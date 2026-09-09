@@ -1,0 +1,30 @@
+{
+  "id": "10032120",
+  "name": "Blaze Destroyer",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 10,
+  "text": "On Spellboost: Reduce the cost of this card by 1.",
+  "attack": 8,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "spellboost",
+      "zone": "hand",
+      "printed": "On Spellboost: Reduce the cost of this card by 1.",
+      "effects": [
+        {
+          "printed": "Reduce the cost of this card by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "90021120",
+  "name": "Steelclad Knight",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [
+    "officer"
+  ]
+}

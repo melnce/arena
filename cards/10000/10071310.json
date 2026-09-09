@@ -1,0 +1,49 @@
+{
+  "id": "10071310",
+  "name": "Bullet from Beyond",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Select an enemy follower on the field and destroy it. Add a Gear of Ambition and Gear of Remembrance to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and destroy it. Add a Gear of Ambition and Gear of Remembrance to your hand.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Add a Gear of Ambition and Gear of Remembrance to your hand.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90071210"
+              },
+              "count": 1
+            },
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90071220"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

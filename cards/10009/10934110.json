@@ -1,0 +1,65 @@
+{
+  "id": "10934110",
+  "name": "Sephie, Maven Convict",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fuse: Cards\nWhenever you Fuse to this card, spend 2 play points to summon an Obsessed Test Subject.\nFanfare: Summon 2 copies of Obsessed Test Subject.\nSuper-Evolve: Gain Crest: Sephie, Maven Convict.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fused",
+      "printed": "Whenever you Fuse to this card, spend 2 play points to summon an Obsessed Test Subject.",
+      "effects": [
+        {
+          "printed": "spend 2 play points to summon an Obsessed Test Subject.",
+          "op": "pay",
+          "resource": "pp",
+          "amount": 2,
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10931110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Obsessed Test Subject.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Obsessed Test Subject.",
+          "op": "summon",
+          "card": {
+            "named": "10931110"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Gain Crest: Sephie, Maven Convict.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Sephie, Maven Convict.",
+          "op": "crest",
+          "gain": "crest:10934110",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "fuse": {
+    "partners": {}
+  }
+}

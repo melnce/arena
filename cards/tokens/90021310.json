@@ -1,0 +1,34 @@
+{
+  "id": "90021310",
+  "name": "Gilded Blade",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Select an enemy follower on the field or the enemy leader and deal it 1 damage.",
+  "tribes": [
+    "loot"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field or the enemy leader and deal it 1 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field or the enemy leader and deal it 1 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "character",
+            "pick": "choose",
+            "includeLeader": true
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

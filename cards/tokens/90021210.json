@@ -1,0 +1,46 @@
+{
+  "id": "90021210",
+  "name": "Dread Pirate's Flag",
+  "kind": "amulet",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Countdown (7)\nWhenever you play a spell, advance this amulet's count by 1.\nLast Words: Deal 2 damage to the enemy leader.",
+  "countdown": 7,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_spell_played",
+      "printed": "Whenever you play a spell, advance this amulet's count by 1.",
+      "effects": [
+        {
+          "printed": "advance this amulet's count by 1.",
+          "op": "countdown",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Deal 2 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader",
+            "pick": "self"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

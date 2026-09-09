@@ -1,0 +1,76 @@
+{
+  "id": "90044330",
+  "name": "Depths of the Eld Blades",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 2,
+  "text": "When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader.\nDeal 1 damage to the enemy leader. Restore 1 defense to your leader.",
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "discarded",
+      "printed": "When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to the enemy leader and restore 1 defense to your leader.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader",
+                "pick": "self"
+              },
+              "amount": 1
+            },
+            {
+              "op": "restore",
+              "select": {
+                "side": "ally",
+                "zone": "leader",
+                "kind": "leader",
+                "pick": "self"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 damage to the enemy leader. Restore 1 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader",
+            "pick": "self"
+          },
+          "amount": 1
+        },
+        {
+          "printed": "Restore 1 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader",
+            "pick": "self"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

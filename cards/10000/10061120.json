@@ -1,0 +1,16 @@
+{
+  "id": "10061120",
+  "name": "Fox of Purity",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Ward",
+  "attack": 1,
+  "defense": 3,
+  "traits": {
+    "ward": true
+  }
+}

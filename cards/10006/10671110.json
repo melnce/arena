@@ -1,0 +1,46 @@
+{
+  "id": "10671110",
+  "name": "Shoddy Plaything",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Draw 3 cards.\nWard\nAccelerate (2): Summon a Shoddy Plaything.",
+  "attack": 1,
+  "defense": 3,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw 3 cards.",
+      "effects": [
+        {
+          "printed": "Draw 3 cards.",
+          "op": "draw",
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "accelerate",
+      "cost": 2,
+      "printed": "Accelerate (2): Summon a Shoddy Plaything.",
+      "effects": [
+        {
+          "printed": "Summon a Shoddy Plaything.",
+          "op": "summon",
+          "card": {
+            "named": "10671110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

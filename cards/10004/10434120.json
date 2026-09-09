@@ -1,0 +1,70 @@
+{
+  "id": "10434120",
+  "name": "Cagliostro, Genius Alchemist",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Gain 2 earth sigils. Add an Ars Magna to your hand.\nSkybound Art- Evolve this follower.\nSuper Skybound Art- Gain Crest: Cagliostro, Genius Alchemist.",
+  "attack": 5,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain 2 earth sigils. Add an Ars Magna to your hand.\nSkybound Art- Evolve this follower.\nSuper Skybound Art- Gain Crest: Cagliostro, Genius Alchemist.",
+      "effects": [
+        {
+          "printed": "Gain 2 earth sigils.",
+          "op": "counter",
+          "key": "earth",
+          "how": "add",
+          "amount": 2
+        },
+        {
+          "printed": "Add an Ars Magna to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90034320"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Skybound Art- Evolve this follower.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        },
+        {
+          "printed": "Super Skybound Art- Gain Crest: Cagliostro, Genius Alchemist.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 15
+            }
+          },
+          "then": [
+            {
+              "op": "crest",
+              "gain": "crest:10434120",
+              "player": "self"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

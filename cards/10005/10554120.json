@@ -1,0 +1,85 @@
+{
+  "id": "10554120",
+  "name": "Shakdoh, Nightblossom",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 10,
+  "text": "Fanfare: Do this 2 times: \"Return your hand to deck. Draw X cards. X is the number of cards you returned. Then, if you have at least 4 cards with the same cost in your hand, deal 4 damage to all enemies.\"\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Do this 2 times: \"Return your hand to deck. Draw X cards. X is the number of cards you returned. Then, if you have at least 4 cards with the same cost in your hand, deal 4 damage to all enemies.\"",
+      "effects": [
+        {
+          "printed": "Do this 2 times: \"Return your hand to deck. Draw X cards. X is the number of cards you returned. Then, if you have at least 4 cards with the same cost in your hand, deal 4 damage to all enemies.\"",
+          "op": "repeat",
+          "times": 2,
+          "effects": [
+            {
+              "op": "seq",
+              "as": "r",
+              "effects": [
+                {
+                  "op": "returnToDeck",
+                  "select": {
+                    "side": "ally",
+                    "zone": "hand",
+                    "kind": "card",
+                    "pick": "all"
+                  },
+                  "as": "r",
+                  "position": "random"
+                },
+                {
+                  "op": "draw",
+                  "count": {
+                    "count": {
+                      "pick": "bound",
+                      "ref": "r"
+                    }
+                  }
+                },
+                {
+                  "op": "if",
+                  "cond": {
+                    "handSameCostAtLeast": {
+                      "n": 4
+                    }
+                  },
+                  "then": [
+                    {
+                      "op": "damage",
+                      "select": {
+                        "side": "enemy",
+                        "kind": "character",
+                        "pick": "all",
+                        "includeLeader": true
+                      },
+                      "amount": 4
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ]
+}

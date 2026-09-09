@@ -1,0 +1,63 @@
+{
+  "id": "90073110",
+  "name": "Ominous Artifact \u03b1",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "gold",
+  "token": true,
+  "cost": 5,
+  "text": "Fuse: Ominous Artifact \u03b2 and Ominous Artifact \u03b3\nWhen you've Fused both to this card, transform it into a Masterwork Artifact \u03a9.\nAt the end of your turn, restore 3 defense to your leader.",
+  "attack": 3,
+  "defense": 5,
+  "tribes": [
+    "artifact"
+  ],
+  "abilities": [
+    {
+      "on": "fused",
+      "printed": "When you've Fused both to this card, transform it into a Masterwork Artifact \u03a9.",
+      "when": {
+        "wasFused": "both"
+      },
+      "effects": [
+        {
+          "printed": "transform it into a Masterwork Artifact \u03a9.",
+          "op": "transform",
+          "select": {
+            "pick": "self"
+          },
+          "into": {
+            "named": "90074110"
+          }
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, restore 3 defense to your leader.",
+      "effects": [
+        {
+          "printed": "restore 3 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader",
+            "pick": "self"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "fuse": {
+    "partners": {
+      "name": [
+        "Ominous Artifact \u03b2",
+        "Ominous Artifact \u03b3"
+      ]
+    }
+  }
+}

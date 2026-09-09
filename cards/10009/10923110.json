@@ -1,0 +1,95 @@
+{
+  "id": "10923110",
+  "name": "Roughwater First Mate",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 3 damage. Summon a Dread Pirate's Flag.\nEvolve: Replicate the effects of this card's Fanfare ability.\nSuper-Evolve: Add a Gilded Blade and Gilded Necklace to your hand and set their costs to 0.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 3 damage. Summon a Dread Pirate's Flag.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 3 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 3
+        },
+        {
+          "printed": "Summon a Dread Pirate's Flag.",
+          "op": "summon",
+          "card": {
+            "named": "90021210"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Add a Gilded Blade and Gilded Necklace to your hand and set their costs to 0.",
+      "effects": [
+        {
+          "printed": "Add a Gilded Blade and Gilded Necklace to your hand and set their costs to 0.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90021310"
+              },
+              "count": 1,
+              "as": "a"
+            },
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90021340"
+              },
+              "count": 1,
+              "as": "b"
+            },
+            {
+              "op": "cost",
+              "select": {
+                "pick": "bound",
+                "ref": "a"
+              },
+              "set": 0
+            },
+            {
+              "op": "cost",
+              "select": {
+                "pick": "bound",
+                "ref": "b"
+              },
+              "set": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

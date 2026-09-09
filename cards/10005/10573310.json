@@ -1,0 +1,32 @@
+{
+  "id": "10573310",
+  "name": "Sincerity of the Dewdrop",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 1,
+  "text": "Select a card on the field and transform it into an Imari's Little Buddies.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a card on the field and transform it into an Imari's Little Buddies.",
+      "effects": [
+        {
+          "printed": "Select a card on the field and transform it into an Imari's Little Buddies.",
+          "op": "transform",
+          "select": {
+            "side": "any",
+            "zone": "field",
+            "kind": "card",
+            "pick": "choose"
+          },
+          "into": {
+            "named": "90074140"
+          }
+        }
+      ]
+    }
+  ]
+}

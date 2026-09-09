@@ -1,0 +1,28 @@
+{
+  "id": "faith:10634120",
+  "name": "Faith: Calge-Danthla, Eld Crystals",
+  "grantedBy": [
+    "10634120"
+  ],
+  "faith": true,
+  "text": "This faith's value starts at 0.\n\nWhenever an allied Crystalspawn enters the field, increase this faith's value by 1.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "name": "Crystalspawn"
+      },
+      "printed": "Whenever an allied Crystalspawn enters the field, increase this faith's value by 1.",
+      "effects": [
+        {
+          "printed": "increase this faith's value by 1.",
+          "op": "counter",
+          "key": "faith",
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

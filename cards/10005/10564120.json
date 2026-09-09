@@ -1,0 +1,47 @@
+{
+  "id": "10564120",
+  "name": "Kukishiro, Mistbloom",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Gain Crest: Kukishiro, Mistbloom. Return 2 random cards from your hand to deck. Draw 2 cards.\nRush",
+  "attack": 5,
+  "defense": 5,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain Crest: Kukishiro, Mistbloom. Return 2 random cards from your hand to deck. Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Kukishiro, Mistbloom.",
+          "op": "crest",
+          "gain": "crest:10564120",
+          "player": "self"
+        },
+        {
+          "printed": "Return 2 random cards from your hand to deck.",
+          "op": "returnToDeck",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "randomDistinct",
+            "count": 2
+          },
+          "position": "random"
+        },
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "10072210",
+  "name": "Puppet Theater",
+  "kind": "amulet",
+  "class": "portalcraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add a Puppet to your hand.\nCountdown (2)\nAt the end of your turn, add a Puppet to your hand.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Puppet to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Puppet to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90071110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, add a Puppet to your hand.",
+      "effects": [
+        {
+          "printed": "add a Puppet to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90071110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

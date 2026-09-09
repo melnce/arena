@@ -1,0 +1,67 @@
+{
+  "id": "10031110",
+  "name": "Dazzling Runeknight",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Select a Mode to activate.\n1. Spellboost your hand 2 times.\n2. Earth Rite (1) - Give this follower +2/+2 and Ward",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Spellboost your hand 2 times.\n2. Earth Rite (1) - Give this follower +2/+2 and Ward",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Spellboost your hand 2 times.\n2. Earth Rite (1) - Give this follower +2/+2 and Ward",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Spellboost your hand 2 times.",
+              "effects": [
+                {
+                  "op": "spellboostHand",
+                  "times": 2
+                }
+              ]
+            },
+            {
+              "printed": "2. Earth Rite (1) - Give this follower +2/+2 and Ward",
+              "effects": [
+                {
+                  "op": "pay",
+                  "resource": "earth",
+                  "amount": 1,
+                  "effects": [
+                    {
+                      "op": "buff",
+                      "select": {
+                        "pick": "self"
+                      },
+                      "attack": 2,
+                      "defense": 2
+                    },
+                    {
+                      "op": "grantTraits",
+                      "select": {
+                        "pick": "self"
+                      },
+                      "traits": {
+                        "ward": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

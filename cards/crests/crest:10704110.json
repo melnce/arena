@@ -1,0 +1,40 @@
+{
+  "id": "crest:10704110",
+  "name": "Crest: Illamrita, Designated Target",
+  "grantedBy": [
+    "10704110"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nLast Words: Summon an Illamrita, Designated Target and evolve it.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon an Illamrita, Designated Target and evolve it.",
+      "effects": [
+        {
+          "printed": "Summon an Illamrita, Designated Target and evolve it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10704110"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

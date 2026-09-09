@@ -1,0 +1,41 @@
+{
+  "id": "crest:10714110",
+  "name": "Crest: Thestae, Anathema of Distortion",
+  "grantedBy": [
+    "10714110"
+  ],
+  "faith": false,
+  "text": "Countdown (3)\nAt the end of your turn, Combo (3) - Give all followers in your deck +1/+1.",
+  "countdown": 3,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, Combo (3) - Give all followers in your deck +1/+1.",
+      "effects": [
+        {
+          "printed": "Combo (3) - Give all followers in your deck +1/+1.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "buff",
+              "select": {
+                "side": "ally",
+                "zone": "deck",
+                "kind": "follower",
+                "pick": "all"
+              },
+              "attack": 1,
+              "defense": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

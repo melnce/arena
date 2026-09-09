@@ -1,0 +1,82 @@
+{
+  "id": "10724110",
+  "name": "Gildaria, Anathema of Attunement",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Rally (20) - Gain Crest: Gildaria, Anathema of Attunement. Evolve this follower.\nDuring your turn, whenever another allied follower enters the field, give it Rush.\nWhen this follower evolves, summon 2 copies of Steelclad Knight.",
+  "attack": 4,
+  "defense": 4,
+  "tribes": [
+    "anathema"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Rally (20) - Gain Crest: Gildaria, Anathema of Attunement. Evolve this follower.",
+      "effects": [
+        {
+          "printed": "Rally (20) - Gain Crest: Gildaria, Anathema of Attunement. Evolve this follower.",
+          "op": "if",
+          "cond": {
+            "rally": {
+              "n": 20
+            }
+          },
+          "then": [
+            {
+              "op": "crest",
+              "gain": "crest:10724110",
+              "player": "self"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "printed": "During your turn, whenever another allied follower enters the field, give it Rush.",
+      "when": {
+        "turnOwner": "self"
+      },
+      "effects": [
+        {
+          "printed": "give it Rush.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "entering",
+            "other": true
+          },
+          "traits": {
+            "rush": true
+          }
+        }
+      ]
+    },
+    {
+      "on": "anyEvolve",
+      "printed": "When this follower evolves, summon 2 copies of Steelclad Knight.",
+      "effects": [
+        {
+          "printed": "summon 2 copies of Steelclad Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021120"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

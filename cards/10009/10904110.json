@@ -1,0 +1,59 @@
+{
+  "id": "10904110",
+  "name": "Zerael, Sundered Rebirth",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "Activates in deck. At the end of your turn, if you've played cards with base costs of 1, 2, 3, 4, 5, 6, 7, and 8 this match, Invoke this card.\nFanfare: Select an enemy follower on the field and deal it 9 damage.\nIntimidate",
+  "attack": 9,
+  "defense": 9,
+  "traits": {
+    "intimidate": true
+  },
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "zone": "deck",
+      "printed": "Activates in deck. At the end of your turn, if you've played cards with base costs of 1, 2, 3, 4, 5, 6, 7, and 8 this match, Invoke this card.",
+      "when": {
+        "playedBaseCostsThisMatch": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      "effects": [
+        {
+          "printed": "Invoke this card.",
+          "op": "invoke"
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 9 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 9 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 9
+        }
+      ]
+    }
+  ]
+}

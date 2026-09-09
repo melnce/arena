@@ -1,0 +1,39 @@
+{
+  "id": "10021310",
+  "name": "Way of the Maid",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Select a card in your hand and return it to deck. Draw 2 Swordcraft followers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a card in your hand and return it to deck. Draw 2 Swordcraft followers.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and return it to deck.",
+          "op": "returnToDeck",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose"
+          },
+          "position": "random"
+        },
+        {
+          "printed": "Draw 2 Swordcraft followers.",
+          "op": "draw",
+          "count": 2,
+          "filter": {
+            "kind": "follower",
+            "class": "swordcraft"
+          }
+        }
+      ]
+    }
+  ]
+}

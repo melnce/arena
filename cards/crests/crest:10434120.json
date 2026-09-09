@@ -1,0 +1,33 @@
+{
+  "id": "crest:10434120",
+  "name": "Crest: Cagliostro, Genius Alchemist",
+  "grantedBy": [
+    "10434120"
+  ],
+  "faith": false,
+  "text": "At the start of your turn, Earth Rite (1) - Add an Ars Magna to your hand.",
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, Earth Rite (1) - Add an Ars Magna to your hand.",
+      "effects": [
+        {
+          "printed": "Earth Rite (1) - Add an Ars Magna to your hand.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 1,
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90034320"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

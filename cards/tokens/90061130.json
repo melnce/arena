@@ -1,0 +1,16 @@
+{
+  "id": "90061130",
+  "name": "Regal Falcon",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 6,
+  "text": "Storm",
+  "attack": 4,
+  "defense": 4,
+  "traits": {
+    "storm": true
+  }
+}

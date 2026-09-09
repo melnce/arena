@@ -1,0 +1,102 @@
+{
+  "id": "10564110",
+  "name": "Sofina, Inspiring Strength",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Select a Mode to activate.\n1. Evolve this follower.\n2. Evolve another random unevolved allied follower with Ward and give it +1/+1.\nWard\nAt the end of your turn, if this follower is evolved, give all other followers on the field -1/-1.",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Evolve this follower.\n2. Evolve another random unevolved allied follower with Ward and give it +1/+1.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Evolve this follower.\n2. Evolve another random unevolved allied follower with Ward and give it +1/+1.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Evolve this follower.",
+              "effects": [
+                {
+                  "op": "evolve",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "super": false
+                }
+              ]
+            },
+            {
+              "printed": "2. Evolve another random unevolved allied follower with Ward and give it +1/+1.",
+              "effects": [
+                {
+                  "op": "seq",
+                  "effects": [
+                    {
+                      "op": "evolve",
+                      "select": {
+                        "side": "ally",
+                        "zone": "field",
+                        "kind": "follower",
+                        "pick": "random",
+                        "other": true,
+                        "filter": {
+                          "unevolved": true,
+                          "hasTrait": "ward"
+                        }
+                      },
+                      "as": "t",
+                      "super": false
+                    },
+                    {
+                      "op": "buff",
+                      "select": {
+                        "pick": "bound",
+                        "ref": "t"
+                      },
+                      "attack": 1,
+                      "defense": 1
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, if this follower is evolved, give all other followers on the field -1/-1.",
+      "when": {
+        "evolved": true
+      },
+      "effects": [
+        {
+          "printed": "give all other followers on the field -1/-1.",
+          "op": "buff",
+          "select": {
+            "side": "any",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all",
+            "other": true
+          },
+          "attack": -1,
+          "defense": -1
+        }
+      ]
+    }
+  ]
+}

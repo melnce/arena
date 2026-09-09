@@ -1,0 +1,69 @@
+{
+  "id": "10444120",
+  "name": "Zooey, Ally of the World",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Gain 1 max play point.\nEnhance(10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain 1 max play point.",
+      "effects": [
+        {
+          "printed": "Gain 1 max play point.",
+          "op": "pp",
+          "action": "gainMax",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 10,
+      "printed": "Enhance(10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
+      "effects": [
+        {
+          "printed": "Give this follower Storm.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "storm": true
+          }
+        },
+        {
+          "printed": "Set your leader's max defense to 1.",
+          "op": "leaderModifier",
+          "select": {
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader",
+            "pick": "self"
+          },
+          "maxDefense": 1
+        },
+        {
+          "printed": "Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
+          "op": "leaderModifier",
+          "select": {
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader",
+            "pick": "self"
+          },
+          "damageCap": 0,
+          "until": "endOfOpponentTurn"
+        }
+      ]
+    }
+  ]
+}

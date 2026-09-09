@@ -1,0 +1,72 @@
+{
+  "id": "crest:10564120",
+  "name": "Crest: Kukishiro, Mistbloom",
+  "grantedBy": [
+    "10564120"
+  ],
+  "faith": false,
+  "text": "During your turn, whenever you draw a 1-, 3-, or 5-cost card, summon a Fox of Purity or Holy Falcon at random.\nDuring your turn, whenever you draw a 2-, 4-, or 6-cost card, summon an enemy Fox of Purity or Holy Falcon at random.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_draw",
+      "filter": {
+        "costIn": [
+          1,
+          3,
+          5
+        ]
+      },
+      "printed": "During your turn, whenever you draw a 1-, 3-, or 5-cost card, summon a Fox of Purity or Holy Falcon at random.",
+      "when": {
+        "turnOwner": "self"
+      },
+      "effects": [
+        {
+          "printed": "summon a Fox of Purity or Holy Falcon at random.",
+          "op": "summon",
+          "card": {
+            "randomFrom": {
+              "name": [
+                "Fox of Purity",
+                "Holy Falcon"
+              ]
+            }
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_draw",
+      "filter": {
+        "costIn": [
+          2,
+          4,
+          6
+        ]
+      },
+      "printed": "During your turn, whenever you draw a 2-, 4-, or 6-cost card, summon an enemy Fox of Purity or Holy Falcon at random.",
+      "when": {
+        "turnOwner": "self"
+      },
+      "effects": [
+        {
+          "printed": "summon an enemy Fox of Purity or Holy Falcon at random.",
+          "op": "summon",
+          "card": {
+            "randomFrom": {
+              "name": [
+                "Fox of Purity",
+                "Holy Falcon"
+              ]
+            }
+          },
+          "count": 1,
+          "controller": "opponent"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "90074140",
+  "name": "Imari's Little Buddies",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 2,
+  "text": "Rush",
+  "attack": 3,
+  "defense": 3,
+  "traits": {
+    "rush": true
+  }
+}

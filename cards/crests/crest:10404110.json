@@ -1,0 +1,30 @@
+{
+  "id": "crest:10404110",
+  "name": "Crest: Sandalphon, Primarch Successor",
+  "grantedBy": [
+    "10404110"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nAt the end of your turn, restore 1 defense to all allies.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, restore 1 defense to all allies.",
+      "effects": [
+        {
+          "printed": "restore 1 defense to all allies.",
+          "op": "restore",
+          "select": {
+            "side": "ally",
+            "kind": "character",
+            "pick": "all",
+            "includeLeader": true
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

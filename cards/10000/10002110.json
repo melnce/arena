@@ -1,0 +1,50 @@
+{
+  "id": "10002110",
+  "name": "Arriet, Luxminstrel",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Evolve: Restore 2 defense to your leader.\nSuper-Evolve: Restore 4 defense instead.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Restore 2 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Restore 2 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader",
+            "pick": "self"
+          },
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "replaces": "evolve",
+      "printed": "Super-Evolve: Restore 4 defense instead.",
+      "effects": [
+        {
+          "printed": "Restore 4 defense instead.",
+          "op": "restore",
+          "select": {
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader",
+            "pick": "self"
+          },
+          "amount": 4
+        }
+      ]
+    }
+  ]
+}

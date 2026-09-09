@@ -1,0 +1,41 @@
+{
+  "id": "90034320",
+  "name": "Ars Magna",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 1,
+  "text": "Select an enemy and deal it 2 damage. Restore 1 defense to your leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy and deal it 2 damage. Restore 1 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Select an enemy and deal it 2 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "kind": "character",
+            "pick": "choose",
+            "includeLeader": true
+          },
+          "amount": 2
+        },
+        {
+          "printed": "Restore 1 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader",
+            "pick": "self"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

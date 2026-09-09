@@ -1,0 +1,128 @@
+{
+  "id": "10624110",
+  "name": "Noel IV, Ruthless Warlord",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Summon a Fearless Soldier and give it Bane.\nEnhance (7): Summon a Fearless Soldier and give it Drain.\nEnhance (8): Summon a Fearless Soldier and give it Storm.\nSuper-Evolve: Give all other allied followers on the field +1/+1.",
+  "attack": 4,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Fearless Soldier and give it Bane.",
+      "effects": [
+        {
+          "printed": "Summon a Fearless Soldier and give it Bane.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10621110"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "bane": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give all other allied followers on the field +1/+1.",
+      "effects": [
+        {
+          "printed": "Give all other allied followers on the field +1/+1.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all",
+            "other": true
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 7,
+      "printed": "Enhance (7): Summon a Fearless Soldier and give it Drain.",
+      "effects": [
+        {
+          "printed": "Summon a Fearless Soldier and give it Drain.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10621110"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "drain": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "enhance",
+      "cost": 8,
+      "printed": "Enhance (8): Summon a Fearless Soldier and give it Storm.",
+      "effects": [
+        {
+          "printed": "Summon a Fearless Soldier and give it Storm.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10621110"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

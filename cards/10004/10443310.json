@@ -1,0 +1,46 @@
+{
+  "id": "10443310",
+  "name": "Primal Beast Absorption",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Select an enemy card on the field, banish it, and add a copy of it to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy card on the field, banish it, and add a copy of it to your hand.",
+      "effects": [
+        {
+          "printed": "Select an enemy card on the field, banish it, and add a copy of it to your hand.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "banish",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "card",
+                "pick": "choose"
+              },
+              "as": "t"
+            },
+            {
+              "op": "addToHand",
+              "card": {
+                "copyOf": {
+                  "pick": "bound",
+                  "ref": "t"
+                },
+                "exact": true
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

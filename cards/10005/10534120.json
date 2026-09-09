@@ -1,0 +1,67 @@
+{
+  "id": "10534120",
+  "name": "Ara, Dawnblossom",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 10,
+  "text": "On Spellboost: Reduce the cost of this card by 1.\nFanfare: Select an enemy follower on the field and deal it 10 damage.\nEvolve: Select another follower on the field and transform it into a Regal Falcon.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "spellboost",
+      "zone": "hand",
+      "printed": "On Spellboost: Reduce the cost of this card by 1.",
+      "effects": [
+        {
+          "printed": "Reduce the cost of this card by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 10 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 10 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 10
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select another follower on the field and transform it into a Regal Falcon.",
+      "effects": [
+        {
+          "printed": "Select another follower on the field and transform it into a Regal Falcon.",
+          "op": "transform",
+          "select": {
+            "side": "any",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "other": true
+          },
+          "into": {
+            "named": "90061130"
+          }
+        }
+      ]
+    }
+  ]
+}

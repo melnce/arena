@@ -1,0 +1,48 @@
+{
+  "id": "10654110",
+  "name": "Armes, Depletive Demon",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "Aura\nCan't be destroyed by abilities.\nClash: Destroy the opposing follower.\nSuper-Evolve: Give this follower \"Can attack 3 times per turn.\"",
+  "attack": 10,
+  "defense": 10,
+  "traits": {
+    "aura": true,
+    "cantBeDestroyedByAbilities": true
+  },
+  "abilities": [
+    {
+      "on": "clash",
+      "printed": "Clash: Destroy the opposing follower.",
+      "effects": [
+        {
+          "printed": "Destroy the opposing follower.",
+          "op": "destroy",
+          "select": {
+            "pick": "opposing"
+          }
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give this follower \"Can attack 3 times per turn.\"",
+      "effects": [
+        {
+          "printed": "Give this follower \"Can attack 3 times per turn.\"",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "attacksPerTurn": 3
+          }
+        }
+      ]
+    }
+  ]
+}

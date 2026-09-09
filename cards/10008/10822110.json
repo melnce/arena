@@ -1,0 +1,48 @@
+{
+  "id": "10822110",
+  "name": "Katze, Magical Thief",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Once on each of your turns, when you play a spell, deal 2 damage to a random enemy follower.\nEvolve: Add a Glittering Gold to your hand.",
+  "attack": 1,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_spell_played",
+      "oncePerTurn": true,
+      "printed": "Once on each of your turns, when you play a spell, deal 2 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "deal 2 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Add a Glittering Gold to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Glittering Gold to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021350"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

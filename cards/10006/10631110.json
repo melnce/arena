@@ -1,0 +1,19 @@
+{
+  "id": "10631110",
+  "name": "Crystalspawn",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Rush",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [
+    "encroacher"
+  ],
+  "traits": {
+    "rush": true
+  }
+}

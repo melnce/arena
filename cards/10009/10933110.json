@@ -1,0 +1,62 @@
+{
+  "id": "10933110",
+  "name": "Ecstatic Scholar",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fuse: Cards\nFanfare: Draw 2 cards. Summon an Obsessed Test Subject.\nSuper-Evolve: If you've Fused to this card, select an allied Obsessed Test Subject on the field and give it Drain.",
+  "attack": 2,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw 2 cards. Summon an Obsessed Test Subject.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        },
+        {
+          "printed": "Summon an Obsessed Test Subject.",
+          "op": "summon",
+          "card": {
+            "named": "10931110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: If you've Fused to this card, select an allied Obsessed Test Subject on the field and give it Drain.",
+      "when": {
+        "wasFused": true
+      },
+      "effects": [
+        {
+          "printed": "select an allied Obsessed Test Subject on the field and give it Drain.",
+          "op": "grantTraits",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "filter": {
+              "name": "Obsessed Test Subject"
+            }
+          },
+          "traits": {
+            "drain": true
+          }
+        }
+      ]
+    }
+  ],
+  "fuse": {
+    "partners": {}
+  }
+}

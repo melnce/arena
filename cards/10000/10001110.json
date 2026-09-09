@@ -1,0 +1,31 @@
+{
+  "id": "10001110",
+  "name": "Indomitable Fighter",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Enhance (4): Give this follower +3/+3.",
+  "attack": 2,
+  "defense": 2,
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Give this follower +3/+3.",
+      "effects": [
+        {
+          "printed": "Give this follower +3/+3.",
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": 3,
+          "defense": 3
+        }
+      ]
+    }
+  ]
+}
