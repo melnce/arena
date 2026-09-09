@@ -6,9 +6,56 @@ A value with no card in the 572+43 pool is omitted. Each value below names at le
 
 Regenerate the schema JSON with `python3 tools/gen_schema.py`.
 
-## Markup stripping (crest / Faith `skill_text`)
+## Official integer maps (from Cygames `common` / `specific_effect_card_info`)
 
-Official `specific_effects[].skill_text` is HTML-ish. Crest `text` is that string after, in order:
+Derived from the live card-list API (`cards/official/catalog.json` `_meta.maps`), then cross-checked against cards whose kind/class/tribe is known. Authored `kind` is still only `follower` / `spell` / `amulet` — official type 2 and type 3 both map to `amulet`. Extra official tribes (`luminous`, `levin`, `shikigami`) appear in the catalog; the closed authored-card enum stays the 12 pool tribes below unless an authored file needs one.
+
+| official int | authored name | evidence |
+|---|---|---|
+| `type` 1 | `follower` | Knight `90021110` |
+| `type` 2 | `amulet` (no Countdown type) | Awed and Inspired `10461210` (Engage amulet) |
+| `type` 3 | `amulet` (Countdown family) | City of Babelon `10703210`, World of Games `10503210` |
+| `type` 4 | `spell` | Deepwood Bounty `90011310` |
+| `class` 0 | `neutral` | Indomitable Fighter `10001110`, Sandalphon `10404110` |
+| `class` 1 | `forestcraft` | Deepwood Bounty `90011310` |
+| `class` 2 | `swordcraft` | Knight `90021110` |
+| `class` 3 | `runecraft` | Dazzling Runeknight `10031110` |
+| `class` 4 | `dragoncraft` | Zooey `10444120` |
+| `class` 5 | `abysscraft` | Istyndet `10954110` |
+| `class` 6 | `havencraft` | Kukishiro `10564120` |
+| `class` 7 | `portalcraft` | Slaus `10574110` |
+| `rarity` 1 | `bronze` | Knight `90021110` |
+| `rarity` 2 | `silver` | Venerating Dyer `10662110` |
+| `rarity` 3 | `gold` | City of Babelon `10703210` |
+| `rarity` 4 | `legendary` | Slaus `10574110` |
+| `tribe` 0 | none (omit from `tribes[]`) | Deepwood Bounty `90011310` (`tribes: [0]`) |
+| `tribe` 2 | `officer` | Knight `90021110` |
+| `tribe` 3 | `luminous` | catalog `data.tribe_names` (no M0 example) |
+| `tribe` 4 | `levin` | catalog `data.tribe_names` (no M0 example) |
+| `tribe` 5 | `pixie` | Fairy `90011110` |
+| `tribe` 6 | `departed` | Rotting Zombie `90051140` |
+| `tribe` 8 | `earth sigil` | Magic Sediment `90031210` |
+| `tribe` 11 | `mysteria` | Tico `10833110` (pool) |
+| `tribe` 12 | `golem` | Emperor of Elements `10533110` |
+| `tribe` 13 | `shikigami` | catalog `data.tribe_names` (no M0 example) |
+| `tribe` 14 | `artifact` | Gear of Ambition `90071210` |
+| `tribe` 15 | `puppetry` | Puppet `90071110` |
+| `tribe` 17 | `marine` | Stormy Shamisen Shredder `10541120` |
+| `tribe` 18 | `loot` | Gilded Blade `90021310` |
+| `tribe` 19 | `encroacher` | Sathanid `10614120` |
+| `tribe` 20 | `anathema` | Gildaria `10724110` |
+| SE type 1 | `crest` | Slaus `10574110` / `10412312` |
+| SE type 2 | `crystallize` | Venerating Dyer `10662110` cost 1 |
+| SE type 3 | `accelerate` | Shoddy Plaything `10671110` cost 2 |
+| SE type 4 | `faith` | Sathanid `10614120` |
+
+`evo` carries images and `skill_text` only — no ATK/DEF. `+2/+2` on evolve is a rule. This fetch: `evo.skill_text === common.skill_text` for every pool card with an object `evo` (`_meta.evo_skill_text_mismatches` is `[]`).
+
+Accelerate and Crystallize lines are **not** in `common.skill_text`. They live on `specific_effects`. Card `text` is stripped `skill_text` only; mode `printed` may be a whitespace-normalised substring of the reconstructed `Accelerate (N): {se.text}` / `Crystallize (N): {se.text}` line. Enhance stays in `skill_text`.
+
+## Markup stripping (card `skill_text` and crest / Faith `skill_text`)
+
+Official `common.skill_text` and `specific_effects[].skill_text` use the same HTML-ish markup. Card `text` and crest `text` are that string after, in order:
 
 1. Replace `<hr>` / `<hr/>` with a newline.
 2. Remove `<b>`, `</b>`, `<i>`, `</i>`, `<color=…>`, `</color>`, `<ridx=…>`, `</ridx>` (attribute values included).
@@ -38,7 +85,7 @@ Faith ids: `faith:<card id>`. Crest ids: `crest:<granting card id>`.
 | `attack` / `defense` | followers only |
 | `countdown` | amulets that print Countdown (`10072210` 2, `10703210` 1) |
 | `tribes` | closed, lowercase (below) |
-| `text` | printed, verbatim from official `description` |
+| `text` | printed, verbatim from official stripped `skill_text` (`cards/official/catalog.json`) |
 | `traits` | 4.3 |
 | `abilities` | 4.4 |
 | `modes` | 4.5 |
@@ -222,7 +269,7 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Modes
 
-Three closed shapes. `enhance` `{kind, cost, printed, effects, replacesBase?}` `10001110`; multi-tier `10624110` (both tiers + Fanfare — ruling 2026-08-15). `replacesBase` `10633310`. `accelerate` `{kind, cost, printed, effects}` `10671110` (summoned body is base cost 6 — ruling). `crystallize` `{kind, cost, printed, countdown?, traits?, abilities}` — no mode-level `effects`; the form's text is amulet abilities (`10662110`).
+Three closed shapes. `enhance` `{kind, cost, printed, effects, replacesBase?}` `10001110`; multi-tier `10624110` (both tiers + Fanfare — ruling 2026-08-15). `replacesBase` `10633310`. `accelerate` `{kind, cost, printed, effects}` `10671110` (summoned body is base cost 6 — ruling; official `skill_text` is `Fanfare: Draw 3 cards.\n\nWard` — the Accelerate line is the SE). `crystallize` `{kind, cost, printed, countdown?, traits?, abilities}` — no mode-level `effects`; the form's text is amulet abilities (`10662110`; official follower `text` is `Rush\nBane`).
 
 ## Fuse
 

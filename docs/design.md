@@ -4,6 +4,27 @@
 
 The end goal (2026-09-05) is matchup simulation statistics — mulligan win rates, drawn-card win rates, whether tech cards matter — without underrating decision-heavy decks versus top-human play. That goal is throughput-bound and search-bound. Flat cloneable state, a multiset deck, a seeded RNG inside the state, and statically enumerable actions are not style; they are the search budget.
 
+## Sources
+
+Cygames' card list API is the source of truth for card **facts and texts** (`id`, `name`, `kind`, `class`, `tribes`, `rarity`, `cost`, `attack`, `defense`, `set`, `token`, rotation, related ids, stripped `skill_text`, specific effects, official Q&A). Endpoint: `GET https://shadowverse-wb.com/web/CardList/cardList?offset=<n>&include_token=1` with header `Lang: en`. The committed dump is `cards/official/catalog.json`.
+
+The **only** things taken from `melnce/Practice-Tool` are:
+
+- `rules/owner-rulings.md` (ruling knowledge)
+- `rules/rulebook.md` (rulebook synthesis)
+- its use as the **differential oracle** — interaction knowledge: the old engine's behaviour as a reference, adjudicated by official text + rulings, never binding
+
+Everything else — card facts, texts, token links, rotation flags, crest / Faith / Crystallize / Accelerate texts, Q&A, decklists — comes from Cygames (or, for live metas, the WBArts feed + Cygames deck-code decode at M1). The old repo's `all.json` / `description` fields were originally scraped from shadowverse.gg; that lineage is not carried into `arena`.
+
+```text
+node tools/fetch-official.mjs              # live fetch → catalog + rules/official-qa.md
+node tools/fetch-official.mjs --check      # re-fetch; exit 1 if records differ (fetched_at ignored)
+node tools/fetch-official.mjs --qa-from-catalog
+node tools/apply-official-catalog.mjs      # rewrite authored fact fields + text from the committed catalog
+```
+
+`--check` is a documented manual command. **Do not put the live fetch in CI** — network flakiness. CI validates authored files against the committed catalog only (`node tools/validate.mjs`).
+
 ## Why a closed schema
 
 Measured on the old authored sets at `8f491f9` (`python3` walk of every object with an `op` key under `cards/sets/*.json`):
@@ -22,7 +43,7 @@ Reviewers spent a fortnight writing gates that a type system would have refused.
 
 ## Printed literals
 
-Every ability, mode, choose option, and clause-root effect carries `printed`. Ability/mode `printed` is a whitespace-normalised substring of the card's `text`. Clause-root `printed` is a substring of its ability. Two clause roots under one ability may not share a sentence. `tools/validate.mjs` enforces the relation; the schema enforces presence.
+Every ability, mode, choose option, and clause-root effect carries `printed`. Ability `printed` is a whitespace-normalised substring of the card's `text`. Enhance `printed` is too (Enhance lives in official `skill_text`). Accelerate / Crystallize lines are **not** in `common.skill_text` — they live on `specific_effects` — so those mode `printed` strings may instead be a substring of the reconstructed `Accelerate (N): {se.text}` / `Crystallize (N): {se.text}` line. Clause-root `printed` is a substring of its ability. Two clause roots under one ability may not share a sentence. `tools/validate.mjs` enforces the relation against the committed catalog; the schema enforces presence.
 
 A separate printed sentence is an independent clause root (owner ruling 2026-09-08). "… and if you did so" is a `seq` with `did`.
 

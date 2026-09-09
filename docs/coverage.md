@@ -1,6 +1,6 @@
 # Coverage — Rotation pool (572 cards + 43 crests)
 
-Judged from printed text in `/tmp/old` at `8f491f9` (`cards/all.json`, `cards/token_details.json`, `specific_effects[].skill_text` with markup stripped). v1 ops were not used as evidence. Ops and conditions are a clause-by-clause verb walk (`tools/coverage_lib.py`), not a keyword scan of the table itself.
+Judged from official Cygames `skill_text` in `cards/official/catalog.json` (markup stripped the same way as crests). The old repo is not the source of card texts. Ops and conditions are a clause-by-clause verb walk (`tools/coverage_lib.py`), not a keyword scan of the table itself.
 
 Status:
 
@@ -8,7 +8,7 @@ Status:
 - `needs: <construct>` — a named construct is missing; do not guess.
 - `question: <line>` — behaviour is unclear; listed in the PR for the owner.
 
-`faith:90034330` is the same Faith as `faith:10634120` (identical official text; the token reads the faith counter). It stays a coverage row because the official dump has the SE; there is no second Faith file.
+`faith:90034330` is the same Faith as `faith:10634120` (identical official text; the token reads the faith counter). It stays a coverage row because the catalog has that SE; there is no second Faith file.
 
 ## Cards
 
@@ -75,27 +75,27 @@ Status:
 | `10401120` | Vyrn, Bestest Pal | fanfare | evolve | — | expressible |
 | `10402110` | Yuni, Cosmic Legacy | endOfTurn | restore | — | expressible |
 | `10403110` | Gran & Djeeta, Valiant Skyfarers | fanfare | draw, damage, evolve, choose | skyboundArt | expressible |
-| `10403120` | Lyria, Skydestined | — | draw, pp | — | expressible |
+| `10403120` | Lyria, Skydestined | — | draw, pp, mode:enhance | — | expressible |
 | `10404110` | Sandalphon, Primarch Successor | fanfare, invoke/invoked, startOfTurn, zone:deck | damage, invoke, returnToHand, crest, repeat | skyboundArt, evolved, evolvedCountAtLeast | expressible |
 | `10411110` | Kou & You, Love and Hatred | strike | restore | — | expressible |
 | `10411120` | Manamel, Super Cutest | anyEvolve, endOfTurn | damage, evolve | — | expressible |
 | `10411310` | Comet Drive | — | draw, damage | evolved | expressible |
-| `10412110` | Chloe, What a Gal | — | summon, returnToHand | — | expressible |
+| `10412110` | Chloe, What a Gal | — | summon, returnToHand, mode:enhance | — | expressible |
 | `10412120` | Anthuria, Toe-Tapping Torch | fanfare | grantTraits | — | expressible |
-| `10412310` | Starry Sky | — | damage, crest | — | expressible |
+| `10412310` | Starry Sky | — | damage, crest | combo | expressible |
 | `10413110` | Cupitan, Iridescent Archer | fanfare, anyEvolve | damage, evolve, repeat | skyboundArt | expressible |
 | `10413310` | Alfheimr | — | draw, restore, buff, grantTraits, choose | skyboundArt | expressible |
 | `10414110` | Ewiyar, Wind Personified | fanfare | ep | skyboundArt | expressible |
 | `10414120` | Yuel & Societte, Dancing Duo | fanfare, superEvolve | damage, crest, repeat | — | expressible |
-| `10421110` | Randall, Feet Fighter | — | grantTraits | — | expressible |
+| `10421110` | Randall, Feet Fighter | — | grantTraits, mode:enhance | — | expressible |
 | `10421120` | Arthur, Staunch Dragon | evolve | summon | — | expressible |
 | `10421130` | Mordred, Illusory Lion | evolve | summon | — | expressible |
 | `10422110` | Aglovale, Lord of Frost | fanfare | damage | — | expressible |
 | `10422120` | Feather, Bombastic Brawler | — | — | — | expressible |
 | `10422130` | Fiorito, Muscles in Bloom | — | — | — | expressible |
-| `10423110` | Golden Knight, True King's Blade | fanfare | damage, restore, choose | — | expressible |
+| `10423110` | Golden Knight, True King's Blade | fanfare | damage, restore, choose, mode:enhance | — | expressible |
 | `10423310` | Knightly Ardor | — | restore, buff, grantTraits, pp, choose | — | expressible |
-| `10424110` | Zeta & Bea, Crimson and Blue | fanfare | summon, grantTraits | — | expressible |
+| `10424110` | Zeta & Bea, Crimson and Blue | fanfare | summon, grantTraits, mode:enhance | — | expressible |
 | `10424120` | Seofon, Leader of the Eternals | fanfare | evolve | skyboundArt | expressible |
 | `10431110` | Philosophia, Cryptic Sophist | fanfare | draw | — | expressible |
 | `10431120` | Suframare, Wandering Tutor | evolve, endOfTurn | grantTraits, spellboostHand | — | expressible |
@@ -116,8 +116,8 @@ Status:
 | `10443110` | Meg, Girl Next Door | fanfare, enter/when | grantTraits | skyboundArt | expressible |
 | `10443310` | Primal Beast Absorption | — | addToHand, banish | — | expressible |
 | `10444110` | Wilnas, Flame Personified | fanfare, evolve | damage, replicate | — | expressible |
-| `10444120` | Zooey, Ally of the World | fanfare | grantTraits, leaderModifier | — | expressible |
-| `10451110` | Almeida, Headstrong Miner | — | buff, evolve | — | expressible |
+| `10444120` | Zooey, Ally of the World | fanfare | grantTraits, leaderModifier, mode:enhance | — | expressible |
+| `10451110` | Almeida, Headstrong Miner | — | buff, evolve, mode:enhance | — | expressible |
 | `10451120` | Vaseraga, Unyielding Scythe | lastWords | summon, damage | — | expressible |
 | `10451310` | Valiant Edge | — | damage, crest | — | expressible |
 | `10452110` | Nezha, Soaring War God | endOfTurn | damage | — | expressible |
@@ -130,7 +130,7 @@ Status:
 | `10461110` | Troue, Heroic Visionary | engage | grantTraits | — | expressible |
 | `10461120` | Lamretta, Sisterly Shepherd | evolve, endOfTurn | damage, grantTraits | evolved | expressible |
 | `10461210` | Awed and Inspired | engage | draw, destroy, transform | — | expressible |
-| `10462110` | Sara, Graphos's Chosen | evolve | buff, destroy | — | expressible |
+| `10462110` | Sara, Graphos's Chosen | evolve | buff, destroy, mode:enhance | — | expressible |
 | `10462120` | Sophia, Zeyen Priestess | fanfare, superEvolve | summon, grantTraits | — | expressible |
 | `10462210` | Skyfaring Vessel | engage, zone:hand | destroy, evolve, cost | — | expressible |
 | `10463110` | Tikoh, Asclepian Surgeon | evolve, engage | damage, restore | — | expressible |
@@ -145,7 +145,7 @@ Status:
 | `10472310` | Stone Breaker | — | damage, repeat | — | expressible |
 | `10473110` | Cassius, Sky-Yearning Arrival | fanfare, lastWords | addToHand, damage | — | expressible |
 | `10473310` | Chaos Legion | — | damage | skyboundArt | expressible |
-| `10474110` | Lu Woh, Light Personified | fanfare | damage, buff, repeat | skyboundArt | expressible |
+| `10474110` | Lu Woh, Light Personified | fanfare | damage, buff, repeat, crest | skyboundArt | expressible |
 | `10474120` | Beelzebub, Supreme King | fanfare | damage, removeAbilities, leaderModifier | — | expressible |
 | `10501110` | Monster Litterateur | fanfare | buff | — | expressible |
 | `10502110` | Goddess of Starlight | evolve | addToHand, discard | — | expressible |
@@ -639,12 +639,12 @@ Status:
 
 ## Regenerating the id list
 
-The pool is not committed (the old repo is read-only reference). From a checkout of `melnce/Practice-Tool` at `8f491f9`:
+The pool is derived from the committed Cygames catalog:
 
 ```bash
-python3 tools/list-pool.py --meta /path/to/Practice-Tool/cards/official-meta.json
+python3 tools/list-pool.py
 ```
 
-Expected: 516 rotation + 56 reachable tokens + 38 Crest + 5 Faith = 572 + 43. Measured at authoring time: those exact counts.
+Expected: 516 rotation + 56 reachable tokens + 38 Crest + 5 Faith = 572 + 43. Re-derived from `cards/official/catalog.json` (2026-09-09 fetch): those exact counts.
 
-`tools/coverage-check.py` (CI) walks every row's printed text in `tools/pool-texts.json` and asserts the ops/conditions columns contain the verbs listed in `tools/coverage_lib.py`.
+`tools/coverage-check.py` (CI) walks every row's official `skill_text` (or crest/faith specific-effect text) in that catalog and asserts the ops/conditions columns contain the verbs listed in `tools/coverage_lib.py`.

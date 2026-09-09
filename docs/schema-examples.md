@@ -237,8 +237,8 @@ Printed text:
 
 ```
 Fanfare: Gain 2 earth sigils. Add an Ars Magna to your hand.
-Skybound Art- Evolve this follower.
-Super Skybound Art- Gain Crest: Cagliostro, Genius Alchemist.
+Skybound Art - Evolve this follower.
+Super Skybound Art - Gain Crest: Cagliostro, Genius Alchemist.
 ```
 
 File: `cards/10004/10434120.json`
@@ -253,13 +253,13 @@ File: `cards/10004/10434120.json`
   "rarity": "legendary",
   "token": false,
   "cost": 4,
-  "text": "Fanfare: Gain 2 earth sigils. Add an Ars Magna to your hand.\nSkybound Art- Evolve this follower.\nSuper Skybound Art- Gain Crest: Cagliostro, Genius Alchemist.",
+  "text": "Fanfare: Gain 2 earth sigils. Add an Ars Magna to your hand.\nSkybound Art - Evolve this follower.\nSuper Skybound Art - Gain Crest: Cagliostro, Genius Alchemist.",
   "attack": 5,
   "defense": 3,
   "abilities": [
     {
       "on": "fanfare",
-      "printed": "Fanfare: Gain 2 earth sigils. Add an Ars Magna to your hand.\nSkybound Art- Evolve this follower.\nSuper Skybound Art- Gain Crest: Cagliostro, Genius Alchemist.",
+      "printed": "Fanfare: Gain 2 earth sigils. Add an Ars Magna to your hand.\nSkybound Art - Evolve this follower.\nSuper Skybound Art - Gain Crest: Cagliostro, Genius Alchemist.",
       "effects": [
         {
           "printed": "Gain 2 earth sigils.",
@@ -277,7 +277,7 @@ File: `cards/10004/10434120.json`
           "count": 1
         },
         {
-          "printed": "Skybound Art- Evolve this follower.",
+          "printed": "Skybound Art - Evolve this follower.",
           "op": "if",
           "cond": {
             "skyboundArt": {
@@ -295,7 +295,7 @@ File: `cards/10004/10434120.json`
           ]
         },
         {
-          "printed": "Super Skybound Art- Gain Crest: Cagliostro, Genius Alchemist.",
+          "printed": "Super Skybound Art - Gain Crest: Cagliostro, Genius Alchemist.",
           "op": "if",
           "cond": {
             "skyboundArt": {
@@ -396,7 +396,7 @@ Printed text:
 ```
 Activates in deck. At the start of your turn, if allied followers have evolved at least 6 times this match, Invoke this card.
 When this card is Invoked, gain Crest: Sandalphon, Primarch Successor and return this card to hand
-Fanfare: Super Skybound Art- Do this 5 times: "Deal 2 damage to a random enemy."
+Fanfare: Super Skybound Art - Do this 5 times: "Deal 2 damage to a random enemy."
 ```
 
 File: `cards/10004/10404110.json`
@@ -411,7 +411,7 @@ File: `cards/10004/10404110.json`
   "rarity": "legendary",
   "token": false,
   "cost": 6,
-  "text": "Activates in deck. At the start of your turn, if allied followers have evolved at least 6 times this match, Invoke this card.\nWhen this card is Invoked, gain Crest: Sandalphon, Primarch Successor and return this card to hand\nFanfare: Super Skybound Art- Do this 5 times: \"Deal 2 damage to a random enemy.\"",
+  "text": "Activates in deck. At the start of your turn, if allied followers have evolved at least 6 times this match, Invoke this card.\n\nWhen this card is Invoked, gain Crest: Sandalphon, Primarch Successor and return this card to hand.\nFanfare: Super Skybound Art - Do this 5 times: \"Deal 2 damage to a random enemy.\"",
   "attack": 7,
   "defense": 6,
   "abilities": [
@@ -457,10 +457,10 @@ File: `cards/10004/10404110.json`
     },
     {
       "on": "fanfare",
-      "printed": "Fanfare: Super Skybound Art- Do this 5 times: \"Deal 2 damage to a random enemy.\"",
+      "printed": "Fanfare: Super Skybound Art - Do this 5 times: \"Deal 2 damage to a random enemy.\"",
       "effects": [
         {
-          "printed": "Super Skybound Art- Do this 5 times: \"Deal 2 damage to a random enemy.\"",
+          "printed": "Super Skybound Art - Do this 5 times: \"Deal 2 damage to a random enemy.\"",
           "op": "if",
           "cond": {
             "skyboundArt": {
@@ -2158,7 +2158,7 @@ File: `cards/10006/10671110.json`
   "rarity": "bronze",
   "token": false,
   "cost": 6,
-  "text": "Fanfare: Draw 3 cards.\nWard\nAccelerate (2): Summon a Shoddy Plaything.",
+  "text": "Fanfare: Draw 3 cards.\n\nWard",
   "attack": 1,
   "defense": 3,
   "traits": {
@@ -2222,7 +2222,7 @@ File: `cards/10006/10662110.json`
   "rarity": "silver",
   "token": false,
   "cost": 4,
-  "text": "Rush\nBane\nCrystallize (1): Countdown (3)\nLast Words: Summon a Venerating Dyer.",
+  "text": "Rush\nBane",
   "attack": 5,
   "defense": 3,
   "traits": {
@@ -3392,7 +3392,7 @@ Printed text:
 
 ```
 Fanfare: Select a Mode to activate.
-Skybound Art- Evolve this follower.
+Skybound Art - Evolve this follower.
 1. Deal 5 damage to a random enemy follower.
 2. Draw 2 followers.
 ```
@@ -3409,13 +3409,13 @@ File: `cards/10004/10403110.json`
   "rarity": "gold",
   "token": false,
   "cost": 4,
-  "text": "Fanfare: Select a Mode to activate.\nSkybound Art- Evolve this follower.\n1. Deal 5 damage to a random enemy follower.\n2. Draw 2 followers.",
+  "text": "Fanfare: Select a Mode to activate.\nSkybound Art - Evolve this follower.\n1. Deal 5 damage to a random enemy follower.\n2. Draw 2 followers.",
   "attack": 3,
   "defense": 2,
   "abilities": [
     {
       "on": "fanfare",
-      "printed": "Fanfare: Select a Mode to activate.\nSkybound Art- Evolve this follower.\n1. Deal 5 damage to a random enemy follower.\n2. Draw 2 followers.",
+      "printed": "Fanfare: Select a Mode to activate.\nSkybound Art - Evolve this follower.\n1. Deal 5 damage to a random enemy follower.\n2. Draw 2 followers.",
       "effects": [
         {
           "printed": "Select a Mode to activate.",
@@ -3453,7 +3453,7 @@ File: `cards/10004/10403110.json`
           ]
         },
         {
-          "printed": "Skybound Art- Evolve this follower.",
+          "printed": "Skybound Art - Evolve this follower.",
           "op": "if",
           "cond": {
             "skyboundArt": {
@@ -3808,7 +3808,7 @@ Printed text:
 
 ```
 Fanfare: Gain 1 max play point.
-Enhance(10): Give this follower Storm. Set your leader's max defense to 1. Give your leader "Can't take more than 0 damage at a time" until the end of your opponent's turn.
+Enhance (10): Give this follower Storm. Set your leader's max defense to 1. Give your leader "Can't take more than 0 damage at a time" until the end of your opponent's turn.
 ```
 
 File: `cards/10004/10444120.json`
@@ -3823,7 +3823,7 @@ File: `cards/10004/10444120.json`
   "rarity": "legendary",
   "token": false,
   "cost": 5,
-  "text": "Fanfare: Gain 1 max play point.\nEnhance(10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
+  "text": "Fanfare: Gain 1 max play point.\nEnhance (10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
   "attack": 5,
   "defense": 5,
   "abilities": [
@@ -3844,7 +3844,7 @@ File: `cards/10004/10444120.json`
     {
       "kind": "enhance",
       "cost": 10,
-      "printed": "Enhance(10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
+      "printed": "Enhance (10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
       "effects": [
         {
           "printed": "Give this follower Storm.",
@@ -4268,7 +4268,7 @@ Printed text:
 
 ```
 Fanfare: Select 2 enemy followers on the field and banish them.
-Super Skybound Art- Super-evolve this follower.
+Super Skybound Art - Super-evolve this follower.
 Ward
 Can't take more than 3 damage at a time.
 ```
@@ -4285,7 +4285,7 @@ File: `cards/10004/10464120.json`
   "rarity": "legendary",
   "token": false,
   "cost": 8,
-  "text": "Fanfare: Select 2 enemy followers on the field and banish them.\nSuper Skybound Art- Super-evolve this follower.\nWard\nCan't take more than 3 damage at a time.",
+  "text": "Fanfare: Select 2 enemy followers on the field and banish them.\nSuper Skybound Art - Super-evolve this follower.\nWard\nCan't take more than 3 damage at a time.",
   "attack": 6,
   "defense": 8,
   "traits": {
@@ -4295,7 +4295,7 @@ File: `cards/10004/10464120.json`
   "abilities": [
     {
       "on": "fanfare",
-      "printed": "Fanfare: Select 2 enemy followers on the field and banish them.\nSuper Skybound Art- Super-evolve this follower.",
+      "printed": "Fanfare: Select 2 enemy followers on the field and banish them.\nSuper Skybound Art - Super-evolve this follower.",
       "effects": [
         {
           "printed": "Select 2 enemy followers on the field and banish them.",
@@ -4309,7 +4309,7 @@ File: `cards/10004/10464120.json`
           }
         },
         {
-          "printed": "Super Skybound Art- Super-evolve this follower.",
+          "printed": "Super Skybound Art - Super-evolve this follower.",
           "op": "if",
           "cond": {
             "skyboundArt": {
