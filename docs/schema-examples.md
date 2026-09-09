@@ -114,10 +114,10 @@ File: `cards/10005/10574110.json`
                 {
                   "op": "restore",
                   "select": {
+                    "pick": "all",
                     "side": "ally",
                     "zone": "leader",
-                    "kind": "leader",
-                    "pick": "self"
+                    "kind": "leader"
                   },
                   "amount": 3
                 }
@@ -203,8 +203,7 @@ File: `cards/10007/10724110.json`
           "printed": "give it Rush.",
           "op": "grantTraits",
           "select": {
-            "pick": "entering",
-            "other": true
+            "pick": "entering"
           },
           "traits": {
             "rush": true
@@ -479,7 +478,8 @@ File: `cards/10004/10404110.json`
                     "side": "enemy",
                     "kind": "character",
                     "pick": "random",
-                    "includeLeader": true
+                    "includeLeader": true,
+                    "zone": "field"
                   },
                   "amount": 2
                 }
@@ -790,7 +790,8 @@ File: `cards/10009/10934110.json`
     }
   ],
   "fuse": {
-    "partners": {}
+    "partners": {},
+    "printed": "Fuse: Cards"
   }
 }
 ```
@@ -858,7 +859,7 @@ File: `cards/10009/10933110.json`
             "kind": "follower",
             "pick": "choose",
             "filter": {
-              "name": "Obsessed Test Subject"
+              "card": "10931110"
             }
           },
           "traits": {
@@ -869,7 +870,8 @@ File: `cards/10009/10933110.json`
     }
   ],
   "fuse": {
-    "partners": {}
+    "partners": {},
+    "printed": "Fuse: Cards"
   }
 }
 ```
@@ -925,31 +927,33 @@ File: `cards/10007/10703210.json`
                   },
                   "amount": 2
                 }
-              ]
+              ],
+              "printed": "1. Deal 2 damage to a random enemy follower."
             },
             {
               "effects": [
                 {
                   "op": "restore",
                   "select": {
+                    "pick": "all",
                     "side": "ally",
                     "zone": "leader",
-                    "kind": "leader",
-                    "pick": "self"
+                    "kind": "leader"
                   },
                   "amount": 2
                 }
-              ]
+              ],
+              "printed": "2. Restore 2 defense to your leader."
             },
             {
               "effects": [
                 {
                   "op": "damage",
                   "select": {
+                    "pick": "all",
                     "side": "enemy",
                     "zone": "leader",
-                    "kind": "leader",
-                    "pick": "self"
+                    "kind": "leader"
                   },
                   "amount": 2
                 },
@@ -959,7 +963,8 @@ File: `cards/10007/10703210.json`
                     "pick": "self"
                   }
                 }
-              ]
+              ],
+              "printed": "3. Deal 2 damage to the enemy leader. Destroy this card."
             }
           ]
         }
@@ -1059,10 +1064,10 @@ File: `cards/10006/10604110.json`
                 {
                   "op": "damage",
                   "select": {
+                    "pick": "all",
                     "side": "enemy",
                     "zone": "leader",
-                    "kind": "leader",
-                    "pick": "self"
+                    "kind": "leader"
                   },
                   "amount": 2
                 }
@@ -1394,20 +1399,20 @@ File: `cards/10008/10854110.json`
                 {
                   "op": "damage",
                   "select": {
+                    "pick": "all",
                     "side": "enemy",
                     "zone": "leader",
-                    "kind": "leader",
-                    "pick": "self"
+                    "kind": "leader"
                   },
                   "amount": 4
                 },
                 {
                   "op": "restore",
                   "select": {
+                    "pick": "all",
                     "side": "ally",
                     "zone": "leader",
-                    "kind": "leader",
-                    "pick": "self"
+                    "kind": "leader"
                   },
                   "amount": 4
                 }
@@ -1596,72 +1601,7 @@ File: `cards/10006/10633310.json`
           "op": "choose",
           "pick": "all",
           "by": "player",
-          "options": [
-            {
-              "printed": "1. Summon a Crystalspawn and give it +1/+0 and Storm.",
-              "effects": [
-                {
-                  "op": "seq",
-                  "effects": [
-                    {
-                      "op": "summon",
-                      "card": {
-                        "named": "10631110"
-                      },
-                      "count": 1,
-                      "as": "s"
-                    },
-                    {
-                      "op": "buff",
-                      "select": {
-                        "pick": "bound",
-                        "ref": "s"
-                      },
-                      "attack": 1,
-                      "defense": 0
-                    },
-                    {
-                      "op": "grantTraits",
-                      "select": {
-                        "pick": "bound",
-                        "ref": "s"
-                      },
-                      "traits": {
-                        "storm": true
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "printed": "2. Summon 2 copies of Crystalspawn and give them +1/+0.",
-              "effects": [
-                {
-                  "op": "seq",
-                  "effects": [
-                    {
-                      "op": "summon",
-                      "card": {
-                        "named": "10631110"
-                      },
-                      "count": 2,
-                      "as": "s"
-                    },
-                    {
-                      "op": "buff",
-                      "select": {
-                        "pick": "bound",
-                        "ref": "s"
-                      },
-                      "attack": 1,
-                      "defense": 0
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+          "optionsFrom": "fanfare"
         }
       ]
     }
@@ -1705,7 +1645,7 @@ File: `cards/10006/10634120.json`
       "event": "ally_follower_enter",
       "zone": "hand",
       "filter": {
-        "name": "Crystalspawn"
+        "card": "10631110"
       },
       "printed": "Activates in hand. Whenever an allied Crystalspawn enters the field, reduce the cost of this card by 1.",
       "effects": [
@@ -1841,10 +1781,10 @@ File: `cards/tokens/90034330.json`
               "printed": "Restore Y defense to your leader.",
               "op": "restore",
               "select": {
+                "pick": "all",
                 "side": "ally",
                 "zone": "leader",
-                "kind": "leader",
-                "pick": "self"
+                "kind": "leader"
               },
               "amount": {
                 "var": "Y"
@@ -1854,10 +1794,10 @@ File: `cards/tokens/90034330.json`
               "printed": "Deal Z damage to the enemy leader.",
               "op": "damage",
               "select": {
+                "pick": "all",
                 "side": "enemy",
                 "zone": "leader",
-                "kind": "leader",
-                "pick": "self"
+                "kind": "leader"
               },
               "amount": {
                 "var": "Z"
@@ -2432,10 +2372,10 @@ File: `cards/10009/10963210.json`
           "printed": "Restore 1 defense to your leader.",
           "op": "restore",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 1
         }
@@ -2495,7 +2435,10 @@ File: `cards/tokens/90051140.json`
               "select": {
                 "pick": "bound",
                 "ref": "s"
-              }
+              },
+              "on": [
+                "lastWords"
+              ]
             }
           ]
         }
@@ -2705,20 +2648,20 @@ File: `cards/tokens/90044330.json`
             {
               "op": "damage",
               "select": {
+                "pick": "all",
                 "side": "enemy",
                 "zone": "leader",
-                "kind": "leader",
-                "pick": "self"
+                "kind": "leader"
               },
               "amount": 1
             },
             {
               "op": "restore",
               "select": {
+                "pick": "all",
                 "side": "ally",
                 "zone": "leader",
-                "kind": "leader",
-                "pick": "self"
+                "kind": "leader"
               },
               "amount": 1
             }
@@ -2734,10 +2677,10 @@ File: `cards/tokens/90044330.json`
           "printed": "Deal 1 damage to the enemy leader.",
           "op": "damage",
           "select": {
+            "pick": "all",
             "side": "enemy",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 1
         },
@@ -2745,10 +2688,10 @@ File: `cards/tokens/90044330.json`
           "printed": "Restore 1 defense to your leader.",
           "op": "restore",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 1
         }
@@ -2793,10 +2736,10 @@ File: `cards/10000/10002110.json`
           "printed": "Restore 2 defense to your leader.",
           "op": "restore",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 2
         }
@@ -2811,10 +2754,10 @@ File: `cards/10000/10002110.json`
           "printed": "Restore 4 defense instead.",
           "op": "restore",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 4
         }
@@ -3152,10 +3095,10 @@ File: `cards/10007/10754120.json`
             {
               "op": "damage",
               "select": {
+                "pick": "all",
                 "side": "enemy",
                 "zone": "leader",
-                "kind": "leader",
-                "pick": "self"
+                "kind": "leader"
               },
               "amount": 1
             }
@@ -3426,10 +3369,10 @@ File: `cards/10005/10543310.json`
             {
               "op": "damage",
               "select": {
+                "pick": "all",
                 "side": "enemy",
                 "zone": "leader",
-                "kind": "leader",
-                "pick": "self"
+                "kind": "leader"
               },
               "amount": 2
             }
@@ -3768,7 +3711,8 @@ File: `cards/10005/10554120.json`
                         "side": "enemy",
                         "kind": "character",
                         "pick": "all",
-                        "includeLeader": true
+                        "includeLeader": true,
+                        "zone": "field"
                       },
                       "amount": 4
                     }
@@ -3916,10 +3860,10 @@ File: `cards/10004/10444120.json`
           "printed": "Set your leader's max defense to 1.",
           "op": "leaderModifier",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "maxDefense": 1
         },
@@ -3927,10 +3871,10 @@ File: `cards/10004/10444120.json`
           "printed": "Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
           "op": "leaderModifier",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "damageCap": 0,
           "until": "endOfOpponentTurn"
@@ -4036,29 +3980,12 @@ File: `cards/tokens/90071210.json`
   "traits": {
     "cantBePlayed": true
   },
-  "abilities": [
-    {
-      "on": "fused",
-      "printed": "When you Fuse to this card, transform it into a Striker Artifact.",
-      "effects": [
-        {
-          "printed": "transform it into a Striker Artifact.",
-          "op": "transform",
-          "select": {
-            "pick": "self"
-          },
-          "into": {
-            "named": "90072110"
-          }
-        }
-      ]
-    }
-  ],
   "fuse": {
+    "printed": "Fuse: Artifact amulets",
     "partners": {
-      "name": [
-        "Gear of Ambition",
-        "Gear of Remembrance"
+      "cards": [
+        "90071210",
+        "90071220"
       ]
     },
     "recipes": [
@@ -4099,7 +4026,7 @@ File: `cards/tokens/90072110.json`
   "rarity": "silver",
   "token": true,
   "cost": 3,
-  "text": "Fuse: Artifact cards\nWhen you Fuse to this card, transform it based on the total cost of the cards fused.\n1: Ominous Artifact \u03b1\n2: Ominous Artifact \u03b2\n3 or more: Ominous Artifact \u03b3\nRush",
+  "text": "Fuse: Artifact cards\nWhen you Fuse to this card, transform it based on the total cost of the cards fused.\n1: Ominous Artifact α\n2: Ominous Artifact β\n3 or more: Ominous Artifact γ\nRush",
   "attack": 5,
   "defense": 1,
   "tribes": [
@@ -4108,13 +4035,6 @@ File: `cards/tokens/90072110.json`
   "traits": {
     "rush": true
   },
-  "abilities": [
-    {
-      "on": "fused",
-      "printed": "When you Fuse to this card, transform it based on the total cost of the cards fused.",
-      "effects": []
-    }
-  ],
   "fuse": {
     "partners": {
       "tribe": "artifact"
@@ -4138,7 +4058,8 @@ File: `cards/tokens/90072110.json`
           "transformInto": "90073130"
         }
       }
-    ]
+    ],
+    "printed": "Fuse: Artifact cards"
   }
 }
 ```
@@ -4160,39 +4081,20 @@ File: `cards/tokens/90073110.json`
 ```json
 {
   "id": "90073110",
-  "name": "Ominous Artifact \u03b1",
+  "name": "Ominous Artifact α",
   "kind": "follower",
   "class": "portalcraft",
   "set": 90000,
   "rarity": "gold",
   "token": true,
   "cost": 5,
-  "text": "Fuse: Ominous Artifact \u03b2 and Ominous Artifact \u03b3\nWhen you've Fused both to this card, transform it into a Masterwork Artifact \u03a9.\nAt the end of your turn, restore 3 defense to your leader.",
+  "text": "Fuse: Ominous Artifact β and Ominous Artifact γ\nWhen you've Fused both to this card, transform it into a Masterwork Artifact Ω.\nAt the end of your turn, restore 3 defense to your leader.",
   "attack": 3,
   "defense": 5,
   "tribes": [
     "artifact"
   ],
   "abilities": [
-    {
-      "on": "fused",
-      "printed": "When you've Fused both to this card, transform it into a Masterwork Artifact \u03a9.",
-      "when": {
-        "wasFused": "both"
-      },
-      "effects": [
-        {
-          "printed": "transform it into a Masterwork Artifact \u03a9.",
-          "op": "transform",
-          "select": {
-            "pick": "self"
-          },
-          "into": {
-            "named": "90074110"
-          }
-        }
-      ]
-    },
     {
       "on": "endOfTurn",
       "whose": "own",
@@ -4202,10 +4104,10 @@ File: `cards/tokens/90073110.json`
           "printed": "restore 3 defense to your leader.",
           "op": "restore",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 3
         }
@@ -4213,12 +4115,24 @@ File: `cards/tokens/90073110.json`
     }
   ],
   "fuse": {
+    "printed": "Fuse: Ominous Artifact β and Ominous Artifact γ",
     "partners": {
-      "name": [
-        "Ominous Artifact \u03b2",
-        "Ominous Artifact \u03b3"
+      "cards": [
+        "90073120",
+        "90073130"
       ]
-    }
+    },
+    "recipes": [
+      {
+        "requires": [
+          "90073120",
+          "90073130"
+        ],
+        "result": {
+          "transformInto": "90074110"
+        }
+      }
+    ]
   }
 }
 ```
@@ -4534,7 +4448,8 @@ File: `cards/10009/10901310.json`
               "orderBy": "baseCost",
               "filter": {
                 "destroyedThisMatch": true
-              }
+              },
+              "zone": "field"
             },
             "exact": true
           },
@@ -4690,10 +4605,10 @@ Rush
       "printed": "When this follower enters the field, if at least 5 other allied copies of Obsessed Test Subject have entered the field this match, give it +3/+3.",
       "when": {
         "enterCountAtLeast": {
-          "name": "Obsessed Test Subject",
           "n": 5,
           "other": true,
-          "side": "ally"
+          "side": "ally",
+          "card": "10931110"
         }
       },
       "effects": [
@@ -4811,10 +4726,10 @@ Last Words: Deal 2 damage to the enemy leader.
           "printed": "Deal 2 damage to the enemy leader.",
           "op": "damage",
           "select": {
+            "pick": "all",
             "side": "enemy",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 2
         }
@@ -5025,7 +4940,8 @@ Select an enemy and deal it 2 damage. Restore 1 defense to your leader.
             "side": "enemy",
             "kind": "character",
             "pick": "choose",
-            "includeLeader": true
+            "includeLeader": true,
+            "zone": "field"
           },
           "amount": 2
         },
@@ -5033,10 +4949,10 @@ Select an enemy and deal it 2 damage. Restore 1 defense to your leader.
           "printed": "Restore 1 defense to your leader.",
           "op": "restore",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 1
         }
@@ -5174,29 +5090,12 @@ Can't be played.
   "traits": {
     "cantBePlayed": true
   },
-  "abilities": [
-    {
-      "on": "fused",
-      "printed": "When you Fuse to this card, transform it into a Fortifier Artifact.",
-      "effects": [
-        {
-          "printed": "transform it into a Fortifier Artifact.",
-          "op": "transform",
-          "select": {
-            "pick": "self"
-          },
-          "into": {
-            "named": "90072120"
-          }
-        }
-      ]
-    }
-  ],
   "fuse": {
+    "printed": "Fuse: Artifact amulets",
     "partners": {
-      "name": [
-        "Gear of Ambition",
-        "Gear of Remembrance"
+      "cards": [
+        "90071210",
+        "90071220"
       ]
     },
     "recipes": [
@@ -5233,7 +5132,7 @@ Ward
   "rarity": "silver",
   "token": true,
   "cost": 3,
-  "text": "Fuse: Artifact cards\nWhen you Fuse to this card, transform it based on the total cost of the cards fused.\n1: Ominous Artifact \u03b1\n2: Ominous Artifact \u03b2\n3 or more: Ominous Artifact \u03b3\nWard",
+  "text": "Fuse: Artifact cards\nWhen you Fuse to this card, transform it based on the total cost of the cards fused.\n1: Ominous Artifact α\n2: Ominous Artifact β\n3 or more: Ominous Artifact γ\nWard",
   "attack": 1,
   "defense": 5,
   "tribes": [
@@ -5242,13 +5141,6 @@ Ward
   "traits": {
     "ward": true
   },
-  "abilities": [
-    {
-      "on": "fused",
-      "printed": "When you Fuse to this card, transform it based on the total cost of the cards fused.",
-      "effects": []
-    }
-  ],
   "fuse": {
     "partners": {
       "tribe": "artifact"
@@ -5272,7 +5164,8 @@ Ward
           "transformInto": "90073130"
         }
       }
-    ]
+    ],
+    "printed": "Fuse: Artifact cards"
   }
 }
 ```
@@ -5288,7 +5181,7 @@ At the end of your turn, deal 3 damage to the enemy leader.
 ```json
 {
   "id": "90073120",
-  "name": "Ominous Artifact \u03b2",
+  "name": "Ominous Artifact β",
   "kind": "follower",
   "class": "portalcraft",
   "set": 90000,
@@ -5311,10 +5204,10 @@ At the end of your turn, deal 3 damage to the enemy leader.
           "printed": "deal 3 damage to the enemy leader.",
           "op": "damage",
           "select": {
+            "pick": "all",
             "side": "enemy",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 3
         }
@@ -5335,7 +5228,7 @@ At the end of your turn, deal 3 damage to all enemy followers.
 ```json
 {
   "id": "90073130",
-  "name": "Ominous Artifact \u03b3",
+  "name": "Ominous Artifact γ",
   "kind": "follower",
   "class": "portalcraft",
   "set": 90000,
@@ -5385,7 +5278,7 @@ Aura
 ```json
 {
   "id": "90074110",
-  "name": "Masterwork Artifact \u03a9",
+  "name": "Masterwork Artifact Ω",
   "kind": "follower",
   "class": "portalcraft",
   "set": 90000,
@@ -5423,10 +5316,10 @@ Aura
           "printed": "Restore 5 defense to your leader.",
           "op": "restore",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 5
         }
@@ -5465,7 +5358,7 @@ Rush
 
 ### `crest:10404110` — Crest: Sandalphon, Primarch Successor
 
-crest. File: `cards/crests/crest:10404110.json`
+crest. File: `cards/crests/crest-10404110.json`
 
 ```
 Countdown (2)
@@ -5495,7 +5388,8 @@ At the end of your turn, restore 1 defense to all allies.
             "side": "ally",
             "kind": "character",
             "pick": "all",
-            "includeLeader": true
+            "includeLeader": true,
+            "zone": "field"
           },
           "amount": 1
         }
@@ -5507,7 +5401,7 @@ At the end of your turn, restore 1 defense to all allies.
 
 ### `crest:10434120` — Crest: Cagliostro, Genius Alchemist
 
-crest. File: `cards/crests/crest:10434120.json`
+crest. File: `cards/crests/crest-10434120.json`
 
 ```
 At the start of your turn, Earth Rite (1) - Add an Ars Magna to your hand.
@@ -5551,7 +5445,7 @@ At the start of your turn, Earth Rite (1) - Add an Ars Magna to your hand.
 
 ### `crest:10554110` — Crest: Milteo & Luzen
 
-crest. File: `cards/crests/crest:10554110.json`
+crest. File: `cards/crests/crest-10554110.json`
 
 ```
 Allied followers' Fanfare and Enhance abilities don't activate.
@@ -5571,18 +5465,18 @@ Whenever you play a follower, evolve it.
     {
       "on": "static",
       "printed": "Allied followers' Fanfare and Enhance abilities don't activate.",
-      "effects": [
-        {
-          "printed": "Allied followers' Fanfare and Enhance abilities don't activate.",
-          "op": "removeAbilities",
-          "select": {
-            "side": "ally",
-            "zone": "field",
-            "kind": "follower",
-            "pick": "all"
-          }
+      "modifier": {
+        "suppress": [
+          "fanfare",
+          "enhance"
+        ],
+        "select": {
+          "pick": "all",
+          "side": "ally",
+          "zone": "field",
+          "kind": "follower"
         }
-      ]
+      }
     },
     {
       "on": "when",
@@ -5608,7 +5502,7 @@ Whenever you play a follower, evolve it.
 
 ### `crest:10564120` — Crest: Kukishiro, Mistbloom
 
-crest. File: `cards/crests/crest:10564120.json`
+crest. File: `cards/crests/crest-10564120.json`
 
 ```
 During your turn, whenever you draw a 1-, 3-, or 5-cost card, summon a Fox of Purity or Holy Falcon at random.
@@ -5645,9 +5539,9 @@ During your turn, whenever you draw a 2-, 4-, or 6-cost card, summon an enemy Fo
           "op": "summon",
           "card": {
             "randomFrom": {
-              "name": [
-                "Fox of Purity",
-                "Holy Falcon"
+              "cards": [
+                "10061120",
+                "90061110"
               ]
             }
           },
@@ -5675,9 +5569,9 @@ During your turn, whenever you draw a 2-, 4-, or 6-cost card, summon an enemy Fo
           "op": "summon",
           "card": {
             "randomFrom": {
-              "name": [
-                "Fox of Purity",
-                "Holy Falcon"
+              "cards": [
+                "10061120",
+                "90061110"
               ]
             }
           },
@@ -5692,7 +5586,7 @@ During your turn, whenever you draw a 2-, 4-, or 6-cost card, summon an enemy Fo
 
 ### `crest:10574110` — Crest: Slaus, Revolving Wheel of Fortune
 
-crest. File: `cards/crests/crest:10574110.json`
+crest. File: `cards/crests/crest-10574110.json`
 
 ```
 Countdown (3)
@@ -5762,10 +5656,10 @@ At the start of your turn, activate a random ability that hasn't been activated 
                 {
                   "op": "damage",
                   "select": {
+                    "pick": "all",
                     "side": "ally",
                     "zone": "leader",
-                    "kind": "leader",
-                    "pick": "self"
+                    "kind": "leader"
                   },
                   "amount": 3
                 }
@@ -5781,7 +5675,7 @@ At the start of your turn, activate a random ability that hasn't been activated 
 
 ### `crest:10704110` — Crest: Illamrita, Designated Target
 
-crest. File: `cards/crests/crest:10704110.json`
+crest. File: `cards/crests/crest-10704110.json`
 
 ```
 Countdown (2)
@@ -5796,7 +5690,7 @@ Last Words: Summon an Illamrita, Designated Target and evolve it.
     "10704110"
   ],
   "faith": false,
-  "text": "Countdown (2)\nLast Words: Summon an Illamrita, Designated Target and evolve it.",
+  "text": "Countdown (2)\nLast Words: Summon an Illamrita, Designated Target and evolve it. ",
   "countdown": 2,
   "abilities": [
     {
@@ -5833,7 +5727,7 @@ Last Words: Summon an Illamrita, Designated Target and evolve it.
 
 ### `crest:10714110` — Crest: Thestae, Anathema of Distortion
 
-crest. File: `cards/crests/crest:10714110.json`
+crest. File: `cards/crests/crest-10714110.json`
 
 ```
 Countdown (3)
@@ -5886,7 +5780,7 @@ At the end of your turn, Combo (3) - Give all followers in your deck +1/+1.
 
 ### `crest:10724110` — Crest: Gildaria, Anathema of Attunement
 
-crest. File: `cards/crests/crest:10724110.json`
+crest. File: `cards/crests/crest-10724110.json`
 
 ```
 Countdown (1)
@@ -5916,10 +5810,10 @@ During your turn, whenever an allied follower enters the field, deal 1 damage to
           "printed": "deal 1 damage to the enemy leader.",
           "op": "damage",
           "select": {
+            "pick": "all",
             "side": "enemy",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 1
         }
@@ -5931,7 +5825,7 @@ During your turn, whenever an allied follower enters the field, deal 1 damage to
 
 ### `crest:10934110` — Crest: Sephie, Maven Convict
 
-crest. File: `cards/crests/crest:10934110.json`
+crest. File: `cards/crests/crest-10934110.json`
 
 ```
 Once on each of your turns, when an allied Obsessed Test Subject enters the field, give it Storm.
@@ -5951,7 +5845,7 @@ Once on each of your turns, when an allied Obsessed Test Subject enters the fiel
       "on": "when",
       "event": "ally_follower_enter",
       "filter": {
-        "name": "Obsessed Test Subject"
+        "card": "10931110"
       },
       "oncePerTurn": true,
       "printed": "Once on each of your turns, when an allied Obsessed Test Subject enters the field, give it Storm.",
@@ -5974,7 +5868,7 @@ Once on each of your turns, when an allied Obsessed Test Subject enters the fiel
 
 ### `crest:10954110` — Crest: Istyndet vs. Mitilykket
 
-crest. File: `cards/crests/crest:10954110.json`
+crest. File: `cards/crests/crest-10954110.json`
 
 ```
 At the end of your turn, if there's an allied card on the field with Last Words, destroy a random allied card with Last Words and a random enemy follower.
@@ -6039,7 +5933,7 @@ At the end of your turn, if there's an allied card on the field with Last Words,
 
 ### `faith:10634120` — Faith: Calge-Danthla, Eld Crystals
 
-crest. File: `cards/crests/faith:10634120.json`
+crest. File: `cards/crests/faith-10634120.json`
 
 ```
 This faith's value starts at 0.
@@ -6061,7 +5955,7 @@ Whenever an allied Crystalspawn enters the field, increase this faith's value by
       "on": "when",
       "event": "ally_follower_enter",
       "filter": {
-        "name": "Crystalspawn"
+        "card": "10631110"
       },
       "printed": "Whenever an allied Crystalspawn enters the field, increase this faith's value by 1.",
       "effects": [
@@ -6078,33 +5972,324 @@ Whenever an allied Crystalspawn enters the field, increase this faith's value by
 }
 ```
 
-### `faith:90034330` — Faith: Depths of the Eld Crystals
 
-crest. File: `cards/crests/faith:90034330.json`
+### `10614120` — Sathanid, Eld Lance
 
-```
-This faith's value starts at 0.
-
-Whenever an allied Crystalspawn enters the field, increase this faith's value by 1.
-```
+File: `cards/10006/10614120.json`
 
 ```json
 {
-  "id": "faith:90034330",
-  "name": "Faith: Depths of the Eld Crystals",
+  "id": "10614120",
+  "name": "Sathanid, Eld Lance",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: Reduce your faith's value by 10 to add a Depths of the Eld Lance to your hand and give your faith \"Whenever an allied follower evolves, deal 1 damage to the enemy leader.\"\nDrain",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [
+    "encroacher"
+  ],
+  "traits": {
+    "drain": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Reduce your faith's value by 10 to add a Depths of the Eld Lance to your hand and give your faith \"Whenever an allied follower evolves, deal 1 damage to the enemy leader.\"",
+      "effects": [
+        {
+          "printed": "Reduce your faith's value by 10 to add a Depths of the Eld Lance to your hand and give your faith \"Whenever an allied follower evolves, deal 1 damage to the enemy leader.\"",
+          "op": "pay",
+          "resource": "faith",
+          "amount": 10,
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90014330"
+              },
+              "count": 1
+            },
+            {
+              "op": "grantAbility",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "crests",
+                "kind": "faith"
+              },
+              "ability": {
+                "on": "when",
+                "event": "ally_evolve",
+                "printed": "Whenever an allied follower evolves, deal 1 damage to the enemy leader.",
+                "effects": [
+                  {
+                    "printed": "deal 1 damage to the enemy leader.",
+                    "op": "damage",
+                    "select": {
+                      "pick": "all",
+                      "side": "enemy",
+                      "zone": "leader",
+                      "kind": "leader"
+                    },
+                    "amount": 1
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### `10624120` — Yidmetra, Eld Sword
+
+File: `cards/10006/10624120.json`
+
+```json
+{
+  "id": "10624120",
+  "name": "Yidmetra, Eld Sword",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add a Depths of the Eld Sword to your hand.\nEvolve: Reduce your faith's value by 5 to give it \"Whenever you play an Enhanced card, give all allied followers on the field +1/+1.\"",
+  "attack": 1,
+  "defense": 2,
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Depths of the Eld Sword to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Depths of the Eld Sword to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90024320"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Reduce your faith's value by 5 to give it \"Whenever you play an Enhanced card, give all allied followers on the field +1/+1.\"",
+      "effects": [
+        {
+          "printed": "Reduce your faith's value by 5 to give it \"Whenever you play an Enhanced card, give all allied followers on the field +1/+1.\"",
+          "op": "pay",
+          "resource": "faith",
+          "amount": 5,
+          "effects": [
+            {
+              "op": "grantAbility",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "crests",
+                "kind": "faith"
+              },
+              "ability": {
+                "on": "when",
+                "event": "ally_card_played",
+                "filter": {
+                  "enhanced": true
+                },
+                "printed": "Whenever you play an Enhanced card, give all allied followers on the field +1/+1.",
+                "effects": [
+                  {
+                    "printed": "give all allied followers on the field +1/+1.",
+                    "op": "buff",
+                    "select": {
+                      "pick": "all",
+                      "side": "ally",
+                      "zone": "field",
+                      "kind": "follower"
+                    },
+                    "attack": 1,
+                    "defense": 1
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### `90014330` — Depths of the Eld Lance
+
+File: `cards/tokens/90014330.json`
+
+```json
+{
+  "id": "90014330",
+  "name": "Depths of the Eld Lance",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 1,
+  "text": "Select an unevolved allied follower on the field and evolve it.",
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an unevolved allied follower on the field and evolve it.",
+      "effects": [
+        {
+          "printed": "Select an unevolved allied follower on the field and evolve it.",
+          "op": "evolve",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "unevolved": true
+            }
+          },
+          "super": false
+        }
+      ]
+    }
+  ]
+}
+```
+
+### `90024320` — Depths of the Eld Sword
+
+File: `cards/tokens/90024320.json`
+
+```json
+{
+  "id": "90024320",
+  "name": "Depths of the Eld Sword",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 0,
+  "text": "Select an enemy follower on the field and deal it 1 damage.\nEnhance (1): Deal 3 damage instead.",
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 1 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 1 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 1,
+      "replacesBase": true,
+      "printed": "Enhance (1): Deal 3 damage instead.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage instead.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ]
+}
+```
+
+### `faith:10614120` — Faith: Sathanid, Eld Lance
+
+File: `cards/crests/faith-10614120.json`
+
+```json
+{
+  "id": "faith:10614120",
+  "name": "Faith: Sathanid, Eld Lance",
   "grantedBy": [
-    "90034330"
+    "10614120"
   ],
   "faith": true,
-  "text": "This faith's value starts at 0.\n\nWhenever an allied Crystalspawn enters the field, increase this faith's value by 1.",
+  "text": "This faith's value starts at 0.\n\nWhenever an allied follower evolves, increase this faith's value by 1.",
   "abilities": [
     {
       "on": "when",
-      "event": "ally_follower_enter",
+      "event": "ally_evolve",
+      "printed": "Whenever an allied follower evolves, increase this faith's value by 1.",
+      "effects": [
+        {
+          "printed": "increase this faith's value by 1.",
+          "op": "counter",
+          "key": "faith",
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}
+```
+
+### `faith:10624120` — Faith: Yidmetra, Eld Sword
+
+File: `cards/crests/faith-10624120.json`
+
+```json
+{
+  "id": "faith:10624120",
+  "name": "Faith: Yidmetra, Eld Sword",
+  "grantedBy": [
+    "10624120"
+  ],
+  "faith": true,
+  "text": "This faith's value starts at 0.\n\nWhenever you play an Enhanced card, increase this faith's value by 1.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_card_played",
       "filter": {
-        "name": "Crystalspawn"
+        "enhanced": true
       },
-      "printed": "Whenever an allied Crystalspawn enters the field, increase this faith's value by 1.",
+      "printed": "Whenever you play an Enhanced card, increase this faith's value by 1.",
       "effects": [
         {
           "printed": "increase this faith's value by 1.",

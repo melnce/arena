@@ -49,7 +49,7 @@ Evolved stats are not authored. Measured: official records have no per-card evo 
 
 ### Crest
 
-`id`, `name`, `grantedBy`, `faith`, `text`, optional `countdown`, `abilities` (same Ability schema). `faith:10634120`, `crest:10574110`.
+`id`, `name`, `grantedBy`, `faith`, `text`, optional `countdown`, `abilities` (same Ability schema). Ids inside files stay `faith:10634120`, `crest:10574110`. Filenames use a hyphen (`cards/crests/crest-10574110.json`, `cards/crests/faith-10634120.json`) so the tree checks out on NTFS.
 
 ## Tribes
 
@@ -80,7 +80,7 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 
 ## Abilities
 
-`{ on, printed, effects, zone?, oncePerTurn?, when?, replaces? }`
+`{ on, printed, effects, zone?, oncePerTurn?, when?, replaces? }` except `on: static`, which has `modifier` and no `effects`. `effects` is `minItems: 1`. `sequence.steps[]` items require `printed`. `ep` requires `amount`.
 
 | `on` | card |
 |---|---|
@@ -103,7 +103,7 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 | `startOfTurn` `{whose}` | `10574110` `own` |
 | `endOfTurn` `{whose}` | `10574110` `own`; `90071110` Puppet `opponent` |
 | `when` `{event, filter?}` | see Events |
-| `static` | `crest:10554110` continuous line (see coverage `needs: suppressTriggers`) |
+| `static` | `{on, printed, modifier}` — no `effects`. `crest:10554110` `modifier.suppress: ["fanfare","enhance"]` over allied field followers |
 
 `whose`: `own` `10574110` · `opponent` `90071110`. Turn-boundary triggers are owner-scoped (ruling 2026-08-31); `any` is omitted.
 
@@ -121,8 +121,7 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 |---|---|
 | `ally_follower_enter` | `10724110`, `crest:10724110`, `10754120` |
 | `enemy_follower_enter` | `10911210` Trap in the Woods (pool; supporting if referenced) |
-| `ally_follower_destroyed` | Lifestealer `10553110` "Whenever a Skeleton is destroyed" + name filter |
-| `enemy_follower_destroyed` | (same family; include only if a pool card needs the enemy side — `10553110` is named-any) |
+| `ally_follower_destroyed` | Lifestealer `10553110` "Whenever a Skeleton is destroyed" + card-id filter |
 | `ally_amulet_destroyed` | `10664120` Lyanthoth Faith; `10964120` Omerio |
 | `ally_card_played` | `10914120` Hien; `crest:10554110` "play a follower" + filter |
 | `ally_spell_played` | `10822110`, `90021210` |
@@ -136,18 +135,7 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 | `leader_restored` | `10563110` Saint of Rehabilitation; `10963110` Executor of the Vow |
 | `self_buffed_up` | `10812110` Ruflet |
 
-Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`, `enemy_follower_destroyed`. Ghost's leave is `on: leave`, not an event.
-
-Search more carefully... I had them in EVENTS. I need to remove unused events from the schema.
-
-Let me check gen_schema EVENTS and remove ones without cards:
-- self_damaged - not in whenever list. Search "takes damage"
-- enemy_follower_defense_down - not found
-- ally_follower_leaves_field - not found
-- ally_follower_destroyed - Lifestealer "Whenever a Skeleton is destroyed"
-- enemy_follower_destroyed - need a card
-
-I'll fix the schema after finishing this doc, removing unjustified events.
+Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`, `enemy_follower_destroyed`. Ghost's leave is `on: leave`, not an event. The schema lists exactly the 15 events in the table.
 
 ## Effects
 
@@ -177,7 +165,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `evolve` | effect-granted `10724110` Fanfare; `super: true` `10464120` |
 | `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane |
 | `grantAbility` | `10704110` quoted end-of-turn banish |
-| `removeAbilities` | `90051140` (silence Last Words on the copy) |
+| `removeAbilities` | `90051140` (optional `on: ["lastWords"]` removes only Last Words) |
 | `cost` | `delta` `10534120`; `set` `10923110`; `untilEndOfTurn` `10574110` |
 | `pp` | `gainMax` `10444120`; `recover` `10604110`; `spend` via `pay` |
 | `ep` | `gain` `10854110` "Recover 1 evolution point" |
@@ -199,10 +187,10 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 |---|---|
 | `seq` | `10633310` "summon … and give it"; `as` + later `bound` |
 | `if` | `10724110` rally; `10041310` overflow else; `cond` / `then` / `else` |
-| `choose` | `pick: 1` `by: player` `10564110`; `pick: 2` `by: random` `10604110`; `pick: all` `10633310` Enhance; `by: randomUnused` `10574110` |
+| `choose` | `pick: 1` `by: player` `10564110`; `pick: 2` `by: random` `10604110`; `pick: all` + `optionsFrom: fanfare` `10633310` Enhance (`options` XOR `optionsFrom`); `by: randomUnused` `10574110` |
 | `forEach` | omitted — measured 0 printed "for each" in the pool |
 | `repeat` | `10954110`, `10543310`, `10554120` |
-| `sequence` | `10703210` City of Babelon (official Q&A wrap-after-last) |
+| `sequence` | `10703210` City of Babelon (official Q&A wrap-after-last); each `steps[]` item requires `printed` |
 
 ## Card source
 
@@ -214,29 +202,35 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Selector
 
-`side` ally/enemy/any · `zone` field/hand/deck/cemetery/leader/crests · `kind` follower/amulet/card/leader/character (`card` on field includes amulets — ruling 2026-09-09, `10573310`) · `filter` · `pick` · `count` · `other` `10724110` · `includeLeader` `90021310` · `orderBy` `10901310` · `ref` when `pick: bound`
+`oneOf` two closed shapes.
 
-`pick` values: `all` `10963210` · `choose` `10021310` · `random` `10543310` · `randomDistinct` `10554110` / `10564120` · `highest` `10901310` · `lowest` `10552310` Tyrannical Fists · `self` · `bound` `10633310` · `entering` `10724110` · `attacker` / `defender` strike/clash · `opposing` `10654110` · `selected` `10473110` Cassius · `leftmost` `10502110`. Omitted: `rightmost`, `lastSummoned`.
+**Reference picks** — `pick ∈ {self, bound, entering, attacker, defender, opposing, selected}`. No other fields. `bound` requires `ref`. `self` `10001110` · `bound` `10633310` · `entering` `10724110` · `opposing` `10654110` · `selected` `10473110` Cassius.
+
+**Pool picks** — `pick ∈ {all, choose, random, randomDistinct, leftmost, highest, lowest}` with **required** `side`, `zone`, `kind`. Optional `filter`, `count`, `other`, `includeLeader`, `orderBy`.
+
+`side` ally/enemy/any · `zone` field/hand/deck/cemetery/leader/crests · `kind` follower/amulet/card/leader/character/faith (`card` on field includes amulets — ruling 2026-09-09, `10573310`; `faith` is the player's Faith crest — `10614120` / `10624120`) · `filter` · `count` · `other` `10724110` · `includeLeader` `90021310` · `orderBy` `10901310`.
+
+`all` `10963210` · `choose` `10021310` · `random` `10543310` · `randomDistinct` `10554110` / `10564120` · `highest` `10901310` · `lowest` `10552310` Tyrannical Fists · `leftmost` `10502110`. A leader is a pool pick (`pick: all`, `zone: leader`, `kind: leader`), not `pick: self` with extra fields. Omitted: `rightmost`, `lastSummoned`.
 
 ## Filter
 
-`all` / `any` / `not` · `tribe` `10754120` · `name` / `notName` `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `destroyedThisMatch` `10901310`
+`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `destroyedThisMatch` `10901310`
 
 ## Condition
 
-`all`/`any`/`not` · `countAtLeast` · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `attackedLeaderLastTurn` `10944110` · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` · `enterCountAtLeast` `10931110` · `handSameCostAtLeast` `10554120`. Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
+`all`/`any`/`not` · `countAtLeast` · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `attackedLeaderLastTurn` `10944110` · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120`. Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
 
 ## Modes
 
-`enhance` `10001110`; multi-tier `10624110` (both tiers + Fanfare — ruling 2026-08-15). `replacesBase` `10633310`. `accelerate` `10671110` (summoned body is base cost 6 — ruling). `crystallize` `10662110` with `countdown` + `abilities`.
+Three closed shapes. `enhance` `{kind, cost, printed, effects, replacesBase?}` `10001110`; multi-tier `10624110` (both tiers + Fanfare — ruling 2026-08-15). `replacesBase` `10633310`. `accelerate` `{kind, cost, printed, effects}` `10671110` (summoned body is base cost 6 — ruling). `crystallize` `{kind, cost, printed, countdown?, traits?, abilities}` — no mode-level `effects`; the form's text is amulet abilities (`10662110`).
 
 ## Fuse
 
-`partners` Filter. "Cards" → empty filter `10934110`. Artifact cards → `{tribe: artifact}` `90072110`. Gears: authored as the two gear names per owner ruling "Artifact fuse chain" (printed text says "Artifact amulets" — question).
+Required `printed` (the literal `Fuse: …` line) plus `partners` Filter. "Cards" → empty filter `10934110`. Artifact cards → `{tribe: artifact}` `90072110`. Gears: authored as the two gear ids per owner ruling "Artifact fuse chain (2026-09-05)"; printed stays `Fuse: Artifact amulets`.
 
-`recipes`: `{costTotal}` / `{costTotalGte}` + `{transformInto}` `90072110`; `{consume: true}` when a fuse spends the partner without transforming (α lone β/γ — the consume is the fuse rule; recipe optional).
+What a fuse does to the **host** is `recipes` data (`partners`, cost conditions, `requires: [ids]`, `result`). The action enumerator reads recipes without running effects. `on: fused` exists only for effects *beyond* the host transform (Sephie `10934110` summon). Ability `effects` is `minItems: 1` — no empty fused stub.
 
-α memory is a rule (Q&A `90073110`), not per-card data beyond `when: {wasFused: "both"}`.
+`recipes`: `{costTotal}` / `{costTotalGte}` + `{transformInto}` `90072110`; `{requires: ["90073120","90073130"]}` → Ω on α (`90073110`). Across-turns memory of which partners were fused is a rule (official Q&A `90073110`).
 
 ## Sentence structure
 
@@ -244,17 +238,6 @@ Independent sentences: `10021310` (return finds nothing → still draws). Depend
 
 ## What I could not express and why
 
-Mirrors the non-green rows in [`coverage.md`](coverage.md):
+Coverage is `needs: 0`. Owner questions that looked open are recorded as derived from existing rulings in [`design.md`](design.md).
 
-| id | status | why |
-|---|---|---|
-| `crest:10554110` | `needs: suppressTriggers` | "Allied followers' Fanfare and Enhance abilities don't activate" is a continuous suppressor of two trigger classes, not `removeAbilities` (silence). `on: static` is the hook; the meaning is still missing. |
-| `faith:10634120` / `faith:90034330` | question | Duplicate official Faith text. Same instance or two? |
-| `10574110` | question | Provisional unused-ability pool after 3. |
-| `10703210` | question | Engage + empty hand. |
-| `10604110` | question | Re-entrant Fanfare depth cap. |
-| `10901310` | question | Destroyed-this-match vs later cemetery changes. |
-| `10564120` | question | Enemy-token Rally / controller. |
-| `90071210` | question | Printed fuse partners vs gears-only ruling. |
-
-`returnToDeck.position: top|bottom` from §4.6 is omitted (measured: no pool card names top or bottom of a deck).
+`returnToDeck.position: top|bottom` from §4.6 is omitted (measured: no pool card names top or bottom of a deck). `{var}` / `randomSplit.keys` are the closed enum `X` `Y` `Z`. `crest.gain` is `crest:` only — a Faith is never gained by an effect.

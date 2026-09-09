@@ -135,7 +135,7 @@ Projection both engines can produce. Keys sorted.
   "evolves_used": 0,
   "faith": 0,
   "field": [ /* 0..4, omitted empties are null */ ],
-  "hand": [ { "card": "10131320", "cost": 1 } ],
+  "hand": [ { "card": "10131320", "cost": 1, "vars": { "X": 2 }, "skybound": 0 } ],
   "leader_defense": 20,
   "leader_max": 20,
   "pp": 1,
@@ -143,8 +143,7 @@ Projection both engines can produce. Keys sorted.
   "pp_max": 1,
   "rally": 0,
   "sep": 0,
-  "shadows": 0,
-  "skybound": 0
+  "shadows": 0
 }
 ```
 
@@ -161,11 +160,13 @@ Projection both engines can produce. Keys sorted.
   "evolved": false,
   "max_defense": 3,
   "super": false,
-  "traits": ["ambush"]      // sorted
+  "traits": ["ambush"],     // sorted
+  "vars": { "X": 1 },       // optional; Stormy Blast-style X on a field copy if it exists
+  "granted": ["lastWords"]  // optional; sorted trigger tags, not printed text
 }
 ```
 
-`hand` is in draw order: `[{card, cost}, …]`.
+`hand` is in draw order: `[{card, cost, vars?, skybound?}, …]`. `vars` is Stormy Blast's X (and any other `{X,Y,Z}`). `skybound` is the Skybound Art gauge **per card in hand** (turn + evolves while in hand + Tsubasa boosts) — not a per-player field.
 
 `deck`, `cemetery`, `banished` are **sorted multisets** `{card_id: count}` (JSON object keys sorted).
 
@@ -174,7 +175,7 @@ Projection both engines can produce. Keys sorted.
 | Omitted | Why |
 |---|---|
 | uids / object identity | not load-bearing; slots and multisets replace them |
-| per-instance granted-ability **text** | grants are gameplay; the exact quoted string is not needed to diff rules outcomes. M1 may add a sorted grant-id list if a card forces it |
+| per-instance granted-ability **text** | grants are gameplay; the snapshot carries a sorted `granted` list of **trigger tags** (`lastWords`, `fanfare`, …), not the quoted string |
 | undo / history / checkpoints | client-only |
 | pending-target click buffers | `phase: choice` plus `legal` is enough |
 | RNG internal counters | the next line's `rng` picks are the contract |

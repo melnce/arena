@@ -36,7 +36,8 @@ struct CardInstance {
     traits: Traits,
     granted: Vec<Ability>,        // runtime grants
     flags: InstanceFlags,         // was_fused, fused_kinds (α), ambush remaining, …
-    vars: BTreeMap<VarKey, i32>,  // X, …
+    vars: BTreeMap<VarKey, i32>,  // X, Y, Z
+    skybound: i32,                // per card in hand; 0 elsewhere
     countdown: Option<i32>,
     attacks_left: i32,
     can_attack: bool,
@@ -56,7 +57,6 @@ struct PlayerState {
     earth: i32,
     faith: i32,
     rally: i32,
-    skybound_related: SkyboundState,
     leader_mods: Vec<LeaderMod>,
     crests: Vec<CrestInstance>,   // id + countdown; cap 5 shared with Faith
     hand: Vec<CardInstance>,
@@ -108,6 +108,10 @@ struct GameConfig {
 
 fn new_game(cfg: GameConfig) -> State;
 ```
+
+**Faith at match start.** A Faith crest is granted to every player whose starting deck (or opening hand) contains a card that carries that Faith — the rulebook's Sham-Nacha rule ("active while … is in your deck"). No card effect ever `crest {gain}`s a `faith:` id. Sathanid / Yidmetra (`10614120`, `10624120`) `grantAbility` onto the player's own Faith (`zone: crests`, `kind: faith`).
+
+**Skybound Art** is per card in hand (turns + evolves while that copy is in hand + Tsubasa boosts), stored on the hand `CardInstance`, not as a player-level gauge.
 
 ## Actions
 
