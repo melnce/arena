@@ -33,10 +33,10 @@
           "printed": "Deal 2 damage to the enemy leader.",
           "op": "damage",
           "select": {
+            "pick": "all",
             "side": "enemy",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 2
         }

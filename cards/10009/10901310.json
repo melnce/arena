@@ -24,7 +24,8 @@
               "orderBy": "baseCost",
               "filter": {
                 "destroyedThisMatch": true
-              }
+              },
+              "zone": "field"
             },
             "exact": true
           },

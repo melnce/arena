@@ -27,9 +27,9 @@
           "op": "summon",
           "card": {
             "randomFrom": {
-              "name": [
-                "Fox of Purity",
-                "Holy Falcon"
+              "cards": [
+                "10061120",
+                "90061110"
               ]
             }
           },
@@ -57,9 +57,9 @@
           "op": "summon",
           "card": {
             "randomFrom": {
-              "name": [
-                "Fox of Purity",
-                "Holy Falcon"
+              "cards": [
+                "10061120",
+                "90061110"
               ]
             }
           },

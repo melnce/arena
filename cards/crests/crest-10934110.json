@@ -11,7 +11,7 @@
       "on": "when",
       "event": "ally_follower_enter",
       "filter": {
-        "name": "Obsessed Test Subject"
+        "card": "10931110"
       },
       "oncePerTurn": true,
       "printed": "Once on each of your turns, when an allied Obsessed Test Subject enters the field, give it Storm.",

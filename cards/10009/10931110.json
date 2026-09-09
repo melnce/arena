@@ -19,10 +19,10 @@
       "printed": "When this follower enters the field, if at least 5 other allied copies of Obsessed Test Subject have entered the field this match, give it +3/+3.",
       "when": {
         "enterCountAtLeast": {
-          "name": "Obsessed Test Subject",
           "n": 5,
           "other": true,
-          "side": "ally"
+          "side": "ally",
+          "card": "10931110"
         }
       },
       "effects": [

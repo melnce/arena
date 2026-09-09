@@ -10,18 +10,18 @@
     {
       "on": "static",
       "printed": "Allied followers' Fanfare and Enhance abilities don't activate.",
-      "effects": [
-        {
-          "printed": "Allied followers' Fanfare and Enhance abilities don't activate.",
-          "op": "removeAbilities",
-          "select": {
-            "side": "ally",
-            "zone": "field",
-            "kind": "follower",
-            "pick": "all"
-          }
+      "modifier": {
+        "suppress": [
+          "fanfare",
+          "enhance"
+        ],
+        "select": {
+          "pick": "all",
+          "side": "ally",
+          "zone": "field",
+          "kind": "follower"
         }
-      ]
+      }
     },
     {
       "on": "when",

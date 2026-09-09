@@ -19,7 +19,7 @@
       "event": "ally_follower_enter",
       "zone": "hand",
       "filter": {
-        "name": "Crystalspawn"
+        "card": "10631110"
       },
       "printed": "Activates in hand. Whenever an allied Crystalspawn enters the field, reduce the cost of this card by 1.",
       "effects": [

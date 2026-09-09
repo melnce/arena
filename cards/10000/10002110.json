@@ -19,10 +19,10 @@
           "printed": "Restore 2 defense to your leader.",
           "op": "restore",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 2
         }
@@ -37,10 +37,10 @@
           "printed": "Restore 4 defense instead.",
           "op": "restore",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 4
         }

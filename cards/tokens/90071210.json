@@ -14,29 +14,12 @@
   "traits": {
     "cantBePlayed": true
   },
-  "abilities": [
-    {
-      "on": "fused",
-      "printed": "When you Fuse to this card, transform it into a Striker Artifact.",
-      "effects": [
-        {
-          "printed": "transform it into a Striker Artifact.",
-          "op": "transform",
-          "select": {
-            "pick": "self"
-          },
-          "into": {
-            "named": "90072110"
-          }
-        }
-      ]
-    }
-  ],
   "fuse": {
+    "printed": "Fuse: Artifact amulets",
     "partners": {
-      "name": [
-        "Gear of Ambition",
-        "Gear of Remembrance"
+      "cards": [
+        "90071210",
+        "90071220"
       ]
     },
     "recipes": [

@@ -55,8 +55,7 @@
           "printed": "give it Rush.",
           "op": "grantTraits",
           "select": {
-            "pick": "entering",
-            "other": true
+            "pick": "entering"
           },
           "traits": {
             "rush": true

@@ -1,0 +1,36 @@
+{
+  "id": "90014330",
+  "name": "Depths of the Eld Lance",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 1,
+  "text": "Select an unevolved allied follower on the field and evolve it.",
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an unevolved allied follower on the field and evolve it.",
+      "effects": [
+        {
+          "printed": "Select an unevolved allied follower on the field and evolve it.",
+          "op": "evolve",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "unevolved": true
+            }
+          },
+          "super": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "90024320",
+  "name": "Depths of the Eld Sword",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 0,
+  "text": "Select an enemy follower on the field and deal it 1 damage.\nEnhance (1): Deal 3 damage instead.",
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 1 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 1 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 1,
+      "replacesBase": true,
+      "printed": "Enhance (1): Deal 3 damage instead.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage instead.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ]
+}

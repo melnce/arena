@@ -103,72 +103,7 @@
           "op": "choose",
           "pick": "all",
           "by": "player",
-          "options": [
-            {
-              "printed": "1. Summon a Crystalspawn and give it +1/+0 and Storm.",
-              "effects": [
-                {
-                  "op": "seq",
-                  "effects": [
-                    {
-                      "op": "summon",
-                      "card": {
-                        "named": "10631110"
-                      },
-                      "count": 1,
-                      "as": "s"
-                    },
-                    {
-                      "op": "buff",
-                      "select": {
-                        "pick": "bound",
-                        "ref": "s"
-                      },
-                      "attack": 1,
-                      "defense": 0
-                    },
-                    {
-                      "op": "grantTraits",
-                      "select": {
-                        "pick": "bound",
-                        "ref": "s"
-                      },
-                      "traits": {
-                        "storm": true
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "printed": "2. Summon 2 copies of Crystalspawn and give them +1/+0.",
-              "effects": [
-                {
-                  "op": "seq",
-                  "effects": [
-                    {
-                      "op": "summon",
-                      "card": {
-                        "named": "10631110"
-                      },
-                      "count": 2,
-                      "as": "s"
-                    },
-                    {
-                      "op": "buff",
-                      "select": {
-                        "pick": "bound",
-                        "ref": "s"
-                      },
-                      "attack": 1,
-                      "defense": 0
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+          "optionsFrom": "fanfare"
         }
       ]
     }

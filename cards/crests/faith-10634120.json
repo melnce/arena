@@ -1,8 +1,8 @@
 {
-  "id": "faith:90034330",
-  "name": "Faith: Depths of the Eld Crystals",
+  "id": "faith:10634120",
+  "name": "Faith: Calge-Danthla, Eld Crystals",
   "grantedBy": [
-    "90034330"
+    "10634120"
   ],
   "faith": true,
   "text": "This faith's value starts at 0.\n\nWhenever an allied Crystalspawn enters the field, increase this faith's value by 1.",
@@ -11,7 +11,7 @@
       "on": "when",
       "event": "ally_follower_enter",
       "filter": {
-        "name": "Crystalspawn"
+        "card": "10631110"
       },
       "printed": "Whenever an allied Crystalspawn enters the field, increase this faith's value by 1.",
       "effects": [

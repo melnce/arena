@@ -1,0 +1,69 @@
+{
+  "id": "10614120",
+  "name": "Sathanid, Eld Lance",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: Reduce your faith's value by 10 to add a Depths of the Eld Lance to your hand and give your faith \"Whenever an allied follower evolves, deal 1 damage to the enemy leader.\"\nDrain",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [
+    "encroacher"
+  ],
+  "traits": {
+    "drain": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Reduce your faith's value by 10 to add a Depths of the Eld Lance to your hand and give your faith \"Whenever an allied follower evolves, deal 1 damage to the enemy leader.\"",
+      "effects": [
+        {
+          "printed": "Reduce your faith's value by 10 to add a Depths of the Eld Lance to your hand and give your faith \"Whenever an allied follower evolves, deal 1 damage to the enemy leader.\"",
+          "op": "pay",
+          "resource": "faith",
+          "amount": 10,
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90014330"
+              },
+              "count": 1
+            },
+            {
+              "op": "grantAbility",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "crests",
+                "kind": "faith"
+              },
+              "ability": {
+                "on": "when",
+                "event": "ally_evolve",
+                "printed": "Whenever an allied follower evolves, deal 1 damage to the enemy leader.",
+                "effects": [
+                  {
+                    "printed": "deal 1 damage to the enemy leader.",
+                    "op": "damage",
+                    "select": {
+                      "pick": "all",
+                      "side": "enemy",
+                      "zone": "leader",
+                      "kind": "leader"
+                    },
+                    "amount": 1
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

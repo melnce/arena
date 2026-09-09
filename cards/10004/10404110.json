@@ -74,7 +74,8 @@
                     "side": "enemy",
                     "kind": "character",
                     "pick": "random",
-                    "includeLeader": true
+                    "includeLeader": true,
+                    "zone": "field"
                   },
                   "amount": 2
                 }

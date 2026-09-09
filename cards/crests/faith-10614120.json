@@ -1,0 +1,25 @@
+{
+  "id": "faith:10614120",
+  "name": "Faith: Sathanid, Eld Lance",
+  "grantedBy": [
+    "10614120"
+  ],
+  "faith": true,
+  "text": "This faith's value starts at 0.\n\nWhenever an allied follower evolves, increase this faith's value by 1.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_evolve",
+      "printed": "Whenever an allied follower evolves, increase this faith's value by 1.",
+      "effects": [
+        {
+          "printed": "increase this faith's value by 1.",
+          "op": "counter",
+          "key": "faith",
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

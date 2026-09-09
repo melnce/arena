@@ -90,10 +90,10 @@
                 {
                   "op": "restore",
                   "select": {
+                    "pick": "all",
                     "side": "ally",
                     "zone": "leader",
-                    "kind": "leader",
-                    "pick": "self"
+                    "kind": "leader"
                   },
                   "amount": 3
                 }

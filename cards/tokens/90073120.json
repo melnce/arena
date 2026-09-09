@@ -1,6 +1,6 @@
 {
   "id": "90073120",
-  "name": "Ominous Artifact \u03b2",
+  "name": "Ominous Artifact β",
   "kind": "follower",
   "class": "portalcraft",
   "set": 90000,
@@ -23,10 +23,10 @@
           "printed": "deal 3 damage to the enemy leader.",
           "op": "damage",
           "select": {
+            "pick": "all",
             "side": "enemy",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "amount": 3
         }

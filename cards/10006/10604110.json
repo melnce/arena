@@ -44,10 +44,10 @@
                 {
                   "op": "damage",
                   "select": {
+                    "pick": "all",
                     "side": "enemy",
                     "zone": "leader",
-                    "kind": "leader",
-                    "pick": "self"
+                    "kind": "leader"
                   },
                   "amount": 2
                 }

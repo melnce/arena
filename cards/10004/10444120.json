@@ -44,10 +44,10 @@
           "printed": "Set your leader's max defense to 1.",
           "op": "leaderModifier",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "maxDefense": 1
         },
@@ -55,10 +55,10 @@
           "printed": "Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
           "op": "leaderModifier",
           "select": {
+            "pick": "all",
             "side": "ally",
             "zone": "leader",
-            "kind": "leader",
-            "pick": "self"
+            "kind": "leader"
           },
           "damageCap": 0,
           "until": "endOfOpponentTurn"

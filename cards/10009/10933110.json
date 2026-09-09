@@ -46,7 +46,7 @@
             "kind": "follower",
             "pick": "choose",
             "filter": {
-              "name": "Obsessed Test Subject"
+              "card": "10931110"
             }
           },
           "traits": {
@@ -57,6 +57,7 @@
     }
   ],
   "fuse": {
-    "partners": {}
+    "partners": {},
+    "printed": "Fuse: Cards"
   }
 }
