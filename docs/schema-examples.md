@@ -3983,10 +3983,8 @@ File: `cards/tokens/90071210.json`
   "fuse": {
     "printed": "Fuse: Artifact amulets",
     "partners": {
-      "cards": [
-        "90071210",
-        "90071220"
-      ]
+      "tribe": "artifact",
+      "kind": "amulet"
     },
     "recipes": [
       {
@@ -5093,10 +5091,8 @@ Can't be played.
   "fuse": {
     "printed": "Fuse: Artifact amulets",
     "partners": {
-      "cards": [
-        "90071210",
-        "90071220"
-      ]
+      "tribe": "artifact",
+      "kind": "amulet"
     },
     "recipes": [
       {

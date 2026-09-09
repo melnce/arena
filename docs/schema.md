@@ -226,7 +226,7 @@ Three closed shapes. `enhance` `{kind, cost, printed, effects, replacesBase?}` `
 
 ## Fuse
 
-Required `printed` (the literal `Fuse: …` line) plus `partners` Filter. "Cards" → empty filter `10934110`. Artifact cards → `{tribe: artifact}` `90072110`. Gears: authored as the two gear ids per owner ruling "Artifact fuse chain (2026-09-05)"; printed stays `Fuse: Artifact amulets`.
+Required `printed` (the literal `Fuse: …` line) plus `partners` Filter. "Cards" → empty filter `10934110`. Artifact cards → `{tribe: artifact}` `90072110` / `90072120`. Artifact amulets → `{tribe: artifact, kind: amulet}` `90071210` / `90071220` (owner ruling 2026-09-10; printed text was right).
 
 What a fuse does to the **host** is `recipes` data (`partners`, cost conditions, `requires: [ids]`, `result`). The action enumerator reads recipes without running effects. `on: fused` exists only for effects *beyond* the host transform (Sephie `10934110` summon). Ability `effects` is `minItems: 1` — no empty fused stub.
 

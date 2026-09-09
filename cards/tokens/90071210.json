@@ -17,10 +17,8 @@
   "fuse": {
     "printed": "Fuse: Artifact amulets",
     "partners": {
-      "cards": [
-        "90071210",
-        "90071220"
-      ]
+      "tribe": "artifact",
+      "kind": "amulet"
     },
     "recipes": [
       {

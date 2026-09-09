@@ -729,9 +729,22 @@ Owner-supplied FAQ text (his caveat: "Dont know if this is official but since I 
 
 <!-- rulebook: absorbed #classmechanic-specific-keywords » **Owner ruling — Artifact fuse chain (2026-09-05), refined by official Q&A (2026-09-06):** -->
 
-Owner's recollection (caveat: "Its been a while so I'm not 100% sure anymore"): gears fuse only with gears and the gear fused _into_ decides the body (Ambition → Striker 5/1 Rush, Remembrance → Fortifier 1/5 Ward); Striker/Fortifier host any Artifact cards and transform by the partners' total cost (1 → Ominous α, 2 → β, 3+ → γ — which is where γ's many recipes come from); Ominous α needs β **and** γ for Masterwork Ω (only one → consumed, no transform); β, γ, Ω cannot fuse. The engine (`src/logic/effects/ops/fuse/fuse.artifact.ts`) matches all of it and the printed token texts. Open, low priority: the owner "believes" α can fuse with anything except gears — α's printed text says β and γ only, and text wins until the client shows otherwise; and both Gears' printed description in `cards/token_details.json` reads "Fuse: Artifact amulets", which matches neither the owner nor the engine (stale text, not a behaviour bug — do not edit the description in this PR).
+Owner's recollection (caveat: "Its been a while so I'm not 100% sure anymore"): ~~gears fuse only with gears~~ **Superseded 2026-09-10** — see **Artifact fuse partners follow the printed text — 2026-09-10** below — and the gear fused _into_ decides the body (Ambition → Striker 5/1 Rush, Remembrance → Fortifier 1/5 Ward); Striker/Fortifier host any Artifact cards and transform by the partners' total cost (1 → Ominous α, 2 → β, 3+ → γ — which is where γ's many recipes come from); Ominous α needs β **and** γ for Masterwork Ω (only one → consumed, no transform); β, γ, Ω cannot fuse. The engine (`src/logic/effects/ops/fuse/fuse.artifact.ts`) matches all of it and the printed token texts. Open, low priority: the owner "believes" α can fuse with anything except gears — α's printed text says β and γ only, and text wins until the client shows otherwise; ~~and both Gears' printed description in `cards/token_details.json` reads "Fuse: Artifact amulets", which matches neither the owner nor the engine (stale text, not a behaviour bug — do not edit the description in this PR)~~ **Superseded 2026-09-10** — the printed "Fuse: Artifact amulets" was right; the gears-only recollection was wrong.
 
 **Official Q&A refinement (2026-09-06) — Ominous Artifact α (`90073110`):** _"If I fuse an Ominous Artifact β to an Ominous Artifact α in my hand one turn, then fuse an Ominous Artifact γ to the same Ominous Artifact α the next turn, will it transform into a Masterwork Artifact Ω?"_ → _"Yes, it will."_ A lone β or γ fused to α is still **consumed and banished** with no immediate transform (owner ruling stands), but α **remembers** which partner kinds have been fused (`fusedArtifacts` on the instance). When the second kind arrives — same fuse or a later turn — α transforms into Masterwork Ω. Already-fused kinds are excluded from the partner pool (a second β cannot be selected once β is remembered). Fresh α copies start with empty flags.
+
+## Artifact fuse partners follow the printed text — 2026-09-10
+
+<!-- rulebook: absorbed #classmechanic-specific-keywords » **Owner ruling — Artifact fuse partners follow the printed text (2026-09-10):** -->
+
+> "Gears can fuse with any artifact amulet, Fortifier and striker can fuse with artifact cards in general."
+
+This **supersedes the gears-only sentence** of **Artifact fuse chain — 2026-09-05** ("gears fuse only with gears … both Gears' printed description … reads 'Fuse: Artifact amulets', which matches neither the owner nor the engine (stale text)"). The printed text was right all along; the 2026-09-05 recollection was wrong. Card text is bible.
+
+Consequences (the rest of the 2026-09-05 / 2026-09-06 chain stands):
+
+- **Gears** (`90071210` Ambition, `90071220` Remembrance): partners are Artifact amulets (`{tribe: artifact, kind: amulet}`). Measured: the only Artifact amulets in the 572-pool are the two Gears themselves, so today's partner set is unchanged, but the data follows the text. The gear fused *into* still decides the body (Ambition → Striker, Remembrance → Fortifier).
+- **Striker / Fortifier** (`90072110` / `90072120`): partners are Artifact cards in general (`{tribe: artifact}`) — amulet or follower (13 Artifact-tribe cards in the pool, including the Gears at cost 1 → Ominous α by cost total).
 
 ---
 
