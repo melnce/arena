@@ -105,6 +105,21 @@ function isStarterSet(setId) {
   return n >= 80000 && n < 90000;
 }
 
+function hashOrNull(v) {
+  if (v == null || v === "") return null;
+  return String(v);
+}
+
+function evoHashes(evo) {
+  if (!evo || typeof evo !== "object" || Array.isArray(evo)) {
+    return { evo_card_image_hash: null, evo_card_banner_image_hash: null };
+  }
+  return {
+    evo_card_image_hash: hashOrNull(evo.card_image_hash),
+    evo_card_banner_image_hash: hashOrNull(evo.card_banner_image_hash),
+  };
+}
+
 function normalizeCommon(common, extras) {
   const set = Number(common.card_set_id);
   const type = Number(common.type);
@@ -137,6 +152,10 @@ function normalizeCommon(common, extras) {
     deck_enabled_num: Number(common.deck_enabled_num) || 0,
     related_card_ids: extras.related,
     specific_effect_card_ids: extras.seIds,
+    card_image_hash: hashOrNull(common.card_image_hash),
+    card_banner_image_hash: hashOrNull(common.card_banner_image_hash),
+    evo_card_image_hash: extras.evo_card_image_hash,
+    evo_card_banner_image_hash: extras.evo_card_banner_image_hash,
     text: stripMarkup(raw),
     text_raw: raw,
     questions: Array.isArray(common.questions) ? common.questions : [],
@@ -231,6 +250,7 @@ export async function fetchCatalog() {
       related,
       seIds,
       effects: effectsFor(seIds, seInfo),
+      ...evoHashes(evo),
     });
   }
 

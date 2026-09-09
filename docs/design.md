@@ -6,7 +6,11 @@ The end goal (2026-09-05) is matchup simulation statistics — mulligan win rate
 
 ## Sources
 
-Cygames' card list API is the source of truth for card **facts and texts** (`id`, `name`, `kind`, `class`, `tribes`, `rarity`, `cost`, `attack`, `defense`, `set`, `token`, rotation, related ids, stripped `skill_text`, specific effects, official Q&A). Endpoint: `GET https://shadowverse-wb.com/web/CardList/cardList?offset=<n>&include_token=1` with header `Lang: en`. The committed dump is `cards/official/catalog.json`.
+Cygames' card list API is the source of truth for card **facts and texts** (`id`, `name`, `kind`, `class`, `tribes`, `rarity`, `cost`, `attack`, `defense`, `set`, `token`, rotation, related ids, stripped `skill_text`, specific effects, official Q&A) and for **image hashes** (`card_image_hash`, `card_banner_image_hash`, `evo_card_image_hash`, `evo_card_banner_image_hash`). Endpoint: `GET https://shadowverse-wb.com/web/CardList/cardList?offset=<n>&include_token=1` with header `Lang: en`. The committed dump is `cards/official/catalog.json`. Raw hashes only — no URLs in the catalog, no image fields on authored card files.
+
+The site builds image paths as `/uploads/card_image/{resourceLang}/card/{card_image_hash}.png` (full card, PNG 530×687) and `/uploads/card_image/{resourceLang}/list/{card_banner_image_hash}.png` (deck-list strip, 800×160) on `https://shadowverse-wb.com`. Language map: `{ja: "jpn", en: "eng", cht: "cht", chs: "chs", ko: "kor"}`. The `en` and `ja` path segments 403; use `eng` / `jpn`. Evolved art uses the `evo_*` hashes in the same templates. Measured: Deepwood Bounty `90011310` `https://shadowverse-wb.com/uploads/card_image/eng/card/3927581ba7464f77ac9c1fd5467cae2d.png` → 200 `image/png`.
+
+The M4 client derives those URLs from the catalog at runtime (hot-linking Cygames' host). A `tools/fetch-images.mjs` mirror into an ignored directory is the fallback if hot-linking is ever blocked — not written now.
 
 The **only** things taken from `melnce/Practice-Tool` are:
 
@@ -14,7 +18,7 @@ The **only** things taken from `melnce/Practice-Tool` are:
 - `rules/rulebook.md` (rulebook synthesis)
 - its use as the **differential oracle** — interaction knowledge: the old engine's behaviour as a reference, adjudicated by official text + rulings, never binding
 
-Everything else — card facts, texts, token links, rotation flags, crest / Faith / Crystallize / Accelerate texts, Q&A, decklists — comes from Cygames (or, for live metas, the WBArts feed + Cygames deck-code decode at M1). The old repo's `all.json` / `description` fields were originally scraped from shadowverse.gg; that lineage is not carried into `arena`.
+Everything else — card facts, texts, image hashes, token links, rotation flags, crest / Faith / Crystallize / Accelerate texts, Q&A, decklists — comes from Cygames (or, for live metas, the WBArts feed + Cygames deck-code decode at M1). The old repo's `all.json` / `description` fields were originally scraped from shadowverse.gg; that lineage is not carried into `arena`.
 
 ```text
 node tools/fetch-official.mjs              # live fetch → catalog + rules/official-qa.md
