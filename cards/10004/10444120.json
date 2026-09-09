@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 5,
-  "text": "Fanfare: Gain 1 max play point.\nEnhance(10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
+  "text": "Fanfare: Gain 1 max play point.\nEnhance (10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
   "attack": 5,
   "defense": 5,
   "abilities": [
@@ -28,7 +28,7 @@
     {
       "kind": "enhance",
       "cost": 10,
-      "printed": "Enhance(10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
+      "printed": "Enhance (10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",
       "effects": [
         {
           "printed": "Give this follower Storm.",
@@ -65,5 +65,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

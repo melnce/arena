@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 4,
-  "text": "Fanfare: Select a Mode to activate.\n1. Evolve this follower.\n2. Evolve another random unevolved allied follower with Ward and give it +1/+1.\nWard\nAt the end of your turn, if this follower is evolved, give all other followers on the field -1/-1.",
+  "text": "Fanfare: Select a Mode to activate.\n1. Evolve this follower.\n2. Evolve another random unevolved allied follower with Ward and give it +1/+1.\n\nWard\nAt the end of your turn, if this follower is evolved, give all other followers on the field -1/-1.",
   "attack": 2,
   "defense": 2,
   "traits": {
@@ -98,5 +98,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

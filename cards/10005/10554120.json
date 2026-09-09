@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 10,
-  "text": "Fanfare: Do this 2 times: \"Return your hand to deck. Draw X cards. X is the number of cards you returned. Then, if you have at least 4 cards with the same cost in your hand, deal 4 damage to all enemies.\"\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
+  "text": "Fanfare: Do this 2 times: \"Return your hand to deck. Draw X cards. X is the number of cards you returned. Then, if you have at least 4 cards with the same cost in your hand, deal 4 damage to all enemies.\"\n\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
   "attack": 4,
   "defense": 4,
   "abilities": [
@@ -82,5 +82,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

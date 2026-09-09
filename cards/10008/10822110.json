@@ -7,7 +7,7 @@
   "rarity": "silver",
   "token": false,
   "cost": 3,
-  "text": "Once on each of your turns, when you play a spell, deal 2 damage to a random enemy follower.\nEvolve: Add a Glittering Gold to your hand.",
+  "text": "Once on each of your turns, when you play a spell, deal 2 damage to a random enemy follower.\n\nEvolve: Add a Glittering Gold to your hand.",
   "attack": 1,
   "defense": 4,
   "abilities": [
@@ -44,5 +44,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

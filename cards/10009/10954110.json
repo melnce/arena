@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 7,
-  "text": "Fanfare: Do this 3 times: \"Reanimate (2).\" Deal 2 damage to all enemy followers.\nSuper-Evolve: Gain Crest: Istyndet vs. Mitilykket.",
+  "text": "Fanfare: Do this 3 times: \"Reanimate (2).\" Deal 2 damage to all enemy followers.\n\nSuper-Evolve: Gain Crest: Istyndet vs. Mitilykket.",
   "attack": 3,
   "defense": 3,
   "abilities": [
@@ -51,5 +51,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

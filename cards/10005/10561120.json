@@ -7,7 +7,7 @@
   "rarity": "bronze",
   "token": false,
   "cost": 1,
-  "text": "Enhance (4): Draw a card. Give this follower Bane.\nDuring your turn, whenever you draw a card, give this follower Rush.",
+  "text": "Enhance (4): Draw a card. Give this follower Bane.\n\nDuring your turn, whenever you draw a card, give this follower Rush.",
   "attack": 1,
   "defense": 1,
   "abilities": [
@@ -55,5 +55,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

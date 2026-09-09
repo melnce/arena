@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 4,
-  "text": "Fanfare: Select an enemy follower on the field and give it -0/-X. X is this follower's attack. Increase your Combo by 1.\nEvolve: Gain Crest: Thestae, Anathema of Distortion.",
+  "text": "Fanfare: Select an enemy follower on the field and give it -0/-X. X is this follower's attack. Increase your Combo by 1.\n\nEvolve: Gain Crest: Thestae, Anathema of Distortion.",
   "attack": 3,
   "defense": 3,
   "tribes": [

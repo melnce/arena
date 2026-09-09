@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 9,
-  "text": "Aura\nCan't be destroyed by abilities.\nClash: Destroy the opposing follower.\nSuper-Evolve: Give this follower \"Can attack 3 times per turn.\"",
+  "text": "Aura\nCan't be destroyed by abilities.\n\nClash: Destroy the opposing follower.\n\nSuper-Evolve: Give this follower \"Can attack 3 times per turn.\"",
   "attack": 10,
   "defense": 10,
   "traits": {
@@ -44,5 +44,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

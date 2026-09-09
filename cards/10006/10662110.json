@@ -7,7 +7,7 @@
   "rarity": "silver",
   "token": false,
   "cost": 4,
-  "text": "Rush\nBane\nCrystallize (1): Countdown (3)\nLast Words: Summon a Venerating Dyer.",
+  "text": "Rush\nBane",
   "attack": 5,
   "defense": 3,
   "traits": {
@@ -37,5 +37,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

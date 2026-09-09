@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 7,
-  "text": "Fuse: Cards\nWhenever you Fuse to this card, spend 2 play points to summon an Obsessed Test Subject.\nFanfare: Summon 2 copies of Obsessed Test Subject.\nSuper-Evolve: Gain Crest: Sephie, Maven Convict.",
+  "text": "Fuse: Cards\nWhenever you Fuse to this card, spend 2 play points to summon an Obsessed Test Subject.\n\nFanfare: Summon 2 copies of Obsessed Test Subject.\n\nSuper-Evolve: Gain Crest: Sephie, Maven Convict.",
   "attack": 4,
   "defense": 4,
   "abilities": [
@@ -62,5 +62,6 @@
   "fuse": {
     "partners": {},
     "printed": "Fuse: Cards"
-  }
+  },
+  "tribes": []
 }

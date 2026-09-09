@@ -7,7 +7,7 @@
   "rarity": "bronze",
   "token": false,
   "cost": 3,
-  "text": "Fanfare: Select a Mode to activate.\n1. Spellboost your hand 2 times.\n2. Earth Rite (1) - Give this follower +2/+2 and Ward",
+  "text": "Fanfare: Select a Mode to activate.\n1. Spellboost your hand 2 times.\n2. Earth Rite (1) - Give this follower +2/+2 and Ward.",
   "attack": 2,
   "defense": 2,
   "abilities": [
@@ -63,5 +63,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

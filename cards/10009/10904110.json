@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 9,
-  "text": "Activates in deck. At the end of your turn, if you've played cards with base costs of 1, 2, 3, 4, 5, 6, 7, and 8 this match, Invoke this card.\nFanfare: Select an enemy follower on the field and deal it 9 damage.\nIntimidate",
+  "text": "Activates in deck. At the end of your turn, if you've played cards with base costs of 1, 2, 3, 4, 5, 6, 7, and 8 this match, Invoke this card.\n\nFanfare: Select an enemy follower on the field and deal it 9 damage.\n\nIntimidate",
   "attack": 9,
   "defense": 9,
   "traits": {
@@ -55,5 +55,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

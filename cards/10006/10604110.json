@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 9,
-  "text": "Fanfare: Activate 2 random abilities from the following.\n1. Destroy a random enemy follower.\n2. Deal 2 damage to the enemy leader.\n3. Recover 2 play points.\n4. Give this follower +4/+4 and activate its Fanfare ability.\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
+  "text": "Fanfare: Activate 2 random abilities from the following.\n1. Destroy a random enemy follower.\n2. Deal 2 damage to the enemy leader.\n3. Recover 2 play points.\n4. Give this follower +4/+4 and activate its Fanfare ability.\n\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
   "attack": 4,
   "defense": 4,
   "tribes": [

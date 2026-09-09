@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 4,
-  "text": "Fanfare: Rally (20) - Gain Crest: Gildaria, Anathema of Attunement. Evolve this follower.\nDuring your turn, whenever another allied follower enters the field, give it Rush.\nWhen this follower evolves, summon 2 copies of Steelclad Knight.",
+  "text": "Fanfare: Rally (20) - Gain Crest: Gildaria, Anathema of Attunement. Evolve this follower.\n\nDuring your turn, whenever another allied follower enters the field, give it Rush.\n\nWhen this follower evolves, summon 2 copies of Steelclad Knight.",
   "attack": 4,
   "defense": 4,
   "tribes": [

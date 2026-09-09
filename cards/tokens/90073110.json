@@ -7,7 +7,7 @@
   "rarity": "gold",
   "token": true,
   "cost": 5,
-  "text": "Fuse: Ominous Artifact β and Ominous Artifact γ\nWhen you've Fused both to this card, transform it into a Masterwork Artifact Ω.\nAt the end of your turn, restore 3 defense to your leader.",
+  "text": "Fuse: Ominous Artifact β and Ominous Artifact γ\nWhen you've Fused both to this card, transform it into a Masterwork Artifact Ω.\n\nAt the end of your turn, restore 3 defense to your leader.",
   "attack": 3,
   "defense": 5,
   "tribes": [

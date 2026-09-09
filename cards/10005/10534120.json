@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 10,
-  "text": "On Spellboost: Reduce the cost of this card by 1.\nFanfare: Select an enemy follower on the field and deal it 10 damage.\nEvolve: Select another follower on the field and transform it into a Regal Falcon.",
+  "text": "On Spellboost: Reduce the cost of this card by 1.\n\nFanfare: Select an enemy follower on the field and deal it 10 damage.\n\nEvolve: Select another follower on the field and transform it into a Regal Falcon.",
   "attack": 4,
   "defense": 4,
   "abilities": [
@@ -63,5 +63,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

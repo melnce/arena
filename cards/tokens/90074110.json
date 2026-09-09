@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": true,
   "cost": 10,
-  "text": "Fanfare: Deal 5 damage to all enemy followers. Restore 5 defense to your leader.\nStorm\nWard\nAura",
+  "text": "Fanfare: Deal 5 damage to all enemy followers. Restore 5 defense to your leader.\n\nStorm\nWard\nAura",
   "attack": 10,
   "defense": 10,
   "tribes": [

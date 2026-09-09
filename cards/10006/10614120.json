@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 1,
-  "text": "Fanfare: Reduce your faith's value by 10 to add a Depths of the Eld Lance to your hand and give your faith \"Whenever an allied follower evolves, deal 1 damage to the enemy leader.\"\nDrain",
+  "text": "Fanfare: Reduce your faith's value by 10 to add a Depths of the Eld Lance to your hand and give your faith \"Whenever an allied follower evolves, deal 1 damage to the enemy leader.\"\n\nDrain",
   "attack": 1,
   "defense": 1,
   "tribes": [

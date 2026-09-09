@@ -7,7 +7,7 @@
   "rarity": "bronze",
   "token": false,
   "cost": 2,
-  "text": "When this follower enters the field, if at least 5 other allied copies of Obsessed Test Subject have entered the field this match, give it +3/+3.\nRush",
+  "text": "When this follower enters the field, if at least 5 other allied copies of Obsessed Test Subject have entered the field this match, give it +3/+3.\n\nRush",
   "attack": 2,
   "defense": 2,
   "traits": {
@@ -37,5 +37,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

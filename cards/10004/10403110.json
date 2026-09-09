@@ -7,13 +7,13 @@
   "rarity": "gold",
   "token": false,
   "cost": 4,
-  "text": "Fanfare: Select a Mode to activate.\nSkybound Art- Evolve this follower.\n1. Deal 5 damage to a random enemy follower.\n2. Draw 2 followers.",
+  "text": "Fanfare: Select a Mode to activate. Skybound Art - Evolve this follower.\n1. Deal 5 damage to a random enemy follower.\n2. Draw 2 followers.",
   "attack": 3,
   "defense": 2,
   "abilities": [
     {
       "on": "fanfare",
-      "printed": "Fanfare: Select a Mode to activate.\nSkybound Art- Evolve this follower.\n1. Deal 5 damage to a random enemy follower.\n2. Draw 2 followers.",
+      "printed": "Fanfare: Select a Mode to activate.\nSkybound Art - Evolve this follower.\n1. Deal 5 damage to a random enemy follower.\n2. Draw 2 followers.",
       "effects": [
         {
           "printed": "Select a Mode to activate.",
@@ -51,7 +51,7 @@
           ]
         },
         {
-          "printed": "Skybound Art- Evolve this follower.",
+          "printed": "Skybound Art - Evolve this follower.",
           "op": "if",
           "cond": {
             "skyboundArt": {
@@ -70,5 +70,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 9,
-  "text": "Fanfare: Necromancy (10) - Summon 3 copies of Rotting Zombie.\nDuring your turn, whenever an allied Departed follower enters the field, give it +1/+0, Rush, and Ward and deal 1 damage to the enemy leader.",
+  "text": "Fanfare: Necromancy (10) - Summon 3 copies of Rotting Zombie.\n\nDuring your turn, whenever an allied Departed follower enters the field, give it +1/+0, Rush, and Ward and deal 1 damage to the enemy leader.",
   "attack": 4,
   "defense": 4,
   "abilities": [
@@ -79,5 +79,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

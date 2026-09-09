@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 6,
-  "text": "Fanfare: Summon a Fearless Soldier and give it Bane.\nEnhance (7): Summon a Fearless Soldier and give it Drain.\nEnhance (8): Summon a Fearless Soldier and give it Storm.\nSuper-Evolve: Give all other allied followers on the field +1/+1.",
+  "text": "Fanfare: Summon a Fearless Soldier and give it Bane.\nEnhance (7): Summon a Fearless Soldier and give it Drain.\nEnhance (8): Summon a Fearless Soldier and give it Storm.\n\nSuper-Evolve: Give all other allied followers on the field +1/+1.",
   "attack": 4,
   "defense": 5,
   "abilities": [
@@ -124,5 +124,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

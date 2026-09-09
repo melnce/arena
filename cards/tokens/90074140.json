@@ -12,5 +12,6 @@
   "defense": 3,
   "traits": {
     "rush": true
-  }
+  },
+  "tribes": []
 }

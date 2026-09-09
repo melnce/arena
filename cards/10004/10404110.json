@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 6,
-  "text": "Activates in deck. At the start of your turn, if allied followers have evolved at least 6 times this match, Invoke this card.\nWhen this card is Invoked, gain Crest: Sandalphon, Primarch Successor and return this card to hand\nFanfare: Super Skybound Art- Do this 5 times: \"Deal 2 damage to a random enemy.\"",
+  "text": "Activates in deck. At the start of your turn, if allied followers have evolved at least 6 times this match, Invoke this card.\n\nWhen this card is Invoked, gain Crest: Sandalphon, Primarch Successor and return this card to hand.\nFanfare: Super Skybound Art - Do this 5 times: \"Deal 2 damage to a random enemy.\"",
   "attack": 7,
   "defense": 6,
   "abilities": [
@@ -53,10 +53,10 @@
     },
     {
       "on": "fanfare",
-      "printed": "Fanfare: Super Skybound Art- Do this 5 times: \"Deal 2 damage to a random enemy.\"",
+      "printed": "Fanfare: Super Skybound Art - Do this 5 times: \"Deal 2 damage to a random enemy.\"",
       "effects": [
         {
-          "printed": "Super Skybound Art- Do this 5 times: \"Deal 2 damage to a random enemy.\"",
+          "printed": "Super Skybound Art - Do this 5 times: \"Deal 2 damage to a random enemy.\"",
           "op": "if",
           "cond": {
             "skyboundArt": {
@@ -85,5 +85,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

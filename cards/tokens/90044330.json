@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": true,
   "cost": 2,
-  "text": "When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader.\nDeal 1 damage to the enemy leader. Restore 1 defense to your leader.",
+  "text": "When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader.\n\nDeal 1 damage to the enemy leader. Restore 1 defense to your leader.",
   "tribes": [
     "encroacher"
   ],

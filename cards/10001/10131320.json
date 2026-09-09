@@ -7,7 +7,7 @@
   "rarity": "bronze",
   "token": false,
   "cost": 1,
-  "text": "X starts at 2.\nOn Spellboost: Increase X by 1.\nSelect an enemy follower on the field and deal it X damage.",
+  "text": "X starts at 2.\nOn Spellboost: Increase X by 1.\n\nSelect an enemy follower on the field and deal it X damage.",
   "abilities": [
     {
       "on": "spellboost",
@@ -47,5 +47,6 @@
   ],
   "vars": {
     "X": 2
-  }
+  },
+  "tribes": []
 }

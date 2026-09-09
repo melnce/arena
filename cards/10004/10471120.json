@@ -7,7 +7,7 @@
   "rarity": "bronze",
   "token": false,
   "cost": 2,
-  "text": "Fanfare: Increase the Skybound Art gauges of all cards in your hand by 1.\nRush",
+  "text": "Fanfare: Increase the Skybound Art gauges of all cards in your hand by 1.\n\nRush",
   "attack": 3,
   "defense": 1,
   "traits": {
@@ -27,5 +27,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

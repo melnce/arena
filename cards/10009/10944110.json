@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 7,
-  "text": "Fanfare: If an allied follower attacked a leader on your last turn, give this follower Storm.\nRush\nIgnores Ward.",
+  "text": "Fanfare: If an allied follower attacked a leader on your last turn, give this follower Storm.\n\nRush\nIgnores Ward.",
   "attack": 6,
   "defense": 5,
   "traits": {
@@ -39,5 +39,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

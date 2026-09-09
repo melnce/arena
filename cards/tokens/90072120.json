@@ -7,7 +7,7 @@
   "rarity": "silver",
   "token": true,
   "cost": 3,
-  "text": "Fuse: Artifact cards\nWhen you Fuse to this card, transform it based on the total cost of the cards fused.\n1: Ominous Artifact α\n2: Ominous Artifact β\n3 or more: Ominous Artifact γ\nWard",
+  "text": "Fuse: Artifact cards\nWhen you Fuse to this card, transform it based on the total cost of the cards fused.\n1: Ominous Artifact α\n2: Ominous Artifact β\n3 or more: Ominous Artifact γ\n\nWard",
   "attack": 1,
   "defense": 5,
   "tribes": [

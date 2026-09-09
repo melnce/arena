@@ -12,5 +12,6 @@
   "defense": 4,
   "traits": {
     "storm": true
-  }
+  },
+  "tribes": []
 }

@@ -7,7 +7,7 @@
   "rarity": "bronze",
   "token": true,
   "cost": 1,
-  "text": "Earth Sigil\nEngage (1): Gain an earth sigil.",
+  "text": "Earth Sigil\n\nEngage (1): Gain an earth sigil.",
   "tribes": [
     "earth sigil"
   ],

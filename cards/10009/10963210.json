@@ -7,7 +7,7 @@
   "rarity": "gold",
   "token": false,
   "cost": 6,
-  "text": "Fanfare: Destroy all followers.\nEngage (1): Destroy this card. Draw a card. Restore 1 defense to your leader.",
+  "text": "Fanfare: Destroy all followers.\n\nEngage (1): Destroy this card. Draw a card. Restore 1 defense to your leader.",
   "abilities": [
     {
       "on": "fanfare",
@@ -49,5 +49,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

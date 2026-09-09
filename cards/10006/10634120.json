@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 10,
-  "text": "Activates in hand. Whenever an allied Crystalspawn enters the field, reduce the cost of this card by 1.\nFanfare: Summon 2 copies of Crystalspawn and give them Storm.\nEvolve: Add a Depths of the Eld Crystals to your hand.",
+  "text": "Activates in hand. Whenever an allied Crystalspawn enters the field, reduce the cost of this card by 1.\n\nFanfare: Summon 2 copies of Crystalspawn and give them Storm.\n\nEvolve: Add a Depths of the Eld Crystals to your hand.",
   "attack": 5,
   "defense": 5,
   "tribes": [

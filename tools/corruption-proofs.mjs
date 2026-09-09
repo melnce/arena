@@ -17,6 +17,11 @@ function runValidate(cardsDir) {
   fs.cpSync(path.join(ROOT, "schema"), path.join(tmpRoot, "schema"), { recursive: true });
   fs.cpSync(path.join(ROOT, "tools"), path.join(tmpRoot, "tools"), { recursive: true });
   fs.cpSync(cardsDir, path.join(tmpRoot, "cards"), { recursive: true });
+  fs.cpSync(
+    path.join(ROOT, "cards", "official"),
+    path.join(tmpRoot, "cards", "official"),
+    { recursive: true },
+  );
   const r = spawnSync("node", ["tools/validate.mjs"], {
     cwd: tmpRoot,
     encoding: "utf8",

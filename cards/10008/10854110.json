@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 8,
-  "text": "Fanfare: Select a Mode to activate.\n1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.\n2. Deal 5 damage to all enemy followers. Recover 1 evolution point.\nEvolve: Select a Mode to activate.\n1. Draw 2 cards.\n2. Recover 2 play points.",
+  "text": "Fanfare: Select a Mode to activate.\n1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.\n2. Deal 5 damage to all enemy followers. Recover 1 evolution point.\n\nEvolve: Select a Mode to activate.\n1. Draw 2 cards.\n2. Recover 2 play points.",
   "attack": 6,
   "defense": 5,
   "abilities": [
@@ -104,5 +104,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

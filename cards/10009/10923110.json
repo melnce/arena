@@ -7,7 +7,7 @@
   "rarity": "gold",
   "token": false,
   "cost": 5,
-  "text": "Fanfare: Select an enemy follower on the field and deal it 3 damage. Summon a Dread Pirate's Flag.\nEvolve: Replicate the effects of this card's Fanfare ability.\nSuper-Evolve: Add a Gilded Blade and Gilded Necklace to your hand and set their costs to 0.",
+  "text": "Fanfare: Select an enemy follower on the field and deal it 3 damage. Summon a Dread Pirate's Flag.\n\nEvolve: Replicate the effects of this card's Fanfare ability.\nSuper-Evolve: Add a Gilded Blade and Gilded Necklace to your hand and set their costs to 0.",
   "attack": 3,
   "defense": 3,
   "abilities": [
@@ -91,5 +91,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

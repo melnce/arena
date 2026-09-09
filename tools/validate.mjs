@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
  * Validate every cards JSON file against schema/cards.schema.json (draft 2020-12)
- * and the printed-substring / reference rules in docs/schema.md § printed.
+ * the official catalog oracle (cards/official/catalog.json), and the
+ * printed-substring / reference rules in docs/schema.md § printed.
+ * Live Cygames fetch is not part of this command.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -15,6 +17,21 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const CARDS = path.join(ROOT, "cards");
 const SCHEMA = path.join(ROOT, "schema", "cards.schema.json");
+const CATALOG_PATH = path.join(CARDS, "official", "catalog.json");
+const CATALOG_FACTS = [
+  "id",
+  "name",
+  "kind",
+  "class",
+  "tribes",
+  "rarity",
+  "cost",
+  "attack",
+  "defense",
+  "set",
+  "token",
+  "text",
+];
 
 const errors = [];
 
@@ -27,8 +44,10 @@ function walkJson(dir) {
   if (!fs.existsSync(dir)) return out;
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, ent.name);
-    if (ent.isDirectory()) out.push(...walkJson(p));
-    else if (ent.name.endsWith(".json")) out.push(p);
+    if (ent.isDirectory()) {
+      if (ent.name === "official") continue;
+      out.push(...walkJson(p));
+    } else if (ent.name.endsWith(".json")) out.push(p);
   }
   return out.sort();
 }
@@ -42,6 +61,42 @@ function normWs(s) {
 function isSubstring(needle, haystack) {
   if (!needle) return false;
   return normWs(haystack).includes(normWs(needle));
+}
+
+function isSubstringAny(needle, haystacks) {
+  return haystacks.some((h) => isSubstring(needle, h));
+}
+
+function factVal(obj, key) {
+  if (key === "tribes") return obj.tribes ?? [];
+  if (key === "attack" || key === "defense") return obj[key] ?? 0;
+  return obj[key];
+}
+
+function factsEqual(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function modeHaystacks(data, rec) {
+  const out = [data.text || ""];
+  for (const se of rec?.specific_effects ?? []) {
+    if (se.type === "accelerate" || se.type === "crystallize") {
+      const label = se.type === "accelerate" ? "Accelerate" : "Crystallize";
+      out.push(`${label} (${se.cost}): ${se.text}`);
+      out.push(se.text);
+    }
+  }
+  return out;
+}
+
+function catalogRecord(catalog, id) {
+  if (id == null) return null;
+  return catalog[String(id)] ?? null;
+}
+
+function numericCrestId(id) {
+  const m = String(id ?? "").match(/^(?:crest|faith):(\d+)$/);
+  return m ? m[1] : null;
 }
 
 function sentences(text) {
@@ -329,6 +384,42 @@ function grantedAbilityHasCrestGain(data, crestId) {
   return found.yes;
 }
 
+function checkAgainstCatalog(file, data, catalog) {
+  const isCrest = typeof data.faith === "boolean" && Array.isArray(data.grantedBy);
+  if (isCrest) {
+    const typ = data.faith ? "faith" : "crest";
+    const ids = [numericCrestId(data.id), ...(data.grantedBy ?? []).map(String)].filter(Boolean);
+    let official = null;
+    for (const id of ids) {
+      const rec = catalogRecord(catalog, id);
+      const se = rec?.specific_effects?.find((e) => e.type === typ);
+      if (se) {
+        official = se.text;
+        break;
+      }
+    }
+    if (official == null) {
+      fail(file, `no official ${typ} specific-effect text for ${data.id}`);
+      return;
+    }
+    if (data.text !== official) {
+      fail(file, `${typ} text does not equal official catalog specific-effect text`);
+    }
+    return;
+  }
+  if (data.id == null) return;
+  const rec = catalogRecord(catalog, data.id);
+  if (!rec) {
+    fail(file, `id ${data.id} is not in the official catalog`);
+    return;
+  }
+  for (const key of CATALOG_FACTS) {
+    if (!factsEqual(factVal(data, key), factVal(rec, key))) {
+      fail(file, `${key} does not equal official catalog record`);
+    }
+  }
+}
+
 function main() {
   const schema = JSON.parse(fs.readFileSync(SCHEMA, "utf8"));
   const ajv = new Ajv2020({
@@ -338,6 +429,13 @@ function main() {
   });
   addFormats(ajv);
   const validate = ajv.compile(schema);
+
+  if (!fs.existsSync(CATALOG_PATH)) {
+    fail(CATALOG_PATH, "missing official catalog (cards/official/catalog.json)");
+  }
+  const catalog = fs.existsSync(CATALOG_PATH)
+    ? JSON.parse(fs.readFileSync(CATALOG_PATH, "utf8"))
+    : {};
 
   const files = walkJson(CARDS);
   if (files.length === 0) {
@@ -388,12 +486,15 @@ function main() {
     checkFaithGain(file, data);
     checkDuplicateEffects(file, data);
     checkOptionsFrom(file, data);
+    checkAgainstCatalog(file, data, catalog);
 
     if (isCrest) {
       for (const [i, ab] of (data.abilities ?? []).entries()) {
         checkAbility(file, ab, data.text, `abilities[${i}]`);
       }
     } else {
+      const rec = catalogRecord(catalog, data.id);
+      const hay = modeHaystacks(data, rec);
       for (const [i, ab] of (data.abilities ?? []).entries()) {
         checkAbility(file, ab, data.text, `abilities[${i}]`);
       }
@@ -402,10 +503,14 @@ function main() {
           fail(file, `modes[${i}] missing printed`);
           continue;
         }
-        if (!isSubstring(mode.printed, data.text)) {
-          fail(file, `modes[${i}] printed is not a substring of text`);
+        if (!isSubstringAny(mode.printed, hay)) {
+          fail(
+            file,
+            `modes[${i}] printed is not a substring of text or official Accelerate/Crystallize line`,
+          );
         }
-        checkPrintedTree(file, mode.printed, mode.effects ?? [], `modes[${i}].effects`, data.text);
+        const modeHay = [mode.printed, ...hay].join("\n");
+        checkPrintedTree(file, mode.printed, mode.effects ?? [], `modes[${i}].effects`, modeHay);
         for (const [j, ab] of (mode.abilities ?? []).entries()) {
           checkAbility(file, ab, mode.printed, `modes[${i}].abilities[${j}]`);
         }

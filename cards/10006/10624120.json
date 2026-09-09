@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 2,
-  "text": "Fanfare: Add a Depths of the Eld Sword to your hand.\nEvolve: Reduce your faith's value by 5 to give it \"Whenever you play an Enhanced card, give all allied followers on the field +1/+1.\"",
+  "text": "Fanfare: Add a Depths of the Eld Sword to your hand.\n\nEvolve: Reduce your faith's value by 5 to give it \"Whenever you play an Enhanced card, give all allied followers on the field +1/+1.\"",
   "attack": 1,
   "defense": 2,
   "tribes": [

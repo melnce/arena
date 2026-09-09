@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 7,
-  "text": "Fanfare: Reanimate (4) and Reanimate (2).\nWhen this follower evolves, destroy 6 other random followers.\nWhen this follower super-evolves, gain Crest: Milteo & Luzen.",
+  "text": "Fanfare: Reanimate (4) and Reanimate (2).\n\nWhen this follower evolves, destroy 6 other random followers.\nWhen this follower super-evolves, gain Crest: Milteo & Luzen.",
   "attack": 3,
   "defense": 3,
   "abilities": [
@@ -61,5 +61,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

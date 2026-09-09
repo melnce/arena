@@ -7,7 +7,7 @@
   "rarity": "gold",
   "token": false,
   "cost": 1,
-  "text": "Countdown (1)\nAt the end of your turn, activate an ability in sequence from the following.\n1. Deal 2 damage to a random enemy follower.\n2. Restore 2 defense to your leader.\n3. Deal 2 damage to the enemy leader. Destroy this card.\nEngage (1): Select a card in your hand and discard it. Delay the count of this amulet by 1.",
+  "text": "Countdown (1)\nAt the end of your turn, activate an ability in sequence from the following.\n1. Deal 2 damage to a random enemy follower.\n2. Restore 2 defense to your leader.\n3. Deal 2 damage to the enemy leader. Destroy this card.\n\nEngage (1): Select a card in your hand and discard it. Delay the count of this amulet by 1.",
   "countdown": 1,
   "abilities": [
     {
@@ -100,5 +100,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

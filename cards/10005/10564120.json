@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 7,
-  "text": "Fanfare: Gain Crest: Kukishiro, Mistbloom. Return 2 random cards from your hand to deck. Draw 2 cards.\nRush",
+  "text": "Fanfare: Gain Crest: Kukishiro, Mistbloom. Return 2 random cards from your hand to deck. Draw 2 cards.\n\nRush",
   "attack": 5,
   "defense": 5,
   "traits": {
@@ -43,5 +43,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

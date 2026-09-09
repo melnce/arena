@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "token": false,
   "cost": 8,
-  "text": "Fanfare: Select 2 enemy followers on the field and banish them.\nSuper Skybound Art- Super-evolve this follower.\nWard\nCan't take more than 3 damage at a time.",
+  "text": "Fanfare: Select 2 enemy followers on the field and banish them. Super Skybound Art - Super-evolve this follower.\n\nWard\nCan't take more than 3 damage at a time.",
   "attack": 6,
   "defense": 8,
   "traits": {
@@ -17,7 +17,7 @@
   "abilities": [
     {
       "on": "fanfare",
-      "printed": "Fanfare: Select 2 enemy followers on the field and banish them.\nSuper Skybound Art- Super-evolve this follower.",
+      "printed": "Fanfare: Select 2 enemy followers on the field and banish them.\nSuper Skybound Art - Super-evolve this follower.",
       "effects": [
         {
           "printed": "Select 2 enemy followers on the field and banish them.",
@@ -31,7 +31,7 @@
           }
         },
         {
-          "printed": "Super Skybound Art- Super-evolve this follower.",
+          "printed": "Super Skybound Art - Super-evolve this follower.",
           "op": "if",
           "cond": {
             "skyboundArt": {
@@ -50,5 +50,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }

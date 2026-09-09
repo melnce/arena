@@ -1,6 +1,6 @@
 # Official Cygames per-card Q&A
 
-Fetched 2026-09-06 from https://shadowverse-wb.com (lang=en). 149 Q&A entries across 120 cards (904 catalog ids).
+Fetched 2026-09-09 from https://shadowverse-wb.com (lang=en). 149 Q&A entries across 120 cards (904 catalog ids).
 
 ## 10001210 Detective's Lens
 
@@ -109,6 +109,7 @@ Fetched 2026-09-06 from https://shadowverse-wb.com (lang=en). 149 Q&A entries ac
 **Q:** What does "deal X damage split between all enemy followers" mean?
 
 **A:** Damage split between enemies is dealt in order from oldest enemy follower on the field to newest (right to left), with each follower taking up to its defense in damage before the subsequent follower takes damage.
+
 For example, if there are 3 enemy followers on the field with defense values of 3, 3, and 2 from right to left, and X is 7, then they will take 3, 3, and 1 damage, respectively.
 
 ## 10113130 Bayle, Luxglaive Warrior
@@ -290,6 +291,7 @@ For example, if there are 3 enemy followers on the field with defense values of 
 **Q:** What does "deal 7 damage split between all enemy followers" mean?
 
 **A:** Damage split between enemies is dealt in order from oldest enemy follower on the field to newest (right to left), with each follower taking up to its defense in damage before the subsequent follower takes damage.
+
 For example, if there are 3 enemy followers on the field with defense values of 3, 3, and 2 from right to left, they take 3, 3, and 1 damage, respectively.
 
 **Q:** If Aragavy, Eternal Hunter's Evolve ability activates when both leaders are at 3 defense, who will win the game?
@@ -499,6 +501,7 @@ For example, if there are 3 enemy followers on the field with defense values of 
 **Q:** What does "all followers with the highest defense" mean?
 
 **A:** Raging Lightning finds the highest defense value among all followers on the field, then deals damage to all followers with that much defense.
+
 For example, if the field consists of a 10/5 Caravan Mammoth, 4/5 Quake Goliath, and 2/2 Indomitable Fighter, Raging Lightning would deal 5 damage to both the Caravan Mammoth and Quake Goliath.
 
 ## 10344110 Azurifrit, Heir to Disdain
@@ -792,8 +795,11 @@ For example, if the field consists of a 10/5 Caravan Mammoth, 4/5 Quake Goliath,
 **Q:** If I play Depths of the Eld Crystal when my faith's value is 3, is the result X = 1, Y = 1, Z = 1 more likely than X = 3, Y = 0, Z = 0?
 
 **A:** Yes. The probability of the result X = 1, Y = 1, Z = 1 is 6/27, while the probability of X = 3, Y = 0, Z = 0 is only 1/27.
+
 To determine the values of X, Y, and Z, the ability first chooses X, Y, or Z at random, with each having an equal 1/3 chance of being chosen. This process is repeated a number of times equal to your faith's value, in this case 3. The number of times each letter is chosen then becomes its final value.
+
 Since the ability chooses one of three letters three times, there are 3 x 3 x 3 = 27 possible outcomes. Only one of these outcomes, the one where X is chosen all three times, results in X = 3, Y = 0, Z = 0, so this result has a 1/27 chance to occur.
+
 In contrast, six different outcomes all result in X = 1, Y = 1, Z = 1. The ability can choose letters in the order XYZ, XZY, YXZ, YZX, ZXY, or ZYX. Therefore, the probability of this result is 6/27.
 
 ## 90034350 Send 'Em Packing

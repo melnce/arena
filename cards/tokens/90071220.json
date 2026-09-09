@@ -7,7 +7,7 @@
   "rarity": "bronze",
   "token": true,
   "cost": 1,
-  "text": "Fuse: Artifact amulets\nWhen you Fuse to this card, transform it into a Fortifier Artifact.\nCan't be played.",
+  "text": "Fuse: Artifact amulets\nWhen you Fuse to this card, transform it into a Fortifier Artifact.\n\nCan't be played.",
   "tribes": [
     "artifact"
   ],

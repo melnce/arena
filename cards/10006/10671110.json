@@ -7,7 +7,7 @@
   "rarity": "bronze",
   "token": false,
   "cost": 6,
-  "text": "Fanfare: Draw 3 cards.\nWard\nAccelerate (2): Summon a Shoddy Plaything.",
+  "text": "Fanfare: Draw 3 cards.\n\nWard",
   "attack": 1,
   "defense": 3,
   "traits": {
@@ -42,5 +42,6 @@
         }
       ]
     }
-  ]
+  ],
+  "tribes": []
 }
