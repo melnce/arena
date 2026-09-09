@@ -73,21 +73,52 @@ EVENTS = [
     "self_buffed_up",
 ]
 
-PICKS = [
-    "all",
-    "choose",
-    "random",
-    "randomDistinct",
-    "leftmost",
-    "highest",
-    "lowest",
-    "self",
-    "bound",
-    "entering",
-    "attacker",
-    "defender",
-    "opposing",
-    "selected",
+REF_PICKS = ["self", "entering", "attacker", "defender", "opposing", "selected"]
+POOL_PICKS = ["all", "choose", "random", "randomDistinct", "leftmost", "highest", "lowest"]
+VARS = ["X", "Y", "Z"]
+TRAIT_KEYS = TRAIT_BOOLS + ["attacksPerTurn", "damageCap"]
+TRIGGER_TAGS = [
+    "fanfare",
+    "lastWords",
+    "evolve",
+    "superEvolve",
+    "anyEvolve",
+    "anySuperEvolve",
+    "strike",
+    "followerStrike",
+    "clash",
+    "enter",
+    "leave",
+    "discarded",
+    "invoked",
+    "fused",
+    "spellboost",
+    "engage",
+    "startOfTurn",
+    "endOfTurn",
+    "when",
+    "enhance",
+]
+OPTIONS_FROM = [
+    "fanfare",
+    "lastWords",
+    "evolve",
+    "superEvolve",
+    "anyEvolve",
+    "anySuperEvolve",
+    "strike",
+    "followerStrike",
+    "clash",
+    "enter",
+    "leave",
+    "discarded",
+    "invoked",
+    "fused",
+    "spellboost",
+    "engage",
+    "startOfTurn",
+    "endOfTurn",
+    "when",
 ]
 
 REPLICATE_KEYS = [
@@ -121,13 +152,9 @@ def filter_schema():
                     {"type": "array", "items": {"$ref": "#/$defs/Tribe"}, "minItems": 1},
                 ]
             },
-            "name": {
-                "oneOf": [
-                    {"type": "string", "minLength": 1},
-                    {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
-                ]
-            },
-            "notName": {"type": "string", "minLength": 1},
+            "card": {"$ref": "#/$defs/CardId"},
+            "cards": {"type": "array", "items": {"$ref": "#/$defs/CardId"}, "minItems": 1},
+            "notCard": {"$ref": "#/$defs/CardId"},
             "kind": {"enum": ["follower", "spell", "amulet", "card"]},
             "class": {"$ref": "#/$defs/Class"},
             "costEq": {"$ref": "#/$defs/Amount"},
@@ -145,7 +172,7 @@ def filter_schema():
             "evolved": {"type": "boolean"},
             "unevolved": {"type": "boolean"},
             "damaged": {"type": "boolean"},
-            "hasTrait": {"type": "string", "minLength": 1},
+            "hasTrait": {"enum": TRAIT_KEYS},
             "enhanced": {"type": "boolean"},
             "sameCostGroup": {"type": "boolean"},
             "hasLastWords": {"type": "boolean"},
@@ -155,21 +182,28 @@ def filter_schema():
 
 
 def selector_schema():
-    return closed(
+    ref_plain = [
+        closed({"pick": {"const": p}}, required=["pick"]) for p in REF_PICKS
+    ]
+    ref_bound = closed(
+        {"pick": {"const": "bound"}, "ref": {"type": "string", "minLength": 1}},
+        required=["pick", "ref"],
+    )
+    pool = closed(
         {
+            "pick": {"enum": POOL_PICKS},
             "side": {"enum": ["ally", "enemy", "any"]},
             "zone": {"enum": ["field", "hand", "deck", "cemetery", "leader", "crests"]},
-            "kind": {"enum": ["follower", "amulet", "card", "leader", "character"]},
+            "kind": {"enum": ["follower", "amulet", "card", "leader", "character", "faith"]},
             "filter": {"$ref": "#/$defs/Filter"},
-            "pick": {"enum": PICKS},
             "count": {"$ref": "#/$defs/Amount"},
             "other": {"type": "boolean"},
             "includeLeader": {"type": "boolean"},
             "orderBy": {"enum": ["attack", "defense", "cost", "baseCost"]},
-            "ref": {"type": "string", "minLength": 1},
         },
-        required=["pick"],
+        required=["pick", "side", "zone", "kind"],
     )
+    return {"oneOf": [*ref_plain, ref_bound, pool]}
 
 
 def amount_schema():
@@ -190,7 +224,7 @@ def amount_schema():
                 },
                 required=["stat"],
             ),
-            closed({"var": {"type": "string", "minLength": 1}}, required=["var"]),
+            closed({"var": {"enum": VARS}}, required=["var"]),
             closed(
                 {
                     "add": {
@@ -326,7 +360,7 @@ def condition_schema():
             closed(
                 {
                     "varAtLeast": closed(
-                        {"key": {"type": "string", "minLength": 1}, "n": {"$ref": "#/$defs/Amount"}},
+                        {"key": {"enum": VARS}, "n": {"$ref": "#/$defs/Amount"}},
                         required=["key", "n"],
                     )
                 },
@@ -336,12 +370,12 @@ def condition_schema():
                 {
                     "enterCountAtLeast": closed(
                         {
-                            "name": {"type": "string", "minLength": 1},
+                            "card": {"$ref": "#/$defs/CardId"},
                             "n": {"$ref": "#/$defs/Amount"},
                             "other": {"type": "boolean"},
                             "side": {"enum": ["ally", "enemy", "any"]},
                         },
-                        required=["name", "n"],
+                        required=["card", "n"],
                     )
                 },
                 required=["enterCountAtLeast"],
@@ -440,7 +474,10 @@ def effect_schema():
             "select": {"$ref": "#/$defs/Selector"},
             "ability": {"$ref": "#/$defs/Ability"},
         }, ["select", "ability"]),
-        leaf("removeAbilities", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
+        leaf("removeAbilities", {
+            "select": {"$ref": "#/$defs/Selector"},
+            "on": {"type": "array", "items": {"enum": TRIGGER_TAGS}, "minItems": 1},
+        }, ["select"]),
         leaf("cost", {
             "select": {"$ref": "#/$defs/Selector"},
             "delta": {"$ref": "#/$defs/Amount"},
@@ -455,9 +492,9 @@ def effect_schema():
             "action": {"enum": ["gain", "spend"]},
             "super": {"type": "boolean"},
             "amount": {"$ref": "#/$defs/Amount"},
-        }, ["action", "super"]),
+        }, ["action", "super", "amount"]),
         leaf("crest", {
-            "gain": {"$ref": "#/$defs/CrestId"},
+            "gain": {"type": "string", "pattern": "^crest:[0-9]{8}$"},
             "player": {"enum": ["self", "opponent"]},
         }, ["gain", "player"]),
         leaf("removeCrests", {
@@ -496,7 +533,7 @@ def effect_schema():
             "times": {"$ref": "#/$defs/Amount"},
         }, ["times"]),
         leaf("randomSplit", {
-            "keys": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 2},
+            "keys": {"type": "array", "items": {"enum": VARS}, "minItems": 2},
             "times": {"$ref": "#/$defs/Amount"},
             "effects": {"type": "array", "items": {"$ref": "#/$defs/ClauseRoot"}, "minItems": 1},
         }, ["keys", "times", "effects"]),
@@ -524,6 +561,11 @@ def effect_schema():
                 ),
             },
         }, ["pick", "by", "options"]),
+        leaf("choose", {
+            "pick": {"oneOf": [{"type": "integer", "minimum": 1}, {"const": "all"}]},
+            "by": {"enum": ["player", "randomUnused", "random"]},
+            "optionsFrom": {"enum": OPTIONS_FROM},
+        }, ["pick", "by", "optionsFrom"]),
         leaf("repeat", {
             "times": {"$ref": "#/$defs/Amount"},
             "effects": {"type": "array", "items": {"$ref": "#/$defs/Effect"}, "minItems": 1},
@@ -534,9 +576,10 @@ def effect_schema():
                 "minItems": 1,
                 "items": closed(
                     {
+                        "printed": {"type": "string", "minLength": 1},
                         "effects": {"type": "array", "items": {"$ref": "#/$defs/Effect"}, "minItems": 1},
                     },
-                    required=["effects"],
+                    required=["printed", "effects"],
                 ),
             },
         }, ["steps"]),
@@ -557,7 +600,7 @@ def trigger_extras():
     """Ability is a closed object with `on` discriminator."""
     base = {
         "printed": {"type": "string", "minLength": 1},
-        "effects": {"type": "array", "items": {"$ref": "#/$defs/ClauseRoot"}},
+        "effects": {"type": "array", "items": {"$ref": "#/$defs/ClauseRoot"}, "minItems": 1},
         "zone": {"enum": ["field", "hand", "deck"]},
         "oncePerTurn": {"type": "boolean"},
         "when": {"$ref": "#/$defs/Condition"},
@@ -566,7 +609,7 @@ def trigger_extras():
     simple = [
         "fanfare", "lastWords", "evolve", "superEvolve", "anyEvolve", "anySuperEvolve",
         "strike", "followerStrike", "clash", "enter", "leave", "discarded",
-        "invoked", "fused", "spellboost", "static",
+        "invoked", "fused", "spellboost",
     ]
     variants = []
     for on in simple:
@@ -594,27 +637,62 @@ def trigger_extras():
         },
         required=["on", "event", "printed", "effects"],
     ))
+    variants.append(closed(
+        {
+            "on": {"const": "static"},
+            "printed": {"type": "string", "minLength": 1},
+            "modifier": closed(
+                {
+                    "suppress": {
+                        "type": "array",
+                        "items": {"enum": TRIGGER_TAGS},
+                        "minItems": 1,
+                    },
+                    "select": {"$ref": "#/$defs/Selector"},
+                },
+                required=["suppress", "select"],
+            ),
+            "zone": {"enum": ["field", "hand", "deck"]},
+            "when": {"$ref": "#/$defs/Condition"},
+        },
+        required=["on", "printed", "modifier"],
+    ))
     return {"oneOf": variants}
 
 
 def mode_schema():
-    common = {
-        "kind": {"enum": ["enhance", "accelerate", "crystallize"]},
-        "cost": {"type": "integer", "minimum": 0},
-        "printed": {"type": "string", "minLength": 1},
-        "effects": {"type": "array", "items": {"$ref": "#/$defs/ClauseRoot"}},
-        "replacesBase": {"type": "boolean"},
-        "countdown": {"type": "integer", "minimum": 0},
-        "traits": {"$ref": "#/$defs/Traits"},
-        "abilities": {"type": "array", "items": {"$ref": "#/$defs/Ability"}},
-    }
-    return {
-        "oneOf": [
-            closed({**common, "kind": {"const": "enhance"}}, required=["kind", "cost", "printed", "effects"]),
-            closed({**common, "kind": {"const": "accelerate"}}, required=["kind", "cost", "printed", "effects"]),
-            closed({**common, "kind": {"const": "crystallize"}}, required=["kind", "cost", "printed"]),
-        ]
-    }
+    effects = {"type": "array", "items": {"$ref": "#/$defs/ClauseRoot"}, "minItems": 1}
+    enhance = closed(
+        {
+            "kind": {"const": "enhance"},
+            "cost": {"type": "integer", "minimum": 0},
+            "printed": {"type": "string", "minLength": 1},
+            "effects": effects,
+            "replacesBase": {"type": "boolean"},
+        },
+        required=["kind", "cost", "printed", "effects"],
+    )
+    accelerate = closed(
+        {
+            "kind": {"const": "accelerate"},
+            "cost": {"type": "integer", "minimum": 0},
+            "printed": {"type": "string", "minLength": 1},
+            "effects": effects,
+        },
+        required=["kind", "cost", "printed", "effects"],
+    )
+    crystallize = closed(
+        {
+            "kind": {"const": "crystallize"},
+            "cost": {"type": "integer", "minimum": 0},
+            "printed": {"type": "string", "minLength": 1},
+            "countdown": {"type": "integer", "minimum": 0},
+            "traits": {"$ref": "#/$defs/Traits"},
+            "abilities": {"type": "array", "items": {"$ref": "#/$defs/Ability"}},
+        },
+        required=["kind", "cost", "printed"],
+    )
+    return {"oneOf": [enhance, accelerate, crystallize]}
 
 
 def fuse_schema():
@@ -629,16 +707,18 @@ def fuse_schema():
             "partners": {"$ref": "#/$defs/Filter"},
             "costTotal": {"type": "integer", "minimum": 0},
             "costTotalGte": {"type": "integer", "minimum": 0},
+            "requires": {"type": "array", "items": {"$ref": "#/$defs/CardId"}, "minItems": 1},
             "result": result,
         },
         required=["result"],
     )
     return closed(
         {
+            "printed": {"type": "string", "minLength": 1},
             "partners": {"$ref": "#/$defs/Filter"},
             "recipes": {"type": "array", "items": recipe, "minItems": 1},
         },
-        required=["partners"],
+        required=["printed", "partners"],
     )
 
 
@@ -718,7 +798,7 @@ def build():
             "CounterKey": {
                 "oneOf": [
                     {"enum": ["combo", "earth", "faith", "shadows", "skyboundHand"]},
-                    closed({"var": {"type": "string", "minLength": 1}}, required=["var"]),
+                    closed({"var": {"enum": VARS}}, required=["var"]),
                 ]
             },
             "Filter": filter_schema(),

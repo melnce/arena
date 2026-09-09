@@ -119,8 +119,11 @@
           "additionalProperties": false,
           "properties": {
             "var": {
-              "type": "string",
-              "minLength": 1
+              "enum": [
+                "X",
+                "Y",
+                "Z"
+              ]
             }
           },
           "required": [
@@ -164,25 +167,18 @@
             }
           ]
         },
-        "name": {
-          "oneOf": [
-            {
-              "type": "string",
-              "minLength": 1
-            },
-            {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              },
-              "minItems": 1
-            }
-          ]
+        "card": {
+          "$ref": "#/$defs/CardId"
         },
-        "notName": {
-          "type": "string",
-          "minLength": 1
+        "cards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CardId"
+          },
+          "minItems": 1
+        },
+        "notCard": {
+          "$ref": "#/$defs/CardId"
         },
         "kind": {
           "enum": [
@@ -249,8 +245,24 @@
           "type": "boolean"
         },
         "hasTrait": {
-          "type": "string",
-          "minLength": 1
+          "enum": [
+            "ward",
+            "bane",
+            "rush",
+            "storm",
+            "ambush",
+            "aura",
+            "intimidate",
+            "drain",
+            "barrier",
+            "ignoresWard",
+            "cantAttackFollowers",
+            "cantAttackLeader",
+            "cantBeDestroyedByAbilities",
+            "cantBePlayed",
+            "attacksPerTurn",
+            "damageCap"
+          ]
         },
         "enhanced": {
           "type": "boolean"
@@ -267,80 +279,166 @@
       }
     },
     "Selector": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "side": {
-          "enum": [
-            "ally",
-            "enemy",
-            "any"
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "self"
+            }
+          },
+          "required": [
+            "pick"
           ]
         },
-        "zone": {
-          "enum": [
-            "field",
-            "hand",
-            "deck",
-            "cemetery",
-            "leader",
-            "crests"
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "entering"
+            }
+          },
+          "required": [
+            "pick"
           ]
         },
-        "kind": {
-          "enum": [
-            "follower",
-            "amulet",
-            "card",
-            "leader",
-            "character"
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "attacker"
+            }
+          },
+          "required": [
+            "pick"
           ]
         },
-        "filter": {
-          "$ref": "#/$defs/Filter"
-        },
-        "pick": {
-          "enum": [
-            "all",
-            "choose",
-            "random",
-            "randomDistinct",
-            "leftmost",
-            "highest",
-            "lowest",
-            "self",
-            "bound",
-            "entering",
-            "attacker",
-            "defender",
-            "opposing",
-            "selected"
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "defender"
+            }
+          },
+          "required": [
+            "pick"
           ]
         },
-        "count": {
-          "$ref": "#/$defs/Amount"
-        },
-        "other": {
-          "type": "boolean"
-        },
-        "includeLeader": {
-          "type": "boolean"
-        },
-        "orderBy": {
-          "enum": [
-            "attack",
-            "defense",
-            "cost",
-            "baseCost"
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "opposing"
+            }
+          },
+          "required": [
+            "pick"
           ]
         },
-        "ref": {
-          "type": "string",
-          "minLength": 1
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "selected"
+            }
+          },
+          "required": [
+            "pick"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "bound"
+            },
+            "ref": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "pick",
+            "ref"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "enum": [
+                "all",
+                "choose",
+                "random",
+                "randomDistinct",
+                "leftmost",
+                "highest",
+                "lowest"
+              ]
+            },
+            "side": {
+              "enum": [
+                "ally",
+                "enemy",
+                "any"
+              ]
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck",
+                "cemetery",
+                "leader",
+                "crests"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "follower",
+                "amulet",
+                "card",
+                "leader",
+                "character",
+                "faith"
+              ]
+            },
+            "filter": {
+              "$ref": "#/$defs/Filter"
+            },
+            "count": {
+              "$ref": "#/$defs/Amount"
+            },
+            "other": {
+              "type": "boolean"
+            },
+            "includeLeader": {
+              "type": "boolean"
+            },
+            "orderBy": {
+              "enum": [
+                "attack",
+                "defense",
+                "cost",
+                "baseCost"
+              ]
+            }
+          },
+          "required": [
+            "pick",
+            "side",
+            "zone",
+            "kind"
+          ]
         }
-      },
-      "required": [
-        "pick"
       ]
     },
     "Amount": {
@@ -407,8 +505,11 @@
           "additionalProperties": false,
           "properties": {
             "var": {
-              "type": "string",
-              "minLength": 1
+              "enum": [
+                "X",
+                "Y",
+                "Z"
+              ]
             }
           },
           "required": [
@@ -898,8 +999,11 @@
               "additionalProperties": false,
               "properties": {
                 "key": {
-                  "type": "string",
-                  "minLength": 1
+                  "enum": [
+                    "X",
+                    "Y",
+                    "Z"
+                  ]
                 },
                 "n": {
                   "$ref": "#/$defs/Amount"
@@ -923,9 +1027,8 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "name": {
-                  "type": "string",
-                  "minLength": 1
+                "card": {
+                  "$ref": "#/$defs/CardId"
                 },
                 "n": {
                   "$ref": "#/$defs/Amount"
@@ -942,7 +1045,7 @@
                 }
               },
               "required": [
-                "name",
+                "card",
                 "n"
               ]
             }
@@ -1568,6 +1671,34 @@
             },
             "select": {
               "$ref": "#/$defs/Selector"
+            },
+            "on": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "fanfare",
+                  "lastWords",
+                  "evolve",
+                  "superEvolve",
+                  "anyEvolve",
+                  "anySuperEvolve",
+                  "strike",
+                  "followerStrike",
+                  "clash",
+                  "enter",
+                  "leave",
+                  "discarded",
+                  "invoked",
+                  "fused",
+                  "spellboost",
+                  "engage",
+                  "startOfTurn",
+                  "endOfTurn",
+                  "when",
+                  "enhance"
+                ]
+              },
+              "minItems": 1
             }
           },
           "required": [
@@ -1680,7 +1811,8 @@
           "required": [
             "op",
             "action",
-            "super"
+            "super",
+            "amount"
           ]
         },
         {
@@ -1702,7 +1834,8 @@
               "$ref": "#/$defs/Condition"
             },
             "gain": {
-              "$ref": "#/$defs/CrestId"
+              "type": "string",
+              "pattern": "^crest:[0-9]{8}$"
             },
             "player": {
               "enum": [
@@ -2037,8 +2170,11 @@
             "keys": {
               "type": "array",
               "items": {
-                "type": "string",
-                "minLength": 1
+                "enum": [
+                  "X",
+                  "Y",
+                  "Z"
+                ]
               },
               "minItems": 2
             },
@@ -2207,6 +2343,73 @@
           "additionalProperties": false,
           "properties": {
             "op": {
+              "const": "choose"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "pick": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "const": "all"
+                }
+              ]
+            },
+            "by": {
+              "enum": [
+                "player",
+                "randomUnused",
+                "random"
+              ]
+            },
+            "optionsFrom": {
+              "enum": [
+                "fanfare",
+                "lastWords",
+                "evolve",
+                "superEvolve",
+                "anyEvolve",
+                "anySuperEvolve",
+                "strike",
+                "followerStrike",
+                "clash",
+                "enter",
+                "leave",
+                "discarded",
+                "invoked",
+                "fused",
+                "spellboost",
+                "engage",
+                "startOfTurn",
+                "endOfTurn",
+                "when"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "pick",
+            "by",
+            "optionsFrom"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
               "const": "repeat"
             },
             "printed": {
@@ -2262,6 +2465,10 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                  "printed": {
+                    "type": "string",
+                    "minLength": 1
+                  },
                   "effects": {
                     "type": "array",
                     "items": {
@@ -2271,6 +2478,7 @@
                   }
                 },
                 "required": [
+                  "printed",
                   "effects"
                 ]
               }
@@ -2319,7 +2527,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2359,7 +2568,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2399,7 +2609,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2439,7 +2650,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2479,7 +2691,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2519,7 +2732,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2559,7 +2773,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2599,7 +2814,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2639,7 +2855,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2679,7 +2896,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2719,7 +2937,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2759,7 +2978,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2799,7 +3019,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2839,7 +3060,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2879,47 +3101,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
-            },
-            "zone": {
-              "enum": [
-                "field",
-                "hand",
-                "deck"
-              ]
-            },
-            "oncePerTurn": {
-              "type": "boolean"
-            },
-            "when": {
-              "$ref": "#/$defs/Condition"
-            },
-            "replaces": {
-              "const": "evolve"
-            }
-          },
-          "required": [
-            "on",
-            "printed",
-            "effects"
-          ]
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "on": {
-              "const": "static"
-            },
-            "printed": {
-              "type": "string",
-              "minLength": 1
-            },
-            "effects": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -2966,7 +3149,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -3014,7 +3198,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -3061,7 +3246,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -3124,7 +3310,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "zone": {
               "enum": [
@@ -3148,6 +3335,75 @@
             "event",
             "printed",
             "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "static"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "modifier": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "suppress": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "fanfare",
+                      "lastWords",
+                      "evolve",
+                      "superEvolve",
+                      "anyEvolve",
+                      "anySuperEvolve",
+                      "strike",
+                      "followerStrike",
+                      "clash",
+                      "enter",
+                      "leave",
+                      "discarded",
+                      "invoked",
+                      "fused",
+                      "spellboost",
+                      "engage",
+                      "startOfTurn",
+                      "endOfTurn",
+                      "when",
+                      "enhance"
+                    ]
+                  },
+                  "minItems": 1
+                },
+                "select": {
+                  "$ref": "#/$defs/Selector"
+                }
+              },
+              "required": [
+                "suppress",
+                "select"
+              ]
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "modifier"
           ]
         }
       ]
@@ -3173,23 +3429,11 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
+              },
+              "minItems": 1
             },
             "replacesBase": {
               "type": "boolean"
-            },
-            "countdown": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "traits": {
-              "$ref": "#/$defs/Traits"
-            },
-            "abilities": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/Ability"
-              }
             }
           },
           "required": [
@@ -3218,23 +3462,8 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/ClauseRoot"
-              }
-            },
-            "replacesBase": {
-              "type": "boolean"
-            },
-            "countdown": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "traits": {
-              "$ref": "#/$defs/Traits"
-            },
-            "abilities": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/Ability"
-              }
+              },
+              "minItems": 1
             }
           },
           "required": [
@@ -3258,15 +3487,6 @@
             "printed": {
               "type": "string",
               "minLength": 1
-            },
-            "effects": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/ClauseRoot"
-              }
-            },
-            "replacesBase": {
-              "type": "boolean"
             },
             "countdown": {
               "type": "integer",
@@ -3294,6 +3514,10 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "printed": {
+          "type": "string",
+          "minLength": 1
+        },
         "partners": {
           "$ref": "#/$defs/Filter"
         },
@@ -3313,6 +3537,13 @@
               "costTotalGte": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "requires": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/CardId"
+                },
+                "minItems": 1
               },
               "result": {
                 "oneOf": [
@@ -3351,6 +3582,7 @@
         }
       },
       "required": [
+        "printed",
         "partners"
       ]
     },
