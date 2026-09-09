@@ -75,23 +75,149 @@ function walkEffects(node, visit) {
     }
   }
   if (Array.isArray(node.steps)) {
-    for (const step of node.steps) walkEffects(step.effects, visit);
+    for (const step of node.steps) {
+      visit.step?.(step, node);
+      walkEffects(step.effects, visit);
+    }
   }
   if (node.ability && typeof node.ability === "object") {
     visit.nestedAbility?.(node.ability);
   }
 }
 
-function collectNamedRefs(node, into) {
+function collectRefs(node, into) {
   if (!node || typeof node !== "object") return;
   if (Array.isArray(node)) {
-    for (const x of node) collectNamedRefs(x, into);
+    for (const x of node) collectRefs(x, into);
     return;
   }
   if (typeof node.named === "string") into.cards.add(node.named);
   if (typeof node.gain === "string") into.crests.add(node.gain);
   if (typeof node.transformInto === "string") into.cards.add(node.transformInto);
-  for (const v of Object.values(node)) collectNamedRefs(v, into);
+  if (typeof node.card === "string" && /^\d{8}$/.test(node.card)) into.cards.add(node.card);
+  if (typeof node.notCard === "string") into.cards.add(node.notCard);
+  if (Array.isArray(node.cards)) {
+    for (const id of node.cards) {
+      if (typeof id === "string" && /^\d{8}$/.test(id)) into.cards.add(id);
+    }
+  }
+  if (Array.isArray(node.requires)) {
+    for (const id of node.requires) {
+      if (typeof id === "string") into.cards.add(id);
+    }
+  }
+  for (const v of Object.values(node)) collectRefs(v, into);
+}
+
+function stripPrinted(value) {
+  if (Array.isArray(value)) return value.map(stripPrinted);
+  if (value && typeof value === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      if (k === "printed") continue;
+      out[k] = stripPrinted(v);
+    }
+    return out;
+  }
+  return value;
+}
+
+function canonical(value) {
+  return JSON.stringify(value, (_, v) => {
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      return Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)));
+    }
+    return v;
+  });
+}
+
+function checkDuplicateEffects(file, data) {
+  const abilityHashes = new Set();
+  for (const ab of data.abilities ?? []) {
+    for (const el of ab.effects ?? []) {
+      abilityHashes.add(canonical(stripPrinted(el)));
+    }
+  }
+  for (const mode of data.modes ?? []) {
+    for (const el of mode.effects ?? []) {
+      const hash = canonical(stripPrinted(el));
+      if (abilityHashes.has(hash)) {
+        fail(
+          file,
+          `mode copies an ability effect subtree (printed stripped): ${hash.slice(0, 80)}`,
+        );
+        return;
+      }
+    }
+  }
+  const optionLists = [];
+  const visit = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) {
+      for (const x of node) visit(x);
+      return;
+    }
+    if (node.op === "choose" && Array.isArray(node.options)) {
+      optionLists.push(canonical(stripPrinted(node.options)));
+    }
+    for (const v of Object.values(node)) visit(v);
+  };
+  visit(data);
+  const seenOpts = new Set();
+  for (const h of optionLists) {
+    if (seenOpts.has(h)) {
+      fail(file, "identical choose options list appears twice in this file");
+      return;
+    }
+    seenOpts.add(h);
+  }
+}
+
+function checkFaithGain(file, node) {
+  if (!node || typeof node !== "object") return;
+  if (Array.isArray(node)) {
+    for (const x of node) checkFaithGain(file, x);
+    return;
+  }
+  if (typeof node.gain === "string" && node.gain.startsWith("faith:")) {
+    fail(file, `CardSource/crest gain must not reference a faith: id (${node.gain})`);
+  }
+  if (typeof node.named === "string" && node.named.startsWith("faith:")) {
+    fail(file, `CardSource must not reference a faith: id (${node.named})`);
+  }
+  for (const v of Object.values(node)) checkFaithGain(file, v);
+}
+
+function abilityHasChoose(ability) {
+  if (!ability || !Array.isArray(ability.effects)) return false;
+  return ability.effects.some((e) => e && e.op === "choose");
+}
+
+function checkOptionsFrom(file, data) {
+  const byOn = new Map();
+  for (const ab of data.abilities ?? []) {
+    if (ab?.on) byOn.set(ab.on, ab);
+  }
+  const visit = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) {
+      for (const x of node) visit(x);
+      return;
+    }
+    if (node.op === "choose" && node.optionsFrom) {
+      const src = byOn.get(node.optionsFrom);
+      if (!src) {
+        fail(file, `optionsFrom ${node.optionsFrom} has no ability with that trigger on this card`);
+      } else if (!abilityHasChoose(src)) {
+        fail(
+          file,
+          `optionsFrom ${node.optionsFrom} does not point at a clause root that is a choose`,
+        );
+      }
+    }
+    for (const v of Object.values(node)) visit(v);
+  };
+  visit(data);
 }
 
 function checkPrintedTree(file, parentPrinted, effects, label, cardText) {
@@ -119,30 +245,57 @@ function checkPrintedTree(file, parentPrinted, effects, label, cardText) {
       }
       used.add(s);
     }
-    walkEffects(root, Object.assign((node) => {
-      if (node.op === "choose" && Array.isArray(node.options)) {
-        for (const [j, opt] of node.options.entries()) {
-          if (!opt.printed) {
-            fail(file, `${label}[${i}] choose option ${j} missing printed`);
-          } else if (
-            !isSubstring(opt.printed, parentPrinted) &&
-            !isSubstring(opt.printed, cardText || "")
-          ) {
-            fail(
+    walkEffects(
+      root,
+      Object.assign(
+        (node) => {
+          if (node.op === "choose" && Array.isArray(node.options)) {
+            for (const [j, opt] of node.options.entries()) {
+              if (!opt.printed) {
+                fail(file, `${label}[${i}] choose option ${j} missing printed`);
+              } else if (
+                !isSubstring(opt.printed, parentPrinted) &&
+                !isSubstring(opt.printed, cardText || "")
+              ) {
+                fail(
+                  file,
+                  `${label}[${i}] choose option ${j} printed is not a substring of its parent or card text`,
+                );
+              }
+            }
+          }
+          if (node.op === "sequence" && Array.isArray(node.steps)) {
+            for (const [j, step] of node.steps.entries()) {
+              if (!step.printed) {
+                fail(file, `${label}[${i}] sequence step ${j} missing printed`);
+              } else if (
+                !isSubstring(step.printed, parentPrinted) &&
+                !isSubstring(step.printed, cardText || "")
+              ) {
+                fail(
+                  file,
+                  `${label}[${i}] sequence step ${j} printed is not a substring of its parent or card text`,
+                );
+              }
+            }
+          }
+          if (node.op === "randomSplit" && Array.isArray(node.effects) && node.printed) {
+            checkPrintedTree(
               file,
-              `${label}[${i}] choose option ${j} printed is not a substring of its parent or card text`,
+              node.printed,
+              node.effects,
+              `${label}[${i}].randomSplit`,
+              cardText,
             );
           }
-        }
-      }
-      if (node.op === "randomSplit" && Array.isArray(node.effects) && node.printed) {
-        checkPrintedTree(file, node.printed, node.effects, `${label}[${i}].randomSplit`, cardText);
-      }
-    }, {
-      nestedAbility: (ability) => {
-        checkAbility(file, ability, parentPrinted, `${label}[${i}].grantedAbility`);
-      },
-    }));
+        },
+        {
+          nestedAbility: (ability) => {
+            checkAbility(file, ability, parentPrinted, `${label}[${i}].grantedAbility`);
+          },
+        },
+      ),
+    );
   }
 }
 
@@ -157,7 +310,23 @@ function checkAbility(file, ability, textHaystack, label) {
       `${label} printed is not a whitespace-normalised substring of card/crest/mode text`,
     );
   }
+  if (ability.on === "static") return;
   checkPrintedTree(file, ability.printed, ability.effects, `${label}.effects`, textHaystack);
+}
+
+function grantedAbilityHasCrestGain(data, crestId) {
+  const found = { yes: false };
+  const visit = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) {
+      for (const x of node) visit(x);
+      return;
+    }
+    if (node.op === "crest" && node.gain === crestId) found.yes = true;
+    for (const v of Object.values(node)) visit(v);
+  };
+  visit(data);
+  return found.yes;
 }
 
 function main() {
@@ -179,6 +348,10 @@ function main() {
   const docs = [];
 
   for (const file of files) {
+    const base = path.basename(file);
+    if (base.includes(":")) {
+      fail(file, "file name contains a colon (use crest-… / faith-… on NTFS)");
+    }
     let data;
     try {
       data = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -212,6 +385,10 @@ function main() {
       fail(file, "crest text is empty");
     }
 
+    checkFaithGain(file, data);
+    checkDuplicateEffects(file, data);
+    checkOptionsFrom(file, data);
+
     if (isCrest) {
       for (const [i, ab] of (data.abilities ?? []).entries()) {
         checkAbility(file, ab, data.text, `abilities[${i}]`);
@@ -238,12 +415,31 @@ function main() {
 
   for (const { file, data } of docs) {
     const refs = { cards: new Set(), crests: new Set() };
-    collectNamedRefs(data, refs);
+    collectRefs(data, refs);
     for (const id of refs.cards) {
-      if (!byId.has(id)) fail(file, `dangling card-source id ${id}`);
+      if (!byId.has(id)) fail(file, `dangling card id ${id}`);
     }
     for (const id of refs.crests) {
       if (!byId.has(id)) fail(file, `dangling crest id ${id}`);
+    }
+  }
+
+  for (const { file, data } of docs) {
+    const isCrest = typeof data.faith === "boolean" && Array.isArray(data.grantedBy);
+    if (!isCrest || data.faith) continue;
+    for (const gid of data.grantedBy ?? []) {
+      const gfile = byId.get(gid);
+      if (!gfile) {
+        fail(file, `grantedBy ${gid} is not an authored card file`);
+        continue;
+      }
+      const granter = docs.find((d) => d.file === gfile)?.data;
+      if (!granter || !grantedAbilityHasCrestGain(granter, data.id)) {
+        fail(
+          file,
+          `grantedBy ${gid} must contain a crest {gain} of ${data.id} (faith files exempt)`,
+        );
+      }
     }
   }
 

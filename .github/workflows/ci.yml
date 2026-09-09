@@ -52,6 +52,12 @@ jobs:
           cache: npm
           cache-dependency-path: tools/package-lock.json
 
+      - name: schema generator matches committed JSON
+        run: python3 tools/gen_schema.py && git diff --exit-code schema/cards.schema.json
+
       - name: validate cards
         working-directory: tools
-        run: npm ci && node validate.mjs
+        run: npm ci && node validate.mjs && node corruption-proofs.mjs
+
+      - name: coverage verb walk
+        run: python3 tools/coverage-check.py

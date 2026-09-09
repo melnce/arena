@@ -1,0 +1,2462 @@
+{
+  "10001110": {
+    "name": "Indomitable Fighter",
+    "text": "Enhance (4): Give this follower +3/+3."
+  },
+  "10001120": {
+    "name": "Leah, Bellringer Angel",
+    "text": "Ward\nLast Words: Draw a card.\nEvolve: Draw a card."
+  },
+  "10001130": {
+    "name": "Quake Goliath",
+    "text": "Ward"
+  },
+  "10001210": {
+    "name": "Detective's Lens",
+    "text": "Engage: Destroy this card. Select an enemy follower on the field and remove Ward from it."
+  },
+  "10002110": {
+    "name": "Arriet, Luxminstrel",
+    "text": "Evolve: Restore 2 defense to your leader.\nSuper-Evolve: Restore 4 defense instead."
+  },
+  "10002120": {
+    "name": "Caravan Mammoth",
+    "text": ""
+  },
+  "10002210": {
+    "name": "Adventurers' Guild",
+    "text": "Fanfare: Draw a follower.\nEngage: Destroy this card. Select an allied follower on the field and give it Rush."
+  },
+  "10011110": {
+    "name": "Fairy Tamer",
+    "text": "Fanfare: Add 2 copies of Fairy to your hand."
+  },
+  "10011120": {
+    "name": "Stray Beastman",
+    "text": "Fanfare: Increase your Combo by 1."
+  },
+  "10011130": {
+    "name": "Gentle Treant",
+    "text": "Fanfare: Combo (3) - Evolve this follower.\nStrike: Restore 2 defense to your leader."
+  },
+  "10011210": {
+    "name": "Wild Profusion",
+    "text": "Fanfare: Add a Fairy to your hand.\nCountdown (2)\nWhenever an allied Pixie follower enters the field, deal 1 damage to a random enemy follower."
+  },
+  "10012110": {
+    "name": "May, Journey Elf",
+    "text": "Fanfare: Combo (3) - Select an enemy follower on the field and deal it 3 damage."
+  },
+  "10012120": {
+    "name": "Selwyn, Sonic Archer",
+    "text": "Storm\nSuper-Evolve: Select an enemy follower on the field and return it to hand."
+  },
+  "10012310": {
+    "name": "Bug Alert",
+    "text": "Select an allied card on the field and return it to hand. Deal 2 damage to a random enemy follower."
+  },
+  "10021110": {
+    "name": "Flashstep Quickblader",
+    "text": "Storm"
+  },
+  "10021120": {
+    "name": "Arms Peddler",
+    "text": "Rush\nLast Words: Draw a card."
+  },
+  "10021130": {
+    "name": "Centaur Centurion",
+    "text": "Storm"
+  },
+  "10021310": {
+    "name": "Way of the Maid",
+    "text": "Select a card in your hand and return it to deck. Draw 2 Swordcraft followers."
+  },
+  "10022110": {
+    "name": "Royal Coachwoman",
+    "text": "Last Words: Summon a Knight."
+  },
+  "10022120": {
+    "name": "Rusty, Luxcard Trickster",
+    "text": "Super-Evolve: Draw all copies of Rusty, Luxcard Trickster and give them Storm."
+  },
+  "10022210": {
+    "name": "Ancestral Crown",
+    "text": "Countdown (4)\nWhenever an allied follower enters the field, give it +1/+1."
+  },
+  "10031110": {
+    "name": "Dazzling Runeknight",
+    "text": "Fanfare: Select a Mode to activate.\n1. Spellboost your hand 2 times.\n2. Earth Rite (1) - Give this follower +2/+2 and Ward"
+  },
+  "10031210": {
+    "name": "Witch's New Brew",
+    "text": "Fanfare: Draw a card.\nEarth Sigil\nEngage (1): Gain an earth sigil."
+  },
+  "10031310": {
+    "name": "Foresight",
+    "text": "Draw a card."
+  },
+  "10031320": {
+    "name": "Truth Summons",
+    "text": "Summon a Clay Golem."
+  },
+  "10032110": {
+    "name": "Remi & Rami, Two-Faced Witch",
+    "text": "Fanfare: Earth Rite (1) - Summon a Guardian Golem.\nSuper-Evolve: Select an allied Golem follower on the field, evolve it, and give it +3/+3."
+  },
+  "10032120": {
+    "name": "Blaze Destroyer",
+    "text": "On Spellboost: Reduce the cost of this card by 1."
+  },
+  "10032310": {
+    "name": "Arcane Eruption",
+    "text": "Deal 2 damage to all followers. Earth Rite (1) - Draw a card."
+  },
+  "10041110": {
+    "name": "Searing Firenewt",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 1 damage."
+  },
+  "10041120": {
+    "name": "Axe-Wielding Dragonslayer",
+    "text": "Ward"
+  },
+  "10041130": {
+    "name": "Warrior of the Deep",
+    "text": "Fanfare: Deal 6 damage to the enemy leader."
+  },
+  "10041310": {
+    "name": "Strike of the Dragonewt",
+    "text": "Select an enemy follower on the field and deal it 2 damage. If you're in Overflow, deal 4 damage instead."
+  },
+  "10042110": {
+    "name": "Draconic Berserker",
+    "text": "Evolve: Select an enemy follower on the field and deal it 4 damage.\nSuper-Evolve: Deal damage to all enemy followers instead."
+  },
+  "10042120": {
+    "name": "Battleforged Dragon Keeper",
+    "text": "Enhance (7): Summon a Vastwing Dragon."
+  },
+  "10042310": {
+    "name": "Dragonsign",
+    "text": "Gain 1 max play point. Then, if you have 10 max play points, draw a card."
+  },
+  "10051110": {
+    "name": "Mistress of the Fanged",
+    "text": "Storm\nBane"
+  },
+  "10051120": {
+    "name": "Night Fiend",
+    "text": "Fanfare: Deal 1 damage to your leader."
+  },
+  "10051130": {
+    "name": "Devious Lesser Mummy",
+    "text": "Fanfare: Necromancy (4) - Give this follower Storm."
+  },
+  "10051310": {
+    "name": "Chaos Cyclone",
+    "text": "Select a Mode to activate.\n1. Draw a follower.\n2. Reanimate (2)."
+  },
+  "10052110": {
+    "name": "Lilith, Enchanting Succubus",
+    "text": "Last Words: Add a Bat to your hand."
+  },
+  "10052120": {
+    "name": "Amorous Necromancer",
+    "text": "Evolve: Summon 2 copies of Ghost.\nSuper-Evolve: Give them Drain."
+  },
+  "10052310": {
+    "name": "Soul Predation",
+    "text": "Select an allied follower on the field and destroy it. Draw 2 cards."
+  },
+  "10061110": {
+    "name": "Soulcure Sister",
+    "text": "Fanfare: Restore 5 defense to your leader.\nWard"
+  },
+  "10061120": {
+    "name": "Fox of Purity",
+    "text": "Ward"
+  },
+  "10061130": {
+    "name": "Winged Warrior",
+    "text": "Fanfare: Select another allied follower on the field and give it +1/+1.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10061210": {
+    "name": "Avian Statue",
+    "text": "Countdown (2)\nLast Words: Summon a Regal Falcon.\nEngage (2): Advance this amulet's count by 2."
+  },
+  "10062110": {
+    "name": "Ironfist Priest",
+    "text": "Evolve: Select an enemy follower on the field with 3 defense or less and banish it.\nSuper-Evolve: Banish all enemy followers with 3 defense or less instead."
+  },
+  "10062120": {
+    "name": "Sacred Griffon",
+    "text": "Ward\nWhenever you Engage an amulet, give this follower Storm."
+  },
+  "10062210": {
+    "name": "Winged Statue",
+    "text": "Countdown (4)\nLast Words: Summon a Holy Falcon.\nEngage (1): Advance this amulet's count by 1."
+  },
+  "10071110": {
+    "name": "Kitty Cannoneer",
+    "text": "Fanfare: Add a Gear of Ambition to your hand.\nRush"
+  },
+  "10071120": {
+    "name": "Puppet Lancer",
+    "text": "Fanfare: Add an Enhanced Puppet to your hand."
+  },
+  "10071130": {
+    "name": "Mechanized Beast",
+    "text": "Bane\nWard"
+  },
+  "10071310": {
+    "name": "Bullet from Beyond",
+    "text": "Select an enemy follower on the field and destroy it. Add a Gear of Ambition and Gear of Remembrance to your hand."
+  },
+  "10072110": {
+    "name": "Electric Whip Lass",
+    "text": "Fanfare: Add a Gear of Remembrance to your hand."
+  },
+  "10072120": {
+    "name": "Mecha Cavalier",
+    "text": "Ward\nEvolve: Summon a Mecha Cavalier.\nSuper-Evolve: Summon 2 instead."
+  },
+  "10072210": {
+    "name": "Puppet Theater",
+    "text": "Fanfare: Add a Puppet to your hand.\nCountdown (2)\nAt the end of your turn, add a Puppet to your hand."
+  },
+  "10131320": {
+    "name": "Stormy Blast",
+    "text": "X starts at 2.\nOn Spellboost: Increase X by 1.\nSelect an enemy follower on the field and deal it X damage."
+  },
+  "10401110": {
+    "name": "Katalina, Sky's Protector",
+    "text": "Fanfare: Skybound Art- Deal 5 damage to 2 random enemy followers.\nWard \nCan't take more than 3 damage at a time."
+  },
+  "10401120": {
+    "name": "Vyrn, Bestest Pal",
+    "text": "Fanfare: If you've unlocked super-evolution, evolve this follower."
+  },
+  "10402110": {
+    "name": "Yuni, Cosmic Legacy",
+    "text": "Aura\nAt the end of your turn, restore 1 defense to all allies."
+  },
+  "10403110": {
+    "name": "Gran & Djeeta, Valiant Skyfarers",
+    "text": "Fanfare: Select a Mode to activate.\nSkybound Art- Evolve this follower.\n1. Deal 5 damage to a random enemy follower.\n2. Draw 2 followers."
+  },
+  "10403120": {
+    "name": "Lyria, Skydestined",
+    "text": "Enhance(8): Draw a follower that costs 7 or more. Recover 7 play points\nBarrier"
+  },
+  "10404110": {
+    "name": "Sandalphon, Primarch Successor",
+    "text": "Activates in deck. At the start of your turn, if allied followers have evolved at least 6 times this match, Invoke this card.\nWhen this card is Invoked, gain Crest: Sandalphon, Primarch Successor and return this card to hand\nFanfare: Super Skybound Art- Do this 5 times: \"Deal 2 damage to a random enemy.\""
+  },
+  "10411110": {
+    "name": "Kou & You, Love and Hatred",
+    "text": "Can attack 2 times per turn.\nStrike: Restore 3 defense to all allies."
+  },
+  "10411120": {
+    "name": "Manamel, Super Cutest",
+    "text": "At the end of your turn, evolve this follower. When this follower evolves, deal 1 damage to all enemy followers."
+  },
+  "10411310": {
+    "name": "Comet Drive",
+    "text": "Select an enemy follower on the field and deal it 4 damage. If there's an evolved allied follower on the field, draw a card."
+  },
+  "10412110": {
+    "name": "Chloe, What a Gal",
+    "text": "Enhance(8): Select a follower in your hand and summon it. Return this card to hand."
+  },
+  "10412120": {
+    "name": "Anthuria, Toe-Tapping Torch",
+    "text": "Fanfare: Give all allied followers on the field Barrier."
+  },
+  "10412310": {
+    "name": "Starry Sky",
+    "text": "Deal 2 damage to a random enemy follower. Combo(5) - Gain Crest: Starry Sky."
+  },
+  "10413110": {
+    "name": "Cupitan, Iridescent Archer",
+    "text": "Fanfare: [Skybound Art] Evolve this follower. [Super Skybound Art] Deal 3 damage to the enemy leader.\nWhen this follower evolves, do this 7 times: \"Deal 1 damage to a random enemy follower.\""
+  },
+  "10413310": {
+    "name": "Alfheimr",
+    "text": "Select a Mode to activate. Super Skybound Art- Activate all of them instead.\n1. Draw a card. Restore 1 defense to your leader.\n2. Give all allied followers on the field +1/+0 and Rush.\n3. Give all allied followers on the field +0/+1 and Ward."
+  },
+  "10414110": {
+    "name": "Ewiyar, Wind Personified",
+    "text": "Fanfare: Skybound Art- Recover 1 evolution point.\nRush."
+  },
+  "10414120": {
+    "name": "Yuel & Societte, Dancing Duo",
+    "text": "Fanfare: Do this 2 times: Deal 4 damage to a random enemy follower.\nSuper-Evolve: Gain Crest: Yuel & Societte, Dancing Duo."
+  },
+  "10421110": {
+    "name": "Randall, Feet Fighter",
+    "text": "Enhance(5): Give this follower Storm."
+  },
+  "10421120": {
+    "name": "Arthur, Staunch Dragon",
+    "text": "Ward\nEvolve: Summon a Mordred, Illusory Lion."
+  },
+  "10421130": {
+    "name": "Mordred, Illusory Lion",
+    "text": "Storm\nEvolve: Summon an Arthur, Staunch Dragon."
+  },
+  "10422110": {
+    "name": "Aglovale, Lord of Frost",
+    "text": "Fanfare: Deal 3 damage to all enemy followers\nIntimidate"
+  },
+  "10422120": {
+    "name": "Feather, Bombastic Brawler",
+    "text": ""
+  },
+  "10422130": {
+    "name": "Fiorito, Muscles in Bloom",
+    "text": "Ambush\nBane"
+  },
+  "10423110": {
+    "name": "Golden Knight, True King's Blade",
+    "text": "Fanfare: Select a Mode to activate.\n1. Super-evolve this follower.\n2. Deal 4 damage to all enemy followers.\n3. Restore 4 defense to your leader.\nEnhance(9): Activate all of them instead."
+  },
+  "10423310": {
+    "name": "Knightly Ardor",
+    "text": "Select a Mode to activate.\n1. Give the leftmost allied Swordcraft follower on the field \"Can attack 2 times per turn\".\n2. Give all allied Swordcraft followers on the field +1/+1 and Barrier.\n3. Recover 2 play points and 1 evolution point.\n4. Restore 6 defense to your leader."
+  },
+  "10424110": {
+    "name": "Zeta & Bea, Crimson and Blue",
+    "text": "Fanfare: Summon a Zeta & Bea, Crimson and Blue.\nEnhance(6): Give it Bane and this follower Storm.\nRush."
+  },
+  "10424120": {
+    "name": "Seofon, Leader of the Eternals",
+    "text": "Fanfare: Skybound Art- Evolve all unevolved allied followers on the field.\nSuper Skybound Art- Super-evolve them instead."
+  },
+  "10431110": {
+    "name": "Philosophia, Cryptic Sophist",
+    "text": "Fanfare: Draw a spell."
+  },
+  "10431120": {
+    "name": "Suframare, Wandering Tutor",
+    "text": "At the end of your turn, spellboost your hand X times. X is this follower's attack.\nEvolve: Give this follower \"Can't attack followers or leaders.\""
+  },
+  "10431310": {
+    "name": "Rune Portal",
+    "text": "Deal 6 damage to all enemy followers. Restore 3 defense to your leader."
+  },
+  "10432110": {
+    "name": "Ezecrain, Portent of Vengeance",
+    "text": "Fanfare: Select 2 enemy followers on the field and deal them 4 damage. Gain 2 earth sigils."
+  },
+  "10432120": {
+    "name": "Mireille & Risette, Penitent Duo",
+    "text": "Fanfare: Summon a Mireille & Risette, Penitent Duo. Earth Rite(2) - Evolve it and this follower."
+  },
+  "10432310": {
+    "name": "Unleashed",
+    "text": "Select a Mode to activate.\n1. Draw a card. Deal 4 damage to a random enemy follower.\n2. Draw 2 cards. Deal 4 damage to 2 random enemy followers and 2 damage to your leader."
+  },
+  "10433110": {
+    "name": "Elmott, Remembrance Aflame",
+    "text": "Fanfare: Select an enemy follower on the field, remove all abilities from it, and deal it 3 damage.\nSuper-Evolve: Gain Crest: Elmott, Remembrance Aflame."
+  },
+  "10433310": {
+    "name": "Alchemic Flare",
+    "text": "Select an enemy follower on the field and deal it 4 damage. Gain an earth sigil.\nSkybound Art- Deal 2 damage to the enemy leader."
+  },
+  "10434110": {
+    "name": "Wamdus, Water Personified",
+    "text": "On Spellboost: Give this follower +1/+1.\nFanfare: Spellboost your hand.\nSuper-Evolve: Select a Mode to activate.\n1. Give all other allied followers on the field Barrier.\n2. Deal X damage split between all enemy followers. X is this follower's attack."
+  },
+  "10434120": {
+    "name": "Cagliostro, Genius Alchemist",
+    "text": "Fanfare: Gain 2 earth sigils. Add an Ars Magna to your hand.\nSkybound Art- Evolve this follower.\nSuper Skybound Art- Gain Crest: Cagliostro, Genius Alchemist."
+  },
+  "10441110": {
+    "name": "Joel, Wave Chaser",
+    "text": "Ward.\nAura."
+  },
+  "10441120": {
+    "name": "Mari, Meg's Bestie",
+    "text": "Activates in hand. Whenever a 3-base-cost allied follower super-evolves, set the cost of this card to 0 until the end of the turn.\nAt the end of your turn, give a random super-evolved allied follower on the field +1/+1."
+  },
+  "10441310": {
+    "name": "Crescent Tube Ride",
+    "text": "Gain Crest: Crescent Tube Ride (Countdown (4). At the end of your turn, give a random allied follower on the field +1/+1.)"
+  },
+  "10442110": {
+    "name": "Izmir, Frigid Fate",
+    "text": "Fanfare: If you have 10 max play points, evolve this follower.\nWhen this follower evolves, deal 3 damage to all enemy followers."
+  },
+  "10442120": {
+    "name": "Mugen, Steel-Bodied Honesty",
+    "text": "Fanfare: Super Skybound Art (15)- Give this follower Storm.\nSuper-Evolve: Select 2 enemy followers on the field and destroy them."
+  },
+  "10442310": {
+    "name": "Maximum Love Bomb",
+    "text": "Select an enemy follower on the field, deal it 3 damage, and give it \"Can't attack followers or leaders\" until the end of your opponent's turn."
+  },
+  "10443110": {
+    "name": "Meg, Girl Next Door",
+    "text": "Fanfare: Skybound Art- Super-evolve this follower.\nWhenever a 2-base-cost allied follower enters the field, give this follower Ward."
+  },
+  "10443310": {
+    "name": "Primal Beast Absorption",
+    "text": "Select an enemy card on the field, banish it, and add a copy of it to your hand."
+  },
+  "10444110": {
+    "name": "Wilnas, Flame Personified",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 8 damage.\nIntimidate.\nEvolve: Replicate the effects of this card'sFanfare ability."
+  },
+  "10444120": {
+    "name": "Zooey, Ally of the World",
+    "text": "Fanfare: Gain 1 max play point.\nEnhance(10): Give this follower Storm. Set your leader's max defense to 1. Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn."
+  },
+  "10451110": {
+    "name": "Almeida, Headstrong Miner",
+    "text": "Enhance(4): Evolve this follower and give it +1/+1.\nRush"
+  },
+  "10451120": {
+    "name": "Vaseraga, Unyielding Scythe",
+    "text": "Intimidate. Last Words: Summon a Vaseraga, Unyielding Scythe. Deal 2 damage to your leader."
+  },
+  "10451310": {
+    "name": "Valiant Edge",
+    "text": "Deal 2 damage to your leader. Gain Crest: Valiant Edge."
+  },
+  "10452110": {
+    "name": "Nezha, Soaring War God",
+    "text": "Rush.\nAt the end of your turn, deal 4 damage to a random enemy follower, then deal 2 damage to a random enemy follower."
+  },
+  "10452120": {
+    "name": "Satyr, Open-Hearted Rover",
+    "text": "Fanfare: If there's an evolved allied follower on the field, evolve this follower.\nAura"
+  },
+  "10452130": {
+    "name": "Baal, Elemental Resonance",
+    "text": "Fanfare: Select a Mode to activate.\n1. Give this follower and another random allied follower on the field +1/+1.\n2. Deal 3 damage to a random enemy follower."
+  },
+  "10453110": {
+    "name": "Nehan, Dispenser of Samsara",
+    "text": "Fanfare: Evolve all unevolved allied followers on the field. Deal 2 damage to your leader.\nDrain"
+  },
+  "10453310": {
+    "name": "Corruption",
+    "text": "Give all followers on the field -2/-2. Give yourself and your opponent Crest: Corruption.\nSuper Skybound Art- Destroy your Crest: Corruption."
+  },
+  "10454110": {
+    "name": "Fediel, Darkness Personified",
+    "text": "Fanfare: Necromancy(6) -Reanimate(2), Reanimate(1), and evolve them.\nAt the end of your turn, give all enemy followers on the field -2/-2."
+  },
+  "10454120": {
+    "name": "Belial, Archangel of Cunning",
+    "text": "Fanfare: Deal 10 damage to all other followers.\nSuper Skybound Art- Gain Crest: Belial, Archangel of Cunning.\nSuper-Evolve: Advance the count of your Crest: Belial, Archangel of Cunning by 1."
+  },
+  "10461110": {
+    "name": "Troue, Heroic Visionary",
+    "text": "Storm.\nWhenever you Engage an amulet, give this follower Drain."
+  },
+  "10461120": {
+    "name": "Lamretta, Sisterly Shepherd",
+    "text": "At the end of your turn, if this follower is evolved, deal 2 damage to all followers.\nEvolve: Give this follower \"Can't attack followers or leaders\" until the end of the turn."
+  },
+  "10461210": {
+    "name": "Awed and Inspired",
+    "text": "Engage(2): Destroy this card. Select an allied follower on the field and transform it into an Awed and Inspired. Draw a card."
+  },
+  "10462110": {
+    "name": "Sara, Graphos's Chosen",
+    "text": "Enhance(6): Give this follower +0/+10.\nWard.\nEvolve: Select a damaged enemy follower on the field and destroy it."
+  },
+  "10462120": {
+    "name": "Sophia, Zeyen Priestess",
+    "text": "Fanfare: Summon a random Havencraft follower that costs 2 or less from your deck.\nSuper-Evolve: Give all other allied followers on the field Barrier."
+  },
+  "10462210": {
+    "name": "Skyfaring Vessel",
+    "text": "Activates in hand. Whenever you Engage an amulet, reduce the cost of this card by 1.\nEngage: Destroy this card. Select an unevolved allied follower on the field and evolve it."
+  },
+  "10463110": {
+    "name": "Tikoh, Asclepian Surgeon",
+    "text": "Whenever you Engage an amulet, restore 1 defense to your leader.\nEvolve: Select an enemy follower on the field and deal it 3 damage."
+  },
+  "10463210": {
+    "name": "De La Fille's Gleaming Gems",
+    "text": "Engage: Destroy this card. Select a Mode to activate.\n1. Destroy a random enemy follower.\n2. Draw 2 cards."
+  },
+  "10464110": {
+    "name": "Galleon, Earth Personified",
+    "text": "Ward.\nCan't attack followers or leaders.\nAt the end of your turn, if you've unlocked super-evolution, evolve a random unevolved allied follower on the field that didn't attack this turn."
+  },
+  "10464120": {
+    "name": "Vira, Luminous Primal Knight",
+    "text": "Fanfare: Select 2 enemy followers on the field and banish them.\nSuper Skybound Art- Super-evolve this follower.\nWard\nCan't take more than 3 damage at a time."
+  },
+  "10471110": {
+    "name": "Sho, Reborn Night King",
+    "text": "Fanfare: If you've unlocked super-evolution, give this follower Barrier.\nStorm."
+  },
+  "10471120": {
+    "name": "Tsubasa, Blazing Gearcyclist",
+    "text": "Fanfare: Increase the Skybound Art gauges of all cards in your hand by 1.\nRush"
+  },
+  "10471130": {
+    "name": "Isaac, Congenial Engineer",
+    "text": "Last Words: Add a Striker Artifact to your hand."
+  },
+  "10472110": {
+    "name": "Eustace, Howl of Thunder",
+    "text": "Fanfare: Skybound Art- Select another unevolved allied follower on the field and evolve it and this follower.\nClash: Deal 3 damage to the opposing follower."
+  },
+  "10472120": {
+    "name": "Ilsa, Brutal Drill Sergeant",
+    "text": "Fanfare: Select a Mode to activate.\n1. Do this 3 times: \"Deal 4 damage to a random enemy follower.\"\n2. Deal 4 damage to the enemy leader."
+  },
+  "10472310": {
+    "name": "Stone Breaker",
+    "text": "Do this 6 times: \"Deal 1 damage to a random enemy follower.\""
+  },
+  "10473110": {
+    "name": "Cassius, Sky-Yearning Arrival",
+    "text": "Fanfare: Select an Artifact follower in your hand and deal X damage to all enemy followers. X is the selected follower's attack.\nLast Words: Add a Fortifier Artifact to your hand."
+  },
+  "10473310": {
+    "name": "Chaos Legion",
+    "text": "Deal 3 damage to all enemies.\nSuper Skybound Art- Deal 6 damage instead."
+  },
+  "10474110": {
+    "name": "Lu Woh, Light Personified",
+    "text": "Fanfare: Do this 6 times: \"Deal 1 damage to a random enemy follower.\" Give all followers in your opponent's hand +1/+0.\nSkybound Art- GainCrest: Lu Woh, Light Personified."
+  },
+  "10474120": {
+    "name": "Beelzebub, Supreme King",
+    "text": "Fanfare: Select 2 enemy followers on the field, remove all abilities from them, and deal them 9 damage. Give the enemy leader \"Takes 1 more damage.\""
+  },
+  "10501110": {
+    "name": "Monster Litterateur",
+    "text": "Fanfare: If there's another 1-base-cost card on the field, give this follower +1/+1."
+  },
+  "10502110": {
+    "name": "Goddess of Starlight",
+    "text": "Evolve: Select 3 cards in your hand and discard them. Add an exact copy each of the 3 leftmost cards in your hand to your hand without revealing them."
+  },
+  "10502120": {
+    "name": "Behemoth General",
+    "text": "Evolve: If the sum of the 3 highest base costs in your hand is higher than that of your opponent's, destroy all enemy followers."
+  },
+  "10503210": {
+    "name": "World of Games",
+    "text": "Countdown (5)\nWhenever you play another card, if there's a card on the field other than it with the same base cost, advance this amulet's count by 1.\nLast Words: Draw 2 cards."
+  },
+  "10503310": {
+    "name": "Fate of the World",
+    "text": "Draw 2 cards. Destroy a random enemy follower with the highest attack.\nEnhance (10): Deal 4 damage to all enemies."
+  },
+  "10504110": {
+    "name": "Getenou, Eightfold Glory",
+    "text": "Fanfare: Discard your hand. Select a Mode to activate.\n1. Draw 8 cards.\n2. Draw 2 cards and reduce their costs by 8."
+  },
+  "10511110": {
+    "name": "Prudent Tanuki",
+    "text": "Ambush\nEvolve: Draw a card."
+  },
+  "10511120": {
+    "name": "Battledore Woodsmaiden",
+    "text": "Fanfare: Summon a Fairy.\nWhenever an allied Pixie follower enters the field, deal 1 damage to the enemy leader.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10511310": {
+    "name": "Flight of the Swarmpetal",
+    "text": "Deal 3 damage split between all enemy followers. Add a Fairy to your hand."
+  },
+  "10512110": {
+    "name": "Flowering Friendship",
+    "text": "Fanfare: Combo (5) - Summon a Flowering Friendship and evolve it and this follower."
+  },
+  "10512120": {
+    "name": "Fairy Beastwhisperer",
+    "text": "Rush\nBane\nDrain"
+  },
+  "10512310": {
+    "name": "Quiet Encouragement",
+    "text": "Deal 1 damage to all enemies. Combo (3) - Deal 2 damage instead."
+  },
+  "10513110": {
+    "name": "Spirited Skipper",
+    "text": "Fanfare: Summon 3 copies of Fairy.\nEvolve: Replicate the effects of this card's Fanfare ability.\nSuper-Evolve: Give all allied Pixie followers on the field Bane."
+  },
+  "10513310": {
+    "name": "Grace of the Swarmpetal",
+    "text": "Draw X cards. X is your Combo."
+  },
+  "10514110": {
+    "name": "Wolfraud, Skybound Hanged Man",
+    "text": "Fanfare: Give this follower +X/+X. X is your Combo.\nEvolve: Discard your hand. Add an exact copy each of 5 random cards in your opponent's deck to your hand without revealing them."
+  },
+  "10514120": {
+    "name": "Miroku, Swarmpetal",
+    "text": "Fanfare: Select a Mode to activate.\n1. Add 2 copies of Fairy to your hand.\n2. Recover 2 play points.\n3. Deal 3 damage split between all enemy followers.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10521110": {
+    "name": "Altruistic Aristocrat",
+    "text": "Fanfare: Select a card in your hand and discard it. Restore 3 defense to your leader. If you selected a spell, restore 6 defense instead."
+  },
+  "10521120": {
+    "name": "Smoke-Shrouded Beauty",
+    "text": "Fanfare: If you have at least 2 spells in your hand, give this follower +1/+1 and Ward.\nEvolve: Add a Glittering Gold to your hand."
+  },
+  "10521310": {
+    "name": "Extravagance of the Goldbloom",
+    "text": "Select a spell in your hand and discard it. Do this 2 times: \"Deal 3 damage to a random enemy follower.\""
+  },
+  "10522110": {
+    "name": "Swift Staffmaster",
+    "text": "When you draw this card, set its cost to 3 until the end of the turn.\nFanfare: Draw a card. Restore 3 defense to your leader.\nRush"
+  },
+  "10522120": {
+    "name": "Amphibian Goldmuncher",
+    "text": "At the end of your turn, if you have at least 2 spells in your hand, deal 5 damage to all enemy followers.\nEvolve: Add 2 copies of Glittering Gold to your hand."
+  },
+  "10522310": {
+    "name": "Serenity's Shield",
+    "text": "Summon 2 copies of Knight.\nEnhance (4): Summon 4 instead."
+  },
+  "10523110": {
+    "name": "Unmoving Tactician",
+    "text": "Can't attack followers or leaders.\nAt the end of your turn, summon a Steelclad Knight.\nSuper-Evolve: Give all other allied followers on the field +3/+3."
+  },
+  "10523310": {
+    "name": "Splendor of the Goldbloom",
+    "text": "Add 2 copies of Glittering Gold to your hand.\nEnhance (5): Add 4 instead."
+  },
+  "10524110": {
+    "name": "Oluon, Raging Chariot",
+    "text": "At the end of your turn, if this follower is unevolved, deal 7 damage to all enemy followers. If it's evolved, do this 3 times: \"Deal 7 damage to another random ally or enemy.\""
+  },
+  "10524120": {
+    "name": "Unkei, Goldbloom",
+    "text": "Fanfare: Select an enemy follower on the field and banish it. Add a Glittering Gold to your hand.\nSuper-Evolve: Gain Crest: Unkei, Goldbloom."
+  },
+  "10531110": {
+    "name": "Terraforming Wizard",
+    "text": "Fanfare: Gain 2 earth sigils.\nSuper-Evolve: Summon 2 copies of Guardian Golem."
+  },
+  "10531120": {
+    "name": "Waterbending Charmwielder",
+    "text": "Fanfare: Deal 3 damage to 3 random enemy followers. Spellboost your hand 3 times."
+  },
+  "10531310": {
+    "name": "Metamorphosis of the Dawnblossom",
+    "text": "Select a card in your hand and discard it. Draw 2 cards."
+  },
+  "10532110": {
+    "name": "Insomniac Witch",
+    "text": "Fanfare: Gain Crest: Insomniac Witch.\nEvolve: Destroy your Crest: Insomniac Witch."
+  },
+  "10532120": {
+    "name": "Woodsong Haikumaster",
+    "text": "On Spellboost: Reduce the cost of this card by 1.\nFanfare: Draw a card.\nLast Words: Spellboost your hand."
+  },
+  "10532310": {
+    "name": "Kitty Cunning",
+    "text": "Earth Rite (2) - Activate 2 random abilities from the following.\n1. Summon a Clay Golem.\n2. Restore 2 defense to your leader.\n3. Gain 3 earth sigils."
+  },
+  "10533110": {
+    "name": "Emperor of Elements",
+    "text": "Fanfare: Summon 2 copies of Guardian Golem.\nWhenever an allied Golem follower enters the field, Earth Rite (1) - Evolve it."
+  },
+  "10533310": {
+    "name": "Grandeur of the Dawnblossom",
+    "text": "Transform all allied followers on the field into exact copies of random followers in your deck."
+  },
+  "10534110": {
+    "name": "Lhynkal, Wandering Fool",
+    "text": "Fanfare: Gain Crest: Lhynkal, Wandering Fool.\nRush\nSuper-Evolve: Add 10 copies of Lhynkal, Wandering Fool to your deck."
+  },
+  "10534120": {
+    "name": "Ara, Dawnblossom",
+    "text": "On Spellboost: Reduce the cost of this card by 1.\nFanfare: Select an enemy follower on the field and deal it 10 damage.\nEvolve: Select another follower on the field and transform it into a Regal Falcon."
+  },
+  "10541110": {
+    "name": "Springwell Steward",
+    "text": "Evolve: Select an enemy follower on the field and deal it 5 damage.\nSuper-Evolve: Select 2 instead."
+  },
+  "10541120": {
+    "name": "Stormy Shamisen Shredder",
+    "text": "Fanfare: Summon a Majestic Megalorca.\nWhenever an allied Marine follower enters the field, restore 2 defense to your leader."
+  },
+  "10541310": {
+    "name": "Blade of the Crestpetal",
+    "text": "Draw a follower. Deal X damage to a random enemy follower. X is the cost of the card you drew."
+  },
+  "10542110": {
+    "name": "Ironmace Dragoon",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 7 damage. Summon a Vastwing Dragon."
+  },
+  "10542120": {
+    "name": "Jellyfish Dancer",
+    "text": "Fanfare: Add a Majestic Megalorca to your hand.\nWhenever an allied Marine follower enters the field, give this follower Rush and Bane."
+  },
+  "10542310": {
+    "name": "Roar of Prominence",
+    "text": "Deal X damage to all followers. X is the number of followers on the field."
+  },
+  "10543110": {
+    "name": "Ruinbringer",
+    "text": "Super-Evolve: Banish all 1-, 3-, 5-, 7-, and 9-cost cards from your deck. Deal X damage split between all enemy followers. X is the number of cards you banished."
+  },
+  "10543310": {
+    "name": "Sloth of the Crestpetal",
+    "text": "Do this 2 times: \"Deal 2 damage to a random enemy follower.\" If you're in Overflow, deal 2 damage to the enemy leader."
+  },
+  "10544110": {
+    "name": "Erntz, Governing Justice",
+    "text": "Ward\nAt the end of your turn, if this follower is unevolved, deal 8 damage to 2 random enemy followers and restore 8 defense to your leader. If this follower is evolved, deal 8 damage to the enemy leader.\nEvolve: Remove Ward from this follower. Give it Intimidate."
+  },
+  "10544120": {
+    "name": "Yube, Crestpetal",
+    "text": "Fanfare: Summon a Majestic Megalorca.\nEvolve: Select a card in your hand and discard it. Gain Crest: Yube, Crestpetal."
+  },
+  "10551110": {
+    "name": "Support Wolf",
+    "text": "Enhance (6): Give this follower +0/+6, Bane, and Barrier.\nRush"
+  },
+  "10551120": {
+    "name": "Crimson Soulmancer",
+    "text": "Fanfare: Reanimate (2).\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10551310": {
+    "name": "Valor of the Nightblossom",
+    "text": "Select an enemy follower on the field and deal it 5 damage. Add a Valor of the Nightblossom to your deck."
+  },
+  "10552110": {
+    "name": "Fickle Necromancer",
+    "text": "Fanfare: Summon a Ghost and Skeleton.\nEvolve: Summon a Rotting Zombie."
+  },
+  "10552120": {
+    "name": "Friendly Blue Ogre",
+    "text": "Fanfare: Select an enemy follower on the field and give it \"Can't attack followers or leaders\" until the end of your opponent's turn. Draw a card.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10552310": {
+    "name": "Tyrannical Fists",
+    "text": "Deal 3 damage to all leaders with the lowest defense."
+  },
+  "10553110": {
+    "name": "Lifestealer",
+    "text": "Fanfare: Transform all other followers on the field into copies of Skeleton.\nWhenever a Skeleton is destroyed, restore 1 defense to your leader.\nEvolve: Deal 1 damage to all other followers."
+  },
+  "10553310": {
+    "name": "Rigor of the Nightblossom",
+    "text": "Gain Crest: Rigor of the Nightblossom."
+  },
+  "10554110": {
+    "name": "Milteo & Luzen",
+    "text": "Fanfare: Reanimate (4) and Reanimate (2).\nWhen this follower evolves, destroy 6 other random followers.\nWhen this follower super-evolves, gain Crest: Milteo & Luzen."
+  },
+  "10554120": {
+    "name": "Shakdoh, Nightblossom",
+    "text": "Fanfare: Do this 2 times: \"Return your hand to deck. Draw X cards. X is the number of cards you returned. Then, if you have at least 4 cards with the same cost in your hand, deal 4 damage to all enemies.\"\nSuper-Evolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10561110": {
+    "name": "Prescient Priestess",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 2 damage.\nWard\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10561120": {
+    "name": "Bouquet Believer",
+    "text": "Enhance (4): Draw a card. Give this follower Bane.\nDuring your turn, whenever you draw a card, give this follower Rush."
+  },
+  "10561310": {
+    "name": "Malice of the Mistbloom",
+    "text": "Return a random card from your hand to deck. Draw 3 cards."
+  },
+  "10562110": {
+    "name": "Immovable Paladin",
+    "text": "Fanfare: Summon 3 copies of Immovable Paladin.\nWard"
+  },
+  "10562120": {
+    "name": "Desperate Shrinemouse",
+    "text": "Fanfare: Draw a card.\nDuring your turn, whenever you draw a card, deal 1 damage to all enemy followers.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10562210": {
+    "name": "Protective Shell",
+    "text": "Engage: Destroy this card. Draw X cards. X is the number of allied followers on the field with Ward."
+  },
+  "10563110": {
+    "name": "Saint of Rehabilitation",
+    "text": "Fanfare: Restore 1 defense to your leader.\nWard\nDuring your turn, whenever your leader's defense is restored, summon a Fox of Purity.\nEvolve: Replicate the effects of this card's Fanfare ability.\nSuper-Evolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10563210": {
+    "name": "Resolve of the Mistbloom",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 5 damage.\nEngage: Destroy this card. Return 2 random cards from your hand to deck. Draw 2 cards."
+  },
+  "10564110": {
+    "name": "Sofina, Inspiring Strength",
+    "text": "Fanfare: Select a Mode to activate.\n1. Evolve this follower.\n2. Evolve another random unevolved allied follower with Ward and give it +1/+1.\nWard\nAt the end of your turn, if this follower is evolved, give all other followers on the field -1/-1."
+  },
+  "10564120": {
+    "name": "Kukishiro, Mistbloom",
+    "text": "Fanfare: Gain Crest: Kukishiro, Mistbloom. Return 2 random cards from your hand to deck. Draw 2 cards.\nRush"
+  },
+  "10571110": {
+    "name": "Marionette Master",
+    "text": "Fanfare: Summon an Enhanced Puppet and Puppet.\nEnhance (7): Give them Storm."
+  },
+  "10571120": {
+    "name": "Flowering Artisan",
+    "text": "Fanfare: Draw a spell.\nWhenever you play a spell, deal 3 damage to all enemy followers."
+  },
+  "10571310": {
+    "name": "Light of the Dewdrop",
+    "text": "Draw a card."
+  },
+  "10572110": {
+    "name": "New-Age Cartographer",
+    "text": "Fanfare: Add an Ominous Artifact β to your hand.\nSuper-Evolve: Select an Artifact follower in your hand that costs 5 or less and summon an exact copy of it."
+  },
+  "10572120": {
+    "name": "Lunar Bunny",
+    "text": "Ward\nWhen you play a spell, evolve this follower."
+  },
+  "10572310": {
+    "name": "Resurrection Tuner",
+    "text": "Select a card in your hand and discard it. Add a copy each of 2 random differently named allied followers destroyed this match to your hand without revealing them."
+  },
+  "10573110": {
+    "name": "Neuron Disrupter",
+    "text": "Fanfare: Recover X play points. X is the number of other allied followers on the field.\nRush\nLast Words: Draw 2 cards."
+  },
+  "10573310": {
+    "name": "Sincerity of the Dewdrop",
+    "text": "Select a card on the field and transform it into an Imari's Little Buddies."
+  },
+  "10574110": {
+    "name": "Slaus, Revolving Wheel of Fortune",
+    "text": "Ambush\nAt the end of your turn, if this follower is evolved, give your opponent Crest: Slaus, Revolving Wheel of Fortune and banish this card.\nAt the start of your turn, activate a random ability that hasn't been activated yet from the following.\n1. Reduce the cost of all cards in your hand by 1 until the end of the turn.\n2. Give all allied followers on the field +2/+2.\n3. Restore 3 defense to your leader."
+  },
+  "10574120": {
+    "name": "Imari, Dewdrop",
+    "text": "Fanfare: Select a card in your hand and discard it. Draw a spell.\nWhenever you play a spell, if this follower is evolved, summon an Imari's Little Buddies.\nSuper-Evolve: Draw 2 differently named 1-cost spells."
+  },
+  "10601110": {
+    "name": "Muddled Onlooker",
+    "text": "Last Words: Deal 1 damage to the enemy leader."
+  },
+  "10601120": {
+    "name": "Disrupted Commoner",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it.\nBane"
+  },
+  "10602210": {
+    "name": "Encroached World",
+    "text": "Engage: Select a card in your hand and transform it into an exact copy of a random card in your opponent's deck."
+  },
+  "10603110": {
+    "name": "Beast Lost to the Dark",
+    "text": "Fanfare: Give this follower 3 random abilities from the following.\n1. Storm.\n2. Bane.\n3. Intimidate.\n4. Drain.\n5. Aura.\n6. Barrier."
+  },
+  "10603210": {
+    "name": "Dark Dimensions",
+    "text": "Countdown (2)\nAt the end of your turn, deal 2 damage to all non-Encroacher followers."
+  },
+  "10604110": {
+    "name": "Omegotep, the Dreaded One",
+    "text": "Fanfare: Activate 2 random abilities from the following.\n1. Destroy a random enemy follower.\n2. Deal 2 damage to the enemy leader.\n3. Recover 2 play points.\n4. Give this follower +4/+4 and activate its Fanfare ability.\nSuper-Evolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10611110": {
+    "name": "Motherly Forestdweller",
+    "text": "Fanfare: Add a Springbloom Fairy to your hand.\nEvolve: Summon a Springbloom Fairy."
+  },
+  "10611120": {
+    "name": "Monkey of Paradise",
+    "text": "Fanfare: Combo (3) - Evolve this follower."
+  },
+  "10611310": {
+    "name": "Advent of the Eld Lance",
+    "text": "Deal 4 damage to all enemy followers. Summon 2 copies of Springbloom Fairy."
+  },
+  "10612110": {
+    "name": "Kindly Executor",
+    "text": "Fanfare: Add a Springbloom Fairy to your hand."
+  },
+  "10612120": {
+    "name": "Howling Wolfman",
+    "text": "Storm"
+  },
+  "10612310": {
+    "name": "Floral Offering",
+    "text": "Activates in hand. Whenever an allied follower evolves, reduce the cost of this card by 1.\nDraw 2 cards."
+  },
+  "10613110": {
+    "name": "Merciful Attendant",
+    "text": "Fanfare: Summon a Springbloom Fairy.\nWhenever an allied follower evolves, restore 1 defense to your leader."
+  },
+  "10613310": {
+    "name": "Nurturing Eld Lance",
+    "text": "Select a Mode to activate.\n1. Destroy a random enemy follower with the highest attack.\n2. Summon a Springbloom Fairy."
+  },
+  "10614110": {
+    "name": "Althenia, Nurturing Bloom",
+    "text": "Fanfare: Summon 3 copies of Springbloom Fairy.\nCan attack 2 times per turn.\nSuper-Evolve: Select an enemy follower on the field and destroy it."
+  },
+  "10614120": {
+    "name": "Sathanid, Eld Lance",
+    "text": "Fanfare: Reduce your faith's value by 10 to add a Depths of the Eld Lance to your hand and give your faith \"Whenever an allied follower evolves, deal 1 damage to the enemy leader.\"\nDrain"
+  },
+  "10621110": {
+    "name": "Fearless Soldier",
+    "text": "Enhance (3): Give this follower +1/+1.\nRush"
+  },
+  "10621120": {
+    "name": "Idle Maid",
+    "text": "Fanfare: Select a card in your hand and return it to deck. Draw 2 Swordcraft followers."
+  },
+  "10621310": {
+    "name": "Advent of the Eld Sword",
+    "text": "Summon 3 copies of Fearless Soldier.\nEnhance (7): Give them +2/+2."
+  },
+  "10622110": {
+    "name": "Loyal Guard",
+    "text": "Enhance (4): Give this follower +2/+2.\nWard\nEvolve: Select an enemy follower on the field and deal it 3 damage."
+  },
+  "10622120": {
+    "name": "Navy Cat",
+    "text": "Fanfare: Destroy all enemy followers with 1 defense.\nStorm"
+  },
+  "10622310": {
+    "name": "Majestic Conquest",
+    "text": "Gain Crest: Majestic Conquest.\nEnhance (3): Delay the count of your Crest: Majestic Conquest by 2."
+  },
+  "10623110": {
+    "name": "Heartless Strategist",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it.\nEnhance (6): Recover 3 play points. Add a Fearless Soldier to your hand."
+  },
+  "10623310": {
+    "name": "Ruthless Eld Sword",
+    "text": "Select a Mode to activate.\n1. Draw a card.\n2. Deal 3 damage to a random enemy follower.\nEnhance (3): Activate all of them instead."
+  },
+  "10624110": {
+    "name": "Noel IV, Ruthless Warlord",
+    "text": "Fanfare: Summon a Fearless Soldier and give it Bane.\nEnhance (7): Summon a Fearless Soldier and give it Drain.\nEnhance (8): Summon a Fearless Soldier and give it Storm.\nSuper-Evolve: Give all other allied followers on the field +1/+1."
+  },
+  "10624120": {
+    "name": "Yidmetra, Eld Sword",
+    "text": "Fanfare: Add a Depths of the Eld Sword to your hand.\nEvolve: Reduce your faith's value by 5 to give it \"Whenever you play an Enhanced card, give all allied followers on the field +1/+1.\""
+  },
+  "10631110": {
+    "name": "Crystalspawn",
+    "text": "Rush"
+  },
+  "10631120": {
+    "name": "Daydream Librarian",
+    "text": "Fanfare: Summon a Caravan Mammoth.\nSuper-Evolve: Give all other allied followers on the field Rush."
+  },
+  "10631310": {
+    "name": "Advent of the Eld Crystals",
+    "text": "Summon 2 copies of Crystalspawn."
+  },
+  "10632110": {
+    "name": "Enraptured Student",
+    "text": "Fanfare: Summon 2 copies of Crystalspawn.\nWhenever an allied Crystalspawn enters the field, restore 1 defense to your leader."
+  },
+  "10632120": {
+    "name": "Adventurous Grimoire",
+    "text": "Enhance (6): Summon 2 copies of Adventurous Grimoire.\nRush\nLast Words: Spellboost your hand."
+  },
+  "10632310": {
+    "name": "Reaved Order",
+    "text": "Select an allied Crystalspawn on the field and destroy it. Draw 2 cards."
+  },
+  "10633110": {
+    "name": "Spellbound Professor",
+    "text": "Fanfare: Summon 2 copies of Crystalspawn.\nEvolve: Give all allied copies of Crystalspawn on the field +1/+0."
+  },
+  "10633310": {
+    "name": "Bewitching Eld Crystals",
+    "text": "Select a Mode to activate.\n1. Summon a Crystalspawn and give it +1/+0 and Storm.\n2. Summon 2 copies of Crystalspawn and give them +1/+0.\nEnhance (5): Activate all of them instead."
+  },
+  "10634110": {
+    "name": "Shymm, Love Bewitched",
+    "text": "Fanfare: Summon 2 copies of Crystalspawn.\nDrain\nSuper-Evolve: Gain Crest: Shymm, Love Bewitched."
+  },
+  "10634120": {
+    "name": "Calge-Danthla, Eld Crystals",
+    "text": "Activates in hand. Whenever an allied Crystalspawn enters the field, reduce the cost of this card by 1.\nFanfare: Summon 2 copies of Crystalspawn and give them Storm.\nEvolve: Add a Depths of the Eld Crystals to your hand."
+  },
+  "10641110": {
+    "name": "Resolute Dragonewt",
+    "text": "Fanfare: Select a card in your hand and discard it.\nLast Words: Draw 2 cards."
+  },
+  "10641120": {
+    "name": "Fruitfish",
+    "text": "Enhance (6): Summon 2 copies of Fruitfish.\nLast Words: Restore 1 defense to your leader."
+  },
+  "10641310": {
+    "name": "Advent of the Eld Blades",
+    "text": "When this card is discarded, if its cost is 4, add an Advent of the Eld Blades to your hand and set its cost to 2.\nSelect an allied follower on the field and give it +2/+2."
+  },
+  "10642110": {
+    "name": "Decisive Swordmaster",
+    "text": "Fanfare: Select a card in your hand and discard it.\nRush\nBarrier"
+  },
+  "10642120": {
+    "name": "Spiked Dragon",
+    "text": "At the end of your turn, evolve this follower.\nWhen this follower evolves, deal 3 damage to all enemies."
+  },
+  "10642310": {
+    "name": "Spilling Red",
+    "text": "Select a card in your hand and discard it. Select an enemy follower on the field and destroy it."
+  },
+  "10643110": {
+    "name": "Impeding Pugilist",
+    "text": "Fanfare: Select a card in your hand and discard it. Deal 6 damage to a random enemy follower.\nWard\nBarrier\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10643310": {
+    "name": "Beheading Eld Blades",
+    "text": "When this card is discarded, if its cost is 7, add a Beheading Eld Blades to your hand and set its cost to 5. If this card's cost is 5, add a Beheading Eld Blades to your hand and set its cost to 3.\nDeal X damage to all enemy followers. X is this card's cost."
+  },
+  "10644110": {
+    "name": "Sagatsumatsu, Fair Beheader",
+    "text": "Fanfare: Select a card in your hand and discard it. Add 2 copies of Spilling Red to your hand.\nStorm\nBane\nAura"
+  },
+  "10644120": {
+    "name": "Vorlalai, Eld Blades",
+    "text": "When this card is discarded, summon a Vorlalai, Eld Blades.\nBane\nEvolve: Add a Depths of the Eld Blades to your hand.\nSuper-Evolve: Add 3 copies instead."
+  },
+  "10651110": {
+    "name": "Reverent Demon",
+    "text": "Last Words: Draw a card. Deal 1 damage to your leader."
+  },
+  "10651120": {
+    "name": "Ghost Dodger",
+    "text": "Rush\nLast Words: Add a Ghost to your hand."
+  },
+  "10651310": {
+    "name": "Advent of the Eld Sight",
+    "text": "Draw 2 cards. Necromancy (4) - Restore 2 defense to your leader."
+  },
+  "10652110": {
+    "name": "Yearnful Necromancer",
+    "text": "Enhance (8): Reanimate (9).\nWard"
+  },
+  "10652120": {
+    "name": "Devilish Heartbreaker",
+    "text": "Enhance (7): Give this follower Storm.\nEvolve: Select an enemy follower on the field and deal it 4 damage."
+  },
+  "10652310": {
+    "name": "Allure of the Mightiest",
+    "text": "Select an enemy follower on the field, banish it, and summon an exact copy of it."
+  },
+  "10653110": {
+    "name": "Deprived Destroyer",
+    "text": "Fanfare: Select another allied follower on the field. If you selected one, destroy it and evolve this follower.\nWhen this follower evolves, summon a Bat and evolve it."
+  },
+  "10653310": {
+    "name": "Depletive Eld Sight",
+    "text": "Select a Mode to activate.\n1. Recover 1 evolution point.\n2. Deal 2 damage to all enemy followers."
+  },
+  "10654110": {
+    "name": "Armes, Depletive Demon",
+    "text": "Aura\nCan't be destroyed by abilities.\nClash: Destroy the opposing follower.\nSuper-Evolve: Give this follower \"Can attack 3 times per turn.\""
+  },
+  "10654120": {
+    "name": "Bibatii, Eld Sight",
+    "text": "Fanfare: Necromancy (4) - Evolve this follower.\nWhen this follower evolves, add a Depths of the Eld Sight to your hand."
+  },
+  "10661110": {
+    "name": "Prostrating Coward",
+    "text": "When this follower enters the field, restore 2 defense to your leader.\nBane\nWard\nCrystallize (2): Countdown (3)\nLast Words: Summon a Prostrating Coward."
+  },
+  "10661210": {
+    "name": "Unholy Water",
+    "text": "Countdown (3)\nLast Words: Draw a card. Destroy a random enemy follower.\nEngage (1): Advance this amulet's count by 1."
+  },
+  "10661310": {
+    "name": "Advent of the Eld Tome",
+    "text": "Draw 2 amulets."
+  },
+  "10662110": {
+    "name": "Venerating Dyer",
+    "text": "Rush\nBane\nCrystallize (1): Countdown (3)\nLast Words: Summon a Venerating Dyer."
+  },
+  "10662120": {
+    "name": "Pegasus Rider",
+    "text": "Fanfare: Summon a Holy Falcon.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10662210": {
+    "name": "Scripture of Salvation",
+    "text": "Countdown (4)\nLast Words: Draw 2 cards. Deal 2 damage to all enemy followers. Restore 2 defense to your leader."
+  },
+  "10663110": {
+    "name": "Worshipful Crusader",
+    "text": "Fanfare: Summon a Worshipful Crusader.\nBane\nAura\nEvolve: Select an enemy follower on the field and destroy it.\nCrystallize (1): Countdown (3)\nLast Words: Summon a Worshipful Crusader."
+  },
+  "10663210": {
+    "name": "Sublime Eld Tome",
+    "text": "Fanfare: Select another card on the field and destroy it. If you selected an allied amulet, recover 2 play points.\nCountdown (2)\nLast Words: Summon a copy of a random allied amulet destroyed this match with Last Words and a base cost of 2 or less."
+  },
+  "10664110": {
+    "name": "Kandima, Sublime Hatred",
+    "text": "Fanfare: Summon a copy each of 2 random differently named allied amulets destroyed this match with Last Words and a base cost of 2 or less.\nSuper-Evolve: Select another card on the field and destroy it. If you selected an allied amulet, deal 3 damage to all enemy followers."
+  },
+  "10664120": {
+    "name": "Lyanthoth, Eld Tome",
+    "text": "Fanfare: Select 3 other cards on the field and destroy them.\nWard\nAt the end of your turn, reduce your faith's value by 10 to add a Depths of the Eld Tome to your hand."
+  },
+  "10671110": {
+    "name": "Shoddy Plaything",
+    "text": "Fanfare: Draw 3 cards.\nWard\nAccelerate (2): Summon a Shoddy Plaything."
+  },
+  "10671120": {
+    "name": "Brilliant Inventor",
+    "text": "Fanfare: Summon an Ominous Artifact α and give it Bane and Ward."
+  },
+  "10671310": {
+    "name": "Advent of the Eld Axe",
+    "text": "Select an enemy follower on the field and deal it 4 damage. If there's an allied follower on the field with a base cost of 5 or more, draw a card."
+  },
+  "10672110": {
+    "name": "Substandard Puppet",
+    "text": "Fanfare: Summon a Substandard Puppet and evolve it and this follower.\nAccelerate (3): Summon 2 copies of Substandard Puppet."
+  },
+  "10672120": {
+    "name": "Timid Pioneer",
+    "text": "Fanfare: Select an enemy follower on the field with 3 defense or less and banish it.\nAmbush"
+  },
+  "10672310": {
+    "name": "Myriad Designs",
+    "text": "Summon a Ludicrous Ordnance, Shoddy Plaything, and Substandard Puppet and give them +0/+1."
+  },
+  "10673110": {
+    "name": "Ludicrous Ordnance",
+    "text": "Fanfare: Summon 2 copies of Ludicrous Ordnance.\nAt the end of your turn, deal 3 damage split between all enemy followers.\nEvolve: Deal 3 damage split between all enemy followers.\nAccelerate (4): Summon a Ludicrous Ordnance."
+  },
+  "10673310": {
+    "name": "Unfeeling Eld Axe",
+    "text": "Activates in hand. Whenever an allied follower with a base cost of 5 or more enters the field, reduce the cost of this card by 1 until the end of the turn.\nEvolve a random unevolved allied follower on the field with a base cost of 5 or more. Deal 6 damage to a random enemy follower."
+  },
+  "10674110": {
+    "name": "Camiscilla, Unfeeling Heart",
+    "text": "Fanfare: Summon a Shoddy Plaything and Substandard Puppet.\nWhenever another allied follower with a base cost of 5 or more enters the field, evolve it.\nSuper-Evolve: Deal X damage to the enemy leader. X is the number of allied followers on the field with a base cost of 5 or more."
+  },
+  "10674120": {
+    "name": "Yog-Zentha, Eld Axe",
+    "text": "Fanfare: If there's an allied follower on the field with a base cost of 5 or more, add a Depths of the Eld Axe to your hand.\nRush"
+  },
+  "10701110": {
+    "name": "Altaro Superfan",
+    "text": "Evolve: Draw a Neutral card."
+  },
+  "10701310": {
+    "name": "Tears of Degradation",
+    "text": "Select an enemy card on the field and banish it."
+  },
+  "10702110": {
+    "name": "Intrepid Newshound",
+    "text": "Last Words: Draw a card.\nSuper-Evolve: Summon 2 copies of Intrepid Newshound."
+  },
+  "10703110": {
+    "name": "Hedonistic Socialite",
+    "text": "Fanfare: Select a card in your hand and discard it. Deal 2 damage to all enemy followers."
+  },
+  "10703210": {
+    "name": "City of Babelon",
+    "text": "Countdown (1)\nAt the end of your turn, activate an ability in sequence from the following.\n1. Deal 2 damage to a random enemy follower.\n2. Restore 2 defense to your leader.\n3. Deal 2 damage to the enemy leader. Destroy this card.\nEngage (1): Select a card in your hand and discard it. Delay the count of this amulet by 1."
+  },
+  "10704110": {
+    "name": "Illamrita, Designated Target",
+    "text": "Follower Strike: Give this follower Barrier. Give the opposing follower \"Can't attack followers or leaders\" and \"At the end of your turn, banish this card.\"\nLast Words: Gain Crest: Illamrita, Designated Target."
+  },
+  "10704120": {
+    "name": "Altaro, Mayor of Babelon",
+    "text": "Ambush\nAt the end of your turn, draw a card."
+  },
+  "10711110": {
+    "name": "Macrobear",
+    "text": "Fanfare: Summon an exact copy of this card.\nRush\nWard\nCan't take more than 3 damage at a time."
+  },
+  "10711120": {
+    "name": "Elven Trapper",
+    "text": "Fanfare: Select a card in your hand and return it to deck. Add 2 copies of Fairy to your hand."
+  },
+  "10711310": {
+    "name": "Cognitive Shift",
+    "text": "Select 2 cards in your hand and return them to deck. Draw 2 cards."
+  },
+  "10712110": {
+    "name": "Virewind Fencer",
+    "text": "Fanfare: Combo (3) - Give this follower Storm."
+  },
+  "10712120": {
+    "name": "Hawkeyed Tactician",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 4 damage. Increase your Combo by 1.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10712310": {
+    "name": "Minimized Anxiety",
+    "text": "Restore 1 defense to your leader. Combo (3) - Gain Crest: Minimized Anxiety."
+  },
+  "10713110": {
+    "name": "Frostbow Sniper",
+    "text": "Fanfare: Select an enemy follower on the field and deal it X damage. X is this follower's attack.\nAt the end of your turn, Combo (3) - Draw a card."
+  },
+  "10713310": {
+    "name": "Magnified Malice",
+    "text": "Deal 2 damage to a random enemy follower. Combo (3) - Gain Crest: Magnified Malice."
+  },
+  "10714110": {
+    "name": "Thestae, Anathema of Distortion",
+    "text": "Fanfare: Select an enemy follower on the field and give it -0/-X. X is this follower's attack. Increase your Combo by 1.\nEvolve: Gain Crest: Thestae, Anathema of Distortion."
+  },
+  "10714120": {
+    "name": "Great Hart of the Glacial Realm",
+    "text": "Fanfare: Add 2 copies of Deepwood Bounty to your hand.\nAt the end of your turn, deal X damage split between all enemy followers. X is this follower's attack.\nSuper-Evolve: Gain Crest: Great Hart of the Glacial Realm."
+  },
+  "10721110": {
+    "name": "Bombastic Bombardier",
+    "text": "Activates in hand. Whenever an allied follower super-evolves, set the cost of this card to 1.\nFanfare: Select an enemy follower on the field and deal it 3 damage."
+  },
+  "10721120": {
+    "name": "High-Strung Liaison",
+    "text": "Fanfare: Summon a Knight. Add a Steelclad Knight to your hand."
+  },
+  "10721310": {
+    "name": "Measured Attunement",
+    "text": "Select an enemy follower on the field and deal it 3 damage. Rally (10) - Give it \"Can't attack followers or leaders\" until the end of your opponent's turn."
+  },
+  "10722110": {
+    "name": "Sharp-Eared Operative",
+    "text": "Last Words: Summon a Knight.\nEvolve: Select an enemy follower on the field and deal it 3 damage."
+  },
+  "10722120": {
+    "name": "Metronomic Medic",
+    "text": "Fanfare: Draw 2 cards. Summon 2 copies of Knight.\nEvolve: Select an enemy follower on the field and deal it 3 damage."
+  },
+  "10722310": {
+    "name": "Orchestrated Silence",
+    "text": "Add a Steelclad Knight to your hand and give it Rush. Rally (10) - Add 2 copies instead."
+  },
+  "10723110": {
+    "name": "Knellclaw Lieutenant",
+    "text": "Fanfare: Summon 3 copies of Knight. Select a Mode to activate.\n1. Give all other allied followers on the field +1/+0 and Rush.\n2. Give all other allied followers on the field +0/+1 and Ward."
+  },
+  "10723310": {
+    "name": "Caesura al Fine",
+    "text": "Select an enemy follower on the field and deal it 6 damage. Rally (10) - Deal X damage to all enemy followers. X is the number of allied followers on the field."
+  },
+  "10724110": {
+    "name": "Gildaria, Anathema of Attunement",
+    "text": "Fanfare: Rally (20) - Gain Crest: Gildaria, Anathema of Attunement. Evolve this follower.\nDuring your turn, whenever another allied follower enters the field, give it Rush.\nWhen this follower evolves, summon 2 copies of Steelclad Knight."
+  },
+  "10724120": {
+    "name": "Cesar, Accordant Major",
+    "text": "Fanfare: Summon 2 copies of Steelclad Knight. Give all other allied Swordcraft followers on the field +1/+3 and Ward.\nWard\nSuper-Evolve: Select an enemy follower on the field and destroy it."
+  },
+  "10731110": {
+    "name": "Dainty Horror",
+    "text": "Fanfare: Earth Rite (1) - Evolve this follower.\nWard"
+  },
+  "10731120": {
+    "name": "Little Beastie",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 1 damage. Gain an earth sigil.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10731310": {
+    "name": "Heel, My Dearie",
+    "text": "Activates in hand. Whenever you perform Earth Rite, reduce the cost of this card by 1.\nDraw 2 cards. Gain an earth sigil."
+  },
+  "10732110": {
+    "name": "Charming Monster",
+    "text": "Rush\nLast Words: Gain 2 earth sigils.\nSuper-Evolve: Earth Rite (2) - Summon 2 copies of Charming Monster."
+  },
+  "10732120": {
+    "name": "Pretty Predator",
+    "text": "Fanfare: Gain 2 earth sigils.\nWard"
+  },
+  "10732310": {
+    "name": "Haphazard Snacking",
+    "text": "Select a Mode to activate.\n1. Gain 4 earth sigils.\n2. Earth Rite (2) - Deal 2 damage to all enemy followers."
+  },
+  "10733110": {
+    "name": "Sweet Abomination",
+    "text": "Fanfare: Earth Rite (1) - Select a Mode to activate.\n1. Deal 3 damage to all enemy followers.\n2. Draw 2 cards.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10733310": {
+    "name": "Bottomless Gluttony",
+    "text": "Activates in hand. Whenever you perform Earth Rite, reduce the cost of this card by 1.\nSelect an enemy follower on the field and destroy it. Gain 2 earth sigils."
+  },
+  "10734110": {
+    "name": "Lilanthim, Anathema of Predation",
+    "text": "Fanfare: Earth Rite (1) - Gain Crest: Lilanthim, Anathema of Predation.\nAura\nEvolve: Earth Rite (1) - Select an enemy follower on the field and destroy it."
+  },
+  "10734120": {
+    "name": "Beloved Masterpiece",
+    "text": "Fanfare: Deal 6 damage to all enemy followers.\nWard\nLast Words: Earth Rite (2) - Deal 3 damage to the enemy leader.\nSuper-Evolve: Summon a Beloved Masterpiece."
+  },
+  "10741110": {
+    "name": "Dragonewt Promoter",
+    "text": "Enhance (4): Summon 2 copies of Dragonewt Promoter.\nRush"
+  },
+  "10741120": {
+    "name": "Carrier Wyvern",
+    "text": "Fanfare: Select another allied follower on the field and give it +2/+2.\nEvolve: Select a follower in your hand and give it +2/+2."
+  },
+  "10741310": {
+    "name": "Apathetic Gaze",
+    "text": "Gain 1 max play point. Transform all copies of Apathetic Gaze in your hand and deck into copies of Lazing Flame."
+  },
+  "10742110": {
+    "name": "Gallant Gatekeeper",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it.\nWard"
+  },
+  "10742120": {
+    "name": "Draconic Part-Timer",
+    "text": "Fanfare: If you have 10 max play points, evolve this follower.\nAt the end of your turn, restore 1 defense to your leader. If this follower is evolved, restore 2 defense instead."
+  },
+  "10742310": {
+    "name": "Lazing Flame",
+    "text": "Restore 3 defense to your leader. If you're in Overflow, draw a card."
+  },
+  "10743110": {
+    "name": "Dragonewt Pathfinder",
+    "text": "Fanfare: Select a Mode to activate. Destroy a random enemy follower with the highest attack.\n1. Evolve this follower.\n2. Give this follower Ambush."
+  },
+  "10743310": {
+    "name": "Blackflame Deluge",
+    "text": "Deal 5 damage to all enemy followers. Deal 3 damage to the enemy leader."
+  },
+  "10744110": {
+    "name": "Burnite, Anathema of Ash",
+    "text": "Fanfare: Deal 9 damage to all enemy followers.\nSuper-Evolve: Give your opponent Crest: Burnite, Anathema of Ash."
+  },
+  "10744120": {
+    "name": "Dragon's Vale Elder",
+    "text": "Fanfare: Summon a Vastwing Dragon. Gain Crest: Dragon's Vale Elder.\nWard\nSuper-Evolve: Delay the count of your Crest: Dragon's Vale Elder by 2."
+  },
+  "10751110": {
+    "name": "Lulumi, Vamp on the Keys",
+    "text": "Rush\nLast Words: Add a Bat to your hand."
+  },
+  "10751120": {
+    "name": "Raz, Demon on the Drums",
+    "text": "Last Words: Summon a Skeleton.\nEvolve: Select an enemy follower on the field and deal it 3 damage."
+  },
+  "10751310": {
+    "name": "Soul Tuning",
+    "text": "Select 2 allied followers on the field and give them +0/+1. Draw a card."
+  },
+  "10752110": {
+    "name": "Highwire Feline",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 3 damage. Summon a Skeleton.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10752120": {
+    "name": "Juggler Corvid",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it. Reanimate (2)."
+  },
+  "10752310": {
+    "name": "Harmony of Youth",
+    "text": "Summon a Ghost, Bat, and Skeleton and evolve them."
+  },
+  "10753110": {
+    "name": "Beastmaster Bones",
+    "text": "Fanfare: Summon a Rotting Zombie and Skeleton.\nWhenever an allied Departed follower enters the field, give it Storm.\nSuper-Evolve: Select another allied follower on the field. If you selected one, destroy it and a random enemy follower."
+  },
+  "10753310": {
+    "name": "Hark to the Night Song",
+    "text": "Deal 6 damage split between all enemy followers. Necromancy (6) - Deal 2 damage to the enemy leader."
+  },
+  "10754110": {
+    "name": "Adahime, Anathema of Death",
+    "text": "Fanfare: Summon 2 random differently named Abysscraft followers that cost 2 or less from your deck.\nWhenever another allied Abysscraft follower enters the field, give it Rush.\nSuper-Evolve: Give all other allied Abysscraft followers on the field +2/+2."
+  },
+  "10754120": {
+    "name": "Macmillan, Reaper of Ceremonies",
+    "text": "Fanfare: Necromancy (10) - Summon 3 copies of Rotting Zombie.\nDuring your turn, whenever an allied Departed follower enters the field, give it +1/+0, Rush, and Ward and deal 1 damage to the enemy leader."
+  },
+  "10761110": {
+    "name": "Reverend of Finance",
+    "text": "Fanfare: If there are at least 3 allied amulets on the field, summon a Reverend of Finance.\nRush\nLast Words: Draw a card."
+  },
+  "10761120": {
+    "name": "Missionary of Recruitment",
+    "text": "Fanfare: Draw 2 amulets.\nEvolve: Deal X damage to all enemy followers. X is the number of amulets in your hand."
+  },
+  "10761210": {
+    "name": "Earrings of Sunlight",
+    "text": "Fanfare: Select a card in your hand and return it to deck. Draw a card.\nEngage: Destroy this card. Replicate the effects of this card's Fanfare ability."
+  },
+  "10762110": {
+    "name": "Sister of Strategic Development",
+    "text": "Fanfare: If there are at least 3 allied amulets on the field, select an enemy follower on the field and deal it 5 damage."
+  },
+  "10762120": {
+    "name": "Holy Hawk of Communications",
+    "text": "Fanfare: Select an enemy follower on the field and banish it. If there are at least 3 allied amulets on the field, restore 3 defense to your leader.\nStorm"
+  },
+  "10762210": {
+    "name": "Timepiece of Perfection",
+    "text": "Enhance (4): Deal 1 damage to all enemy followers.\nEngage: Destroy this card. Deal 1 damage to all enemy followers."
+  },
+  "10763110": {
+    "name": "Deacon of Security",
+    "text": "Fanfare: If there are at least 3 allied amulets on the field, evolve this follower and give it Barrier.\nWard\nLast Words: Restore 3 defense to your leader."
+  },
+  "10763210": {
+    "name": "Trident of Eroding Tides",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 4 damage.\nEngage: Destroy this card. Select an enemy follower on the field and deal it 2 damage."
+  },
+  "10764110": {
+    "name": "Rodeo, Anathema of Adjudication",
+    "text": "Fanfare: Summon a Rings of Moonlight.\nEvolve: Delay the count of a random allied Rings of Moonlight on the field by 1."
+  },
+  "10764120": {
+    "name": "Initia, Chief Ordination Officer",
+    "text": "Fanfare: Select an enemy follower on the field and banish it. If there are at least 3 allied amulets on the field, restore 3 defense to your leader.\nWard\nAura\nSuper-Evolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10771110": {
+    "name": "Brusque Barkeep",
+    "text": "Whenever an allied Artifact follower enters the field, restore 1 defense to your leader.\nEvolve: Summon a Mystic Artifact."
+  },
+  "10771120": {
+    "name": "Beat Breaker",
+    "text": "Fanfare: Summon a Beat Breaker. If at least 3 differently named allied Artifact followers have entered the field this match, summon 2 instead.\nRush"
+  },
+  "10771310": {
+    "name": "Freerunning",
+    "text": "Select a Mode to activate. If at least 3 differently named allied Artifact followers have entered the field this match, activate all of them instead.\n1. Add an Analyzing Artifact to your hand.\n2. Add an Ancient Artifact to your hand."
+  },
+  "10772110": {
+    "name": "Cool Courier",
+    "text": "Fanfare: Add an Ancient Artifact to your hand.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10772120": {
+    "name": "Audacious Artist",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it. If at least 3 differently named allied Artifact followers have entered the field this match, summon an Ancient Artifact and Mystic Artifact."
+  },
+  "10772310": {
+    "name": "Blink Step",
+    "text": "Give all allied followers on the field +1/+0. If you've unlocked super-evolution, give all followers in your hand +1/+0."
+  },
+  "10773110": {
+    "name": "Brazen Broadcaster",
+    "text": "Fanfare: Summon an Analyzing Artifact.\nEnhance (5): Summon a Mystic Artifact.\nWhenever an allied Artifact follower enters the field, give it Rush."
+  },
+  "10773310": {
+    "name": "Warp Slash",
+    "text": "Deal X damage to all enemy followers. X is the number of differently named allied Artifact followers that have entered the field this match. Deal 1 damage to the enemy leader."
+  },
+  "10774110": {
+    "name": "Scarlet, Anathema of Dislocation",
+    "text": "Fanfare: Deal X damage to all enemy followers. X is the number of differently named allied Artifact followers that have entered the field this match.\nStorm\nWard"
+  },
+  "10774120": {
+    "name": "Myuu, Hot on His Heels",
+    "text": "Whenever an allied Artifact follower enters the field, deal 3 damage to a random enemy follower.\nEvolve: Summon an Ancient Artifact.\nSuper-Evolve: Then, if at least 3 differently named allied Artifact followers have entered the field this match, give this follower Storm."
+  },
+  "10801110": {
+    "name": "Hamsa, Sculpted Divinity",
+    "text": "Evolve: Give this follower +5/+5."
+  },
+  "10801120": {
+    "name": "Reina, Timeless Wanderer",
+    "text": "Fanfare: Recover 1 evolution point."
+  },
+  "10802110": {
+    "name": "Alfied, Squire of Joy",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 4 damage.\nEvolve: Give this follower Storm."
+  },
+  "10802310": {
+    "name": "Legacy of the Brave",
+    "text": "Add an exact copy of a random card in your opponent's hand to your hand without revealing it and reduce its cost by 1. Draw a card."
+  },
+  "10803110": {
+    "name": "Aika, Elegy of Loss",
+    "text": "Fanfare: Add a copy of a random allied follower destroyed this match to your hand without revealing it.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10803310": {
+    "name": "Wills United",
+    "text": "Select a Mode to activate.\n1. Deal 3 damage to a random enemy follower.\n2. Reanimate (2).\n3. Give all allied followers on the field +1/+0."
+  },
+  "10804110": {
+    "name": "Alabaster Bahamut",
+    "text": "Fanfare: Select a Mode to activate.\n1. Banish all other followers from the field.\n2. Banish all amulets from the field.\n3. Banish all crests."
+  },
+  "10804120": {
+    "name": "Olivia, Proud Dark Angel",
+    "text": "Fanfare: Recover 2 super-evolution points.\nWard"
+  },
+  "10811110": {
+    "name": "Marlone, Scales of the Past",
+    "text": "Fanfare: Destroy X random enemy followers. X is the number of enemy followers on the field minus the number of allied followers on the field."
+  },
+  "10811120": {
+    "name": "Citrus, Heretical Hermit",
+    "text": "Fanfare: Summon 2 copies of Fairy.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10811130": {
+    "name": "Moelle, Gloomy Maiden",
+    "text": "Fanfare: Select a card in your hand and return it to deck. Draw a card.\nWard"
+  },
+  "10812110": {
+    "name": "Ruflet, Primeval Fairy",
+    "text": "Once on each of your turns, when this follower is given + attack or defense on the field, summon a Fairy.\nLast Words: Add a Fairy to your hand."
+  },
+  "10812120": {
+    "name": "Lycoris, Barbs of Passion",
+    "text": "Fanfare: Summon a Michelle, Kind Mindreader.\nRush\nBane"
+  },
+  "10812310": {
+    "name": "Peaceful Solitude",
+    "text": "Select an enemy follower on the field and destroy it. Restore 2 defense to your leader."
+  },
+  "10813110": {
+    "name": "Michelle, Kind Mindreader",
+    "text": "Fanfare: Summon a Lycoris, Barbs of Passion. Give all allied followers on the field Barrier.\nWard"
+  },
+  "10813310": {
+    "name": "Curiosity Abounds",
+    "text": "Summon 2 random differently named followers that cost 2 or less from your deck. Give all allied followers on the field +1/+1."
+  },
+  "10814110": {
+    "name": "Setus & Maisha, Bladerights",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it. Give all other allied followers on the field +1/+1.\nStorm\nWard"
+  },
+  "10814120": {
+    "name": "Tia, Eternal Crystalian",
+    "text": "Enhance (4): Give all allied followers on the field +1/+1.\nRush\nOnce on each of your turns, when this follower is given + attack or defense on the field, add an Eve, Blade of Crystalia to your hand."
+  },
+  "10821110": {
+    "name": "Naht & Vince, Force and Order",
+    "text": "Fanfare: Summon a Naht's Henchman. Deal 3 damage to all enemy followers.\nSuper-Evolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10821120": {
+    "name": "Shaili, Prowling Assassin",
+    "text": "Ambush\nEvolve: Select an enemy follower on the field and give it \"Can't attack followers or leaders\" until the end of your opponent's turn."
+  },
+  "10821130": {
+    "name": "Sasha, Knight Everlasting",
+    "text": "Fanfare: Summon a Steelclad Knight and give it Rush.\nEvolve: Summon a Steelclad Knight and give it Ward."
+  },
+  "10822110": {
+    "name": "Katze, Magical Thief",
+    "text": "Once on each of your turns, when you play a spell, deal 2 damage to a random enemy follower.\nEvolve: Add a Glittering Gold to your hand."
+  },
+  "10822120": {
+    "name": "Oda Nobunaga",
+    "text": "Fanfare: Deal 6 damage to all enemy followers.\nIntimidate"
+  },
+  "10822310": {
+    "name": "Shared Existence",
+    "text": "Give a random enemy follower on the field with the highest attack -10/-10.\nEnhance (6): Summon 3 copies of Wretch."
+  },
+  "10823110": {
+    "name": "Okita Souji",
+    "text": "Fanfare: If you've unlocked super-evolution, evolve this follower.\nRush\nFollower Strike: Do this 1 time: \"Deal 3 damage to the opposing follower.\" If this follower is evolved, do it 3 times instead."
+  },
+  "10823310": {
+    "name": "Slice of Domesticity",
+    "text": "Select a Mode to activate. If there are at least 2 allied cards on the field, activate all of them instead.\n1. Deal 4 damage to a random enemy follower.\n2. Restore 2 defense to your leader."
+  },
+  "10824110": {
+    "name": "Bunny & Baron, Fate's Bullet",
+    "text": "Fanfare: Summon a Bunny & Baron, Fate's Bullet. Rally (20) - Deal 4 damage to the enemy leader.\nRush\nEvolve: Add a Desperados' Shot to your hand."
+  },
+  "10824120": {
+    "name": "Mars, Conflagrant Commander",
+    "text": "Fanfare: Summon 3 copies of Knight.\nStorm\nBane\nWhenever an allied Officer follower enters the field, give it +2/+0 and Rush and give this follower +1/+0.\nSuper-Evolve: Summon a Knight."
+  },
+  "10831110": {
+    "name": "Meowskers, Roly-Poly Mk II & Djeana",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 1 damage. Spellboost your hand.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10831120": {
+    "name": "Poppy, Mysterian Secretary",
+    "text": "Fanfare: Add a Mysterian Missile to your hand."
+  },
+  "10831310": {
+    "name": "Stormy Blast",
+    "text": "X starts at 2.\nOn Spellboost: Increase X by 1.\nSelect an enemy follower on the field and deal it X damage."
+  },
+  "10832110": {
+    "name": "Sammy & Marie, Flowers of Joy",
+    "text": "On Spellboost: Reduce the cost of this card by 1.\nFanfare: Draw 2 cards. Your opponent draws a card."
+  },
+  "10832310": {
+    "name": "Harmonious Meal",
+    "text": "Restore 2 defense to your leader. Spellboost your hand."
+  },
+  "10832320": {
+    "name": "Earth-Shattering Bolt",
+    "text": "Deal 8 damage to a random enemy follower with the highest attack. Deal 2 damage to the enemy leader. Earth Rite (2) - Add an Earth-Shattering Bolt to your hand."
+  },
+  "10833110": {
+    "name": "Tico, Mysterian Spellcrafter",
+    "text": "Fanfare: Add 2 copies of Mysterian Missile to your hand.\nEvolve: Reduce the cost of all Mysteria spells in your hand by 1.\nSuper-Evolve: Gain Crest: Tico, Mysterian Spellcrafter."
+  },
+  "10833310": {
+    "name": "Amethyst's Naptime",
+    "text": "X starts at 0.\nOn Spellboost: Increase X by 1.\nDraw 2 cards. If X is at least 5, restore 2 defense to your leader and recover 2 play points."
+  },
+  "10834110": {
+    "name": "Tetra & Ladica, Forest BFFs",
+    "text": "X starts at 0.\nOn Spellboost: Increase X by 1.\nFanfare: If X is at least 10, add a Delta Cannon to your hand. If X is at least 20, add a Send 'Em Packing to your hand.\nStorm"
+  },
+  "10834120": {
+    "name": "Ginger, Disastrous Word",
+    "text": "Fanfare: Summon 2 copies of Guardian Golem.\nWhenever another allied follower enters the field, give it Rush and spellboost your hand.\nEvolve: Summon a Guardian Golem."
+  },
+  "10841110": {
+    "name": "Gido, Leader of the Pack",
+    "text": "Fanfare: If your leader's defense is 10 or less, evolve this follower.\nBane\nWard"
+  },
+  "10841120": {
+    "name": "Sandstorm Watchdragon",
+    "text": "Ward\nLast Words: Draw 3 cards."
+  },
+  "10841130": {
+    "name": "Spirit of Wadatsumi",
+    "text": "Fanfare: Add a Majestic Megalorca to your hand.\nEvolve: Gain Crest: Spirit of Wadatsumi."
+  },
+  "10842110": {
+    "name": "Reef & Lolo, Serene Sirens",
+    "text": "Fanfare: Summon a Reef & Lolo, Serene Sirens.\nRush\nAt the end of your turn, add a Majestic Megalorca to your hand."
+  },
+  "10842120": {
+    "name": "Kimika, Cook of Happiness",
+    "text": "Fanfare: Select a card in your hand and discard it. Draw a card. Restore 1 defense to your leader.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10842310": {
+    "name": "Art of Decay",
+    "text": "Deal 4 damage to a random enemy follower. Deal 4 damage to the enemy leader."
+  },
+  "10843110": {
+    "name": "Giada, Peerless Flame of War",
+    "text": "Rush\nIntimidate\nStrike: Give this follower Barrier. If attacking a follower, give this follower \"Can attack 2 times per turn\" until the end of the turn."
+  },
+  "10843310": {
+    "name": "Ephemeral Foxfire",
+    "text": "Select an enemy follower on the field or the enemy leader and deal it 1 damage. Add an Ephemeral Foxfire to your deck. If you're in Overflow, draw a card."
+  },
+  "10844110": {
+    "name": "Drache & Aluzard, Burning Blood",
+    "text": "Fanfare: Give this follower +X/+X. If X is at least 2, evolve this follower. X is the number of other allied copies of Drache & Aluzard, Burning Blood that have entered the field this match.\nWard\nLast Words: Gain Crest: Drache & Aluzard, Burning Blood."
+  },
+  "10844120": {
+    "name": "Lumiore & Argente, Shining Wings",
+    "text": "Fanfare: Select 2 cards in your hand and discard them. Deal 4 damage to all enemies.\nSuper-Evolve: Draw 3 cards.\nAccelerate (3): Gain 1 max play point."
+  },
+  "10851110": {
+    "name": "Anisage, Clear Resolve",
+    "text": "Storm\nIgnores Ward."
+  },
+  "10851120": {
+    "name": "Lilith, Devilish Cutie",
+    "text": "Strike: Deal 1 damage to both leaders.\nLast Words: Add a Bat to your hand."
+  },
+  "10851130": {
+    "name": "Limil, Devilish Bunny",
+    "text": "Fanfare: If your leader's defense is higher than the enemy leader's defense, summon 2 copies of Bat.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10852110": {
+    "name": "Fiole, Devilish Matriarch",
+    "text": "Fanfare: Summon 3 copies of Bat.\nWhenever an allied Bat enters the field, give it Rush."
+  },
+  "10852120": {
+    "name": "Marsha, Dark Knight",
+    "text": "Fanfare: Deal 1 damage to all enemy followers and both leaders.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10852310": {
+    "name": "Bittersweet Departures",
+    "text": "Select 2 Modes to activate.\n1. Deal 1 damage to the enemy leader.\n2. Restore 2 defense to your leader.\n3. Deal 3 damage to a random enemy follower.\n4. Gain 4 shadows."
+  },
+  "10853110": {
+    "name": "Suzy, Sincere Hexcaster",
+    "text": "Fanfare: Select an enemy follower on the field and give it -0/-3.\nEvolve: Select a follower in your hand and give it +3/+0."
+  },
+  "10853310": {
+    "name": "Ebb and Flow",
+    "text": "Select a card in your hand and return it to deck. Draw 2 cards. If you've unlocked super-evolution, reduce their costs by 1."
+  },
+  "10854110": {
+    "name": "Itsurugi & Taketsumi, Brothers",
+    "text": "Fanfare: Select a Mode to activate.\n1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.\n2. Deal 5 damage to all enemy followers. Recover 1 evolution point.\nEvolve: Select a Mode to activate.\n1. Draw 2 cards.\n2. Recover 2 play points."
+  },
+  "10854120": {
+    "name": "Ceres, Liminal Rose",
+    "text": "Fanfare: Necromancy (20) - Reduce the cost of all Abysscraft cards in your hand by 2.\nClash: Deal 4 damage to the opposing follower.\nAt the end of your turn, restore 4 defense to your leader."
+  },
+  "10861110": {
+    "name": "Lilium, Witch of the Tomes",
+    "text": "Last Words: Draw a card.\nEvolve: Select an enemy follower on the field, remove all abilities from it, and deal it 2 damage."
+  },
+  "10861120": {
+    "name": "Theresa, Ergon Priestess",
+    "text": "Fanfare: Summon a Soulcure Sister and give it +2/-2 and Storm."
+  },
+  "10861130": {
+    "name": "Grant, Hunter of Undeath",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10862110": {
+    "name": "Edeth, Voice of Heaven",
+    "text": "Ward\nAura\nLast Words: Summon an Edeth, Voice of Heaven and remove Last Words from it.\nSuper-Evolve: Select an enemy follower on the field and destroy it."
+  },
+  "10862120": {
+    "name": "Viche, Abyssal Researcher",
+    "text": "Activates in hand. Whenever an allied follower super-evolves, reduce the cost of this card by 3.\nRush\nBane"
+  },
+  "10862310": {
+    "name": "Lingering Threat",
+    "text": "Select an enemy follower on the field with 3 defense or less and banish it.\nEnhance (5): Banish all enemy followers with 3 defense or less instead."
+  },
+  "10863110": {
+    "name": "Colette, Holy Exorcist",
+    "text": "Fanfare: If there's an evolved allied follower on the field, evolve this follower.\nWard\nWhen this follower evolves, do this 2 times: \"Deal 1 damage to a random enemy follower.\""
+  },
+  "10863210": {
+    "name": "Academy Hijinks",
+    "text": "Countdown (2)\nAt the end of your turn, draw a card and, if there's an evolved allied follower on the field, restore 1 defense to your leader. If there's a super-evolved allied follower on the field, restore 2 defense instead."
+  },
+  "10864110": {
+    "name": "Verdilia & Castelle, Sisters",
+    "text": "Fanfare: Summon a random follower that costs 2 or less from your deck and super-evolve it.\nSuper-Evolve: Gain Crest: Verdilia & Castelle, Sisters."
+  },
+  "10864120": {
+    "name": "Zoe, Dazzling Hope",
+    "text": "Fanfare: Select a Mode to activate. Deal 3 damage to this follower.\n1. Deal 3 damage to all enemy followers.\n2. Deal 3 damage to the enemy leader.\n3. Restore 3 defense to your leader.\nEvolve: Gain Crest: Zoe, Dazzling Hope."
+  },
+  "10871110": {
+    "name": "Kratos, Everyday Joy",
+    "text": "Ward\nLast Words: Summon a Kratos, Everyday Joy and remove Last Words from it."
+  },
+  "10871120": {
+    "name": "Leona, Overbearing Guardian",
+    "text": "Ward\nSuper-Evolve: Select another allied follower on the field and give it Ambush."
+  },
+  "10871130": {
+    "name": "Zerk, Artifact Manipulator",
+    "text": "Fanfare: Add a copy of a random allied Artifact follower destroyed this match to your hand without revealing it."
+  },
+  "10872110": {
+    "name": "Layla, Artificial Gift of Life",
+    "text": "Rush\nLast Words: Add an Ancient Artifact to your hand."
+  },
+  "10872120": {
+    "name": "Lazuli, Gateway Connector",
+    "text": "Fanfare: Add a Radiant Artifact to your hand."
+  },
+  "10872310": {
+    "name": "Unsullied Days",
+    "text": "Draw 2 cards. If you've unlocked super-evolution, restore 2 defense to your leader."
+  },
+  "10873110": {
+    "name": "Miriam, Reciprocator",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it. Summon a Radiant Artifact."
+  },
+  "10873310": {
+    "name": "The Journey Ahead",
+    "text": "Select an enemy follower on the field and deal it 6 damage. If at least 3 differently named allied Artifact followers have entered the field this match, recover 1 evolution point."
+  },
+  "10874110": {
+    "name": "Asher & Lydia, Paths Beyond",
+    "text": "Fanfare: Select an enemy follower on the field and give it Ward.\nEnhance (9): Evolve this follower and give it Storm.\nWhen this follower evolves, destroy 2 random enemy followers with Ward."
+  },
+  "10874120": {
+    "name": "Eudie, Your Dependable Mentor",
+    "text": "Fanfare: Add an Analyzing Artifact to your hand.\nEvolve: Select another unevolved allied follower on the field and evolve it."
+  },
+  "10901110": {
+    "name": "Jailor of Antiquity",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 6 damage. Deal 2 damage to a random unselected enemy follower.\nAccelerate (1): Deal 2 damage to a random enemy follower.\nWard"
+  },
+  "10901310": {
+    "name": "Initiation of Rebirth",
+    "text": "Add a copy of a random allied follower destroyed this match with the highest base cost to your deck without revealing it. Draw a card."
+  },
+  "10902110": {
+    "name": "Blade Angel",
+    "text": "Fanfare: Select 2 other allied followers on the field and give them +3/+3."
+  },
+  "10903110": {
+    "name": "Warden of Selflessness",
+    "text": "Fanfare: Add a Jailor of Antiquity to your hand. Deal X damage to 2 random enemy followers. X is the number of Neutral cards in your hand.\nEvolve: Recover 1 play point."
+  },
+  "10903210": {
+    "name": "Azvaldt, Penitentiary of Chaos",
+    "text": "At the end of your turn, if you've played cards with base costs of 1, 2, 3, 4, 5, 6, 7, and 8 this match, destroy this card.\nLast Words: Summon a copy each of 4 random differently named allied followers destroyed this match. Give all allied followers on the field +3/+3."
+  },
+  "10904110": {
+    "name": "Zerael, Sundered Rebirth",
+    "text": "Activates in deck. At the end of your turn, if you've played cards with base costs of 1, 2, 3, 4, 5, 6, 7, and 8 this match, Invoke this card.\nFanfare: Select an enemy follower on the field and deal it 9 damage.\nIntimidate"
+  },
+  "10911110": {
+    "name": "Sprouting Initiate",
+    "text": "Fanfare: Combo (3) - Draw a card.\nRush"
+  },
+  "10911120": {
+    "name": "Jungle Youth",
+    "text": "Intimidate"
+  },
+  "10911210": {
+    "name": "Trap in the Woods",
+    "text": "Whenever an enemy follower enters the field, destroy it and this card."
+  },
+  "10912110": {
+    "name": "Leafshadow Assassin",
+    "text": "Fanfare: Add a Fairy to your hand. Combo (3) - Give it Bane."
+  },
+  "10912120": {
+    "name": "Primate Plotters",
+    "text": "Fanfare: Add an exact copy of a random card in your opponent's hand to your hand without revealing it.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10912310": {
+    "name": "Verdant Ring Kindred",
+    "text": "Select a Mode to activate. Combo (3) - Activate all of them instead.\n1. Deal 4 damage to a random enemy follower.\n2. Add a Deepwood Bounty and Fairy to your hand."
+  },
+  "10913110": {
+    "name": "Virid Lieutenant",
+    "text": "Fanfare: Combo (3) - Draw 2 cards.\nEvolve: Select another allied follower on the field and give it +1/+1 and Rush."
+  },
+  "10913310": {
+    "name": "Crimson Incense",
+    "text": "Activates in hand. At the end of your turn, Combo (3) - Reduce the cost of this card by 1.\nSelect an enemy follower on the field and destroy it. Draw a card."
+  },
+  "10914110": {
+    "name": "Magachiyo, Aromatic Convict",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 4 damage. Combo (3) - Deal damage to all enemy followers instead.\nSuper-Evolve: Give this follower Storm."
+  },
+  "10914120": {
+    "name": "Hien, Redolent Revenant",
+    "text": "Activates in hand. Whenever you play a card, reduce the cost of this card by 1 until the end of the turn.\nFanfare: Select an enemy follower on the field and deal it 4 damage.\nLast Words: Summon a Hien, Redolent Revenant."
+  },
+  "10921110": {
+    "name": "Open-Sea Scout",
+    "text": "Fanfare: Summon a Dread Pirate's Flag.\nEvolve: Add a Gilded Boots to your hand."
+  },
+  "10921120": {
+    "name": "Kindred Cavalrywoman",
+    "text": "Rush\nWard"
+  },
+  "10921310": {
+    "name": "Phalanx",
+    "text": "Summon a Steelclad Knight and give it Ward.\nEnhance (6): Summon 5 instead."
+  },
+  "10922110": {
+    "name": "Whirlpool Gunner",
+    "text": "Fanfare: Summon a Dread Pirate's Flag. Add a Gilded Goblet to your hand.\nRush"
+  },
+  "10922120": {
+    "name": "Ferocious Commander",
+    "text": "Fanfare: Summon 2 copies of Steelclad Knight.\nEnhance (7): Give them and this follower +3/+0 and Rush."
+  },
+  "10922310": {
+    "name": "Severed Ties",
+    "text": "Select an enemy follower on the field and deal it 5 damage. If this card's cost is 3, add a Severed Ties to your hand and set its cost to 1."
+  },
+  "10923110": {
+    "name": "Roughwater First Mate",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 3 damage. Summon a Dread Pirate's Flag.\nEvolve: Replicate the effects of this card's Fanfare ability.\nSuper-Evolve: Add a Gilded Blade and Gilded Necklace to your hand and set their costs to 0."
+  },
+  "10923310": {
+    "name": "L'Age d'Or",
+    "text": "Summon a Dread Pirate's Flag. Deal 2 damage to all enemy followers.\nEnhance (6): Summon 2 instead. Deal 4 damage instead."
+  },
+  "10924110": {
+    "name": "Barbaros, Rebellious Convict",
+    "text": "Fanfare: Summon a Dread Pirate's Flag. Advance the counts of all allied copies of Dread Pirate's Flag on the field by 5.\nStorm"
+  },
+  "10924120": {
+    "name": "Beltezore, Valorous Revenant",
+    "text": "Storm\nBane\nWard\nAura\nCan attack 3 times per turn."
+  },
+  "10931110": {
+    "name": "Obsessed Test Subject",
+    "text": "When this follower enters the field, if at least 5 other allied copies of Obsessed Test Subject have entered the field this match, give it +3/+3.\nRush"
+  },
+  "10931120": {
+    "name": "Key Spirit",
+    "text": "Fanfare: Select an enemy follower on the field and deal it 7 damage. Deal 4 damage to the enemy leader.\nEvolve: Select a card in your hand with On Spellboost and spellboost it 4 times."
+  },
+  "10931310": {
+    "name": "Miscalculated Experiment",
+    "text": "Add 3 copies of Truth Summons to your hand."
+  },
+  "10932110": {
+    "name": "Enamored Researcher",
+    "text": "Fanfare: Summon 2 copies of Obsessed Test Subject.\nEnhance (8): Summon 3 copies instead and give them Ward.\nEvolve: Select an allied Obsessed Test Subject on the field and give it Bane."
+  },
+  "10932120": {
+    "name": "Noble Philosopher",
+    "text": "Fanfare: Return your hand to deck. Draw X cards. X is the number of cards you returned."
+  },
+  "10932310": {
+    "name": "Humane Love",
+    "text": "Summon an Obsessed Test Subject and give it +1/+0. Add an Obsessed Test Subject to your hand and give it +1/+0."
+  },
+  "10933110": {
+    "name": "Ecstatic Scholar",
+    "text": "Fuse: Cards\nFanfare: Draw 2 cards. Summon an Obsessed Test Subject.\nSuper-Evolve: If you've Fused to this card, select an allied Obsessed Test Subject on the field and give it Drain."
+  },
+  "10933310": {
+    "name": "Obsidian Raven",
+    "text": "Summon an Obsessed Test Subject. Do this 2 times: \"Deal 7 damage to a random enemy follower.\""
+  },
+  "10934110": {
+    "name": "Sephie, Maven Convict",
+    "text": "Fuse: Cards\nWhenever you Fuse to this card, spend 2 play points to summon an Obsessed Test Subject.\nFanfare: Summon 2 copies of Obsessed Test Subject.\nSuper-Evolve: Gain Crest: Sephie, Maven Convict."
+  },
+  "10934120": {
+    "name": "Phylene, Cleansing Revenant",
+    "text": "On Spellboost: Reduce the cost of this card by 1.\nBane\nWard\nAura"
+  },
+  "10941110": {
+    "name": "Ripper-Clawed Thief",
+    "text": "Fanfare: If an allied follower attacked a leader on your last turn, give this follower Storm.\nLast Words: Add a Ripper-Clawed Thief to your hand and remove Last Words from it."
+  },
+  "10941120": {
+    "name": "Cave Dragon",
+    "text": "Fanfare: If you're in Overflow, evolve this follower.\nAmbush"
+  },
+  "10941310": {
+    "name": "Drake Whelp's Tantrum",
+    "text": "Summon a Fire Drake Whelp.\nEnhance (3): Deal 3 damage to a random enemy follower."
+  },
+  "10942110": {
+    "name": "High-Spirited Marauder",
+    "text": "Storm\nStrike: If an allied follower attacked a leader on your last turn, give this follower +1/+0 until the end of the turn."
+  },
+  "10942120": {
+    "name": "Dragonfolk Butler",
+    "text": "Fanfare: Restore 3 defense to your leader. Recover 3 play points.\nEvolve: Select another allied follower on the field and give it +3/+3."
+  },
+  "10942310": {
+    "name": "Parting Jaws",
+    "text": "Select 2 cards in your hand and discard them. Deal 3 damage to a random enemy follower and the enemy leader."
+  },
+  "10943110": {
+    "name": "Barren-Earth Tyrant",
+    "text": "Fanfare: Do this 1 time: \"Deal 4 damage to a random enemy follower.\" If an allied follower attacked a leader on your last turn, do it 2 times instead.\nEvolve: Summon a High-Spirited Marauder."
+  },
+  "10943310": {
+    "name": "Artiglio",
+    "text": "Deal 3 damage split between all enemy followers. If an allied follower attacked a leader on your last turn, deal 6 damage instead."
+  },
+  "10944110": {
+    "name": "Antemaria, Piercing Convict",
+    "text": "Fanfare: If an allied follower attacked a leader on your last turn, give this follower Storm.\nRush\nIgnores Ward."
+  },
+  "10944120": {
+    "name": "Normagdala, Ravening Revenant",
+    "text": "Fanfare: Select a Mode to activate.\n1. Draw a card. Restore 3 defense to your leader.\n2. Give all enemy followers on the field -0/-4.\nWard\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10951110": {
+    "name": "Ruthless Blitzer",
+    "text": "Fanfare: Deal 2 damage to both leaders."
+  },
+  "10951120": {
+    "name": "Netherworld Lieutenant",
+    "text": "Last Words: Summon a Netherworld Lieutenant, give it +1/+0 and Rush, and remove Last Words from it."
+  },
+  "10951310": {
+    "name": "Spooky Surprise",
+    "text": "Summon a Ghost and Rotting Zombie."
+  },
+  "10952110": {
+    "name": "Void Colonel",
+    "text": "Ward\nLast Words: Destroy a random enemy follower. Restore 2 defense to your leader.\nCrystallize (2): Countdown (4)\nLast Words: Summon a Void Colonel."
+  },
+  "10952120": {
+    "name": "Sparkly Demoness",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it. Deal 2 damage to the enemy leader."
+  },
+  "10952310": {
+    "name": "Chains of the Past",
+    "text": "Do this 1 time: \"Deal 3 damage to a random enemy follower. Deal 1 damage to both leaders.\"\nEnhance (4): Do it 2 times instead."
+  },
+  "10953110": {
+    "name": "Rampaging Commander",
+    "text": "Fanfare: Deal 3 damage to all enemy followers. Deal 3 damage to both leaders.\nSuper-Evolve: Draw 2 cards. Deal 1 damage to both leaders."
+  },
+  "10953310": {
+    "name": "Reaper's Due",
+    "text": "Select an allied follower on the field and give it \"Last Words: Summon a copy of this card.\""
+  },
+  "10954110": {
+    "name": "Istyndet vs. Mitilykket",
+    "text": "Fanfare: Do this 3 times: \"Reanimate (2).\" Deal 2 damage to all enemy followers.\nSuper-Evolve: Gain Crest: Istyndet vs. Mitilykket."
+  },
+  "10954120": {
+    "name": "Garodeth vs. Zeth",
+    "text": "Activates in hand. At the end of your turn, if your leader's defense is 12 or less, reduce the cost of this card by 1.\nFanfare: Select a Mode to activate.\n1. Give this follower Storm. Deal 2 damage to your leader.\n2. Give this follower Ward. Deal 8 damage to all enemy followers."
+  },
+  "10961110": {
+    "name": "Follower of the Tenets",
+    "text": "Ward\nDuring your turn, when your leader's defense is restored, evolve this follower."
+  },
+  "10961120": {
+    "name": "Peryton",
+    "text": "Fanfare: Summon 2 copies of Peryton.\nRush"
+  },
+  "10961210": {
+    "name": "Roaring Basilica",
+    "text": "Countdown (3)\nLast Words: Summon a Holyflame Tiger. Deal 4 damage to a random enemy follower.\nEngage (3): Advance this amulet's count by 3."
+  },
+  "10962110": {
+    "name": "Agent of the Testaments",
+    "text": "Fanfare: Give this follower Ambush until the end of your opponent's turn.\nAt the end of your turn, restore 1 defense to your leader."
+  },
+  "10962120": {
+    "name": "Miraculous Al-mi'raj",
+    "text": "Storm\nCrystallize (1): Countdown (3)\nLast Words: Summon a Miraculous Al-mi'raj.\nEngage (1): Advance this amulet's count by 1."
+  },
+  "10962310": {
+    "name": "Vow of Devotion",
+    "text": "Select a Mode to activate. If there's an allied card on the field with a base cost of 6 or more, activate all of them instead.\n1. Deal 3 damage to a random enemy follower.\n2. Restore 2 defense to your leader."
+  },
+  "10963110": {
+    "name": "Executor of the Vow",
+    "text": "Fanfare: Restore 2 defense to your leader.\nWard\nDuring your turn, whenever your leader's defense is restored, destroy a random enemy follower.\nSuper-Evolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10963210": {
+    "name": "Juratio",
+    "text": "Fanfare: Destroy all followers.\nEngage (1): Destroy this card. Draw a card. Restore 1 defense to your leader."
+  },
+  "10964110": {
+    "name": "Erralde, Signet Convict",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it.\nEvolve: Gain Crest: Erralde, Signet Convict."
+  },
+  "10964120": {
+    "name": "Omerio, Winged Revenant",
+    "text": "Whenever an allied amulet is destroyed, activate an ability in sequence from the following.\n1. Deal 3 damage to 2 random enemy followers.\n2. Restore 2 defense to your leader.\n3. Summon a Holy Falcon.\nEvolve: Destroy all allied amulets."
+  },
+  "10971110": {
+    "name": "Bluerust Underling",
+    "text": "Fanfare: If there are no duplicates in your deck, select an enemy follower on the field and deal it 5 damage.\nRush"
+  },
+  "10971120": {
+    "name": "Twindrone Engineer",
+    "text": "Fanfare: Summon an Analyzing Artifact.\nEvolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "10971310": {
+    "name": "Dimensional Selection",
+    "text": "Select a Mode to activate.\n1. Deal 5 damage to all enemy followers.\n2. Summon 2 copies of Mystic Artifact."
+  },
+  "10972110": {
+    "name": "Ironwork Bodyguard",
+    "text": "Fanfare: If there are no duplicates in your deck, select an enemy follower on the field, deal it 4 damage, and restore 4 defense to your leader.\nWard"
+  },
+  "10972120": {
+    "name": "Blade Puppeteer",
+    "text": "Fanfare: Summon an Enhanced Puppet and Puppet.\nWhenever an allied Puppetry follower enters the field, deal 1 damage to the enemy leader."
+  },
+  "10972310": {
+    "name": "Disgraceful Banishment",
+    "text": "Select a card in your hand and discard it. Draw a card. If there are no duplicates in your deck, draw 3 instead."
+  },
+  "10973110": {
+    "name": "Steelforged Right Hand",
+    "text": "Fanfare: Select an enemy follower on the field and destroy it. If there are no duplicates in your deck, give this follower Storm."
+  },
+  "10973310": {
+    "name": "Soulforge",
+    "text": "Select an enemy follower on the field and destroy it. If there are no duplicates in your deck, destroy all enemy followers instead."
+  },
+  "10974110": {
+    "name": "Cutthroat, Fluxblade Convict",
+    "text": "Bane\nEvolve: Banish all copies of Cutthroat, Fluxblade Convict from your deck. Then, if there are no duplicates in your deck, gain Crest: Cutthroat, Fluxblade Convict."
+  },
+  "10974120": {
+    "name": "Aizeden, Killshot Revenant",
+    "text": "Fanfare: Summon a Warden of the Trigger.\nWhenever an allied Artifact follower enters the field, destroy a random enemy follower.\nSuper-Evolve: Replicate the effects of this card's Fanfare ability."
+  },
+  "90011110": {
+    "name": "Fairy",
+    "text": "Rush"
+  },
+  "90011120": {
+    "name": "Springbloom Fairy",
+    "text": "Ward\nAt the end of your turn, evolve this follower."
+  },
+  "90011310": {
+    "name": "Deepwood Bounty",
+    "text": "Restore 1 defense to your leader."
+  },
+  "90014110": {
+    "name": "Eve, Blade of Crystalia",
+    "text": "Storm\nWard"
+  },
+  "90014330": {
+    "name": "Depths of the Eld Lance",
+    "text": "Select an unevolved allied follower on the field and evolve it."
+  },
+  "90021110": {
+    "name": "Knight",
+    "text": ""
+  },
+  "90021120": {
+    "name": "Steelclad Knight",
+    "text": ""
+  },
+  "90021130": {
+    "name": "Naht's Henchman",
+    "text": ""
+  },
+  "90021210": {
+    "name": "Dread Pirate's Flag",
+    "text": "Countdown (7)\nWhenever you play a spell, advance this amulet's count by 1.\nLast Words: Deal 2 damage to the enemy leader."
+  },
+  "90021310": {
+    "name": "Gilded Blade",
+    "text": "Select an enemy follower on the field or the enemy leader and deal it 1 damage."
+  },
+  "90021320": {
+    "name": "Gilded Goblet",
+    "text": "Restore 2 defense to your leader."
+  },
+  "90021330": {
+    "name": "Gilded Boots",
+    "text": "Select an allied follower on the field and give it +1/+0 and Rush."
+  },
+  "90021340": {
+    "name": "Gilded Necklace",
+    "text": "Select an allied follower on the field and give it +0/+1 and Ward."
+  },
+  "90021350": {
+    "name": "Glittering Gold",
+    "text": "Select a Mode to activate.\n1. Draw a card.\n2. Deal 2 damage to a random enemy follower."
+  },
+  "90022110": {
+    "name": "Wretch",
+    "text": "Rush"
+  },
+  "90024320": {
+    "name": "Depths of the Eld Sword",
+    "text": "Select an enemy follower on the field and deal it 1 damage.\nEnhance (1): Deal 3 damage instead."
+  },
+  "90024330": {
+    "name": "Desperados' Shot",
+    "text": "Do this 2 times: \"Deal 4 damage to a random enemy follower.\""
+  },
+  "90031110": {
+    "name": "Clay Golem",
+    "text": ""
+  },
+  "90031120": {
+    "name": "Guardian Golem",
+    "text": "Ward"
+  },
+  "90031210": {
+    "name": "Magic Sediment",
+    "text": "Earth Sigil\nEngage (1): Gain an earth sigil."
+  },
+  "90031310": {
+    "name": "Mysterian Missile",
+    "text": "Deal 3 damage to a random enemy follower."
+  },
+  "90034320": {
+    "name": "Ars Magna",
+    "text": "Select an enemy and deal it 2 damage. Restore 1 defense to your leader."
+  },
+  "90034330": {
+    "name": "Depths of the Eld Crystals",
+    "text": "Summon a Crystalspawn and give it +X/+X. Restore Y defense to your leader. Deal Z damage to the enemy leader. X, Y, and Z are determined randomly and add up to your faith's value."
+  },
+  "90034340": {
+    "name": "Delta Cannon",
+    "text": "Deal 5 damage to all enemy followers."
+  },
+  "90034350": {
+    "name": "Send 'Em Packing",
+    "text": "Select an allied follower on the field and give it \"Can attack 2 times per turn.\""
+  },
+  "90041110": {
+    "name": "Fire Drake Whelp",
+    "text": "Intimidate"
+  },
+  "90041120": {
+    "name": "Vastwing Dragon",
+    "text": "Intimidate"
+  },
+  "90041130": {
+    "name": "Majestic Megalorca",
+    "text": "Rush"
+  },
+  "90044330": {
+    "name": "Depths of the Eld Blades",
+    "text": "When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader.\nDeal 1 damage to the enemy leader. Restore 1 defense to your leader."
+  },
+  "90051110": {
+    "name": "Skeleton",
+    "text": ""
+  },
+  "90051120": {
+    "name": "Bat",
+    "text": "Drain"
+  },
+  "90051130": {
+    "name": "Ghost",
+    "text": "Storm\nWhen this card leaves the field, banish it.\nAt the end of your turn, banish this card."
+  },
+  "90051140": {
+    "name": "Rotting Zombie",
+    "text": "Last Words: Summon a Rotting Zombie and remove Last Words from it."
+  },
+  "90054330": {
+    "name": "Depths of the Eld Sight",
+    "text": "Draw 2 cards."
+  },
+  "90061110": {
+    "name": "Holy Falcon",
+    "text": "Storm"
+  },
+  "90061120": {
+    "name": "Holyflame Tiger",
+    "text": "Rush"
+  },
+  "90061130": {
+    "name": "Regal Falcon",
+    "text": "Storm"
+  },
+  "90064210": {
+    "name": "Rings of Moonlight",
+    "text": "Countdown (1)\nAura\nAt the end of your turn, if there are at least 3 allied amulets on the field, deal 3 damage to all enemies."
+  },
+  "90064320": {
+    "name": "Depths of the Eld Tome",
+    "text": "Select a card on the field and destroy it. If you selected an allied amulet, deal 2 damage to the enemy leader and add a Depths of the Eld Tome to your hand."
+  },
+  "90071110": {
+    "name": "Puppet",
+    "text": "Rush\nAt the end of your opponent's turn, destroy this card."
+  },
+  "90071120": {
+    "name": "Enhanced Puppet",
+    "text": "Rush\nAt the end of your opponent's turn, destroy this card."
+  },
+  "90071130": {
+    "name": "Analyzing Artifact",
+    "text": "When this card enters the field, draw a card."
+  },
+  "90071140": {
+    "name": "Ancient Artifact",
+    "text": "Rush"
+  },
+  "90071150": {
+    "name": "Mystic Artifact",
+    "text": "Ward"
+  },
+  "90071160": {
+    "name": "Radiant Artifact",
+    "text": "Storm"
+  },
+  "90071210": {
+    "name": "Gear of Ambition",
+    "text": "Fuse: Artifact amulets\nWhen you Fuse to this card, transform it into a Striker Artifact.\nCan't be played."
+  },
+  "90071220": {
+    "name": "Gear of Remembrance",
+    "text": "Fuse: Artifact amulets\nWhen you Fuse to this card, transform it into a Fortifier Artifact.\nCan't be played."
+  },
+  "90072110": {
+    "name": "Striker Artifact",
+    "text": "Fuse: Artifact cards\nWhen you Fuse to this card, transform it based on the total cost of the cards fused.\n1: Ominous Artifact α\n2: Ominous Artifact β\n3 or more: Ominous Artifact γ\nRush"
+  },
+  "90072120": {
+    "name": "Fortifier Artifact",
+    "text": "Fuse: Artifact cards\nWhen you Fuse to this card, transform it based on the total cost of the cards fused.\n1: Ominous Artifact α\n2: Ominous Artifact β\n3 or more: Ominous Artifact γ\nWard"
+  },
+  "90073110": {
+    "name": "Ominous Artifact α",
+    "text": "Fuse: Ominous Artifact β and Ominous Artifact γ\nWhen you've Fused both to this card, transform it into a Masterwork Artifact Ω.\nAt the end of your turn, restore 3 defense to your leader."
+  },
+  "90073120": {
+    "name": "Ominous Artifact β",
+    "text": "At the end of your turn, deal 3 damage to the enemy leader."
+  },
+  "90073130": {
+    "name": "Ominous Artifact γ",
+    "text": "At the end of your turn, deal 3 damage to all enemy followers."
+  },
+  "90074110": {
+    "name": "Masterwork Artifact Ω",
+    "text": "Fanfare: Deal 5 damage to all enemy followers. Restore 5 defense to your leader.\nStorm\nWard\nAura"
+  },
+  "90074140": {
+    "name": "Imari's Little Buddies",
+    "text": "Rush"
+  },
+  "90074150": {
+    "name": "Warden of the Trigger",
+    "text": "Ward\nLast Words: Restore 2 defense to your leader."
+  },
+  "90074320": {
+    "name": "Depths of the Eld Axe",
+    "text": "Select an allied follower on the field with a base cost of 5 or more, add a copy of it to your hand without revealing it, and reduce the cost of the copy by 3."
+  },
+  "crest:10404110": {
+    "name": "Crest: Sandalphon, Primarch Successor",
+    "text": "Countdown (2)\nAt the end of your turn, restore 1 defense to all allies."
+  },
+  "crest:10412310": {
+    "name": "Crest: Starry Sky",
+    "text": "Countdown (1)\nLast Words: Deal 1 damage to the enemy leader. Add a Starry Sky to your hand."
+  },
+  "crest:10414120": {
+    "name": "Crest: Yuel & Societte, Dancing Duo",
+    "text": "Countdown (4)\nOnce on each of your turns, when you play a follower, evolve it."
+  },
+  "crest:10433110": {
+    "name": "Crest: Elmott, Remembrance Aflame",
+    "text": "At the start of your turn, deal 1 damage to the enemy leader."
+  },
+  "crest:10434120": {
+    "name": "Crest: Cagliostro, Genius Alchemist",
+    "text": "At the start of your turn, Earth Rite (1) - Add an Ars Magna to your hand."
+  },
+  "crest:10441310": {
+    "name": "Crest: Crescent Tube Ride",
+    "text": "Countdown (4)\nAt the end of your turn, give a random allied follower on the field +1/+1."
+  },
+  "crest:10451310": {
+    "name": "Crest: Valiant Edge",
+    "text": "Countdown (2)\nAt the end of your turn, deal 2 damage to a random enemy follower and restore 1 defense to your leader."
+  },
+  "crest:10453310": {
+    "name": "Crest: Corruption",
+    "text": "Countdown (4)\nAt the end of your turn, deal 2 damage to your leader."
+  },
+  "crest:10454120": {
+    "name": "Crest: Belial, Archangel of Cunning",
+    "text": "Countdown (4)\nLast Words: Deal 20 damage to the enemy leader."
+  },
+  "crest:10474110": {
+    "name": "Crest: Lu Woh, Light Personified",
+    "text": "Countdown (2)\nWhenever an enemy follower with Storm attacks a leader, give it -3/-0 until the end of the turn."
+  },
+  "crest:10524120": {
+    "name": "Crest: Unkei, Goldbloom",
+    "text": "Countdown (4)\nAt the end of your turn, add a Glittering Gold to your hand."
+  },
+  "crest:10532110": {
+    "name": "Crest: Insomniac Witch",
+    "text": "Countdown (2)\nLast Words: Deal 3 damage to all followers."
+  },
+  "crest:10534110": {
+    "name": "Crest: Lhynkal, Wandering Fool",
+    "text": "Whenever an allied Lhynkal, Wandering Fool enters the field, reduce the enemy leader's max defense by 2."
+  },
+  "crest:10544120": {
+    "name": "Crest: Yube, Crestpetal",
+    "text": "Whenever an allied Marine follower attacks, give it +1/+0 until the end of the turn and, once on each of your turns, add a Majestic Megalorca to your hand."
+  },
+  "crest:10553310": {
+    "name": "Crest: Rigor of the Nightblossom",
+    "text": "Countdown (2)\nAt the end of your turn, draw a card. Then, if you have at least 4 cards with the same cost in your hand, summon a Skeleton and give it Ward."
+  },
+  "crest:10554110": {
+    "name": "Crest: Milteo & Luzen",
+    "text": "Allied followers' Fanfare and Enhance abilities don't activate.\nWhenever you play a follower, evolve it."
+  },
+  "crest:10564120": {
+    "name": "Crest: Kukishiro, Mistbloom",
+    "text": "During your turn, whenever you draw a 1-, 3-, or 5-cost card, summon a Fox of Purity or Holy Falcon at random.\nDuring your turn, whenever you draw a 2-, 4-, or 6-cost card, summon an enemy Fox of Purity or Holy Falcon at random."
+  },
+  "crest:10574110": {
+    "name": "Crest: Slaus, Revolving Wheel of Fortune",
+    "text": "Countdown (3)\nAt the start of your turn, activate a random ability that hasn't been activated yet from the following.\n1. Increase the cost of all cards in your hand by 1 until the end of the turn.\n2. Give all allied followers on the field -2/-2.\n3. Deal 3 damage to your leader."
+  },
+  "faith:10614120": {
+    "name": "Faith: Sathanid, Eld Lance",
+    "text": "This faith's value starts at 0.\n\nWhenever an allied follower evolves, increase this faith's value by 1."
+  },
+  "crest:10622310": {
+    "name": "Crest: Majestic Conquest",
+    "text": "Countdown (2)\nWhenever you play an Enhanced card, summon a Fearless Soldier."
+  },
+  "faith:10624120": {
+    "name": "Faith: Yidmetra, Eld Sword",
+    "text": "This faith's value starts at 0.\n\nWhenever you play an Enhanced card, increase this faith's value by 1."
+  },
+  "crest:10634110": {
+    "name": "Crest: Shymm, Love Bewitched",
+    "text": "Whenever an allied Crystalspawn attacks, give it +1/+0."
+  },
+  "faith:10634120": {
+    "name": "Faith: Calge-Danthla, Eld Crystals",
+    "text": "This faith's value starts at 0.\n\nWhenever an allied Crystalspawn enters the field, increase this faith's value by 1."
+  },
+  "faith:10664120": {
+    "name": "Faith: Lyanthoth, Eld Tome",
+    "text": "This faith's value starts at 0.\n\nWhenever an allied amulet is destroyed, increase this faith's value by 1."
+  },
+  "crest:10704110": {
+    "name": "Crest: Illamrita, Designated Target",
+    "text": "Countdown (2)\nLast Words: Summon an Illamrita, Designated Target and evolve it. "
+  },
+  "crest:10712310": {
+    "name": "Crest: Minimized Anxiety",
+    "text": "Countdown (1)\nLast Words: Add a Magnified Malice to your hand."
+  },
+  "crest:10713310": {
+    "name": "Crest: Magnified Malice",
+    "text": "Countdown (1)\nLast Words: Add a Minimized Anxiety to your hand."
+  },
+  "crest:10714110": {
+    "name": "Crest: Thestae, Anathema of Distortion",
+    "text": "Countdown (3)\nAt the end of your turn, Combo (3) - Give all followers in your deck +1/+1."
+  },
+  "crest:10714120": {
+    "name": "Crest: Great Hart of the Glacial Realm",
+    "text": "Countdown (3)\nAt the end of your turn, Combo (3) - Add a Deepwood Bounty to your hand."
+  },
+  "crest:10724110": {
+    "name": "Crest: Gildaria, Anathema of Attunement",
+    "text": "Countdown (1)\nDuring your turn, whenever an allied follower enters the field, deal 1 damage to the enemy leader."
+  },
+  "crest:10734110": {
+    "name": "Crest: Lilanthim, Anathema of Predation",
+    "text": "Countdown (1)\nAt the end of your opponent's turn, summon a Lilanthim, Anathema of Predation and evolve it."
+  },
+  "crest:10744110": {
+    "name": "Crest: Burnite, Anathema of Ash",
+    "text": "At the start of your turn, deal 2 damage to your leader.\nOnce on each of your turns, when your leader's defense is restored, deal 1 damage to it."
+  },
+  "crest:10744120": {
+    "name": "Crest: Dragon's Vale Elder",
+    "text": "Countdown (2)\nAt the end of your turn, summon a Vastwing Dragon."
+  },
+  "crest:10833110": {
+    "name": "Crest: Tico, Mysterian Spellcrafter",
+    "text": "Whenever you play a Mysteria spell, deal 1 damage to the enemy leader."
+  },
+  "crest:10841130": {
+    "name": "Crest: Spirit of Wadatsumi",
+    "text": "Whenever an allied Marine follower enters the field, give it +1/+1."
+  },
+  "crest:10844110": {
+    "name": "Crest: Drache & Aluzard, Burning Blood",
+    "text": "Countdown (2)\nLast Words: Add a Drache & Aluzard, Burning Blood to your hand and set its cost to 2."
+  },
+  "crest:10864110": {
+    "name": "Crest: Verdilia & Castelle, Sisters",
+    "text": "Whenever a super-evolved allied follower attacks a follower, give the allied follower \"Can attack 2 times per turn\" until the end of the turn."
+  },
+  "crest:10864120": {
+    "name": "Crest: Zoe, Dazzling Hope",
+    "text": "Countdown (1)\nLast Words: Summon a Zoe, Dazzling Hope and evolve it."
+  },
+  "crest:10934110": {
+    "name": "Crest: Sephie, Maven Convict",
+    "text": "Once on each of your turns, when an allied Obsessed Test Subject enters the field, give it Storm."
+  },
+  "crest:10954110": {
+    "name": "Crest: Istyndet vs. Mitilykket",
+    "text": "At the end of your turn, if there's an allied card on the field with Last Words, destroy a random allied card with Last Words and a random enemy follower."
+  },
+  "crest:10964110": {
+    "name": "Crest: Erralde, Signet Convict",
+    "text": "At the end of your turn, if there's an allied card on the field with a base cost of 6 or more, deal 1 damage to the enemy leader and restore 1 defense to your leader."
+  },
+  "crest:10974110": {
+    "name": "Crest: Cutthroat, Fluxblade Convict",
+    "text": "Once on each of your turns, when you play a follower, evolve it."
+  },
+  "faith:90034330": {
+    "name": "Faith: Depths of the Eld Crystals",
+    "text": "This faith's value starts at 0.\n\nWhenever an allied Crystalspawn enters the field, increase this faith's value by 1."
+  }
+}
