@@ -234,6 +234,10 @@ fn encode(state: &State, perspective: PlayerId) -> Features;
 // the encoder masks. The bot is given the opponent's decklist, not the hand.
 ```
 
+`encode` is still unimplemented. This crate does not grow a feature vector, a
+mask, or a Python `Game.encode` method. The engine stays perfect-information;
+observation masking is M5 work on top of `snapshot` / `full` / `hash`.
+
 ## Throughput
 
 M1's benchmark reports games/second for both engines on the same seeded games. No speedup factor is claimed in M0.
@@ -260,3 +264,29 @@ The WASM binary `include_str!`s every authored `cards/**/*.json` except `cards/o
 | `cardText(id)` | string | JSON `{id, name, text, kind, cost}` from the baked bundle |
 | `bundleInfo()` | string | `{cards, crests, bytes}` |
 | `version()` | string | git SHA baked at build, or `"dev"` |
+
+## Python (M5 foundation)
+
+`py/` is a PyO3 `cdylib` (`arena-py`, imported as `arena`). JSON at the
+boundary; dicts on the Python side. `matchup` and `play_random` run whole
+games in Rust — the Python boundary is not on the per-action path.
+
+`CardDb` is loaded from the filesystem (`CardDb::load`; `root` may be the
+repo root or the `cards/` directory). `new_game` still `require_supported`s
+every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
+
+| API | Notes |
+|---|---|
+| `arena.load_cards(root: str = "cards") -> CardDb` | Filesystem load, serde-validated. |
+| `Game(db, seed, deck_a, deck_b, first="coin", opening_hands=None)` | `deck_*` are `{id: count}`; `opening_hands` is the trace header shape. |
+| `Game.legal() -> list[dict]` | `NeutralAction` dicts, engine order. |
+| `Game.apply(action, rng=None) -> list[dict]` | Event dicts. `rng` is the trace line's pick array (replay). Raises `arena.Illegal(str)`. |
+| `Game.snapshot() -> dict` | `CanonicalState` (`docs/trace-format.md`). |
+| `Game.full() -> dict` | Perfect-information dump of public `State` fields (instance ids, flags, ordered zones). |
+| `Game.hash() -> int` | FNV-1a 64 of the canonical snapshot JSON. |
+| `Game.phase` / `active` / `turn` / `winner` / `terminal` | `"mulligan"\|"main"\|"choice"\|"end"\|"terminal"`; `"a"/"b"`; `winner` is `str \| None`. |
+| `Game.clone() -> Game` | Deep copy of `State` (search). |
+| `arena.play_random(db, seed, deck_a, deck_b, first="coin") -> dict` | `{winner, turns, actions, first}`. Random-legal + `policy_rng`. |
+| `arena.matchup(db, decks, games, seed, policy="random", threads=None) -> dict` | Every ordered pair including mirrors. Per pair `{games, a_wins, b_wins, first_player_wins, mean_turns, mean_actions}`. Seed per game = FNV-1a64 of `(seed, pair_index, game_index)`. `policy` is `"random"` (arena-bench random-legal) or `"first-legal"`. Deterministic for a given seed and thread count. |
+
+`py/matchup.py` loads `oracle/decks/*.json` and prints the win-rate matrix.
