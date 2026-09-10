@@ -19,7 +19,10 @@ function catalogPlugin(): Plugin {
   };
 }
 
+const base = process.env.VITE_BASE || "/";
+
 export default defineConfig({
+  base,
   plugins: [catalogPlugin()],
   assetsInclude: ["**/*.wasm"],
   server: {

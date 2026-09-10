@@ -1,3 +1,4 @@
+import { publicUrl } from "../base.ts";
 import { crestFile, lookupText } from "../catalog.ts";
 import { applyCardImage, escapeHtml } from "../images.ts";
 import type { CardInstance, CrestInstance } from "../types.ts";
@@ -141,10 +142,10 @@ function applyOverlays(wrap: HTMLElement, inst: CardInstance, onBoard: boolean):
     img.alt = cls;
     stack.appendChild(img);
   };
-  if (traits.has("bane")) add("/images/icon_bane.png", "bane-icon");
-  if (traits.has("drain")) add("/images/icon_drain.png", "drain-icon");
+  if (traits.has("bane")) add(publicUrl("images/icon_bane.png"), "bane-icon");
+  if (traits.has("drain")) add(publicUrl("images/icon_drain.png"), "drain-icon");
   if (tags.has("lastwords") || tags.has("last_words") || tags.has("lastWords")) {
-    add("/images/icon_last-words.png", "lastwords-icon");
+    add(publicUrl("images/icon_last-words.png"), "lastwords-icon");
   }
   if (stack.childElementCount) wrap.appendChild(stack);
 }
@@ -160,7 +161,7 @@ export function renderCrestSlot(slot: HTMLElement, crest: CrestInstance | undefi
   if (file) {
     const img = document.createElement("img");
     img.className = "crest-image";
-    img.src = `/crests/${file}`;
+    img.src = publicUrl(`crests/${file}`);
     img.alt = info.name;
     img.referrerPolicy = "no-referrer";
     slot.appendChild(img);
