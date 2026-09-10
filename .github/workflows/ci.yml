@@ -43,7 +43,9 @@ jobs:
         run: ARENA_SOAK_GAMES=100 cargo test --release soak -- --nocapture
 
       - name: throughput floor
-        run: ARENA_BENCH_MIN_GAMES_PER_SEC=800 cargo test --release --test throughput -- --nocapture
+        # Three benches in one binary; run them one at a time so they do not
+        # share a CI core and miss the 800 games/s floor.
+        run: ARENA_BENCH_MIN_GAMES_PER_SEC=800 cargo test --release --test throughput -- --nocapture --test-threads=1
 
       - name: oracle traces
         run: cargo test --release --test oracle -- --nocapture
