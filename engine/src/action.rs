@@ -123,17 +123,18 @@ fn choose_option_json(state: &State, i: u8) -> ChooseOptionJson {
     ChooseOptionJson::Mode { mode: i }
 }
 
-/// Map a NeutralAction onto the current state. `None` if the line names a
-/// card that is not at the given hand index (`play.card` vs `hand_pos`;
-/// `fuse.host_pos` / `partner_pos` must each hold a card). Replay treats
-/// `None` as `Illegal::NotLegal` at that line.
+/// Map a NeutralAction onto the current state. `None` if `play.card` is not
+/// the id at `hand_pos`, or if `choose.option.card` is not in the offered
+/// set. `fuse` is positions only — no card-id check. Replay treats `None`
+/// as `Illegal::NotLegal` at that line.
 pub fn from_neutral(state: &State, n: &NeutralAction) -> Option<Action> {
-    let who = acting_player(state);
-    let hand = &state.player(who).hand;
     match n {
         NeutralAction::Mulligan { swap, .. } => Some(Action::MulliganConfirm { swap: *swap }),
         NeutralAction::Play { hand_pos, card, .. } => {
-            let inst = hand.get(*hand_pos as usize)?;
+            let inst = state
+                .player(acting_player(state))
+                .hand
+                .get(*hand_pos as usize)?;
             if inst.card.as_str() != *card {
                 return None;
             }
@@ -157,25 +158,18 @@ pub fn from_neutral(state: &State, n: &NeutralAction) -> Option<Action> {
             super_evolve: *super_evolve,
         }),
         NeutralAction::Engage { slot, .. } => Some(Action::Engage { slot: Slot(*slot) }),
-        NeutralAction::Fuse {
-            host_pos,
-            partner_pos,
-            ..
-        } => {
-            hand.get(*host_pos as usize)?;
-            for p in partner_pos {
-                hand.get(*p as usize)?;
-            }
-            Some(Action::Fuse { host: *host_pos })
-        }
+        NeutralAction::Fuse { host_pos, .. } => Some(Action::Fuse { host: *host_pos }),
         NeutralAction::BonusPp { .. } => Some(Action::BonusPp),
-        NeutralAction::Choose { option, .. } => Some(Action::Choose(option_index(state, option))),
+        NeutralAction::Choose { option, .. } => match option {
+            ChooseOptionJson::Card { .. } => Some(Action::Choose(option_index(state, option)?)),
+            _ => Some(Action::Choose(option_index(state, option).unwrap_or(0))),
+        },
         NeutralAction::Confirm { .. } => Some(Action::Confirm),
         NeutralAction::EndTurn { .. } => Some(Action::EndTurn),
     }
 }
 
-fn option_index(state: &State, opt: &ChooseOptionJson) -> u8 {
+fn option_index(state: &State, opt: &ChooseOptionJson) -> Option<u8> {
     if let Phase::Choice { node, .. } = &state.phase {
         let opts: Vec<ChooseOptionJson> = match node {
             ChoiceNode::Targets { options, .. } | ChoiceNode::MultiPick { options, .. } => options
@@ -196,11 +190,9 @@ fn option_index(state: &State, opt: &ChooseOptionJson) -> u8 {
                 .map(|p| ChooseOptionJson::Mode { mode: *p })
                 .collect(),
         };
-        if let Some(i) = opts.iter().position(|o| o == opt) {
-            return i as u8;
-        }
+        return opts.iter().position(|o| o == opt).map(|i| i as u8);
     }
-    0
+    None
 }
 
 pub fn play_form_label(form: PlayForm) -> &'static str {

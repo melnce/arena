@@ -197,6 +197,29 @@ fn play_mismatched_card_is_not_legal() {
 }
 
 #[test]
+fn choose_card_not_in_offered_set_is_not_legal() {
+    let db = load_db();
+    let mut st = started(&db, 3);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, PlayerId::B, "88001110");
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    let h = put_hand(&db, &mut st, me, "88001300");
+    play(&db, &mut st, h);
+    assert!(matches!(st.phase, Phase::Choice { .. }));
+    let neu = NeutralAction::Choose {
+        player: "a".into(),
+        option: arena_engine::trace::ChooseOptionJson::Card {
+            card: "uid_24".into(),
+        },
+    };
+    assert!(
+        from_neutral(&st, &neu).is_none(),
+        "choose.option.card must be in the offered set"
+    );
+}
+
+#[test]
 fn header_x_keys_are_ignored() {
     let raw = r#"{
         "v": 1,
