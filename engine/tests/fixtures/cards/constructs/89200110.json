@@ -1,0 +1,25 @@
+{
+  "id": "89200110",
+  "name": "C Reanimate",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Reanimate a follower that costs 2 or less.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Reanimate a follower that costs 2 or less.",
+      "effects": [
+        {
+          "op": "reanimate",
+          "maxCost": 2,
+          "printed": "Reanimate a follower that costs 2 or less."
+        }
+      ]
+    }
+  ]
+}

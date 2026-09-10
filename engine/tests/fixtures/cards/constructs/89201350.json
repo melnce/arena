@@ -1,0 +1,31 @@
+{
+  "id": "89201350",
+  "name": "C SideAny",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Give all followers +2/+0.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give all followers +2/+0.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "any",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 2,
+          "printed": "Give all followers +2/+0."
+        }
+      ]
+    }
+  ]
+}

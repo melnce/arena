@@ -1,0 +1,33 @@
+{
+  "id": "89201430",
+  "name": "C FiltWard",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy an enemy follower with Ward.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy an enemy follower with Ward.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "hasTrait": "ward"
+            }
+          },
+          "printed": "Destroy an enemy follower with Ward."
+        }
+      ]
+    }
+  ]
+}

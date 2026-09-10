@@ -1,0 +1,30 @@
+{
+  "id": "89201130",
+  "name": "C SrcRF2",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Summon 2 random differently named followers from your deck.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon 2 random differently named followers from your deck.",
+      "effects": [
+        {
+          "op": "summon",
+          "card": {
+            "randomFrom": {
+              "kind": "follower"
+            }
+          },
+          "count": 2,
+          "printed": "Summon 2 random differently named followers from your deck."
+        }
+      ]
+    }
+  ]
+}

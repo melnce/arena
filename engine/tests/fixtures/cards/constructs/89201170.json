@@ -1,0 +1,31 @@
+{
+  "id": "89201170",
+  "name": "C PickRD",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy 2 random distinct enemy followers.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy 2 random distinct enemy followers.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "randomDistinct",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "count": 2
+          },
+          "printed": "Destroy 2 random distinct enemy followers."
+        }
+      ]
+    }
+  ]
+}

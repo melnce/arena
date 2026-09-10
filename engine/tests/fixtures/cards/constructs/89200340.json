@@ -1,0 +1,43 @@
+{
+  "id": "89200340",
+  "name": "C Seq",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Summon a Synth Vanilla and give it +2/+2.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Synth Vanilla and give it +2/+2.",
+      "effects": [
+        {
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "88001110"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "attack": 2,
+              "defense": 2
+            }
+          ],
+          "printed": "Summon a Synth Vanilla and give it +2/+2."
+        }
+      ]
+    }
+  ]
+}

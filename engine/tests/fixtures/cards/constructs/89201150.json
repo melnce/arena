@@ -1,0 +1,30 @@
+{
+  "id": "89201150",
+  "name": "C PickCh",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy an enemy follower.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "printed": "Destroy an enemy follower."
+        }
+      ]
+    }
+  ]
+}

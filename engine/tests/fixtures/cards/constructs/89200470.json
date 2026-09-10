@@ -1,0 +1,26 @@
+{
+  "id": "89200470",
+  "name": "C DrawOpp",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Your opponent draws a card.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Your opponent draws a card.",
+      "effects": [
+        {
+          "op": "draw",
+          "count": 1,
+          "player": "opponent",
+          "printed": "Your opponent draws a card."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "89200280",
+  "name": "C Transform",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Transform an enemy follower into a Synth Big.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Transform an enemy follower into a Synth Big.",
+      "effects": [
+        {
+          "op": "transform",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "into": {
+            "named": "88001320"
+          },
+          "printed": "Transform an enemy follower into a Synth Big."
+        }
+      ]
+    }
+  ]
+}

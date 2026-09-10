@@ -1,0 +1,265 @@
+{
+  "id": "89100200",
+  "name": "Synth Construct Kitchen",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Fanfare / Last Words / Strike / Engage / End of turn: Deal 1 damage to the enemy leader.",
+  "attack": 2,
+  "defense": 4,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Fanfare: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Last Words: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Evolve: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Super-Evolve: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "anyEvolve",
+      "printed": "Whenever this follower evolves: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Whenever this follower evolves: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "anySuperEvolve",
+      "printed": "Whenever this follower super-evolves: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Whenever this follower super-evolves: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "strike",
+      "printed": "Strike: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Strike: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "followerStrike",
+      "printed": "Follower Strike: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Follower Strike: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "clash",
+      "printed": "Clash: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Clash: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "enter",
+      "printed": "When this follower enters the field: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "When this follower enters the field: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "leave",
+      "printed": "When this follower leaves the field: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "When this follower leaves the field: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "discarded",
+      "printed": "When this card is discarded: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "When this card is discarded: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "invoked",
+      "printed": "Invoked: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Invoked: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "fused",
+      "printed": "Fused: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Fused: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "spellboost",
+      "printed": "On Spellboost: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "On Spellboost: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "engage",
+      "cost": 0,
+      "sacrifice": false,
+      "printed": "Engage: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "printed": "Whenever another allied follower enters the field, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 1,
+          "printed": "deal 1 damage to the enemy leader."
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 2,
+      "printed": "Enhance (2): Deal 5 damage to the enemy leader.",
+      "replacesBase": true,
+      "effects": [
+        {
+          "op": "damage",
+          "select": { "pick": "all", "side": "enemy", "zone": "leader", "kind": "leader" },
+          "amount": 5,
+          "printed": "Deal 5 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

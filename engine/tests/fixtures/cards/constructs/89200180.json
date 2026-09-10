@@ -1,0 +1,33 @@
+{
+  "id": "89200180",
+  "name": "C RemoveWard",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove Ward from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove Ward from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeTraits",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "traits": {
+            "ward": true
+          },
+          "printed": "Remove Ward from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

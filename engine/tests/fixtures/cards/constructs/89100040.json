@@ -1,0 +1,14 @@
+{
+  "id": "89100040",
+  "name": "Synth High Atk",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "",
+  "attack": 8,
+  "defense": 3,
+  "tribes": []
+}

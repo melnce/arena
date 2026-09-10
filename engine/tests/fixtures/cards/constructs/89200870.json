@@ -1,0 +1,33 @@
+{
+  "id": "89200870",
+  "name": "C RmOn engage",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove engage from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove engage from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "engage"
+          ],
+          "printed": "Remove engage from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

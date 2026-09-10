@@ -1,0 +1,31 @@
+{
+  "id": "89201390",
+  "name": "C OrdBase",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Discard the card with the highest base cost in the enemy hand.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Discard the card with the highest base cost in the enemy hand.",
+      "effects": [
+        {
+          "op": "discard",
+          "select": {
+            "pick": "highest",
+            "side": "enemy",
+            "zone": "hand",
+            "kind": "card",
+            "orderBy": "baseCost"
+          },
+          "printed": "Discard the card with the highest base cost in the enemy hand."
+        }
+      ]
+    }
+  ]
+}

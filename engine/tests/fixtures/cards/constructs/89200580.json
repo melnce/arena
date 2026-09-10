@@ -1,0 +1,35 @@
+{
+  "id": "89200580",
+  "name": "C LeadDelta",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Subtract 20 from the enemy leader's max defense.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Subtract 20 from the enemy leader's max defense.",
+      "effects": [
+        {
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "maxDefense": {
+            "delta": {
+              "neg": 20
+            }
+          },
+          "printed": "Subtract 20 from the enemy leader's max defense."
+        }
+      ]
+    }
+  ]
+}

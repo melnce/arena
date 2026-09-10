@@ -1,0 +1,33 @@
+{
+  "id": "89200390",
+  "name": "C BuffEot",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Give an enemy follower +3/+3 until the end of the turn.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give an enemy follower +3/+3 until the end of the turn.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 3,
+          "defense": 3,
+          "untilEndOfTurn": true,
+          "printed": "Give an enemy follower +3/+3 until the end of the turn."
+        }
+      ]
+    }
+  ]
+}

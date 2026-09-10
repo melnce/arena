@@ -1,0 +1,31 @@
+{
+  "id": "89200660",
+  "name": "C RetDeckR",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Return a card in your hand to your deck.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Return a card in your hand to your deck.",
+      "effects": [
+        {
+          "op": "returnToDeck",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "position": "random",
+          "printed": "Return a card in your hand to your deck."
+        }
+      ]
+    }
+  ]
+}

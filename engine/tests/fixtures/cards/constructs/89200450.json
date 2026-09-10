@@ -1,0 +1,28 @@
+{
+  "id": "89200450",
+  "name": "C DrawFilt",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Draw a follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw a follower.",
+      "effects": [
+        {
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "kind": "follower"
+          },
+          "printed": "Draw a follower."
+        }
+      ]
+    }
+  ]
+}

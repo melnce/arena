@@ -1,0 +1,34 @@
+{
+  "id": "89201090",
+  "name": "C SrcCopy",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Summon a copy of an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a copy of an enemy follower.",
+      "effects": [
+        {
+          "op": "summon",
+          "card": {
+            "copyOf": {
+              "pick": "choose",
+              "side": "enemy",
+              "zone": "field",
+              "kind": "follower"
+            },
+            "exact": false
+          },
+          "count": 1,
+          "printed": "Summon a copy of an enemy follower."
+        }
+      ]
+    }
+  ]
+}

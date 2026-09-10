@@ -1,0 +1,30 @@
+{
+  "id": "89201180",
+  "name": "C PickLeft",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy the leftmost enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy the leftmost enemy follower.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "leftmost",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "printed": "Destroy the leftmost enemy follower."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "89201400",
+  "name": "C Other Follower",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Destroy all other allied followers.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Destroy all other allied followers.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "other": true
+          },
+          "printed": "Fanfare: Destroy all other allied followers."
+        }
+      ]
+    }
+  ]
+}

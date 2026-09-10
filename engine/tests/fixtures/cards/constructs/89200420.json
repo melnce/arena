@@ -1,0 +1,27 @@
+{
+  "id": "89200420",
+  "name": "C ComboAdd2",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Add 3 to your combo.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Add 3 to your combo.",
+      "effects": [
+        {
+          "op": "counter",
+          "key": "combo",
+          "how": "add",
+          "amount": 3,
+          "printed": "Add 3 to your combo."
+        }
+      ]
+    }
+  ]
+}

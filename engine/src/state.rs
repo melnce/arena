@@ -88,6 +88,9 @@ pub struct CardInstance {
     pub sequence_index: u32,
     /// Trait grants with an `until` expiry (Measured Attunement / Shaili / Friendly Blue Ogre).
     pub temp_traits: Vec<TempTraitGrant>,
+    /// Option indices already fired by `choose by: randomUnused` (Slaus).
+    /// Not replenished; a later resolution with an empty remainder is a no-op.
+    pub choose_used: BTreeSet<u8>,
 }
 
 /// A `grantTraits` that expires at a turn boundary.
@@ -138,6 +141,7 @@ impl CardInstance {
             once_used: Vec::new(),
             sequence_index: 0,
             temp_traits: Vec::new(),
+            choose_used: BTreeSet::new(),
         }
     }
 
@@ -197,9 +201,7 @@ impl CardInstance {
             Some(tags) => {
                 self.granted.retain(|a| !tags.contains(&a.tag()));
                 for t in tags {
-                    if let TriggerTag::LastWords = t {
-                        self.printed_tags.remove("lastWords");
-                    }
+                    self.printed_tags.remove(t.snapshot());
                 }
             }
             None => {
@@ -224,6 +226,8 @@ pub struct CrestInstance {
     pub granted_order: u32,
     /// Runtime grants (Sathanid / Yidmetra onto the Faith crest).
     pub granted: Vec<Ability>,
+    /// Option indices already fired by `choose by: randomUnused` on this crest.
+    pub choose_used: BTreeSet<u8>,
 }
 
 #[derive(Debug, Clone)]

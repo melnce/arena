@@ -1,0 +1,26 @@
+{
+  "id": "89200500",
+  "name": "C PpMax",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Gain 3 max PP.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Gain 3 max PP.",
+      "effects": [
+        {
+          "op": "pp",
+          "action": "gainMax",
+          "amount": 3,
+          "printed": "Gain 3 max PP."
+        }
+      ]
+    }
+  ]
+}

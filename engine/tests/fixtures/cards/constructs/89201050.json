@@ -1,0 +1,54 @@
+{
+  "id": "89201050",
+  "name": "C SelectAs",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Select an enemy follower and deal damage to the enemy leader equal to its attack.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower and deal damage to the enemy leader equal to its attack.",
+      "effects": [
+        {
+          "op": "seq",
+          "effects": [
+            {
+              "op": "select",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "as": "x"
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": {
+                "stat": {
+                  "of": {
+                    "pick": "bound",
+                    "ref": "x"
+                  },
+                  "which": "attack"
+                }
+              }
+            }
+          ],
+          "printed": "Select an enemy follower and deal damage to the enemy leader equal to its attack."
+        }
+      ]
+    }
+  ]
+}

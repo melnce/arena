@@ -1,0 +1,30 @@
+{
+  "id": "89201120",
+  "name": "C SrcRF",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Summon a random follower from your deck.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a random follower from your deck.",
+      "effects": [
+        {
+          "op": "summon",
+          "card": {
+            "randomFrom": {
+              "kind": "follower"
+            }
+          },
+          "count": 1,
+          "printed": "Summon a random follower from your deck."
+        }
+      ]
+    }
+  ]
+}

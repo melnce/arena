@@ -1,0 +1,30 @@
+{
+  "id": "89200070",
+  "name": "C Banish",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Banish all enemy followers.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Banish all enemy followers.",
+      "effects": [
+        {
+          "op": "banish",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "printed": "Banish all enemy followers."
+        }
+      ]
+    }
+  ]
+}

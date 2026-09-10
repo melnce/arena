@@ -1,0 +1,26 @@
+{
+  "id": "89200520",
+  "name": "C PpSpend",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Spend 2 PP.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Spend 2 PP.",
+      "effects": [
+        {
+          "op": "pp",
+          "action": "spend",
+          "amount": 2,
+          "printed": "Spend 2 PP."
+        }
+      ]
+    }
+  ]
+}

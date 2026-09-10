@@ -1,0 +1,31 @@
+{
+  "id": "89201200",
+  "name": "C PickLo",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy the enemy followers with the lowest attack.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy the enemy followers with the lowest attack.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "lowest",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "orderBy": "attack"
+          },
+          "printed": "Destroy the enemy followers with the lowest attack."
+        }
+      ]
+    }
+  ]
+}

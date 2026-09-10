@@ -1,0 +1,33 @@
+{
+  "id": "89200820",
+  "name": "C RmOn leave",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove leave from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove leave from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "leave"
+          ],
+          "printed": "Remove leave from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

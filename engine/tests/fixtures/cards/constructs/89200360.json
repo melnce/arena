@@ -1,0 +1,58 @@
+{
+  "id": "89200360",
+  "name": "C Choose",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Choose: Deal 1 or 7 damage to the enemy leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Choose: Deal 1 or 7 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "Deal 1 damage to the enemy leader.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 1
+                }
+              ]
+            },
+            {
+              "printed": "Deal 7 damage to the enemy leader.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 7
+                }
+              ]
+            }
+          ],
+          "printed": "Choose: Deal 1 or 7 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

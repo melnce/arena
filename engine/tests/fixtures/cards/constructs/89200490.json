@@ -1,0 +1,27 @@
+{
+  "id": "89200490",
+  "name": "C EpSpend",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Spend 1 evolution point.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Spend 1 evolution point.",
+      "effects": [
+        {
+          "op": "ep",
+          "action": "spend",
+          "super": false,
+          "amount": 1,
+          "printed": "Spend 1 evolution point."
+        }
+      ]
+    }
+  ]
+}

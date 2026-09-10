@@ -1,0 +1,42 @@
+{
+  "id": "89200330",
+  "name": "C RandSplit",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Randomly split 1 between X and Y, then deal 1 damage to the enemy leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Randomly split 1 between X and Y, then deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "randomSplit",
+          "keys": [
+            "X",
+            "Y"
+          ],
+          "times": 1,
+          "effects": [
+            {
+              "printed": "Deal 1 damage to the enemy leader.",
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ],
+          "printed": "Randomly split 1 between X and Y, then deal 1 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

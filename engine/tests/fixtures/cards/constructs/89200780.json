@@ -1,0 +1,33 @@
+{
+  "id": "89200780",
+  "name": "C RmOn strike",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove strike from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove strike from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "strike"
+          ],
+          "printed": "Remove strike from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

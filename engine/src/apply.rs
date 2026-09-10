@@ -619,7 +619,9 @@ fn play_form(
     } else {
         (false, false)
     };
-    let enhance: Vec<&Mode> = if suppress_enhance {
+    // `printed_tags` loses "enhance" after `removeAbilities`; static suppress
+    // also strips the mode at play (Milteo & Luzen).
+    let enhance: Vec<&Mode> = if suppress_enhance || !inst.printed_tags.contains("enhance") {
         Vec::new()
     } else {
         card.modes()
@@ -3885,6 +3887,7 @@ fn apply_effect(
                 }
             }
             ChooseBy::Random | ChooseBy::RandomUnused => {
+                let persist = matches!(by, ChooseBy::RandomUnused);
                 let resolved = if options.is_some() {
                     options.clone()
                 } else {
@@ -3895,7 +3898,14 @@ fn apply_effect(
                         crate::card::ChoosePick::All => opts.len(),
                         crate::card::ChoosePick::N(k) => k as usize,
                     };
-                    let mut unused: Vec<usize> = (0..opts.len()).collect();
+                    let already = if persist {
+                        choose_used_of(state, source)
+                    } else {
+                        std::collections::BTreeSet::new()
+                    };
+                    let mut unused: Vec<usize> = (0..opts.len())
+                        .filter(|i| !already.contains(&(*i as u8)))
+                        .collect();
                     for _ in 0..n {
                         if unused.is_empty() {
                             break;
@@ -3908,6 +3918,9 @@ fn apply_effect(
                             .map_err(Illegal::OraclePickNotLegal)?;
                         state.picks.extend(emit);
                         let oi = unused.remove(j.min(unused.len() - 1));
+                        if persist {
+                            mark_choose_used(state, source, oi as u8);
+                        }
                         push_effects(state, controller, source, opts[oi].effects.clone());
                     }
                 }
@@ -6032,6 +6045,41 @@ fn set_sequence_index(state: &mut State, source: SourceRef, v: u32) {
     }
 }
 
+fn choose_used_of(state: &State, source: SourceRef) -> std::collections::BTreeSet<u8> {
+    match source {
+        SourceRef::Field { player, id } => state
+            .find_field(player, id)
+            .and_then(|s| state.field_inst(player, s))
+            .map(|c| c.choose_used.clone())
+            .unwrap_or_default(),
+        SourceRef::Crest { player, index } => state
+            .player(player)
+            .crests
+            .get(index)
+            .map(|c| c.choose_used.clone())
+            .unwrap_or_default(),
+        _ => std::collections::BTreeSet::new(),
+    }
+}
+
+fn mark_choose_used(state: &mut State, source: SourceRef, i: u8) {
+    match source {
+        SourceRef::Field { player, id } => {
+            if let Some(slot) = state.find_field(player, id) {
+                if let Some(c) = state.field_inst_mut(player, slot) {
+                    c.choose_used.insert(i);
+                }
+            }
+        }
+        SourceRef::Crest { player, index } => {
+            if let Some(c) = state.player_mut(player).crests.get_mut(index) {
+                c.choose_used.insert(i);
+            }
+        }
+        _ => {}
+    }
+}
+
 fn crest_matches_filter(c: &CrestInstance, filter: Option<&Filter>) -> bool {
     let Some(f) = filter else {
         return !c.faith;
@@ -6462,6 +6510,7 @@ fn gain_crest(db: &CardDb, state: &mut State, who: PlayerId, id: &str, events: &
         once_used: Vec::new(),
         granted_order: order,
         granted: Vec::new(),
+        choose_used: std::collections::BTreeSet::new(),
     });
     events.push(Event::CrestGain {
         player: who,
@@ -6982,7 +7031,23 @@ fn pool_candidates(
                     });
                 }
             }
-            Zone::Cemetery | Zone::Crests => {}
+            Zone::Cemetery => {
+                // Cemetery is a real pool (return / copy / count). Crests stay
+                // on the special-case paths (countdown / removeCrests /
+                // grantAbility) — they are not card instances.
+                for c in &state.player(who).cemetery {
+                    if !kind_ok(c, p.kind) {
+                        continue;
+                    }
+                    if let Some(f) = &p.filter {
+                        if !inst_matches_filter(state, who, c, f) {
+                            continue;
+                        }
+                    }
+                    out.push(TargetOpt::Card(c.card));
+                }
+            }
+            Zone::Crests => {}
         }
     }
     let _ = db;

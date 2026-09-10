@@ -1,0 +1,47 @@
+{
+  "id": "89201320",
+  "name": "C KindFaith",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Give your Faith Last Words: Deal 1 damage to the enemy leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give your Faith Last Words: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "grantAbility",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "crests",
+            "kind": "faith"
+          },
+          "ability": {
+            "on": "lastWords",
+            "printed": "Last Words: Deal 1 damage to the enemy leader.",
+            "effects": [
+              {
+                "op": "damage",
+                "select": {
+                  "pick": "all",
+                  "side": "enemy",
+                  "zone": "leader",
+                  "kind": "leader"
+                },
+                "amount": 1,
+                "printed": "Last Words: Deal 1 damage to the enemy leader."
+              }
+            ]
+          },
+          "printed": "Give your Faith Last Words: Deal 1 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

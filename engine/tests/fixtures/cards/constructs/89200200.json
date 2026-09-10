@@ -1,0 +1,30 @@
+{
+  "id": "89200200",
+  "name": "C RemoveAb",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove the abilities of an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove the abilities of an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "printed": "Remove the abilities of an enemy follower."
+        }
+      ]
+    }
+  ]
+}

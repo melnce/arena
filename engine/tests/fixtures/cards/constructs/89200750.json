@@ -1,0 +1,33 @@
+{
+  "id": "89200750",
+  "name": "C RmOn superEvolve",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove superEvolve from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove superEvolve from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "superEvolve"
+          ],
+          "printed": "Remove superEvolve from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

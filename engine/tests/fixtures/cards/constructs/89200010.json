@@ -1,0 +1,26 @@
+{
+  "id": "89200010",
+  "name": "C Crest",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Gain Crest: Construct.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Gain Crest: Construct.",
+      "effects": [
+        {
+          "op": "crest",
+          "gain": "crest:89100910",
+          "player": "self",
+          "printed": "Gain Crest: Construct."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "89201290",
+  "name": "C KindC",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy all enemy cards on the field.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy all enemy cards on the field.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "card"
+          },
+          "printed": "Destroy all enemy cards on the field."
+        }
+      ]
+    }
+  ]
+}

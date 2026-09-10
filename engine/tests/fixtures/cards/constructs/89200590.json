@@ -1,0 +1,31 @@
+{
+  "id": "89200590",
+  "name": "C LeadCap",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "The enemy leader can't take more than 1 damage at a time.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "The enemy leader can't take more than 1 damage at a time.",
+      "effects": [
+        {
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "damageCap": 1,
+          "printed": "The enemy leader can't take more than 1 damage at a time."
+        }
+      ]
+    }
+  ]
+}

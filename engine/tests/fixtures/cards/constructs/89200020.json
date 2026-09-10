@@ -1,0 +1,31 @@
+{
+  "id": "89200020",
+  "name": "C Damage",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 3 damage to the enemy leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 3 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 3,
+          "printed": "Deal 3 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

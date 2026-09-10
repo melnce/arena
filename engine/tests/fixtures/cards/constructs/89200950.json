@@ -1,0 +1,44 @@
+{
+  "id": "89200950",
+  "name": "C Rep lastWords",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Replicate lastWords. lastWords: Deal 1 damage to the enemy leader.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "lastWords: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "lastWords: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Replicate lastWords.",
+      "effects": [
+        {
+          "op": "replicate",
+          "ability": "lastWords",
+          "printed": "Fanfare: Replicate lastWords."
+        }
+      ]
+    }
+  ]
+}

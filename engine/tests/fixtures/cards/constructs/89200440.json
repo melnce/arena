@@ -1,0 +1,32 @@
+{
+  "id": "89200440",
+  "name": "C Split",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 4 damage split among all enemy followers.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 4 damage split among all enemy followers.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4,
+          "split": true,
+          "printed": "Deal 4 damage split among all enemy followers."
+        }
+      ]
+    }
+  ]
+}

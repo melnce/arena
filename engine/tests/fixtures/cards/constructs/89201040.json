@@ -1,0 +1,51 @@
+{
+  "id": "89201040",
+  "name": "C IfElse",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If Overflow is active, deal 1 damage to the enemy leader. Otherwise, deal 5 damage.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If Overflow is active, deal 1 damage to the enemy leader. Otherwise, deal 5 damage.",
+      "effects": [
+        {
+          "op": "if",
+          "cond": {
+            "overflow": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ],
+          "else": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 5
+            }
+          ],
+          "printed": "If Overflow is active, deal 1 damage to the enemy leader. Otherwise, deal 5 damage."
+        }
+      ]
+    }
+  ]
+}

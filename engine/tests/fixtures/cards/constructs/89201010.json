@@ -1,0 +1,31 @@
+{
+  "id": "89201010",
+  "name": "C EvoSuper",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Super-evolve an allied follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Super-evolve an allied follower.",
+      "effects": [
+        {
+          "op": "evolve",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "super": true,
+          "printed": "Super-evolve an allied follower."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "89201230",
+  "name": "C ZnDeck",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Banish all followers from the enemy deck.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Banish all followers from the enemy deck.",
+      "effects": [
+        {
+          "op": "banish",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "deck",
+            "kind": "follower"
+          },
+          "printed": "Banish all followers from the enemy deck."
+        }
+      ]
+    }
+  ]
+}
