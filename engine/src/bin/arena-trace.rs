@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use arena_engine::{
     apply, legal_actions, new_game, policy_rng, snapshot_json, to_neutral, Action, CardDb, CardId,
-    First, GameConfig, NeutralAction, OpeningHandsJson, Phase, PlayerId, TraceHeader,
+    First, GameConfig, OpeningHandsJson, Phase, PlayerId, TraceHeader,
 };
 
 fn main() {

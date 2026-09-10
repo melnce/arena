@@ -398,7 +398,7 @@ fn can_fuse(db: &CardDb, state: &State, me: PlayerId, host: usize, inst: &CardIn
 }
 
 fn fuse_partner_indices(
-    db: &CardDb,
+    _db: &CardDb,
     state: &State,
     me: PlayerId,
     host: usize,
