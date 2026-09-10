@@ -74,6 +74,16 @@ Reactions to an op of an in-flight list that is *not* inside a flushed wave (`al
 
 That order is what makes play reactions (`whenever you play`) resolve before Fanfare (E39), other cards' enter reactions wait until the play completes (E34), the entrant's own `on:enter` sort with those reactions by board age (E38), Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
 
+`apply_attack` writes `State.combat_opposing` (the attack target as a `TargetOpt`) before queuing Strike / Follower Strike / Clash, and clears it after combat damage. `pick: opposing` reads that slot (Okita's "the opposing follower").
+
+`grantTraits.until` (`endOfTurn` / `endOfOpponentTurn`) is caster-relative: `endOfOpponentTurn` expires when the caster's opponent's turn ends, even if the grant sits on an enemy follower (Measured Attunement / Shaili). Grants are stored on `CardInstance.temp_traits` and `merge_remove`'d at that boundary.
+
+A `countdown` selector with `zone: crests` adjusts `CrestInstance.countdown` in place (Majestic Conquest "Delay the count of your Crest … by 2"). `filter.card` `10622310` matches crest id `crest:10622310`.
+
+`summon { copyOf }` from `zone: hand` **moves** that hand instance onto the field (Chloe "summon it"); a full field leaves the card in hand. `addToHand { copyOf }` of several deck targets copies each resolved instance and does not remove the originals (Wolfraud exact copies).
+
+Hand-zone `when ally_draw` fires only on the drawn instance (`note_draw` takes the last same-id in hand). Other copies of the same card already in hand stay quiet (Swift Staffmaster).
+
 A super-evolved follower on its owner's turn is still a legal `destroy` candidate; `destroy_by_ability` fizzles via `cantBeDestroyedByAbilities` / own-turn SE protection (E31). Lethal 0-defense still settles. The candidate pool is unchanged so `random_target` picks still match.
 
 Lethal **damage** marks a follower destroyed (`defense <= 0`) and it stays in its slot — not a candidate, not attackable — until pending work is quiet, when deaths settle together and Last Words queue (rulebook Meteor / simultaneous destruction). Explicit `destroy` / `banish` remove at once (Last Words still wait in the queue). An op's targets are selected when that op is reached (after previous ops in the list), then captured by instance id for that op's applications only. A nested body (`repeat`, `if`/`else`, `seq`, `choose` options) is pushed on top of the enclosing remainder and resolves completely before the next enclosing op.
