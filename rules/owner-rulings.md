@@ -305,6 +305,8 @@ Worked example, 10 points of split damage:
 
 So a cheap high-defense Barrier body is a genuine soak against split damage — it eats its full defense worth of the pool and the followers behind it are protected by that much.
 
+In-game observation 2026-09-10 (owner): Glade evolved at X = 9 vs [4/4 Barrier, 3/3] → 3/3 destroyed, 4/4 undamaged, Barrier consumed — one damage instance per follower including the leftover on the last; a second instance (4/2) is ruled out.
+
 **The engine was already correct.** `applySplitSpillover` (`src/logic/effects/ops/damage/primitives.ts:386`) walks recipients in pool order, deals `min(remaining, currentDefense)` to each, and decrements `remaining` by the allocation rather than by the damage actually dealt. This was raised as an open question during set-10009 authoring and pinned by a test _documenting the engine_; that test now pins a **ruling** and its comment should say so. Affects the 9 split-damage cards: Aragavy, Glade, Artiglio, Marwynn, Shining Disenchantment, Flight of the Swarmpetal, Miroku, Ruinbringer, Ludicrous Ordnance, Hark to the Night Song.
 
 ## Witch's New Brew always wins an Earth Sigil merge — 2026-08-30
