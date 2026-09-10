@@ -1,0 +1,36 @@
+{
+  "id": "10934120",
+  "name": "Phylene, Cleansing Revenant",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 10,
+  "text": "On Spellboost: Reduce the cost of this card by 1.\n\nBane\nWard\nAura",
+  "attack": 4,
+  "defense": 6,
+  "traits": {
+    "bane": true,
+    "ward": true,
+    "aura": true
+  },
+  "abilities": [
+    {
+      "on": "spellboost",
+      "zone": "hand",
+      "printed": "On Spellboost: Reduce the cost of this card by 1.",
+      "effects": [
+        {
+          "printed": "Reduce the cost of this card by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

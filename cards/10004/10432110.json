@@ -1,0 +1,41 @@
+{
+  "id": "10432110",
+  "name": "Ezecrain, Portent of Vengeance",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Select 2 enemy followers on the field and deal them 4 damage. Gain 2 earth sigils.",
+  "attack": 6,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select 2 enemy followers on the field and deal them 4 damage. Gain 2 earth sigils.",
+      "effects": [
+        {
+          "printed": "Select 2 enemy followers on the field and deal them 4 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "count": 2
+          },
+          "amount": 4
+        },
+        {
+          "printed": "Gain 2 earth sigils.",
+          "op": "counter",
+          "key": "earth",
+          "how": "add",
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

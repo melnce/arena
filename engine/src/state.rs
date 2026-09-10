@@ -30,6 +30,8 @@ pub struct InstanceFlags {
     pub eot_cost: Option<i32>,
     /// True when this copy was played with an Enhance tier active.
     pub enhanced: bool,
+    /// Temporary trait grants: (until, traits, caster).
+    pub temp_traits: Vec<(crate::card::Until, Traits, PlayerId)>,
 }
 
 impl Default for InstanceFlags {
@@ -47,6 +49,7 @@ impl Default for InstanceFlags {
             eot_defense: 0,
             eot_cost: None,
             enhanced: false,
+            temp_traits: Vec::new(),
         }
     }
 }
@@ -532,6 +535,7 @@ pub struct State {
     /// Set while `AllyFollowerAttacks` is enqueued: the attack targets a follower.
     pub attacking_follower: bool,
     /// Attack target while Strike / Follower Strike / Clash resolve.
+    /// `Condition.attackingFollower` is true when this is a field slot.
     pub combat_opposing: Option<TargetOpt>,
 }
 

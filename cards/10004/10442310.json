@@ -1,0 +1,49 @@
+{
+  "id": "10442310",
+  "name": "Maximum Love Bomb",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Select an enemy follower on the field, deal it 3 damage, and give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field, deal it 3 damage, and give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field, deal it 3 damage, and give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose"
+              },
+              "amount": 3,
+              "as": "t"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "traits": {
+                "cantAttackFollowers": true,
+                "cantAttackLeader": true
+              },
+              "until": "endOfOpponentTurn"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

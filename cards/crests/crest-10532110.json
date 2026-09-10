@@ -1,0 +1,29 @@
+{
+  "id": "crest:10532110",
+  "name": "Crest: Insomniac Witch",
+  "grantedBy": [
+    "10532110"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nLast Words: Deal 3 damage to all followers.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Deal 3 damage to all followers.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to all followers.",
+          "op": "damage",
+          "select": {
+            "side": "any",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ]
+}

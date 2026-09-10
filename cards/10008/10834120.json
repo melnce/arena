@@ -1,0 +1,70 @@
+{
+  "id": "10834120",
+  "name": "Ginger, Disastrous Word",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon 2 copies of Guardian Golem.\n\nWhenever another allied follower enters the field, give it Rush and spellboost your hand.\n\nEvolve: Summon a Guardian Golem.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Guardian Golem.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Guardian Golem.",
+          "op": "summon",
+          "card": {
+            "named": "90031120"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "printed": "Whenever another allied follower enters the field, give it Rush and spellboost your hand.",
+      "effects": [
+        {
+          "printed": "give it Rush and spellboost your hand.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "entering"
+              },
+              "traits": {
+                "rush": true
+              }
+            },
+            {
+              "op": "spellboostHand",
+              "times": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon a Guardian Golem.",
+      "effects": [
+        {
+          "printed": "Summon a Guardian Golem.",
+          "op": "summon",
+          "card": {
+            "named": "90031120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

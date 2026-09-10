@@ -1,0 +1,40 @@
+{
+  "id": "crest:10844110",
+  "name": "Crest: Drache & Aluzard, Burning Blood",
+  "grantedBy": [
+    "10844110"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nLast Words: Add a Drache & Aluzard, Burning Blood to your hand and set its cost to 2.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add a Drache & Aluzard, Burning Blood to your hand and set its cost to 2.",
+      "effects": [
+        {
+          "printed": "Add a Drache & Aluzard, Burning Blood to your hand and set its cost to 2.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "10844110"
+              },
+              "count": 1,
+              "as": "c"
+            },
+            {
+              "op": "cost",
+              "select": {
+                "pick": "bound",
+                "ref": "c"
+              },
+              "set": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

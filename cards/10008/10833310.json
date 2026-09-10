@@ -1,0 +1,71 @@
+{
+  "id": "10833310",
+  "name": "Amethyst's Naptime",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "X starts at 0.\nOn Spellboost: Increase X by 1.\n\nDraw 2 cards. If X is at least 5, restore 2 defense to your leader and recover 2 play points.",
+  "abilities": [
+    {
+      "on": "spellboost",
+      "zone": "hand",
+      "printed": "On Spellboost: Increase X by 1.",
+      "effects": [
+        {
+          "printed": "Increase X by 1.",
+          "op": "counter",
+          "key": {
+            "var": "X"
+          },
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Draw 2 cards. If X is at least 5, restore 2 defense to your leader and recover 2 play points.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        },
+        {
+          "printed": "If X is at least 5, restore 2 defense to your leader and recover 2 play points.",
+          "op": "if",
+          "cond": {
+            "varAtLeast": {
+              "key": "X",
+              "n": 5
+            }
+          },
+          "then": [
+            {
+              "op": "restore",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 2
+            },
+            {
+              "op": "pp",
+              "action": "recover",
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "vars": {
+    "X": 0
+  },
+  "tribes": []
+}

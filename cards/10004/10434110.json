@@ -1,0 +1,98 @@
+{
+  "id": "10434110",
+  "name": "Wamdus, Water Personified",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 3,
+  "text": "On Spellboost: Give this follower +1/+1.\n\nFanfare: Spellboost your hand.\n\nSuper-Evolve: Select a Mode to activate.\n1. Give all other allied followers on the field Barrier.\n2. Deal X damage split between all enemy followers. X is this follower's attack.",
+  "attack": 0,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "spellboost",
+      "zone": "hand",
+      "printed": "On Spellboost: Give this follower +1/+1.",
+      "effects": [
+        {
+          "printed": "Give this follower +1/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Spellboost your hand.",
+      "effects": [
+        {
+          "printed": "Spellboost your hand.",
+          "op": "spellboostHand",
+          "times": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select a Mode to activate.\n1. Give all other allied followers on the field Barrier.\n2. Deal X damage split between all enemy followers. X is this follower's attack.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Give all other allied followers on the field Barrier.\n2. Deal X damage split between all enemy followers. X is this follower's attack.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Give all other allied followers on the field Barrier.",
+              "effects": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "all",
+                    "other": true
+                  },
+                  "traits": {
+                    "barrier": true
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "2. Deal X damage split between all enemy followers. X is this follower's attack.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "all"
+                  },
+                  "amount": {
+                    "stat": {
+                      "of": {
+                        "pick": "self"
+                      },
+                      "which": "attack"
+                    }
+                  },
+                  "split": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

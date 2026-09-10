@@ -1,0 +1,52 @@
+{
+  "id": "10544120",
+  "name": "Yube, Crestpetal",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Summon a Majestic Megalorca.\n\nEvolve: Select a card in your hand and discard it. Gain Crest: Yube, Crestpetal.",
+  "attack": 1,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Majestic Megalorca.",
+      "effects": [
+        {
+          "printed": "Summon a Majestic Megalorca.",
+          "op": "summon",
+          "card": {
+            "named": "90041130"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select a card in your hand and discard it. Gain Crest: Yube, Crestpetal.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Gain Crest: Yube, Crestpetal.",
+          "op": "crest",
+          "gain": "crest:10544120",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

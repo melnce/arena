@@ -1,0 +1,58 @@
+{
+  "id": "10643110",
+  "name": "Impeding Pugilist",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Select a card in your hand and discard it. Deal 6 damage to a random enemy follower.\n\nWard\nBarrier\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 6,
+  "defense": 9,
+  "traits": {
+    "ward": true,
+    "barrier": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and discard it. Deal 6 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Deal 6 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

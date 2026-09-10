@@ -1,0 +1,58 @@
+{
+  "id": "10441120",
+  "name": "Mari, Meg's Bestie",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Activates in hand. Whenever a 3-base-cost allied follower super-evolves, set the cost of this card to 0 until the end of the turn.\n\nAt the end of your turn, give a random super-evolved allied follower on the field +1/+1.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_super_evolve",
+      "zone": "hand",
+      "filter": {
+        "baseCostEq": 3
+      },
+      "printed": "Activates in hand. Whenever a 3-base-cost allied follower super-evolves, set the cost of this card to 0 until the end of the turn.",
+      "effects": [
+        {
+          "printed": "set the cost of this card to 0 until the end of the turn.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "set": 0,
+          "untilEndOfTurn": true
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, give a random super-evolved allied follower on the field +1/+1.",
+      "effects": [
+        {
+          "printed": "give a random super-evolved allied follower on the field +1/+1.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random",
+            "filter": {
+              "evolved": true
+            }
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

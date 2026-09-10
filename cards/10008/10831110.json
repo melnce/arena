@@ -1,0 +1,49 @@
+{
+  "id": "10831110",
+  "name": "Meowskers, Roly-Poly Mk II & Djeana",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 1 damage. Spellboost your hand.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 1 damage. Spellboost your hand.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 1 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 1
+        },
+        {
+          "printed": "Spellboost your hand.",
+          "op": "spellboostHand",
+          "times": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

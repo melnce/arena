@@ -1,0 +1,46 @@
+{
+  "id": "10534110",
+  "name": "Lhynkal, Wandering Fool",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: Gain Crest: Lhynkal, Wandering Fool.\n\nRush\n\nSuper-Evolve: Add 10 copies of Lhynkal, Wandering Fool to your deck.",
+  "attack": 1,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain Crest: Lhynkal, Wandering Fool.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Lhynkal, Wandering Fool.",
+          "op": "crest",
+          "gain": "crest:10534110",
+          "player": "self"
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Add 10 copies of Lhynkal, Wandering Fool to your deck.",
+      "effects": [
+        {
+          "printed": "Add 10 copies of Lhynkal, Wandering Fool to your deck.",
+          "op": "addToDeck",
+          "card": {
+            "named": "10534110"
+          },
+          "count": 10,
+          "position": "random"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

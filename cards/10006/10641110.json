@@ -1,0 +1,43 @@
+{
+  "id": "10641110",
+  "name": "Resolute Dragonewt",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Select a card in your hand and discard it.\n\nLast Words: Draw 2 cards.",
+  "attack": 2,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and discard it.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose"
+          }
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

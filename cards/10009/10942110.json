@@ -1,0 +1,43 @@
+{
+  "id": "10942110",
+  "name": "High-Spirited Marauder",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Storm\nStrike: If an allied follower attacked a leader on your last turn, give this follower +1/+0 until the end of the turn.",
+  "attack": 1,
+  "defense": 2,
+  "traits": {
+    "storm": true
+  },
+  "abilities": [
+    {
+      "on": "strike",
+      "printed": "Strike: If an allied follower attacked a leader on your last turn, give this follower +1/+0 until the end of the turn.",
+      "effects": [
+        {
+          "printed": "If an allied follower attacked a leader on your last turn, give this follower +1/+0 until the end of the turn.",
+          "op": "if",
+          "cond": {
+            "attackedLeaderLastTurn": true
+          },
+          "then": [
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 1,
+              "defense": 0,
+              "untilEndOfTurn": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "crest:10744120",
+  "name": "Crest: Dragon's Vale Elder",
+  "grantedBy": [
+    "10744120"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nAt the end of your turn, summon a Vastwing Dragon.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, summon a Vastwing Dragon.",
+      "effects": [
+        {
+          "printed": "summon a Vastwing Dragon.",
+          "op": "summon",
+          "card": {
+            "named": "90041120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

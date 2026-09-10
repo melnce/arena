@@ -1,0 +1,30 @@
+{
+  "id": "10631310",
+  "name": "Advent of the Eld Crystals",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Summon 2 copies of Crystalspawn.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon 2 copies of Crystalspawn.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Crystalspawn.",
+          "op": "summon",
+          "card": {
+            "named": "10631110"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "crest:10634110",
+  "name": "Crest: Shymm, Love Bewitched",
+  "grantedBy": [
+    "10634110"
+  ],
+  "faith": false,
+  "text": "Whenever an allied Crystalspawn attacks, give it +1/+0.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_attacks",
+      "filter": {
+        "card": "10631110"
+      },
+      "printed": "Whenever an allied Crystalspawn attacks, give it +1/+0.",
+      "effects": [
+        {
+          "printed": "give it +1/+0.",
+          "op": "buff",
+          "select": {
+            "pick": "entering"
+          },
+          "attack": 1,
+          "defense": 0
+        }
+      ]
+    }
+  ]
+}

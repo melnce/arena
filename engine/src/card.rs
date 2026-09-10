@@ -680,6 +680,8 @@ pub struct Filter {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub has_last_words: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub has_spellboost: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub destroyed_this_match: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "didNotAttackThisTurn")]
@@ -1136,6 +1138,15 @@ pub struct SequenceStep {
     pub effects: Vec<Effect>,
 }
 
+/// Forced `leaderModifier.maxDefense` construction — `{set: N}` or `{delta: N}`.
+/// Same split as `cost.set` / `cost.delta`; no sign-dependent bare int.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum MaxDefenseChange {
+    Set { set: Amount },
+    Delta { delta: Amount },
+}
+
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
@@ -1277,6 +1288,8 @@ pub enum Effect {
             skip_serializing_if = "Option::is_none"
         )]
         distinct_names: Option<bool>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        player: Option<CrestPlayer>,
     },
     Discard {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1468,7 +1481,7 @@ pub enum Effect {
         select: Selector,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[serde(rename = "maxDefense")]
-        max_defense: Option<Amount>,
+        max_defense: Option<MaxDefenseChange>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "damageCap")]
         damage_cap: Option<Amount>,
         #[serde(
@@ -1506,6 +1519,8 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         when: Option<Condition>,
         times: Amount,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        select: Option<Selector>,
     },
     #[serde(rename = "randomSplit")]
     RandomSplit {
@@ -2622,8 +2637,19 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
         | Effect::GrantTraits { select, .. }
         | Effect::RemoveTraits { select, .. }
         | Effect::RemoveAbilities { select, .. }
-        | Effect::RemoveCrests { select, .. }
-        | Effect::LeaderModifier { select, .. } => walk_selector(select, used),
+        | Effect::RemoveCrests { select, .. } => walk_selector(select, used),
+        Effect::LeaderModifier {
+            select,
+            max_defense,
+            ..
+        } => {
+            walk_selector(select, used);
+            match max_defense {
+                Some(MaxDefenseChange::Set { set }) => walk_amount(set, used),
+                Some(MaxDefenseChange::Delta { delta }) => walk_amount(delta, used),
+                None => {}
+            }
+        }
         Effect::Countdown { select, delta, .. } => {
             walk_selector(select, used);
             walk_amount(delta, used);
@@ -2641,8 +2667,17 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
         | Effect::Ep { amount: count, .. }
         | Effect::Reanimate {
             max_cost: count, ..
+        } => walk_amount(count, used),
+        Effect::SpellboostHand {
+            times: count,
+            select,
+            ..
+        } => {
+            walk_amount(count, used);
+            if let Some(s) = select {
+                walk_selector(s, used);
+            }
         }
-        | Effect::SpellboostHand { times: count, .. } => walk_amount(count, used),
         Effect::Cost {
             select, delta, set, ..
         } => {

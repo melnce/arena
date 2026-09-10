@@ -1,0 +1,40 @@
+{
+  "id": "10731110",
+  "name": "Dainty Horror",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Earth Rite (1) - Evolve this follower.\n\nWard",
+  "attack": 2,
+  "defense": 6,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Earth Rite (1) - Evolve this follower.",
+      "effects": [
+        {
+          "printed": "Earth Rite (1) - Evolve this follower.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 1,
+          "effects": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

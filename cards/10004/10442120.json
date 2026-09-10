@@ -1,0 +1,59 @@
+{
+  "id": "10442120",
+  "name": "Mugen, Steel-Bodied Honesty",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Super Skybound Art - Give this follower Storm.\n\nSuper-Evolve: Select 2 enemy followers on the field and destroy them.",
+  "attack": 10,
+  "defense": 8,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Super Skybound Art - Give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Super Skybound Art - Give this follower Storm.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 15
+            }
+          },
+          "then": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select 2 enemy followers on the field and destroy them.",
+      "effects": [
+        {
+          "printed": "Select 2 enemy followers on the field and destroy them.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "count": 2
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

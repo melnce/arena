@@ -1,0 +1,18 @@
+{
+  "id": "10441110",
+  "name": "Joel, Wave Chaser",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Ward\nAura",
+  "attack": 3,
+  "defense": 3,
+  "traits": {
+    "ward": true,
+    "aura": true
+  },
+  "tribes": []
+}

@@ -1,0 +1,52 @@
+{
+  "id": "10431120",
+  "name": "Suframare, Wandering Tutor",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "At the end of your turn, spellboost your hand X times. X is this follower's attack.\n\nEvolve: Give this follower \"Can't attack followers or leaders.\"",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, spellboost your hand X times. X is this follower's attack.",
+      "effects": [
+        {
+          "printed": "spellboost your hand X times. X is this follower's attack.",
+          "op": "spellboostHand",
+          "times": {
+            "stat": {
+              "of": {
+                "pick": "self"
+              },
+              "which": "attack"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Give this follower \"Can't attack followers or leaders.\"",
+      "effects": [
+        {
+          "printed": "Give this follower \"Can't attack followers or leaders.\"",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "cantAttackFollowers": true,
+            "cantAttackLeader": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

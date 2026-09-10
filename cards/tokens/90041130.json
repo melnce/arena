@@ -1,0 +1,19 @@
+{
+  "id": "90041130",
+  "name": "Majestic Megalorca",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Rush",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "rush": true
+  },
+  "tribes": [
+    "marine"
+  ]
+}

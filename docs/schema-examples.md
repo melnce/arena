@@ -3865,7 +3865,9 @@ File: `cards/10004/10444120.json`
             "zone": "leader",
             "kind": "leader"
           },
-          "maxDefense": 1
+          "maxDefense": {
+            "set": 1
+          }
         },
         {
           "printed": "Give your leader \"Can't take more than 0 damage at a time\" until the end of your opponent's turn.",

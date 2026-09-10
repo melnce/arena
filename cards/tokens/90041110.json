@@ -1,0 +1,17 @@
+{
+  "id": "90041110",
+  "name": "Fire Drake Whelp",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Intimidate",
+  "attack": 1,
+  "defense": 1,
+  "traits": {
+    "intimidate": true
+  },
+  "tribes": []
+}

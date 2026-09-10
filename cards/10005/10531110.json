@@ -1,0 +1,43 @@
+{
+  "id": "10531110",
+  "name": "Terraforming Wizard",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Gain 2 earth sigils.\n\nSuper-Evolve: Summon 2 copies of Guardian Golem.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain 2 earth sigils.",
+      "effects": [
+        {
+          "printed": "Gain 2 earth sigils.",
+          "op": "counter",
+          "key": "earth",
+          "how": "add",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Summon 2 copies of Guardian Golem.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Guardian Golem.",
+          "op": "summon",
+          "card": {
+            "named": "90031120"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

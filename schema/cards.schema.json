@@ -273,6 +273,9 @@
         "hasLastWords": {
           "type": "boolean"
         },
+        "hasSpellboost": {
+          "type": "boolean"
+        },
         "destroyedThisMatch": {
           "type": "boolean"
         },
@@ -1665,6 +1668,12 @@
             },
             "distinctNames": {
               "type": "boolean"
+            },
+            "player": {
+              "enum": [
+                "self",
+                "opponent"
+              ]
             }
           },
           "required": [
@@ -2258,7 +2267,32 @@
               "$ref": "#/$defs/Selector"
             },
             "maxDefense": {
-              "$ref": "#/$defs/Amount"
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "set": {
+                      "$ref": "#/$defs/Amount"
+                    }
+                  },
+                  "required": [
+                    "set"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "delta": {
+                      "$ref": "#/$defs/Amount"
+                    }
+                  },
+                  "required": [
+                    "delta"
+                  ]
+                }
+              ]
             },
             "damageCap": {
               "$ref": "#/$defs/Amount"
@@ -2357,6 +2391,9 @@
             },
             "times": {
               "$ref": "#/$defs/Amount"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
             }
           },
           "required": [

@@ -1,0 +1,58 @@
+{
+  "id": "10433110",
+  "name": "Elmott, Remembrance Aflame",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Select an enemy follower on the field, remove all abilities from it, and deal it 3 damage.\n\nSuper-Evolve: Gain Crest: Elmott, Remembrance Aflame.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field, remove all abilities from it, and deal it 3 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field, remove all abilities from it, and deal it 3 damage.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "removeAbilities",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose"
+              },
+              "as": "t"
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Gain Crest: Elmott, Remembrance Aflame.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Elmott, Remembrance Aflame.",
+          "op": "crest",
+          "gain": "crest:10433110",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

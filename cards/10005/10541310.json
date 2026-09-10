@@ -1,0 +1,48 @@
+{
+  "id": "10541310",
+  "name": "Blade of the Crestpetal",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Draw a follower. Deal X damage to a random enemy follower. X is the cost of the card you drew.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw a follower. Deal X damage to a random enemy follower. X is the cost of the card you drew.",
+      "effects": [
+        {
+          "printed": "Draw a follower.",
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "kind": "follower"
+          },
+          "as": "d"
+        },
+        {
+          "printed": "Deal X damage to a random enemy follower. X is the cost of the card you drew.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": {
+            "stat": {
+              "of": {
+                "pick": "bound",
+                "ref": "d"
+              },
+              "which": "cost"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

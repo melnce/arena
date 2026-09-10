@@ -1,0 +1,53 @@
+{
+  "id": "10732110",
+  "name": "Charming Monster",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Rush\nLast Words: Gain 2 earth sigils.\n\nSuper-Evolve: Earth Rite (2) - Summon 2 copies of Charming Monster.",
+  "attack": 4,
+  "defense": 2,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Gain 2 earth sigils.",
+      "effects": [
+        {
+          "printed": "Gain 2 earth sigils.",
+          "op": "counter",
+          "key": "earth",
+          "how": "add",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Earth Rite (2) - Summon 2 copies of Charming Monster.",
+      "effects": [
+        {
+          "printed": "Earth Rite (2) - Summon 2 copies of Charming Monster.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 2,
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10732110"
+              },
+              "count": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

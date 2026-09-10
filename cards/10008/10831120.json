@@ -1,0 +1,32 @@
+{
+  "id": "10831120",
+  "name": "Poppy, Mysterian Secretary",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add a Mysterian Missile to your hand.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Mysterian Missile to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Mysterian Missile to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90031310"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "mysteria"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "10943310",
+  "name": "Artiglio",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Deal 3 damage split between all enemy followers. If an allied follower attacked a leader on your last turn, deal 6 damage instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 3 damage split between all enemy followers. If an allied follower attacked a leader on your last turn, deal 6 damage instead.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage split between all enemy followers. If an allied follower attacked a leader on your last turn, deal 6 damage instead.",
+          "op": "if",
+          "cond": {
+            "attackedLeaderLastTurn": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "all"
+              },
+              "amount": 6,
+              "split": true
+            }
+          ],
+          "else": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "all"
+              },
+              "amount": 3,
+              "split": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
