@@ -1,0 +1,114 @@
+{
+  "id": "10603110",
+  "name": "Beast Lost to the Dark",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Give this follower 3 random abilities from the following.\n1. Storm.\n2. Bane.\n3. Intimidate.\n4. Drain.\n5. Aura.\n6. Barrier.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Give this follower 3 random abilities from the following.\n1. Storm.\n2. Bane.\n3. Intimidate.\n4. Drain.\n5. Aura.\n6. Barrier.",
+      "effects": [
+        {
+          "printed": "Give this follower 3 random abilities from the following.\n1. Storm.\n2. Bane.\n3. Intimidate.\n4. Drain.\n5. Aura.\n6. Barrier.",
+          "op": "choose",
+          "pick": 3,
+          "by": "randomUnused",
+          "options": [
+            {
+              "printed": "1. Storm.",
+              "effects": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "storm": true
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "2. Bane.",
+              "effects": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "bane": true
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "3. Intimidate.",
+              "effects": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "intimidate": true
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "4. Drain.",
+              "effects": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "drain": true
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "5. Aura.",
+              "effects": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "aura": true
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "6. Barrier.",
+              "effects": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "barrier": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

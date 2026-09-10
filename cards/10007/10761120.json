@@ -1,0 +1,54 @@
+{
+  "id": "10761120",
+  "name": "Missionary of Recruitment",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Draw 2 amulets.\n\nEvolve: Deal X damage to all enemy followers. X is the number of amulets in your hand.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw 2 amulets.",
+      "effects": [
+        {
+          "printed": "Draw 2 amulets.",
+          "op": "draw",
+          "count": 2,
+          "filter": {
+            "kind": "amulet"
+          }
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Deal X damage to all enemy followers. X is the number of amulets in your hand.",
+      "effects": [
+        {
+          "printed": "Deal X damage to all enemy followers. X is the number of amulets in your hand.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": {
+            "count": {
+              "pick": "all",
+              "side": "ally",
+              "zone": "hand",
+              "kind": "amulet"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

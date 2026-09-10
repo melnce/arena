@@ -1,0 +1,48 @@
+{
+  "id": "10401110",
+  "name": "Katalina, Sky's Protector",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Skybound Art - Deal 5 damage to 2 random enemy followers.\n\nWard\nCan't take more than 3 damage at a time.",
+  "attack": 5,
+  "defense": 5,
+  "traits": {
+    "ward": true,
+    "damageCap": 3
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Skybound Art - Deal 5 damage to 2 random enemy followers.",
+      "effects": [
+        {
+          "printed": "Skybound Art - Deal 5 damage to 2 random enemy followers.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "randomDistinct",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "count": 2
+              },
+              "amount": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

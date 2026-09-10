@@ -1,0 +1,17 @@
+{
+  "id": "90061120",
+  "name": "Holyflame Tiger",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 4,
+  "text": "Rush",
+  "attack": 4,
+  "defense": 4,
+  "traits": {
+    "rush": true
+  },
+  "tribes": []
+}

@@ -1,0 +1,35 @@
+{
+  "id": "10601120",
+  "name": "Disrupted Commoner",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it.\n\nBane",
+  "attack": 4,
+  "defense": 4,
+  "traits": {
+    "bane": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

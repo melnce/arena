@@ -1,0 +1,33 @@
+{
+  "id": "10601110",
+  "name": "Muddled Onlooker",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Last Words: Deal 1 damage to the enemy leader.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

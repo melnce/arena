@@ -1,0 +1,56 @@
+{
+  "id": "10862310",
+  "name": "Lingering Threat",
+  "kind": "spell",
+  "class": "havencraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Select an enemy follower on the field with 3 defense or less and banish it.\nEnhance (5): Banish all enemy followers with 3 defense or less instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field with 3 defense or less and banish it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field with 3 defense or less and banish it.",
+          "op": "banish",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "defenseLte": 3
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 5,
+      "printed": "Enhance (5): Banish all enemy followers with 3 defense or less instead.",
+      "effects": [
+        {
+          "printed": "Banish all enemy followers with 3 defense or less instead.",
+          "op": "banish",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "defenseLte": 3
+            }
+          }
+        }
+      ],
+      "replacesBase": true
+    }
+  ],
+  "tribes": []
+}

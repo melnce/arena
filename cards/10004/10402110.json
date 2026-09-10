@@ -1,0 +1,38 @@
+{
+  "id": "10402110",
+  "name": "Yuni, Cosmic Legacy",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Aura\nAt the end of your turn, restore 1 defense to all allies.",
+  "attack": 3,
+  "defense": 3,
+  "traits": {
+    "aura": true
+  },
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, restore 1 defense to all allies.",
+      "effects": [
+        {
+          "printed": "restore 1 defense to all allies.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "character",
+            "includeLeader": true
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

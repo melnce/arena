@@ -1,0 +1,56 @@
+{
+  "id": "10961210",
+  "name": "Roaring Basilica",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Countdown (3)\nLast Words: Summon a Holyflame Tiger. Deal 4 damage to a random enemy follower.\n\nEngage (3): Advance this amulet's count by 3.",
+  "countdown": 3,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Holyflame Tiger. Deal 4 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Summon a Holyflame Tiger.",
+          "op": "summon",
+          "card": {
+            "named": "90061120"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Deal 4 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "pick": "random",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "on": "engage",
+      "cost": 3,
+      "sacrifice": false,
+      "printed": "Engage (3): Advance this amulet's count by 3.",
+      "effects": [
+        {
+          "printed": "Advance this amulet's count by 3.",
+          "op": "countdown",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

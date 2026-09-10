@@ -1,0 +1,57 @@
+{
+  "id": "10861110",
+  "name": "Lilium, Witch of the Tomes",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Last Words: Draw a card.\n\nEvolve: Select an enemy follower on the field, remove all abilities from it, and deal it 2 damage.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field, remove all abilities from it, and deal it 2 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field, remove all abilities from it, and deal it 2 damage.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "removeAbilities",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "as": "t"
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

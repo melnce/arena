@@ -1,0 +1,29 @@
+{
+  "id": "10801120",
+  "name": "Reina, Timeless Wanderer",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Recover 1 evolution point.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Recover 1 evolution point.",
+      "effects": [
+        {
+          "printed": "Recover 1 evolution point.",
+          "op": "ep",
+          "action": "gain",
+          "super": false,
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

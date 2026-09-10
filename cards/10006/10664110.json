@@ -1,0 +1,89 @@
+{
+  "id": "10664110",
+  "name": "Kandima, Sublime Hatred",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Summon a copy each of 2 random differently named allied amulets destroyed this match with Last Words and a base cost of 2 or less.\n\nSuper-Evolve: Select another card on the field and destroy it. If you selected an allied amulet, deal 3 damage to all enemy followers.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a copy each of 2 random differently named allied amulets destroyed this match with Last Words and a base cost of 2 or less.",
+      "effects": [
+        {
+          "printed": "Summon a copy each of 2 random differently named allied amulets destroyed this match with Last Words and a base cost of 2 or less.",
+          "op": "summon",
+          "card": {
+            "copyOf": {
+              "pick": "randomDistinct",
+              "side": "ally",
+              "zone": "field",
+              "kind": "amulet",
+              "count": 2,
+              "filter": {
+                "destroyedThisMatch": true,
+                "hasLastWords": true,
+                "baseCostLte": 2
+              }
+            },
+            "exact": false
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select another card on the field and destroy it. If you selected an allied amulet, deal 3 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Select another card on the field and destroy it. If you selected an allied amulet, deal 3 damage to all enemy followers.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "choose",
+                "side": "any",
+                "zone": "field",
+                "kind": "card",
+                "other": true
+              },
+              "as": "t"
+            },
+            {
+              "op": "if",
+              "cond": {
+                "boundHas": {
+                  "ref": "t",
+                  "filter": {
+                    "kind": "amulet"
+                  },
+                  "side": "ally"
+                }
+              },
+              "then": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  },
+                  "amount": 3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

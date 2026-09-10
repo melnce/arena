@@ -102,3 +102,17 @@ cargo test --release --test oracle
 ```
 
 CI shares the release build with the soak step (`cargo test --release --test oracle`). Debug replay of the 210 traces is ~8 s, so the test stays in the default `cargo test`.
+
+## After the oracle: random-deck soak
+
+The committed traces under `oracle/traces/` are a frozen regression corpus (0 red / 0 stale). They do not grow. After every class in the Rotation pool is authorable, `engine/tests/soak_random.rs` is the live gate that the new cards actually play:
+
+- From the authored pool, build a seeded random 40-card deck per class (that class's cards + Neutral, ≤3 copies, tokens excluded, `deck_enabled_num` respected). A card is included only if it and every `named` / `related_card_ids` descendant `require_supported` — M1 stubs (`op:randomSplit`, `op:counter skyboundHand`) stay out of the decks. After M3 wave 1 every one of the eight classes has ≥ 40 authorable cards.
+- Play each class against each other class for N games (`ARENA_SOAK_GAMES`, default 20; CI sets 100, same env var as the fixture-deck soak).
+- Both sides use the same random-legal-action policy as `arena-bench`.
+- Every game must reach `terminal` within the action cap, without panic. After every action: defense ≤ max defense, board ≤ 5, hand ≤ 9, PP ≤ max PP (+1 bonus orb), counters ≥ 0, no `bindings` entry outliving its resolution, `legal_actions` non-empty until terminal.
+- Then `arena-trace` → `arena-replay` self-consistency on 10 of those decks.
+
+```
+ARENA_SOAK_GAMES=20 cargo test --release --test soak_random -- --nocapture
+```

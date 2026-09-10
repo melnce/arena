@@ -1,0 +1,40 @@
+{
+  "id": "10461210",
+  "name": "Awed and Inspired",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 0,
+  "text": "Engage (2): Destroy this card. Select an allied follower on the field and transform it into an Awed and Inspired. Draw a card.",
+  "abilities": [
+    {
+      "on": "engage",
+      "cost": 2,
+      "sacrifice": true,
+      "printed": "Engage (2): Destroy this card. Select an allied follower on the field and transform it into an Awed and Inspired. Draw a card.",
+      "effects": [
+        {
+          "printed": "Select an allied follower on the field and transform it into an Awed and Inspired.",
+          "op": "transform",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "into": {
+            "named": "10461210"
+          }
+        },
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

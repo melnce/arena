@@ -1,0 +1,55 @@
+{
+  "id": "90064210",
+  "name": "Rings of Moonlight",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 8,
+  "text": "Countdown (1)\nAura\nAt the end of your turn, if there are at least 3 allied amulets on the field, deal 3 damage to all enemies.",
+  "traits": {
+    "aura": true
+  },
+  "countdown": 1,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, if there are at least 3 allied amulets on the field, deal 3 damage to all enemies.",
+      "effects": [
+        {
+          "printed": "if there are at least 3 allied amulets on the field, deal 3 damage to all enemies.",
+          "op": "if",
+          "cond": {
+            "countAtLeast": {
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "amulet"
+              },
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "character",
+                "includeLeader": true
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

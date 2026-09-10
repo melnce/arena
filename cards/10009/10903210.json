@@ -1,0 +1,81 @@
+{
+  "id": "10903210",
+  "name": "Azvaldt, Penitentiary of Chaos",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 8,
+  "text": "At the end of your turn, if you've played cards with base costs of 1, 2, 3, 4, 5, 6, 7, and 8 this match, destroy this card.\nLast Words: Summon a copy each of 4 random differently named allied followers destroyed this match. Give all allied followers on the field +3/+3.",
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, if you've played cards with base costs of 1, 2, 3, 4, 5, 6, 7, and 8 this match, destroy this card.",
+      "effects": [
+        {
+          "printed": "if you've played cards with base costs of 1, 2, 3, 4, 5, 6, 7, and 8 this match, destroy this card.",
+          "op": "if",
+          "cond": {
+            "playedBaseCostsThisMatch": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ]
+          },
+          "then": [
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "self"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a copy each of 4 random differently named allied followers destroyed this match. Give all allied followers on the field +3/+3.",
+      "effects": [
+        {
+          "printed": "Summon a copy each of 4 random differently named allied followers destroyed this match.",
+          "op": "summon",
+          "card": {
+            "copyOf": {
+              "pick": "randomDistinct",
+              "side": "ally",
+              "zone": "field",
+              "kind": "follower",
+              "count": 4,
+              "filter": {
+                "destroyedThisMatch": true
+              }
+            },
+            "exact": false
+          },
+          "count": 4
+        },
+        {
+          "printed": "Give all allied followers on the field +3/+3.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 3,
+          "defense": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

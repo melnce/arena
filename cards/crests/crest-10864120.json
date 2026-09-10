@@ -1,0 +1,40 @@
+{
+  "id": "crest:10864120",
+  "name": "Crest: Zoe, Dazzling Hope",
+  "grantedBy": [
+    "10864120"
+  ],
+  "faith": false,
+  "text": "Countdown (1)\nLast Words: Summon a Zoe, Dazzling Hope and evolve it.",
+  "countdown": 1,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Zoe, Dazzling Hope and evolve it.",
+      "effects": [
+        {
+          "printed": "Summon a Zoe, Dazzling Hope and evolve it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10864120"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

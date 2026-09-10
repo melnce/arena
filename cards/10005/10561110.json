@@ -1,0 +1,47 @@
+{
+  "id": "10561110",
+  "name": "Prescient Priestess",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 2 damage.\n\nWard\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 2 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 2 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
