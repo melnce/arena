@@ -4,9 +4,9 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 use arena_engine::{
-    apply, determinize, encode, legal_actions, legal_ids, legal_mask, new_game, policy_rng,
-    search_key, Action, ActionId, AttackTarget, CardId, First, GameConfig, Observation, Phase,
-    PlayerId, Policy, Random, Slot, H0, MAX_ACTIONS, MAX_TURNS,
+    apply, by_name, determinize, encode, legal_actions, legal_ids, legal_mask, names, new_game,
+    policy_rng, search_key, Action, ActionId, AttackTarget, CardId, First, GameConfig, Observation,
+    Phase, PlayerId, Policy, Random, Slot, H0, MAX_ACTIONS, MAX_TURNS,
 };
 
 mod common;
@@ -572,4 +572,22 @@ fn h0_beats_random_basic_forest_mirror() {
         results, again,
         "H0 vs Random must be deterministic for a seed"
     );
+}
+
+#[test]
+fn policy_by_name_is_object_safe() {
+    assert_eq!(names(), &["random", "first-legal", "h0"]);
+    assert!(by_name("nope", 1).is_none());
+    let db = load_db();
+    let state = started(&db, 1);
+    let legal = legal_actions(&db, &state);
+    assert!(!legal.is_empty());
+    let mut rng = policy_rng(1);
+    for name in names() {
+        let mut p = by_name(name, 7).expect(name);
+        let i = p.choose(&db, &state, &legal, &mut rng);
+        assert!(i < legal.len(), "{name} index {i}");
+    }
+    let mut first = by_name("first-legal", 0).unwrap();
+    assert_eq!(first.choose(&db, &state, &legal, &mut rng), 0);
 }

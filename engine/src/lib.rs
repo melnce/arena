@@ -32,7 +32,7 @@ pub use encode::{encode, Observation};
 pub use error::{Illegal, LoadError, OraclePickNotLegal, ReplayError, Unsupported};
 pub use ids::{AttackTarget, First, PlayerId, Slot};
 pub use limits::{MAX_ACTIONS, MAX_TURNS};
-pub use policy::{AnyPolicy, FirstLegal, Policy, Random, H0};
+pub use policy::{by_name, names, AnyPolicy, FirstLegal, Policy, Random, H0};
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
 pub use search_key::search_key;
 pub use snapshot::{hash, snapshot, snapshot_json};
@@ -67,7 +67,9 @@ pub fn reseed(state: &mut State, seed: u64) {
 const _: fn() = || {
     fn assert_send<T: Send>() {}
     fn assert_sync<T: Sync>() {}
+    fn assert_object_safe(_: &dyn Policy) {}
     assert_send::<State>();
     assert_sync::<State>();
     assert_sync::<CardDb>();
+    let _: fn(&dyn Policy) = assert_object_safe;
 };

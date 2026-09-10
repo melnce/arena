@@ -334,7 +334,16 @@ uniformly, leftover pool becomes the deck. Own side is untouched.
 trait Policy {
     fn choose(&mut self, db: &CardDb, state: &State, legal: &[Action], rng: &mut Xoshiro256ss) -> usize;
 }
+
+fn policy::by_name(name: &str, seed: u64) -> Option<Box<dyn Policy>>;
+fn policy::names() -> &'static [&'static str];   // "random", "first-legal", "h0"
 ```
+
+`Policy` is object-safe. `policy/` (and `encode`, `search_key`, `determinize`)
+compile for `wasm32-unknown-unknown`: no `Instant` / `SystemTime`, threads,
+`std::fs`, or `getrandom`. The node cap is the only search budget. `seed` is
+accepted at construction; current policies do not store it — `choose` uses
+the caller rng (typically `policy_rng(seed)`).
 
 `Random` and `FirstLegal` are the arena-bench / arena-trace policies (same
 streams and output as before). `H0` is a determinized search bot:
