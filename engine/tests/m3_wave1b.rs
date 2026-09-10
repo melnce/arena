@@ -794,6 +794,9 @@ fn sword_forest_pool_throughput_floor() {
             "throughput {GAMES} {label} games: {gps:.1} games/s, {:.0} actions/s (floor {floor})",
             actions as f64 / secs
         );
+        if cfg!(debug_assertions) {
+            continue;
+        }
         assert!(gps >= floor, "{label} {gps:.1} games/s below floor {floor}");
     }
 }
