@@ -683,6 +683,9 @@ pub enum TribeOrList {
 }
 
 /// Reference pick vs pool pick. Pool picks require `side`, `zone`, `kind`.
+/// Schema-mirror enums nest Filter/Selector/Condition; clippy 1.98's
+/// `large_enum_variant` fires. Size is paid at `CardDb::load`, not in `State`.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Selector {
@@ -757,6 +760,7 @@ pub enum PoolPick {
     Lowest,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Amount {
@@ -806,6 +810,7 @@ pub struct AmountStat {
     pub which: StatWhich,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Condition {
@@ -976,6 +981,7 @@ pub struct EnterCountAtLeast {
 // CardSource, Effect, Ability, Mode, Fuse, Card, Crest
 // ---------------------------------------------------------------------------
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CardSource {
@@ -1037,6 +1043,7 @@ pub struct SequenceStep {
     pub effects: Vec<Effect>,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -1586,6 +1593,7 @@ impl Effect {
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "on", rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -2033,6 +2041,7 @@ impl Ability {
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -2117,6 +2126,7 @@ pub struct CardVars {
     pub x: i32,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -2346,6 +2356,7 @@ impl Crest {
 }
 
 /// Top-level authored file: a collectible / token card or a crest / faith.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CardOrCrest {

@@ -2771,15 +2771,13 @@ fn banish_opt(state: &mut State, t: &TargetOpt, events: &mut Vec<Event>) {
                 state.player_mut(*player).compact_field();
             }
         }
-        TargetOpt::Hand { player, pos } => {
-            if (*pos as usize) < state.player(*player).hand.len() {
-                let inst = state.player_mut(*player).hand.remove(*pos as usize);
-                events.push(Event::Banish {
-                    card: inst.card,
-                    from: ZoneLabel::Hand,
-                });
-                state.player_mut(*player).banished.push(inst);
-            }
+        TargetOpt::Hand { player, pos } if (*pos as usize) < state.player(*player).hand.len() => {
+            let inst = state.player_mut(*player).hand.remove(*pos as usize);
+            events.push(Event::Banish {
+                card: inst.card,
+                from: ZoneLabel::Hand,
+            });
+            state.player_mut(*player).banished.push(inst);
         }
         _ => {}
     }
@@ -2802,11 +2800,9 @@ fn bounce_opt(
 
 fn return_deck_opt(state: &mut State, t: &TargetOpt) {
     match t {
-        TargetOpt::Hand { player, pos } => {
-            if (*pos as usize) < state.player(*player).hand.len() {
-                let inst = state.player_mut(*player).hand.remove(*pos as usize);
-                state.player_mut(*player).deck.push(inst);
-            }
+        TargetOpt::Hand { player, pos } if (*pos as usize) < state.player(*player).hand.len() => {
+            let inst = state.player_mut(*player).hand.remove(*pos as usize);
+            state.player_mut(*player).deck.push(inst);
         }
         TargetOpt::Slot { player, slot } => {
             if let Some(inst) = state.player_mut(*player).field[*slot as usize].take() {
