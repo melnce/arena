@@ -1,5 +1,5 @@
 //! `CardDb::load(root)` — every `cards/**/*.json` except the catalog, plus
-//! the catalog for facts.
+//! the catalog for facts. `from_json` is the same path on in-memory text.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs;
@@ -27,9 +27,8 @@ pub struct CardDb {
 }
 
 impl CardDb {
-    pub fn load(root: impl AsRef<Path>) -> Result<Self, LoadError> {
-        let root = root.as_ref();
-        let mut db = CardDb {
+    fn empty() -> Self {
+        CardDb {
             cards: BTreeMap::new(),
             crests: BTreeMap::new(),
             catalog: BTreeMap::new(),
@@ -37,28 +36,17 @@ impl CardDb {
             when_cards: HashMap::new(),
             when_crests: HashMap::new(),
             boundary_cards: HashMap::new(),
-        };
+        }
+    }
+
+    /// Load authored cards and the official catalog from `root` on disk.
+    /// Thin wrapper over [`CardDb::from_json`].
+    pub fn load(root: impl AsRef<Path>) -> Result<Self, LoadError> {
+        let root = root.as_ref();
+        let mut entries = Vec::new();
         let catalog_path = root.join("cards/official/catalog.json");
         if catalog_path.exists() {
-            let text = fs::read_to_string(&catalog_path).map_err(|source| LoadError::Io {
-                path: catalog_path.display().to_string(),
-                source,
-            })?;
-            let raw: serde_json::Map<String, serde_json::Value> = serde_json::from_str(&text)
-                .map_err(|source| LoadError::Catalog {
-                    path: catalog_path.display().to_string(),
-                    source,
-                })?;
-            for (k, v) in raw {
-                if k.len() == 8 && k.bytes().all(|b| b.is_ascii_digit()) {
-                    let rec: CatalogRecord =
-                        serde_json::from_value(v).map_err(|source| LoadError::Catalog {
-                            path: format!("{}#{k}", catalog_path.display()),
-                            source,
-                        })?;
-                    db.catalog.insert(k, rec);
-                }
-            }
+            entries.push(read_entry(&catalog_path)?);
         }
         let cards_root = root.join("cards");
         if cards_root.exists() {
@@ -66,8 +54,25 @@ impl CardDb {
                 if path.file_name().and_then(|s| s.to_str()) == Some("catalog.json") {
                     return Ok(());
                 }
-                db.load_file(path, false)
+                entries.push(read_entry(path)?);
+                Ok(())
             })?;
+        }
+        Self::from_json(&entries)
+    }
+
+    /// Parse in-memory `(path-or-id label, JSON text)` pairs with the same
+    /// validation as [`CardDb::load`]. A label whose file name is
+    /// `catalog.json` is loaded as catalog facts; every other entry is a
+    /// card or crest.
+    pub fn from_json(entries: &[(String, String)]) -> Result<Self, LoadError> {
+        let mut db = Self::empty();
+        for (label, text) in entries {
+            if is_catalog_label(label) {
+                db.load_catalog_text(label, text)?;
+            } else {
+                db.load_text(label, text, false)?;
+            }
         }
         db.rebuild_when_index();
         db.rebuild_boundary_index();
@@ -89,13 +94,33 @@ impl CardDb {
     }
 
     fn load_file(&mut self, path: &Path, skip_existing: bool) -> Result<(), LoadError> {
-        let text = fs::read_to_string(path).map_err(|source| LoadError::Io {
-            path: path.display().to_string(),
-            source,
-        })?;
+        let (label, text) = read_entry(path)?;
+        self.load_text(&label, &text, skip_existing)
+    }
+
+    fn load_catalog_text(&mut self, label: &str, text: &str) -> Result<(), LoadError> {
+        let raw: serde_json::Map<String, serde_json::Value> =
+            serde_json::from_str(text).map_err(|source| LoadError::Catalog {
+                path: label.to_string(),
+                source,
+            })?;
+        for (k, v) in raw {
+            if k.len() == 8 && k.bytes().all(|b| b.is_ascii_digit()) {
+                let rec: CatalogRecord =
+                    serde_json::from_value(v).map_err(|source| LoadError::Catalog {
+                        path: format!("{label}#{k}"),
+                        source,
+                    })?;
+                self.catalog.insert(k, rec);
+            }
+        }
+        Ok(())
+    }
+
+    fn load_text(&mut self, label: &str, text: &str, skip_existing: bool) -> Result<(), LoadError> {
         let parsed: CardOrCrest =
-            serde_json::from_str(&text).map_err(|source| LoadError::Parse {
-                path: path.display().to_string(),
+            serde_json::from_str(text).map_err(|source| LoadError::Parse {
+                path: label.to_string(),
                 source,
             })?;
         match parsed {
@@ -109,7 +134,7 @@ impl CardDb {
                     return Err(LoadError::Duplicate {
                         id: key,
                         first: prev.display().to_string(),
-                        second: path.display().to_string(),
+                        second: label.to_string(),
                     });
                 }
                 if let Some(name) = card.unbound_refs().into_iter().next() {
@@ -118,7 +143,7 @@ impl CardDb {
                         name,
                     });
                 }
-                self.paths.insert(key, path.to_path_buf());
+                self.paths.insert(key, PathBuf::from(label));
                 self.cards.insert(id, card);
             }
             CardOrCrest::Crest(crest) => {
@@ -130,7 +155,7 @@ impl CardDb {
                     return Err(LoadError::Duplicate {
                         id: key,
                         first: prev.display().to_string(),
-                        second: path.display().to_string(),
+                        second: label.to_string(),
                     });
                 }
                 if let Some(name) = crest.unbound_refs().into_iter().next() {
@@ -139,7 +164,7 @@ impl CardDb {
                         name,
                     });
                 }
-                self.paths.insert(key.clone(), path.to_path_buf());
+                self.paths.insert(key.clone(), PathBuf::from(label));
                 self.crests.insert(key, crest);
             }
         }
@@ -237,6 +262,18 @@ impl CardDb {
         }
         self.boundary_cards = boundary_cards;
     }
+}
+
+fn read_entry(path: &Path) -> Result<(String, String), LoadError> {
+    let text = fs::read_to_string(path).map_err(|source| LoadError::Io {
+        path: path.display().to_string(),
+        source,
+    })?;
+    Ok((path.display().to_string(), text))
+}
+
+fn is_catalog_label(label: &str) -> bool {
+    Path::new(label).file_name().and_then(|s| s.to_str()) == Some("catalog.json")
 }
 
 fn walk_json(
