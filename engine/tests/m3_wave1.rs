@@ -690,6 +690,12 @@ fn encroached_world_hand_transform_from_enemy_deck() {
 }
 
 /// Camiscilla's `pick: entering` must survive Bahamut mode 1 compacting the board.
+///
+/// E40 (Sword/Forest PR, not implemented here): a queued When does not
+/// resolve if its source has left the field. Camiscilla is banished by
+/// Bahamut mode 1 before this trigger drains, so after merging main this
+/// fixture should assert Bahamut is **unevolved**. Last Words are the
+/// exception; this ability is not Last Words.
 #[test]
 fn camiscilla_evolve_entering_survives_bahamut_banish() {
     let db = load_db();
