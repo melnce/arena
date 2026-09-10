@@ -1,0 +1,742 @@
+/**
+ * Phase 3 — fixed-viewport game-client shell (100dvh grid layout).
+ * Revert by removing this file and the index.html link + gameShell wrapper.
+ */
+
+:root {
+  --shell-left-gutter: 68px;
+  --shell-right-gutter: 232px;
+  --shell-top-gutter: 8px;
+  --shell-bottom-gutter: 8px;
+  --game-bar-row-height: auto;
+  --leader-bar-size: 52px;
+  --leader-bar-width: calc(var(--leader-bar-size) * 2.75);
+  /* Compact rail HP badge (number + padding); was leader-bar-width × size. */
+  --leader-hp-badge-height: 32px;
+  --leader-hp-badge-min-width: 2.75em;
+  /* Outer-edge leader bar — [Evo | HP | Super]; also the attack surface.
+     Height = HP badge (32px); evo buttons (28px) centre inside. */
+  --leader-attack-strip-height: 32px;
+  /* Hit-pad corridor toward the hand (board-stack padding outside the bar).
+     Was 12px when the strip was an 8px line — needed invisible margin so
+     aiming at the visible band still hit. The bar is now 32px of visible,
+     aimable target; visible ≈ hittable, so the pad is redundant. Do not
+     reintroduce it to "help touch" — that was the wrong fix for an 8px
+     line, and it costs layout height. Gap-outset still covers the row-gap.
+     Must be `0px` (not unitless `0`) so calc() with px lengths stays valid. */
+  --leader-attack-hit-pad: 0px;
+  /* Expand hit into the side row-gap (measured 4px); stay strictly inside. */
+  --leader-attack-gap-outset: 3px;
+  --hand-scale-top: 0.72;
+  --hand-scale-bottom: 1;
+  --board-card-scale: 1.12;
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --hand-scale-top: 0.8;
+    --board-card-scale: 1.14;
+    --leader-bar-size: 56px;
+  }
+}
+
+@media (min-width: 1900px) {
+  :root {
+    --hand-scale-top: 0.82;
+    --board-card-scale: 1.16;
+    --leader-bar-size: 58px;
+  }
+}
+
+@media (min-width: 2560px) {
+  :root {
+    --board-card-scale: 1.18;
+    --leader-bar-size: 60px;
+  }
+}
+
+@media (min-height: 800px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    min-height: 100dvh;
+    max-height: 100dvh;
+  }
+}
+
+#gameShell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+html {
+  overscroll-behavior: none;
+}
+
+#gameShell #appRoot {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: var(--shell-top-gutter) var(--shell-right-gutter)
+    var(--shell-bottom-gutter) var(--shell-left-gutter);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#gameShell #appRoot > .side {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  column-gap: clamp(var(--space-4), 1.2vw, var(--space-10));
+  row-gap: var(--play-row-gap, 4px);
+  align-items: center;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* Hand row spans the full content width — leader + stats vacated to the
+   right rail so the hand is no longer sharing 1.2fr with two siblings. */
+.side-red,
+.side-blue {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.side-red {
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "hand"
+    "board";
+}
+
+.side-blue {
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "board"
+    "hand";
+}
+
+.side-red #redHand {
+  grid-area: hand;
+  justify-self: stretch;
+  align-self: end;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.side-blue #blueHand {
+  grid-area: hand;
+  justify-self: stretch;
+  align-self: end;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Board stack: attack strip at the outer/far edge of each board.
+   Default: red on top → strip above board; blue on bottom → strip below.
+   Flipped (active-on-bottom.active-second): column-reverse keeps the strip
+   on the outer edge when sides swap order. */
+.side-red .board-stack,
+.side-blue .board-stack {
+  grid-area: board;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.side-red .board-stack {
+  flex-direction: column; /* DOM: strip, board → strip on top */
+  padding-top: var(--leader-attack-hit-pad);
+  padding-bottom: 0;
+  box-sizing: border-box;
+}
+
+.side-blue .board-stack {
+  flex-direction: column; /* DOM: board, strip → strip on bottom */
+  padding-top: 0;
+  padding-bottom: var(--leader-attack-hit-pad);
+  box-sizing: border-box;
+}
+
+body.active-on-bottom.active-second .side-blue .board-stack {
+  flex-direction: column-reverse; /* blue on top → strip on top */
+  padding-top: var(--leader-attack-hit-pad);
+  padding-bottom: 0;
+}
+
+body.active-on-bottom.active-second .side-red .board-stack {
+  flex-direction: column-reverse; /* red on bottom → strip on bottom */
+  padding-top: 0;
+  padding-bottom: var(--leader-attack-hit-pad);
+}
+
+/* Followers face the centre line: push cards toward the shared inner edge.
+   Default: red on top → flex-end; blue on bottom → flex-start.
+   Flipped (active-on-bottom.active-second): reverse with the side swap. */
+.side-red #redBoard {
+  align-items: flex-end;
+}
+
+.side-blue #blueBoard {
+  align-items: flex-start;
+}
+
+body.active-on-bottom.active-second .side-blue #blueBoard {
+  align-items: flex-end;
+}
+
+body.active-on-bottom.active-second .side-red #redBoard {
+  align-items: flex-start;
+}
+
+.side-red #redBoard,
+.side-blue #blueBoard {
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-height: 0;
+  width: 100%;
+}
+
+#gameShell .zone {
+  margin: 0 !important;
+}
+
+.side-red,
+.side-blue {
+  row-gap: var(--space-3);
+}
+
+#redMulliganConfirm {
+  grid-area: board;
+  justify-self: center;
+  align-self: center;
+  z-index: 5;
+}
+
+#blueMulliganConfirm {
+  grid-area: hand;
+  justify-self: center;
+  align-self: center;
+  z-index: 5;
+}
+
+/* Perspective flip — side order (preserved from phase 2) */
+#appRoot {
+  display: flex;
+  flex-direction: column;
+}
+
+.side-red {
+  order: 1;
+}
+
+.side-blue {
+  order: 2;
+}
+
+body.active-on-bottom.active-second .side-red {
+  order: 2;
+}
+
+body.active-on-bottom.active-second .side-blue {
+  order: 1;
+}
+
+/* Compact top hand vs larger bottom hand */
+body:not(.active-on-bottom.active-second) .side-red .hand-zone {
+  --hand-local-scale: var(--hand-scale-top);
+}
+
+body:not(.active-on-bottom.active-second) .side-blue .hand-zone {
+  --hand-local-scale: var(--hand-scale-bottom);
+}
+
+body.active-on-bottom.active-second .side-blue .hand-zone {
+  --hand-local-scale: var(--hand-scale-top);
+}
+
+body.active-on-bottom.active-second .side-red .hand-zone {
+  --hand-local-scale: var(--hand-scale-bottom);
+}
+
+.hand-zone {
+  transform-origin: bottom center;
+}
+
+/* Scale affects layout width, not just paint (no transform: scale on cards) */
+.hand-zone .card {
+  width: calc(var(--card-width) * var(--hand-local-scale, 1));
+  height: calc(var(--card-height) * var(--hand-local-scale, 1));
+  transform-origin: bottom center;
+}
+
+.hand-zone .card:hover {
+  transform: translateY(-6px) scale(1.03);
+}
+
+/* Fit full hands inside column — tighten overlap beyond token when needed.
+   Also: never stay tighter than a 60px exposed strip when the container
+   has room (max of the legacy min(...) and the 60px floor, both capped by
+   the fit calc). Realises the freed hand-row width as a readable tap strip
+   without changing --hand-local-scale. */
+.hand-zone:has(.card:nth-child(7)):not(:has(.card:nth-child(8)))
+  .card:not(:first-child) {
+  margin-left: max(
+    min(
+      var(--hand-card-overlap-active),
+      calc((100cqw - 7 * var(--hand-scaled-card-outer-width)) / 6)
+    ),
+    min(
+      calc(60px - var(--hand-scaled-card-outer-width)),
+      calc((100cqw - 7 * var(--hand-scaled-card-outer-width)) / 6)
+    )
+  );
+}
+
+.hand-zone:has(.card:nth-child(8)):not(:has(.card:nth-child(9)))
+  .card:not(:first-child) {
+  margin-left: max(
+    min(
+      var(--hand-card-overlap-active),
+      calc((100cqw - 8 * var(--hand-scaled-card-outer-width)) / 7)
+    ),
+    min(
+      calc(60px - var(--hand-scaled-card-outer-width)),
+      calc((100cqw - 8 * var(--hand-scaled-card-outer-width)) / 7)
+    )
+  );
+}
+
+.hand-zone:has(.card:nth-child(9)) .card:not(:first-child) {
+  margin-left: max(
+    min(
+      var(--hand-card-overlap-active),
+      calc((100cqw - 9 * var(--hand-scaled-card-outer-width)) / 8)
+    ),
+    min(
+      calc(60px - var(--hand-scaled-card-outer-width)),
+      calc((100cqw - 9 * var(--hand-scaled-card-outer-width)) / 8)
+    )
+  );
+}
+
+/* Compact leader HP readout on the outer-edge bar (and any residual rail use) */
+#turnControls .leader-container,
+.side .leader-container {
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  position: relative;
+  z-index: var(--z-leader-controls);
+}
+
+#turnControls .leader-hp-readout,
+.side .leader-hp-readout {
+  width: auto !important;
+  min-width: var(--leader-hp-badge-min-width) !important;
+  max-width: none;
+  height: var(--leader-hp-badge-height) !important;
+  max-height: var(--leader-hp-badge-height) !important;
+  padding: 2px 10px !important;
+  box-sizing: border-box !important;
+  border-radius: var(--radius-pill) !important;
+  border-width: 2px !important;
+  font-size: var(--font-size-lg) !important;
+  outline-width: 2px;
+}
+
+/* Outer-edge leader bar — [Evo | HP | Super], also the attack / spell-target
+   surface. Sibling of .board-zone so cards/glows cannot cover hits.
+   Visible height is --leader-attack-strip-height; finger hit is ::before. */
+.leader-attack-strip {
+  flex: 0 0 var(--leader-attack-strip-height);
+  width: 100% !important;
+  height: var(--leader-attack-strip-height) !important;
+  min-height: var(--leader-attack-strip-height);
+  max-height: var(--leader-attack-strip-height);
+  min-width: 0 !important;
+  max-width: none !important;
+  box-sizing: border-box;
+  border-radius: var(--radius-md) !important;
+  position: relative;
+  z-index: var(--z-leader-controls);
+  /* Hit via ::before; controls above it take their own pointer events. */
+  pointer-events: none;
+  cursor: default;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: inherit !important;
+  margin: 0 !important;
+  padding: 0 var(--space-2) !important;
+  opacity: 0.96;
+}
+
+/* Controls sit above the ::before hit layer so evo drag/click is distinct
+   from leader attack / canTargetLeader. Drop hit-tests walk ancestors, so a
+   release over a button still resolves to this bar. */
+.leader-attack-strip > .evo-btn,
+.leader-attack-strip > .leader-hp-readout {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+  flex: 0 0 auto;
+  /* Kill layout.css `.leader { margin: auto }` and base `button { margin }`
+     that would space-between the trio across the full bar width. */
+  margin: 0 !important;
+}
+
+/* Hit region: bar + optional pad corridor + gap outset. Must not enter
+   .board-zone or .hand-zone rects — pad is board-stack padding, not either zone. */
+.leader-attack-strip::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 1;
+  background: transparent;
+}
+
+/* Default: red strip on top → hit extends up into padding-top; blue below → down */
+.side-red .leader-attack-strip::before {
+  bottom: 0;
+  top: auto;
+  height: calc(
+    var(--leader-attack-strip-height) + var(--leader-attack-hit-pad) +
+      var(--leader-attack-gap-outset)
+  );
+}
+
+.side-blue .leader-attack-strip::before {
+  top: 0;
+  bottom: auto;
+  height: calc(
+    var(--leader-attack-strip-height) + var(--leader-attack-hit-pad) +
+      var(--leader-attack-gap-outset)
+  );
+}
+
+/* Flipped: blue on top / red on bottom — hit still toward the hand. */
+body.active-on-bottom.active-second .side-blue .leader-attack-strip::before {
+  bottom: 0;
+  top: auto;
+  height: calc(
+    var(--leader-attack-strip-height) + var(--leader-attack-hit-pad) +
+      var(--leader-attack-gap-outset)
+  );
+}
+
+body.active-on-bottom.active-second .side-red .leader-attack-strip::before {
+  top: 0;
+  bottom: auto;
+  height: calc(
+    var(--leader-attack-strip-height) + var(--leader-attack-hit-pad) +
+      var(--leader-attack-gap-outset)
+  );
+}
+
+.leader-attack-strip.red-leader {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 92, 92, 0.18),
+    rgba(255, 92, 92, 0.55),
+    rgba(255, 92, 92, 0.18)
+  ) !important;
+  border: 1px solid var(--leader-red-ring) !important;
+  outline: none;
+}
+
+.leader-attack-strip.blue-leader {
+  background: linear-gradient(
+    90deg,
+    rgba(74, 140, 255, 0.18),
+    rgba(74, 140, 255, 0.55),
+    rgba(74, 140, 255, 0.18)
+  ) !important;
+  border: 1px solid var(--leader-blue-ring) !important;
+  outline: none;
+}
+
+.leader-attack-strip.selectable {
+  opacity: 1;
+}
+
+#turnControls .hp-value,
+.side .hp-value {
+  font-size: var(--font-size-lg) !important;
+  line-height: 1;
+}
+
+#turnControls .evo-btn,
+.side .evo-btn {
+  font-size: var(--font-size-2xs);
+  padding: 4px 6px;
+  min-height: 28px;
+}
+
+/* Larger board cards */
+.board-zone .card {
+  width: calc(var(--card-width) * var(--board-card-scale)) !important;
+  height: calc(var(--card-height) * var(--board-card-scale)) !important;
+}
+
+.board-zone {
+  min-height: 0 !important;
+  height: 100%;
+  max-height: 100%;
+  overflow: visible;
+  padding: var(--space-3) var(--space-4);
+}
+
+.hand-zone {
+  min-height: 0;
+  max-height: calc(var(--card-height) * var(--hand-local-scale, 1) + 24px);
+  padding: var(--space-2) var(--space-3);
+  box-sizing: border-box;
+}
+
+/* Battle log toggle — left edge (document glyph, not hamburger) */
+#historyToggle.battle-log-btn {
+  position: fixed;
+  left: 12px;
+  bottom: 88px;
+  top: auto;
+  transform: none;
+  z-index: var(--z-hamburger);
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-strong);
+  background: linear-gradient(
+    180deg,
+    var(--color-bg-control-hover),
+    var(--color-bg-control)
+  );
+  color: var(--color-text-primary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  transition:
+    background var(--duration-normal) var(--ease-default),
+    border-color var(--duration-normal) var(--ease-default),
+    box-shadow var(--duration-normal) var(--ease-default);
+}
+
+#historyToggle.battle-log-btn:hover {
+  background: var(--color-bg-control-active);
+  border-color: var(--color-border-default);
+  box-shadow: var(--shadow-lg);
+}
+
+#historyToggle.battle-log-btn:focus-visible {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 2px rgba(97, 218, 251, 0.25);
+}
+
+#historyToggle .battle-log-glyph {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+/* Turn controls — full-height right rail hosting HP/evo/stats + PP/End Turn.
+   Red cluster top, core centered, blue cluster bottom — no overlap. */
+#gameShell #turnControls {
+  position: fixed;
+  right: 12px;
+  top: max(56px, calc(var(--shell-top-gutter) + 48px)) !important;
+  bottom: max(12px, var(--shell-bottom-gutter));
+  transform: none !important;
+  z-index: var(--z-turn-controls);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  width: calc(var(--shell-right-gutter) - 24px);
+  max-width: calc(var(--shell-right-gutter) - 24px);
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: var(--space-2);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+#gameShell #turnControls .turn-controls-core {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  /* God mode expands this; scroll inside core so clusters cannot cover PP/god. */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Script diverge banner — below settings hamburger, not sticky header */
+#scriptDivergeBanner {
+  position: fixed;
+  top: 56px;
+  left: var(--shell-left-gutter);
+  right: var(--shell-right-gutter);
+  z-index: var(--z-banner);
+}
+
+/* Active side highlights (phase 2 preserved) */
+body.active-first .side-blue,
+body.active-second .side-red {
+  background: transparent;
+}
+
+body.active-first .side-blue {
+  background: linear-gradient(
+    180deg,
+    var(--color-board-blue-active),
+    transparent 55%
+  );
+}
+
+body.active-second .side-red {
+  background: linear-gradient(
+    180deg,
+    var(--color-board-red-active),
+    transparent 55%
+  );
+}
+
+/* Floating stats live inside #turnControls (right rail). HP/evo live on the
+   outer-edge leader bar. */
+.floating-stats {
+  max-width: var(--side-rail-width);
+}
+
+.side-rail-cluster {
+  position: relative;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  z-index: var(--z-leader-controls);
+  pointer-events: auto;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+.side-rail-cluster--red,
+.side-rail-cluster--blue {
+  top: auto;
+  bottom: auto;
+}
+
+#gameShell #redStatsContainer.floating-stats,
+#gameShell #blueStatsContainer.floating-stats {
+  position: relative;
+  left: auto;
+  top: auto;
+  bottom: auto;
+  right: auto;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  margin: 0;
+}
+
+#gameShell #redCrests,
+#gameShell #blueCrests {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--crest-row-gap, 2px);
+}
+
+#gameShell #redStats,
+#gameShell #blueStats {
+  order: 0;
+}
+
+#gameShell .crest-row {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+
+#redStatsContainer,
+#blueStatsContainer {
+  grid-area: unset;
+  grid-row: unset;
+  grid-column: unset;
+}
+
+/* No page scroll — fixed game-client shell */
+body.phase3-fixed-viewport {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/*
+ * Short viewports (≤799px): keep the fixed 100dvh shell (compress, do not scroll).
+ *
+ * Prior fallback set `#gameShell { height: auto }` and `html, body { overflow: auto }`.
+ * Two independent failures followed:
+ * 1. Specificity — `body.phase3-fixed-viewport` (0,1,1) beat bare `body` (0,0,1), so
+ *    overflow stayed `hidden` and the page could not scroll.
+ * 2. Flex collapse — with an indefinite shell height, `#appRoot > .side` (`flex: 1 1 0;
+ *    min-height: 0`) resolved to 0px. Cards still painted (descendants overflow visible)
+ *    but outside `#appRoot`'s `overflow: hidden` clip, so `elementFromPoint` returned
+ *    `<body>` and hand clicks were silently dead.
+ *
+ * Compress via the same 100dvh flex distribution used at ≥800px. Match the selector
+ * specificity here so a future scroll fallback cannot lose to the base rule again.
+ */
+@media (max-height: 799px) {
+  body.phase3-fixed-viewport {
+    overflow: hidden;
+  }
+
+  #gameShell {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+}
