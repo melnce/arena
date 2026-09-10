@@ -916,6 +916,11 @@ pub enum Condition {
         #[serde(rename = "amountAtLeast")]
         amount_at_least: AmountAtLeast,
     },
+    /// Strike is attacking a follower (Giada `10843110`; Verdilia crest on Haven).
+    AttackingFollower {
+        #[serde(rename = "attackingFollower")]
+        attacking_follower: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1074,6 +1079,15 @@ pub struct ChooseOption {
 pub struct SequenceStep {
     pub printed: String,
     pub effects: Vec<Effect>,
+}
+
+/// Forced `leaderModifier.maxDefense` construction — `{set: N}` or `{delta: N}`.
+/// Same split as `cost.set` / `cost.delta`; no sign-dependent bare int.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum MaxDefenseChange {
+    Set { set: Amount },
+    Delta { delta: Amount },
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -1400,7 +1414,7 @@ pub enum Effect {
         select: Selector,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[serde(rename = "maxDefense")]
-        max_defense: Option<Amount>,
+        max_defense: Option<MaxDefenseChange>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "damageCap")]
         damage_cap: Option<Amount>,
         #[serde(
@@ -2546,8 +2560,19 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
         | Effect::GrantTraits { select, .. }
         | Effect::RemoveTraits { select, .. }
         | Effect::RemoveAbilities { select, .. }
-        | Effect::RemoveCrests { select, .. }
-        | Effect::LeaderModifier { select, .. } => walk_selector(select, used),
+        | Effect::RemoveCrests { select, .. } => walk_selector(select, used),
+        Effect::LeaderModifier {
+            select,
+            max_defense,
+            ..
+        } => {
+            walk_selector(select, used);
+            match max_defense {
+                Some(MaxDefenseChange::Set { set }) => walk_amount(set, used),
+                Some(MaxDefenseChange::Delta { delta }) => walk_amount(delta, used),
+                None => {}
+            }
+        }
         Effect::Countdown { select, delta, .. } => {
             walk_selector(select, used);
             walk_amount(delta, used);

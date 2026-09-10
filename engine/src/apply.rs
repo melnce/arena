@@ -4,9 +4,10 @@ use crate::action::{from_neutral, to_neutral, Action};
 use crate::card::{
     Ability, AbilityZone, Amount, Card, CardId, CardKind, CardSource, ChooseBy, ChooseOption,
     ChoosePick, Condition, Controller, CounterHow, CounterKey, CrestPlayer, DeckPosition, Effect,
-    EpAction, EventName, FieldHasKind, Filter, FilterKind, FuseResult, Mode, NamedCounter,
-    OptionsFrom, OrderBy, PayResource, PoolPick, PoolSelector, PpAction, RefPick, ReplicateKey,
-    Selector, SelectorKind, Side, StatWhich, Traits, TriggerTag, TurnOwner, Until, Whose, Zone,
+    EpAction, EventName, FieldHasKind, Filter, FilterKind, FuseResult, MaxDefenseChange, Mode,
+    NamedCounter, OptionsFrom, OrderBy, PayResource, PoolPick, PoolSelector, PpAction, RefPick,
+    ReplicateKey, Selector, SelectorKind, Side, StatWhich, Traits, TriggerTag, TurnOwner, Until,
+    Whose, Zone,
 };
 use crate::db::CardDb;
 use crate::error::{Illegal, LoadError, Unsupported};
@@ -64,6 +65,7 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         invoked_ids: std::collections::BTreeSet::new(),
         event_base_cost: None,
         event_inst_id: None,
+        attacking_follower: false,
     };
     fill_deck(db, &mut state, PlayerId::A, &cfg.deck_a)?;
     fill_deck(db, &mut state, PlayerId::B, &cfg.deck_b)?;
@@ -1234,6 +1236,8 @@ fn apply_attack(
     if matches!(target, AttackTarget::Leader) {
         state.player_mut(me).attacked_leader_this_turn = true;
     }
+    // Strike `if {attackingFollower}` (Giada). Cleared when AfterCombat runs.
+    state.attacking_follower = matches!(target, AttackTarget::Slot(_));
     raise_when(
         db,
         state,
@@ -2865,6 +2869,7 @@ fn run_aftermath(
             defender_id,
             knockback: _,
         } => {
+            state.attacking_follower = false;
             combat_damage(
                 db,
                 state,
@@ -3851,9 +3856,15 @@ fn apply_effect(
             until,
             ..
         } => {
-            let md_v = max_defense
-                .as_ref()
-                .map(|a| eval_amount(db, state, controller, Some(source), a));
+            let md_change = max_defense.as_ref().map(|md| match md {
+                MaxDefenseChange::Set { set } => {
+                    (true, eval_amount(db, state, controller, Some(source), set))
+                }
+                MaxDefenseChange::Delta { delta } => (
+                    false,
+                    eval_amount(db, state, controller, Some(source), delta),
+                ),
+            });
             let cap_v = damage_cap
                 .as_ref()
                 .map(|a| eval_amount(db, state, controller, Some(source), a));
@@ -3877,12 +3888,12 @@ fn apply_effect(
             };
             for player in players {
                 let p = state.player_mut(player);
-                if let Some(v) = md_v {
-                    if v < 0 {
-                        // Negative = delta (Lhynkal crest). Positive = set (Zooey).
-                        p.leader_max = (p.leader_max + v).max(1);
+                if let Some((is_set, v)) = md_change {
+                    if is_set {
+                        p.leader_max = v.max(0);
                     } else {
-                        p.leader_max = v;
+                        // Delta floors at 0; max 0 clamps defense to 0 and is lethal.
+                        p.leader_max = (p.leader_max + v).max(0);
                     }
                     p.leader_defense = p.leader_defense.min(p.leader_max);
                 }
@@ -3893,6 +3904,7 @@ fn apply_effect(
                     until: *until,
                 });
             }
+            check_leader_lethal(state);
         }
         Effect::Cost {
             select,
@@ -4405,8 +4417,8 @@ fn grant_traits_opt(
                     f.flags.ambush_active = true;
                 }
                 if let Some(n) = traits.attacks_per_turn {
-                    // Mid-combat grant (Giada FollowerStrike): this attack
-                    // already spent one, so leave n-1 remaining.
+                    // Mid-combat grant (Giada Strike if attacking a follower):
+                    // this attack already spent one, so leave n-1 remaining.
                     let remain = if f.flags.attacked_this_turn {
                         n.saturating_sub(1)
                     } else {
@@ -5246,9 +5258,11 @@ fn copy_target_to_hand(
 }
 
 /// Field transform: original ceases in place (no Last Words, no shadow, no
-/// cemetery, not a leave). The new card is a fresh print in the same slot and
-/// did not enter (no Rally, no enter triggers, no enteredThisMatch). Rush/Storm
-/// on the new card allow attacking that turn — owner 2026-09-10.
+/// cemetery, not a leave). `exact: false` is a fresh print; `exact: true`
+/// clones the rolled instance (cost modifiers included — Grandeur / glossary
+/// Exact Copy). The replacement did not enter (no Rally, no enter triggers,
+/// no enteredThisMatch). Rush/Storm still allow attacking that turn — owner
+/// 2026-09-10.
 fn transform_slot(
     db: &CardDb,
     state: &mut State,
@@ -5257,6 +5271,9 @@ fn transform_slot(
     into: &CardSource,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
+    let Some(mut neu) = materialize_transform(db, state, player, into)? else {
+        return Ok(());
+    };
     let Some(old) = state.player_mut(player).field[slot as usize].take() else {
         return Ok(());
     };
@@ -5264,15 +5281,7 @@ fn transform_slot(
         state.player_mut(player).earth_slot = None;
         state.player_mut(player).earth = 0;
     }
-    let named = match resolve_transform_dest(db, state, player, into)? {
-        Some(id) => id,
-        None => return Ok(()),
-    };
-    let card = db.require_supported(named).map_err(|e| match e {
-        LoadError::Unsupported(u) => Illegal::Unsupported(u),
-        _ => Illegal::NotLegal,
-    })?;
-    let mut neu = CardInstance::from_card(card, state.alloc_id());
+    let named = neu.card;
     neu.flags.summoning_sick = true;
     neu.flags.attacks_left = neu.traits.attacks_per_turn.unwrap_or(1);
     state.player_mut(player).field[slot as usize] = Some(neu);
@@ -5284,15 +5293,20 @@ fn transform_slot(
     Ok(())
 }
 
-fn resolve_transform_dest(
+enum ResolvedTransform {
+    Fresh(CardId),
+    Exact(CardInstance),
+}
+
+fn resolve_transform_into(
     db: &CardDb,
     state: &mut State,
     controller: PlayerId,
     into: &CardSource,
-) -> Result<Option<CardId>, Illegal> {
+) -> Result<Option<ResolvedTransform>, Illegal> {
     match into {
-        CardSource::Named { named } => Ok(Some(*named)),
-        CardSource::Copy { copy_of, .. } => {
+        CardSource::Named { named } => Ok(Some(ResolvedTransform::Fresh(*named))),
+        CardSource::Copy { copy_of, exact } => {
             // Independent roll per target (Grandeur official Q&A: two Clay
             // Golems each 50/50, not the same card for both).
             let ts = resolve_select_rolling(
@@ -5302,29 +5316,54 @@ fn resolve_transform_dest(
                 SourceRef::Leader { player: controller },
                 copy_of,
             )?;
-            Ok(match ts.first() {
-                Some(TargetOpt::Slot { player, slot }) => {
-                    state.field_inst(*player, *slot).map(|c| c.card)
+            let inst = match ts.first() {
+                Some(TargetOpt::Slot { player, slot }) => state.field_inst(*player, *slot).cloned(),
+                Some(TargetOpt::Hand { player, pos }) => {
+                    state.player(*player).hand.get(*pos as usize).cloned()
                 }
-                Some(TargetOpt::Hand { player, pos }) => state
-                    .player(*player)
-                    .hand
-                    .get(*pos as usize)
-                    .map(|c| c.card),
                 Some(TargetOpt::Deck { player, id }) => state
                     .player(*player)
                     .deck
                     .iter()
                     .find(|c| c.id == *id)
-                    .map(|c| c.card),
-                Some(TargetOpt::Card(id)) => Some(*id),
+                    .cloned(),
+                Some(TargetOpt::Card(id)) => {
+                    return Ok(Some(ResolvedTransform::Fresh(*id)));
+                }
                 _ => None,
+            };
+            Ok(match inst {
+                Some(c) if *exact => Some(ResolvedTransform::Exact(c)),
+                Some(c) => Some(ResolvedTransform::Fresh(c.card)),
+                None => None,
             })
         }
         CardSource::RandomFrom { .. } => Err(Illegal::Unsupported(Unsupported {
             card: controller.as_str().into(),
             construct: "transform randomFrom".into(),
         })),
+    }
+}
+
+fn materialize_transform(
+    db: &CardDb,
+    state: &mut State,
+    controller: PlayerId,
+    into: &CardSource,
+) -> Result<Option<CardInstance>, Illegal> {
+    match resolve_transform_into(db, state, controller, into)? {
+        None => Ok(None),
+        Some(ResolvedTransform::Fresh(named)) => {
+            let card = db.require_supported(named).map_err(|e| match e {
+                LoadError::Unsupported(u) => Illegal::Unsupported(u),
+                _ => Illegal::NotLegal,
+            })?;
+            Ok(Some(CardInstance::from_card(card, state.alloc_id())))
+        }
+        Some(ResolvedTransform::Exact(mut inst)) => {
+            inst.id = state.alloc_id();
+            Ok(Some(inst))
+        }
     }
 }
 
@@ -5338,34 +5377,26 @@ fn transform_opt(
     match t {
         TargetOpt::Slot { player, slot } => transform_slot(db, state, *player, *slot, into, events),
         TargetOpt::Hand { player, pos } => {
-            let Some(dest) = resolve_transform_dest(db, state, *player, into)? else {
+            let Some(neu) = materialize_transform(db, state, *player, into)? else {
                 return Ok(());
             };
-            let card = db.require_supported(dest).map_err(|e| match e {
-                LoadError::Unsupported(u) => Illegal::Unsupported(u),
-                _ => Illegal::NotLegal,
-            })?;
             if (*pos as usize) < state.player(*player).hand.len() {
-                let neu = CardInstance::from_card(card, state.alloc_id());
                 state.player_mut(*player).hand[*pos as usize] = neu;
             }
             Ok(())
         }
         TargetOpt::Deck { player, id } => {
-            let Some(dest) = resolve_transform_dest(db, state, *player, into)? else {
+            let Some(mut neu) = materialize_transform(db, state, *player, into)? else {
                 return Ok(());
             };
-            let card = db.require_supported(dest).map_err(|e| match e {
-                LoadError::Unsupported(u) => Illegal::Unsupported(u),
-                _ => Illegal::NotLegal,
-            })?;
             if let Some(c) = state
                 .player_mut(*player)
                 .deck
                 .iter_mut()
                 .find(|c| c.id == *id)
             {
-                *c = CardInstance::from_card(card, c.id);
+                neu.id = *id;
+                *c = neu;
             }
             Ok(())
         }
@@ -6531,6 +6562,9 @@ fn eval_cond(
         Condition::AttackedLeaderLastTurn {
             attacked_leader_last_turn,
         } => state.player(who).attacked_leader_last_turn == *attacked_leader_last_turn,
+        Condition::AttackingFollower { attacking_follower } => {
+            state.attacking_follower == *attacking_follower
+        }
         Condition::SuperEvolutionUnlocked {
             super_evolution_unlocked,
         } => {

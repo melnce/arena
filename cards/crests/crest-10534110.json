@@ -24,7 +24,9 @@
             "zone": "leader",
             "kind": "leader"
           },
-          "maxDefense": -2
+          "maxDefense": {
+            "delta": -2
+          }
         }
       ]
     }

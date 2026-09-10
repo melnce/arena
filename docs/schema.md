@@ -222,7 +222,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `counter` | `earth` `10434120`; `combo` `10714110`; `skyboundHand` `10471120`; `shadows` via `pay`; `faith` `faith:10634120`; `{var: X}` `10131320` |
 | `pay` | `shadows` `10754120`; `earth` `10031110`; `pp` `10934110`; `faith` `10624120` Yidmetra |
 | `transform` | `10534120`, `10573310` |
-| `leaderModifier` | `10444120` maxDefense + damageCap + until |
+| `leaderModifier` | Forced `maxDefense: {set: N}` Zooey `10444120` (existing file; was a bare int) or `maxDefense: {delta: N}` Lhynkal `crest:10534110` — same split as `cost`. After either, current defense clamps to the new max. `delta` floors the max at 0; a leader whose max (and therefore defense) is 0 is destroyed. `damageCap` + `until` `10444120` |
 | `replicate` | `10604110`, `10923110` |
 | `invoke` | `10404110`, `10904110` |
 | `spellboostHand` | `10031110`; optional `select` `10931120` Key Spirit ("spellboost it 4 times") |
@@ -241,7 +241,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 
 ## Card source
 
-`{named: id}` `10724110` · `{copyOf, exact}` `10443310` / `10901310` · `{randomFrom: Filter}` `crest:10564120`
+`{named: id}` `10724110` · `{copyOf, exact}` `10443310` / `10901310` · Grandeur `10533310` `exact: true` clones the rolled deck instance (modifiers included) · `{randomFrom: Filter}` `crest:10564120`
 
 ## Amount
 
@@ -265,7 +265,7 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Condition
 
-`all`/`any`/`not` · `countAtLeast` · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `attackedLeaderLastTurn` `10944110` · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120`. Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
+`all`/`any`/`not` · `countAtLeast` · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `attackedLeaderLastTurn` `10944110` · `attackingFollower` `10843110` Giada (one Strike; second sentence) · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120`. Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
 
 ## Modes
 

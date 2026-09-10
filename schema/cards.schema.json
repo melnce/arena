@@ -901,6 +901,18 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "attackingFollower": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "attackingFollower"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
             "turnOwner": {
               "enum": [
                 "self",
@@ -2119,7 +2131,32 @@
               "$ref": "#/$defs/Selector"
             },
             "maxDefense": {
-              "$ref": "#/$defs/Amount"
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "set": {
+                      "$ref": "#/$defs/Amount"
+                    }
+                  },
+                  "required": [
+                    "set"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "delta": {
+                      "$ref": "#/$defs/Amount"
+                    }
+                  },
+                  "required": [
+                    "delta"
+                  ]
+                }
+              ]
             },
             "damageCap": {
               "$ref": "#/$defs/Amount"

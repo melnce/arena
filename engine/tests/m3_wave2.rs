@@ -338,6 +338,30 @@ fn grandeur_independent_per_follower_picks() {
 }
 
 #[test]
+fn grandeur_exact_copy_keeps_deck_cost() {
+    let db = load_db();
+    let mut st = started(&db, 221);
+    let me = PlayerId::A;
+    st.player_mut(me).deck.clear();
+    put_deck(&db, &mut st, me, "90031110");
+    if let Some(c) = st.player_mut(me).deck.last_mut() {
+        c.cost = 0;
+    }
+    put_field(&db, &mut st, me, "88001110");
+    give_pp(&mut st, me, 7, 7);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10533310");
+    let f = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == "90031110")
+        .expect("transformed into deck follower");
+    assert_eq!(f.cost, 0, "exact copy keeps the deck-instance cost");
+}
+
+#[test]
 fn lhynkal_ten_deck_copies_and_crest_max_defense() {
     let db = load_db();
     let mut st = started(&db, 208);
@@ -363,6 +387,33 @@ fn lhynkal_ten_deck_copies_and_crest_max_defense() {
     play_id(&db, &mut st, me, "10534110");
     assert_eq!(st.player(opp).leader_max, 16);
     assert_eq!(st.player(opp).leader_defense, 16);
+}
+
+#[test]
+fn lhynkal_five_entries_zero_max_is_lethal() {
+    let db = load_db();
+    let mut st = started(&db, 222);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10534110");
+    assert!(crest_has(&st, me, "crest:10534110"));
+    // Enter-before-fanfare: the first body does not trip its own crest.
+    // Clear the slot so five later entries fit on a 5-wide board.
+    st.player_mut(me).field = Default::default();
+    st.player_mut(opp).leader_defense = 10;
+    st.player_mut(opp).leader_max = 10;
+    give_pp(&mut st, me, 5, 5);
+    st.player_mut(me).hand.clear();
+    for _ in 0..5 {
+        put_hand(&db, &mut st, me, "10534110");
+        play_id(&db, &mut st, me, "10534110");
+    }
+    assert_eq!(st.player(opp).leader_max, 0);
+    assert_eq!(st.player(opp).leader_defense, 0);
+    assert_eq!(st.winner, Some(me));
+    assert!(matches!(st.phase, Phase::Terminal));
 }
 
 #[test]
@@ -611,6 +662,33 @@ fn giada_second_attack_on_follower_strike() {
         "second attack available after follower Strike"
     );
     attack_follower(&db, &mut st, slot, 0);
+}
+
+#[test]
+fn giada_leader_strike_gives_barrier_only() {
+    let db = load_db();
+    let mut st = started(&db, 223);
+    let me = PlayerId::A;
+    give_pp(&mut st, me, 6, 6);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10843110");
+    let slot = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .position(|c| c.card.as_str() == "10843110")
+        .unwrap() as u8;
+    if let Some(f) = st.field_inst_mut(me, slot) {
+        f.flags.summoning_sick = false;
+    }
+    attack_leader(&db, &mut st, slot);
+    let g = st.field_inst(me, slot).unwrap();
+    assert_eq!(g.traits.barrier, Some(true));
+    assert_eq!(
+        g.flags.attacks_left, 0,
+        "leader Strike does not grant a second attack"
+    );
 }
 
 #[test]

@@ -324,6 +324,7 @@ def condition_schema():
             ),
             closed({"did": {"type": "string", "minLength": 1}}, required=["did"]),
             closed({"attackedLeaderLastTurn": {"type": "boolean"}}, required=["attackedLeaderLastTurn"]),
+            closed({"attackingFollower": {"type": "boolean"}}, required=["attackingFollower"]),
             closed({"turnOwner": {"enum": ["self", "opponent"]}}, required=["turnOwner"]),
             closed(
                 {"evolvedCountAtLeast": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])},
@@ -541,7 +542,12 @@ def effect_schema():
         }, ["select", "into"]),
         leaf("leaderModifier", {
             "select": {"$ref": "#/$defs/Selector"},
-            "maxDefense": {"$ref": "#/$defs/Amount"},
+            "maxDefense": {
+                "oneOf": [
+                    closed({"set": {"$ref": "#/$defs/Amount"}}, required=["set"]),
+                    closed({"delta": {"$ref": "#/$defs/Amount"}}, required=["delta"]),
+                ]
+            },
             "damageCap": {"$ref": "#/$defs/Amount"},
             "damageTakenBonus": {"$ref": "#/$defs/Amount"},
             "until": {"enum": ["endOfTurn", "endOfOpponentTurn"]},

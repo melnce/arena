@@ -498,6 +498,9 @@ pub struct State {
     /// still between zones (`AllyCardPlayed` fires before enter).
     pub event_base_cost: Option<i32>,
     pub event_inst_id: Option<u32>,
+    /// Current Strike is attacking a follower. Set in `apply_attack`, cleared
+    /// when AfterCombat starts (Giada / Verdilia `attackingFollower`).
+    pub attacking_follower: bool,
 }
 
 #[derive(Debug, Clone)]
