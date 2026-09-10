@@ -1,0 +1,37 @@
+{
+  "id": "88001380",
+  "name": "Synth Repeat Random",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Do this 2 times: Deal 1 damage to a random enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Do this 2 times: Deal 1 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Do this 2 times: Deal 1 damage to a random enemy follower.",
+          "op": "repeat",
+          "times": 2,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "random"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "88001440",
+  "name": "Synth Takes More",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Fanfare: Give the enemy leader \"Takes 1 more damage.\"",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Give the enemy leader \"Takes 1 more damage.\"",
+      "effects": [
+        {
+          "printed": "Give the enemy leader \"Takes 1 more damage.\"",
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "damageTakenBonus": 1
+        }
+      ]
+    }
+  ]
+}

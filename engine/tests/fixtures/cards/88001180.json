@@ -1,0 +1,17 @@
+{
+  "id": "88001180",
+  "name": "Synth Aura",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Aura",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "traits": {
+    "aura": true
+  }
+}

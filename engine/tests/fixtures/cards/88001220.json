@@ -1,0 +1,33 @@
+{
+  "id": "88001220",
+  "name": "Synth Strike Leader",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Strike: Deal 2 damage to the enemy leader.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "strike",
+      "printed": "Strike: Deal 2 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

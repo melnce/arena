@@ -1,0 +1,17 @@
+{
+  "id": "88001160",
+  "name": "Synth Drain",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "Drain",
+  "attack": 5,
+  "defense": 5,
+  "tribes": [],
+  "traits": {
+    "drain": true
+  }
+}

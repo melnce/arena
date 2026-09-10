@@ -3,3 +3,22 @@ name = "arena-engine"
 version = "0.1.0"
 edition = "2021"
 publish = false
+
+[[bin]]
+name = "arena-trace"
+path = "src/bin/arena-trace.rs"
+
+[[bin]]
+name = "arena-replay"
+path = "src/bin/arena-replay.rs"
+
+[[bin]]
+name = "arena-bench"
+path = "src/bin/arena-bench.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+
+[dev-dependencies]

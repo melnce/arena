@@ -1,0 +1,42 @@
+{
+  "id": "10031210",
+  "name": "Witch's New Brew",
+  "kind": "amulet",
+  "class": "runecraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: Draw a card.\n\nEarth Sigil\n\nEngage (1): Gain an earth sigil.",
+  "tribes": [
+    "earth sigil"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "engage",
+      "cost": 1,
+      "printed": "Engage (1): Gain an earth sigil.",
+      "effects": [
+        {
+          "printed": "Gain an earth sigil.",
+          "op": "counter",
+          "key": "earth",
+          "how": "add",
+          "amount": 1
+        }
+      ],
+      "sacrifice": true
+    }
+  ]
+}

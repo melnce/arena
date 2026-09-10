@@ -1,0 +1,38 @@
+{
+  "id": "88001500",
+  "name": "Synth Replicate",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "Fanfare: Draw a card.\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 3,
+  "defense": 3,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ]
+}

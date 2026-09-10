@@ -1,0 +1,144 @@
+//! Replay a trace from either engine with ScriptedRng; diff per line.
+//!
+//! Exit 0 = green; 2 = divergence; 3 = unsupported / oracle-pick-not-legal.
+
+use std::fs;
+use std::process::ExitCode;
+
+use arena_engine::{
+    apply, from_neutral, legal_actions, new_game, snapshot_json, to_neutral, Action, CardDb,
+    CardId, First, GameConfig, GameRng, NeutralAction, ReplayError, TraceHeader,
+};
+
+fn main() -> ExitCode {
+    let args: Vec<String> = std::env::args().collect();
+    let path = args.get(1).cloned().unwrap_or_default();
+    if path.is_empty() {
+        eprintln!("usage: arena-replay <trace.jsonl> [--from-engine practice-tool|arena]");
+        return ExitCode::from(1);
+    }
+    match run(&path) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("{e}");
+            ExitCode::from(e.exit_code() as u8)
+        }
+    }
+}
+
+fn run(path: &str) -> Result<(), ReplayError> {
+    let text = fs::read_to_string(path)?;
+    let mut lines = text.lines().filter(|l| !l.trim().is_empty());
+    let header_line = lines
+        .next()
+        .ok_or_else(|| ReplayError::Header("empty".into()))?;
+    let header: TraceHeader = serde_json::from_str(header_line)
+        .map_err(|source| ReplayError::Parse { line: 1, source })?;
+    let mut db = CardDb::load(".").map_err(|e| ReplayError::Header(e.to_string()))?;
+    let _ = db.load_extra_dir("engine/tests/fixtures/cards");
+    let deck_a = parse_ids(&header.deck_a);
+    let deck_b = parse_ids(&header.deck_b);
+    let first = if header.first == "b" {
+        First::B
+    } else {
+        First::A
+    };
+    let mut state = new_game(
+        &db,
+        GameConfig {
+            seed: header.seed,
+            deck_a,
+            deck_b,
+            first,
+        },
+    )
+    .map_err(|e| match e {
+        arena_engine::LoadError::Unsupported(u) => ReplayError::Unsupported(u),
+        other => ReplayError::Header(other.to_string()),
+    })?;
+    for (ln, line) in lines.enumerate() {
+        let rec: serde_json::Value =
+            serde_json::from_str(line).map_err(|source| ReplayError::Parse {
+                line: ln + 2,
+                source,
+            })?;
+        let i = rec.get("i").and_then(|v| v.as_u64()).unwrap_or(0) as u32;
+        let action: NeutralAction = serde_json::from_value(
+            rec.get("action").cloned().unwrap_or_default(),
+        )
+        .map_err(|source| ReplayError::Parse {
+            line: ln + 2,
+            source,
+        })?;
+        let rng: Vec<arena_engine::Pick> = rec
+            .get("rng")
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+            .unwrap_or_default();
+        state.rng = GameRng::scripted(rng, header.seed);
+        let act = from_neutral(&state, &action).ok_or(ReplayError::Illegal {
+            i,
+            source: arena_engine::Illegal::NotLegal,
+        })?;
+        // Old-engine completed fuse: partners in the same line.
+        if let NeutralAction::Fuse {
+            host_pos,
+            partner_pos,
+            ..
+        } = &action
+        {
+            if !partner_pos.is_empty() {
+                apply(&db, &mut state, Action::Fuse { host: *host_pos })
+                    .map_err(|source| ReplayError::Illegal { i, source })?;
+                if let arena_engine::Phase::Choice { .. } = state.phase {
+                    // choose each partner then confirm
+                    for p in partner_pos {
+                        let _ = apply(&db, &mut state, Action::Choose(*p));
+                    }
+                    apply(&db, &mut state, Action::Confirm)
+                        .map_err(|source| ReplayError::Illegal { i, source })?;
+                }
+            } else {
+                apply(&db, &mut state, act).map_err(|source| ReplayError::Illegal { i, source })?;
+            }
+        } else {
+            apply(&db, &mut state, act).map_err(|e| match e {
+                arena_engine::Illegal::Unsupported(u) => ReplayError::Unsupported(u),
+                arena_engine::Illegal::OraclePickNotLegal(o) => ReplayError::Oracle(o),
+                other => ReplayError::Illegal { i, source: other },
+            })?;
+        }
+        let got = snapshot_json(&state);
+        let want = rec.get("state").cloned().unwrap_or(serde_json::Value::Null);
+        if let Some((path, a, b)) = arena_engine::json_eq_first_diff(&got, &want, "") {
+            return Err(ReplayError::Diverge {
+                i,
+                path,
+                arena: a,
+                trace: b,
+            });
+        }
+        if let Some(legal) = rec.get("legal") {
+            let mut ours: Vec<NeutralAction> = legal_actions(&db, &state)
+                .iter()
+                .map(|a| to_neutral(&state, a))
+                .collect();
+            let mut theirs: Vec<NeutralAction> =
+                serde_json::from_value(legal.clone()).unwrap_or_default();
+            ours.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
+            theirs.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
+            if ours != theirs {
+                return Err(ReplayError::Diverge {
+                    i,
+                    path: "legal".into(),
+                    arena: format!("{} actions", ours.len()),
+                    trace: format!("{} actions", theirs.len()),
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+fn parse_ids(v: &[String]) -> Vec<CardId> {
+    v.iter().filter_map(|s| CardId::parse(s)).collect()
+}

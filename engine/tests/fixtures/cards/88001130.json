@@ -1,0 +1,17 @@
+{
+  "id": "88001130",
+  "name": "Synth Rush",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Rush",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "traits": {
+    "rush": true
+  }
+}

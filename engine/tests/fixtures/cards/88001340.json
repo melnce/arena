@@ -1,0 +1,44 @@
+{
+  "id": "88001340",
+  "name": "Synth Evolve Both",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Evolve: Deal 3 damage to the enemy leader.\nSuper-Evolve: Draw 2 cards.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Deal 3 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "id": "10011210",
+  "name": "Wild Profusion",
+  "kind": "amulet",
+  "class": "forestcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add a Fairy to your hand.\n\nCountdown (2)\nWhenever an allied Pixie follower enters the field, deal 1 damage to a random enemy follower.",
+  "tribes": [],
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Fairy to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Fairy to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90011110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "printed": "Whenever an allied Pixie follower enters the field, deal 1 damage to a random enemy follower.",
+      "filter": {
+        "kind": "follower",
+        "tribe": "pixie"
+      },
+      "effects": [
+        {
+          "printed": "deal 1 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "88001270",
+  "name": "Synth Necromancy Storm",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Fanfare: Necromancy (4): Give this follower Storm.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Necromancy (4): Give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Necromancy (4): Give this follower Storm.",
+          "op": "pay",
+          "resource": "shadows",
+          "amount": 4,
+          "effects": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

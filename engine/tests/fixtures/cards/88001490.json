@@ -1,0 +1,29 @@
+{
+  "id": "88001490",
+  "name": "Synth Draw Follower 7",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Draw a follower that costs 7 or more.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw a follower that costs 7 or more.",
+      "effects": [
+        {
+          "printed": "Draw a follower that costs 7 or more.",
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "kind": "follower",
+            "costGte": 7
+          }
+        }
+      ]
+    }
+  ]
+}
