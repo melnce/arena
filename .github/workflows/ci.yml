@@ -37,6 +37,9 @@ jobs:
         run: cargo test
 
       - name: soak 100 games
+        # Fixture-deck soak (`soak.rs`) and the class-matrix random-deck gate
+        # (`soak_random.rs`) share ARENA_SOAK_GAMES. Default N is 0 / 20;
+        # CI uses 100 for both.
         run: ARENA_SOAK_GAMES=100 cargo test --release soak -- --nocapture
 
       - name: throughput floor
