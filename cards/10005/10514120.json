@@ -1,0 +1,79 @@
+{
+  "id": "10514120",
+  "name": "Miroku, Swarmpetal",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Select a Mode to activate.\n1. Add 2 copies of Fairy to your hand.\n2. Recover 2 play points.\n3. Deal 3 damage split between all enemy followers.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Add 2 copies of Fairy to your hand.\n2. Recover 2 play points.\n3. Deal 3 damage split between all enemy followers.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Add 2 copies of Fairy to your hand.\n2. Recover 2 play points.\n3. Deal 3 damage split between all enemy followers.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Add 2 copies of Fairy to your hand.",
+              "effects": [
+                {
+                  "op": "addToHand",
+                  "card": {
+                    "named": "90011110"
+                  },
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "printed": "2. Recover 2 play points.",
+              "effects": [
+                {
+                  "op": "pp",
+                  "action": "recover",
+                  "amount": 2
+                }
+              ]
+            },
+            {
+              "printed": "3. Deal 3 damage split between all enemy followers.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  },
+                  "amount": 3,
+                  "split": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,72 @@
+{
+  "id": "10913110",
+  "name": "Virid Lieutenant",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Combo (3) - Draw 2 cards.\n\nEvolve: Select another allied follower on the field and give it +1/+1 and Rush.",
+  "attack": 1,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Combo (3) - Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Combo (3) - Draw 2 cards.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "draw",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select another allied follower on the field and give it +1/+1 and Rush.",
+      "effects": [
+        {
+          "printed": "Select another allied follower on the field and give it +1/+1 and Rush.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "buff",
+              "select": {
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose",
+                "other": true
+              },
+              "attack": 1,
+              "defense": 1,
+              "as": "t"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "traits": {
+                "rush": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

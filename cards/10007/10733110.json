@@ -1,0 +1,72 @@
+{
+  "id": "10733110",
+  "name": "Sweet Abomination",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Earth Rite (1) - Select a Mode to activate.\n1. Deal 3 damage to all enemy followers.\n2. Draw 2 cards.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Earth Rite (1) - Select a Mode to activate.\n1. Deal 3 damage to all enemy followers.\n2. Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Earth Rite (1) - Select a Mode to activate.\n1. Deal 3 damage to all enemy followers.\n2. Draw 2 cards.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 1,
+          "effects": [
+            {
+              "op": "choose",
+              "pick": 1,
+              "by": "player",
+              "options": [
+                {
+                  "printed": "1. Deal 3 damage to all enemy followers.",
+                  "effects": [
+                    {
+                      "op": "damage",
+                      "select": {
+                        "pick": "all",
+                        "side": "enemy",
+                        "zone": "field",
+                        "kind": "follower"
+                      },
+                      "amount": 3
+                    }
+                  ]
+                },
+                {
+                  "printed": "2. Draw 2 cards.",
+                  "effects": [
+                    {
+                      "op": "draw",
+                      "count": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

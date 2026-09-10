@@ -1,0 +1,33 @@
+{
+  "id": "90034350",
+  "name": "Send 'Em Packing",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 1,
+  "text": "Select an allied follower on the field and give it \"Can attack 2 times per turn.\"",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied follower on the field and give it \"Can attack 2 times per turn.\"",
+      "effects": [
+        {
+          "printed": "Select an allied follower on the field and give it \"Can attack 2 times per turn.\"",
+          "op": "grantTraits",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "traits": {
+            "attacksPerTurn": 2
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

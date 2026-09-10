@@ -1,0 +1,42 @@
+{
+  "id": "10712110",
+  "name": "Virewind Fencer",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Combo (3) - Give this follower Storm.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Combo (3) - Give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Combo (3) - Give this follower Storm.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

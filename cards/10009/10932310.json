@@ -1,0 +1,66 @@
+{
+  "id": "10932310",
+  "name": "Humane Love",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Summon an Obsessed Test Subject and give it +1/+0. Add an Obsessed Test Subject to your hand and give it +1/+0.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon an Obsessed Test Subject and give it +1/+0. Add an Obsessed Test Subject to your hand and give it +1/+0.",
+      "effects": [
+        {
+          "printed": "Summon an Obsessed Test Subject and give it +1/+0.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10931110"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "attack": 1,
+              "defense": 0
+            }
+          ]
+        },
+        {
+          "printed": "Add an Obsessed Test Subject to your hand and give it +1/+0.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "10931110"
+              },
+              "count": 1,
+              "as": "h"
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "h"
+              },
+              "attack": 1,
+              "defense": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

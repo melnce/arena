@@ -334,6 +334,7 @@ fn istyndet_crest_destroys_random_last_words_at_eot() {
             faith: false,
             once_used: Vec::new(),
             granted_order: 0,
+            granted: vec![],
         });
     end_turn(&db, &mut st);
     assert!(
@@ -444,10 +445,10 @@ fn gain_earth_sigil_on_full_board_with_brew_adds_to_stack() {
 }
 
 #[test]
-fn sigil_with_full_board_and_no_holder_is_lost_assumed() {
-    // Assumption — owner has not ruled this half. Full board, no Earth Sigil
-    // amulet: the Magic Sediment that would carry the gain cannot be summoned
-    // (excess summons skipped), so earth stays 0.
+fn sigil_with_full_board_and_no_holder_is_lost() {
+    // Official glossary, Earth Sigil / Summon: "If your field is full, nothing
+    // happens." A spell's "gain an earth sigil" with no holder and a full
+    // board loses the sigil.
     let db = load_db();
     let mut st = started(&db, 20);
     let me = PlayerId::A;
@@ -649,9 +650,10 @@ fn last_words_raised_mid_wave_wait_behind_already_queued() {
 
 #[test]
 fn adahime_rush_waits_until_fanfare_choice_completes() {
-    // Rulebook Fanfare and Enter-Play Trigger Order: other cards' enter
-    // reactions drain after the played card's Fanfare, including across a
-    // Fanfare choice (owner 2026-09-10 A2).
+    // Rulebook Fanfare and Enter-Play Trigger Order: enter reactions
+    // ("whenever … enters the field") drain after the played card's Fanfare,
+    // including across a Fanfare choice (E34 / owner 2026-09-10 A2). Play
+    // reactions resolve at play time (E39) and do not wait.
     let db = load_db();
     let mut st = started(&db, 34);
     let me = PlayerId::A;

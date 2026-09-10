@@ -100,3 +100,23 @@ fn self_consistency_abyss_30_seeds() {
         emit_and_replay_deck(&db, 20260910 + g, "oracle/decks/abyss-p8rfn.json");
     }
 }
+
+#[test]
+fn self_consistency_rune_mach15_30_seeds() {
+    let db = load_db();
+    let decks = load_deck_file("oracle/decks/rune-mach15.json");
+    assert!(deck_ready(&db, &decks), "rune-mach15 must load");
+    for g in 0u64..30 {
+        emit_and_replay_deck(&db, 20260910 + g, "oracle/decks/rune-mach15.json");
+    }
+}
+
+#[test]
+fn self_consistency_elf_neanisu2_30_seeds() {
+    let db = load_db();
+    let decks = load_deck_file("oracle/decks/elf-neanisu2.json");
+    assert!(deck_ready(&db, &decks), "elf-neanisu2 must load");
+    for g in 0u64..30 {
+        emit_and_replay_deck(&db, 20260910 + g, "oracle/decks/elf-neanisu2.json");
+    }
+}

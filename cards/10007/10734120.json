@@ -1,0 +1,74 @@
+{
+  "id": "10734120",
+  "name": "Beloved Masterpiece",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Deal 6 damage to all enemy followers. \n\nWard\nLast Words: Earth Rite (2) - Deal 3 damage to the enemy leader.\n\nSuper-Evolve: Summon a Beloved Masterpiece.",
+  "attack": 4,
+  "defense": 8,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 6 damage to all enemy followers. ",
+      "effects": [
+        {
+          "printed": "Deal 6 damage to all enemy followers. ",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Earth Rite (2) - Deal 3 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Earth Rite (2) - Deal 3 damage to the enemy leader.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 2,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Summon a Beloved Masterpiece.",
+      "effects": [
+        {
+          "printed": "Summon a Beloved Masterpiece.",
+          "op": "summon",
+          "card": {
+            "named": "10734120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

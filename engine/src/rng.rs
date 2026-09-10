@@ -152,6 +152,13 @@ impl GameRng {
         }
     }
 
+    pub fn peek_chose_key(&self) -> Option<String> {
+        match self {
+            GameRng::Scripted { picks, index, .. } => picks.get(*index).map(|p| p.chose.as_key()),
+            GameRng::Live(_) => None,
+        }
+    }
+
     pub fn gen_range(&mut self, n: u32) -> u32 {
         match self {
             GameRng::Live(g) => g.gen_range(n),

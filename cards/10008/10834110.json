@@ -1,0 +1,82 @@
+{
+  "id": "10834110",
+  "name": "Tetra & Ladica, Forest BFFs",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "text": "X starts at 0.\nOn Spellboost: Increase X by 1.\n\nFanfare: If X is at least 10, add a Delta Cannon to your hand. If X is at least 20, add a Send 'Em Packing to your hand.\n\nStorm",
+  "attack": 5,
+  "defense": 5,
+  "tribes": [],
+  "traits": {
+    "storm": true
+  },
+  "vars": {
+    "X": 0
+  },
+  "abilities": [
+    {
+      "on": "spellboost",
+      "zone": "hand",
+      "printed": "On Spellboost: Increase X by 1.",
+      "effects": [
+        {
+          "printed": "Increase X by 1.",
+          "op": "counter",
+          "key": {
+            "var": "X"
+          },
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If X is at least 10, add a Delta Cannon to your hand. If X is at least 20, add a Send 'Em Packing to your hand.",
+      "effects": [
+        {
+          "printed": "If X is at least 10, add a Delta Cannon to your hand.",
+          "op": "if",
+          "cond": {
+            "varAtLeast": {
+              "key": "X",
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90034340"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "printed": "If X is at least 20, add a Send 'Em Packing to your hand.",
+          "op": "if",
+          "cond": {
+            "varAtLeast": {
+              "key": "X",
+              "n": 20
+            }
+          },
+          "then": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90034350"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

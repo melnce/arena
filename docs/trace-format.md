@@ -107,6 +107,8 @@ Every random decision, by outcome.
 
 `ScriptedRng` matches `chose` against its candidate list. If `chose` is not a candidate, the run fails with `oracle picked X; not legal here`.
 
+**`random_target` slots** are numbered among **surviving** board cards at roll time: followers already at 0 defense or marked for destruction, and amulets at countdown 0, are skipped; the order of the rest is preserved. The `chose.slot` is that survivor index, not the raw field slot. Live play still picks by index into the candidate list; only the recorded/matched label uses the survivor index. Scripted replay also accepts a raw field slot as an alias when that label is not already a survivor key of another candidate (M1 traces).
+
 Do not record RNG as an index into an unstable list.
 
 ## CanonicalState
@@ -171,7 +173,7 @@ Projection both engines can produce. Keys sorted.
 }
 ```
 
-`hand` is in draw order: `[{card, cost, vars?, skybound?}, …]`. `vars` is Stormy Blast's X (and any other `{X,Y,Z}`). `skybound` is the Skybound Art gauge **per card in hand** (turn + evolves while in hand + Tsubasa boosts) — not a per-player field.
+`hand` is in draw order: `[{card, cost, vars?, skybound?}, …]`. `vars` is Stormy Blast's X (and any other `{X,Y,Z}`). `skybound` is the number of allied evolves witnessed while **that hand copy** was in hand (omitted when 0); the Skybound Art gauge is `turn` + that count, added at evaluation, not stored.
 
 `deck`, `cemetery`, `banished` are **sorted multisets** `{card_id: count}` (JSON object keys sorted).
 
@@ -219,5 +221,6 @@ Pinned 2026-09-10 from the first differential run. Both emitters follow these; a
 - **`granted`** is the sorted **set** of trigger tags present on the instance that the printed card does not carry — runtime grants only — and is omitted when empty. Tags are the schema's trigger names: `fanfare, lastWords, evolve, superEvolve, anyEvolve, anySuperEvolve, strike, followerStrike, clash, enter, leave, discarded, invoked, fused, spellboost, engage, startOfTurn, endOfTurn, when, enhance`. A grant of an ability the card already prints (a second Last Words on a printed Last Words follower) is invisible under this definition; accepted for M1.
 - **Picks for every card that leaves the deck.** A card that leaves the deck by a draw is a `draw` pick; one that leaves by any other effect (a search, a summon from the deck) is `{"what":"multiset_pick","among":"deck","chose":"<card id>"}`, one per card in engine order. Invoke names its card and records nothing. Filtered draws ("draw a follower") are `draw` picks whose `chose` must be among the matching candidates.
 - **`raw` picks** are engine-private (the old engine's shuffles) and are ignored by every reader.
+- **`random_target.chose.slot`** is the 0-based index among surviving board cards at roll time (followers at 0 defense or marked for destruction and amulets at countdown 0 are skipped, order preserved), not the raw field slot.
 - **Header extensions.** Header keys prefixed `x_` are engine-private and ignored by readers (`x_final_hash`); every other header key is the format.
 - **Cemetery.** `cemetery` holds every card that went there — destroyed followers and amulets and played spells alike; `shadows` is the separate counter the rules spend.
