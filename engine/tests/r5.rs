@@ -196,10 +196,12 @@ fn pick_highest_tie_replays_either_recorded_slot() {
         let db = load_db();
         let mut st = started(&db, 6);
         let opp = PlayerId::B;
-        for _ in 0..2 {
-            let i = put_field(&db, &mut st, opp, "88001110");
-            if let Some(f) = st.field_inst_mut(opp, i) {
+        let mut ids = [0u32; 2];
+        for id in &mut ids {
+            let slot_i = put_field(&db, &mut st, opp, "88001110");
+            if let Some(f) = st.field_inst_mut(opp, slot_i) {
                 f.attack = 5;
+                *id = f.id;
             }
         }
         give_pp(&mut st, PlayerId::A, 1, 1);
@@ -215,7 +217,10 @@ fn pick_highest_tie_replays_either_recorded_slot() {
         );
         apply(&db, &mut st, Action::Play { hand: h }).unwrap();
         assert_eq!(field_count(&st, opp), 1);
-        assert!(st.player(opp).field[1 - slot as usize].is_some());
+        let gone = ids[slot as usize];
+        let stayed = ids[1 - slot as usize];
+        assert!(st.find_field(opp, stayed).is_some());
+        assert!(st.find_field(opp, gone).is_none());
     }
 }
 
