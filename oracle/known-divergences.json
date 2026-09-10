@@ -600,38 +600,6 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "royal-nattui-mirror/trace-20260910-2.jsonl",
-    "i": 84,
-    "path": "players.b.field[1].attacks_left",
-    "class": "old-data",
-    "reason": "Beltezore, Valorous Revenant 10924120 prints 'Can attack 3 times per turn'; the old engine's snapshot has attacks_left 1 the turn it is played (Storm)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-12.jsonl",
-    "i": 81,
-    "path": "players.a.field[1].attacks_left",
-    "class": "old-data",
-    "reason": "Beltezore, Valorous Revenant 10924120 prints 'Can attack 3 times per turn'; the old engine's snapshot has attacks_left 1 the turn it is played (Storm)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-21.jsonl",
-    "i": 116,
-    "path": "players.a.field[3].attacks_left",
-    "class": "old-data",
-    "reason": "Beltezore, Valorous Revenant 10924120 prints 'Can attack 3 times per turn'; the old engine's snapshot has attacks_left 1 the turn it is played (Storm)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-25.jsonl",
-    "i": 98,
-    "path": "players.a.field[0].attacks_left",
-    "class": "old-data",
-    "reason": "Beltezore, Valorous Revenant 10924120 prints 'Can attack 3 times per turn'; the old engine's snapshot has attacks_left 1 the turn it is played (Storm)",
-    "since": "2026-09-10"
-  },
-  {
     "trace": "royal-nattui-mirror/trace-20260910-26.jsonl",
     "i": 63,
     "path": "players.a.field[0].max_defense",

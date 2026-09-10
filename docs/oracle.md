@@ -16,7 +16,7 @@ Repo: `melnce/Practice-Tool`.
 
 **Rune / Elf** (`rune-mach15-mirror`, `elf-neanisu2-mirror`): emitter `4552f1b0` on Practice-Tool `main` (PR #390 merged at `c923611b`; this SHA also includes PR #391). Recorded 2026-09-10, 30 games each, seed `20260910`. The Rune oracle deck swaps Tetra & Ladica `10834110` ×3 for Dazzling Runeknight `10031110` ×3 (Basic Rune, already in `basic-rune-mirror`): the old repo's card JSON has no X for Tetra, so every game stopped at the first hand snapshot with `vars`. Tetra stays authored and fixture-tested (`tetra_vars_increment_on_spellboost`); the oracle list stays 40 and all-Rune.
 
-**Royal / Ramp Claywies** (`royal-nattui-mirror`, `ramp-claywies-mirror`): emitter `b3bd5473e421cf2fd1cf7ac80184beadf6308274` on Practice-Tool `main` (PR #392 merged: surviving-card slot numbering, `player` on both-board `choose` options, tagged return-to-deck shuffle). Recorded 2026-09-10, seed `20260910`, 30 Royal games (deck `oracle/decks/royal-nattui.json`) and 20 Ramp-Claywies games (deck `oracle/decks/ramp-claywies.json` = feed 247048).
+**Royal / Ramp Claywies** (`royal-nattui-mirror`, `ramp-claywies-mirror`): emitter `bf8a9123bf2517530d1a12717f9d0dbde4f7eb45` on Practice-Tool `main` (PR #395 merged: snapshot `attacks_left` from `attacks_per_turn` before the first attack; PR #392 still included). Royal re-recorded 2026-09-10, seed `20260910`, 30 games, deck `oracle/decks/royal-nattui.json` (same list as the old repo's `decks/trace/royal-nattui.json`). Ramp-Claywies is byte-identical under this emitter (20 games, deck `oracle/decks/ramp-claywies.json` = old `decks/trace/ramp-claywies.json` = feed 247048) — not re-recorded.
 
 ```
 git clone https://github.com/melnce/Practice-Tool.git
@@ -43,9 +43,10 @@ git checkout 4552f1b0   # Practice-Tool main; decks/trace/ has no Rune list — 
 npm run trace -- --seed=20260910 --games=30 --deck-a=/workspace/oracle/decks/rune-mach15.json --deck-b=/workspace/oracle/decks/rune-mach15.json --out=<tmp>/rune-mach15-mirror
 npm run trace -- --seed=20260910 --games=30 --deck-a=/workspace/oracle/decks/elf-neanisu2.json --deck-b=/workspace/oracle/decks/elf-neanisu2.json --out=<tmp>/elf-neanisu2-mirror
 
-git checkout b3bd5473e421cf2fd1cf7ac80184beadf6308274
+git checkout bf8a9123bf2517530d1a12717f9d0dbde4f7eb45
 npm run trace -- --seed=20260910 --games=30 --deck-a=/workspace/oracle/decks/royal-nattui.json --deck-b=/workspace/oracle/decks/royal-nattui.json --out=<tmp>/royal-nattui-mirror
-npm run trace -- --seed=20260910 --games=20 --deck-a=/workspace/oracle/decks/ramp-claywies.json --deck-b=/workspace/oracle/decks/ramp-claywies.json --out=<tmp>/ramp-claywies-mirror
+# ramp-claywies-mirror is byte-identical at this SHA — do not re-record
+# npm run trace -- --seed=20260910 --games=20 --deck-a=/workspace/oracle/decks/ramp-claywies.json --deck-b=/workspace/oracle/decks/ramp-claywies.json --out=<tmp>/ramp-claywies-mirror
 ```
 
 `decks/trace/abyss-p8rfn.json` on that branch is the same 40-card list as `oracle/decks/abyss-p8rfn.json`.
@@ -69,7 +70,7 @@ gzip -n -k -c trace-20260910-0.jsonl > oracle/traces/<set>/trace-20260910-0.json
 
 If any of those fail, the emitter commit is wrong — do not patch the traces.
 
-The committed M1 sets at `c9c7aad2`, the Abyss set at `2dfd184c`, the Artifact Portal set at `5a6226bf`, and the Rune / Elf sets at `4552f1b0` pass all four checks: every game's last line is `phase: "terminal"`.
+The committed M1 sets at `c9c7aad2`, the Abyss set at `2dfd184c`, the Artifact Portal set at `5a6226bf`, the Rune / Elf sets at `4552f1b0`, and Royal / Ramp-Claywies at `bf8a9123` pass all four checks: every game's last line is `phase: "terminal"`.
 
 ## Allowlist
 
