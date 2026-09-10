@@ -1,0 +1,34 @@
+{
+  "id": "88001730",
+  "name": "Synth Ally Draw Ping",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Whenever you draw a card, deal 1 damage to the enemy leader.",
+  "attack": 1,
+  "defense": 3,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_draw",
+      "printed": "Whenever you draw a card, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}
