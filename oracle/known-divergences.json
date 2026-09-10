@@ -100,7 +100,7 @@
     "i": 33,
     "path": "players.a.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: a \u22120/\u22124 lowers max_defense by 4; the old engine set it to the current defense",
+    "reason": "owner ruling 2026-09-10: a −0/−4 lowers max_defense by 4; the old engine set it to the current defense",
     "since": "2026-09-10"
   },
   {
@@ -128,235 +128,123 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "afnm-minatodao-mirror/trace-20260910-0.jsonl",
-    "i": 19,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-1.jsonl",
-    "i": 44,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-3.jsonl",
-    "i": 25,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-5.jsonl",
-    "i": 21,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-6.jsonl",
-    "i": 32,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-7.jsonl",
-    "i": 80,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-8.jsonl",
-    "i": 27,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-10.jsonl",
-    "i": 23,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-11.jsonl",
-    "i": 14,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-12.jsonl",
-    "i": 27,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-13.jsonl",
-    "i": 57,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-14.jsonl",
-    "i": 31,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-15.jsonl",
-    "i": 16,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-16.jsonl",
-    "i": 14,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-17.jsonl",
-    "i": 12,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-18.jsonl",
-    "i": 22,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-19.jsonl",
-    "i": 32,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-20.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-21.jsonl",
-    "i": 16,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-22.jsonl",
-    "i": 37,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-23.jsonl",
-    "i": 14,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-25.jsonl",
-    "i": 15,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-26.jsonl",
-    "i": 15,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-27.jsonl",
-    "i": 24,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-28.jsonl",
-    "i": 16,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-29.jsonl",
-    "i": 62,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}",
+    "trace": "afnm-minatodao-mirror/trace-20260910-4.jsonl",
+    "i": 56,
+    "path": "error",
+    "class": "engine",
+    "reason": "E36 pending from wave 2 (replay numbers random_target candidates by raw slot)",
     "since": "2026-09-10"
   },
   {
     "trace": "afnm-minatodao-mirror/trace-20260910-2.jsonl",
+    "i": 110,
+    "path": "error",
+    "class": "engine",
+    "reason": "E36 pending from wave 2 (replay numbers random_target candidates by raw slot); Asher 10874110 Enhance destroy 2 Ward",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-3.jsonl",
+    "i": 29,
+    "path": "players.b.field[2]",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play: 'Nothing raised mid-sequence interrupts the play sequence; the reactive queue drains once at the end of the play'; Imari, Dewdrop 10574120 'Whenever you play a spell, if this follower is evolved, summon an Imari's Little Buddies' waits until the spell's choose; the old engine summoned at the play line",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-12.jsonl",
+    "i": 68,
+    "path": "players.b.field[3]",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play: 'Nothing raised mid-sequence interrupts the play sequence; the reactive queue drains once at the end of the play'; Imari, Dewdrop 10574120 'Whenever you play a spell, if this follower is evolved, summon an Imari's Little Buddies' waits until the spell's choose; the old engine summoned at the play line",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-17.jsonl",
+    "i": 48,
+    "path": "players.b.field[1]",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play: 'Nothing raised mid-sequence interrupts the play sequence; the reactive queue drains once at the end of the play'; Imari, Dewdrop 10574120 'Whenever you play a spell, if this follower is evolved, summon an Imari's Little Buddies' waits until the spell's choose; the old engine summoned at the play line",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-18.jsonl",
+    "i": 44,
+    "path": "players.a.field[1]",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play: 'Nothing raised mid-sequence interrupts the play sequence; the reactive queue drains once at the end of the play'; Imari, Dewdrop 10574120 'Whenever you play a spell, if this follower is evolved, summon an Imari's Little Buddies' waits until the spell's choose; the old engine summoned at the play line",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-21.jsonl",
+    "i": 54,
+    "path": "players.b.field[2]",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play: 'Nothing raised mid-sequence interrupts the play sequence; the reactive queue drains once at the end of the play'; Imari, Dewdrop 10574120 'Whenever you play a spell, if this follower is evolved, summon an Imari's Little Buddies' waits until the spell's choose; the old engine summoned at the play line",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-11.jsonl",
+    "i": 88,
+    "path": "players.a.field[1].attack",
+    "class": "old-rule",
+    "reason": "rulebook Copy semantics: 'a copy / copies of (without \"exact\") copies the base/printed card'; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine entered the evolved instance stats (Ludicrous Ordnance 10673110 5/6)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-20.jsonl",
+    "i": 56,
+    "path": "players.a.field[4].attack",
+    "class": "old-rule",
+    "reason": "rulebook Copy semantics: 'a copy / copies of (without \"exact\") copies the base/printed card'; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine entered the evolved instance stats (Asher & Lydia 10874110 7/7)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-1.jsonl",
     "i": 66,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}. E38 ran this game on from i=55; dropped on emitter regen.",
+    "path": "error",
+    "class": "old-emitter",
+    "reason": "trace-format pins board randoms as random_target {slot} (Practice-Tool PR #391); the old engine's evolve/enter destroy path still emits random_card with the card id; Asher 10874110 evolve destroy Ward, chose 90074140",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-7.jsonl",
+    "i": 83,
+    "path": "error",
+    "class": "old-emitter",
+    "reason": "trace-format pins board randoms as random_target {slot} (Practice-Tool PR #391); the old engine's evolve/enter destroy path still emits random_card with the card id; Aizeden 10974120 ally_enter destroy, chose 90074140",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-22.jsonl",
+    "i": 76,
+    "path": "error",
+    "class": "old-emitter",
+    "reason": "trace-format pins board randoms as random_target {slot} (Practice-Tool PR #391); the old engine's evolve/enter destroy path still emits random_card with the card id; Asher 10874110 evolve destroy Ward, chose 90074140",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-23.jsonl",
+    "i": 49,
+    "path": "error",
+    "class": "old-emitter",
+    "reason": "trace-format pins board randoms as random_target {slot} (Practice-Tool PR #391); the old engine's evolve/enter destroy path still emits random_card with the card id; Asher 10874110 evolve destroy Ward, chose 90074140",
     "since": "2026-09-10"
   },
   {
     "trace": "afnm-minatodao-mirror/trace-20260910-24.jsonl",
-    "i": 26,
-    "path": "legal",
-    "class": "convention",
-    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}. E38 ran this game on from i=22; dropped on emitter regen.",
+    "i": 55,
+    "path": "error",
+    "class": "old-emitter",
+    "reason": "trace-format pins board randoms as random_target {slot} (Practice-Tool PR #391); the old engine's evolve/enter destroy path still emits random_card with the card id; Asher 10874110 evolve destroy Ward, chose 90074140",
     "since": "2026-09-10"
   },
   {
-    "trace": "afnm-minatodao-mirror/trace-20260910-4.jsonl",
-    "i": 56,
+    "trace": "afnm-minatodao-mirror/trace-20260910-28.jsonl",
+    "i": 48,
     "path": "error",
-    "class": "convention",
-    "reason": "E36 (lands via main from cursor/m2-rune-elf): Asher 10874110 'destroy 2 random enemy followers with Ward'; the emitter numbers random_target among surviving cards at roll time (trace-format RK), so the second pick is slot:1 after compact. Not implemented here.",
+    "class": "old-emitter",
+    "reason": "trace-format pins board randoms as random_target {slot} (Practice-Tool PR #391); the old engine's evolve/enter destroy path still emits random_card with the card id; Asher 10874110 evolve destroy Ward, chose 90074140",
     "since": "2026-09-10"
   }
 ]

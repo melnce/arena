@@ -551,3 +551,30 @@ fn e38_aizeden_destroy_before_analyzing_draw() {
     );
     assert!(!field_has(&st, opp, "10771110"));
 }
+
+/// Imari 10574120 "Whenever you play a spell, if this follower is evolved,
+/// summon an Imari's Little Buddies" waits until Freerunning's Mode choose
+/// completes (E34: reactions drain after the play, including a player choice).
+#[test]
+fn imari_summons_after_freerunning_mode_choose() {
+    let db = load_db();
+    let mut st = started(&db, 57);
+    let me = PlayerId::A;
+    let slot = put_field(&db, &mut st, me, "10574120");
+    if let Some(f) = st.field_inst_mut(me, slot) {
+        f.evolved = true;
+    }
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10771310");
+    assert!(matches!(st.phase, Phase::Choice { .. }));
+    assert!(
+        !field_has(&st, me, "90074140"),
+        "play reactions wait for the spell's Mode choose"
+    );
+    choose(&db, &mut st, 0);
+    assert!(
+        field_has(&st, me, "90074140"),
+        "Little Buddies after Freerunning resolves"
+    );
+}
