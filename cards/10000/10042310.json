@@ -21,8 +21,18 @@
         },
         {
           "printed": "Then, if you have 10 max play points, draw a card.",
-          "op": "draw",
-          "count": 1
+          "op": "if",
+          "cond": {
+            "maxPpAtLeast": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "draw",
+              "count": 1
+            }
+          ]
         }
       ]
     }

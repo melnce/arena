@@ -800,6 +800,27 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "maxPpAtLeast": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "maxPpAtLeast"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
             "skyboundArt": {
               "type": "object",
               "additionalProperties": false,
