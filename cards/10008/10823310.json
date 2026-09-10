@@ -69,7 +69,6 @@
           "op": "choose",
           "pick": "all",
           "by": "player",
-          "optionsFrom": "fanfare",
           "when": {
             "countAtLeast": {
               "select": {
@@ -80,7 +79,8 @@
               },
               "n": 2
             }
-          }
+          },
+          "optionsFrom": "fanfare"
         }
       ]
     }
