@@ -662,5 +662,13 @@
     "class": "old-emitter",
     "reason": "trace-format pins board randoms as random_target {slot} (Practice-Tool PR #391); the old engine's evolve/enter destroy path still emits random_card with the card id; Asher 10874110 evolve destroy Ward, chose 90074140",
     "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-21.jsonl",
+    "i": 82,
+    "path": "error",
+    "class": "old-emitter",
+    "reason": "trace-format pins board randoms as random_target {slot} (Practice-Tool PR #391); the old engine's evolve/enter destroy path still emits random_card with the card id because Sincerity of the Dewdrop 10573310 board-transform Buddies carry no zone; Aizeden 10974120 ally_enter destroy, chose 90074140",
+    "since": "2026-09-10"
   }
 ]
