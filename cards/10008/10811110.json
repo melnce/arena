@@ -1,0 +1,57 @@
+{
+  "id": "10811110",
+  "name": "Marlone, Scales of the Past",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Destroy X random enemy followers. X is the number of enemy followers on the field minus the number of allied followers on the field.",
+  "attack": 6,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Destroy X random enemy followers. X is the number of enemy followers on the field minus the number of allied followers on the field.",
+      "effects": [
+        {
+          "printed": "Destroy X random enemy followers. X is the number of enemy followers on the field minus the number of allied followers on the field.",
+          "op": "destroy",
+          "select": {
+            "pick": "randomDistinct",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "count": {
+              "max": [
+                0,
+                {
+                  "sub": [
+                    {
+                      "count": {
+                        "pick": "all",
+                        "side": "enemy",
+                        "zone": "field",
+                        "kind": "follower"
+                      }
+                    },
+                    {
+                      "count": {
+                        "pick": "all",
+                        "side": "ally",
+                        "zone": "field",
+                        "kind": "follower"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

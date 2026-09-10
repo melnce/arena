@@ -66,13 +66,23 @@ A **played** follower's Rally increment is deferred until the play sequence is q
 
 `apply` runs the action then `drain_until_quiet`:
 
-1. Drain the current trigger-queue wave (8-category order, entry-order then printed-order; the whole wave is flushed onto `pending_work` so LIFO still resolves active side first) **unless** the next frame is an index-0 list (Fanfare, a nested body, a freshly flushed trigger) or a trigger wave is still in flight (`RestoreBindings` still on the stack). A trigger raised while a queued item resolves goes to the back of the queue (E32 / Grimnir: (2) and (3) before the Last Words (4) that (1) just queued).
+1. Drain the current trigger-queue wave (8-category order, entry-order then printed-order; the whole wave is flushed onto `pending_work` so LIFO still resolves active side first) **unless** the next frame is an index-0 list (Fanfare, a nested body, a freshly flushed trigger) or a trigger wave is still in flight (`RestoreBindings` still on the stack). A trigger raised while a queued item resolves goes to the back of the queue (E32 / Grimnir: (2) and (3) before the Last Words (4) that (1) just queued). **E40:** when a flushed trigger (`When`, turn-boundary, enter — not Last Words / Leave / Strike / Clash) comes up for resolution, skip it if its `SourceRef` is a field instance that is no longer on the field (destroyed, banished, bounced, transformed — transform is a new instance), a crest no longer at that index, or a hand/deck instance that is in neither zone (deck-zone start-of-turn is stored as `SourceRef::Hand`). Last Words are `SourceRef::Spell` and Leave is raised because the source left, so they are exempt. Same skip applies to play-reaction items flushed onto `pending_work` (E39). Source: Shadowverse 効果処理 wiki, https://w.atwiki.jp/svkoukasyori/pages/16.html — 「ラストワード・「場を離れる時」以外の効果は、解決前に効果を持ったカードが場を離れた場合解決されない。」 plus 「ひとつの効果の解決中に他の誘発効果は割り込まない」. Owner 2026-09-10: Trap in the Woods vs three Knights kills only the first.
 2. Pop newly pushed effect lists and aftermaths (combat damage, turn-boundary step 7/8). Nested bodies sit on top of the enclosing remainder.
 3. Settle 0-defense deaths (by instance id).
 
 Reactions to an op of an in-flight list that is *not* inside a flushed wave (`ally_draw` after `draw count: N`) still run before the next op of that list (E28). Countdown expiry captures doomed amulets/crests by instance id / `granted_order` before any destroy, so compact cannot retarget a neighbour. A `countdown delta` over a selector (Barbaros) likewise captures each hit by instance id before applying, so a Flag that reaches 0 and is destroyed does not steal the next Flag's slot. Fuse partner `legal` is `choose {card}` like every other hand choice.
 
 That order is what makes play reactions (`whenever you play`) resolve before Fanfare (E39), other cards' enter reactions wait until the play completes (E34), the entrant's own `on:enter` sort with those reactions by board age (E38), Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
+
+`apply_attack` writes `State.combat_opposing` (the attack target as a `TargetOpt`) before queuing Strike / Follower Strike / Clash, and clears it after combat damage. `pick: opposing` reads that slot (Okita's "the opposing follower"). If Strike or Clash has already reduced a combatant to 0 defense, `combat_damage` does not exchange hits.
+
+`grantTraits.until` (`endOfTurn` / `endOfOpponentTurn`) is caster-relative: `endOfOpponentTurn` expires when the caster's opponent's turn ends, even if the grant sits on an enemy follower (Measured Attunement / Shaili). Grants are stored on `CardInstance.temp_traits` and `merge_remove`'d at that boundary.
+
+A `countdown` selector with `zone: crests` adjusts `CrestInstance.countdown` in place (Majestic Conquest "Delay the count of your Crest … by 2"). `filter.card` `10622310` matches crest id `crest:10622310`.
+
+`summon { from }` **moves** the selected instance onto the field (Chloe "summon it"); a full field leaves the card where it is. `summon { copyOf }` always copies (exact or printed) regardless of zone — the hand/deck/field original stays (Cartographer). `addToHand { copyOf }` of several deck targets copies each resolved instance and does not remove the originals (Wolfraud exact copies).
+
+Hand-zone `when ally_draw` fires only on the drawn instance (`note_draw` takes the last same-id in hand). Other copies of the same card already in hand stay quiet (Swift Staffmaster).
 
 A super-evolved follower on its owner's turn is still a legal `destroy` candidate; `destroy_by_ability` fizzles via `cantBeDestroyedByAbilities` / own-turn SE protection (E31). Lethal 0-defense still settles. The candidate pool is unchanged so `random_target` picks still match.
 
@@ -110,6 +120,10 @@ The Faith's "Whenever an allied follower evolves, increase this faith's value by
 
 ## E36 — `random_target` among surviving board cards
 
+A `side: any` random pool (Oluon) qualifies keys with the player (`a:slot:0`, `leader:b`) so two leaders or two `slot:0`s do not collapse on scripted replay. Single-side pools still emit `slot:N` / `leader`.
+
+A `side: any` random pool (Oluon) qualifies keys with the player (`a:slot:0`, `leader:b`) so two leaders or two `slot:0`s do not collapse on scripted replay. Single-side pools still emit `slot:N` / `leader`.
+
 Recorded `chose.slot` is the 0-based index among **surviving** cards on that player's field at roll time (followers at 0 defense / marked for destruction and amulets at countdown 0 are skipped; order preserved), not the raw field slot. In a `randomDistinct` wave the first chosen slot is also skipped at later rolls (the old engine applies that destroy before the next roll). A non-distinct `random` wave does not skip a follower that survived the first pick — it stays in the numbering. Live play still picks by index into the candidate list. Scripted replay matches the survivor-index label first; if that misses, a raw field slot is accepted as an alias when that label is not already a survivor key of another candidate (M1 ramp traces numbered by raw slot). Aliases are not added for live RNG.
 
 ## Questions for the owner
@@ -120,6 +134,7 @@ Asked; arena follows the rulebook/text until he says otherwise.
 2. **Granted `attacksPerTurn: 2` after attacks already made this turn.** Rulebook is silent. Implemented as `attacks_left = attacks_left.max(n)`.
 3. **Duplicate-id draw after `returnToDeck`.** A draw of an id that has both a modified copy and a just-returned printed copy takes the oldest (first in vec; return appends).
 4. **E38 — entrant's own `on:enter` vs older `ally_enter`.** Implemented as same-timing board enter triggers, oldest first (not a jump onto `pending_work` above Fanfare). Pending owner.
+5. **E40 — source must still be in its zone.** See Resolution §1. Trap in the Woods vs a 3-Knight summon: three `enemy_follower_enter` items queue (no mid-effect interrupt); the first destroys the first Knight and the trap; the other two skip.
 
 ## Defense debuff and `max_defense`
 

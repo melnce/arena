@@ -922,6 +922,8 @@ pub enum Condition {
 pub struct CountAtLeast {
     pub select: Selector,
     pub n: Amount,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Filter>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1023,6 +1025,10 @@ pub enum CardSource {
         #[serde(rename = "copyOf")]
         copy_of: Selector,
         exact: bool,
+    },
+    /// Put the selected instance itself onto the field (Chloe "summon it").
+    From {
+        from: Selector,
     },
     RandomFrom {
         #[serde(rename = "randomFrom")]
@@ -1248,6 +1254,8 @@ pub enum Effect {
         when: Option<Condition>,
         select: Selector,
         traits: Traits,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        until: Option<Until>,
     },
     #[serde(rename = "removeTraits")]
     RemoveTraits {
@@ -2644,6 +2652,7 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
 fn walk_source(src: &CardSource, used: &mut BTreeSet<String>) {
     match src {
         CardSource::Copy { copy_of, .. } => walk_selector(copy_of, used),
+        CardSource::From { from } => walk_selector(from, used),
         CardSource::RandomFrom { random_from } => walk_filter(random_from, used),
         CardSource::Named { .. } => {}
     }
@@ -2733,6 +2742,9 @@ fn walk_condition(c: &Condition, used: &mut BTreeSet<String>) {
         Condition::CountAtLeast { count_at_least } => {
             walk_selector(&count_at_least.select, used);
             walk_amount(&count_at_least.n, used);
+            if let Some(f) = &count_at_least.filter {
+                walk_filter(f, used);
+            }
         }
         Condition::MaxPpAtLeast { max_pp_at_least } => walk_amount(&max_pp_at_least.n, used),
         Condition::Combo { combo } => walk_amount(&combo.n, used),

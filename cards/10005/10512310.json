@@ -1,0 +1,57 @@
+{
+  "id": "10512310",
+  "name": "Quiet Encouragement",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Deal 1 damage to all enemies. Combo (3) - Deal 2 damage instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 damage to all enemies. Combo (3) - Deal 2 damage instead.",
+      "effects": [
+        {
+          "printed": "Deal 1 damage to all enemies. Combo (3) - Deal 2 damage instead.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "printed": "Deal 2 damage instead.",
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "character",
+                "includeLeader": true
+              },
+              "amount": 2
+            }
+          ],
+          "else": [
+            {
+              "printed": "Deal 1 damage to all enemies.",
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "character",
+                "includeLeader": true
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

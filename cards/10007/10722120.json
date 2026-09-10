@@ -1,0 +1,52 @@
+{
+  "id": "10722120",
+  "name": "Metronomic Medic",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Draw 2 cards. Summon 2 copies of Knight.\n\nEvolve: Select an enemy follower on the field and deal it 3 damage.",
+  "attack": 2,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw 2 cards. Summon 2 copies of Knight.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        },
+        {
+          "printed": "Summon 2 copies of Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021110"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and deal it 3 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 3 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

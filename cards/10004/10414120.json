@@ -1,0 +1,51 @@
+{
+  "id": "10414120",
+  "name": "Yuel & Societte, Dancing Duo",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Do this 2 times: \"Deal 4 damage to a random enemy follower.\"\n\nSuper-Evolve: Gain Crest: Yuel & Societte, Dancing Duo.",
+  "attack": 4,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Do this 2 times: \"Deal 4 damage to a random enemy follower.\"",
+      "effects": [
+        {
+          "printed": "Do this 2 times: \"Deal 4 damage to a random enemy follower.\"",
+          "op": "repeat",
+          "times": 2,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Gain Crest: Yuel & Societte, Dancing Duo.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Yuel & Societte, Dancing Duo.",
+          "op": "crest",
+          "gain": "crest:10414120",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

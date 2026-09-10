@@ -1,0 +1,64 @@
+{
+  "id": "10524110",
+  "name": "Oluon, Raging Chariot",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "At the end of your turn, if this follower is unevolved, deal 7 damage to all enemy followers. If it's evolved, do this 3 times: \"Deal 7 damage to another random ally or enemy.\"",
+  "attack": 7,
+  "defense": 7,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, if this follower is unevolved, deal 7 damage to all enemy followers. If it's evolved, do this 3 times: \"Deal 7 damage to another random ally or enemy.\"",
+      "effects": [
+        {
+          "printed": "if this follower is unevolved, deal 7 damage to all enemy followers. If it's evolved, do this 3 times: \"Deal 7 damage to another random ally or enemy.\"",
+          "op": "if",
+          "cond": {
+            "evolved": true
+          },
+          "then": [
+            {
+              "printed": "do this 3 times: \"Deal 7 damage to another random ally or enemy.\"",
+              "op": "repeat",
+              "times": 3,
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "random",
+                    "side": "any",
+                    "zone": "field",
+                    "kind": "character",
+                    "includeLeader": true,
+                    "other": true
+                  },
+                  "amount": 7
+                }
+              ]
+            }
+          ],
+          "else": [
+            {
+              "printed": "deal 7 damage to all enemy followers.",
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

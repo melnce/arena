@@ -1,0 +1,36 @@
+{
+  "id": "90011120",
+  "name": "Springbloom Fairy",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Ward\nAt the end of your turn, evolve this follower.",
+  "attack": 1,
+  "defense": 1,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, evolve this follower.",
+      "effects": [
+        {
+          "printed": "evolve this follower.",
+          "op": "evolve",
+          "select": {
+            "pick": "self"
+          },
+          "super": false
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "pixie"
+  ]
+}

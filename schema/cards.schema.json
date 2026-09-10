@@ -681,6 +681,9 @@
                 },
                 "n": {
                   "$ref": "#/$defs/Amount"
+                },
+                "filter": {
+                  "$ref": "#/$defs/Filter"
                 }
               },
               "required": [
@@ -1169,6 +1172,18 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "from": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "from"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
             "randomFrom": {
               "$ref": "#/$defs/Filter"
             }
@@ -1642,6 +1657,12 @@
             },
             "traits": {
               "$ref": "#/$defs/Traits"
+            },
+            "until": {
+              "enum": [
+                "endOfTurn",
+                "endOfOpponentTurn"
+              ]
             }
           },
           "required": [

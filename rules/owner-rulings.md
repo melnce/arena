@@ -794,6 +794,22 @@ World of Games prints "a card on the field other than it" with no side. The same
 
 Crests and Faith that react to an allied evolve resolve before that follower's printed `Evolve:` / `Super-Evolve:` list. No official Cygames Q&A exists for this ordering.
 
+## "Once on each of your turns" is only during your turns — 2026-09-10
+
+<!-- rulebook: absorbed #timing-windows-and-trigger-resolution -->
+
+> "its in the text: each of YOUR turns. NOT each turn"
+
+The Japanese reads 「自分のターンごとに1回」. Authored as `oncePerTurn: true` plus `when: {turnOwner: "self"}` (Tia `10814120`, Ruflet `10812110`, Katze `10822110`, and every other card that prints the phrase). A buff or play on the opponent's turn does not consume the once-per-turn gate and does not fire the ability.
+
+## Trap in the Woods kills only one summoned follower — 2026-09-10
+
+<!-- rulebook: absorbed #timing-windows-and-trigger-resolution -->
+
+> "no it kills one summon … even if they do [enter at once] it would kill only 1 of the knights"
+
+The general rule behind it is **E40**: a queued triggered ability does not resolve if the card that carries it has left the field before it resolves. Last Words and "when this card leaves the field" are the exception (they are raised *because* the source left). Source: Shadowverse 効果処理 wiki, https://w.atwiki.jp/svkoukasyori/pages/16.html — 「ラストワード・「場を離れる時」以外の効果は、解決前に効果を持ったカードが場を離れた場合解決されない。」 plus 「ひとつの効果の解決中に他の誘発効果は割り込まない」 (no interruption mid-effect — the queue rule we already have).
+
 ## A follower evolves only once — 2026-09-10
 
 <!-- rulebook: absorbed #play-point-pp-and-evolution-point-rules -->

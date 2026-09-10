@@ -1,0 +1,33 @@
+{
+  "id": "10421120",
+  "name": "Arthur, Staunch Dragon",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Ward\n\nEvolve: Summon a Mordred, Illusory Lion.",
+  "attack": 2,
+  "defense": 3,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon a Mordred, Illusory Lion.",
+      "effects": [
+        {
+          "printed": "Summon a Mordred, Illusory Lion.",
+          "op": "summon",
+          "card": {
+            "named": "10421130"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

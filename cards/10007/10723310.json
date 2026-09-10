@@ -1,0 +1,62 @@
+{
+  "id": "10723310",
+  "name": "Caesura al Fine",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Select an enemy follower on the field and deal it 6 damage. Rally (10) - Deal X damage to all enemy followers. X is the number of allied followers on the field.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 6 damage. Rally (10) - Deal X damage to all enemy followers. X is the number of allied followers on the field.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 6 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 6
+        },
+        {
+          "printed": "Rally (10) - Deal X damage to all enemy followers. X is the number of allied followers on the field.",
+          "op": "if",
+          "cond": {
+            "rally": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "printed": "Deal X damage to all enemy followers. X is the number of allied followers on the field.",
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": {
+                "count": {
+                  "pick": "all",
+                  "side": "ally",
+                  "zone": "field",
+                  "kind": "follower"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

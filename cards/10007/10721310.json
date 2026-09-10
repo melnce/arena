@@ -1,0 +1,58 @@
+{
+  "id": "10721310",
+  "name": "Measured Attunement",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Select an enemy follower on the field and deal it 3 damage. Rally (10) - Give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 3 damage. Rally (10) - Give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 3 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3,
+          "as": "t"
+        },
+        {
+          "printed": "Rally (10) - Give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+          "op": "if",
+          "cond": {
+            "rally": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "printed": "Give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "traits": {
+                "cantAttackFollowers": true,
+                "cantAttackLeader": true
+              },
+              "until": "endOfOpponentTurn"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

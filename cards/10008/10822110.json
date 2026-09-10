@@ -15,6 +15,9 @@
       "on": "when",
       "event": "ally_spell_played",
       "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      },
       "printed": "Once on each of your turns, when you play a spell, deal 2 damage to a random enemy follower.",
       "effects": [
         {

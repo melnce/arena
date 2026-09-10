@@ -1,0 +1,85 @@
+{
+  "id": "10521110",
+  "name": "Altruistic Aristocrat",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Select a card in your hand and discard it. Restore 3 defense to your leader. If you selected a spell, restore 6 defense instead.",
+  "attack": 4,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and discard it. Restore 3 defense to your leader. If you selected a spell, restore 6 defense instead.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it. Restore 3 defense to your leader. If you selected a spell, restore 6 defense instead.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "discard",
+              "select": {
+                "pick": "choose",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "card"
+              },
+              "as": "d"
+            },
+            {
+              "op": "if",
+              "cond": {
+                "did": "d"
+              },
+              "then": [
+                {
+                  "op": "if",
+                  "cond": {
+                    "countAtLeast": {
+                      "select": {
+                        "pick": "bound",
+                        "ref": "d"
+                      },
+                      "n": 1,
+                      "filter": {
+                        "kind": "spell"
+                      }
+                    }
+                  },
+                  "then": [
+                    {
+                      "op": "restore",
+                      "select": {
+                        "pick": "all",
+                        "side": "ally",
+                        "zone": "leader",
+                        "kind": "leader"
+                      },
+                      "amount": 6
+                    }
+                  ],
+                  "else": [
+                    {
+                      "op": "restore",
+                      "select": {
+                        "pick": "all",
+                        "side": "ally",
+                        "zone": "leader",
+                        "kind": "leader"
+                      },
+                      "amount": 3
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

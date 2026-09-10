@@ -1,0 +1,44 @@
+{
+  "id": "10611110",
+  "name": "Motherly Forestdweller",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Add a Springbloom Fairy to your hand.\n\nEvolve: Summon a Springbloom Fairy.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Springbloom Fairy to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Springbloom Fairy to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90011120"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon a Springbloom Fairy.",
+      "effects": [
+        {
+          "printed": "Summon a Springbloom Fairy.",
+          "op": "summon",
+          "card": {
+            "named": "90011120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

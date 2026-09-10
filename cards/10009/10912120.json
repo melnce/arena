@@ -1,0 +1,47 @@
+{
+  "id": "10912120",
+  "name": "Primate Plotters",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Add an exact copy of a random card in your opponent's hand to your hand without revealing it.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add an exact copy of a random card in your opponent's hand to your hand without revealing it.",
+      "effects": [
+        {
+          "printed": "Add an exact copy of a random card in your opponent's hand to your hand without revealing it.",
+          "op": "addToHand",
+          "card": {
+            "copyOf": {
+              "pick": "random",
+              "side": "enemy",
+              "zone": "hand",
+              "kind": "card"
+            },
+            "exact": true
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "op": "replicate",
+          "ability": "fanfare",
+          "printed": "Replicate the effects of this card's Fanfare ability."
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

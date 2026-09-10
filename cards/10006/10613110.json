@@ -1,0 +1,48 @@
+{
+  "id": "10613110",
+  "name": "Merciful Attendant",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Summon a Springbloom Fairy.\n\nWhenever an allied follower evolves, restore 1 defense to your leader.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Springbloom Fairy.",
+      "effects": [
+        {
+          "printed": "Summon a Springbloom Fairy.",
+          "op": "summon",
+          "card": {
+            "named": "90011120"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_evolve",
+      "printed": "Whenever an allied follower evolves, restore 1 defense to your leader.",
+      "effects": [
+        {
+          "printed": "restore 1 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

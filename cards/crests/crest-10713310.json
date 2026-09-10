@@ -1,0 +1,26 @@
+{
+  "id": "crest:10713310",
+  "name": "Crest: Magnified Malice",
+  "grantedBy": [
+    "10713310"
+  ],
+  "faith": false,
+  "text": "Countdown (1)\nLast Words: Add a Minimized Anxiety to your hand.",
+  "countdown": 1,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add a Minimized Anxiety to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Minimized Anxiety to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "10712310"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

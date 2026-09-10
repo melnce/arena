@@ -1,0 +1,50 @@
+{
+  "id": "10822310",
+  "name": "Shared Existence",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Give a random enemy follower on the field with the highest attack -10/-10.\nEnhance (6): Summon 3 copies of Wretch.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give a random enemy follower on the field with the highest attack -10/-10.",
+      "effects": [
+        {
+          "printed": "Give a random enemy follower on the field with the highest attack -10/-10.",
+          "op": "buff",
+          "select": {
+            "pick": "highest",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "orderBy": "attack"
+          },
+          "attack": -10,
+          "defense": -10
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 6,
+      "printed": "Enhance (6): Summon 3 copies of Wretch.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies of Wretch.",
+          "op": "summon",
+          "card": {
+            "named": "90022110"
+          },
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

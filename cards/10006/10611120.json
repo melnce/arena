@@ -1,0 +1,41 @@
+{
+  "id": "10611120",
+  "name": "Monkey of Paradise",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Combo (3) - Evolve this follower.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Combo (3) - Evolve this follower.",
+      "effects": [
+        {
+          "printed": "Combo (3) - Evolve this follower.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "printed": "Evolve this follower.",
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
