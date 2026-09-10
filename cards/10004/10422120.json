@@ -1,0 +1,14 @@
+{
+  "id": "10422120",
+  "name": "Feather, Bombastic Brawler",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "",
+  "attack": 5,
+  "defense": 4,
+  "tribes": []
+}

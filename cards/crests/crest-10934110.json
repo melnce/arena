@@ -14,6 +14,9 @@
         "card": "10931110"
       },
       "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      },
       "printed": "Once on each of your turns, when an allied Obsessed Test Subject enters the field, give it Storm.",
       "effects": [
         {

@@ -1,0 +1,41 @@
+{
+  "id": "10612310",
+  "name": "Floral Offering",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Activates in hand. Whenever an allied follower evolves, reduce the cost of this card by 1.\n\nDraw 2 cards.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_evolve",
+      "printed": "Activates in hand. Whenever an allied follower evolves, reduce the cost of this card by 1.",
+      "effects": [
+        {
+          "printed": "reduce the cost of this card by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ],
+      "zone": "hand"
+    },
+    {
+      "on": "fanfare",
+      "printed": "Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

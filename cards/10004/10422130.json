@@ -1,0 +1,18 @@
+{
+  "id": "10422130",
+  "name": "Fiorito, Muscles in Bloom",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Ambush\nBane",
+  "attack": 2,
+  "defense": 6,
+  "traits": {
+    "ambush": true,
+    "bane": true
+  },
+  "tribes": []
+}

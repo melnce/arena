@@ -1,0 +1,50 @@
+{
+  "id": "10521310",
+  "name": "Extravagance of the Goldbloom",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Select a spell in your hand and discard it. Do this 2 times: \"Deal 3 damage to a random enemy follower.\"",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a spell in your hand and discard it. Do this 2 times: \"Deal 3 damage to a random enemy follower.\"",
+      "effects": [
+        {
+          "printed": "Select a spell in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "filter": {
+              "kind": "spell"
+            }
+          }
+        },
+        {
+          "printed": "Do this 2 times: \"Deal 3 damage to a random enemy follower.\"",
+          "op": "repeat",
+          "times": 2,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

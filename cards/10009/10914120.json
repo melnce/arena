@@ -1,0 +1,64 @@
+{
+  "id": "10914120",
+  "name": "Hien, Redolent Revenant",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "Activates in hand. Whenever you play a card, reduce the cost of this card by 1 until the end of the turn.\n\nFanfare: Select an enemy follower on the field and deal it 4 damage.\n\nLast Words: Summon a Hien, Redolent Revenant.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_card_played",
+      "printed": "Activates in hand. Whenever you play a card, reduce the cost of this card by 1 until the end of the turn.",
+      "effects": [
+        {
+          "printed": "reduce the cost of this card by 1 until the end of the turn.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1,
+          "untilEndOfTurn": true
+        }
+      ],
+      "zone": "hand"
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 4 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 4 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Hien, Redolent Revenant.",
+      "effects": [
+        {
+          "printed": "Summon a Hien, Redolent Revenant.",
+          "op": "summon",
+          "card": {
+            "named": "10914120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

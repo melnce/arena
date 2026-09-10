@@ -1,0 +1,47 @@
+{
+  "id": "10722110",
+  "name": "Sharp-Eared Operative",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Last Words: Summon a Knight.\n\nEvolve: Select an enemy follower on the field and deal it 3 damage.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Knight.",
+      "effects": [
+        {
+          "printed": "Summon a Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and deal it 3 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 3 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

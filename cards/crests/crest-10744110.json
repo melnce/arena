@@ -29,6 +29,9 @@
       "on": "when",
       "event": "leader_restored",
       "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      },
       "printed": "Once on each of your turns, when your leader's defense is restored, deal 1 damage to it.",
       "effects": [
         {

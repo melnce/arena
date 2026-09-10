@@ -1,0 +1,67 @@
+{
+  "id": "10521120",
+  "name": "Smoke-Shrouded Beauty",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: If you have at least 2 spells in your hand, give this follower +1/+1 and Ward.\n\nEvolve: Add a Glittering Gold to your hand.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If you have at least 2 spells in your hand, give this follower +1/+1 and Ward.",
+      "effects": [
+        {
+          "printed": "If you have at least 2 spells in your hand, give this follower +1/+1 and Ward.",
+          "op": "if",
+          "cond": {
+            "handHas": {
+              "filter": {
+                "kind": "spell"
+              },
+              "n": 2
+            }
+          },
+          "then": [
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 1,
+              "defense": 1
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "ward": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Add a Glittering Gold to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Glittering Gold to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021350"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,41 @@
+{
+  "id": "10811120",
+  "name": "Citrus, Heretical Hermit",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Summon 2 copies of Fairy.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Fairy.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Fairy.",
+          "op": "summon",
+          "card": {
+            "named": "90011110"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "op": "replicate",
+          "ability": "fanfare",
+          "printed": "Replicate the effects of this card's Fanfare ability."
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

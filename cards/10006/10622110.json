@@ -1,0 +1,54 @@
+{
+  "id": "10622110",
+  "name": "Loyal Guard",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Enhance (4): Give this follower +2/+2.\n\nWard\n\nEvolve: Select an enemy follower on the field and deal it 3 damage.",
+  "attack": 3,
+  "defense": 3,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and deal it 3 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 3 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Give this follower +2/+2.",
+      "effects": [
+        {
+          "printed": "Give this follower +2/+2.",
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": 2,
+          "defense": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

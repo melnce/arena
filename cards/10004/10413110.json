@@ -1,0 +1,86 @@
+{
+  "id": "10413110",
+  "name": "Cupitan, Iridescent Archer",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Skybound Art - Evolve this follower. Super Skybound Art - Deal 3 damage to the enemy leader.\n\nWhen this follower evolves, do this 7 times: \"Deal 1 damage to a random enemy follower.\"",
+  "attack": 3,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Skybound Art - Evolve this follower. Super Skybound Art - Deal 3 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Skybound Art - Evolve this follower.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "printed": "Evolve this follower.",
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        },
+        {
+          "printed": "Super Skybound Art - Deal 3 damage to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 15
+            }
+          },
+          "then": [
+            {
+              "printed": "Deal 3 damage to the enemy leader.",
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "anyEvolve",
+      "printed": "When this follower evolves, do this 7 times: \"Deal 1 damage to a random enemy follower.\"",
+      "effects": [
+        {
+          "printed": "do this 7 times: \"Deal 1 damage to a random enemy follower.\"",
+          "op": "repeat",
+          "times": 7,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

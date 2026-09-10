@@ -1,0 +1,50 @@
+{
+  "id": "10712310",
+  "name": "Minimized Anxiety",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Restore 1 defense to your leader. Combo (3) - Gain Crest: Minimized Anxiety.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Restore 1 defense to your leader. Combo (3) - Gain Crest: Minimized Anxiety.",
+      "effects": [
+        {
+          "printed": "Restore 1 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        },
+        {
+          "printed": "Combo (3) - Gain Crest: Minimized Anxiety.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "printed": "Gain Crest: Minimized Anxiety.",
+              "op": "crest",
+              "gain": "crest:10712310",
+              "player": "self"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

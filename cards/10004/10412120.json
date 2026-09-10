@@ -1,0 +1,35 @@
+{
+  "id": "10412120",
+  "name": "Anthuria, Toe-Tapping Torch",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Give all allied followers on the field Barrier.",
+  "attack": 5,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Give all allied followers on the field Barrier.",
+      "effects": [
+        {
+          "printed": "Give all allied followers on the field Barrier.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "traits": {
+            "barrier": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

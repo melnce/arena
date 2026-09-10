@@ -1,0 +1,50 @@
+{
+  "id": "10713310",
+  "name": "Magnified Malice",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 1,
+  "text": "Deal 2 damage to a random enemy follower. Combo (3) - Gain Crest: Magnified Malice.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 2 damage to a random enemy follower. Combo (3) - Gain Crest: Magnified Malice.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "pick": "random",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 2
+        },
+        {
+          "printed": "Combo (3) - Gain Crest: Magnified Malice.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "printed": "Gain Crest: Magnified Malice.",
+              "op": "crest",
+              "gain": "crest:10713310",
+              "player": "self"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

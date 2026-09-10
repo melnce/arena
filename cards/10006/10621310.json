@@ -1,0 +1,50 @@
+{
+  "id": "10621310",
+  "name": "Advent of the Eld Sword",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 5,
+  "text": "Summon 3 copies of Fearless Soldier.\nEnhance (7): Give them +2/+2.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon 3 copies of Fearless Soldier.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies of Fearless Soldier.",
+          "op": "summon",
+          "card": {
+            "named": "10621110"
+          },
+          "count": 3,
+          "as": "s"
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 7,
+      "printed": "Enhance (7): Give them +2/+2.",
+      "effects": [
+        {
+          "printed": "Give them +2/+2.",
+          "op": "buff",
+          "select": {
+            "pick": "bound",
+            "ref": "s"
+          },
+          "attack": 2,
+          "defense": 2
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "10911120",
+  "name": "Jungle Youth",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "text": "Intimidate",
+  "attack": 10,
+  "defense": 8,
+  "traits": {
+    "intimidate": true
+  },
+  "tribes": []
+}

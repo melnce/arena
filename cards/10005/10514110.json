@@ -1,0 +1,66 @@
+{
+  "id": "10514110",
+  "name": "Wolfraud, Skybound Hanged Man",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Give this follower +X/+X. X is your Combo.\n\nEvolve: Discard your hand. Add an exact copy each of 5 random cards in your opponent's deck to your hand without revealing them.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Give this follower +X/+X. X is your Combo.",
+      "effects": [
+        {
+          "printed": "Give this follower +X/+X. X is your Combo.",
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": {
+            "counter": "combo"
+          },
+          "defense": {
+            "counter": "combo"
+          }
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Discard your hand. Add an exact copy each of 5 random cards in your opponent's deck to your hand without revealing them.",
+      "effects": [
+        {
+          "printed": "Discard your hand.",
+          "op": "discard",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          }
+        },
+        {
+          "printed": "Add an exact copy each of 5 random cards in your opponent's deck to your hand without revealing them.",
+          "op": "addToHand",
+          "card": {
+            "copyOf": {
+              "pick": "randomDistinct",
+              "side": "enemy",
+              "zone": "deck",
+              "kind": "card",
+              "count": 5
+            },
+            "exact": true
+          },
+          "count": 5
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

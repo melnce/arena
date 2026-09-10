@@ -80,8 +80,16 @@ pub struct CardInstance {
     pub tribes: Vec<Tribe>,
     pub name: String,
     pub once_used: Vec<TriggerTag>,
-    /// Temporary trait grants with an expiry (`grantTraits.until`).
-    pub trait_until: Vec<(Traits, Option<crate::card::Until>)>,
+    /// Trait grants with an `until` expiry (Measured Attunement / Shaili / Friendly Blue Ogre).
+    pub temp_traits: Vec<TempTraitGrant>,
+}
+
+/// A `grantTraits` that expires at a turn boundary.
+#[derive(Debug, Clone)]
+pub struct TempTraitGrant {
+    pub traits: Traits,
+    pub until: crate::card::Until,
+    pub caster: PlayerId,
 }
 
 impl CardInstance {
@@ -122,7 +130,7 @@ impl CardInstance {
             tribes: card.tribes().to_vec(),
             name: card.name().to_string(),
             once_used: Vec::new(),
-            trait_until: Vec::new(),
+            temp_traits: Vec::new(),
         }
     }
 
@@ -504,6 +512,8 @@ pub struct State {
     pub attack_target_is_leader: bool,
     /// Next `maybe_bind` appends to an existing name (Beelzebub 2-pick).
     pub bind_append: bool,
+    /// Attack target while Strike / Follower Strike / Clash resolve.
+    pub combat_opposing: Option<TargetOpt>,
 }
 
 #[derive(Debug, Clone)]
@@ -514,6 +524,8 @@ pub enum WorkFrame {
         effects: Vec<crate::card::Effect>,
         index: usize,
         subject: Option<TargetOpt>,
+        /// E40: skip this list at `index == 0` if `source` has left its zone.
+        e40: bool,
     },
     Aftermath(Aftermath),
 }

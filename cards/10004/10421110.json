@@ -1,0 +1,33 @@
+{
+  "id": "10421110",
+  "name": "Randall, Feet Fighter",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Enhance (5): Give this follower Storm.",
+  "attack": 3,
+  "defense": 2,
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 5,
+      "printed": "Enhance (5): Give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Give this follower Storm.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "storm": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

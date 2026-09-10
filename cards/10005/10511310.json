@@ -1,0 +1,40 @@
+{
+  "id": "10511310",
+  "name": "Flight of the Swarmpetal",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Deal 3 damage split between all enemy followers. Add a Fairy to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 3 damage split between all enemy followers. Add a Fairy to your hand.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage split between all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3,
+          "split": true
+        },
+        {
+          "printed": "Add a Fairy to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90011110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
