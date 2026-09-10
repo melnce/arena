@@ -1,0 +1,24 @@
+{
+  "id": "89500019",
+  "name": "Draw One",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "89600031",
+  "name": "filter_hasTrait",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy followers with Ward.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy followers with Ward.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy followers with Ward.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "hasTrait": "ward"
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "89800319",
+  "name": "ability_modifier_suppress_enhance",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Allied followers' enhance abilities don't activate.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "static",
+      "printed": "Allied followers' enhance abilities don't activate.",
+      "modifier": {
+        "suppress": [
+          "enhance"
+        ],
+        "select": {
+          "pick": "all",
+          "side": "ally",
+          "zone": "field",
+          "kind": "follower"
+        }
+      }
+    }
+  ]
+}

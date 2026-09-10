@@ -1,0 +1,14 @@
+{
+  "id": "89500006",
+  "name": "Forest Tank",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Forestcraft.",
+  "attack": 2,
+  "defense": 10,
+  "tribes": []
+}

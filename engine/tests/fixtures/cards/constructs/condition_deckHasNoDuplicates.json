@@ -1,0 +1,38 @@
+{
+  "id": "89501014",
+  "name": "condition_deckHasNoDuplicates",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If your deck has no duplicates, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If your deck has no duplicates, deal 1.",
+      "effects": [
+        {
+          "printed": "If your deck has no duplicates, deal 1.",
+          "op": "if",
+          "cond": {
+            "deckHasNoDuplicates": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

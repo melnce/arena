@@ -1,0 +1,35 @@
+{
+  "id": "89800203",
+  "name": "ability_zone_deck",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Activates in deck. At the start of your turn, deal 1 to the enemy leader.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "printed": "At the start of your turn, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "At the start of your turn, deal 1."
+        }
+      ],
+      "whose": "own",
+      "zone": "deck"
+    }
+  ]
+}

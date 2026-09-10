@@ -1,0 +1,38 @@
+{
+  "id": "89501029",
+  "name": "condition_turnOwner",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If it is your turn, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If it is your turn, deal 1.",
+      "effects": [
+        {
+          "printed": "If it is your turn, deal 1.",
+          "op": "if",
+          "cond": {
+            "turnOwner": "self"
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

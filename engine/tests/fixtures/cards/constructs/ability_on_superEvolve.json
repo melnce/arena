@@ -1,0 +1,33 @@
+{
+  "id": "89800004",
+  "name": "ability_on_superEvolve",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Super-Evolve: Deal 1 to the enemy leader.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Super-Evolve: Deal 1 to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

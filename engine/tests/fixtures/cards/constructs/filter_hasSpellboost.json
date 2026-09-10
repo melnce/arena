@@ -1,0 +1,32 @@
+{
+  "id": "89600030",
+  "name": "filter_hasSpellboost",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Discard all allied hand cards with Spellboost.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Discard all allied hand cards with Spellboost.",
+      "effects": [
+        {
+          "printed": "Discard all allied hand cards with Spellboost.",
+          "op": "discard",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "filter": {
+              "hasSpellboost": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

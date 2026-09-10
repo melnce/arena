@@ -1,0 +1,30 @@
+{
+  "id": "89500004",
+  "name": "Last Words Dummy",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Last Words: Restore 0 to this follower.",
+  "attack": 2,
+  "defense": 10,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Restore 0 to this follower.",
+      "effects": [
+        {
+          "op": "restore",
+          "select": {
+            "pick": "self"
+          },
+          "amount": 0,
+          "printed": "Last Words: Restore 0 to this follower."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "89501027",
+  "name": "condition_skyboundArt",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Skybound Art (10): Deal 1 to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Skybound Art (10): Deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Skybound Art (10): Deal 1 to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

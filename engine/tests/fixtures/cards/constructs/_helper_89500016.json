@@ -1,0 +1,14 @@
+{
+  "id": "89500016",
+  "name": "Earth Sigil Helper",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Earth Sigil.",
+  "tribes": [
+    "earth sigil"
+  ]
+}

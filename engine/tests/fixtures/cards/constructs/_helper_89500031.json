@@ -1,0 +1,32 @@
+{
+  "id": "89500031",
+  "name": "Destroy Tank One",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy Tank One.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy Tank One.",
+      "effects": [
+        {
+          "printed": "Destroy Tank One.",
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "any",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "card": "89500001"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

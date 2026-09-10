@@ -1,0 +1,29 @@
+{
+  "id": "89800314",
+  "name": "ability_modifier_suppress_spellboost",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Allied followers' spellboost abilities don't activate.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "static",
+      "printed": "Allied followers' spellboost abilities don't activate.",
+      "modifier": {
+        "suppress": [
+          "spellboost"
+        ],
+        "select": {
+          "pick": "all",
+          "side": "ally",
+          "zone": "field",
+          "kind": "card"
+        }
+      }
+    }
+  ]
+}

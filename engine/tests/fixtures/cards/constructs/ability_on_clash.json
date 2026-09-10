@@ -1,0 +1,33 @@
+{
+  "id": "89800009",
+  "name": "ability_on_clash",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Clash: Deal 1 to the enemy leader.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "clash",
+      "printed": "Clash: Deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Clash: Deal 1 to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

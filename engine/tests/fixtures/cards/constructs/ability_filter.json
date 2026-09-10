@@ -1,0 +1,37 @@
+{
+  "id": "89800206",
+  "name": "ability_filter",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Whenever an allied officer enters, deal 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "when",
+      "printed": "Whenever an allied officer enters, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Whenever an allied officer enters, deal 1."
+        }
+      ],
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "officer"
+      }
+    }
+  ]
+}

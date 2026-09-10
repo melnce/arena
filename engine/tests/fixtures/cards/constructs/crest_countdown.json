@@ -1,0 +1,29 @@
+{
+  "id": "crest:89509001",
+  "name": "Crest: Countdown Pin",
+  "grantedBy": [
+    "89500001"
+  ],
+  "faith": false,
+  "text": "Countdown (1)\nLast Words: Deal 1 to the enemy leader.",
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Last Words: Deal 1 to the enemy leader."
+        }
+      ]
+    }
+  ],
+  "countdown": 1
+}

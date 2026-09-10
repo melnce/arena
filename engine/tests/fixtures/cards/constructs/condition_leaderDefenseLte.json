@@ -1,0 +1,38 @@
+{
+  "id": "89501022",
+  "name": "condition_leaderDefenseLte",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If your leader's defense is 10 or less, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If your leader's defense is 10 or less, deal 1.",
+      "effects": [
+        {
+          "printed": "If your leader's defense is 10 or less, deal 1.",
+          "op": "if",
+          "cond": {
+            "leaderDefenseLte": 10
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

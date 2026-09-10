@@ -1,0 +1,41 @@
+{
+  "id": "89501005",
+  "name": "condition_attackedLeaderLastTurn",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: If this player attacked the enemy leader last turn, deal 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If this player attacked the enemy leader last turn, deal 1.",
+      "effects": [
+        {
+          "printed": "Fanfare: If this player attacked the enemy leader last turn, deal 1.",
+          "op": "if",
+          "cond": {
+            "attackedLeaderLastTurn": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

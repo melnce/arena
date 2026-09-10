@@ -1,0 +1,49 @@
+{
+  "id": "89501012",
+  "name": "condition_countAtLeast_filter",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If there are at least 1 allied officer, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If there are at least 1 allied officer, deal 1.",
+      "effects": [
+        {
+          "printed": "If there are at least 1 allied officer, deal 1.",
+          "op": "if",
+          "cond": {
+            "countAtLeast": {
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "n": 1,
+              "filter": {
+                "tribe": "officer"
+              }
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

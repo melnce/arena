@@ -1,0 +1,52 @@
+{
+  "id": "89800025",
+  "name": "mode_combo",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Combo (3): Deal 3 to the enemy leader. Otherwise deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Combo (3): Deal 3. Otherwise deal 1.",
+      "effects": [
+        {
+          "printed": "Combo (3): Deal 3. Otherwise deal 1.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 3
+            }
+          ],
+          "else": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

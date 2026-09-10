@@ -1,0 +1,33 @@
+{
+  "id": "89800005",
+  "name": "ability_on_anyEvolve",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "When this follower evolves, deal 1 to the enemy leader.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "anyEvolve",
+      "printed": "When this follower evolves, deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "When this follower evolves, deal 1 to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

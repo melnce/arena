@@ -1,0 +1,29 @@
+{
+  "id": "89500027",
+  "name": "Destroy Ally Amulets",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy all allied amulets.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy all allied amulets.",
+      "effects": [
+        {
+          "printed": "Destroy all allied amulets.",
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "amulet"
+          }
+        }
+      ]
+    }
+  ]
+}

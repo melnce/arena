@@ -1,0 +1,34 @@
+{
+  "id": "89800023",
+  "name": "mode_accelerate",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 5,
+  "text": "Accelerate (1): Deal 4 to the enemy leader.",
+  "attack": 3,
+  "defense": 3,
+  "tribes": [],
+  "modes": [
+    {
+      "kind": "accelerate",
+      "cost": 1,
+      "printed": "Accelerate (1): Deal 4 to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 4 to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 4
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "id": "89501010",
+  "name": "condition_costEq",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Fanfare: If this card's cost is 2, deal 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If this card's cost is 2, deal 1.",
+      "effects": [
+        {
+          "printed": "Fanfare: If this card's cost is 2, deal 1.",
+          "op": "if",
+          "cond": {
+            "costEq": 2
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

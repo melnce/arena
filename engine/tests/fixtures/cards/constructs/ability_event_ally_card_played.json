@@ -1,0 +1,34 @@
+{
+  "id": "89800105",
+  "name": "ability_event_ally_card_played",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Whenever ally card played, deal 1 to the enemy leader.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "when",
+      "printed": "Whenever ally card played, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Whenever ally card played, deal 1."
+        }
+      ],
+      "event": "ally_card_played"
+    }
+  ]
+}

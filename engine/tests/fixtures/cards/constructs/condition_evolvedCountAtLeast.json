@@ -1,0 +1,40 @@
+{
+  "id": "89501018",
+  "name": "condition_evolvedCountAtLeast",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If allied followers have evolved at least 2 times, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If allied followers have evolved at least 2 times, deal 1.",
+      "effects": [
+        {
+          "printed": "If allied followers have evolved at least 2 times, deal 1.",
+          "op": "if",
+          "cond": {
+            "evolvedCountAtLeast": {
+              "n": 2
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

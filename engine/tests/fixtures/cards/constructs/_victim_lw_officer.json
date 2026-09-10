@@ -1,0 +1,35 @@
+{
+  "id": "89800403",
+  "name": "Officer Last Words",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Last Words: Deal 1. An officer.",
+  "attack": 2,
+  "defense": 10,
+  "tribes": [
+    "officer"
+  ],
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Last Words: Deal 1."
+        }
+      ]
+    }
+  ]
+}

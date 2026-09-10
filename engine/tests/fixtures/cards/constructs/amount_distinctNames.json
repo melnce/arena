@@ -1,0 +1,36 @@
+{
+  "id": "89700010",
+  "name": "amount_distinctNames",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Gain attack equal to distinct allied enter names matching officers.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain attack equal to distinct allied enter names matching officers.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": {
+            "distinctNames": {
+              "enteredThisMatch": {
+                "tribe": "officer"
+              }
+            }
+          },
+          "printed": "Fanfare: Gain attack equal to distinct allied enter names matching officers."
+        }
+      ]
+    }
+  ]
+}

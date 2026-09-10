@@ -1,0 +1,14 @@
+{
+  "id": "89500012",
+  "name": "Sword Tank",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Swordcraft.",
+  "attack": 2,
+  "defense": 10,
+  "tribes": []
+}

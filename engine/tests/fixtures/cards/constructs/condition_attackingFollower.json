@@ -1,0 +1,41 @@
+{
+  "id": "89501006",
+  "name": "condition_attackingFollower",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Strike: If attacking a follower, deal 1 to the enemy leader.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "strike",
+      "printed": "Strike: If attacking a follower, deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "printed": "If attacking a follower, deal 1 to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "attackingFollower": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

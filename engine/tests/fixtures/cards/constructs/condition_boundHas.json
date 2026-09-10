@@ -1,0 +1,54 @@
+{
+  "id": "89501008",
+  "name": "condition_boundHas",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Select allied followers as g. If g has an officer, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select allied followers as g. If g has an officer, deal 1.",
+      "effects": [
+        {
+          "printed": "Select allied followers as g.",
+          "op": "select",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "as": "g"
+        },
+        {
+          "printed": "If g has an officer, deal 1.",
+          "op": "if",
+          "cond": {
+            "boundHas": {
+              "ref": "g",
+              "filter": {
+                "tribe": "officer"
+              }
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

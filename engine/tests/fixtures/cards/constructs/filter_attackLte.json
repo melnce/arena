@@ -1,0 +1,33 @@
+{
+  "id": "89600005",
+  "name": "filter_attackLte",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy followers with 1 or less attack.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy followers with 1 or less attack.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy followers with 1 or less attack.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "attackLte": 1
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

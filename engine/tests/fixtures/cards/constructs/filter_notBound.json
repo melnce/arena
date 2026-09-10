@@ -1,0 +1,47 @@
+{
+  "id": "89600032",
+  "name": "filter_notBound",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Select an allied officer as b. Deal 1 to allied followers not bound as b.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied officer as b. Deal 1 to allied followers not bound as b.",
+      "effects": [
+        {
+          "printed": "Select an allied officer as b.",
+          "op": "select",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "tribe": "officer"
+            }
+          },
+          "as": "b"
+        },
+        {
+          "printed": "Deal 1 to allied followers not bound as b.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "notBound": "b"
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

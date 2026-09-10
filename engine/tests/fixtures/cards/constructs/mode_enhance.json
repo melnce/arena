@@ -1,0 +1,54 @@
+{
+  "id": "89800021",
+  "name": "mode_enhance",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Fanfare: Deal 1. Enhance (5): Deal 5 instead.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Fanfare: Deal 1 to the enemy leader."
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 5,
+      "printed": "Enhance (5): Deal 5 to the enemy leader.",
+      "replacesBase": true,
+      "effects": [
+        {
+          "printed": "Deal 5 to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 5
+        }
+      ]
+    }
+  ]
+}

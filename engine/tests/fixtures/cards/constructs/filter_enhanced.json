@@ -1,0 +1,33 @@
+{
+  "id": "89600025",
+  "name": "filter_enhanced",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enhanced enemy followers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enhanced enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enhanced enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "enhanced": true
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

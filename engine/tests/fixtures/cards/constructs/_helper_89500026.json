@@ -1,0 +1,29 @@
+{
+  "id": "89500026",
+  "name": "Destroy Enemies",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy all enemy followers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy all enemy followers.",
+      "effects": [
+        {
+          "printed": "Destroy all enemy followers.",
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ]
+}

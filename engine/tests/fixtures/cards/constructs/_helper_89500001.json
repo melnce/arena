@@ -1,0 +1,14 @@
+{
+  "id": "89500001",
+  "name": "Tank One",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "A sturdy 1-cost body.",
+  "attack": 2,
+  "defense": 10,
+  "tribes": []
+}

@@ -1,0 +1,12 @@
+{
+  "id": "89500009",
+  "name": "Plain Amulet",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "An amulet.",
+  "tribes": []
+}

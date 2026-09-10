@@ -1,0 +1,33 @@
+{
+  "id": "89600010",
+  "name": "filter_baseCostLte",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy followers with base cost 1 or less.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy followers with base cost 1 or less.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy followers with base cost 1 or less.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "baseCostLte": 1
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "89600006",
+  "name": "filter_defenseGte",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy followers with 12 or more defense.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy followers with 12 or more defense.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy followers with 12 or more defense.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "defenseGte": 12
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

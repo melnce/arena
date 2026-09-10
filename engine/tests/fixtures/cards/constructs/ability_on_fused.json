@@ -1,0 +1,39 @@
+{
+  "id": "89800014",
+  "name": "ability_on_fused",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Fuse: Cards. Whenever you Fuse to this card, deal 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fused",
+      "printed": "Whenever you Fuse to this card, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Whenever you Fuse to this card, deal 1."
+        }
+      ]
+    }
+  ],
+  "fuse": {
+    "printed": "Fuse: Cards",
+    "partners": {
+      "kind": "card"
+    }
+  }
+}

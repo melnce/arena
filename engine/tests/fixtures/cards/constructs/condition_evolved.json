@@ -1,0 +1,41 @@
+{
+  "id": "89501017",
+  "name": "condition_evolved",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Fanfare: If this follower is evolved, deal 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If this follower is evolved, deal 1.",
+      "effects": [
+        {
+          "printed": "Fanfare: If this follower is evolved, deal 1.",
+          "op": "if",
+          "cond": {
+            "evolved": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

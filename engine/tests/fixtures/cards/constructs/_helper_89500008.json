@@ -1,0 +1,30 @@
+{
+  "id": "89500008",
+  "name": "Boost Target",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Spellboost: Do nothing visible.",
+  "abilities": [
+    {
+      "on": "spellboost",
+      "printed": "Spellboost: Do nothing visible.",
+      "effects": [
+        {
+          "op": "restore",
+          "select": {
+            "pick": "self"
+          },
+          "amount": 0,
+          "printed": "Spellboost: Do nothing visible."
+        }
+      ]
+    }
+  ],
+  "vars": {
+    "X": 0
+  }
+}

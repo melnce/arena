@@ -1,0 +1,14 @@
+{
+  "id": "89500002",
+  "name": "Tank Three",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "A sturdy 3-cost body.",
+  "attack": 2,
+  "defense": 10,
+  "tribes": []
+}

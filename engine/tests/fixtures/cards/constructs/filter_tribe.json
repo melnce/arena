@@ -1,0 +1,33 @@
+{
+  "id": "89600020",
+  "name": "filter_tribe",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy officers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy officers.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy officers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "tribe": "officer"
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

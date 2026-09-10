@@ -1,0 +1,40 @@
+{
+  "id": "89501025",
+  "name": "condition_playedBaseCostsThisMatch",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If you have played a 3-cost this match, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If you have played a 3-cost this match, deal 1.",
+      "effects": [
+        {
+          "printed": "If you have played a 3-cost this match, deal 1.",
+          "op": "if",
+          "cond": {
+            "playedBaseCostsThisMatch": [
+              3
+            ]
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

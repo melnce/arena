@@ -1,0 +1,14 @@
+{
+  "id": "89500028",
+  "name": "Evolvable",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "A body to evolve.",
+  "attack": 1,
+  "defense": 10,
+  "tribes": []
+}

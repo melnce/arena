@@ -1,0 +1,33 @@
+{
+  "id": "89600021",
+  "name": "filter_kind",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy amulets.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy amulets.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy amulets.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "card",
+            "filter": {
+              "kind": "amulet"
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

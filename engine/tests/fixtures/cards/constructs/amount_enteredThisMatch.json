@@ -1,0 +1,34 @@
+{
+  "id": "89700011",
+  "name": "amount_enteredThisMatch",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Gain attack equal to allied officer entries this match.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain attack equal to allied officer entries this match.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": {
+            "enteredThisMatch": {
+              "tribe": "officer"
+            }
+          },
+          "printed": "Fanfare: Gain attack equal to allied officer entries this match."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "89800024",
+  "name": "mode_crystallize",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 5,
+  "text": "Crystallize (1): Countdown (2).",
+  "attack": 3,
+  "defense": 3,
+  "tribes": [],
+  "modes": [
+    {
+      "kind": "crystallize",
+      "cost": 1,
+      "printed": "Crystallize (1): Countdown (2).",
+      "countdown": 2
+    }
+  ]
+}

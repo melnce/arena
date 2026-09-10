@@ -1,0 +1,45 @@
+{
+  "id": "89800013",
+  "name": "ability_on_invoked",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Activates in deck. At the start of your turn, Invoke this card. When Invoked, deal 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "printed": "At the start of your turn, Invoke this card.",
+      "effects": [
+        {
+          "printed": "Invoke this card.",
+          "op": "invoke"
+        }
+      ],
+      "whose": "own",
+      "zone": "deck"
+    },
+    {
+      "on": "invoked",
+      "printed": "When this card is Invoked, deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "When this card is Invoked, deal 1 to the enemy leader."
+        }
+      ]
+    }
+  ]
+}
