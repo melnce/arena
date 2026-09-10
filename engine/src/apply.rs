@@ -3125,6 +3125,7 @@ fn push_effects(state: &mut State, controller: PlayerId, source: SourceRef, effe
     push_work(state, controller, source, effects, 0, None, false);
 }
 
+#[allow(clippy::too_many_arguments)]
 fn resolve_effect_list(
     db: &CardDb,
     state: &mut State,
