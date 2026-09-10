@@ -5825,7 +5825,6 @@ fn eval_amount(
             };
             inst_stat(state, t, stat.which).unwrap_or(0)
         }
-        _ => 0,
     }
 }
 
