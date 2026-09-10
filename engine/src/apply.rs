@@ -603,7 +603,14 @@ fn play_form(
     _free: usize,
 ) -> Option<(i32, CardKind, Vec<Effect>)> {
     let effective = inst.cost;
-    let suppress_enhance = static_suppresses_tag(db, state, inst, me, TriggerTag::Enhance);
+    let (suppress_enhance, suppress_fanfare) = if board_has_static_suppressor(db, state) {
+        (
+            static_suppresses_tag(db, state, inst, me, TriggerTag::Enhance),
+            static_suppresses_tag(db, state, inst, me, TriggerTag::Fanfare),
+        )
+    } else {
+        (false, false)
+    };
     let enhance: Vec<&Mode> = if suppress_enhance {
         Vec::new()
     } else {
@@ -628,7 +635,7 @@ fn play_form(
         if pp < paid {
             return None;
         }
-        let mut fx = if static_suppresses_tag(db, state, inst, me, TriggerTag::Fanfare) {
+        let mut fx = if suppress_fanfare {
             Vec::new()
         } else {
             fanfare_effects(card)
@@ -660,7 +667,7 @@ fn play_form(
         return Some((cost, CardKind::Amulet, Vec::new()));
     }
     if pp >= effective {
-        let fx = if static_suppresses_tag(db, state, inst, me, TriggerTag::Fanfare) {
+        let fx = if suppress_fanfare {
             Vec::new()
         } else {
             fanfare_effects(card)
@@ -1423,50 +1430,53 @@ fn apply_evolve_action(
         return Ok(());
     };
     let src = SourceRef::Field { player: who, id };
-    let live = state.field_inst(who, slot.0).cloned();
-    let when_ok = |a: &Ability| {
-        if let Some(inst) = live.as_ref() {
-            if static_suppresses_tag(db, state, inst, who, a.tag()) {
-                return false;
+    let fx = {
+        let live = state.field_inst(who, slot.0);
+        let when_ok = |a: &Ability| {
+            if let Some(inst) = live {
+                if static_suppresses_tag(db, state, inst, who, a.tag()) {
+                    return false;
+                }
+            }
+            a.when_cond()
+                .map(|c| eval_cond(db, state, who, Some(src), c))
+                .unwrap_or(true)
+        };
+        let replace = card.abilities().iter().any(|a| a.replaces_evolve());
+        let mut fx = Vec::new();
+        if supered && replace {
+            for a in card.abilities() {
+                if matches!(a, Ability::SuperEvolve { .. }) && when_ok(a) {
+                    fx.extend(a.effects().iter().cloned());
+                }
+            }
+        } else {
+            if !granted {
+                for a in card.abilities() {
+                    if matches!(a, Ability::Evolve { .. }) && when_ok(a) {
+                        fx.extend(a.effects().iter().cloned());
+                    }
+                }
+            }
+            for a in card.abilities() {
+                if matches!(a, Ability::AnyEvolve { .. }) && when_ok(a) {
+                    fx.extend(a.effects().iter().cloned());
+                }
+            }
+            if supered {
+                for a in card.abilities() {
+                    if matches!(
+                        a,
+                        Ability::SuperEvolve { .. } | Ability::AnySuperEvolve { .. }
+                    ) && when_ok(a)
+                    {
+                        fx.extend(a.effects().iter().cloned());
+                    }
+                }
             }
         }
-        a.when_cond()
-            .map(|c| eval_cond(db, state, who, Some(src), c))
-            .unwrap_or(true)
+        fx
     };
-    let replace = card.abilities().iter().any(|a| a.replaces_evolve());
-    let mut fx = Vec::new();
-    if supered && replace {
-        for a in card.abilities() {
-            if matches!(a, Ability::SuperEvolve { .. }) && when_ok(a) {
-                fx.extend(a.effects().iter().cloned());
-            }
-        }
-    } else {
-        if !granted {
-            for a in card.abilities() {
-                if matches!(a, Ability::Evolve { .. }) && when_ok(a) {
-                    fx.extend(a.effects().iter().cloned());
-                }
-            }
-        }
-        for a in card.abilities() {
-            if matches!(a, Ability::AnyEvolve { .. }) && when_ok(a) {
-                fx.extend(a.effects().iter().cloned());
-            }
-        }
-        if supered {
-            for a in card.abilities() {
-                if matches!(
-                    a,
-                    Ability::SuperEvolve { .. } | Ability::AnySuperEvolve { .. }
-                ) && when_ok(a)
-                {
-                    fx.extend(a.effects().iter().cloned());
-                }
-            }
-        }
-    }
     // Skybound Art gauge = current turn number + evolves/boosts stored on the
     // instance (rulebook). Evolves while a copy is in hand increment that
     // copy's stored bonus; turn number is added at evaluation so M1 snapshots
@@ -7035,6 +7045,31 @@ fn kind_ok(c: &CardInstance, k: SelectorKind) -> bool {
     }
 }
 
+/// Any field card or crest whose printed abilities include `on: static`
+/// with a non-empty `suppress`. Id lookup only — no ability walk.
+fn board_has_static_suppressor(db: &CardDb, state: &State) -> bool {
+    for who in PlayerId::ALL {
+        if state
+            .player(who)
+            .field
+            .iter()
+            .flatten()
+            .any(|c| db.card_has_static_suppress(c.card))
+        {
+            return true;
+        }
+        if state
+            .player(who)
+            .crests
+            .iter()
+            .any(|c| db.crest_has_static_suppress(&c.id))
+        {
+            return true;
+        }
+    }
+    false
+}
+
 /// Crest / field `on: static` `modifier.suppress` — Milteo & Luzen
 /// (`crest:10554110`) silences Fanfare and Enhance on allied followers.
 /// Evaluated as if `inst` were already an allied field card so play-time
@@ -7046,8 +7081,14 @@ fn static_suppresses_tag(
     inst_owner: PlayerId,
     tag: TriggerTag,
 ) -> bool {
+    if !board_has_static_suppressor(db, state) {
+        return false;
+    }
     for who in PlayerId::ALL {
         for slot in state.player(who).field.iter().flatten() {
+            if !db.card_has_static_suppress(slot.card) {
+                continue;
+            }
             if let Ok(card) = db.card(slot.card) {
                 for a in card.abilities().iter().chain(slot.granted.iter()) {
                     if static_modifier_hits(db, state, who, a, inst, inst_owner, tag) {
@@ -7057,6 +7098,9 @@ fn static_suppresses_tag(
             }
         }
         for c in &state.player(who).crests {
+            if !db.crest_has_static_suppress(&c.id) {
+                continue;
+            }
             if let Ok(def) = db.crest(&c.id) {
                 for a in def.abilities().iter().chain(c.granted.iter()) {
                     if static_modifier_hits(db, state, who, a, inst, inst_owner, tag) {

@@ -24,6 +24,11 @@ pub struct CardDb {
     /// Cards that print a start/end-of-turn ability in a given zone.
     /// `true` = startOfTurn, `false` = endOfTurn.
     boundary_cards: HashMap<(AbilityZone, bool), HashSet<CardId>>,
+    /// Printed `on: static` with a non-empty `suppress`. Granted abilities
+    /// cannot be static (`grantAbility.ability` has no static variant), so
+    /// this set is complete for the board walk.
+    static_cards: HashSet<CardId>,
+    static_crests: HashSet<String>,
 }
 
 impl CardDb {
@@ -36,6 +41,8 @@ impl CardDb {
             when_cards: HashMap::new(),
             when_crests: HashMap::new(),
             boundary_cards: HashMap::new(),
+            static_cards: HashSet::new(),
+            static_crests: HashSet::new(),
         }
     }
 
@@ -76,6 +83,7 @@ impl CardDb {
         }
         db.rebuild_when_index();
         db.rebuild_boundary_index();
+        db.rebuild_static_index();
         Ok(db)
     }
 
@@ -90,6 +98,7 @@ impl CardDb {
         walk_json(dir, &mut |path| self.load_file(path, true))?;
         self.rebuild_when_index();
         self.rebuild_boundary_index();
+        self.rebuild_static_index();
         Ok(())
     }
 
@@ -223,6 +232,16 @@ impl CardDb {
             .is_some_and(|set| !set.is_empty())
     }
 
+    /// Printed `on: static` with a non-empty `suppress` on this card.
+    pub fn card_has_static_suppress(&self, id: CardId) -> bool {
+        self.static_cards.contains(&id)
+    }
+
+    /// Printed `on: static` with a non-empty `suppress` on this crest.
+    pub fn crest_has_static_suppress(&self, id: &str) -> bool {
+        self.static_crests.contains(id)
+    }
+
     fn rebuild_when_index(&mut self) {
         let mut when_cards: HashMap<(EventName, AbilityZone), HashSet<CardId>> = HashMap::new();
         let mut when_crests: HashMap<(EventName, AbilityZone), HashSet<String>> = HashMap::new();
@@ -261,6 +280,23 @@ impl CardDb {
             }
         }
         self.boundary_cards = boundary_cards;
+    }
+
+    fn rebuild_static_index(&mut self) {
+        let mut static_cards = HashSet::new();
+        let mut static_crests = HashSet::new();
+        for (id, card) in &self.cards {
+            if card.abilities().iter().any(ability_has_static_suppress) {
+                static_cards.insert(*id);
+            }
+        }
+        for (id, crest) in &self.crests {
+            if crest.abilities().iter().any(ability_has_static_suppress) {
+                static_crests.insert(id.clone());
+            }
+        }
+        self.static_cards = static_cards;
+        self.static_crests = static_crests;
     }
 }
 
@@ -308,4 +344,11 @@ fn index_when_abilities(abilities: &[Ability], mut on_when: impl FnMut(EventName
             on_when(*event, a.zone());
         }
     }
+}
+
+fn ability_has_static_suppress(a: &Ability) -> bool {
+    matches!(
+        a,
+        Ability::Static { modifier, .. } if !modifier.suppress.is_empty()
+    )
 }
