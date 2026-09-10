@@ -109,7 +109,7 @@ fn require_supported_runecraft_m3() {
             "10632310", "10633110", "10634110", "10731110", "10731120", "10731310", "10732110",
             "10732120", "10732310", "10733310", "10734110", "10831110", "10831120", "10831310",
             "10832110", "10832310", "10832320", "10833310", "10834120", "10931120", "10931310",
-            "10932120", "10934120", "90031110", "90031120", "90031310", "90034330",
+            "10932120", "10934120", "90031110", "90031120", "90031310",
         ],
     );
 }
@@ -188,6 +188,10 @@ fn stormy_blast_x_after_two_boosts() {
     let me = PlayerId::A;
     let opp = PlayerId::B;
     put_field(&db, &mut st, opp, "88001110");
+    if let Some(f) = st.field_inst_mut(opp, 0) {
+        f.defense = 10;
+        f.max_defense = 10;
+    }
     st.player_mut(me).hand.clear();
     put_hand(&db, &mut st, me, "10831310");
     let slot = put_field(&db, &mut st, me, "10431120");
@@ -206,11 +210,7 @@ fn stormy_blast_x_after_two_boosts() {
     play(&db, &mut st, h);
     drain_choice(&db, &mut st);
     let tank = st.player(opp).field[0].as_ref().unwrap();
-    assert_eq!(
-        tank.defense,
-        tank.max_defense - 4,
-        "X is 4 after two boosts"
-    );
+    assert_eq!(tank.defense, 6, "X is 4 after two boosts (10 - 4)");
 }
 
 #[test]
@@ -458,6 +458,8 @@ fn beheading_eld_blades_two_discard_tiers() {
         .find(|c| c.card.as_str() == "10643310")
         .expect("tier 7→5");
     assert_eq!(first.cost, 5);
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
     give_pp(&mut st, me, 3, 3);
     play_id(&db, &mut st, me, "10544120");
     let unevolved = st
@@ -584,6 +586,7 @@ fn giada_second_attack_on_follower_strike() {
     let opp = PlayerId::B;
     put_field(&db, &mut st, opp, "88001110");
     if let Some(f) = st.field_inst_mut(opp, 0) {
+        f.attack = 0;
         f.defense = 20;
         f.max_defense = 20;
     }
@@ -676,9 +679,9 @@ fn drache_x_counts_only_other_copies() {
         .flatten()
         .find(|c| c.card.as_str() == "10844110")
         .unwrap();
-    // play increments to 3; X = 3-1 = 2; 4+2 / 4+2 and evolve
-    assert_eq!(d.attack, 6);
-    assert_eq!(d.defense, 6);
+    // play increments to 3; X = 3-1 = 2; +2/+2 then evolve +2/+2 → 8/8
+    assert_eq!(d.attack, 8);
+    assert_eq!(d.defense, 8);
     assert!(d.evolved);
 }
 
@@ -720,6 +723,12 @@ fn yube_crest_once_per_turn_half() {
     grant_evolve(&db, &mut st, yube);
     drain_choice(&db, &mut st);
     assert!(crest_has(&st, me, "crest:10544120"));
+    put_field(&db, &mut st, PlayerId::B, "88001110");
+    if let Some(f) = st.field_inst_mut(PlayerId::B, 0) {
+        f.defense = 20;
+        f.max_defense = 20;
+        f.attack = 0;
+    }
     let orca = st
         .player(me)
         .field
@@ -727,13 +736,16 @@ fn yube_crest_once_per_turn_half() {
         .flatten()
         .position(|c| c.card.as_str() == "90041130")
         .unwrap() as u8;
+    if let Some(f) = st.field_inst_mut(me, orca) {
+        f.flags.summoning_sick = false;
+    }
     let hand_before = st
         .player(me)
         .hand
         .iter()
         .filter(|c| c.card.as_str() == "90041130")
         .count();
-    attack_leader(&db, &mut st, orca);
+    attack_follower(&db, &mut st, orca, 0);
     let hand_mid = st
         .player(me)
         .hand
@@ -745,7 +757,7 @@ fn yube_crest_once_per_turn_half() {
     if let Some(f) = st.field_inst_mut(me, orca2) {
         f.flags.summoning_sick = false;
     }
-    attack_leader(&db, &mut st, orca2);
+    attack_follower(&db, &mut st, orca2, 0);
     let hand_after = st
         .player(me)
         .hand

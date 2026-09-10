@@ -1013,14 +1013,15 @@ fn apply_play(
         };
         // Spellboost the hand (Accelerate counts as a spell) — ruling 2026-09-02
         spellboost_hand(db, state, me, events)?;
-        push_effects(state, me, src, effects);
-        // corpse
+        // Corpse before spell text so `{var: X}` / costEq see the boosted instance
+        // (Stormy Blast, Amethyst's Naptime, Beheading Eld Blades).
         let mut corpse = inst;
         corpse.kind = CardKind::Spell;
         corpse.base_cost = base_for_ladder;
         corpse.cost = paid;
         state.player_mut(me).shadows += 1;
         state.player_mut(me).cemetery.push(corpse);
+        push_effects(state, me, src, effects);
     } else {
         enter_from_play(db, state, me, inst, effects, events)?;
     }
@@ -2289,6 +2290,11 @@ fn raise_when(
     subject: Option<&CardInstance>,
     subject_owner: PlayerId,
 ) {
+    // Nested events (Earth Rite during an enter-triggered `pay`) must not
+    // clobber the in-flight list's `pick: entering` (Emperor of Elements).
+    let prev_subject = state.event_subject.clone();
+    let prev_base = state.event_base_cost;
+    let prev_inst = state.event_inst_id;
     if event == EventName::SelfBuffedUp {
         if let Some(inst) = subject {
             enqueue_when_on(
@@ -2301,6 +2307,9 @@ fn raise_when(
                 true,
             );
         }
+        state.event_subject = prev_subject;
+        state.event_base_cost = prev_base;
+        state.event_inst_id = prev_inst;
         return;
     }
     if let Some(inst) = subject {
@@ -2315,6 +2324,9 @@ fn raise_when(
         });
     }
     enqueue_when_on(db, state, observer_side, event, subject, None, false);
+    state.event_subject = prev_subject;
+    state.event_base_cost = prev_base;
+    state.event_inst_id = prev_inst;
 }
 
 struct PendingWhen {
@@ -3227,7 +3239,11 @@ fn effect_choice_node(
         | Effect::RemoveAbilities { select, .. }
         | Effect::Cost { select, .. }
         | Effect::Countdown { select, .. }
-        | Effect::Transform { select, .. } => {
+        | Effect::Transform { select, .. }
+        | Effect::SpellboostHand {
+            select: Some(select),
+            ..
+        } => {
             if let Selector::Pool(p) = select {
                 if p.pick == PoolPick::Choose {
                     let opts = pool_target_opts(db, state, controller, source, p);
@@ -3349,9 +3365,10 @@ fn apply_effect_with_targets(
                 .iter()
                 .filter_map(|t| target_as_card(state, t))
                 .collect();
-            for t in targets {
-                return_deck_opt(db, state, t);
-            }
+            apply_each_captured(state, targets, |st, t| {
+                return_deck_opt(db, st, t);
+                Ok(())
+            })?;
             maybe_bind(state, e, &bound);
             return Ok(());
         }
@@ -3400,6 +3417,26 @@ fn apply_effect_with_targets(
             for t in targets {
                 grant_traits_opt(state, t, traits, *until, controller);
             }
+        }
+        Effect::SpellboostHand { times, .. } => {
+            let n = eval_amount(db, state, controller, Some(source), times).max(0);
+            let ids: Vec<(PlayerId, u32)> = targets
+                .iter()
+                .filter_map(|t| match t {
+                    TargetOpt::Hand { player, pos } => state
+                        .player(*player)
+                        .hand
+                        .get(*pos as usize)
+                        .map(|c| (*player, c.id)),
+                    _ => None,
+                })
+                .collect();
+            for (who, hid) in ids {
+                for _ in 0..n {
+                    spellboost_instance(db, state, who, hid, events)?;
+                }
+            }
+            return Ok(());
         }
         Effect::RemoveTraits { traits, .. } => {
             for t in targets {
@@ -4247,7 +4284,10 @@ fn deal_follower(
     let mut amt = raw;
     // "takes N more damage" stacks and applies to a 0-damage event — 2026-08-31
     // (follower-level bonus not separately stored in M1 beyond leader mods)
-    if f.is_barrier() {
+    if raw <= 0 {
+        // No damage to prevent — Barrier stays (Giada Strike vs 0-atk).
+        amt = 0;
+    } else if f.is_barrier() {
         f.traits.barrier = None;
         amt = 0;
     } else if f.super_evolved && active == who {
@@ -6290,19 +6330,7 @@ fn eval_amount(
                 .map(|(_, n)| n)
                 .sum()
         }
-        Amount::Var { var } => {
-            if let Some(SourceRef::Field { player, id } | SourceRef::Hand { player, id }) = source {
-                if let Some(c) = state.player(player).hand.iter().find(|c| c.id == id) {
-                    return *c.vars.get(var).unwrap_or(&0);
-                }
-                if let Some(slot) = state.find_field(player, id) {
-                    if let Some(c) = state.field_inst(player, slot) {
-                        return *c.vars.get(var).unwrap_or(&0);
-                    }
-                }
-            }
-            0
-        }
+        Amount::Var { var } => vars_of(state, source, *var),
         Amount::Stat { stat } => {
             let Some(src) = source else {
                 return 0;
@@ -6637,6 +6665,7 @@ fn entered_ids_matching(
 
 enum CapturedTarget {
     Field { player: PlayerId, id: u32 },
+    Hand { player: PlayerId, id: u32 },
     Keep(TargetOpt),
 }
 
@@ -6646,6 +6675,16 @@ fn capture_targets(state: &State, ts: &[TargetOpt]) -> Vec<CapturedTarget> {
             TargetOpt::Slot { player, slot } => {
                 if let Some(c) = state.field_inst(*player, *slot) {
                     CapturedTarget::Field {
+                        player: *player,
+                        id: c.id,
+                    }
+                } else {
+                    CapturedTarget::Keep(t.clone())
+                }
+            }
+            TargetOpt::Hand { player, pos } => {
+                if let Some(c) = state.player(*player).hand.get(*pos as usize) {
+                    CapturedTarget::Hand {
                         player: *player,
                         id: c.id,
                     }
@@ -6666,6 +6705,15 @@ fn live_captured(state: &State, cap: &CapturedTarget) -> Option<TargetOpt> {
                 slot,
             })
         }
+        CapturedTarget::Hand { player, id } => state
+            .player(*player)
+            .hand
+            .iter()
+            .position(|c| c.id == *id)
+            .map(|pos| TargetOpt::Hand {
+                player: *player,
+                pos: pos as u8,
+            }),
         CapturedTarget::Keep(t) => Some(t.clone()),
     }
 }
