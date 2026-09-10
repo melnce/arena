@@ -233,13 +233,21 @@ impl CardDb {
     }
 
     /// Printed `on: static` with a non-empty `suppress` on this card.
+    #[inline]
     pub fn card_has_static_suppress(&self, id: CardId) -> bool {
         self.static_cards.contains(&id)
     }
 
     /// Printed `on: static` with a non-empty `suppress` on this crest.
+    #[inline]
     pub fn crest_has_static_suppress(&self, id: &str) -> bool {
         self.static_crests.contains(id)
+    }
+
+    /// Any printed static-suppress card or crest is in the database.
+    #[inline]
+    pub fn has_any_static_suppress(&self) -> bool {
+        !self.static_cards.is_empty() || !self.static_crests.is_empty()
     }
 
     fn rebuild_when_index(&mut self) {

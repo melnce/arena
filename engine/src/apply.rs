@@ -351,9 +351,10 @@ fn legal_choice(state: &State) -> Vec<Action> {
 fn legal_main(db: &CardDb, state: &State) -> Vec<Action> {
     let me = state.active;
     let p = state.player(me);
+    let static_in_play = board_has_static_suppressor(db, state);
     let mut out = Vec::new();
     for (i, inst) in p.hand.iter().enumerate() {
-        if playable(db, state, me, i, inst) {
+        if playable(db, state, me, i, inst, static_in_play) {
             out.push(Action::Play { hand: i as u8 });
         }
     }
@@ -564,7 +565,14 @@ fn attack_targets(
     out
 }
 
-fn playable(db: &CardDb, state: &State, me: PlayerId, hand_i: usize, inst: &CardInstance) -> bool {
+fn playable(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    hand_i: usize,
+    inst: &CardInstance,
+    static_in_play: bool,
+) -> bool {
     if inst.cant_be_played() {
         return false;
     }
@@ -575,7 +583,7 @@ fn playable(db: &CardDb, state: &State, me: PlayerId, hand_i: usize, inst: &Card
         return false;
     }
     let pp = state.player(me).usable_pp();
-    let form = play_form(db, state, me, card, inst, pp, state.player(me).field_free());
+    let form = play_form(db, state, me, card, inst, pp, static_in_play);
     let Some((paid, kind, effects)) = form else {
         return false;
     };
@@ -600,10 +608,10 @@ fn play_form(
     card: &Card,
     inst: &CardInstance,
     pp: i32,
-    _free: usize,
+    static_in_play: bool,
 ) -> Option<(i32, CardKind, Vec<Effect>)> {
     let effective = inst.cost;
-    let (suppress_enhance, suppress_fanfare) = if board_has_static_suppressor(db, state) {
+    let (suppress_enhance, suppress_fanfare) = if static_in_play {
         (
             static_suppresses_tag(db, state, inst, me, TriggerTag::Enhance),
             static_suppresses_tag(db, state, inst, me, TriggerTag::Fanfare),
@@ -997,7 +1005,7 @@ fn apply_play(
         card,
         &inst,
         pp,
-        state.player(me).field_free(),
+        board_has_static_suppressor(db, state),
     )
     .ok_or(Illegal::NotLegal)?;
     state.player_mut(me).spend_pp(paid);
@@ -7047,7 +7055,11 @@ fn kind_ok(c: &CardInstance, k: SelectorKind) -> bool {
 
 /// Any field card or crest whose printed abilities include `on: static`
 /// with a non-empty `suppress`. Id lookup only — no ability walk.
+#[inline]
 fn board_has_static_suppressor(db: &CardDb, state: &State) -> bool {
+    if !db.has_any_static_suppress() {
+        return false;
+    }
     for who in PlayerId::ALL {
         if state
             .player(who)
