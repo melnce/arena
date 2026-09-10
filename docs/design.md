@@ -62,6 +62,10 @@ Followers and amulets occupy slots 0..4 per player in entry order. The deck is a
 
 The RNG lives inside the state (seedable, cloneable). A clone is a complete fork. `ScriptedRng` replays recorded outcomes. No global RNG.
 
+## The bot (M5)
+
+The practice tool still shows everything. The engine stays perfect-information; observation masking is the bot's contract. A player is given both decklists and everything that has become public (board, cemetery, banished, revealed or visibly added cards) but not the opponent's hand: `encode` exposes hand size, deck size, and a known remaining pool (decklist minus public removals plus visible tokens), never an opponent hand id. Search keys hash the full state except the RNG so hidden flags (`choose_used`, `once_used`, the mulligan actor) distinguish futures that `hash` collapses. Determinization resamples the opponent's hidden cards from that pool. H0 is a depth-limited beam search over that information with a hand-written value, so matchup statistics are not random-legal play.
+
 ## Headless
 
 The engine crate has no `web-sys` / `js-sys` / `wasm-bindgen` dependency. CI asserts it. A `wasm/` crate (M4) and a `py/` crate (M5) wrap it later.

@@ -293,6 +293,14 @@ pub struct PlayerState {
     pub turns_taken: u32,
     pub is_second: bool,
     pub enter_counts: BTreeMap<CardId, i32>,
+    /// Opening decklist (card ids, with copies). Snapshot-neutral.
+    pub starting_deck: Vec<CardId>,
+    /// Cards currently in a public zone that left the hidden pool.
+    /// Snapshot-neutral — not in `CanonicalState`.
+    pub public_removals: Vec<CardId>,
+    /// Tokens / returned cards currently in hand or deck that are not
+    /// accounted for by `starting_deck − public_removals`. Snapshot-neutral.
+    pub public_hand_additions: Vec<CardId>,
 }
 
 impl PlayerState {
@@ -328,7 +336,39 @@ impl PlayerState {
             turns_taken: 0,
             is_second: false,
             enter_counts: BTreeMap::new(),
+            starting_deck: Vec::new(),
+            public_removals: Vec::new(),
+            public_hand_additions: Vec::new(),
         }
+    }
+
+    /// Snapshot of the incremental logs (additions then removals).
+    pub fn derive_public_knowledge(&self) -> (Vec<CardId>, Vec<CardId>) {
+        (
+            self.public_removals.clone(),
+            self.public_hand_additions.clone(),
+        )
+    }
+
+    /// Known remaining pool = decklist + visible hand additions − public removals.
+    /// Additions are applied first so a token that is later played nets to zero.
+    pub fn known_remaining_pool(&self) -> BTreeMap<CardId, u32> {
+        let mut pool: BTreeMap<CardId, u32> = BTreeMap::new();
+        for id in &self.starting_deck {
+            *pool.entry(*id).or_insert(0) += 1;
+        }
+        for id in &self.public_hand_additions {
+            *pool.entry(*id).or_insert(0) += 1;
+        }
+        for id in &self.public_removals {
+            if let Some(n) = pool.get_mut(id) {
+                if *n > 0 {
+                    *n -= 1;
+                }
+            }
+        }
+        pool.retain(|_, n| *n > 0);
+        pool
     }
 
     pub fn usable_pp(&self) -> i32 {
@@ -668,5 +708,13 @@ impl State {
         } else {
             Ok(())
         }
+    }
+
+    pub fn note_public_removal(&mut self, who: PlayerId, card: crate::card::CardId) {
+        self.player_mut(who).public_removals.push(card);
+    }
+
+    pub fn note_public_addition(&mut self, who: PlayerId, card: crate::card::CardId) {
+        self.player_mut(who).public_hand_additions.push(card);
     }
 }

@@ -229,14 +229,152 @@ fn hash(state: &State) -> u64;
 
 fn snapshot(state: &State) -> CanonicalState;   // docs/trace-format.md
 
-fn encode(state: &State, perspective: PlayerId) -> Features;
-// signature and intent only — M5. The engine keeps perfect information;
-// the encoder masks. The bot is given the opponent's decklist, not the hand.
+fn encode(state: &State, perspective: PlayerId) -> Observation;
+fn search_key(state: &State) -> u64;
+fn determinize(state: &State, perspective: PlayerId, seed: u64) -> State;
 ```
 
-`encode` is still unimplemented. This crate does not grow a feature vector, a
-mask, or a Python `Game.encode` method. The engine stays perfect-information;
-observation masking is M5 work on top of `snapshot` / `full` / `hash`.
+The engine stays perfect-information. `encode` masks. The bot is given the
+opponent's decklist, not the hand (`rules/owner-rulings.md` Hidden information
+— 2026-08-13). `snapshot` / `hash` are unchanged (FNV-1a 64 of the canonical
+snapshot; they omit hidden state).
+
+## ActionId (M5)
+
+A total, fixed table of every `Action` the engine can return, independent of
+the state. `ActionId::COUNT == 114`. `from_action` / `to_action` are inverses
+on every legal action. `legal_mask(db, state) -> [bool; 114]` is the bitset of
+`legal_actions`; `legal_ids` preserves `legal_actions` order.
+
+| Range | Kind | Count | Encoding |
+|---|---|---|---|
+| 0–15 | `MulliganConfirm { swap }` | 16 | `swap` as a 4-bit mask (`bit i` = card `i`) |
+| 16–24 | `Play { hand }` | 9 | `hand` in `0..HAND_LIMIT` |
+| 25–54 | `Attack` | 30 | 5 attackers × 6 targets (enemy slots 0–4, then leader) |
+| 55–64 | `Evolve` | 10 | 5 slots × {evolve, super} |
+| 65–69 | `Engage` | 5 | slot 0–4 |
+| 70–78 | `Fuse { host }` | 9 | `host` in `0..HAND_LIMIT` |
+| 79 | `BonusPp` | 1 | |
+| 80–111 | `Choose(i)` | 32 | `i < 32` (asserted: no `ChoiceNode` in a 20k-state sample exceeded 32) |
+| 112 | `Confirm` | 1 | |
+| 113 | `EndTurn` | 1 | |
+
+```text
+fn ActionId::from_action(action: &Action) -> ActionId;
+fn ActionId::to_action(self) -> Action;
+fn legal_mask(db: &CardDb, state: &State) -> [bool; ActionId::COUNT];
+fn legal_ids(db: &CardDb, state: &State) -> Vec<ActionId>;
+```
+
+## Observation (M5)
+
+`encode(state, perspective) -> Observation` with `features: Vec<f32>` of length
+`Observation::LEN` (545) and a parallel `ids: Vec<u32>` of length
+`Observation::IDS_LEN` (220). Card ids stay ids (embedding inputs for M5b);
+they are never one-hot over the pool.
+
+What `perspective` may see: own hand (ids, current cost, spellboost, fused /
+can't-play / once-used flags, skybound), own deck as a multiset of ids (order
+is never information), own crests / counters / PP / EP / SEP / leader; the
+opponent's board, crests, counters, PP / EP / SEP, leader; the opponent's
+**hand size** and **deck size**; the opponent's **known remaining pool** =
+starting decklist − public-zone cards + tokens still in hand/deck. The
+opponent-hand id region is always `0`.
+
+`PlayerState` stores snapshot-neutral `starting_deck`, `public_removals`, and
+`public_hand_additions` (not in `CanonicalState`).
+
+`Observation::LAYOUT` — name, offset, width:
+
+| Name | Offset | Width |
+|---|---|---|
+| `phase` | 0 | 5 (mulligan, main, choice, end, terminal) |
+| `turn` | 5 | 1 |
+| `i_am_active` | 6 | 1 |
+| `winner` | 7 | 1 (+1 me / −1 opp / 0) |
+| `first_is_me` | 8 | 1 |
+| `choice_ids` | 9 | 32 (`Choose(i)` offered) |
+| `me_scalars` | 41 | 29 |
+| `opp_scalars` | 70 | 29 |
+| `own_hand_cost` | 99 | 9 |
+| `own_hand_spellboost` | 108 | 9 |
+| `own_hand_skybound` | 117 | 9 |
+| `own_hand_fused` | 126 | 9 |
+| `own_hand_cant_play` | 135 | 9 |
+| `own_hand_once_used` | 144 | 9 |
+| `own_board` | 153 | 100 (5 × 20: atk/def/max/evo/super/traits/cap/attacks/once/seq/bound/kind) |
+| `opp_board` | 253 | 100 |
+| `own_deck_hist` | 353 | 96 |
+| `opp_known_pool_hist` | 449 | 96 |
+
+Ids: own hand 9, own-deck vocab 96, opponent board 5, own board 5, opponent
+known-pool vocab 96, opponent hand 9 (always 0). Histograms are counts over
+the sorted union of both starting decklists plus visible token ids, padded
+to `HIST_WIDTH = 96`.
+
+## search_key (M5)
+
+`search_key(state) -> u64` is FNV-1a 64 over a hand-rolled little-endian
+canonical walk of every `State` field **except the RNG**. It differs when
+`choose_used`, `once_used`, hand-zone once-per-turn flags, or the mulligan
+actor differ; clones match; RNG-only reseeds match. Not interchangeable with
+`hash` (the snapshot hash is pinned by the oracle corpus).
+
+## determinize (M5)
+
+`determinize(state, perspective, seed) -> State` clones, reseeds `rng` from
+`seed`, and resamples the opponent's hand and deck from their known remaining
+pool: hand size preserved, public tokens kept in hand, the rest drawn
+uniformly, leftover pool becomes the deck. Own side is untouched.
+`encode(determinize(s), p) == encode(s, p)`.
+
+## Policy (M5)
+
+```text
+trait Policy {
+    fn choose(&mut self, db: &CardDb, state: &State, legal: &[Action], rng: &mut Xoshiro256ss) -> usize;
+}
+
+fn policy::by_name(name: &str, seed: u64) -> Option<Box<dyn Policy>>;
+fn policy::names() -> &'static [&'static str];   // "random", "first-legal", "h0"
+```
+
+`Policy` is object-safe. `policy/` (and `encode`, `search_key`, `determinize`)
+compile for `wasm32-unknown-unknown`: no `Instant` / `SystemTime`, threads,
+`std::fs`, or `getrandom`. The node cap is the only search budget. `seed` is
+accepted at construction; current policies do not store it — `choose` uses
+the caller rng (typically `policy_rng(seed)`).
+
+`Random` and `FirstLegal` are the arena-bench / arena-trace policies (same
+streams and output as before). `H0` is a determinized search bot:
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `depth` | 6 | own-turn actions before cutoff |
+| `beam` | 4 | top-k by value each ply |
+| `determinizations` | 4 | opponent-reply samples |
+| `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
+
+H0 builds `K = max(1, determinizations)` search roots via
+`determinize(state, me, seed)` (which reseeds the game RNG) from the
+policy rng. Own-turn search, lethal, and the opponent's greedy reply all
+run on those roots — the true hidden hand and live game RNG are never
+read. A lethal is taken only when every root agrees (a random lethal is
+a bet, not a lethal). Candidate values are averaged over the K roots.
+The node cap is global. `H0::fast()` uses `K = 1` and a 1-ply value
+on that root (no depth-2 consensus-lethal walk).
+
+`BonusPp` is considered only in the **activate** direction
+(`!bonus_pp.active`); cancel is never chosen. Cycles are skipped: any
+action whose resulting `search_key` is already on the current line is
+dropped. Mulligan: swap every card whose cost is ≥ 4 (both seats).
+
+Value: leader-defense difference, board (atk+def with Ward/Storm/evolved
+weights), hand size, next-turn PP / EP / SEP, crest / countdown presence;
+terminal = ±∞ on a single root, finite-clamped when averaging.
+
+`arena-bench` accepts `--policy random|first-legal|h0` and `--vs` for
+asymmetric seats. Caps: `engine::limits::{MAX_TURNS, MAX_ACTIONS}` = 60 / 800.
 
 ## Throughput
 

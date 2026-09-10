@@ -6,7 +6,8 @@ use std::path::PathBuf;
 use std::time::Instant;
 
 use arena_engine::{
-    apply, legal_actions, new_game, policy_rng, CardDb, CardId, First, GameConfig, Phase,
+    acting_player, apply, legal_actions, new_game, policy_rng, AnyPolicy, CardDb, CardId, First,
+    GameConfig, Phase, PlayerId, Policy, MAX_ACTIONS, MAX_TURNS,
 };
 
 fn main() {
@@ -15,7 +16,8 @@ fn main() {
     let mut games: u32 = 100;
     let mut deck_a = PathBuf::from("engine/tests/fixtures/decks/basic-neutral-forest.json");
     let mut deck_b = deck_a.clone();
-    let mut first_legal = false;
+    let mut policy_a = "random".to_string();
+    let mut policy_b: Option<String> = None;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -36,7 +38,11 @@ fn main() {
                 i += 2;
             }
             "--policy" => {
-                first_legal = args[i + 1] == "first-legal";
+                policy_a = args[i + 1].clone();
+                i += 2;
+            }
+            "--vs" => {
+                policy_b = Some(args[i + 1].clone());
                 i += 2;
             }
             _ => i += 1,
@@ -60,6 +66,9 @@ fn main() {
     let mut deckout = 0u32;
     let mut turn_cap_n = 0u32;
     let mut action_cap_n = 0u32;
+    let mut a_wins = 0u32;
+    let mut b_wins = 0u32;
+    let pol_b_name = policy_b.clone().unwrap_or_else(|| policy_a.clone());
     for g in 0..games {
         let s = seed.wrapping_add(g as u64);
         let mut state = new_game(
@@ -73,14 +82,16 @@ fn main() {
             },
         )
         .expect("game");
-        let mut policy = policy_rng(s);
+        let mut rng = policy_rng(s);
+        let mut pol_a = AnyPolicy::parse(&policy_a);
+        let mut pol_b = AnyPolicy::parse(&pol_b_name);
         let mut nact = 0u32;
         while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
-            if state.turn > 60 {
+            if state.turn > MAX_TURNS {
                 turn_cap_n += 1;
                 break;
             }
-            if nact >= 800 {
+            if nact >= MAX_ACTIONS {
                 action_cap_n += 1;
                 break;
             }
@@ -88,11 +99,11 @@ fn main() {
             if legal.is_empty() {
                 break;
             }
-            let idx = if first_legal {
-                0
-            } else {
-                policy.gen_range(legal.len() as u32) as usize
+            let idx = match acting_player(&state) {
+                PlayerId::A => pol_a.choose(&db, &state, &legal, &mut rng),
+                PlayerId::B => pol_b.choose(&db, &state, &legal, &mut rng),
             };
+            let idx = idx.min(legal.len().saturating_sub(1));
             if apply(&db, &mut state, legal[idx].clone()).is_err() {
                 break;
             }
@@ -101,6 +112,10 @@ fn main() {
         }
         turns += u64::from(state.turn);
         if let Some(w) = state.winner {
+            match w {
+                PlayerId::A => a_wins += 1,
+                PlayerId::B => b_wins += 1,
+            }
             let p = state.player(w.opponent());
             if p.leader_defense <= 0 {
                 lethal += 1;
@@ -118,6 +133,10 @@ fn main() {
         "actions_per_second": actions as f64 / secs,
         "mean_turns": turns as f64 / f64::from(games.max(1)),
         "mean_actions": actions as f64 / f64::from(games.max(1)),
+        "policy": policy_a,
+        "vs": pol_b_name,
+        "a_wins": a_wins,
+        "b_wins": b_wins,
         "terminal_by": {
             "lethal": lethal,
             "deckout": deckout,

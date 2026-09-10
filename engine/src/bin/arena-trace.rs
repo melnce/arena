@@ -9,7 +9,8 @@ use std::path::PathBuf;
 
 use arena_engine::{
     apply, legal_actions, new_game, policy_rng, snapshot_json, to_neutral, Action, CardDb, CardId,
-    First, GameConfig, OpeningHandsJson, Phase, PlayerId, TraceHeader,
+    First, GameConfig, OpeningHandsJson, Phase, PlayerId, Policy, Random, TraceHeader, MAX_ACTIONS,
+    MAX_TURNS,
 };
 
 fn main() {
@@ -20,8 +21,8 @@ fn main() {
     let mut deck_b = deck_a.clone();
     let mut out = PathBuf::from("traces");
     let mut first = First::Coin;
-    let mut turn_cap: u32 = 60;
-    let mut action_cap: u32 = 800;
+    let mut turn_cap: u32 = MAX_TURNS;
+    let mut action_cap: u32 = MAX_ACTIONS;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -145,7 +146,8 @@ fn play_one(
         },
     };
     let mut lines = vec![serde_json::to_string(&header).unwrap()];
-    let mut policy = policy_rng(seed);
+    let mut rng = policy_rng(seed);
+    let mut policy = Random;
     let mut i = 0u32;
     while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
         if state.turn > turn_cap || i >= action_cap {
@@ -155,7 +157,7 @@ fn play_one(
         if legal.is_empty() {
             break;
         }
-        let choice = policy.gen_range(legal.len() as u32) as usize;
+        let choice = policy.choose(db, &state, &legal, &mut rng);
         let action = legal[choice].clone();
         let recorded = to_neutral(&state, &action);
         let _ = apply(db, &mut state, action).map_err(|e| e.to_string())?;
