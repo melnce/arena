@@ -539,7 +539,7 @@ A player's EP evolve always runs the full `evolve[]` / `superevolve[]` script fo
 
 ### Damage Events (General)
 
-**Split damage (sequential).** When an effect deals split damage to enemy followers in sequence (`split_sequential`), the pool allocates against each follower's **current defense** in entry order (oldest to newest). Each follower consumes `min(remaining pool, its current defense)` from the pool before the next follower is considered; leftover pool after the last follower may spill to the enemy leader only when the effect sets `spill_to_leader`.
+**Split damage (sequential).** Official glossary, Split Damage (2026-09-10): damage is dealt oldest enemy follower to newest, each taking up to its current defense before the next, and leftover is dealt to the enemy leader or, if the ability only targets followers, the last follower. Shares are computed first (`min(pool, current defense)` oldest to newest; the last follower's share also absorbs leftover when the ability does not include the leader), then each share is one damage instance. Barrier reduces the whole share to 0, so a lone 1/1 with Barrier hit by a 6-point follower-only split survives (owner 2026-09-10). Allocated points are still consumed from the pool even when Barrier absorbs them (owner 2026-08-29). Leftover spills to the enemy leader only when the effect sets `includeLeader`.
 
 **Owner ruling — Barrier in split damage (2026-08-29):**
 

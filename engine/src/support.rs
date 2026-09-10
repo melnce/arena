@@ -77,14 +77,6 @@ fn effect_unsupported(e: &Effect) -> Option<String> {
         Effect::RandomSplit { .. } => Some("op:randomSplit".into()),
         Effect::Sequence { .. } => Some("op:sequence".into()),
         Effect::Transform { .. } => Some("op:transform".into()),
-        Effect::Pay {
-            resource: crate::card::PayResource::Faith,
-            ..
-        } => Some("op:pay resource:faith".into()),
-        Effect::Counter {
-            key: crate::card::CounterKey::Named(crate::card::NamedCounter::Faith),
-            ..
-        } => Some("op:counter faith".into()),
         Effect::Counter {
             key: crate::card::CounterKey::Named(crate::card::NamedCounter::SkyboundHand),
             ..
@@ -186,8 +178,6 @@ pub fn m1_unsupported_list() -> Vec<&'static str> {
         "op:randomSplit",
         "op:sequence",
         "op:transform",
-        "op:pay resource:faith",
-        "op:counter faith",
         "op:counter skyboundHand",
         "op:addToDeck",
     ]

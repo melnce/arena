@@ -1,0 +1,86 @@
+{
+  "id": "10932110",
+  "name": "Enamored Researcher",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Summon 2 copies of Obsessed Test Subject.\nEnhance (8): Summon 3 copies instead and give them Ward.\n\nEvolve: Select an allied Obsessed Test Subject on the field and give it Bane.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Obsessed Test Subject.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Obsessed Test Subject.",
+          "op": "summon",
+          "card": {
+            "named": "10931110"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an allied Obsessed Test Subject on the field and give it Bane.",
+      "effects": [
+        {
+          "printed": "Select an allied Obsessed Test Subject on the field and give it Bane.",
+          "op": "grantTraits",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "filter": {
+              "card": "10931110"
+            }
+          },
+          "traits": {
+            "bane": true
+          }
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 8,
+      "replacesBase": true,
+      "printed": "Enhance (8): Summon 3 copies instead and give them Ward.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies instead and give them Ward.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10931110"
+              },
+              "count": 3,
+              "as": "s"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "ward": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

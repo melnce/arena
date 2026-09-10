@@ -1,0 +1,37 @@
+{
+  "id": "crest:10714120",
+  "name": "Crest: Great Hart of the Glacial Realm",
+  "grantedBy": [
+    "10714120"
+  ],
+  "faith": false,
+  "text": "Countdown (3)\nAt the end of your turn, Combo (3) - Add a Deepwood Bounty to your hand.",
+  "countdown": 3,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, Combo (3) - Add a Deepwood Bounty to your hand.",
+      "effects": [
+        {
+          "printed": "Combo (3) - Add a Deepwood Bounty to your hand.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90011310"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "90011310",
+  "name": "Deepwood Bounty",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Restore 1 defense to your leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Restore 1 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Restore 1 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

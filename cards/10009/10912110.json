@@ -1,0 +1,52 @@
+{
+  "id": "10912110",
+  "name": "Leafshadow Assassin",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add a Fairy to your hand. Combo (3) - Give it Bane.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Fairy to your hand. Combo (3) - Give it Bane.",
+      "effects": [
+        {
+          "printed": "Add a Fairy to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90011110"
+          },
+          "count": 1,
+          "as": "f"
+        },
+        {
+          "printed": "Combo (3) - Give it Bane.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "f"
+              },
+              "traits": {
+                "bane": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

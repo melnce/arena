@@ -1,0 +1,33 @@
+{
+  "id": "90031310",
+  "name": "Mysterian Missile",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Deal 3 damage to a random enemy follower.",
+  "tribes": [
+    "mysteria"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 3 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "pick": "random",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ]
+}

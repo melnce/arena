@@ -70,6 +70,14 @@ When an effect list pauses for a player choice, the reactive queue is **not** dr
 
 A completed old-engine `fuse { host_pos, partner_pos }` line is applied by `apply_neutral`: start the fuse, map each `partner_pos` (pre-action hand position) to the index in `options`, then Confirm. Confirm with no partners is not legal. `Choose` with an out-of-range index is `NotLegal`.
 
+## Skybound Art
+
+The per-hand `skybound` counter is the number of allied evolves (player EP and effect-granted, ruling 2026-08-10) witnessed while **that copy** was in hand. It is stored only on hand instances whose printed text has a `skyboundArt` condition, starts at 0 for a newly added copy, and is omitted from the snapshot at 0. Evaluation adds the current round (`State.turn`, equal to the acting player's `turns_taken`) so the gauge is `turn + skybound`; Skybound Art fires at ≥ 10, Super Skybound Art at ≥ 15. The turn is not stored on the instance.
+
+## Faith
+
+At `new_game`, after decks and opening hands are dealt, every player whose starting deck or opening hand contains a card that carries a Faith gains that Faith crest (`faith:<id>`, no countdown, `faith: 0`) — the Sham-Nacha / engine-api rule. The crest's `when ally_evolve` increments `PlayerState.faith`. `pay faith N` spends only if the value is ≥ N, else the wrapped body fizzles. `grantAbility` onto `zone: crests, kind: faith` appends to `CrestInstance.granted` (not visible in CanonicalState; it fires when the event hits). Faith counts toward the five-icon cap but not toward "the number of crests" (rulings 2026-09-05/06).
+
 ## Defense debuff and `max_defense`
 
 A stat debuff lowers `max_defense` by the same amount; current defense drops by the same amount; healing restores up to the new maximum. Example: a 7/5 (max 7) given −0/−4 becomes 7/1 (max 3). Owner ruling 2026-09-10: modifications define the max (Azurifrit's "fully restore" goes to the buffed maximum).
@@ -77,8 +85,8 @@ A stat debuff lowers `max_defense` by the same amount; current defense drops by 
 ## State notes
 
 - Field slots are entry order, compacted on leave.
-- Deck is an unordered `Vec` treated as a multiset; draws pick uniformly via the state's RNG.
-- Earth sigils: a counter plus `earth_slot` (which amulet holds the stack). Merge: collectible replaces token (ruling 2026-08-30). A full board blocks playing an Earth Sigil amulet; "gain an earth sigil" still increments the existing stack (ruling 2026-09-10).
+- Deck is an unordered `Vec` treated as a multiset; draws pick uniformly via the state's RNG. When several copies of an id differ (Thestae's crest +1/+1 on a deck follower vs a copy just returned from hand), a recorded `draw` of that id takes the first copy in vec order. `returnToDeck position: random` appends (the old emitter's shuffle is `raw` and ignored) so that copy is the one that has been in the deck longest.
+- Earth sigils: a counter plus `earth_slot` (which amulet holds the stack). When an Earth Sigil amulet enters, every other allied Earth Sigil is **banished** (no shadow, no Last Words) and the new amulet takes their counts (official glossary Earth Sigil; owner 2026-09-10 "yes banish them instead"). "Gain X earth sigils" increments the holder on the field, else summons one Magic Sediment with count X; no holder and a full board loses the sigil. A full board still blocks *playing* an Earth Sigil amulet (ruling 2026-09-10).
 - `hash` is FNV-1a 64 of the sorted-key canonical snapshot JSON.
 
 ## Tests

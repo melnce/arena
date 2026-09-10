@@ -194,13 +194,15 @@ impl CardInstance {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CrestInstance {
     pub id: String,
     pub countdown: Option<i32>,
     pub faith: bool,
     pub once_used: Vec<TriggerTag>,
     pub granted_order: u32,
+    /// Runtime grants (Sathanid / Yidmetra onto the Faith crest).
+    pub granted: Vec<Ability>,
 }
 
 #[derive(Debug, Clone)]
@@ -406,6 +408,7 @@ pub enum TargetOpt {
     Slot { player: PlayerId, slot: u8 },
     Leader { player: PlayerId },
     Hand { player: PlayerId, pos: u8 },
+    Deck { player: PlayerId, id: u32 },
     Card(CardId),
     Mode(u8),
 }
@@ -452,6 +455,7 @@ pub enum BoundRef {
     Field { player: PlayerId, id: u32 },
     Leader { player: PlayerId },
     Hand { player: PlayerId, id: u32 },
+    Deck { player: PlayerId, id: u32 },
     Card(CardId),
 }
 
@@ -480,6 +484,11 @@ pub struct State {
     pub pending_play_rally: Option<PlayerId>,
     /// Subject of the current `When` event (`pick: entering`, etc.).
     pub event_subject: Option<TargetOpt>,
+    /// Base cost / instance id of the current when-event subject. Set from the
+    /// live `CardInstance` so `sameCostGroup` works while the played card is
+    /// still between zones (`AllyCardPlayed` fires before enter).
+    pub event_base_cost: Option<i32>,
+    pub event_inst_id: Option<u32>,
 }
 
 #[derive(Debug, Clone)]

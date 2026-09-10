@@ -171,7 +171,7 @@ Projection both engines can produce. Keys sorted.
 }
 ```
 
-`hand` is in draw order: `[{card, cost, vars?, skybound?}, …]`. `vars` is Stormy Blast's X (and any other `{X,Y,Z}`). `skybound` is the Skybound Art gauge **per card in hand** (turn + evolves while in hand + Tsubasa boosts) — not a per-player field.
+`hand` is in draw order: `[{card, cost, vars?, skybound?}, …]`. `vars` is Stormy Blast's X (and any other `{X,Y,Z}`). `skybound` is the number of allied evolves witnessed while **that hand copy** was in hand (omitted when 0); the Skybound Art gauge is `turn` + that count, added at evaluation, not stored.
 
 `deck`, `cemetery`, `banished` are **sorted multisets** `{card_id: count}` (JSON object keys sorted).
 

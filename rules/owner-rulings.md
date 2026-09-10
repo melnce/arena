@@ -756,7 +756,7 @@ Witch's New Brew and Magic Sediment are untargetable by enemy selection (Aura) a
 
 `10031210` Witch's New Brew and `90031210` Magic Sediment set `traits.aura: true` and `traits.cantBeDestroyedByAbilities: true`. The catalog `skill_text` does not print Aura; the client has it. CanonicalState still lists only `aura` on Earth Sigil amulets (the old engine does not snapshot `cantBeDestroyedByAbilities`); destroy-by-ability fizzles from the instance trait and the Earth Sigil tribe.
 
-The glossary's merge rule (a newly played Earth Sigil amulet **banishes** the others and takes their counts) differs from the old engine's cemetery-and-shadow merge. **Do not change the merge** until the owner rules — listed under Still open.
+**Merge — owner 2026-09-10 ("yes banish them instead"):** when an Earth Sigil amulet enters, its count is set to 1, every other allied Earth Sigil amulet is **banished** (banished multiset, no shadow, no Last Words) and their counts are added to the new amulet. "Gain X earth sigils" adds X to the holder on the field, else summons a Magic Sediment with count X (glossary, Earth Sigil). A generated Sediment still merges into a Brew already on the field (the agreed part of 2026-08-30). The 2026-08-30 "collectible survives" identity is superseded: the newest amulet survives.
 
 ## Earth Sigil amulets and a full board — 2026-09-10
 
@@ -780,4 +780,4 @@ A stat modification defines the follower's maximum defense: max = the stat line 
 
 ~~Initiation of Rebirth highest-base-cost ties (assumed, not contested).~~ **Settled 2026-09-02 — randomly among the tied cards.** See **Initiation of Rebirth highest-base-cost ties — 2026-09-02** above.
 
-**Earth Sigil merge: glossary banish vs old-engine cemetery.** Official glossary, 2026-09-10 (Earth Sigil): a newly played Earth Sigil amulet **banishes** the others and takes their counts. The old engine cemeteries them (and they produce a shadow). **Do not change the merge** until the owner rules.
+~~**Earth Sigil merge: glossary banish vs old-engine cemetery.**~~ **Settled 2026-09-10 — banish, newest survives.** See **Earth Sigil amulets have Aura — 2026-09-10** above. Official glossary plus owner "yes banish them instead": other allied Earth Sigil amulets are banished and their counts move to the new amulet. The old engine's cemetery-and-shadow merge is `old-rule`.

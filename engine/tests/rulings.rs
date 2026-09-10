@@ -205,7 +205,8 @@ fn fuse_partners_banished() {
 
 #[test]
 fn earth_sigil_merge_collectible_wins() {
-    // Witch's New Brew always wins an Earth Sigil merge — 2026-08-30
+    // Owner 2026-09-10: newest amulet survives; others are banished.
+    // Playing Brew onto Sediment → Brew with the combined stack, Sediment banished.
     let db = load_db();
     let mut st = started(&db, 9);
     let me = PlayerId::A;
@@ -221,6 +222,13 @@ fn earth_sigil_merge_collectible_wins() {
     assert!(field_has(&st, me, "10031210"), "collectible survives");
     assert!(!field_has(&st, me, "90031210"), "token holder is replaced");
     assert!(st.player(me).earth >= 2);
+    assert!(
+        st.player(me)
+            .banished
+            .iter()
+            .any(|c| c.card.as_str() == "90031210"),
+        "Sediment is banished, not cemeteried"
+    );
 }
 
 #[test]
@@ -238,6 +246,7 @@ fn crest_cap_five() {
                 faith: false,
                 once_used: vec![],
                 granted_order: i as u32,
+                granted: vec![],
             });
     }
     assert_eq!(st.player(me).crests.len(), 5);

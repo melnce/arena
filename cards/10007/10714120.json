@@ -1,0 +1,68 @@
+{
+  "id": "10714120",
+  "name": "Great Hart of the Glacial Realm",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Add 2 copies of Deepwood Bounty to your hand.\n\nAt the end of your turn, deal X damage split between all enemy followers. X is this follower's attack.\n\nSuper-Evolve: Gain Crest: Great Hart of the Glacial Realm.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add 2 copies of Deepwood Bounty to your hand.",
+      "effects": [
+        {
+          "printed": "Add 2 copies of Deepwood Bounty to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90011310"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, deal X damage split between all enemy followers. X is this follower's attack.",
+      "effects": [
+        {
+          "printed": "deal X damage split between all enemy followers. X is this follower's attack.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": {
+            "stat": {
+              "of": {
+                "pick": "self"
+              },
+              "which": "attack"
+            }
+          },
+          "split": true
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Gain Crest: Great Hart of the Glacial Realm.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Great Hart of the Glacial Realm.",
+          "op": "crest",
+          "gain": "crest:10714120",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

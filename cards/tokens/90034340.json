@@ -1,0 +1,31 @@
+{
+  "id": "90034340",
+  "name": "Delta Cannon",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 1,
+  "text": "Deal 5 damage to all enemy followers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 5 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 5 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 5
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
