@@ -1251,3 +1251,31 @@ fn effect_evolve_on_evolved_follower_is_noop() {
         "only Remi's SEP counts; the no-op does not increment evolves_used"
     );
 }
+
+#[test]
+fn ecstatic_scholar_super_evolve_without_fuse_skips_drain_choice() {
+    // Super-Evolve `when: wasFused` — an unfused Scholar does not offer
+    // the Drain choose (rune-11 i=86).
+    let db = load_db();
+    let mut st = started(&db, 143);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, me, "10931110");
+    put_field(&db, &mut st, me, "10933110");
+    set_round(&mut st, me, 7);
+    st.player_mut(me).sep = 1;
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: Slot(1),
+            super_evolve: true,
+        },
+    )
+    .expect("super-evolve unfused Scholar");
+    assert!(
+        matches!(st.phase, Phase::Main),
+        "wasFused is false; Super-Evolve body does not run"
+    );
+    let sub = st.field_inst(me, 0).expect("Subject");
+    assert_ne!(sub.traits.drain, Some(true), "no Drain grant");
+}

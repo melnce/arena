@@ -1292,24 +1292,30 @@ fn apply_evolve_action(
     let Ok(card) = db.card(card_id) else {
         return Ok(());
     };
+    let src = SourceRef::Field { player: me, id };
+    let when_ok = |a: &Ability| {
+        a.when_cond()
+            .map(|c| eval_cond(db, state, me, Some(src), c))
+            .unwrap_or(true)
+    };
     let replace = card.abilities().iter().any(|a| a.replaces_evolve());
     let mut fx = Vec::new();
     if supered && replace {
         for a in card.abilities() {
-            if matches!(a, Ability::SuperEvolve { .. }) {
+            if matches!(a, Ability::SuperEvolve { .. }) && when_ok(a) {
                 fx.extend(a.effects().iter().cloned());
             }
         }
     } else {
         if !granted {
             for a in card.abilities() {
-                if matches!(a, Ability::Evolve { .. }) {
+                if matches!(a, Ability::Evolve { .. }) && when_ok(a) {
                     fx.extend(a.effects().iter().cloned());
                 }
             }
         }
         for a in card.abilities() {
-            if matches!(a, Ability::AnyEvolve { .. }) {
+            if matches!(a, Ability::AnyEvolve { .. }) && when_ok(a) {
                 fx.extend(a.effects().iter().cloned());
             }
         }
@@ -1318,13 +1324,13 @@ fn apply_evolve_action(
                 if matches!(
                     a,
                     Ability::SuperEvolve { .. } | Ability::AnySuperEvolve { .. }
-                ) {
+                ) && when_ok(a)
+                {
                     fx.extend(a.effects().iter().cloned());
                 }
             }
         }
     }
-    let src = SourceRef::Field { player: me, id };
     // Skybound Art gauge = current turn number + evolves/boosts stored on the
     // instance (rulebook). Evolves while a copy is in hand increment that
     // copy's stored bonus; turn number is added at evaluation so M1 snapshots

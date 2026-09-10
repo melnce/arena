@@ -264,32 +264,8 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "elf-neanisu2-mirror/trace-20260910-3.jsonl",
-    "i": 20,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
     "trace": "elf-neanisu2-mirror/trace-20260910-4.jsonl",
     "i": 46,
-    "path": "players.b.field[0].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-6.jsonl",
-    "i": 74,
-    "path": "players.b.field[2].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-10.jsonl",
-    "i": 182,
     "path": "players.b.field[0].max_defense",
     "class": "old-rule",
     "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
@@ -301,14 +277,6 @@
     "path": "players.b.field[0].max_defense",
     "class": "old-rule",
     "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-13.jsonl",
-    "i": 90,
-    "path": "players.b.field[0].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
@@ -328,35 +296,11 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "elf-neanisu2-mirror/trace-20260910-23.jsonl",
-    "i": 23,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
     "trace": "elf-neanisu2-mirror/trace-20260910-25.jsonl",
     "i": 100,
     "path": "players.b.field[0].max_defense",
     "class": "old-rule",
     "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-27.jsonl",
-    "i": 81,
-    "path": "players.b.field[0].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-29.jsonl",
-    "i": 37,
-    "path": "players.a.field[0].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
@@ -421,6 +365,238 @@
     "path": "players.a.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-3.jsonl",
+    "i": 10,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-5.jsonl",
+    "i": 53,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-6.jsonl",
+    "i": 40,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-7.jsonl",
+    "i": 109,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-10.jsonl",
+    "i": 15,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-13.jsonl",
+    "i": 24,
+    "path": "error",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts, so the fifth advance destroys World of Games and Last Words draw; the old engine did not count the enemy card and recorded no draw pick",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-14.jsonl",
+    "i": 160,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-15.jsonl",
+    "i": 92,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-18.jsonl",
+    "i": 131,
+    "path": "players.a.field[1].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-19.jsonl",
+    "i": 36,
+    "path": "players.b.hand[3].card",
+    "class": "old-rule",
+    "reason": "E39 / owner 2026-09-10: World of Games Last Words from a play-reaction destroy resolve before Fanfare; the old engine ran Leafshadow Assassin 10912110 Fanfare add-Fairy first then the draws",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-21.jsonl",
+    "i": 6,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-23.jsonl",
+    "i": 22,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-24.jsonl",
+    "i": 38,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-26.jsonl",
+    "i": 89,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-27.jsonl",
+    "i": 40,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-28.jsonl",
+    "i": 6,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-29.jsonl",
+    "i": 16,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-2.jsonl",
+    "i": 39,
+    "path": "players.a.banished.90031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-8.jsonl",
+    "i": 95,
+    "path": "players.a.banished.90031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-15.jsonl",
+    "i": 132,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-17.jsonl",
+    "i": 61,
+    "path": "players.b.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-19.jsonl",
+    "i": 100,
+    "path": "players.a.banished.90031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-21.jsonl",
+    "i": 56,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-23.jsonl",
+    "i": 32,
+    "path": "players.b.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-24.jsonl",
+    "i": 52,
+    "path": "players.b.banished.90031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-27.jsonl",
+    "i": 81,
+    "path": "players.b.field[2].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-28.jsonl",
+    "i": 48,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-29.jsonl",
+    "i": 99,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-11.jsonl",
+    "i": 107,
+    "path": "players.a.banished.90031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
     "since": "2026-09-10"
   }
 ]
