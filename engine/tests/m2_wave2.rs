@@ -1153,7 +1153,7 @@ fn world_of_games_divine_thunder_qa_count_is_four() {
     let mut st = started(&db, 140);
     let me = PlayerId::A;
     let opp = PlayerId::B;
-    give_pp(&mut st, me, 4, 4);
+    give_pp(&mut st, me, 10, 10);
     put_field(&db, &mut st, opp, "10001130");
     st.player_mut(me).hand.clear();
     play_id(&db, &mut st, me, WORLD);
@@ -1166,6 +1166,7 @@ fn world_of_games_divine_thunder_qa_count_is_four() {
         .find(|c| c.card.as_str() == WORLD)
         .and_then(|c| c.countdown);
     assert_eq!(cd, Some(5));
+    give_pp(&mut st, me, 4, 4);
     play_id(&db, &mut st, me, "10103310");
     drain_choice(&db, &mut st);
     let cd = st
