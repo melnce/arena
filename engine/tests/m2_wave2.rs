@@ -1,7 +1,10 @@
 //! M2 wave 2: Skybound Art, Faith, hand/deck modifiers, World of Games,
 //! Earth Sigil banish-merge, split leftover-as-one-hit, attacksPerTurn.
 
-use arena_engine::{apply, legal_actions, snapshot, Action, AttackTarget, Phase, PlayerId, Slot};
+use arena_engine::{
+    apply, legal_actions, snapshot, Action, AttackTarget, GameRng, Phase, Pick, PickChose,
+    PickWhat, PlayerId, Slot,
+};
 
 mod common;
 use common::*;
@@ -236,6 +239,85 @@ fn faith_increments_on_allied_evolve() {
     st.player_mut(me).ep = 1;
     grant_evolve(&db, &mut st, 0);
     assert_eq!(st.player(me).faith, 1);
+}
+
+#[test]
+fn evolve_faith_increments_before_evolve_ability_choice() {
+    // E37 / elf-0: crests and Faith drain before the evolving follower's
+    // Evolve: list. Miroku's replicate-Fanfare choice sees faith already +1.
+    let db = load_db();
+    let mut st = started_decks(&db, 94, &[SATHANID], &["88001110"]);
+    let me = PlayerId::A;
+    set_round(&mut st, me, 7);
+    st.player_mut(me).sep = 1;
+    st.player_mut(me).faith = 2;
+    put_field(&db, &mut st, me, "10514120");
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: Slot(0),
+            super_evolve: true,
+        },
+    )
+    .expect("super-evolve Miroku");
+    assert!(
+        matches!(st.phase, Phase::Choice { .. }),
+        "Evolve: replicate Fanfare opens a mode choice"
+    );
+    assert_eq!(
+        st.player(me).faith,
+        3,
+        "Faith crest resolved before the Evolve: list"
+    );
+}
+
+#[test]
+fn obsidian_raven_second_random_skips_dead_survivor_index() {
+    // E36 / rune-11: [Brew, Sephie 4/4, Subject 5/5]. First pick slot:1
+    // (Sephie) dies; second pick slot:1 is the Subject among survivors
+    // (Brew=0, Subject=1), not raw slot 2.
+    let db = load_db();
+    let mut st = started(&db, 95);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, opp, BREW);
+    let seph = put_field(&db, &mut st, opp, "10934110");
+    let sub = put_field(&db, &mut st, opp, SUBJECT);
+    if let Some(f) = st.field_inst_mut(opp, seph) {
+        f.attack = 4;
+        f.defense = 4;
+        f.max_defense = 4;
+    }
+    if let Some(f) = st.field_inst_mut(opp, sub) {
+        f.attack = 5;
+        f.defense = 5;
+        f.max_defense = 5;
+    }
+    give_pp(&mut st, me, 5, 5);
+    st.player_mut(me).hand.clear();
+    let h = put_hand(&db, &mut st, me, RAVEN);
+    st.rng = GameRng::scripted(
+        vec![
+            Pick {
+                what: PickWhat::RandomTarget,
+                among: None,
+                chose: PickChose::Slot { slot: 1 },
+            },
+            Pick {
+                what: PickWhat::RandomTarget,
+                among: None,
+                chose: PickChose::Slot { slot: 1 },
+            },
+        ],
+        95,
+    );
+    apply(&db, &mut st, Action::Play { hand: h }).expect("Raven 7+7");
+    assert!(field_has(&st, opp, BREW), "Brew is not a follower target");
+    assert!(
+        !field_has(&st, opp, "10934110") && !field_has(&st, opp, SUBJECT),
+        "both followers take 7 and leave"
+    );
 }
 
 #[test]

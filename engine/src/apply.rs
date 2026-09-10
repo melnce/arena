@@ -23,6 +23,17 @@ use crate::trace::{NeutralAction, PickWhat};
 
 // Hand overflow: owner-rulings.md — Hand overflow destroys without Last Words — 2026-08-10
 
+/// Owner question pending (rune-2 i=68): rulebook **Fanfare and Enter-Play
+/// Trigger Order** steps 3–4 — crests and board that react to the play wait
+/// until the played card's Fanfare (including its choice) completes. Set
+/// `false` to drain those reactions on the play snapshot (old engine).
+const PLAY_REACTIONS_AFTER_FANFARE: bool = true;
+
+/// Owner question pending (elf-23 i=23): World of Games prints "a card on
+/// the field other than it" with no side. Set `false` to count allied
+/// field only (old engine).
+const WORLD_OF_GAMES_COUNTS_EITHER_SIDE: bool = true;
+
 // =========================================================================
 // Construction
 // =========================================================================
@@ -1315,6 +1326,12 @@ fn apply_evolve_action(
             h.skybound += 1;
         }
     }
+    // E37: push the evolving follower's Evolve/Super-Evolve list first so it
+    // sits under the reaction wave (pending_work is LIFO). Then raise
+    // when-triggers and flush them on top — Faith/crests and other cards'
+    // `when ally_evolve` drain before the Evolve: list starts. Reactions
+    // raised *during* that list still wait (A2 / play-sequence E34).
+    push_effects(state, me, src, fx);
     if let Some(evolved) = state.field_inst(me, slot.0).cloned() {
         raise_when(db, state, me, EventName::AllyEvolve, Some(&evolved), me);
         if supered {
@@ -1328,7 +1345,7 @@ fn apply_evolve_action(
             );
         }
     }
-    push_effects(state, me, src, fx);
+    drain_queue(db, state, events)?;
     Ok(())
 }
 
@@ -2309,7 +2326,6 @@ fn enqueue_when_on(
     only_inst: Option<u32>,
     self_buff: bool,
 ) {
-    let cat = if observer_side == state.active { 4 } else { 6 };
     let mut pending: Vec<PendingWhen> = Vec::new();
     let scan = WhenScan {
         db,
@@ -2585,6 +2601,24 @@ fn enqueue_when_on(
                 }
             }
         }
+        // Crests before board at the same timing (rulebook turn boundaries
+        // step 2 vs 3; E37 evolve). Active then opponent.
+        let cat = match source {
+            SourceRef::Crest { .. } => {
+                if observer_side == state.active {
+                    3
+                } else {
+                    5
+                }
+            }
+            _ => {
+                if observer_side == state.active {
+                    4
+                } else {
+                    6
+                }
+            }
+        };
         enqueue(state, cat, entry, printed, observer_side, source, &a);
     }
 }
@@ -2837,6 +2871,9 @@ fn next_frame_allows_queue_drain(state: &State) -> bool {
     // (2) and (3) — already on pending_work — finish (E32 / Grimnir).
     if trigger_wave_in_flight(state) {
         return false;
+    }
+    if !PLAY_REACTIONS_AFTER_FANFARE {
+        return true;
     }
     match state.pending_work.last() {
         None => true,
@@ -5573,7 +5610,10 @@ fn eval_cond(
                 .unwrap_or(1);
             let sides: Vec<PlayerId> = match field_has.side {
                 Some(Side::Enemy) => vec![who.opponent()],
-                Some(Side::Any) => vec![who, who.opponent()],
+                Some(Side::Any) if WORLD_OF_GAMES_COUNTS_EITHER_SIDE => {
+                    vec![who, who.opponent()]
+                }
+                Some(Side::Any) => vec![who],
                 None | Some(Side::Ally) => vec![who],
             };
             let mut count = 0i32;
@@ -5724,6 +5764,41 @@ fn pick_extremum(
     random_pool_apply(state, tied, 1, false)
 }
 
+fn board_card_survives(c: &CardInstance) -> bool {
+    match c.kind {
+        CardKind::Follower => c.defense > 0,
+        CardKind::Amulet => !c.countdown.is_some_and(|n| n <= 0),
+        CardKind::Spell => true,
+    }
+}
+
+/// 0-based index among surviving cards on that player's field (E36).
+/// Followers at 0 defense / marked for destruction and amulets at
+/// countdown 0 are skipped; order of the rest is preserved.
+fn surviving_board_index(state: &State, player: PlayerId, slot: u8) -> Option<u8> {
+    let mut i = 0u8;
+    for (si, cell) in state.player(player).field.iter().enumerate() {
+        let Some(c) = cell else {
+            continue;
+        };
+        if !board_card_survives(c) {
+            continue;
+        }
+        if si == slot as usize {
+            return Some(i);
+        }
+        i = i.saturating_add(1);
+    }
+    None
+}
+
+fn surviving_slot_key(state: &State, player: PlayerId, slot: u8) -> String {
+    match surviving_board_index(state, player, slot) {
+        Some(i) => format!("slot:{i}"),
+        None => format!("slot:{slot}"),
+    }
+}
+
 fn random_pool_apply(
     state: &mut State,
     cands: Vec<TargetOpt>,
@@ -5742,10 +5817,10 @@ fn random_pool_apply(
         if left.is_empty() {
             break;
         }
-        let keys: Vec<String> = left
+        let mut keys: Vec<String> = left
             .iter()
             .map(|t| match t {
-                TargetOpt::Slot { slot, .. } => format!("slot:{slot}"),
+                TargetOpt::Slot { player, slot } => surviving_slot_key(state, *player, *slot),
                 TargetOpt::Leader { .. } => "leader".into(),
                 TargetOpt::Card(c) => c.as_str(),
                 TargetOpt::Deck { player, id } => state
@@ -5759,6 +5834,7 @@ fn random_pool_apply(
                 TargetOpt::Mode(m) => format!("mode:{m}"),
             })
             .collect();
+        alias_scripted_raw_slot(state, &left, &mut keys);
         let mut emit = Vec::new();
         let i = if deck_search {
             state
@@ -5780,6 +5856,33 @@ fn random_pool_apply(
         }
     }
     Ok(out)
+}
+
+/// Scripted `random_target` matches survivor-index keys first (E36). If the
+/// recorded `chose` is not among those keys, a raw field slot is accepted as
+/// an alias when that label is not already a survivor key of another
+/// candidate — M1 ramp traces numbered by raw slot. Live RNG is unchanged
+/// (one key per candidate; expanding would bias the roll).
+fn alias_scripted_raw_slot(state: &State, left: &[TargetOpt], keys: &mut [String]) {
+    if !state.rng.is_scripted() || state.rng.peek_what() != Some(PickWhat::RandomTarget) {
+        return;
+    }
+    let Some(chose) = state.rng.peek_chose_key() else {
+        return;
+    };
+    if keys.iter().any(|k| k == &chose) {
+        return;
+    }
+    for (i, t) in left.iter().enumerate() {
+        let TargetOpt::Slot { slot, .. } = t else {
+            continue;
+        };
+        let raw = format!("slot:{slot}");
+        if raw == chose && !keys.iter().any(|k| k == &raw) {
+            keys[i] = raw;
+            return;
+        }
+    }
 }
 
 /// Remove one copy of `id` from `who`'s deck. No extra pick — the caller

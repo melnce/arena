@@ -32,7 +32,7 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 
 ## When events
 
-`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, active side category 4 then opponent 6, entry order within a side. The played card's own `enter` ability sits on `pending_work` above Fanfare (rulebook step 1). Other cards' enter/play reactions stay on the queue until the play completes, including across a Fanfare choice (E34). `pick: entering` reads `State.event_subject`.
+`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, crests before board (active crest 3, active board 4, opponent crest 5, opponent board 6), entry order within a side. The played card's own `enter` ability sits on `pending_work` above Fanfare (rulebook step 1). Other cards' enter/play reactions stay on the queue until the play completes, including across a Fanfare choice (rulebook **Fanfare and Enter-Play Trigger Order**). `pick: entering` reads `State.event_subject`.
 
 `CardDb` builds a static `when` index at load: for each `(EventName, AbilityZone)`, the card ids (and crest ids) that print at least one `When` for that pair. `enqueue_when_on` does not clone zones; it walks field instances whose card id is in the index for `(event, Field)` or whose `granted_whens` count is non-zero (grants are dynamic and rare), crests in the crest index, and hand/deck only when the index has any entry for that `(event, zone)` — today's cards have no deck `When` for most events, so those scans cost nothing. Categories, entry order, `oncePerTurn` marks, and `filter`/`when` evaluation are unchanged.
 
@@ -77,6 +77,27 @@ The per-hand `skybound` counter is the number of allied evolves (player EP and e
 ## Faith
 
 At `new_game`, after decks and opening hands are dealt, every player whose starting deck or opening hand contains a card that carries a Faith gains that Faith crest (`faith:<id>`, no countdown, `faith: 0`) — the Sham-Nacha / engine-api rule. The crest's `when ally_evolve` increments `PlayerState.faith`. `pay faith N` spends only if the value is ≥ N, else the wrapped body fizzles. `grantAbility` onto `zone: crests, kind: faith` appends to `CrestInstance.granted` (not visible in CanonicalState; it fires when the event hits). Faith counts toward the five-icon cap but not toward "the number of crests" (rulings 2026-09-05/06).
+
+## E37 — evolve reactions before the evolving follower's Evolve list
+
+Play has a special case (rulebook **Fanfare and Enter-Play Trigger Order**): the played card's Fanfare is step 2, and crests/board that react to the play wait until it finishes (steps 3–6). An evolve has no such exception, so the general same-timing rule applies: crests first, then board abilities (turn boundaries: start-of-turn crests are step 2, board abilities step 3; same-timing crests resolve in grant order).
+
+The Faith's "Whenever an allied follower evolves, increase this faith's value by 1" and the evolving follower's printed `Evolve:` / `Super-Evolve:` are both triggered by the evolve. The crest resolves first, so at the Evolve ability's choice node the faith already shows +1. Implementation: `raise_when(ally_evolve)` is flushed onto `pending_work` **above** the evolving follower's Evolve/Super-Evolve list; reactions raised *during* that list still wait (A2 / the play-sequence wait). Owner has been asked; this is the rulebook reading until he says otherwise.
+
+## E36 — `random_target` among surviving board cards
+
+Recorded `chose.slot` is the 0-based index among **surviving** cards on that player's field at roll time (followers at 0 defense / marked for destruction and amulets at countdown 0 are skipped; order preserved), not the raw field slot. Live play still picks by index into the candidate list. Scripted replay matches the survivor-index label first; if that misses, a raw field slot is accepted as an alias when that label is not already a survivor key of another candidate (M1 ramp traces numbered by raw slot). Aliases are not added for live RNG.
+
+## Questions for the owner
+
+Asked; arena follows the rulebook/text until he says otherwise. World of Games items are each behind one switch in `apply.rs`.
+
+1. **E37 — evolve reactions before the evolving follower's Evolve list.** Rulebook same-timing: crests before board. Play's Fanfare-before-reactions is the special case (Fanfare and Enter-Play Trigger Order); evolve has no such exception. Old engine agrees on Faith-before-choice (elf-0 i=59). Confirm or reject.
+2. **World of Games play-reaction wait** (`PLAY_REACTIONS_AFTER_FANFARE`, default true). Rulebook **Fanfare and Enter-Play Trigger Order** steps 3–4: crests and board that react to the play wait until Fanfare (including its choice) completes. Owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first). Set `false` to drain on the play snapshot (old engine).
+3. **World of Games either-side count** (`WORLD_OF_GAMES_COUNTS_EITHER_SIDE`, default true). The text says "a card on the field other than it", no side. Owner question pending (elf-23 i=23: a's WoG advances for b's Magachiyo). Set `false` to count allied field only (old engine).
+4. **World of Games counting itself.** A later 1-cost play sees World of Games (base 1) as "a card on the field other than it". The printed "other than it" excludes only the played card.
+5. **Granted `attacksPerTurn: 2` after attacks already made this turn.** Rulebook is silent. Implemented as `attacks_left = attacks_left.max(n)`.
+6. **Duplicate-id draw after `returnToDeck`.** A draw of an id that has both a modified copy and a just-returned printed copy takes the oldest (first in vec; return appends).
 
 ## Defense debuff and `max_defense`
 

@@ -114,7 +114,7 @@ next():
 
 `gen_range(n)` (n > 0) uses rejection sampling on the high 32 bits of `next()` so the distribution is uniform. A clone is a complete fork; a replay from a clone is bit-identical.
 
-`ScriptedRng` consumes the trace's `rng` array **by outcome**. Each game-level decision (`draw`, `random_target`, `random_card`, `random_unused`, `random_split`, `coin`, `reanimate`, `multiset_pick`) matches `chose` against the current candidate list; a miss is `OraclePickNotLegal`. The live generator is not advanced in scripted mode. Entries with `"what":"raw"` (old-engine shuffles) are ignored before the array is fed to `ScriptedRng`.
+`ScriptedRng` consumes the trace's `rng` array **by outcome**. Each game-level decision (`draw`, `random_target`, `random_card`, `random_unused`, `random_split`, `coin`, `reanimate`, `multiset_pick`) matches `chose` against the current candidate list; a miss is `OraclePickNotLegal`. For `random_target`, candidates are labeled by surviving-board index (E36); a raw field slot is accepted as an alias when that label is not already taken. The live generator is not advanced in scripted mode. Entries with `"what":"raw"` (old-engine shuffles) are ignored before the array is fed to `ScriptedRng`.
 
 Opening-hand draws are **not** `rng` picks. When `GameConfig.opening_hands` is set (replay of a header that carries `opening_hands`), `new_game` removes those card ids from the deck multisets in the listed draw order and does not roll. Live `arena-trace` still rolls the opening four, then writes them onto the header.
 
