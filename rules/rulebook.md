@@ -310,6 +310,8 @@ Two enter-play rulings:
 
 **Owner ruling — `named_enter_count` / "other" copies and enter-route timing (2026-08-30):** Cards gated on how many **other** allied copies have entered this match must not count the entering card itself when the gate is evaluated on an enter-trigger route. Obsessed Test Subject (`10931110`) — _"if at least 5 other allied copies … have entered"_ — buffs starting at the **6th** copy. The Fanfare route (Drache & Aluzard `10844110`) records the enter _after_ Fanfare and is already correct; a global "exclude self" would break it. Check the route, not just the key.
 
+**E38 (pending owner, 2026-09-10):** an entrant's own "When this card enters the field" (`on:enter`) is a same-timing board enter trigger, ordered with the others by board age — "board abilities resolve in entry order (oldest first)". Step 1 of the list above is when those reactions are *queued* relative to Fanfare, not a priority over older cards' reactions to the same event. Fanfare still resolves before all of them (E34). Example: Aizeden (`10974120`) already on the field, play Analyzing Artifact (`90071130`) — Aizeden's destroy (older) before the Artifact's draw (newest).
+
 ---
 
 ## Effect Types and Resolution Model

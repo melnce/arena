@@ -337,26 +337,26 @@
   },
   {
     "trace": "afnm-minatodao-mirror/trace-20260910-2.jsonl",
-    "i": 55,
-    "path": "error",
-    "class": "old-rule",
-    "reason": "Analyzing Artifact 90071130 prints 'When this card enters the field, draw a card'; E34 / rulebook Fanfare and Enter-Play: the entering card's own enter resolves before other cards' ally_enter (Aizeden 10974120 / Myuu 10774120). The old engine rolled random_target first",
+    "i": 66,
+    "path": "legal",
+    "class": "convention",
+    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}. E38 ran this game on from i=55; dropped on emitter regen.",
     "since": "2026-09-10"
   },
   {
     "trace": "afnm-minatodao-mirror/trace-20260910-24.jsonl",
-    "i": 22,
-    "path": "error",
-    "class": "old-rule",
-    "reason": "Analyzing Artifact 90071130 prints 'When this card enters the field, draw a card'; E34 / rulebook Fanfare and Enter-Play: the entering card's own enter resolves before other cards' ally_enter (Aizeden 10974120 / Myuu 10774120). The old engine rolled random_target first",
+    "i": 26,
+    "path": "legal",
+    "class": "convention",
+    "reason": "Sincerity of the Dewdrop 10573310 prints 'Select a card on the field'; when both boards occupy the same slot number the old emitter's choose {slot:N} (trace-format) collapses allied and enemy into one legal option, while arena names {slot, player}. E38 ran this game on from i=22; dropped on emitter regen.",
     "since": "2026-09-10"
   },
   {
     "trace": "afnm-minatodao-mirror/trace-20260910-4.jsonl",
     "i": 56,
     "path": "error",
-    "class": "old-rule",
-    "reason": "Asher & Lydia 10874110 prints 'destroy 2 random enemy followers with Ward'; owner ruling 2026-08-23 / rulebook Randomness: N random followers are distinct from the current field (no compact between picks). The old engine destroyed then compacted, so the second random_target repeated slot:1",
+    "class": "convention",
+    "reason": "E36 (lands via main from cursor/m2-rune-elf): Asher 10874110 'destroy 2 random enemy followers with Ward'; the emitter numbers random_target among surviving cards at roll time (trace-format RK), so the second pick is slot:1 after compact. Not implemented here.",
     "since": "2026-09-10"
   }
 ]

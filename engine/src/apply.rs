@@ -1013,12 +1013,12 @@ fn enter_from_play(
             raise_follower_enter(db, state, me, &entered);
         }
     }
-    // Rulebook Fanfare and Enter-Play Trigger Order: the played card's own
-    // enter ability (step 1) sits on pending_work above Fanfare; other cards'
-    // enter/play reactions stay on the queue until the play completes (E34).
+    // E34: Fanfare on pending_work; enter/play reactions stay on the queue
+    // until the play completes. E38: the entrant's own `on:enter` is one of
+    // those reactions (board age, oldest first), not a jump ahead of them.
     let gated = gated_fanfare(db, state, me, src, card_id, fanfare);
     push_effects(state, me, src, gated);
-    push_own_enter(db, state, me, id);
+    queue_enter_reactions(db, state, me, card_id, id, true);
     Ok(())
 }
 
@@ -2018,35 +2018,6 @@ fn enqueue_card_triggers(
                 a,
             );
         }
-    }
-}
-
-fn push_own_enter(db: &CardDb, state: &mut State, me: PlayerId, inst_id: u32) {
-    let Some(slot) = state.find_field(me, inst_id) else {
-        return;
-    };
-    let Some(inst) = state.field_inst(me, slot).cloned() else {
-        return;
-    };
-    let Ok(card) = db.card(inst.card) else { return };
-    let mut own = Vec::new();
-    for a in card.abilities().iter().chain(inst.granted.iter()) {
-        if a.tag() == TriggerTag::Enter {
-            own.push(a.effects().to_vec());
-        }
-    }
-    for fx in own.into_iter().rev() {
-        push_work(
-            state,
-            me,
-            SourceRef::Field {
-                player: me,
-                id: inst.id,
-            },
-            fx,
-            0,
-            None,
-        );
     }
 }
 
@@ -4685,7 +4656,6 @@ fn apply_invoke(
             raise_follower_enter(db, state, controller, &entered);
         }
         queue_enter_reactions(db, state, controller, id, inst_uid, false);
-        push_own_enter(db, state, controller, inst_uid);
         enqueue_card_triggers(db, state, controller, inst_uid, TriggerTag::Invoked, 4);
     }
     Ok(())

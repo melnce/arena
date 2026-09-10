@@ -1,7 +1,9 @@
 //! M2 wave 1 constructs: crystallize, hand-zone endOfTurn, summon from deck,
 //! granted Last Words copy, split damage, necromancy evolve, Strike both leaders.
 
-use arena_engine::{apply, legal_actions, snapshot, Action, AttackTarget, Phase, PlayerId, Slot};
+use arena_engine::{
+    apply, legal_actions, snapshot, Action, AttackTarget, Phase, PickWhat, PlayerId, Slot,
+};
 
 mod common;
 use common::*;
@@ -787,5 +789,41 @@ fn reanimate_pick_weighted_by_destroyed_instances() {
     assert!(
         (180..=220).contains(&a),
         "A (two instances) chosen {a}/300, expected ~200 (2/3); B={b}"
+    );
+}
+
+// ----- E38 -----
+
+#[test]
+fn e38_own_enter_sorts_with_older_ally_enter() {
+    // Game 2 i=55: Aizeden already on the field; play Analyzing Artifact.
+    // Oldest-first: Aizeden's destroy (random_target) before the Artifact's
+    // own "When this card enters the field, draw a card". Fanfare stays
+    // before all of them (Analyzing has none). E38 pending owner.
+    let db = load_db();
+    let mut st = started(&db, 38);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, me, "10974120");
+    put_field(&db, &mut st, opp, "10771110");
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "90071130");
+    let kinds: Vec<_> = st
+        .picks
+        .iter()
+        .filter(|p| p.what == PickWhat::RandomTarget || p.what == PickWhat::Draw)
+        .map(|p| p.what)
+        .collect();
+    assert!(
+        kinds.len() >= 2,
+        "expected destroy pick then draw, got {:?}",
+        st.picks
+    );
+    assert_eq!(kinds[0], PickWhat::RandomTarget, "older Aizeden first");
+    assert_eq!(kinds[1], PickWhat::Draw, "entrant own enter last");
+    assert!(
+        !field_has(&st, opp, "10771110"),
+        "Aizeden destroyed the enemy follower"
     );
 }

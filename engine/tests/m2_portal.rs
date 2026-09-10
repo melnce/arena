@@ -3,7 +3,7 @@
 //! draw, copyOf + hand cost, Accelerate 3/4.
 
 use arena_engine::{
-    apply, legal_actions, Action, AttackTarget, CardInstance, Phase, PlayerId, Slot,
+    apply, legal_actions, Action, AttackTarget, CardInstance, Phase, PickWhat, PlayerId, Slot,
 };
 
 mod common;
@@ -524,4 +524,30 @@ fn analyzing_artifact_enter_draws_transform_does_not() {
             .any(|p| p.what == arena_engine::PickWhat::Draw),
         "Analyzing on:enter draws"
     );
+}
+
+/// Game 2 i=55 shape: older Aizeden, play Analyzing Artifact. E38.
+#[test]
+fn e38_aizeden_destroy_before_analyzing_draw() {
+    let db = load_db();
+    let mut st = started(&db, 56);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, me, "10974120");
+    put_field(&db, &mut st, opp, "10771110");
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "90071130");
+    let kinds: Vec<_> = st
+        .picks
+        .iter()
+        .filter(|p| p.what == PickWhat::RandomTarget || p.what == PickWhat::Draw)
+        .map(|p| p.what)
+        .collect();
+    assert_eq!(
+        kinds,
+        vec![PickWhat::RandomTarget, PickWhat::Draw],
+        "oldest board trigger first, then the entrant's own enter"
+    );
+    assert!(!field_has(&st, opp, "10771110"));
 }
