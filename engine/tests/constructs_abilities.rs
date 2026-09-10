@@ -648,6 +648,19 @@ fn construct_ability_when_turnOwner_self() {
 }
 
 #[test]
+fn construct_ability_when_turnOwner() {
+    // tools/constructs.py slug; same fixture as when_turnOwner_self.
+    let db = load_db();
+    let mut st = started(&db, 451);
+    watcher(&db, &mut st, "89800201");
+    play_costed(&db, &mut st, TANK1, 1);
+    assert_eq!(opp_def(&st), 19);
+    end_turn(&db, &mut st);
+    play_costed(&db, &mut st, TANK3, 3);
+    assert_eq!(leader_def(&st, PlayerId::A), 20, "opponent turn is quiet");
+}
+
+#[test]
 fn construct_ability_zone_hand() {
     // no-op engine: field copy also fires
     let db = load_db();

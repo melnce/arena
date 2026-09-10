@@ -114,6 +114,15 @@ fn construct_amount_n() {
 }
 
 #[test]
+fn construct_amount_int() {
+    // tools/constructs.py slug for the integer Amount variant.
+    let db = load_db();
+    let mut st = started(&db, 301);
+    play_costed(&db, &mut st, "89700001", 1);
+    assert_eq!(atk_of(&st, "89700001"), 6);
+}
+
+#[test]
 fn construct_amount_add() {
     // no-op engine: +0 or first addend only
     let db = load_db();
