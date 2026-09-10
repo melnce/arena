@@ -1,4 +1,5 @@
 import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
+import { publicUrl } from "./base.ts";
 import { decks, loadCatalog, parseDeckJson } from "./catalog.ts";
 import { clearFloaters, spawnFloaters } from "./fct.ts";
 import { bindPointer } from "./input.ts";
@@ -203,7 +204,7 @@ const deckCache = new Map<string, Record<string, number>>();
 async function ensureDecks(): Promise<void> {
   for (const d of decks()) {
     if (deckCache.has(d.id)) continue;
-    const raw = await fetch(`/decks/${d.file}`).then((r) => r.text());
+    const raw = await fetch(publicUrl(`decks/${d.file}`)).then((r) => r.text());
     deckCache.set(d.id, parseDeckJson(raw));
   }
 }

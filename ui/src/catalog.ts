@@ -1,5 +1,6 @@
-import type { CardText, CatalogEntry, DeckManifestEntry } from "./types.ts";
 import { cardText as wasmCardText } from "../pkg/arena_wasm.js";
+import { publicUrl } from "./base.ts";
+import type { CardText, CatalogEntry, DeckManifestEntry } from "./types.ts";
 
 const catalog = new Map<string, CatalogEntry>();
 const textCache = new Map<string, CardText>();
@@ -9,13 +10,13 @@ let crestById: Record<string, string> = {};
 
 export async function loadCatalog(): Promise<void> {
   const [images, manifest, crests] = await Promise.all([
-    fetch("/catalog-images.json").then((r) => r.json()) as Promise<
+    fetch(publicUrl("catalog-images.json")).then((r) => r.json()) as Promise<
       Record<string, CatalogEntry>
     >,
-    fetch("/decks/manifest.json").then((r) => r.json()) as Promise<{
+    fetch(publicUrl("decks/manifest.json")).then((r) => r.json()) as Promise<{
       entries: DeckManifestEntry[];
     }>,
-    fetch("/crest-art.json")
+    fetch(publicUrl("crest-art.json"))
       .then((r) => r.json())
       .catch(() => ({ bySlug: {}, byId: {} })) as Promise<{
       bySlug?: Record<string, string>;
