@@ -27,7 +27,7 @@
               },
               "zone": "field"
             },
-            "exact": true
+            "exact": false
           },
           "count": 1,
           "position": "random"

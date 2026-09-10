@@ -16,11 +16,13 @@ const MD_OUT = path.join(ROOT, "rules", "official-glossary.md");
 function main() {
   if (!fs.existsSync(EN_OUT) || !fs.existsSync(JA_OUT)) {
     console.error("missing committed glossary JSON");
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   if (!fs.existsSync(MD_OUT)) {
     console.error(`missing ${MD_OUT}`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   const en = JSON.parse(fs.readFileSync(EN_OUT, "utf8"));
   const ja = JSON.parse(fs.readFileSync(JA_OUT, "utf8"));
@@ -31,7 +33,8 @@ function main() {
       "rules/official-glossary.md does not match regeneration from cards/official/glossary.*.json",
     );
     console.error("run: node tools/fetch-glossary.mjs --md-from-json");
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   console.log(`ok: official glossary markdown matches JSON (${en._meta?.count ?? "?"} entries)`);
 }

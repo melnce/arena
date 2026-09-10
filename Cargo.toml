@@ -1,3 +1,4 @@
 [workspace]
-members = ["engine", "wasm"]
+members = ["engine", "wasm", "py"]
+default-members = ["engine", "wasm"]
 resolver = "2"

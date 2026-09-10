@@ -456,7 +456,8 @@ function schemaOnly(dirArg) {
   if (errors.length) {
     for (const e of errors) console.error(e);
     console.error(`\n${errors.length} error(s), ${files.length} file(s)`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   console.log(`ok: ${files.length} files schema-only`);
 }
@@ -466,7 +467,8 @@ function main() {
   if (argv[0] === "--schema-only") {
     if (!argv[1]) {
       console.error("usage: node validate.mjs --schema-only <dir>");
-      process.exit(1);
+      process.exitCode = 1;
+      return;
     }
     schemaOnly(argv[1]);
     return;
@@ -602,7 +604,8 @@ function main() {
   if (errors.length) {
     for (const e of errors) console.error(e);
     console.error(`\n${errors.length} error(s), ${files.length} file(s)`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   console.log(`ok: ${files.length} files validated`);
 }

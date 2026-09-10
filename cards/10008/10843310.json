@@ -19,7 +19,7 @@
           "select": {
             "side": "enemy",
             "zone": "field",
-            "kind": "follower",
+            "kind": "character",
             "pick": "choose",
             "includeLeader": true
           },
