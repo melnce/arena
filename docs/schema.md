@@ -210,7 +210,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `search` | omitted — measured 0 printed "search" in the pool. `10021310` is `draw` + filter |
 | `addToDeck` | `10901310` |
 | `evolve` | effect-granted `10724110` Fanfare; `super: true` `10464120` |
-| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane |
+| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane; `until` `endOfTurn` `10461120` Lamretta / `endOfOpponentTurn` `10962110` Agent of the Testaments |
 | `grantAbility` | `10704110` quoted end-of-turn banish |
 | `removeAbilities` | `90051140` (optional `on: ["lastWords"]` removes only Last Words) |
 | `cost` | `delta` `10534120`; `set` `10923110`; `untilEndOfTurn` `10574110` |
@@ -245,7 +245,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 
 ## Amount
 
-integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{stat: {of, which}}` `10714110` · `{var}` `10131320` · `{add}/{sub}/{max}/{min}` `10811110` Marlone (sub) · `{neg}` `10714110` · `{distinctNames}` `10773310` · `{enteredThisMatch}` `10773310`. `{turn}` omitted (no pool card).
+integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{stat: {of, which}}` `10714110` · `{var}` `10131320` · `{add}/{sub}/{max}/{min}` `10811110` Marlone (sub) · `{neg}` `10714110` · `{distinctNames}` `10773310` · `{enteredThisMatch}` `10773310` · `{sumHighestBaseCosts: {n, select}}` `10502120` Behemoth ("the sum of the 3 highest base costs in your hand"). `{turn}` omitted (no pool card).
 
 ## Selector
 
@@ -261,11 +261,11 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Filter
 
-`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `destroyedThisMatch` `10901310`
+`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `destroyedThisMatch` `10901310` · `didNotAttackThisTurn` `10464110` Galleon ("that didn't attack this turn") · `superEvolved` `10863210` Academy Hijinks · `notBound` `10901110` Jailor ("unselected")
 
 ## Condition
 
-`all`/`any`/`not` · `countAtLeast` · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `attackedLeaderLastTurn` `10944110` · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120`. Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
+`all`/`any`/`not` · `countAtLeast` · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `boundHas` `10663210` Sublime Eld Tome ("If you selected an allied amulet") · `attackedLeaderLastTurn` `10944110` · `attackingFollower` `crest:10864110` Verdilia ("attacks a follower") · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120` · `amountAtLeast` `10502120` Behemoth. Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
 
 ## Modes
 

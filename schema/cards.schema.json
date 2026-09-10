@@ -275,6 +275,16 @@
         },
         "destroyedThisMatch": {
           "type": "boolean"
+        },
+        "didNotAttackThisTurn": {
+          "type": "boolean"
+        },
+        "superEvolved": {
+          "type": "boolean"
+        },
+        "notBound": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
@@ -619,6 +629,32 @@
           "required": [
             "enteredThisMatch"
           ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sumHighestBaseCosts": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "n": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "select": {
+                  "$ref": "#/$defs/Selector"
+                }
+              },
+              "required": [
+                "n",
+                "select"
+              ]
+            }
+          },
+          "required": [
+            "sumHighestBaseCosts"
+          ]
         }
       ]
     },
@@ -898,6 +934,18 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "attackingFollower": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "attackingFollower"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
             "turnOwner": {
               "enum": [
                 "self",
@@ -1131,6 +1179,39 @@
           },
           "required": [
             "handSameCostAtLeast"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "boundHas": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "ref": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "filter": {
+                  "$ref": "#/$defs/Filter"
+                },
+                "side": {
+                  "enum": [
+                    "ally",
+                    "enemy",
+                    "any"
+                  ]
+                }
+              },
+              "required": [
+                "ref",
+                "filter"
+              ]
+            }
+          },
+          "required": [
+            "boundHas"
           ]
         }
       ]
@@ -1642,6 +1723,12 @@
             },
             "traits": {
               "$ref": "#/$defs/Traits"
+            },
+            "until": {
+              "enum": [
+                "endOfTurn",
+                "endOfOpponentTurn"
+              ]
             }
           },
           "required": [
