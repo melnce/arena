@@ -1,0 +1,13 @@
+[build-system]
+requires = ["maturin>=1.4,<2"]
+build-backend = "maturin"
+
+[project]
+name = "arena"
+version = "0.1.0"
+requires-python = ">=3.10"
+description = "Python bindings for the arena match engine (M5 foundation)"
+
+[tool.maturin]
+module-name = "arena"
+features = ["extension-module"]
