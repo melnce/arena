@@ -32,25 +32,20 @@
           },
           "then": [
             {
-              "op": "seq",
-              "effects": [
-                {
-                  "op": "addToHand",
-                  "card": {
-                    "named": "10922310"
-                  },
-                  "count": 1,
-                  "as": "t"
-                },
-                {
-                  "op": "cost",
-                  "select": {
-                    "pick": "bound",
-                    "ref": "t"
-                  },
-                  "set": 1
-                }
-              ]
+              "op": "addToHand",
+              "card": {
+                "named": "10922310"
+              },
+              "count": 1,
+              "as": "t"
+            },
+            {
+              "op": "cost",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "set": 1
             }
           ]
         }

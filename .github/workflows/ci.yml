@@ -76,6 +76,12 @@ jobs:
       - name: coverage verb walk
         run: python3 tools/coverage-check.py
 
+      - name: phrase index — no unlisted divergence
+        run: python3 tools/phrase_index.py --check-divergences
+
+      - name: phrase index — doc current
+        run: python3 tools/phrase_index.py --check-doc
+
   wasm:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -130,3 +136,52 @@ jobs:
           ARENA_WASM_SEEDS: "20"
           ARENA_FIRST: coin
         run: node wasm/tests/node.test.mjs
+
+  py:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-py-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-py-
+            ${{ runner.os }}-cargo-
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install maturin
+        run: pip install maturin pytest
+
+      - name: Build arena-trace
+        run: cargo build --release --bin arena-trace
+
+      - name: cargo fmt
+        run: cargo fmt --check
+
+      - name: cargo clippy arena-py
+        run: cargo clippy -p arena-py --all-targets -- -D warnings
+
+      - name: Build and install wheel
+        working-directory: py
+        run: |
+          python -m maturin build --release --out ../dist
+          pip install ../dist/*.whl
+
+      - name: pytest
+        run: python -m pytest py/tests -q
