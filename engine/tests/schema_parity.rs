@@ -92,7 +92,7 @@ fn m1_unsupported_list_is_nonempty() {
     let v = m1_unsupported_list();
     assert!(v.contains(&"on:invoked"));
     assert!(v.contains(&"op:transform"));
-    assert!(v.contains(&"mode:crystallize"));
+    assert!(v.contains(&"op:invoke"));
 }
 
 #[test]

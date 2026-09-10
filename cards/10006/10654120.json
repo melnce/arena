@@ -1,0 +1,53 @@
+{
+  "id": "10654120",
+  "name": "Bibatii, Eld Sight",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 4,
+  "attack": 3,
+  "defense": 3,
+  "text": "Fanfare: Necromancy (4) - Evolve this follower.\n\nWhen this follower evolves, add a Depths of the Eld Sight to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Necromancy (4) - Evolve this follower.",
+      "effects": [
+        {
+          "printed": "Necromancy (4) - Evolve this follower.",
+          "op": "pay",
+          "resource": "shadows",
+          "amount": 4,
+          "effects": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "anyEvolve",
+      "printed": "When this follower evolves, add a Depths of the Eld Sight to your hand.",
+      "effects": [
+        {
+          "printed": "add a Depths of the Eld Sight to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90054330"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

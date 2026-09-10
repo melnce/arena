@@ -302,7 +302,7 @@ fn choose_card_takes_the_lowest_hand_position() {
 // ----- E19 -----
 
 #[test]
-fn discarded_vorlalai_summons_before_the_next_choice() {
+fn discarded_vorlalai_summons_after_the_spell_resolves() {
     let db = load_db();
     let mut st = started(&db, 10);
     let me = PlayerId::A;
@@ -319,8 +319,13 @@ fn discarded_vorlalai_summons_before_the_next_choice() {
         "destroy select is pending"
     );
     assert!(
+        !field_has(&st, me, "10644120"),
+        "on:discarded waits until the spell finishes"
+    );
+    choose(&db, &mut st, 0);
+    assert!(
         field_has(&st, me, "10644120"),
-        "on:discarded summons before the second choice"
+        "on:discarded summons after the spell resolves"
     );
     assert_eq!(st.player(me).rally, 1);
 }

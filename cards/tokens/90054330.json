@@ -1,0 +1,27 @@
+{
+  "id": "90054330",
+  "name": "Depths of the Eld Sight",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 1,
+  "text": "Draw 2 cards.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

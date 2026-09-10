@@ -25,6 +25,7 @@ function runValidate(cardsDir) {
   const r = spawnSync("node", ["tools/validate.mjs"], {
     cwd: tmpRoot,
     encoding: "utf8",
+    maxBuffer: 20 * 1024 * 1024,
   });
   fs.rmSync(tmpRoot, { recursive: true, force: true });
   return r;

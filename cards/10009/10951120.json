@@ -1,0 +1,65 @@
+{
+  "id": "10951120",
+  "name": "Netherworld Lieutenant",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "attack": 1,
+  "defense": 1,
+  "text": "Last Words: Summon a Netherworld Lieutenant, give it +1/+0 and Rush, and remove Last Words from it.",
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Netherworld Lieutenant, give it +1/+0 and Rush, and remove Last Words from it.",
+      "effects": [
+        {
+          "printed": "Summon a Netherworld Lieutenant, give it +1/+0 and Rush, and remove Last Words from it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10951120"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "attack": 1,
+              "defense": 0
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "rush": true
+              }
+            },
+            {
+              "op": "removeAbilities",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "on": [
+                "lastWords"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

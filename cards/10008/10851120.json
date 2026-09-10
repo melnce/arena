@@ -1,0 +1,47 @@
+{
+  "id": "10851120",
+  "name": "Lilith, Devilish Cutie",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "attack": 1,
+  "defense": 1,
+  "text": "Strike: Deal 1 damage to both leaders.\nLast Words: Add a Bat to your hand.",
+  "abilities": [
+    {
+      "on": "strike",
+      "printed": "Strike: Deal 1 damage to both leaders.",
+      "effects": [
+        {
+          "printed": "Deal 1 damage to both leaders.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "any",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add a Bat to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Bat to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90051120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

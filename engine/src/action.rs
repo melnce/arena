@@ -221,5 +221,6 @@ pub fn play_form_label(form: PlayForm) -> &'static str {
         PlayForm::Normal => "normal",
         PlayForm::Enhance { .. } => "enhance",
         PlayForm::Accelerate { .. } => "accelerate",
+        PlayForm::Crystallize { .. } => "crystallize",
     }
 }

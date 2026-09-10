@@ -1,0 +1,68 @@
+{
+  "id": "10803310",
+  "name": "Wills United",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Select a Mode to activate.\n1. Deal 3 damage to a random enemy follower.\n2. Reanimate (2).\n3. Give all allied followers on the field +1/+0.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate.\n1. Deal 3 damage to a random enemy follower.\n2. Reanimate (2).\n3. Give all allied followers on the field +1/+0.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Deal 3 damage to a random enemy follower.\n2. Reanimate (2).\n3. Give all allied followers on the field +1/+0.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Deal 3 damage to a random enemy follower.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "random",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  },
+                  "amount": 3
+                }
+              ]
+            },
+            {
+              "printed": "2. Reanimate (2).",
+              "effects": [
+                {
+                  "op": "reanimate",
+                  "maxCost": 2
+                }
+              ]
+            },
+            {
+              "printed": "3. Give all allied followers on the field +1/+0.",
+              "effects": [
+                {
+                  "op": "buff",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower"
+                  },
+                  "attack": 1,
+                  "defense": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

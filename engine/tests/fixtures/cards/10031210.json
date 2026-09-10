@@ -11,6 +11,10 @@
   "tribes": [
     "earth sigil"
   ],
+  "traits": {
+    "aura": true,
+    "cantBeDestroyedByAbilities": true
+  },
   "abilities": [
     {
       "on": "fanfare",
@@ -36,7 +40,7 @@
           "amount": 1
         }
       ],
-      "sacrifice": true
+      "sacrifice": false
     }
   ]
 }

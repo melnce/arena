@@ -58,6 +58,7 @@ pub enum DivergenceClass {
     OldEmitter,
     Engine,
     Convention,
+    OldRule,
 }
 
 impl KnownDivergence {
@@ -142,7 +143,7 @@ pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayErro
         if let Err(e) = apply_neutral(db, &mut state, &action) {
             return Err(match e {
                 Illegal::Unsupported(u) => ReplayError::Unsupported(u),
-                Illegal::OraclePickNotLegal(o) => ReplayError::Oracle(o),
+                Illegal::OraclePickNotLegal(o) => ReplayError::OracleAt { i, err: o },
                 other => illegal_at(i, &action, &legal_json(db, &state), other),
             });
         }

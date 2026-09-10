@@ -1,0 +1,97 @@
+{
+  "id": "10954120",
+  "name": "Garodeth vs. Zeth",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "attack": 8,
+  "defense": 8,
+  "text": "Activates in hand. At the end of your turn, if your leader's defense is 12 or less, reduce the cost of this card by 1.\n\nFanfare: Select a Mode to activate.\n1. Give this follower Storm. Deal 2 damage to your leader.\n2. Give this follower Ward. Deal 8 damage to all enemy followers.",
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "zone": "hand",
+      "printed": "Activates in hand. At the end of your turn, if your leader's defense is 12 or less, reduce the cost of this card by 1.",
+      "when": {
+        "leaderDefenseLte": 12
+      },
+      "effects": [
+        {
+          "printed": "reduce the cost of this card by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Give this follower Storm. Deal 2 damage to your leader.\n2. Give this follower Ward. Deal 8 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Give this follower Storm. Deal 2 damage to your leader.\n2. Give this follower Ward. Deal 8 damage to all enemy followers.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Give this follower Storm. Deal 2 damage to your leader.",
+              "effects": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "storm": true
+                  }
+                },
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 2
+                }
+              ]
+            },
+            {
+              "printed": "2. Give this follower Ward. Deal 8 damage to all enemy followers.",
+              "effects": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "ward": true
+                  }
+                },
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  },
+                  "amount": 8
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

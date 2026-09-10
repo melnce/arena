@@ -1,0 +1,56 @@
+{
+  "id": "10552110",
+  "name": "Fickle Necromancer",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "attack": 1,
+  "defense": 1,
+  "text": "Fanfare: Summon a Ghost and Skeleton.\n\nEvolve: Summon a Rotting Zombie.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Ghost and Skeleton.",
+      "effects": [
+        {
+          "printed": "Summon a Ghost and Skeleton.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051130"
+              },
+              "count": 1
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon a Rotting Zombie.",
+      "effects": [
+        {
+          "printed": "Summon a Rotting Zombie.",
+          "op": "summon",
+          "card": {
+            "named": "90051140"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

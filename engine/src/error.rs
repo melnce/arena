@@ -124,6 +124,8 @@ pub enum ReplayError {
     Unsupported(Unsupported),
     #[error("{0}")]
     Oracle(OraclePickNotLegal),
+    #[error("oracle at i={i}: {err}")]
+    OracleAt { i: u32, err: OraclePickNotLegal },
     #[error("illegal action at i={i}: {action}; legal={legal} ({source})")]
     Illegal {
         i: u32,
@@ -138,7 +140,9 @@ impl ReplayError {
     pub fn exit_code(&self) -> i32 {
         match self {
             ReplayError::Diverge { .. } | ReplayError::Header(_) | ReplayError::Illegal { .. } => 2,
-            ReplayError::Unsupported(_) | ReplayError::Oracle(_) => 3,
+            ReplayError::Unsupported(_) | ReplayError::Oracle(_) | ReplayError::OracleAt { .. } => {
+                3
+            }
             ReplayError::Io(_) | ReplayError::Parse { .. } => 1,
         }
     }

@@ -1,0 +1,47 @@
+{
+  "id": "10751120",
+  "name": "Raz, Demon on the Drums",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "attack": 1,
+  "defense": 2,
+  "text": "Last Words: Summon a Skeleton. \n\nEvolve: Select an enemy follower on the field and deal it 3 damage.",
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Skeleton.",
+      "effects": [
+        {
+          "printed": "Summon a Skeleton.",
+          "op": "summon",
+          "card": {
+            "named": "90051110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and deal it 3 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 3 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
