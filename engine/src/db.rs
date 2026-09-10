@@ -54,22 +54,24 @@ impl CardDb {
                 if path.file_name().and_then(|s| s.to_str()) == Some("catalog.json") {
                     return Ok(());
                 }
-                db.load_file(path)
+                db.load_file(path, false)
             })?;
         }
         Ok(db)
     }
 
     /// Load extra authored files (engine fixtures) without touching `cards/`.
+    /// IDs already present from `cards/**` are skipped so stand-in fixtures do
+    /// not collide once RD's card pool lands on the same tree.
     pub fn load_extra_dir(&mut self, dir: impl AsRef<Path>) -> Result<(), LoadError> {
         let dir = dir.as_ref();
         if !dir.exists() {
             return Ok(());
         }
-        walk_json(dir, &mut |path| self.load_file(path))
+        walk_json(dir, &mut |path| self.load_file(path, true))
     }
 
-    fn load_file(&mut self, path: &Path) -> Result<(), LoadError> {
+    fn load_file(&mut self, path: &Path, skip_existing: bool) -> Result<(), LoadError> {
         let text = fs::read_to_string(path).map_err(|source| LoadError::Io {
             path: path.display().to_string(),
             source,
@@ -84,6 +86,9 @@ impl CardDb {
                 let id = card.id();
                 let key = id.as_str();
                 if let Some(prev) = self.paths.get(&key) {
+                    if skip_existing {
+                        return Ok(());
+                    }
                     return Err(LoadError::Duplicate {
                         id: key,
                         first: prev.display().to_string(),
@@ -102,6 +107,9 @@ impl CardDb {
             CardOrCrest::Crest(crest) => {
                 let key = crest.id.clone();
                 if let Some(prev) = self.paths.get(&key) {
+                    if skip_existing {
+                        return Ok(());
+                    }
                     return Err(LoadError::Duplicate {
                         id: key,
                         first: prev.display().to_string(),
