@@ -620,7 +620,7 @@
     "i": 84,
     "path": "players.b.field[3].attack",
     "class": "old-rule",
-    "reason": "Asher & Lydia 10874110 prints Fanfare (give Ward) then Enhance (9) evolve + Storm; owner 2026-08-15 Enhance never suppresses Fanfare; the play-line snapshot is still the 5/5 because Fanfare's choose pauses before Enhance; the old engine already shows the evolved 8/8",
+    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 8/8 (Asher & Lydia 10874110)",
     "since": "2026-09-10"
   },
   {
@@ -628,7 +628,7 @@
     "i": 93,
     "path": "players.a.field[3].attack",
     "class": "old-rule",
-    "reason": "Asher & Lydia 10874110 prints Fanfare (give Ward) then Enhance (9) evolve + Storm; owner 2026-08-15 Enhance never suppresses Fanfare; the play-line snapshot is still the 5/5 because Fanfare's choose pauses before Enhance; the old engine already shows the evolved 7/7",
+    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 7/7 (Asher & Lydia 10874110)",
     "since": "2026-09-10"
   }
 ]
