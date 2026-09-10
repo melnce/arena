@@ -14,6 +14,9 @@
         "kind": "follower"
       },
       "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      },
       "printed": "Once on each of your turns, when you play a follower, evolve it.",
       "effects": [
         {

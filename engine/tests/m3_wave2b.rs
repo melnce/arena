@@ -579,6 +579,57 @@ fn cutthroat_banish_then_no_crest_if_duplicate_left() {
     );
 }
 
+/// Cutthroat crest: "Once on each of your turns, when you play a follower, evolve it."
+/// Owner ruling: `oncePerTurn: true` + `when: {turnOwner: "self"}` — only during YOUR turns, once each.
+#[test]
+fn cutthroat_crest_once_per_your_turn() {
+    let db = load_db();
+    let mut st = started(&db, 121);
+    let me = PlayerId::A;
+    st.player_mut(me)
+        .crests
+        .push(arena_engine::state::CrestInstance {
+            id: "crest:10974110".into(),
+            countdown: None,
+            faith: false,
+            once_used: Vec::new(),
+            granted_order: 0,
+            granted: vec![],
+        });
+    give_pp(&mut st, me, 3, 3);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "88001110");
+    let first = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == "88001110")
+        .expect("first play");
+    assert!(first.evolved, "first follower play this turn evolves");
+    play_id(&db, &mut st, me, "88001110");
+    let unevolved = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == "88001110" && !c.evolved)
+        .count();
+    assert_eq!(unevolved, 1, "second play same turn is not evolved");
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
+    give_pp(&mut st, me, 1, 1);
+    play_id(&db, &mut st, me, "88001110");
+    let evolved = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == "88001110" && c.evolved)
+        .count();
+    assert_eq!(evolved, 2, "oncePerTurn resets on the next of your turns");
+}
+
 /// Lunar Bunny evolving before the played spell resolves (E39).
 #[test]
 fn lunar_bunny_evolves_before_spell_body() {
