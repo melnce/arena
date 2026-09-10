@@ -28,8 +28,9 @@ pub use state::{
 };
 pub use support::m1_unsupported_list;
 pub use trace::{
-    json_eq_first_diff, legal_divergence_parts, neutral_json, picks_from_trace_rng, sort_json,
-    ActionLine, NeutralAction, OpeningHandsJson, Pick, PickChose, PickWhat, TraceHeader,
+    json_eq_first_diff, legal_divergence_parts, neutral_json, picks_from_trace_rng,
+    replay_compare_legal, replay_state_diff, sort_json, ActionLine, NeutralAction,
+    OpeningHandsJson, Pick, PickChose, PickWhat, TraceHeader,
 };
 
 /// Re-export used by bins that only need to list legal actions as NeutralAction.

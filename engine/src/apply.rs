@@ -1087,12 +1087,17 @@ fn apply_attack(
     );
     // Strike / Clash before damage — rulebook Combat Timing
     queue_combat_triggers(db, state, me, attacker.0, target);
+    let defender_id = match target {
+        AttackTarget::Slot(ds) => state.field_inst(me.opponent(), ds.0).map(|c| c.id),
+        AttackTarget::Leader => None,
+    };
     state
         .pending_work
         .push(WorkFrame::Aftermath(Aftermath::AfterCombat {
             attacker_player: me,
             attacker_id: att.id,
             target,
+            defender_id,
             knockback: att.super_evolved,
         }));
     Ok(())
@@ -2258,6 +2263,7 @@ fn run_aftermath(
             attacker_player,
             attacker_id,
             target,
+            defender_id,
             knockback,
         } => {
             combat_damage(
@@ -2266,6 +2272,7 @@ fn run_aftermath(
                 attacker_player,
                 attacker_id,
                 target,
+                defender_id,
                 knockback,
                 events,
             )?;
@@ -2445,8 +2452,10 @@ fn resolve_effect_list(
         });
         return Ok(());
     }
-    apply_effect(db, state, controller, source, &e, events)?;
-    if index + 1 < effects.len() && !matches!(state.phase, Phase::Choice { .. }) {
+    // Push the rest of this list first so a nested body (`repeat` / `if` /
+    // `seq` / `choose` options) pushed by `apply_effect` sits on top and
+    // resolves completely before the next enclosing op (E25).
+    if index + 1 < effects.len() {
         state.pending_work.push(WorkFrame::Effects {
             controller,
             source,
@@ -2454,6 +2463,7 @@ fn resolve_effect_list(
             index: index + 1,
         });
     }
+    apply_effect(db, state, controller, source, &e, events)?;
     Ok(())
 }
 
@@ -2705,6 +2715,8 @@ fn apply_effect(
             split,
             ..
         } => {
+            // Targets for this op only, selected now (E24) — not when the
+            // enclosing list started.
             let n = eval_amount(db, state, controller, Some(source), amount);
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
             if *split == Some(true) {
@@ -3102,6 +3114,7 @@ fn combat_damage(
     me: PlayerId,
     attacker_id: u32,
     target: AttackTarget,
+    defender_id: Option<u32>,
     knockback: bool,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
@@ -3120,19 +3133,38 @@ fn combat_damage(
             }
         }
         AttackTarget::Slot(ds) => {
-            let Some(def) = state.field_inst(opp, ds.0).cloned() else {
+            // Knockback keys off the defender captured at declaration, not
+            // whoever compacted into `ds` after other deaths (E23).
+            let def_slot = match defender_id {
+                Some(id) => match state.find_field(opp, id) {
+                    Some(slot) => slot,
+                    None => {
+                        if knockback {
+                            deal_leader(state, opp, 1, events);
+                        }
+                        return Ok(());
+                    }
+                },
+                None => ds.0,
+            };
+            let Some(def) = state.field_inst(opp, def_slot).cloned() else {
+                if knockback && defender_id.is_some_and(|id| state.find_field(opp, id).is_none()) {
+                    deal_leader(state, opp, 1, events);
+                }
                 return Ok(());
             };
-            deal_follower(state, opp, ds.0, att.attack.max(0), me, events);
+            deal_follower(state, opp, def_slot, att.attack.max(0), me, events);
             deal_follower(state, me, slot, def.attack.max(0), opp, events);
             if att.is_drain() {
                 restore_leader(db, state, me, att.attack.max(0), events);
             }
             // Bane even at 0 — rulebook Bane
             if att.is_bane() {
-                if let Some(d) = state.field_inst(opp, ds.0) {
-                    if !bane_blocked(state, opp, d) {
-                        destroy_slot(db, state, opp, ds.0, false, events)?;
+                if let Some(dslot) = state.find_field(opp, def.id) {
+                    if let Some(d) = state.field_inst(opp, dslot) {
+                        if !bane_blocked(state, opp, d) {
+                            destroy_slot(db, state, opp, dslot, false, events)?;
+                        }
                     }
                 }
             }
@@ -3144,7 +3176,7 @@ fn combat_damage(
                 }
             }
             settle_deaths(db, state, events)?;
-            let target_dead = state.field_inst(opp, ds.0).is_none();
+            let target_dead = state.find_field(opp, def.id).is_none();
             if knockback && target_dead {
                 deal_leader(state, opp, 1, events);
             }

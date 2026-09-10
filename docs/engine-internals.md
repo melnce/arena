@@ -55,7 +55,11 @@ A **played** follower's Rally increment is deferred until the play sequence is q
 
 That order is what makes enter-reactions precede Fanfare, Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
 
-Lethal **damage** marks a follower destroyed (`defense <= 0`) and it stays in its slot — not a candidate, not attackable — until pending work is quiet, when deaths settle together and Last Words queue (rulebook Meteor / simultaneous destruction). Explicit `destroy` / `banish` remove at once (Last Words still wait in the queue). Multi-target ops capture the set by instance id before the first application.
+Lethal **damage** marks a follower destroyed (`defense <= 0`) and it stays in its slot — not a candidate, not attackable — until pending work is quiet, when deaths settle together and Last Words queue (rulebook Meteor / simultaneous destruction). Explicit `destroy` / `banish` remove at once (Last Words still wait in the queue). An op's targets are selected when that op is reached (after previous ops in the list), then captured by instance id for that op's applications only. A nested body (`repeat`, `if`/`else`, `seq`, `choose` options) is pushed on top of the enclosing remainder and resolves completely before the next enclosing op.
+
+Super-evolve knockback (1 to the enemy leader when the SE attacker destroys the defender on its owner's turn) keys off the defender's instance id captured at attack declaration — not the follower that compacted into that slot after deaths.
+
+`arena-replay` (and library replay) compare only `phase` and `winner` when both snapshots are `phase: terminal`; the rest of the state and `legal` are post-mortem.
 
 When an effect list pauses for a player choice, the reactive queue drains first, so reactions to the clause just resolved (e.g. `on: discarded`) are visible in the choice-node snapshot.
 

@@ -471,6 +471,7 @@ pub enum Aftermath {
         attacker_player: PlayerId,
         attacker_id: u32,
         target: crate::ids::AttackTarget,
+        defender_id: Option<u32>,
         knockback: bool,
     },
     AfterEvolve {

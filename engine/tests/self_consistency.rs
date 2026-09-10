@@ -67,7 +67,7 @@ fn emit_and_replay(db: &CardDb, seed: u64) {
         let act = from_neutral(&replay, neu).expect("from_neutral");
         apply(db, &mut replay, act).unwrap_or_else(|e| panic!("replay seed={seed} i={i}: {e}"));
         let got = snapshot_json(&replay);
-        if let Some((path, a, b)) = arena_engine::json_eq_first_diff(&got, snap, "") {
+        if let Some((path, a, b)) = arena_engine::replay_state_diff(&got, snap) {
             panic!("seed {seed} i={i} {path}: arena={a} trace={b}");
         }
     }

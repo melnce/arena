@@ -85,7 +85,7 @@ fn run(path: &str) -> Result<(), ReplayError> {
         })?;
         let got = snapshot_json(&state);
         let want = rec.get("state").cloned().unwrap_or(serde_json::Value::Null);
-        if let Some((path, a, b)) = arena_engine::json_eq_first_diff(&got, &want, "") {
+        if let Some((path, a, b)) = arena_engine::replay_state_diff(&got, &want) {
             return Err(ReplayError::Diverge {
                 i,
                 path,
@@ -93,20 +93,22 @@ fn run(path: &str) -> Result<(), ReplayError> {
                 trace: b,
             });
         }
-        if let Some(legal) = rec.get("legal") {
-            let mut ours: Vec<NeutralAction> = legal_actions_neutral(&db, &state);
-            let mut theirs: Vec<NeutralAction> =
-                serde_json::from_value(legal.clone()).unwrap_or_default();
-            ours.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
-            theirs.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
-            if ours != theirs {
-                let (arena, trace) = legal_divergence_parts(&ours, &theirs);
-                return Err(ReplayError::Diverge {
-                    i,
-                    path: "legal".into(),
-                    arena,
-                    trace,
-                });
+        if arena_engine::replay_compare_legal(&got, &want) {
+            if let Some(legal) = rec.get("legal") {
+                let mut ours: Vec<NeutralAction> = legal_actions_neutral(&db, &state);
+                let mut theirs: Vec<NeutralAction> =
+                    serde_json::from_value(legal.clone()).unwrap_or_default();
+                ours.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
+                theirs.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
+                if ours != theirs {
+                    let (arena, trace) = legal_divergence_parts(&ours, &theirs);
+                    return Err(ReplayError::Diverge {
+                        i,
+                        path: "legal".into(),
+                        arena,
+                        trace,
+                    });
+                }
             }
         }
     }

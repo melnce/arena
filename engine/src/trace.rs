@@ -275,6 +275,39 @@ pub fn json_eq_first_diff<'a>(
     }
 }
 
+fn phase_is_terminal(v: &serde_json::Value) -> bool {
+    v.get("phase").and_then(|p| p.as_str()) == Some("terminal")
+}
+
+fn winner_value(v: &serde_json::Value) -> serde_json::Value {
+    v.get("winner").cloned().unwrap_or(serde_json::Value::Null)
+}
+
+/// Replay contract for one line's `state`.
+///
+/// At a line whose `phase` is `terminal`, only `phase` and `winner` are
+/// compared; the rest of the state is post-mortem and engine-private
+/// (`docs/trace-format.md` Conventions).
+pub fn replay_state_diff(
+    got: &serde_json::Value,
+    want: &serde_json::Value,
+) -> Option<(String, String, String)> {
+    if phase_is_terminal(got) && phase_is_terminal(want) {
+        let gw = winner_value(got);
+        let ww = winner_value(want);
+        if gw != ww {
+            return Some(("winner".into(), gw.to_string(), ww.to_string()));
+        }
+        return None;
+    }
+    json_eq_first_diff(got, want, "")
+}
+
+/// `legal` is not compared when both sides are already `phase: terminal`.
+pub fn replay_compare_legal(got: &serde_json::Value, want: &serde_json::Value) -> bool {
+    !(phase_is_terminal(got) && phase_is_terminal(want))
+}
+
 /// Compact one-line JSON of a NeutralAction (replay diagnostics).
 pub fn neutral_json(a: &NeutralAction) -> String {
     serde_json::to_string(a).unwrap_or_else(|_| format!("{a:?}"))
