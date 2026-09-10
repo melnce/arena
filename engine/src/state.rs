@@ -80,6 +80,19 @@ pub struct CardInstance {
     pub tribes: Vec<Tribe>,
     pub name: String,
     pub once_used: Vec<TriggerTag>,
+    /// Next `op:sequence` step (wraps after the last). Per-instance; survives
+    /// the trigger queue so Omerio / City of Babelon keep their cursor.
+    pub sequence_index: u32,
+    /// Trait grants with an `until` expiry (Measured Attunement / Shaili / Friendly Blue Ogre).
+    pub temp_traits: Vec<TempTraitGrant>,
+}
+
+/// A `grantTraits` that expires at a turn boundary.
+#[derive(Debug, Clone)]
+pub struct TempTraitGrant {
+    pub traits: Traits,
+    pub until: crate::card::Until,
+    pub caster: PlayerId,
 }
 
 impl CardInstance {
@@ -120,6 +133,8 @@ impl CardInstance {
             tribes: card.tribes().to_vec(),
             name: card.name().to_string(),
             once_used: Vec::new(),
+            sequence_index: 0,
+            temp_traits: Vec::new(),
         }
     }
 
@@ -389,6 +404,8 @@ pub enum ChoiceNode {
     Modes {
         options: Vec<u8>,
         pending: PendingChoice,
+        /// Mode indices already chosen this `choose pick N` (listed-order resolve).
+        picked: Vec<u8>,
     },
     Cards {
         options: Vec<CardId>,
@@ -455,10 +472,23 @@ pub struct OpeningHands {
 /// A bound `as` target, stored by instance id so later `ref`s survive compaction.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BoundRef {
-    Field { player: PlayerId, id: u32 },
-    Leader { player: PlayerId },
-    Hand { player: PlayerId, id: u32 },
-    Deck { player: PlayerId, id: u32 },
+    Field {
+        player: PlayerId,
+        id: u32,
+        card: CardId,
+        kind: crate::card::CardKind,
+    },
+    Leader {
+        player: PlayerId,
+    },
+    Hand {
+        player: PlayerId,
+        id: u32,
+    },
+    Deck {
+        player: PlayerId,
+        id: u32,
+    },
     Card(CardId),
 }
 
@@ -495,6 +525,14 @@ pub struct State {
     /// still between zones (`AllyCardPlayed` fires before enter).
     pub event_base_cost: Option<i32>,
     pub event_inst_id: Option<u32>,
+    /// True while an attack targeting a leader is resolving (Lu Woh crest).
+    pub attack_target_is_leader: bool,
+    /// Next `maybe_bind` appends to an existing name (Beelzebub 2-pick).
+    pub bind_append: bool,
+    /// Set while `AllyFollowerAttacks` is enqueued: the attack targets a follower.
+    pub attacking_follower: bool,
+    /// Attack target while Strike / Follower Strike / Clash resolve.
+    pub combat_opposing: Option<TargetOpt>,
 }
 
 #[derive(Debug, Clone)]
@@ -505,6 +543,11 @@ pub enum WorkFrame {
         effects: Vec<crate::card::Effect>,
         index: usize,
         subject: Option<TargetOpt>,
+        /// Instance id of `subject` when it was a field slot, so `pick: entering`
+        /// survives `compact_field` after a mid-resolution banish/destroy.
+        subject_id: Option<u32>,
+        /// E40: skip this list at `index == 0` if `source` has left its zone.
+        e40: bool,
     },
     Aftermath(Aftermath),
 }
@@ -572,6 +615,8 @@ pub struct QueuedTrigger {
     /// Entering/attacking subject captured at enqueue so sequential enters
     /// (Adahime fanfare summons, Macmillan's 3 Zombies) each keep `pick: entering`.
     pub subject: Option<TargetOpt>,
+    /// Field instance id for `subject` (slot indexes move on compact).
+    pub subject_id: Option<u32>,
 }
 
 impl State {

@@ -1,0 +1,55 @@
+{
+  "id": "10623110",
+  "name": "Heartless Strategist",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it.\nEnhance (6): Recover 3 play points. Add a Fearless Soldier to your hand.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 6,
+      "printed": "Enhance (6): Recover 3 play points. Add a Fearless Soldier to your hand.",
+      "effects": [
+        {
+          "printed": "Recover 3 play points.",
+          "op": "pp",
+          "action": "recover",
+          "amount": 3
+        },
+        {
+          "printed": "Add a Fearless Soldier to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "10621110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

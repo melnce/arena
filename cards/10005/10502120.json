@@ -1,0 +1,68 @@
+{
+  "id": "10502120",
+  "name": "Behemoth General",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Evolve: If the sum of the 3 highest base costs in your hand is higher than that of your opponent's, destroy all enemy followers.",
+  "attack": 4,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: If the sum of the 3 highest base costs in your hand is higher than that of your opponent's, destroy all enemy followers.",
+      "effects": [
+        {
+          "printed": "If the sum of the 3 highest base costs in your hand is higher than that of your opponent's, destroy all enemy followers.",
+          "op": "if",
+          "cond": {
+            "amountAtLeast": {
+              "of": {
+                "sumHighestBaseCosts": {
+                  "n": 3,
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "hand",
+                    "kind": "card"
+                  }
+                }
+              },
+              "n": {
+                "add": [
+                  {
+                    "sumHighestBaseCosts": {
+                      "n": 3,
+                      "select": {
+                        "pick": "all",
+                        "side": "enemy",
+                        "zone": "hand",
+                        "kind": "card"
+                      }
+                    }
+                  },
+                  1
+                ]
+              }
+            }
+          },
+          "then": [
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

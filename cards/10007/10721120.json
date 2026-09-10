@@ -1,0 +1,38 @@
+{
+  "id": "10721120",
+  "name": "High-Strung Liaison",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Summon a Knight. Add a Steelclad Knight to your hand.",
+  "attack": 2,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Knight. Add a Steelclad Knight to your hand.",
+      "effects": [
+        {
+          "printed": "Summon a Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021110"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Add a Steelclad Knight to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

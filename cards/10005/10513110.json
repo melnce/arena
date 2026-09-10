@@ -1,0 +1,63 @@
+{
+  "id": "10513110",
+  "name": "Spirited Skipper",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Summon 3 copies of Fairy.\n\nEvolve: Replicate the effects of this card's Fanfare ability.\nSuper-Evolve: Give all allied Pixie followers on the field Bane.",
+  "attack": 4,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 3 copies of Fairy.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies of Fairy.",
+          "op": "summon",
+          "card": {
+            "named": "90011110"
+          },
+          "count": 3
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "op": "replicate",
+          "ability": "fanfare",
+          "printed": "Replicate the effects of this card's Fanfare ability."
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give all allied Pixie followers on the field Bane.",
+      "effects": [
+        {
+          "printed": "Give all allied Pixie followers on the field Bane.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "tribe": "pixie"
+            }
+          },
+          "traits": {
+            "bane": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

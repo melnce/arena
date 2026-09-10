@@ -1,0 +1,39 @@
+{
+  "id": "10622120",
+  "name": "Navy Cat",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Destroy all enemy followers with 1 defense.\n\nStorm",
+  "attack": 6,
+  "defense": 6,
+  "traits": {
+    "storm": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Destroy all enemy followers with 1 defense.",
+      "effects": [
+        {
+          "printed": "Destroy all enemy followers with 1 defense.",
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "defenseLte": 1,
+              "defenseGte": 1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

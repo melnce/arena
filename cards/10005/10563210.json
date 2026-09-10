@@ -1,0 +1,56 @@
+{
+  "id": "10563210",
+  "name": "Resolve of the Mistbloom",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 5 damage.\n\nEngage: Destroy this card. Return 2 random cards from your hand to deck. Draw 2 cards.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 5 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 5 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "on": "engage",
+      "cost": 0,
+      "sacrifice": true,
+      "printed": "Engage: Destroy this card. Return 2 random cards from your hand to deck. Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Return 2 random cards from your hand to deck.",
+          "op": "returnToDeck",
+          "select": {
+            "pick": "randomDistinct",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "count": 2
+          },
+          "position": "random"
+        },
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

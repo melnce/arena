@@ -1,0 +1,63 @@
+{
+  "id": "10713110",
+  "name": "Frostbow Sniper",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Select an enemy follower on the field and deal it X damage. X is this follower's attack.\n\nAt the end of your turn, Combo (3) - Draw a card.",
+  "attack": 3,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it X damage. X is this follower's attack.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it X damage. X is this follower's attack.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": {
+            "stat": {
+              "of": {
+                "pick": "self"
+              },
+              "which": "attack"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, Combo (3) - Draw a card.",
+      "effects": [
+        {
+          "printed": "Combo (3) - Draw a card.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "printed": "Draw a card.",
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,30 @@
+{
+  "id": "10612110",
+  "name": "Kindly Executor",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add a Springbloom Fairy to your hand.",
+  "attack": 1,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Springbloom Fairy to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Springbloom Fairy to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90011120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

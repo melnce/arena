@@ -1,0 +1,53 @@
+{
+  "id": "10802310",
+  "name": "Legacy of the Brave",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Add an exact copy of a random card in your opponent's hand to your hand without revealing it and reduce its cost by 1. Draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Add an exact copy of a random card in your opponent's hand to your hand without revealing it and reduce its cost by 1. Draw a card.",
+      "effects": [
+        {
+          "printed": "Add an exact copy of a random card in your opponent's hand to your hand without revealing it and reduce its cost by 1.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "copyOf": {
+                  "pick": "random",
+                  "side": "enemy",
+                  "zone": "hand",
+                  "kind": "card"
+                },
+                "exact": true
+              },
+              "count": 1,
+              "as": "c"
+            },
+            {
+              "op": "cost",
+              "select": {
+                "pick": "bound",
+                "ref": "c"
+              },
+              "delta": -1
+            }
+          ]
+        },
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

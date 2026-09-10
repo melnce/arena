@@ -1,0 +1,41 @@
+{
+  "id": "10602210",
+  "name": "Encroached World",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Engage: Select a card in your hand and transform it into an exact copy of a random card in your opponent's deck.",
+  "abilities": [
+    {
+      "on": "engage",
+      "cost": 0,
+      "sacrifice": false,
+      "printed": "Engage: Select a card in your hand and transform it into an exact copy of a random card in your opponent's deck.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and transform it into an exact copy of a random card in your opponent's deck.",
+          "op": "transform",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "into": {
+            "copyOf": {
+              "pick": "random",
+              "side": "enemy",
+              "zone": "deck",
+              "kind": "card"
+            },
+            "exact": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

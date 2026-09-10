@@ -1,0 +1,58 @@
+{
+  "id": "crest:10553310",
+  "name": "Crest: Rigor of the Nightblossom",
+  "grantedBy": [
+    "10553310"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nAt the end of your turn, draw a card. Then, if you have at least 4 cards with the same cost in your hand, summon a Skeleton and give it Ward.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, draw a card. Then, if you have at least 4 cards with the same cost in your hand, summon a Skeleton and give it Ward.",
+      "effects": [
+        {
+          "printed": "draw a card.",
+          "op": "draw",
+          "count": 1
+        },
+        {
+          "printed": "Then, if you have at least 4 cards with the same cost in your hand, summon a Skeleton and give it Ward.",
+          "op": "if",
+          "cond": {
+            "handSameCostAtLeast": {
+              "n": 4
+            }
+          },
+          "then": [
+            {
+              "op": "seq",
+              "effects": [
+                {
+                  "op": "summon",
+                  "card": {
+                    "named": "90051110"
+                  },
+                  "count": 1,
+                  "as": "sk"
+                },
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "sk"
+                  },
+                  "traits": {
+                    "ward": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

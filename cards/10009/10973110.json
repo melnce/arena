@@ -1,0 +1,50 @@
+{
+  "id": "10973110",
+  "name": "Steelforged Right Hand",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it. If there are no duplicates in your deck, give this follower Storm.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it. If there are no duplicates in your deck, give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        },
+        {
+          "printed": "If there are no duplicates in your deck, give this follower Storm.",
+          "op": "if",
+          "cond": {
+            "deckHasNoDuplicates": true
+          },
+          "then": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

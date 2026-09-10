@@ -1,0 +1,57 @@
+{
+  "id": "10962120",
+  "name": "Miraculous Al-mi'raj",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Storm",
+  "attack": 2,
+  "defense": 1,
+  "traits": {
+    "storm": true
+  },
+  "modes": [
+    {
+      "kind": "crystallize",
+      "cost": 1,
+      "printed": "Crystallize (1): Countdown (3)\nLast Words: Summon a Miraculous Al-mi'raj.\n\nEngage (1): Advance this amulet's count by 1.",
+      "countdown": 3,
+      "abilities": [
+        {
+          "on": "lastWords",
+          "printed": "Last Words: Summon a Miraculous Al-mi'raj.",
+          "effects": [
+            {
+              "printed": "Summon a Miraculous Al-mi'raj.",
+              "op": "summon",
+              "card": {
+                "named": "10962120"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "on": "engage",
+          "cost": 1,
+          "sacrifice": false,
+          "printed": "Engage (1): Advance this amulet's count by 1.",
+          "effects": [
+            {
+              "printed": "Advance this amulet's count by 1.",
+              "op": "countdown",
+              "select": {
+                "pick": "self"
+              },
+              "delta": -1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,75 @@
+{
+  "id": "10901110",
+  "name": "Jailor of Antiquity",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 6 damage. Deal 2 damage to a random unselected enemy follower.\n\nWard",
+  "attack": 6,
+  "defense": 6,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 6 damage. Deal 2 damage to a random unselected enemy follower.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 6 damage. Deal 2 damage to a random unselected enemy follower.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 6,
+              "as": "t"
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "filter": {
+                  "notBound": "t"
+                }
+              },
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "accelerate",
+      "cost": 1,
+      "printed": "Accelerate (1): Deal 2 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "pick": "random",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

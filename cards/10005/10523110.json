@@ -1,0 +1,54 @@
+{
+  "id": "10523110",
+  "name": "Unmoving Tactician",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Can't attack followers or leaders.\nAt the end of your turn, summon a Steelclad Knight.\n\nSuper-Evolve: Give all other allied followers on the field +3/+3.",
+  "attack": 5,
+  "defense": 6,
+  "traits": {
+    "cantAttackFollowers": true,
+    "cantAttackLeader": true
+  },
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, summon a Steelclad Knight.",
+      "effects": [
+        {
+          "printed": "summon a Steelclad Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021120"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give all other allied followers on the field +3/+3.",
+      "effects": [
+        {
+          "printed": "Give all other allied followers on the field +3/+3.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "other": true
+          },
+          "attack": 3,
+          "defense": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

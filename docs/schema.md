@@ -156,7 +156,7 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 
 `zone`: `field` default · `hand` `10634120` / `10534120` · `deck` `10404110` / `10904110`
 
-`oncePerTurn`: `10812110`, `10822110`, `crest:10934110`
+`oncePerTurn`: `10812110`, `10822110`, `crest:10934110`. The printed phrase "Once on each of your turns" always pairs with `when: {turnOwner: self}` (owner 2026-09-10 — `rules/owner-rulings.md`).
 
 `when` on the ability: `evolved` `10574110`; `turnOwner` `10724110`; `wasFused` `10933110`; `evolvedCountAtLeast` `10404110`; `playedBaseCostsThisMatch` `10904110`
 
@@ -168,7 +168,8 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 |---|---|
 | `ally_follower_enter` | `10724110`, `crest:10724110`, `10754120` |
 | `enemy_follower_enter` | `10911210` Trap in the Woods (pool; supporting if referenced) |
-| `ally_follower_destroyed` | Lifestealer `10553110` "Whenever a Skeleton is destroyed" + card-id filter |
+| `ally_follower_destroyed` | Lifestealer `10553110` "Whenever a Skeleton is destroyed" + card-id filter (allied side) |
+| `enemy_follower_destroyed` | Lifestealer `10553110` — "a Skeleton" is any side; both destroy events |
 | `ally_amulet_destroyed` | `10664120` Lyanthoth Faith; `10964120` Omerio |
 | `ally_card_played` | `10914120` Hien; `crest:10554110` "play a follower" + filter |
 | `ally_spell_played` | `10822110`, `90021210` |
@@ -179,10 +180,10 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 | `ally_draw` | `10561120`, `crest:10564120` |
 | `ally_earth_rite` | `10731310` Heel, My Dearie |
 | `ally_engage` | `10062120` Sacred Griffon |
-| `leader_restored` | `10563110` Saint of Rehabilitation; `10963110` Executor of the Vow |
+| `leader_restored` | `10563110` Saint of Rehabilitation; `10961110` Follower of the Tenets; `10963110` Executor of the Vow — 0-heal still fires (official Q&A Burnite `10144110`) |
 | `self_buffed_up` | `10812110` Ruflet |
 
-Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`, `enemy_follower_destroyed`. Ghost's leave is `on: leave`, not an event. The schema lists exactly the 15 events in the table.
+Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`. Ghost's leave is `on: leave`, not an event. The schema lists the 16 events in the table. `enemy_follower_destroyed` is forced by Lifestealer `10553110` "Whenever a Skeleton is destroyed" (any side).
 
 ## Effects
 
@@ -197,6 +198,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `damage` | `10904110`; `split: true` `10434110` Wamdus |
 | `restore` | `10002110` |
 | `buff` | `10001110`; negative via `Amount.neg` `10714110`; `untilEndOfTurn` `10574110` option 1 (cost, not buff) — buff until EOT: `10474110` Lu Woh |
+| `select` | `10473110` Cassius: "Select an Artifact follower in your hand and deal X damage to all enemy followers. X is the selected follower's attack" — opens the choice, binds (`as`), does nothing else. Empty pool binds nothing; a later `Amount.stat` of an empty binding is 0 (official Q&A: the ability still resolves). |
 | `setStats` | omitted — no pool card sets a follower's ATK/DEF to a number (Zooey sets leader max defense via `leaderModifier`) |
 | `destroy` | `10963210` |
 | `banish` | `10574110`, `10443310` |
@@ -210,7 +212,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `search` | omitted — measured 0 printed "search" in the pool. `10021310` is `draw` + filter |
 | `addToDeck` | `10901310` |
 | `evolve` | effect-granted `10724110` Fanfare; `super: true` `10464120` |
-| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane |
+| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane; `until: endOfTurn` `10461120` Lamretta / `until: endOfOpponentTurn` `10721310` Measured Attunement / `10821120` Shaili / Friendly Blue Ogre `10552120` / `10962110` Agent of the Testaments |
 | `grantAbility` | `10704110` quoted end-of-turn banish |
 | `removeAbilities` | `90051140` (optional `on: ["lastWords"]` removes only Last Words) |
 | `cost` | `delta` `10534120`; `set` `10923110`; `untilEndOfTurn` `10574110` |
@@ -241,17 +243,21 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 
 ## Card source
 
-`{named: id}` `10724110` · `{copyOf, exact}` `10443310` / `10901310` · `{randomFrom: Filter}` `crest:10564120`
+`{named: id}` `10724110` · `{copyOf, exact}` `10443310` / `10901310` · `{from: Selector}` `10412110` Chloe "Select a follower in your hand and summon it" (the selected instance itself; hand today, legal for a deck selector) · `{randomFrom: Filter}` `crest:10564120`
+
+`copyOf` always copies (exact or printed) regardless of zone — the original stays. `from` is the move: put that instance onto the field; a full field leaves it where it is.
+
+`randomFrom` with count > 1 picks differently named cards; every printed use says so. A future card that summons several from a deck without "differently named" needs its own construction.
 
 ## Amount
 
-integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{stat: {of, which}}` `10714110` · `{var}` `10131320` · `{add}/{sub}/{max}/{min}` `10811110` Marlone (sub) · `{neg}` `10714110` · `{distinctNames}` `10773310` · `{enteredThisMatch}` `10773310`. `{turn}` omitted (no pool card).
+integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{stat: {of, which}}` `10714110` · `{var}` `10131320` · `{add}/{sub}/{max}/{min}` `10811110` Marlone (sub) · `{neg}` `10714110` · `{distinctNames}` `10773310` · `{enteredThisMatch}` `10773310` · `{sumHighestBaseCosts: {n, select}}` `10502120` Behemoth ("the sum of the 3 highest base costs in your hand"). `{turn}` omitted (no pool card).
 
 ## Selector
 
 `oneOf` two closed shapes.
 
-**Reference picks** — `pick ∈ {self, bound, entering, attacker, defender, opposing, selected}`. No other fields. `bound` requires `ref`. `self` `10001110` · `bound` `10633310` · `entering` `10724110` · `opposing` `10654110` · `selected` `10473110` Cassius.
+**Reference picks** — `pick ∈ {self, bound, entering, attacker, defender, opposing, selected}`. No other fields. `bound` requires `ref`. `self` `10001110` · `bound` `10633310` · `entering` `10724110` · `opposing` `10654110`. `selected` omitted — no pool card; Cassius `10473110` is `op: select` + bind, not `pick: selected`.
 
 **Pool picks** — `pick ∈ {all, choose, random, randomDistinct, leftmost, highest, lowest}` with **required** `side`, `zone`, `kind`. Optional `filter`, `count`, `other`, `includeLeader`, `orderBy`.
 
@@ -261,11 +267,11 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Filter
 
-`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `destroyedThisMatch` `10901310`
+`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `destroyedThisMatch` `10901310` · `didNotAttackThisTurn` `10464110` Galleon ("that didn't attack this turn") · `superEvolved` `10863210` Academy Hijinks · `notBound` `10901110` Jailor ("unselected")
 
 ## Condition
 
-`all`/`any`/`not` · `countAtLeast` · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `attackedLeaderLastTurn` `10944110` · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120`. Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
+`all`/`any`/`not` · `countAtLeast` (`filter` `10521110` "If you selected a spell") · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `boundHas` `10663210` Sublime Eld Tome ("If you selected an allied amulet") · `attackedLeaderLastTurn` `10944110` · `attackingFollower` `crest:10864110` Verdilia ("attacks a follower") · `attackingLeader` Lu Woh crest `crest:10474110` "attacks a leader" · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120` · `amountAtLeast` `10502120` Behemoth · `deckHasNoDuplicates` Bluerust Underling `10971110` / Cutthroat `10974110` "If there are no duplicates in your deck". Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
 
 ## Modes
 

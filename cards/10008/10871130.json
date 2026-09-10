@@ -1,0 +1,46 @@
+{
+  "id": "10871130",
+  "name": "Zerk, Artifact Manipulator",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: Add a copy of a random allied Artifact follower destroyed this match to your hand without revealing it.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a copy of a random allied Artifact follower destroyed this match to your hand without revealing it.",
+      "effects": [
+        {
+          "printed": "Add a copy of a random allied Artifact follower destroyed this match to your hand without revealing it.",
+          "op": "addToHand",
+          "card": {
+            "copyOf": {
+              "pick": "random",
+              "side": "ally",
+              "zone": "field",
+              "kind": "follower",
+              "filter": {
+                "all": [
+                  {
+                    "destroyedThisMatch": true
+                  },
+                  {
+                    "tribe": "artifact"
+                  }
+                ]
+              }
+            },
+            "exact": false
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

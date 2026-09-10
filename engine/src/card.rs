@@ -244,6 +244,7 @@ pub enum EventName {
     AllyFollowerEnter,
     EnemyFollowerEnter,
     AllyFollowerDestroyed,
+    EnemyFollowerDestroyed,
     AllyAmuletDestroyed,
     AllyCardPlayed,
     AllySpellPlayed,
@@ -479,8 +480,11 @@ impl Traits {
         );
         or_bool(&mut self.cant_be_played, other.cant_be_played);
         if let Some(n) = other.attacks_per_turn {
+            // "Can attack N times" grants stack as extra attacks (Verdilia +
+            // Armes official Q&A: 2 + 2 printed extras → 3 attacks).
+            let extra = (n - 1).max(0);
             let cur = self.attacks_per_turn.unwrap_or(1);
-            self.attacks_per_turn = Some(cur.max(n));
+            self.attacks_per_turn = Some(cur + extra);
         }
         if let Some(n) = other.damage_cap {
             self.damage_cap = Some(match self.damage_cap {
@@ -533,8 +537,11 @@ impl Traits {
         if other.cant_be_played == Some(true) {
             self.cant_be_played = None;
         }
-        if other.attacks_per_turn.is_some() {
-            self.attacks_per_turn = None;
+        if let Some(n) = other.attacks_per_turn {
+            let extra = (n - 1).max(0);
+            let cur = self.attacks_per_turn.unwrap_or(1);
+            let next = (cur - extra).max(1);
+            self.attacks_per_turn = if next <= 1 { None } else { Some(next) };
         }
         if other.damage_cap.is_some() {
             self.damage_cap = None;
@@ -674,6 +681,15 @@ pub struct Filter {
     pub has_last_words: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub destroyed_this_match: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "didNotAttackThisTurn")]
+    pub did_not_attack_this_turn: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "superEvolved")]
+    pub super_evolved: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "notBound")]
+    pub not_bound: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -801,6 +817,10 @@ pub enum Amount {
         #[serde(rename = "enteredThisMatch")]
         entered_this_match: Filter,
     },
+    SumHighestBaseCosts {
+        #[serde(rename = "sumHighestBaseCosts")]
+        sum_highest_base_costs: SumHighestBaseCosts,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -809,6 +829,14 @@ pub enum Amount {
 pub struct AmountStat {
     pub of: Box<Selector>,
     pub which: StatWhich,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct SumHighestBaseCosts {
+    pub n: i32,
+    pub select: Box<Selector>,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -874,6 +902,11 @@ pub enum Condition {
         #[serde(rename = "attackedLeaderLastTurn")]
         attacked_leader_last_turn: bool,
     },
+    /// Verdilia crest: "Whenever a super-evolved allied follower attacks a follower"
+    AttackingFollower {
+        #[serde(rename = "attackingFollower")]
+        attacking_follower: bool,
+    },
     TurnOwner {
         #[serde(rename = "turnOwner")]
         turn_owner: TurnOwner,
@@ -914,6 +947,18 @@ pub enum Condition {
         #[serde(rename = "amountAtLeast")]
         amount_at_least: AmountAtLeast,
     },
+    DeckHasNoDuplicates {
+        #[serde(rename = "deckHasNoDuplicates")]
+        deck_has_no_duplicates: bool,
+    },
+    AttackingLeader {
+        #[serde(rename = "attackingLeader")]
+        attacking_leader: bool,
+    },
+    BoundHas {
+        #[serde(rename = "boundHas")]
+        bound_has: BoundHas,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -922,6 +967,8 @@ pub enum Condition {
 pub struct CountAtLeast {
     pub select: Selector,
     pub n: Amount,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub filter: Option<Filter>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -999,6 +1046,17 @@ pub struct AmountAtLeast {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
+pub struct BoundHas {
+    #[serde(rename = "ref")]
+    pub ref_name: String,
+    pub filter: Filter,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub side: Option<Side>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct EnterCountAtLeast {
     pub card: CardId,
     pub n: Amount,
@@ -1023,6 +1081,10 @@ pub enum CardSource {
         #[serde(rename = "copyOf")]
         copy_of: Selector,
         exact: bool,
+    },
+    /// Put the selected instance itself onto the field (Chloe "summon it").
+    From {
+        from: Selector,
     },
     RandomFrom {
         #[serde(rename = "randomFrom")]
@@ -1116,6 +1178,16 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[serde(rename = "untilEndOfTurn")]
         until_end_of_turn: Option<bool>,
+    },
+    /// Selection with no effect on the chosen card (Cassius `10473110`).
+    Select {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        printed: Option<String>,
+        #[serde(default, rename = "as", skip_serializing_if = "Option::is_none")]
+        as_bind: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        when: Option<Condition>,
+        select: Selector,
     },
     Destroy {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1248,6 +1320,8 @@ pub enum Effect {
         when: Option<Condition>,
         select: Selector,
         traits: Traits,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        until: Option<Until>,
     },
     #[serde(rename = "removeTraits")]
     RemoveTraits {
@@ -1508,6 +1582,7 @@ impl Effect {
             Effect::Damage { printed, .. }
             | Effect::Restore { printed, .. }
             | Effect::Buff { printed, .. }
+            | Effect::Select { printed, .. }
             | Effect::Destroy { printed, .. }
             | Effect::Banish { printed, .. }
             | Effect::ReturnToHand { printed, .. }
@@ -1550,6 +1625,7 @@ impl Effect {
             Effect::Damage { when, .. }
             | Effect::Restore { when, .. }
             | Effect::Buff { when, .. }
+            | Effect::Select { when, .. }
             | Effect::Destroy { when, .. }
             | Effect::Banish { when, .. }
             | Effect::ReturnToHand { when, .. }
@@ -1592,6 +1668,7 @@ impl Effect {
             Effect::Damage { as_bind, .. }
             | Effect::Restore { as_bind, .. }
             | Effect::Buff { as_bind, .. }
+            | Effect::Select { as_bind, .. }
             | Effect::Destroy { as_bind, .. }
             | Effect::Banish { as_bind, .. }
             | Effect::ReturnToHand { as_bind, .. }
@@ -2417,6 +2494,10 @@ pub enum CardOrCrest {
     Crest(Crest),
 }
 
+fn default_deck_enabled() -> i32 {
+    3
+}
+
 /// Catalog facts used for cross-checks (not a closed schema object).
 #[derive(Debug, Clone, Deserialize)]
 pub struct CatalogRecord {
@@ -2438,6 +2519,8 @@ pub struct CatalogRecord {
     pub rotation: bool,
     #[serde(default)]
     pub text: String,
+    #[serde(default = "default_deck_enabled")]
+    pub deck_enabled_num: i32,
     #[serde(default)]
     pub related_card_ids: Vec<String>,
     #[serde(default)]
@@ -2530,6 +2613,7 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
             }
         }
         Effect::Destroy { select, .. }
+        | Effect::Select { select, .. }
         | Effect::Banish { select, .. }
         | Effect::ReturnToHand { select, .. }
         | Effect::ReturnToDeck { select, .. }
@@ -2644,6 +2728,7 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
 fn walk_source(src: &CardSource, used: &mut BTreeSet<String>) {
     match src {
         CardSource::Copy { copy_of, .. } => walk_selector(copy_of, used),
+        CardSource::From { from } => walk_selector(from, used),
         CardSource::RandomFrom { random_from } => walk_filter(random_from, used),
         CardSource::Named { .. } => {}
     }
@@ -2733,6 +2818,9 @@ fn walk_condition(c: &Condition, used: &mut BTreeSet<String>) {
         Condition::CountAtLeast { count_at_least } => {
             walk_selector(&count_at_least.select, used);
             walk_amount(&count_at_least.n, used);
+            if let Some(f) = &count_at_least.filter {
+                walk_filter(f, used);
+            }
         }
         Condition::MaxPpAtLeast { max_pp_at_least } => walk_amount(&max_pp_at_least.n, used),
         Condition::Combo { combo } => walk_amount(&combo.n, used),

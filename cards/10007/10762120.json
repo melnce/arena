@@ -1,0 +1,62 @@
+{
+  "id": "10762120",
+  "name": "Holy Hawk of Communications",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Select an enemy follower on the field and banish it. If there are at least 3 allied amulets on the field, restore 3 defense to your leader.\n\nStorm",
+  "attack": 4,
+  "defense": 3,
+  "traits": {
+    "storm": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and banish it. If there are at least 3 allied amulets on the field, restore 3 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and banish it.",
+          "op": "banish",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        },
+        {
+          "printed": "If there are at least 3 allied amulets on the field, restore 3 defense to your leader.",
+          "op": "if",
+          "cond": {
+            "countAtLeast": {
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "amulet"
+              },
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "restore",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,51 @@
+{
+  "id": "10773310",
+  "name": "Warp Slash",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Deal X damage to all enemy followers. X is the number of differently named allied Artifact followers that have entered the field this match. Deal 1 damage to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal X damage to all enemy followers. X is the number of differently named allied Artifact followers that have entered the field this match. Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal X damage to all enemy followers. X is the number of differently named allied Artifact followers that have entered the field this match.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": {
+            "distinctNames": {
+              "enteredThisMatch": {
+                "tribe": "artifact",
+                "kind": "follower"
+              }
+            }
+          }
+        },
+        {
+          "printed": "Deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

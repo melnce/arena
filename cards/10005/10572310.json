@@ -1,0 +1,48 @@
+{
+  "id": "10572310",
+  "name": "Resurrection Tuner",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Select a card in your hand and discard it. Add a copy each of 2 random differently named allied followers destroyed this match to your hand without revealing them.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a card in your hand and discard it. Add a copy each of 2 random differently named allied followers destroyed this match to your hand without revealing them.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          }
+        },
+        {
+          "printed": "Add a copy each of 2 random differently named allied followers destroyed this match to your hand without revealing them.",
+          "op": "addToHand",
+          "card": {
+            "copyOf": {
+              "pick": "randomDistinct",
+              "side": "ally",
+              "zone": "field",
+              "kind": "follower",
+              "count": 2,
+              "filter": {
+                "destroyedThisMatch": true
+              }
+            },
+            "exact": false
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

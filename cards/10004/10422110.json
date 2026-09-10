@@ -1,0 +1,36 @@
+{
+  "id": "10422110",
+  "name": "Aglovale, Lord of Frost",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Deal 3 damage to all enemy followers.\n\nIntimidate",
+  "attack": 5,
+  "defense": 3,
+  "traits": {
+    "intimidate": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 3 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

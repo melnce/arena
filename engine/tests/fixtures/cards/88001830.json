@@ -1,0 +1,37 @@
+{
+  "id": "88001830",
+  "name": "Synth Summon Exact Copy From Hand",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Select a follower in your hand and summon an exact copy of it.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a follower in your hand and summon an exact copy of it.",
+      "effects": [
+        {
+          "printed": "Select a follower in your hand and summon an exact copy of it.",
+          "op": "summon",
+          "card": {
+            "copyOf": {
+              "pick": "choose",
+              "side": "ally",
+              "zone": "hand",
+              "kind": "follower",
+              "filter": {
+                "kind": "follower"
+              }
+            },
+            "exact": true
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

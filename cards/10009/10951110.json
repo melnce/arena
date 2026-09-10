@@ -1,0 +1,33 @@
+{
+  "id": "10951110",
+  "name": "Ruthless Blitzer",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Deal 2 damage to both leaders.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 2 damage to both leaders.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to both leaders.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "any",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

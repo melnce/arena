@@ -3,6 +3,11 @@
 debug
 target
 
+# wasm-pack output (dev harness and node tests)
+ui/dev/pkg/
+wasm/pkg/
+wasm/pkg-node/
+
 # Node (tools/validate.mjs)
 node_modules/
 

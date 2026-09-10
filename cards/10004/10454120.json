@@ -1,0 +1,70 @@
+{
+  "id": "10454120",
+  "name": "Belial, Archangel of Cunning",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Deal 10 damage to all other followers. Super Skybound Art - Gain Crest: Belial, Archangel of Cunning.\n\nSuper-Evolve: Advance the count of your Crest: Belial, Archangel of Cunning by 1.",
+  "attack": 7,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 10 damage to all other followers. Super Skybound Art - Gain Crest: Belial, Archangel of Cunning.",
+      "effects": [
+        {
+          "printed": "Deal 10 damage to all other followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "any",
+            "zone": "field",
+            "kind": "follower",
+            "other": true
+          },
+          "amount": 10
+        },
+        {
+          "printed": "Super Skybound Art - Gain Crest: Belial, Archangel of Cunning.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 15
+            }
+          },
+          "then": [
+            {
+              "op": "crest",
+              "gain": "crest:10454120",
+              "player": "self"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Advance the count of your Crest: Belial, Archangel of Cunning by 1.",
+      "effects": [
+        {
+          "printed": "Advance the count of your Crest: Belial, Archangel of Cunning by 1.",
+          "op": "countdown",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "crests",
+            "kind": "card",
+            "filter": {
+              "card": "10454120"
+            }
+          },
+          "delta": -1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

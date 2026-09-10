@@ -15,6 +15,9 @@
       "on": "when",
       "event": "self_buffed_up",
       "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      },
       "printed": "Once on each of your turns, when this follower is given + attack or defense on the field, summon a Fairy.",
       "effects": [
         {

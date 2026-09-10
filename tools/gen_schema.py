@@ -59,6 +59,7 @@ EVENTS = [
     "ally_follower_enter",
     "enemy_follower_enter",
     "ally_follower_destroyed",
+    "enemy_follower_destroyed",
     "ally_amulet_destroyed",
     "ally_card_played",
     "ally_spell_played",
@@ -177,6 +178,9 @@ def filter_schema():
             "sameCostGroup": {"type": "boolean"},
             "hasLastWords": {"type": "boolean"},
             "destroyedThisMatch": {"type": "boolean"},
+            "didNotAttackThisTurn": {"type": "boolean"},
+            "superEvolved": {"type": "boolean"},
+            "notBound": {"type": "string", "minLength": 1},
         }
     )
 
@@ -278,6 +282,18 @@ def amount_schema():
                 {"enteredThisMatch": {"$ref": "#/$defs/Filter"}},
                 required=["enteredThisMatch"],
             ),
+            closed(
+                {
+                    "sumHighestBaseCosts": closed(
+                        {
+                            "n": {"type": "integer", "minimum": 1},
+                            "select": {"$ref": "#/$defs/Selector"},
+                        },
+                        required=["n", "select"],
+                    )
+                },
+                required=["sumHighestBaseCosts"],
+            ),
         ]
     }
 
@@ -291,7 +307,11 @@ def condition_schema():
             closed(
                 {
                     "countAtLeast": closed(
-                        {"select": {"$ref": "#/$defs/Selector"}, "n": {"$ref": "#/$defs/Amount"}},
+                        {
+                            "select": {"$ref": "#/$defs/Selector"},
+                            "n": {"$ref": "#/$defs/Amount"},
+                            "filter": {"$ref": "#/$defs/Filter"},
+                        },
                         required=["select", "n"],
                     )
                 },
@@ -323,6 +343,7 @@ def condition_schema():
             ),
             closed({"did": {"type": "string", "minLength": 1}}, required=["did"]),
             closed({"attackedLeaderLastTurn": {"type": "boolean"}}, required=["attackedLeaderLastTurn"]),
+            closed({"attackingFollower": {"type": "boolean"}}, required=["attackingFollower"]),
             closed({"turnOwner": {"enum": ["self", "opponent"]}}, required=["turnOwner"]),
             closed(
                 {"evolvedCountAtLeast": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])},
@@ -401,6 +422,21 @@ def condition_schema():
                 {"handSameCostAtLeast": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])},
                 required=["handSameCostAtLeast"],
             ),
+            closed({"deckHasNoDuplicates": {"type": "boolean"}}, required=["deckHasNoDuplicates"]),
+            closed({"attackingLeader": {"type": "boolean"}}, required=["attackingLeader"]),
+            closed(
+                {
+                    "boundHas": closed(
+                        {
+                            "ref": {"type": "string", "minLength": 1},
+                            "filter": {"$ref": "#/$defs/Filter"},
+                            "side": {"enum": ["ally", "enemy", "any"]},
+                        },
+                        required=["ref", "filter"],
+                    )
+                },
+                required=["boundHas"],
+            ),
         ]
     }
 
@@ -426,6 +462,7 @@ def card_source():
                 {"copyOf": {"$ref": "#/$defs/Selector"}, "exact": {"type": "boolean"}},
                 required=["copyOf", "exact"],
             ),
+            closed({"from": {"$ref": "#/$defs/Selector"}}, required=["from"]),
             closed({"randomFrom": {"$ref": "#/$defs/Filter"}}, required=["randomFrom"]),
         ]
     }
@@ -448,6 +485,9 @@ def effect_schema():
             "defense": {"$ref": "#/$defs/Amount"},
             "untilEndOfTurn": {"type": "boolean"},
         }, ["select"]),
+        leaf("select", {
+            "select": {"$ref": "#/$defs/Selector"},
+        }, ["select", "as"]),
         leaf("destroy", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
         leaf("banish", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
         leaf("returnToHand", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
@@ -483,6 +523,7 @@ def effect_schema():
         leaf("grantTraits", {
             "select": {"$ref": "#/$defs/Selector"},
             "traits": {"$ref": "#/$defs/Traits"},
+            "until": {"enum": ["endOfTurn", "endOfOpponentTurn"]},
         }, ["select", "traits"]),
         leaf("removeTraits", {
             "select": {"$ref": "#/$defs/Selector"},

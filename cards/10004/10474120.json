@@ -1,0 +1,58 @@
+{
+  "id": "10474120",
+  "name": "Beelzebub, Supreme King",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "Fanfare: Select 2 enemy followers on the field, remove all abilities from them, and deal them 9 damage. Give the enemy leader \"Takes 1 more damage.\"",
+  "attack": 9,
+  "defense": 9,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select 2 enemy followers on the field, remove all abilities from them, and deal them 9 damage. Give the enemy leader \"Takes 1 more damage.\"",
+      "effects": [
+        {
+          "printed": "Select 2 enemy followers on the field, remove all abilities from them, and deal them 9 damage.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "removeAbilities",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "count": 2
+              },
+              "as": "t"
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "amount": 9
+            }
+          ]
+        },
+        {
+          "printed": "Give the enemy leader \"Takes 1 more damage.\"",
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "damageTakenBonus": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

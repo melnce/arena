@@ -1,0 +1,26 @@
+{
+  "id": "10553310",
+  "name": "Rigor of the Nightblossom",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Gain Crest: Rigor of the Nightblossom.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Gain Crest: Rigor of the Nightblossom.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Rigor of the Nightblossom.",
+          "op": "crest",
+          "gain": "crest:10553310",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

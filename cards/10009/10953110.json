@@ -1,0 +1,66 @@
+{
+  "id": "10953110",
+  "name": "Rampaging Commander",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Deal 3 damage to all enemy followers. Deal 3 damage to both leaders.\n\nSuper-Evolve: Draw 2 cards. Deal 1 damage to both leaders.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 3 damage to all enemy followers. Deal 3 damage to both leaders.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        },
+        {
+          "printed": "Deal 3 damage to both leaders.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "any",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Draw 2 cards. Deal 1 damage to both leaders.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        },
+        {
+          "printed": "Deal 1 damage to both leaders.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "any",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

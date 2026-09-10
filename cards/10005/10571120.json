@@ -1,0 +1,48 @@
+{
+  "id": "10571120",
+  "name": "Flowering Artisan",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Draw a spell.\n\nWhenever you play a spell, deal 3 damage to all enemy followers.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw a spell.",
+      "effects": [
+        {
+          "printed": "Draw a spell.",
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "kind": "spell"
+          }
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_spell_played",
+      "printed": "Whenever you play a spell, deal 3 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "deal 3 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

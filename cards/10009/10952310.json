@@ -1,0 +1,84 @@
+{
+  "id": "10952310",
+  "name": "Chains of the Past",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Do this 1 time: \"Deal 3 damage to a random enemy follower. Deal 1 damage to both leaders.\"\nEnhance (4): Do it 2 times instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Do this 1 time: \"Deal 3 damage to a random enemy follower. Deal 1 damage to both leaders.\"",
+      "effects": [
+        {
+          "printed": "Do this 1 time: \"Deal 3 damage to a random enemy follower. Deal 1 damage to both leaders.\"",
+          "op": "repeat",
+          "times": 1,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 3
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "any",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "replacesBase": true,
+      "printed": "Enhance (4): Do it 2 times instead.",
+      "effects": [
+        {
+          "printed": "Do it 2 times instead.",
+          "op": "repeat",
+          "times": 2,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 3
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "any",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

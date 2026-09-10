@@ -1,0 +1,37 @@
+{
+  "id": "crest:10412310",
+  "name": "Crest: Starry Sky",
+  "grantedBy": [
+    "10412310"
+  ],
+  "faith": false,
+  "text": "Countdown (1)\nLast Words: Deal 1 damage to the enemy leader. Add a Starry Sky to your hand.",
+  "countdown": 1,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Deal 1 damage to the enemy leader. Add a Starry Sky to your hand.",
+      "effects": [
+        {
+          "printed": "Deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        },
+        {
+          "printed": "Add a Starry Sky to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "10412310"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

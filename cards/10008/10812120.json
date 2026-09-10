@@ -1,0 +1,34 @@
+{
+  "id": "10812120",
+  "name": "Lycoris, Barbs of Passion",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Summon a Michelle, Kind Mindreader.\n\nRush\nBane",
+  "attack": 3,
+  "defense": 4,
+  "traits": {
+    "rush": true,
+    "bane": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Michelle, Kind Mindreader.",
+      "effects": [
+        {
+          "printed": "Summon a Michelle, Kind Mindreader.",
+          "op": "summon",
+          "card": {
+            "named": "10813110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

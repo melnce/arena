@@ -1,0 +1,70 @@
+{
+  "id": "10772120",
+  "name": "Audacious Artist",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it. If at least 3 differently named allied Artifact followers have entered the field this match, summon an Ancient Artifact and Mystic Artifact.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it. If at least 3 differently named allied Artifact followers have entered the field this match, summon an Ancient Artifact and Mystic Artifact.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        },
+        {
+          "printed": "If at least 3 differently named allied Artifact followers have entered the field this match, summon an Ancient Artifact and Mystic Artifact.",
+          "op": "if",
+          "cond": {
+            "amountAtLeast": {
+              "of": {
+                "distinctNames": {
+                  "enteredThisMatch": {
+                    "tribe": "artifact",
+                    "kind": "follower"
+                  }
+                }
+              },
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "seq",
+              "effects": [
+                {
+                  "op": "summon",
+                  "card": {
+                    "named": "90071140"
+                  },
+                  "count": 1
+                },
+                {
+                  "op": "summon",
+                  "card": {
+                    "named": "90071150"
+                  },
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

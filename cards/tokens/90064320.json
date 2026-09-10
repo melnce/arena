@@ -1,0 +1,69 @@
+{
+  "id": "90064320",
+  "name": "Depths of the Eld Tome",
+  "kind": "spell",
+  "class": "havencraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 1,
+  "text": "Select a card on the field and destroy it. If you selected an allied amulet, deal 2 damage to the enemy leader and add a Depths of the Eld Tome to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a card on the field and destroy it. If you selected an allied amulet, deal 2 damage to the enemy leader and add a Depths of the Eld Tome to your hand.",
+      "effects": [
+        {
+          "printed": "Select a card on the field and destroy it. If you selected an allied amulet, deal 2 damage to the enemy leader and add a Depths of the Eld Tome to your hand.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "choose",
+                "side": "any",
+                "zone": "field",
+                "kind": "card"
+              },
+              "as": "t"
+            },
+            {
+              "op": "if",
+              "cond": {
+                "boundHas": {
+                  "ref": "t",
+                  "filter": {
+                    "kind": "amulet"
+                  },
+                  "side": "ally"
+                }
+              },
+              "then": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 2
+                },
+                {
+                  "op": "addToHand",
+                  "card": {
+                    "named": "90064320"
+                  },
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

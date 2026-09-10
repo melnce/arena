@@ -1,0 +1,77 @@
+{
+  "id": "10672310",
+  "name": "Myriad Designs",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Summon a Ludicrous Ordnance, Shoddy Plaything, and Substandard Puppet and give them +0/+1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Ludicrous Ordnance, Shoddy Plaything, and Substandard Puppet and give them +0/+1.",
+      "effects": [
+        {
+          "printed": "Summon a Ludicrous Ordnance, Shoddy Plaything, and Substandard Puppet and give them +0/+1.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10673110"
+              },
+              "count": 1,
+              "as": "a"
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "10671110"
+              },
+              "count": 1,
+              "as": "b"
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "10672110"
+              },
+              "count": 1,
+              "as": "c"
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "a"
+              },
+              "attack": 0,
+              "defense": 1
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "b"
+              },
+              "attack": 0,
+              "defense": 1
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "c"
+              },
+              "attack": 0,
+              "defense": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

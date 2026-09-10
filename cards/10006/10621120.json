@@ -1,0 +1,42 @@
+{
+  "id": "10621120",
+  "name": "Idle Maid",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Select a card in your hand and return it to deck. Draw 2 Swordcraft followers.",
+  "attack": 3,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and return it to deck. Draw 2 Swordcraft followers.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and return it to deck.",
+          "op": "returnToDeck",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "position": "random"
+        },
+        {
+          "printed": "Draw 2 Swordcraft followers.",
+          "op": "draw",
+          "count": 2,
+          "filter": {
+            "class": "swordcraft",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,19 @@
+{
+  "id": "90071160",
+  "name": "Radiant Artifact",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "Storm",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "storm": true
+  },
+  "tribes": [
+    "artifact"
+  ]
+}

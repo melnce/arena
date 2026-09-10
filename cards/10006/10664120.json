@@ -1,0 +1,61 @@
+{
+  "id": "10664120",
+  "name": "Lyanthoth, Eld Tome",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "Fanfare: Select 3 other cards on the field and destroy them.\n\nWard\nAt the end of your turn, reduce your faith's value by 10 to add a Depths of the Eld Tome to your hand.",
+  "attack": 9,
+  "defense": 9,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select 3 other cards on the field and destroy them.",
+      "effects": [
+        {
+          "printed": "Select 3 other cards on the field and destroy them.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "any",
+            "zone": "field",
+            "kind": "card",
+            "count": 3,
+            "other": true
+          }
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, reduce your faith's value by 10 to add a Depths of the Eld Tome to your hand.",
+      "effects": [
+        {
+          "printed": "reduce your faith's value by 10 to add a Depths of the Eld Tome to your hand.",
+          "op": "pay",
+          "resource": "faith",
+          "amount": 10,
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90064320"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

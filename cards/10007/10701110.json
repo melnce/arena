@@ -1,0 +1,30 @@
+{
+  "id": "10701110",
+  "name": "Altaro Superfan",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Evolve: Draw a Neutral card.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Draw a Neutral card.",
+      "effects": [
+        {
+          "printed": "Draw a Neutral card.",
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "class": "neutral"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

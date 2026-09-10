@@ -1,0 +1,46 @@
+{
+  "id": "10522310",
+  "name": "Serenity's Shield",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Summon 2 copies of Knight.\nEnhance (4): Summon 4 instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon 2 copies of Knight.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021110"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Summon 4 instead.",
+      "effects": [
+        {
+          "printed": "Summon 4 instead.",
+          "op": "summon",
+          "card": {
+            "named": "90021110"
+          },
+          "count": 4
+        }
+      ],
+      "replacesBase": true
+    }
+  ],
+  "tribes": []
+}

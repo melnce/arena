@@ -1,0 +1,37 @@
+{
+  "id": "90024330",
+  "name": "Desperados' Shot",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 1,
+  "text": "Do this 2 times: \"Deal 4 damage to a random enemy follower.\"",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Do this 2 times: \"Deal 4 damage to a random enemy follower.\"",
+      "effects": [
+        {
+          "printed": "Do this 2 times: \"Deal 4 damage to a random enemy follower.\"",
+          "op": "repeat",
+          "times": 2,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

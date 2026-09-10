@@ -1,0 +1,102 @@
+{
+  "id": "10753110",
+  "name": "Beastmaster Bones",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon a Rotting Zombie and Skeleton.\n\nWhenever an allied Departed follower enters the field, give it Storm.\n\nSuper-Evolve: Select another allied follower on the field. If you selected one, destroy it and a random enemy follower.",
+  "attack": 3,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Rotting Zombie and Skeleton.",
+      "effects": [
+        {
+          "printed": "Summon a Rotting Zombie and Skeleton.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051140"
+              },
+              "count": 1
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "departed"
+      },
+      "printed": "Whenever an allied Departed follower enters the field, give it Storm.",
+      "effects": [
+        {
+          "printed": "give it Storm.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "entering"
+          },
+          "traits": {
+            "storm": true
+          }
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select another allied follower on the field. If you selected one, destroy it and a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Select another allied follower on the field. If you selected one, destroy it and a random enemy follower.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "choose",
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower",
+                "other": true
+              },
+              "as": "t"
+            },
+            {
+              "op": "if",
+              "cond": {
+                "did": "t"
+              },
+              "then": [
+                {
+                  "op": "destroy",
+                  "select": {
+                    "pick": "random",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

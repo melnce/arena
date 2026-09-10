@@ -1,0 +1,50 @@
+{
+  "id": "10573110",
+  "name": "Neuron Disrupter",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Recover X play points. X is the number of other allied followers on the field.\n\nRush\nLast Words: Draw 2 cards.",
+  "attack": 4,
+  "defense": 2,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Recover X play points. X is the number of other allied followers on the field.",
+      "effects": [
+        {
+          "printed": "Recover X play points. X is the number of other allied followers on the field.",
+          "op": "pp",
+          "action": "recover",
+          "amount": {
+            "count": {
+              "pick": "all",
+              "side": "ally",
+              "zone": "field",
+              "kind": "follower",
+              "other": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
