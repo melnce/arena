@@ -1,0 +1,33 @@
+{
+  "id": "89200410",
+  "name": "C CostDelta",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Subtract 2 from the cost of a card in your hand.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Subtract 2 from the cost of a card in your hand.",
+      "effects": [
+        {
+          "op": "cost",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "delta": {
+            "neg": 2
+          },
+          "printed": "Subtract 2 from the cost of a card in your hand."
+        }
+      ]
+    }
+  ]
+}

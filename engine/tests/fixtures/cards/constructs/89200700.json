@@ -1,0 +1,75 @@
+{
+  "id": "89200700",
+  "name": "C OptFrom",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Choose: Deal 1 or 3 damage to the enemy leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Choose: Deal 1 or 3 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "Deal 1 damage to the enemy leader.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 1
+                }
+              ]
+            },
+            {
+              "printed": "Deal 3 damage to the enemy leader.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 3
+                }
+              ]
+            }
+          ],
+          "printed": "Choose: Deal 1 or 3 damage to the enemy leader."
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 1,
+      "printed": "Enhance (1): Do both.",
+      "replacesBase": true,
+      "effects": [
+        {
+          "printed": "Do both.",
+          "op": "choose",
+          "pick": "all",
+          "by": "player",
+          "optionsFrom": "fanfare"
+        }
+      ]
+    }
+  ]
+}

@@ -100,6 +100,7 @@ fn start_of_turn_ability_never_fires_at_end_of_turn() {
             once_used: vec![],
             granted_order: 1,
             granted: vec![],
+            choose_used: Default::default(),
         });
     let before = st.player(me).leader_defense;
     end_turn(&db, &mut st);
@@ -177,6 +178,7 @@ fn burnite_crest_leader_restored_once_per_turn() {
             once_used: vec![],
             granted_order: 1,
             granted: vec![],
+            choose_used: Default::default(),
         });
     st.player_mut(me).leader_defense = 10;
     give_pp(&mut st, me, 10, 10);

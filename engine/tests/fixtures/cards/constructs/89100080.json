@@ -1,0 +1,12 @@
+{
+  "id": "89100080",
+  "name": "Synth Blank Spell",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "",
+  "tribes": []
+}

@@ -1,0 +1,28 @@
+{
+  "id": "89100100",
+  "name": "Synth Invoke Self",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Activates in deck. At the start of your turn, Invoke this card.",
+  "attack": 5,
+  "defense": 5,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "zone": "deck",
+      "printed": "Activates in deck. At the start of your turn, Invoke this card.",
+      "effects": [
+        {
+          "printed": "Invoke this card.",
+          "op": "invoke"
+        }
+      ]
+    }
+  ]
+}

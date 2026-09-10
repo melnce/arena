@@ -1,0 +1,33 @@
+{
+  "id": "89100030",
+  "name": "Synth LW Ping",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Last Words: Deal 1 damage to the enemy leader.",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Last Words: Deal 1 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

@@ -28,6 +28,8 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 
 Enhance that does not `replacesBase` (Zeta & Bea) appends to the Fanfare list of the same resolution, so an `as` bound by the base Fanfare is visible to the tier. `replacesBase` (Splendor, L'Age d'Or, Ruthless Eld Sword) swaps the list; `choose pick: all optionsFrom: fanfare` then copies the Fanfare's `options` and runs them in printed order with no player choice.
 
+`op:banish` binds field targets **before** the move so a later `copyOf {pick: bound}` still resolves the instance (it lives in that player's `banished` pile — Allure of the Mightiest / PR #14). Deck and hand targets are rebound as `TargetOpt::Card` **after** the banish so a later `{count: {pick: bound}}` or `{stat: {of: bound}}` sees the card id, not a stale hand/deck index.
+
 ## This card's cost
 
 `Condition.costEq` is the played instance's current cost. Spells read the cemetery corpse written at play (`cost = paid`). Severed Ties "If this card's cost is 3" therefore sees a cost-set copy as 1 and does not chain. This is not Filter `costEq` (pool / event subject).
@@ -55,6 +57,10 @@ Per-instance `CardInstance.sequence_index` (0-based, wraps after the last step).
 ## `grantTraits.until`
 
 `grantTraits.until` (`endOfTurn` / `endOfOpponentTurn`) is caster-relative: `endOfOpponentTurn` expires when the caster's opponent's turn ends, even if the grant sits on an enemy follower (Measured Attunement / Shaili). Grants are stored on `CardInstance.temp_traits` and `merge_remove`'d at that boundary. Stacked `"Can attack N times"` grants add `(N-1)` extra attacks (Verdilia + Armes official Q&A → 3).
+
+`choose by: randomUnused` persists used option indices on the source instance or crest (`choose_used`). The remainder is not replenished — Slaus / crest:10574110 fire each option at most once; a later resolution with an empty remainder is a no-op (owner ruling 2026-08-13). `by: random` still rolls only within a single resolution.
+
+`removeAbilities.on` strips every listed trigger from `printed_tags` (not only `lastWords`) and drops matching granted abilities. `play_form` then skips Enhance modes when the instance no longer carries `enhance`.
 
 ## Destroyed-this-match
 
@@ -179,6 +185,29 @@ A stat debuff lowers `max_defense` by the same amount; current defense drops by 
 - Earth sigils: a counter plus `earth_slot` (which amulet holds the stack). When an Earth Sigil amulet enters, every other allied Earth Sigil is **banished** (no shadow, no Last Words) and the new amulet takes their counts (official glossary Earth Sigil; owner 2026-09-10 "yes banish them instead"). "Gain X earth sigils" increments the holder on the field, else summons one Magic Sediment with count X; no holder and a full board loses the sigil. A full board still blocks *playing* an Earth Sigil amulet (ruling 2026-09-10).
 - `hash` is FNV-1a 64 of the sorted-key canonical snapshot JSON.
 
+## Inert match arms (`apply.rs`)
+
+Every `match` on `Effect`, `CardSource`, and `Selector.pick` / `zone` / `kind` that discards a variant (`_ => {}`, `_ => Ok(())`, `unreachable!`, a `continue` that skips the construct) is one of:
+
+| site | discarded | why |
+|---|---|---|
+| `apply_effect` `Effect::RandomSplit` | the op | Honest stub: `require_supported` rejects `op:randomSplit`; apply returns `Illegal::Unsupported`. Not a silent no-op. |
+| `apply_counter` `_ => {}` | `skyboundHand` | Honest stub (`op:counter skyboundHand` in `require_supported`). Other `CounterKey`s are handled. |
+| `deal_to_opt` / `restore_opt` `_ => {}` | hand / deck / card / mode | Damage and restore apply to leaders and field slots only. A hand/deck pick is a no-target, not an ignored op. |
+| `remove_abilities_opt` `_ => {}` | leader / card | `removeAbilities` walks field, hand, and deck instances. Leaders have no ability list. |
+| `banish_opt` `_ => {}` | leader / card | Banish moves field / hand / deck instances. A leader cannot be banished. |
+| `bounce_opt` `_ => {}` | leader / hand | Bounce is field → hand, or a `Card`/`Deck` pick pulled from the deck. Hand already in hand. |
+| `return_deck_opt` `_ => {}` | leader / deck / card | Return-to-deck takes field or hand. |
+| `grant_traits_opt` / `remove_traits_opt` | non-slot | Traits live on field instances. |
+| `RefPick::Selected` / `Attacker` / `Defender` | those picks | No pool card uses them (`selected` omitted; Cassius is `op: select` + bind). Resolve as empty. |
+| `pool_candidates` `Zone::Crests` | generic crest pool | Crests are not card instances. `countdown` / `removeCrests` / `grantAbility` special-case `zone: crests`. |
+| `CardSource::From` / `RandomFrom` on `addToDeck` / `transform` | those sources | `Illegal::Unsupported`. Summon / addToHand implement them. |
+| `Aftermath` `_ => {}` | unused aftermath tags | Exhaustive elsewhere; leftover tags are no-ops by construction. |
+
+`Zone::Cemetery` is a real pool (card ids) so `copyOf` / `addToHand` / counts from the cemetery resolve. That was a silent empty pool and is now implemented.
+
+`choose by: randomUnused` used to share the `by: random` arm (distinct only inside one resolution). Persistence is now on the instance/crest; the unused-vs-random distinction is no longer a silent no-op.
+
 ## Tests
 
-Integration tests under `engine/tests/` load the repo's `cards/` plus fixtures. Soak is opt-in: `ARENA_SOAK_GAMES=N cargo test --release soak` (fixed fixture deck in `soak.rs`; class-matrix random decks in `soak_random.rs`, default N=20).
+Integration tests under `engine/tests/` load the repo's `cards/` plus fixtures. Soak is opt-in: `ARENA_SOAK_GAMES=N cargo test --release soak` (fixed fixture deck in `soak.rs`; class-matrix random decks in `soak_random.rs`, default N=20). Construct coverage is `docs/construct-fixtures.md` (`python3 tools/constructs.py --write`).

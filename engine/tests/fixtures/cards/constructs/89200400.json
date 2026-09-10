@@ -1,0 +1,31 @@
+{
+  "id": "89200400",
+  "name": "C CostSet",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Change the cost of a card in your hand to 1.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Change the cost of a card in your hand to 1.",
+      "effects": [
+        {
+          "op": "cost",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "set": 1,
+          "printed": "Change the cost of a card in your hand to 1."
+        }
+      ]
+    }
+  ]
+}

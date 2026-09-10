@@ -1,0 +1,37 @@
+{
+  "id": "89200370",
+  "name": "C Repeat",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Do this 3 times: Deal 1 damage to the enemy leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Do this 3 times: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "repeat",
+          "times": 3,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ],
+          "printed": "Do this 3 times: Deal 1 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

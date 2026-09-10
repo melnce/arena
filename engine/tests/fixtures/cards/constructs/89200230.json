@@ -1,0 +1,27 @@
+{
+  "id": "89200230",
+  "name": "C EpGain",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Gain 2 evolution points.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Gain 2 evolution points.",
+      "effects": [
+        {
+          "op": "ep",
+          "action": "gain",
+          "super": false,
+          "amount": 2,
+          "printed": "Gain 2 evolution points."
+        }
+      ]
+    }
+  ]
+}

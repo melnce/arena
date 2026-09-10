@@ -1,0 +1,26 @@
+{
+  "id": "89200510",
+  "name": "C PpRec",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Recover 2 PP.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Recover 2 PP.",
+      "effects": [
+        {
+          "op": "pp",
+          "action": "recover",
+          "amount": 2,
+          "printed": "Recover 2 PP."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "89200550",
+  "name": "C Pay pp",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Pay 1 pp and deal 5 damage to the enemy leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Pay 1 pp and deal 5 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "pay",
+          "resource": "pp",
+          "amount": 1,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 5
+            }
+          ],
+          "printed": "Pay 1 pp and deal 5 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

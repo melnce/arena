@@ -1,0 +1,33 @@
+{
+  "id": "89200830",
+  "name": "C RmOn discarded",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove discarded from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove discarded from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "discarded"
+          ],
+          "printed": "Remove discarded from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

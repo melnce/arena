@@ -1,0 +1,31 @@
+{
+  "id": "89201360",
+  "name": "C OrdAtk",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy the enemy follower with the highest attack.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy the enemy follower with the highest attack.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "highest",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "orderBy": "attack"
+          },
+          "printed": "Destroy the enemy follower with the highest attack."
+        }
+      ]
+    }
+  ]
+}

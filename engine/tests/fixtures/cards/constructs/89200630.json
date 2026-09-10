@@ -1,0 +1,34 @@
+{
+  "id": "89200630",
+  "name": "C WardOppEot",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Give an allied follower Ward until the end of your opponent's turn.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give an allied follower Ward until the end of your opponent's turn.",
+      "effects": [
+        {
+          "op": "grantTraits",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "traits": {
+            "ward": true
+          },
+          "until": "endOfOpponentTurn",
+          "printed": "Give an allied follower Ward until the end of your opponent's turn."
+        }
+      ]
+    }
+  ]
+}

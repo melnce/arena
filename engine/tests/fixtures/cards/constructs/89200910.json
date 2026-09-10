@@ -1,0 +1,33 @@
+{
+  "id": "89200910",
+  "name": "C RmOn enhance",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove enhance from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove enhance from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "enhance"
+          ],
+          "printed": "Remove enhance from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

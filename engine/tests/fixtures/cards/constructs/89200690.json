@@ -1,0 +1,61 @@
+{
+  "id": "89200690",
+  "name": "C ChUnused",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "At the end of your turn, activate a random unused: deal 1 to the enemy or 1 to yourself.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, activate a random unused: deal 1 to the enemy or 1 to yourself.",
+      "effects": [
+        {
+          "printed": "activate a random unused: deal 1 to the enemy or 1 to yourself.",
+          "op": "choose",
+          "pick": 1,
+          "by": "randomUnused",
+          "options": [
+            {
+              "printed": "deal 1 to the enemy",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 1
+                }
+              ]
+            },
+            {
+              "printed": "deal 1 to yourself",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

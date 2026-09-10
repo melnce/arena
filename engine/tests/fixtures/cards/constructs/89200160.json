@@ -1,0 +1,31 @@
+{
+  "id": "89200160",
+  "name": "C Evolve",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Evolve an allied follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Evolve an allied follower.",
+      "effects": [
+        {
+          "op": "evolve",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "super": false,
+          "printed": "Evolve an allied follower."
+        }
+      ]
+    }
+  ]
+}

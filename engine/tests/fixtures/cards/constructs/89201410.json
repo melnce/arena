@@ -1,0 +1,32 @@
+{
+  "id": "89201410",
+  "name": "C IncLead",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 2 damage to a random enemy including the leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 2 damage to a random enemy including the leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "includeLeader": true
+          },
+          "amount": 2,
+          "printed": "Deal 2 damage to a random enemy including the leader."
+        }
+      ]
+    }
+  ]
+}

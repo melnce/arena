@@ -1,0 +1,34 @@
+{
+  "id": "89201070",
+  "name": "C WhenOverflow",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 4 damage to the enemy leader if Overflow is active.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 4 damage to the enemy leader if Overflow is active.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 4,
+          "when": {
+            "overflow": true
+          },
+          "printed": "Deal 4 damage to the enemy leader if Overflow is active."
+        }
+      ]
+    }
+  ]
+}

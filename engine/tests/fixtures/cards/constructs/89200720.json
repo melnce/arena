@@ -1,0 +1,33 @@
+{
+  "id": "89200720",
+  "name": "C RmOn fanfare",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove fanfare from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove fanfare from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "fanfare"
+          ],
+          "printed": "Remove fanfare from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

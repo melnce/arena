@@ -1,0 +1,30 @@
+{
+  "id": "89201210",
+  "name": "C ZnField",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy all enemy followers on the field.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy all enemy followers on the field.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "printed": "Destroy all enemy followers on the field."
+        }
+      ]
+    }
+  ]
+}

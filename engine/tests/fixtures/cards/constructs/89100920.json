@@ -1,0 +1,14 @@
+{
+  "id": "89100920",
+  "name": "Synth Faith Carrier",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "",
+  "attack": 1,
+  "defense": 1,
+  "tribes": []
+}

@@ -1,0 +1,25 @@
+{
+  "id": "89200320",
+  "name": "C SBHand",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Spellboost your hand 2 times.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Spellboost your hand 2 times.",
+      "effects": [
+        {
+          "op": "spellboostHand",
+          "times": 2,
+          "printed": "Spellboost your hand 2 times."
+        }
+      ]
+    }
+  ]
+}

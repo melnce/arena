@@ -1,0 +1,30 @@
+{
+  "id": "89201260",
+  "name": "C ZnCrest",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove your Crests.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove your Crests.",
+      "effects": [
+        {
+          "op": "removeCrests",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "crests",
+            "kind": "card"
+          },
+          "printed": "Remove your Crests."
+        }
+      ]
+    }
+  ]
+}

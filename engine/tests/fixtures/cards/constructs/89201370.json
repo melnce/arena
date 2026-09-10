@@ -1,0 +1,31 @@
+{
+  "id": "89201370",
+  "name": "C OrdDef",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy the enemy follower with the highest defense.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy the enemy follower with the highest defense.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "highest",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "orderBy": "defense"
+          },
+          "printed": "Destroy the enemy follower with the highest defense."
+        }
+      ]
+    }
+  ]
+}

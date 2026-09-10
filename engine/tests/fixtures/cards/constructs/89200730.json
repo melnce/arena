@@ -1,0 +1,33 @@
+{
+  "id": "89200730",
+  "name": "C RmOn lastWords",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove lastWords from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove lastWords from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "lastWords"
+          ],
+          "printed": "Remove lastWords from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

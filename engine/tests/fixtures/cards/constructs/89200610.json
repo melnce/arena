@@ -1,0 +1,32 @@
+{
+  "id": "89200610",
+  "name": "C LeadCapEot",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "The enemy leader can't take more than 1 damage at a time until the end of the turn.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "The enemy leader can't take more than 1 damage at a time until the end of the turn.",
+      "effects": [
+        {
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "damageCap": 1,
+          "until": "endOfTurn",
+          "printed": "The enemy leader can't take more than 1 damage at a time until the end of the turn."
+        }
+      ]
+    }
+  ]
+}

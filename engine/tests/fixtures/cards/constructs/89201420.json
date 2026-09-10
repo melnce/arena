@@ -1,0 +1,31 @@
+{
+  "id": "89201420",
+  "name": "C Count2",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy the 2 leftmost enemy followers.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy the 2 leftmost enemy followers.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "leftmost",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "count": 2
+          },
+          "printed": "Destroy the 2 leftmost enemy followers."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "89200030",
+  "name": "C Restore",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Restore 4 defense to your leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Restore 4 defense to your leader.",
+      "effects": [
+        {
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 4,
+          "printed": "Restore 4 defense to your leader."
+        }
+      ]
+    }
+  ]
+}

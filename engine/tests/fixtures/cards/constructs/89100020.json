@@ -1,0 +1,13 @@
+{
+  "id": "89100020",
+  "name": "Synth Construct Amulet",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Countdown (3)",
+  "countdown": 3,
+  "tribes": []
+}

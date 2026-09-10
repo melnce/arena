@@ -1,0 +1,29 @@
+{
+  "id": "89200640",
+  "name": "C SummonOpp",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Summon a Synth Vanilla for your opponent.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Synth Vanilla for your opponent.",
+      "effects": [
+        {
+          "op": "summon",
+          "card": {
+            "named": "88001110"
+          },
+          "count": 1,
+          "controller": "opponent",
+          "printed": "Summon a Synth Vanilla for your opponent."
+        }
+      ]
+    }
+  ]
+}

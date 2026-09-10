@@ -1,0 +1,27 @@
+{
+  "id": "89200430",
+  "name": "C ComboSet",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Set your combo to 3.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Set your combo to 3.",
+      "effects": [
+        {
+          "op": "counter",
+          "key": "combo",
+          "how": "set",
+          "amount": 3,
+          "printed": "Set your combo to 3."
+        }
+      ]
+    }
+  ]
+}

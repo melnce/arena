@@ -1,0 +1,59 @@
+{
+  "id": "89200380",
+  "name": "C Sequence",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "At the end of your turn, deal 1 damage, then 3 damage, in sequence.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, deal 1 damage, then 3 damage, in sequence.",
+      "effects": [
+        {
+          "printed": "deal 1 damage, then 3 damage, in sequence.",
+          "op": "sequence",
+          "steps": [
+            {
+              "printed": "deal 1 damage",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 1
+                }
+              ]
+            },
+            {
+              "printed": "deal 3 damage",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

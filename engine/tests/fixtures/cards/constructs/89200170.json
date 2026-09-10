@@ -1,0 +1,33 @@
+{
+  "id": "89200170",
+  "name": "C GrantWard",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Give an enemy follower Ward.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give an enemy follower Ward.",
+      "effects": [
+        {
+          "op": "grantTraits",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "traits": {
+            "ward": true
+          },
+          "printed": "Give an enemy follower Ward."
+        }
+      ]
+    }
+  ]
+}

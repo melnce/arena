@@ -1,0 +1,46 @@
+{
+  "id": "89200960",
+  "name": "C Rep engage",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Replicate engage. engage: Deal 1 damage to the enemy leader.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "engage",
+      "cost": 0,
+      "sacrifice": false,
+      "printed": "Engage: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Replicate engage.",
+      "effects": [
+        {
+          "op": "replicate",
+          "ability": "engage",
+          "printed": "Fanfare: Replicate engage."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "89200250",
+  "name": "C Countdown",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Subtract 1 from the countdown of an allied amulet.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Subtract 1 from the countdown of an allied amulet.",
+      "effects": [
+        {
+          "op": "countdown",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "amulet"
+          },
+          "delta": {
+            "neg": 1
+          },
+          "printed": "Subtract 1 from the countdown of an allied amulet."
+        }
+      ]
+    }
+  ]
+}
