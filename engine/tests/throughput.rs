@@ -3,7 +3,9 @@
 
 use std::time::Instant;
 
-use arena_engine::{apply, legal_actions, new_game, policy_rng, First, GameConfig, Phase};
+use arena_engine::{
+    apply, legal_actions, new_game, policy_rng, First, GameConfig, Phase, MAX_ACTIONS, MAX_TURNS,
+};
 
 mod common;
 use common::*;
@@ -28,7 +30,7 @@ fn play_game(
     let mut policy = policy_rng(seed);
     let mut actions = 0u32;
     while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
-        if state.turn > 60 || actions >= 800 {
+        if state.turn > MAX_TURNS || actions >= MAX_ACTIONS {
             break;
         }
         let legal = legal_actions(db, &state);

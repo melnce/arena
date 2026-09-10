@@ -2,7 +2,7 @@
 
 use arena_engine::{
     apply, hash, legal_actions, new_game, policy_rng, zone_count, First, GameConfig, Phase,
-    PlayerId,
+    PlayerId, MAX_ACTIONS, MAX_TURNS,
 };
 
 mod common;
@@ -29,7 +29,7 @@ fn play_game(
     let mut actions = 0u32;
     let start_account = zone_count(state.player(PlayerId::A));
     while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
-        if state.turn > 60 || actions >= n_cap {
+        if state.turn > MAX_TURNS || actions >= n_cap {
             break;
         }
         let h = hash(&state);
@@ -85,7 +85,7 @@ fn soak_random_legal() {
     let mut actions = 0u64;
     let mut turns = 0u64;
     for i in 0..n {
-        let o = play_game(&db, 1000 + u64::from(i), &decks, 800);
+        let o = play_game(&db, 1000 + u64::from(i), &decks, MAX_ACTIONS);
         actions += u64::from(o.actions);
         turns += u64::from(o.turns);
         if o.terminal {

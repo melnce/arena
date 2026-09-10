@@ -72,6 +72,8 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
     };
     fill_deck(db, &mut state, PlayerId::A, &cfg.deck_a)?;
     fill_deck(db, &mut state, PlayerId::B, &cfg.deck_b)?;
+    state.players[0].starting_deck = cfg.deck_a.clone();
+    state.players[1].starting_deck = cfg.deck_b.clone();
     let mut picks = Vec::new();
     let first = match cfg.first {
         First::A => PlayerId::A,
@@ -269,6 +271,7 @@ fn add_to_hand(state: &mut State, who: PlayerId, inst: CardInstance) {
 
 fn overflow_destroy(state: &mut State, who: PlayerId, inst: CardInstance) {
     // no Last Words — ruling 2026-08-10
+    state.note_public_removal(who, inst.card);
     state.player_mut(who).shadows += 1;
     state.player_mut(who).cemetery.push(inst);
 }
@@ -1012,6 +1015,7 @@ fn apply_play(
     .ok_or(Illegal::NotLegal)?;
     state.player_mut(me).spend_pp(paid);
     let mut inst = state.player_mut(me).hand.remove(hand as usize);
+    state.note_public_removal(me, inst.card);
     let form = if kind == CardKind::Amulet && card.kind() != CardKind::Amulet {
         PlayForm::Crystallize { paid }
     } else if kind == CardKind::Spell && card.kind() != CardKind::Spell {
@@ -1845,6 +1849,7 @@ fn commit_fuse(
     });
     // partners banished — ruling 2026-09-02
     for inst in partners {
+        state.note_public_removal(me, inst.card);
         state.player_mut(me).banished.push(inst);
     }
     if let Some(h) = state.player_mut(me).hand.get_mut(host_pos) {
@@ -5220,6 +5225,7 @@ fn banish_opt(state: &mut State, t: &TargetOpt, events: &mut Vec<Event>) {
                 card: inst.card,
                 from: ZoneLabel::Hand,
             });
+            state.note_public_removal(*player, inst.card);
             state.player_mut(*player).banished.push(inst);
         }
         TargetOpt::Deck { player, id } => {
@@ -5229,6 +5235,7 @@ fn banish_opt(state: &mut State, t: &TargetOpt, events: &mut Vec<Event>) {
                     card: inst.card,
                     from: ZoneLabel::Deck,
                 });
+                state.note_public_removal(*player, inst.card);
                 state.player_mut(*player).banished.push(inst);
             }
         }
@@ -5248,7 +5255,13 @@ fn bounce_opt(
             if let Some(inst) = state.player_mut(*player).field[*slot as usize].take() {
                 queue_leave(db, state, *player, &inst, *slot);
                 state.player_mut(*player).compact_field();
-                add_to_hand(state, *player, reset_off_field(db, inst));
+                let inst = reset_off_field(db, inst);
+                let card = inst.card;
+                let before = state.player(*player).hand.len();
+                add_to_hand(state, *player, inst);
+                if state.player(*player).hand.len() > before {
+                    state.note_public_addition(*player, card);
+                }
             }
         }
         TargetOpt::Card(id) => {
@@ -5281,7 +5294,9 @@ fn return_deck_opt(db: &CardDb, state: &mut State, t: &TargetOpt) {
             if let Some(inst) = state.player_mut(*player).field[*slot as usize].take() {
                 queue_leave(db, state, *player, &inst, *slot);
                 state.player_mut(*player).compact_field();
-                insert_deck_random(state, *player, reset_off_field(db, inst));
+                let inst = reset_off_field(db, inst);
+                state.note_public_addition(*player, inst.card);
+                insert_deck_random(state, *player, inst);
             }
         }
         _ => {}
@@ -5340,6 +5355,7 @@ fn discard_opt(
                 }
             }
             state.player_mut(*player).shadows += 1;
+            state.note_public_removal(*player, inst.card);
             state.player_mut(*player).cemetery.push(inst);
         }
     }
@@ -5560,6 +5576,7 @@ fn summon_source(
                         return Ok(None);
                     }
                     let mut taken = state.player_mut(*player).hand.remove(*pos as usize);
+                    state.note_public_removal(*player, taken.card);
                     taken.flags.summoning_sick = true;
                     taken
                 }
@@ -5569,6 +5586,7 @@ fn summon_source(
                         return Ok(None);
                     };
                     let mut taken = state.player_mut(*player).deck.remove(pos);
+                    state.note_public_removal(*player, taken.card);
                     taken.flags.summoning_sick = true;
                     taken
                 }
@@ -5660,6 +5678,7 @@ fn summon_source(
                 .find(|&j| state.player(who).deck[j].card == chosen)
                 .unwrap_or(idxs[i.min(idxs.len() - 1)]);
             let mut taken = state.player_mut(who).deck.remove(pos);
+            state.note_public_removal(who, taken.card);
             taken.id = state.alloc_id();
             taken.flags.summoning_sick = true;
             taken
@@ -5810,8 +5829,10 @@ fn add_source_to_hand(
 
 fn push_hand_target(state: &mut State, who: PlayerId, inst: CardInstance) -> Option<TargetOpt> {
     let before = state.player(who).hand.len();
+    let card = inst.card;
     add_to_hand(state, who, inst);
     if state.player(who).hand.len() > before {
+        state.note_public_addition(who, card);
         Some(TargetOpt::Hand {
             player: who,
             pos: before as u8,
@@ -6214,6 +6235,7 @@ fn apply_invoke(
         return Ok(());
     }
     let mut inst = state.player_mut(controller).deck.remove(pos);
+    state.note_public_removal(controller, inst.card);
     state.invoked_ids.insert(card_id);
     inst.flags.summoning_sick = true;
     inst.flags.attacks_left = inst.traits.attacks_per_turn.unwrap_or(1);
@@ -6595,6 +6617,7 @@ fn summon_from_opt(
             }
             if move_instance {
                 let mut taken = state.player_mut(*player).hand.remove(*pos as usize);
+                state.note_public_removal(*player, taken.card);
                 taken.flags.summoning_sick = true;
                 taken
             } else {
@@ -6616,6 +6639,7 @@ fn summon_from_opt(
             };
             if move_instance {
                 let mut taken = state.player_mut(*player).deck.remove(pos);
+                state.note_public_removal(*player, taken.card);
                 taken.flags.summoning_sick = true;
                 taken
             } else {

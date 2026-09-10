@@ -3,26 +3,38 @@
 #![forbid(unsafe_code)]
 
 pub mod action;
+pub mod action_id;
 pub mod apply;
 pub mod card;
 pub mod db;
+pub mod determinize;
+pub mod encode;
 pub mod error;
 pub mod event;
 pub mod ids;
+pub mod limits;
 pub mod oracle;
+pub mod policy;
 pub mod rng;
+pub mod search_key;
 pub mod snapshot;
 pub mod state;
 pub mod support;
 pub mod trace;
 
-pub use action::{from_neutral, to_neutral, Action};
+pub use action::{acting_player, from_neutral, to_neutral, Action};
+pub use action_id::{legal_ids, legal_mask, ActionId};
 pub use apply::{apply, apply_neutral, legal_actions, new_game, zone_count};
 pub use card::{Card, CardId, CardOrCrest};
 pub use db::CardDb;
+pub use determinize::determinize;
+pub use encode::{encode, Observation};
 pub use error::{Illegal, LoadError, OraclePickNotLegal, ReplayError, Unsupported};
 pub use ids::{AttackTarget, First, PlayerId, Slot};
+pub use limits::{MAX_ACTIONS, MAX_TURNS};
+pub use policy::{AnyPolicy, FirstLegal, Policy, Random, H0};
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
+pub use search_key::search_key;
 pub use snapshot::{hash, snapshot, snapshot_json};
 pub use state::{
     CardInstance, ChoiceNode, GameConfig, OpeningHands, Phase, PlayForm, PlayerState, State,
@@ -51,3 +63,11 @@ pub fn legal_actions_neutral(db: &CardDb, state: &State) -> Vec<NeutralAction> {
 pub fn reseed(state: &mut State, seed: u64) {
     state.rng.reseed(seed);
 }
+
+const _: fn() = || {
+    fn assert_send<T: Send>() {}
+    fn assert_sync<T: Sync>() {}
+    assert_send::<State>();
+    assert_sync::<State>();
+    assert_sync::<CardDb>();
+};
