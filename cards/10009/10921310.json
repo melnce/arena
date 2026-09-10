@@ -48,11 +48,27 @@
       "effects": [
         {
           "printed": "Summon 5 instead.",
-          "op": "summon",
-          "card": {
-            "named": "90021120"
-          },
-          "count": 5
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90021120"
+              },
+              "count": 5,
+              "as": "s"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "ward": true
+              }
+            }
+          ]
         }
       ],
       "replacesBase": true

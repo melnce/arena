@@ -17,7 +17,7 @@ The phrase is normalized so rows compare across cards, in this order:
 
 The construction shape is the node's JSON with every `printed` removed, numeric literals → `N`, card/crest ids → `ID`, binding names (`as`, `ref`) → `REF`, then canonical JSON (sorted keys). Ability `on`/`whose` and mode `kind`/`cost` are omitted from the shape — they are the stripped prefix. Two nodes share a construction when the shapes are byte-equal. Divergence is judged per node kind (ability / mode / clause) so a Fanfare wrapper is not compared to its inner clause.
 
-Index: **2054** rows, **869** distinct phrases, **856** with one shape (per kind), **13** divergent (16 kind×phrase groups).
+Index: **2054** rows, **869** distinct phrases, **855** with one shape (per kind), **14** divergent (18 kind×phrase groups).
 
 ## Phrases
 
@@ -930,8 +930,10 @@ Index: **2054** rows, **869** distinct phrases, **856** with one shape (per kind
 | (ability) Summon N copies of NAME. Give all other allied Swordcraft followers on the field +N/+N and Ward | `{"effects":[{"card":{"named":"ID"},"count":"N","op":"summon"},{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"filter":{"class":"swordcraft"},"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}},{"op":"grantTraits","select":{"filter":{"class":"swordcraft"},"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"},"traits":{"ward":true}}],"op":"seq"}]}` | 1 | `10724120` |
 | (ability) Summon N copies of NAME. Select a Mode to activate. N. Give all other allied followers on the field +N/+N and Rush. N. Give all other allied followers on the field +N/+N and Ward | `{"effects":[{"card":{"named":"ID"},"count":"N","op":"summon"},{"by":"player","op":"choose","options":[{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}},{"op":"grantTraits","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"},"traits":{"rush":true}}]},{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}},{"op":"grantTraits","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"},"traits":{"ward":true}}]}],"pick":"N"}]}` | 1 | `10723110` |
 | (ability) Summon N instead | `{"effects":[{"card":{"named":"ID"},"count":"N","op":"summon"}],"replaces":"evolve"}` | 1 | `10072120` |
-| (clause) Summon N instead | `{"card":{"named":"ID"},"count":"N","op":"summon"}` | 4 | `10072120`, `10522310`, `10921310`, … |
-| (mode) Summon N instead | `{"effects":[{"card":{"named":"ID"},"count":"N","op":"summon"}],"replacesBase":true}` | 2 | `10522310`, `10921310` |
+| (clause) Summon N instead | `{"card":{"named":"ID"},"count":"N","op":"summon"}` | 3 | `10072120`, `10522310`, `10923310` |
+| (clause) Summon N instead | `{"effects":[{"as":"REF","card":{"named":"ID"},"count":"N","op":"summon"},{"op":"grantTraits","select":{"pick":"bound","ref":"REF"},"traits":{"ward":true}}],"op":"seq"}` | 1 | `10921310` |
+| (mode) Summon N instead | `{"effects":[{"card":{"named":"ID"},"count":"N","op":"summon"}],"replacesBase":true}` | 1 | `10522310` |
+| (mode) Summon N instead | `{"effects":[{"effects":[{"as":"REF","card":{"named":"ID"},"count":"N","op":"summon"},{"op":"grantTraits","select":{"pick":"bound","ref":"REF"},"traits":{"ward":true}}],"op":"seq"}],"replacesBase":true}` | 1 | `10921310` |
 | (mode) Summon N instead. Deal N damage instead | `{"effects":[{"card":{"named":"ID"},"count":"N","op":"summon"},{"amount":"N","op":"damage","select":{"kind":"follower","pick":"all","side":"enemy","zone":"field"}}],"replacesBase":true}` | 1 | `10923310` |
 | (ability) Summon N random differently named Abysscraft followers that cost N or less from your deck | `{"effects":[{"card":{"randomFrom":{"class":"abysscraft","costLte":"N","kind":"follower"}},"count":"N","op":"summon"}]}` | 1 | `10754110` |
 | (clause) Summon N random differently named Abysscraft followers that cost N or less from your deck | `{"card":{"randomFrom":{"class":"abysscraft","costLte":"N","kind":"follower"}},"count":"N","op":"summon"}` | 1 | `10754110` |
@@ -1246,6 +1248,16 @@ Every same-kind phrase with more than one construction shape. Unlisted divergenc
 - `{"as":"REF","card":{"named":"ID"},"count":"N","op":"summon"}` — `10052120`, `10621310`, `10922120`
 - `{"card":{"named":"ID"},"count":"N","op":"summon"}` — `10513110`, `10522310`, `10531110`, `10533110`, `10562110`, `10611310`, `10614110`, `10631310`, `10632110`, `10632120`, `10633110`, `10634110`, `10641120`, `10672110`, `10673110`, `10702110`, `10722120`, `10723110`, `10724120`, `10741110`, `10811120`, `10822310`, `10824120`, `10834120`, `10852110`, `10932110`, `10934110`, `10961120`
 
+### `(clause) Summon N instead`
+
+- `{"card":{"named":"ID"},"count":"N","op":"summon"}` — `10072120`, `10522310`, `10923310`
+- `{"effects":[{"as":"REF","card":{"named":"ID"},"count":"N","op":"summon"},{"op":"grantTraits","select":{"pick":"bound","ref":"REF"},"traits":{"ward":true}}],"op":"seq"}` — `10921310`
+
+### `(mode) Summon N instead`
+
+- `{"effects":[{"card":{"named":"ID"},"count":"N","op":"summon"}],"replacesBase":true}` — `10522310`
+- `{"effects":[{"effects":[{"as":"REF","card":{"named":"ID"},"count":"N","op":"summon"},{"op":"grantTraits","select":{"pick":"bound","ref":"REF"},"traits":{"ward":true}}],"op":"seq"}],"replacesBase":true}` — `10921310`
+
 ### `(ability) Summon a NAME`
 
 - `{"effects":[{"as":"REF","card":{"named":"ID"},"count":"N","op":"summon"}]}` — `10424110`
@@ -1290,6 +1302,7 @@ From `tools/phrase-index-exceptions.json`. Each entry names ids and the sentence
 | Add a NAME to your hand | Leafshadow Assassin 10912110 binds the Fairy so Combo (3) can give that instance Bane; a lone add has no later clause to bind. | `10912110`, `10011210` |
 | Deal N damage to all enemy followers | Timepiece of Perfection 10762210 wraps the Enhance copy in seq so validate.mjs does not flag a mode that copies the Engage clause's damage subtree. | `10762210`, `10422110` |
 | Deal N damage instead | An instead-clause inherits its target from the card's base sentence (all enemies / all enemy followers / the selected follower), which the leftover printed does not repeat. | `10512310`, `10923310`, `90024320` |
+| Summon N instead | Official JP on Phalanx 10921310: 『スティールナイト』1枚を自分の場に出す。それは【守護】を持つ。【エンハンス_6】1枚ではなく5枚。 — Enhance substitutes the count only; それは【守護】を持つ still applies to what was summoned. | `10921310`, `10522310` |
 | Draw N cards | Ebb and Flow 10853310 binds the drawn cards so the super-evolution clause can reduce their costs; a lone draw has nothing to bind. | `10853310`, `10052310` |
 | Draw a follower | Blade of the Crestpetal 10541310 binds the drawn follower so X is that card's cost; Adventurers' Guild 10002210 draws with no later reference. | `10541310`, `10002210` |
 | Select a Mode to activate | The numbered options are card-specific and carry their own printed nodes; this prompt is only the choose wrapper. | `10864120`, `10823310`, `10962310`, `10912310`, `10403110`, `10771310`, `10413310`, `10743110` |
