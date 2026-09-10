@@ -1,0 +1,6 @@
+{
+  "framework": null,
+  "installCommand": "cd ui && npm ci --no-audit --no-fund",
+  "buildCommand": "bash scripts/vercel-build.sh",
+  "outputDirectory": "ui/dist"
+}
