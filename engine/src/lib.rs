@@ -33,11 +33,17 @@ pub use trace::{
 };
 
 /// Re-export used by bins that only need to list legal actions as NeutralAction.
+/// `legal` is a set: identical NeutralActions appear once (hand copies of one
+/// id collapse to one `choose {card}`).
 pub fn legal_actions_neutral(db: &CardDb, state: &State) -> Vec<NeutralAction> {
-    legal_actions(db, state)
-        .iter()
-        .map(|a| to_neutral(state, a))
-        .collect()
+    let mut out = Vec::new();
+    for a in legal_actions(db, state) {
+        let n = to_neutral(state, &a);
+        if !out.contains(&n) {
+            out.push(n);
+        }
+    }
+    out
 }
 
 pub fn reseed(state: &mut State, seed: u64) {

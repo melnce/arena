@@ -57,6 +57,10 @@ That order is what makes enter-reactions precede Fanfare, Strike/Clash precede c
 
 A completed old-engine `fuse { host_pos, partner_pos }` line is applied by `apply_neutral`: start the fuse, map each `partner_pos` (pre-action hand position) to the index in `options`, then Confirm. Confirm with no partners is not legal. `Choose` with an out-of-range index is `NotLegal`.
 
+## Defense debuff and `max_defense`
+
+A stat debuff lowers `max_defense` by the same amount; current defense drops by the same amount; healing restores up to the new maximum. Example: a 7/5 (max 7) given −0/−4 becomes 7/1 (max 3). This is the rulebook reading ("restoration cannot raise a follower above its current maximum — the highest it has been set to via base or buffs"). Owner confirmation pending; if he rules the old engine's max-1 reading, this is a one-line change.
+
 ## State notes
 
 - Field slots are entry order, compacted on leave.

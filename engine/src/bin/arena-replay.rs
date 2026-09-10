@@ -6,9 +6,9 @@ use std::fs;
 use std::process::ExitCode;
 
 use arena_engine::{
-    apply_neutral, legal_actions, legal_divergence_parts, neutral_json, new_game,
-    picks_from_trace_rng, snapshot_json, to_neutral, CardDb, CardId, First, GameConfig, GameRng,
-    NeutralAction, OpeningHands, ReplayError, TraceHeader,
+    apply_neutral, legal_actions_neutral, legal_divergence_parts, neutral_json, new_game,
+    picks_from_trace_rng, snapshot_json, CardDb, CardId, First, GameConfig, GameRng, NeutralAction,
+    OpeningHands, ReplayError, TraceHeader,
 };
 
 fn main() -> ExitCode {
@@ -94,10 +94,7 @@ fn run(path: &str) -> Result<(), ReplayError> {
             });
         }
         if let Some(legal) = rec.get("legal") {
-            let mut ours: Vec<NeutralAction> = legal_actions(&db, &state)
-                .iter()
-                .map(|a| to_neutral(&state, a))
-                .collect();
+            let mut ours: Vec<NeutralAction> = legal_actions_neutral(&db, &state);
             let mut theirs: Vec<NeutralAction> =
                 serde_json::from_value(legal.clone()).unwrap_or_default();
             ours.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
@@ -117,9 +114,9 @@ fn run(path: &str) -> Result<(), ReplayError> {
 }
 
 fn legal_json(db: &CardDb, state: &arena_engine::State) -> String {
-    let acts: Vec<String> = legal_actions(db, state)
+    let acts: Vec<String> = legal_actions_neutral(db, state)
         .iter()
-        .map(|a| neutral_json(&to_neutral(state, a)))
+        .map(neutral_json)
         .collect();
     format!("[{}]", acts.join(", "))
 }

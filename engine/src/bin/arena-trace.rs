@@ -164,7 +164,7 @@ fn play_one(
             "action": recorded,
             "rng": state.picks,
             "state": snapshot_json(&state),
-            "legal": legal_actions(db, &state).iter().map(|a| to_neutral(&state, a)).collect::<Vec<NeutralAction>>(),
+            "legal": arena_engine::legal_actions_neutral(db, &state),
         });
         lines.push(serde_json::to_string(&line).unwrap());
         i += 1;

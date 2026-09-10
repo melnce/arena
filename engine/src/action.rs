@@ -104,7 +104,15 @@ fn choose_option_json(state: &State, i: u8) -> ChooseOptionJson {
                     Some(TargetOpt::Leader { .. }) => ChooseOptionJson::Leader(LeaderWord::Leader),
                     Some(TargetOpt::Card(id)) => ChooseOptionJson::Card { card: id.as_str() },
                     Some(TargetOpt::Mode(m)) => ChooseOptionJson::Mode { mode: *m },
-                    Some(TargetOpt::Hand { .. }) | None => ChooseOptionJson::Mode { mode: i },
+                    Some(TargetOpt::Hand { player, pos }) => {
+                        match state.player(*player).hand.get(*pos as usize) {
+                            Some(c) => ChooseOptionJson::Card {
+                                card: c.card.as_str(),
+                            },
+                            None => ChooseOptionJson::Mode { mode: i },
+                        }
+                    }
+                    None => ChooseOptionJson::Mode { mode: i },
                 };
             }
             ChoiceNode::Modes { options, .. } => {

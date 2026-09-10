@@ -410,7 +410,7 @@ fn fuse_partner_indices(
         .enumerate()
         .filter(|(i, c)| {
             *i != host
-                && filter_matches_card(db, c, &fuse.partners)
+                && filter_matches_card(state, me, c, &fuse.partners)
                 && !already_fused_kind(host_inst, c)
         })
         .map(|(i, _)| i as u8)
@@ -1473,10 +1473,10 @@ fn commit_fuse(
                         if let Ok(newc) = db.require_supported(transform_into) {
                             let mut neu =
                                 CardInstance::from_card(newc, state.player(me).hand[host_pos].id);
+                            // Transform is a new card: fresh fuse budget and empty
+                            // β/γ memory (α itself starts empty). Keep was_fused.
+                            // Ruling 2026-09-06 / 2026-08-29.
                             neu.flags.was_fused = true;
-                            neu.flags.fused_kinds = kinds;
-                            neu.flags.fused_this_turn = true;
-                            neu.flags.summoning_sick = false;
                             state.player_mut(me).hand[host_pos] = neu;
                             events.push(Event::Transform {
                                 slot: Slot(0),
@@ -2492,7 +2492,7 @@ fn apply_effect_with_targets(
         }
         Effect::ReturnToDeck { .. } => {
             for t in targets {
-                return_deck_opt(state, t);
+                return_deck_opt(db, state, t);
             }
         }
         Effect::Discard { .. } => {
@@ -2681,7 +2681,7 @@ fn apply_effect(
         }
         Effect::ReturnToDeck { select, .. } => {
             for t in resolve_select_rolling(db, state, controller, source, select)? {
-                return_deck_opt(state, &t);
+                return_deck_opt(db, state, &t);
             }
         }
         Effect::Summon {
@@ -3041,14 +3041,14 @@ fn combat_damage(
             // Bane even at 0 — rulebook Bane
             if att.is_bane() {
                 if let Some(d) = state.field_inst(opp, ds.0) {
-                    if d.traits.cant_be_destroyed_by_abilities != Some(true) {
+                    if !bane_blocked(state, opp, d) {
                         destroy_slot(db, state, opp, ds.0, false, events)?;
                     }
                 }
             }
             if def.is_bane() {
                 if let Some(a) = state.field_inst(me, slot) {
-                    if a.traits.cant_be_destroyed_by_abilities != Some(true) {
+                    if !bane_blocked(state, me, a) {
                         destroy_slot(db, state, me, slot, false, events)?;
                     }
                 }
@@ -3061,6 +3061,13 @@ fn combat_damage(
         }
     }
     Ok(())
+}
+
+/// Super-evolved own-turn protection: cannot be destroyed by abilities/effects
+/// (including Bane). Rulebook Evolution stat bonuses.
+fn bane_blocked(state: &State, owner: PlayerId, inst: &CardInstance) -> bool {
+    inst.traits.cant_be_destroyed_by_abilities == Some(true)
+        || (inst.super_evolved && state.active == owner)
 }
 
 fn deal_to_opt(
@@ -3382,7 +3389,7 @@ fn banish_opt(state: &mut State, t: &TargetOpt, events: &mut Vec<Event>) {
 }
 
 fn bounce_opt(
-    _db: &CardDb,
+    db: &CardDb,
     state: &mut State,
     controller: PlayerId,
     t: &TargetOpt,
@@ -3392,7 +3399,7 @@ fn bounce_opt(
         TargetOpt::Slot { player, slot } => {
             if let Some(inst) = state.player_mut(*player).field[*slot as usize].take() {
                 state.player_mut(*player).compact_field();
-                add_to_hand(state, *player, inst);
+                add_to_hand(state, *player, reset_off_field(db, inst));
             }
         }
         TargetOpt::Card(id) => {
@@ -3409,7 +3416,7 @@ fn bounce_opt(
     Ok(())
 }
 
-fn return_deck_opt(state: &mut State, t: &TargetOpt) {
+fn return_deck_opt(db: &CardDb, state: &mut State, t: &TargetOpt) {
     match t {
         TargetOpt::Hand { player, pos } if (*pos as usize) < state.player(*player).hand.len() => {
             let inst = state.player_mut(*player).hand.remove(*pos as usize);
@@ -3418,11 +3425,25 @@ fn return_deck_opt(state: &mut State, t: &TargetOpt) {
         TargetOpt::Slot { player, slot } => {
             if let Some(inst) = state.player_mut(*player).field[*slot as usize].take() {
                 state.player_mut(*player).compact_field();
-                state.player_mut(*player).deck.push(inst);
+                state
+                    .player_mut(*player)
+                    .deck
+                    .push(reset_off_field(db, inst));
             }
         }
         _ => {}
     }
+}
+
+/// Field → hand/deck is a fresh printed copy. `was_fused` is the one flag
+/// that stays (ruling 2026-08-29).
+fn reset_off_field(db: &CardDb, inst: CardInstance) -> CardInstance {
+    let Ok(card) = db.card(inst.card) else {
+        return inst;
+    };
+    let mut neu = CardInstance::from_card(card, inst.id);
+    neu.flags.was_fused = inst.flags.was_fused;
+    neu
 }
 
 fn discard_opt(
@@ -3974,6 +3995,11 @@ fn pool_candidates(
                         slot: i as u8,
                     });
                 }
+                // `kind: character` includes the leader; `includeLeader` includes
+                // it for any kind. docs/schema.md `includeLeader`.
+                if p.kind == SelectorKind::Character || p.include_leader == Some(true) {
+                    out.push(TargetOpt::Leader { player: who });
+                }
             }
             Zone::Hand => {
                 for (i, c) in state.player(who).hand.iter().enumerate() {
@@ -4122,51 +4148,8 @@ fn inst_matches_filter(state: &State, who: PlayerId, c: &CardInstance, f: &Filte
     true
 }
 
-fn filter_matches_card(db: &CardDb, inst: &CardInstance, f: &Filter) -> bool {
-    inst_matches_filter(
-        &State {
-            players: [PlayerState::new(), PlayerState::new()],
-            turn: 0,
-            active: PlayerId::A,
-            first: PlayerId::A,
-            phase: Phase::Main,
-            winner: None,
-            rng: GameRng::live(0),
-            step_counter: 0,
-            next_instance: 1,
-            crest_order: 1,
-            picks: Vec::new(),
-            pending_work: Vec::new(),
-            queue: Vec::new(),
-            suppress_last_words: false,
-            bindings: std::collections::BTreeMap::new(),
-            pending_play_rally: None,
-            event_subject: None,
-        },
-        PlayerId::A,
-        inst,
-        f,
-    ) || {
-        let _ = db;
-        if let Some(ids) = &f.cards {
-            return ids.contains(&inst.card);
-        }
-        if let Some(t) = &f.tribe {
-            return match t {
-                crate::card::TribeOrList::One(tr) => inst.tribes.contains(tr),
-                crate::card::TribeOrList::Many(ts) => ts.iter().any(|tr| inst.tribes.contains(tr)),
-            };
-        }
-        if let Some(k) = f.kind {
-            return match k {
-                FilterKind::Amulet => inst.kind == CardKind::Amulet,
-                FilterKind::Follower => inst.kind == CardKind::Follower,
-                FilterKind::Spell => inst.kind == CardKind::Spell,
-                FilterKind::Card => true,
-            };
-        }
-        f.cards.is_none() && f.tribe.is_none() && f.kind.is_none() && f.card.is_none()
-    }
+fn filter_matches_card(state: &State, who: PlayerId, inst: &CardInstance, f: &Filter) -> bool {
+    inst_matches_filter(state, who, inst, f)
 }
 
 fn eval_amount_simple(a: &Amount) -> i32 {
