@@ -1691,39 +1691,44 @@ fn queue_turn_boundary(db: &CardDb, state: &mut State, whose_turn: PlayerId, sta
 
 fn tick_crests(_db: &CardDb, state: &mut State, who: PlayerId) {
     let mut doomed = Vec::new();
-    for (i, c) in state.player_mut(who).crests.iter_mut().enumerate() {
+    for c in state.player_mut(who).crests.iter_mut() {
         if let Some(cd) = c.countdown.as_mut() {
             *cd -= 1;
             if *cd <= 0 {
-                doomed.push(i);
+                doomed.push(c.granted_order);
             }
         }
     }
-    for i in doomed.into_iter().rev() {
-        let c = state.player_mut(who).crests.remove(i);
-        // Last Words on crest — queued via abilities when we have db in drain
-        state
-            .pending_work
-            .push(WorkFrame::Aftermath(Aftermath::DrainQueue));
-        let _ = c;
+    for order in doomed {
+        let crests = &mut state.player_mut(who).crests;
+        if let Some(i) = crests.iter().position(|c| c.granted_order == order) {
+            let c = crests.remove(i);
+            // Last Words on crest — queued via abilities when we have db in drain
+            state
+                .pending_work
+                .push(WorkFrame::Aftermath(Aftermath::DrainQueue));
+            let _ = c;
+        }
     }
 }
 
 fn tick_amulets(db: &CardDb, state: &mut State, who: PlayerId) {
     // Countdown advances once at the owner's start of turn — rulebook Countdown.
+    // Capture by instance id: destroy_slot compacts, so a later slot index
+    // would hit whoever moved in (E29 / same root as E14).
     let mut doomed = Vec::new();
-    for (i, s) in state.player_mut(who).field.iter_mut().enumerate() {
-        if let Some(c) = s {
-            if let Some(cd) = c.countdown.as_mut() {
-                *cd -= 1;
-                if *cd <= 0 {
-                    doomed.push(i as u8);
-                }
+    for c in state.player_mut(who).field.iter_mut().flatten() {
+        if let Some(cd) = c.countdown.as_mut() {
+            *cd -= 1;
+            if *cd <= 0 {
+                doomed.push(c.id);
             }
         }
     }
-    for slot in doomed {
-        let _ = destroy_slot(db, state, who, slot, false, &mut Vec::new());
+    for id in doomed {
+        if let Some(slot) = state.find_field(who, id) {
+            let _ = destroy_slot(db, state, who, slot, false, &mut Vec::new());
+        }
     }
 }
 
@@ -2196,27 +2201,13 @@ fn drain_until_quiet(
             return Ok(());
         }
         state.bump_step()?;
-        // A mid-effect frame (index > 0) is the resolving effect: never interrupt it.
-        // Newly pushed frames wait behind the reactive queue (play sequence,
-        // Strike-before-damage, start-of-turn draw at step 8).
+        // Queue first: reactions to the op that just finished (ally_draw after
+        // `draw count: N`, Last Words after a settle) run before the next op
+        // of the enclosing list (E28). Nested bodies sit on top as index-0
+        // frames (E25). Newly pushed frames still wait behind the queue
+        // (play sequence, Strike-before-damage, start-of-turn draw at step 8).
         // Rulebook: Trigger queue; Fanfare and Enter-Play Trigger Order;
         // Combat Timing; Start-of-Turn and End-of-Turn Sequences.
-        let continue_effect = matches!(
-            state.pending_work.last(),
-            Some(WorkFrame::Effects { index, .. }) if *index > 0
-        );
-        if continue_effect {
-            if let Some(WorkFrame::Effects {
-                controller,
-                source,
-                effects,
-                index,
-            }) = state.pending_work.pop()
-            {
-                resolve_effect_list(db, state, controller, source, effects, index, events)?;
-            }
-            continue;
-        }
         if !state.queue.is_empty() {
             drain_queue(db, state, events)?;
             continue;
@@ -2372,12 +2363,17 @@ fn drain_queue(db: &CardDb, state: &mut State, _events: &mut [Event]) -> Result<
     if state.queue.is_empty() {
         return Ok(());
     }
+    // Flush the whole current wave. One-at-a-time onto a LIFO stack reversed
+    // the wave (B's Last Words ran before A's). Rulebook: active side first,
+    // entry order within a side (E27).
     state
         .queue
         .sort_by_key(|t| (t.category, t.entry, t.printed_order));
-    let t = state.queue.remove(0);
+    let batch = std::mem::take(&mut state.queue);
     state.bindings.clear();
-    push_effects(state, t.controller, t.source, t.effects);
+    for t in batch.into_iter().rev() {
+        push_effects(state, t.controller, t.source, t.effects);
+    }
     let _ = db;
     Ok(())
 }
@@ -3624,17 +3620,16 @@ fn countdown_opt(
 fn settle_deaths(db: &CardDb, state: &mut State, events: &mut Vec<Event>) -> Result<(), Illegal> {
     let mut dead = Vec::new();
     for p in PlayerId::ALL {
-        for (i, s) in state.player(p).field.iter().enumerate() {
-            if let Some(c) = s {
-                if c.kind == CardKind::Follower && c.defense <= 0 {
-                    dead.push((p, i as u8));
-                }
+        for c in state.player(p).field.iter().flatten() {
+            if c.kind == CardKind::Follower && c.defense <= 0 {
+                dead.push((p, c.id));
             }
         }
     }
-    dead.sort_by_key(|a| std::cmp::Reverse(a.1));
-    for (p, slot) in dead {
-        destroy_slot(db, state, p, slot, false, events)?;
+    for (p, id) in dead {
+        if let Some(slot) = state.find_field(p, id) {
+            destroy_slot(db, state, p, slot, false, events)?;
+        }
     }
     Ok(())
 }

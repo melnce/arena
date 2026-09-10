@@ -125,8 +125,17 @@ fn choose_option_json(state: &State, i: u8) -> ChooseOptionJson {
                 }
             }
             ChoiceNode::FusePartners { options, .. } => {
-                if let Some(pos) = options.get(i as usize) {
-                    return ChooseOptionJson::Mode { mode: *pos };
+                // A partner is a card in hand — `{card}`, lowest-copy (E30).
+                let who = match &state.phase {
+                    Phase::Choice { player, .. } => *player,
+                    _ => acting_player(state),
+                };
+                if let Some(&pos) = options.get(i as usize) {
+                    if let Some(c) = state.player(who).hand.get(pos as usize) {
+                        return ChooseOptionJson::Card {
+                            card: c.card.as_str(),
+                        };
+                    }
                 }
             }
         }
@@ -198,7 +207,8 @@ fn option_index(state: &State, opt: &ChooseOptionJson) -> Option<u8> {
                 .collect(),
             ChoiceNode::FusePartners { options, .. } => options
                 .iter()
-                .map(|p| ChooseOptionJson::Mode { mode: *p })
+                .enumerate()
+                .map(|(i, _)| choose_option_json(state, i as u8))
                 .collect(),
         };
         return opts.iter().position(|o| o == opt).map(|i| i as u8);

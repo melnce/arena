@@ -48,10 +48,11 @@ A **played** follower's Rally increment is deferred until the play sequence is q
 
 `apply` runs the action then `drain_until_quiet`:
 
-1. Continue an in-flight `Effects` frame (`index > 0`) — never interrupt the resolving effect.
-2. Drain the FIFO trigger queue (8-category order, entry-order then printed-order).
-3. Pop newly pushed effect lists and aftermaths (combat damage, turn-boundary step 7/8).
-4. Settle 0-defense deaths.
+1. Drain the current trigger-queue wave (8-category order, entry-order then printed-order; the whole wave is flushed onto `pending_work` so LIFO still resolves active side first).
+2. Pop newly pushed effect lists and aftermaths (combat damage, turn-boundary step 7/8). Nested bodies sit on top of the enclosing remainder.
+3. Settle 0-defense deaths (by instance id).
+
+Reactions to an op (`ally_draw` after `draw count: N`, Last Words after a settle) therefore run before the next op of the enclosing list. Countdown expiry captures doomed amulets/crests by instance id / `granted_order` before any destroy, so compact cannot retarget a neighbour. Fuse partner `legal` is `choose {card}` like every other hand choice.
 
 That order is what makes enter-reactions precede Fanfare, Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
 
