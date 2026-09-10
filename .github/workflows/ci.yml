@@ -73,3 +73,58 @@ jobs:
 
       - name: coverage verb walk
         run: python3 tools/coverage-check.py
+
+  wasm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-wasm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-wasm-
+
+      - name: wasm-pack
+        run: |
+          if ! command -v wasm-pack >/dev/null; then
+            curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+          fi
+
+      - name: wasm-pack web
+        run: wasm-pack build wasm --target web --release --out-dir ../ui/dev/pkg
+
+      - name: wasm-pack nodejs
+        run: wasm-pack build wasm --target nodejs --release --out-dir pkg-node
+
+      - name: native traces
+        run: |
+          cargo build -p arena-engine --release --bin arena-trace
+          mkdir -p target/wasm-traces
+          ./target/release/arena-trace \
+            --seed 1 --games 20 \
+            --deck-a oracle/decks/basic-forest.json \
+            --deck-b oracle/decks/basic-rune.json \
+            --out target/wasm-traces \
+            --first coin
+
+      - name: node wasm == native
+        env:
+          ARENA_WASM_PKG: wasm/pkg-node
+          ARENA_TRACE_DIR: target/wasm-traces
+          ARENA_DECK_A: oracle/decks/basic-forest.json
+          ARENA_DECK_B: oracle/decks/basic-rune.json
+          ARENA_WASM_SEEDS: "20"
+          ARENA_FIRST: coin
+        run: node wasm/tests/node.test.mjs
