@@ -94,18 +94,33 @@ fn fate_of_the_world_picks_draw_draw_then_random_target() {
         2,
     );
     apply(&db, &mut st, Action::Play { hand: h }).expect("Fate printed form");
-    let whats: Vec<PickWhat> = st.picks.iter().map(|p| p.what).collect();
-    assert_eq!(
-        whats,
-        vec![PickWhat::Draw, PickWhat::Draw, PickWhat::RandomTarget],
-        "targets for destroy are selected after the draws; picks={:?}",
-        st.picks
-    );
     assert_eq!(
         field_count(&st, opp),
         2,
         "one highest-attack body destroyed"
     );
+}
+
+#[test]
+fn fate_of_the_world_live_records_draw_draw_then_random_target() {
+    let db = load_db();
+    let mut st = started(&db, 20);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, opp, "88001110");
+    put_field(&db, &mut st, opp, "88001110");
+    put_field(&db, &mut st, opp, "88001110");
+    give_pp(&mut st, me, 5, 5);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10503310");
+    let whats: Vec<PickWhat> = st.picks.iter().map(|p| p.what).collect();
+    assert_eq!(
+        whats,
+        vec![PickWhat::Draw, PickWhat::Draw, PickWhat::RandomTarget],
+        "picks={:?}",
+        st.picks
+    );
+    assert_eq!(field_count(&st, opp), 2);
 }
 
 #[test]
@@ -138,6 +153,30 @@ fn random_damage_then_draw_picks_random_target_then_draw() {
         3,
     );
     apply(&db, &mut st, Action::Play { hand: h }).expect("damage then draw");
+    let left = st
+        .player(opp)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == "88001320")
+        .expect("tank survives 2");
+    assert_eq!(left.defense, 2);
+}
+
+#[test]
+fn random_damage_then_draw_live_records_random_target_then_draw() {
+    let db = load_db();
+    let mut st = started(&db, 21);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    let body = put_field(&db, &mut st, opp, "88001320");
+    if let Some(f) = st.field_inst_mut(opp, body) {
+        f.defense = 4;
+        f.max_defense = 4;
+    }
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "88001720");
     let whats: Vec<PickWhat> = st.picks.iter().map(|p| p.what).collect();
     assert_eq!(
         whats,

@@ -92,7 +92,7 @@ pub enum Event {
     },
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EventTarget {
     Leader(PlayerId),
     Slot(PlayerId, Slot),

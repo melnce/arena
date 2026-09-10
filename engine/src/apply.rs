@@ -2264,7 +2264,7 @@ fn run_aftermath(
             attacker_id,
             target,
             defender_id,
-            knockback,
+            knockback: _,
         } => {
             combat_damage(
                 db,
@@ -2273,7 +2273,6 @@ fn run_aftermath(
                 attacker_id,
                 target,
                 defender_id,
-                knockback,
                 events,
             )?;
         }
@@ -3115,7 +3114,6 @@ fn combat_damage(
     attacker_id: u32,
     target: AttackTarget,
     defender_id: Option<u32>,
-    knockback: bool,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
     let Some(slot) = state.find_field(me, attacker_id) else {
@@ -3124,6 +3122,7 @@ fn combat_damage(
     let Some(att) = state.field_inst(me, slot).cloned() else {
         return Ok(());
     };
+    let knockback = att.super_evolved;
     let opp = me.opponent();
     match target {
         AttackTarget::Leader => {
