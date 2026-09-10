@@ -26,6 +26,12 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 
 `as` / `{pick: bound, ref}` names live in `State.bindings` for one **resolution**. The map is cleared at the start of `apply`. Nested `seq` / `if` / `pay` frames share the live map, so an Evolve ability's `as: "g"` is visible to the Super-Evolve ability of the same card when both fire (rulebook: a super-evolve fires both lines unless the super line says `instead`). A reactive-queue drain between ops of the same list saves the map and restores it after the wave (`Aftermath::RestoreBindings`), so an enclosing `as` name survives enter-triggers that run before the next op (Netherworld Lieutenant: summon `as: s`, then buff the bound copy). Queued triggers themselves start from an empty map. A `ref` with no live binding is an empty set — never a runtime error. `CardDb::load` rejects a `ref` that no `as` on the same card could produce (`LoadError::UnboundRef`).
 
+Enhance that does not `replacesBase` (Zeta & Bea) appends to the Fanfare list of the same resolution, so an `as` bound by the base Fanfare is visible to the tier. `replacesBase` (Splendor, L'Age d'Or, Ruthless Eld Sword) swaps the list; `choose pick: all optionsFrom: fanfare` then copies the Fanfare's `options` and runs them in printed order with no player choice.
+
+## This card's cost
+
+`Condition.costEq` is the played instance's current cost. Spells read the cemetery corpse written at play (`cost = paid`). Severed Ties "If this card's cost is 3" therefore sees a cost-set copy as 1 and does not chain. This is not Filter `costEq` (pool / event subject).
+
 ## Turn-boundary abilities
 
 `ability_boundary` matches `StartOfTurn` only when `start` and `EndOfTurn` only when `!start`, and only when `a.zone()` matches the scan (field / hand / deck). `queue_turn_boundary` calls the same matcher for both boundaries with that flag, so an `endOfTurn { whose: opponent }` (Enhanced Puppet) does not fire at the opponent's start, and an `endOfTurn { whose: own }` (Puppet Theater, Dark Dimensions) does not fire at the owner's start. `enqueue_boundary` looks up abilities by index (no `Ability` clones) and also scans hand (and deck) so a `zone: hand` endOfTurn (Garodeth) fires; `when` conditions are evaluated at enqueue.
@@ -54,7 +60,7 @@ A **played** follower's Rally increment is deferred until the play sequence is q
 2. Pop newly pushed effect lists and aftermaths (combat damage, turn-boundary step 7/8). Nested bodies sit on top of the enclosing remainder.
 3. Settle 0-defense deaths (by instance id).
 
-Reactions to an op of an in-flight list that is *not* inside a flushed wave (`ally_draw` after `draw count: N`) still run before the next op of that list (E28). Countdown expiry captures doomed amulets/crests by instance id / `granted_order` before any destroy, so compact cannot retarget a neighbour. Fuse partner `legal` is `choose {card}` like every other hand choice.
+Reactions to an op of an in-flight list that is *not* inside a flushed wave (`ally_draw` after `draw count: N`) still run before the next op of that list (E28). Countdown expiry captures doomed amulets/crests by instance id / `granted_order` before any destroy, so compact cannot retarget a neighbour. A `countdown delta` over a selector (Barbaros) likewise captures each hit by instance id before applying, so a Flag that reaches 0 and is destroyed does not steal the next Flag's slot. Fuse partner `legal` is `choose {card}` like every other hand choice.
 
 That order is what makes play reactions (`whenever you play`) resolve before Fanfare (E39), the played card's own enter precede Fanfare, other cards' enter reactions wait until the play completes (E34), Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
 

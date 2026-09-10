@@ -848,6 +848,11 @@ pub enum Condition {
     Overflow {
         overflow: bool,
     },
+    /// Played instance's current cost. Severed Ties "If this card's cost is 3".
+    CostEq {
+        #[serde(rename = "costEq")]
+        cost_eq: Amount,
+    },
     /// Exact check of current `pp_max` against `n` (Dragonsign: 10).
     /// Overflow remains the separate ≥7-max-PP keyword.
     MaxPpAtLeast {

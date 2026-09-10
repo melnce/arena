@@ -1,0 +1,68 @@
+{
+  "id": "10424110",
+  "name": "Zeta & Bea, Crimson and Blue",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Summon a Zeta & Bea, Crimson and Blue.\nEnhance (6): Give it Bane and this follower Storm.\n\nRush",
+  "attack": 3,
+  "defense": 2,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Zeta & Bea, Crimson and Blue.",
+      "effects": [
+        {
+          "printed": "Summon a Zeta & Bea, Crimson and Blue.",
+          "op": "summon",
+          "card": {
+            "named": "10424110"
+          },
+          "count": 1,
+          "as": "z"
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 6,
+      "printed": "Enhance (6): Give it Bane and this follower Storm.",
+      "effects": [
+        {
+          "printed": "Give it Bane and this follower Storm.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "z"
+              },
+              "traits": {
+                "bane": true
+              }
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,68 @@
+{
+  "id": "10923310",
+  "name": "L'Age d'Or",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Summon a Dread Pirate's Flag. Deal 2 damage to all enemy followers.\nEnhance (6): Summon 2 instead. Deal 4 damage instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Dread Pirate's Flag. Deal 2 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Summon a Dread Pirate's Flag.",
+          "op": "summon",
+          "card": {
+            "named": "90021210"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Deal 2 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 6,
+      "replacesBase": true,
+      "printed": "Enhance (6): Summon 2 instead. Deal 4 damage instead.",
+      "effects": [
+        {
+          "printed": "Summon 2 instead.",
+          "op": "summon",
+          "card": {
+            "named": "90021210"
+          },
+          "count": 2
+        },
+        {
+          "printed": "Deal 4 damage instead.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 4
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

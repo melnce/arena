@@ -1,0 +1,52 @@
+{
+  "id": "10524120",
+  "name": "Unkei, Goldbloom",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select an enemy follower on the field and banish it. Add a Glittering Gold to your hand.\n\nSuper-Evolve: Gain Crest: Unkei, Goldbloom.",
+  "attack": 2,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and banish it. Add a Glittering Gold to your hand.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and banish it.",
+          "op": "banish",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Add a Glittering Gold to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021350"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Gain Crest: Unkei, Goldbloom.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Unkei, Goldbloom.",
+          "op": "crest",
+          "gain": "crest:10524120",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

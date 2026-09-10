@@ -1,0 +1,47 @@
+{
+  "id": "10924110",
+  "name": "Barbaros, Rebellious Convict",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon a Dread Pirate's Flag. Advance the counts of all allied copies of Dread Pirate's Flag on the field by 5.\n\nStorm",
+  "attack": 4,
+  "defense": 3,
+  "traits": {
+    "storm": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Dread Pirate's Flag. Advance the counts of all allied copies of Dread Pirate's Flag on the field by 5.",
+      "effects": [
+        {
+          "printed": "Summon a Dread Pirate's Flag.",
+          "op": "summon",
+          "card": {
+            "named": "90021210"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Advance the counts of all allied copies of Dread Pirate's Flag on the field by 5.",
+          "op": "countdown",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "amulet",
+            "filter": {
+              "card": "90021210"
+            }
+          },
+          "delta": -5
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

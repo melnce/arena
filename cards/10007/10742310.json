@@ -1,0 +1,46 @@
+{
+  "id": "10742310",
+  "name": "Lazing Flame",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Restore 3 defense to your leader. If you're in Overflow, draw a card. ",
+  "tribes": [
+    "anathema"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Restore 3 defense to your leader. If you're in Overflow, draw a card. ",
+      "effects": [
+        {
+          "printed": "Restore 3 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 3
+        },
+        {
+          "printed": "If you're in Overflow, draw a card.",
+          "op": "if",
+          "cond": {
+            "overflow": true
+          },
+          "then": [
+            {
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

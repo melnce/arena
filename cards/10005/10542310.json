@@ -1,0 +1,38 @@
+{
+  "id": "10542310",
+  "name": "Roar of Prominence",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Deal X damage to all followers. X is the number of followers on the field.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal X damage to all followers. X is the number of followers on the field.",
+      "effects": [
+        {
+          "printed": "Deal X damage to all followers. X is the number of followers on the field.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "any",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": {
+            "count": {
+              "pick": "all",
+              "side": "any",
+              "zone": "field",
+              "kind": "follower"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

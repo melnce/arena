@@ -2,11 +2,11 @@
 
 use crate::action::{from_neutral, Action};
 use crate::card::{
-    Ability, AbilityZone, Amount, Card, CardId, CardKind, CardSource, ChooseBy, Condition,
-    Controller, CounterHow, CounterKey, CrestPlayer, Effect, EpAction, EventName, FieldHasKind,
-    Filter, FilterKind, FuseResult, Mode, NamedCounter, OrderBy, PayResource, PoolPick,
-    PoolSelector, PpAction, RefPick, ReplicateKey, Selector, SelectorKind, Side, StatWhich, Traits,
-    TriggerTag, TurnOwner, Until, Whose, Zone,
+    Ability, AbilityZone, Amount, Card, CardId, CardKind, CardSource, ChooseBy, ChoosePick,
+    Condition, Controller, CounterHow, CounterKey, CrestPlayer, Effect, EpAction, EventName,
+    FieldHasKind, Filter, FilterKind, FuseResult, Mode, NamedCounter, OptionsFrom, OrderBy,
+    PayResource, PoolPick, PoolSelector, PpAction, RefPick, ReplicateKey, Selector, SelectorKind,
+    Side, StatWhich, Traits, TriggerTag, TurnOwner, Until, Whose, Zone,
 };
 use crate::db::CardDb;
 use crate::error::{Illegal, LoadError, Unsupported};
@@ -941,6 +941,9 @@ fn apply_play(
     } else {
         PlayForm::Normal
     };
+    if matches!(form, PlayForm::Enhance { .. }) {
+        inst.flags.enhanced = true;
+    }
     if matches!(form, PlayForm::Crystallize { .. }) {
         apply_crystallize_form(card, &mut inst, paid);
     }
@@ -1743,16 +1746,15 @@ fn resume_mode(
         subject,
     }) = state.pending_work.pop()
     {
-        if let Some(Effect::Choose {
-            options: Some(opts),
-            ..
-        }) = effects.get(index).cloned()
-        {
+        if let Some(e) = effects.get(index).cloned() {
+            let opts = choose_options(db, state, source, &e);
             if let Some(opt) = opts.get(idx as usize) {
                 let mut rest = effects;
                 rest.remove(index);
                 push_work(state, controller, source, rest, index, subject.clone());
                 push_effects(state, controller, source, opt.effects.clone());
+            } else {
+                push_work(state, controller, source, effects, index, subject.clone());
             }
         } else {
             push_work(state, controller, source, effects, index, subject.clone());
@@ -3079,6 +3081,137 @@ fn resolve_effect_list(
     Ok(())
 }
 
+fn source_card_id(state: &State, source: SourceRef) -> Option<CardId> {
+    match source {
+        SourceRef::Field { player, id } => state
+            .find_field(player, id)
+            .and_then(|s| state.field_inst(player, s).map(|c| c.card)),
+        SourceRef::Hand { player, id } => state
+            .player(player)
+            .hand
+            .iter()
+            .find(|c| c.id == id)
+            .map(|c| c.card),
+        SourceRef::Spell { card, .. } => Some(card),
+        _ => None,
+    }
+}
+
+fn source_instance_cost(state: &State, source: Option<SourceRef>) -> Option<i32> {
+    match source {
+        Some(SourceRef::Field { player, id }) => state
+            .find_field(player, id)
+            .and_then(|s| state.field_inst(player, s).map(|c| c.cost)),
+        Some(SourceRef::Hand { player, id }) => state
+            .player(player)
+            .hand
+            .iter()
+            .find(|c| c.id == id)
+            .map(|c| c.cost),
+        Some(SourceRef::Spell { player, card }) => state
+            .player(player)
+            .cemetery
+            .iter()
+            .rev()
+            .find(|c| c.card == card)
+            .map(|c| c.cost),
+        _ => None,
+    }
+}
+
+fn options_from_tag(from: OptionsFrom) -> TriggerTag {
+    match from {
+        OptionsFrom::Fanfare => TriggerTag::Fanfare,
+        OptionsFrom::LastWords => TriggerTag::LastWords,
+        OptionsFrom::Evolve => TriggerTag::Evolve,
+        OptionsFrom::SuperEvolve => TriggerTag::SuperEvolve,
+        OptionsFrom::AnyEvolve => TriggerTag::AnyEvolve,
+        OptionsFrom::AnySuperEvolve => TriggerTag::AnySuperEvolve,
+        OptionsFrom::Strike => TriggerTag::Strike,
+        OptionsFrom::FollowerStrike => TriggerTag::FollowerStrike,
+        OptionsFrom::Clash => TriggerTag::Clash,
+        OptionsFrom::Enter => TriggerTag::Enter,
+        OptionsFrom::Leave => TriggerTag::Leave,
+        OptionsFrom::Discarded => TriggerTag::Discarded,
+        OptionsFrom::Invoked => TriggerTag::Invoked,
+        OptionsFrom::Fused => TriggerTag::Fused,
+        OptionsFrom::Spellboost => TriggerTag::Spellboost,
+        OptionsFrom::Engage => TriggerTag::Engage,
+        OptionsFrom::StartOfTurn => TriggerTag::StartOfTurn,
+        OptionsFrom::EndOfTurn => TriggerTag::EndOfTurn,
+        OptionsFrom::When => TriggerTag::When,
+    }
+}
+
+fn find_choose_in_effects(effects: &[Effect]) -> Option<Vec<crate::card::ChooseOption>> {
+    for e in effects {
+        match e {
+            Effect::Choose {
+                options: Some(opts),
+                ..
+            } => return Some(opts.clone()),
+            Effect::If {
+                then, else_effects, ..
+            } => {
+                if let Some(o) = find_choose_in_effects(then) {
+                    return Some(o);
+                }
+                if let Some(els) = else_effects {
+                    if let Some(o) = find_choose_in_effects(els) {
+                        return Some(o);
+                    }
+                }
+            }
+            Effect::Seq { effects, .. }
+            | Effect::Pay { effects, .. }
+            | Effect::Repeat { effects, .. } => {
+                if let Some(o) = find_choose_in_effects(effects) {
+                    return Some(o);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+fn choose_options(
+    db: &CardDb,
+    state: &State,
+    source: SourceRef,
+    e: &Effect,
+) -> Vec<crate::card::ChooseOption> {
+    let Effect::Choose {
+        options,
+        options_from,
+        ..
+    } = e
+    else {
+        return Vec::new();
+    };
+    if let Some(opts) = options {
+        return opts.clone();
+    }
+    let Some(from) = options_from else {
+        return Vec::new();
+    };
+    let Some(cid) = source_card_id(state, source) else {
+        return Vec::new();
+    };
+    let Ok(card) = db.card(cid) else {
+        return Vec::new();
+    };
+    let tag = options_from_tag(*from);
+    for a in card.abilities() {
+        if a.tag() == tag {
+            if let Some(opts) = find_choose_in_effects(a.effects()) {
+                return opts;
+            }
+        }
+    }
+    Vec::new()
+}
+
 fn effect_choice_node(
     db: &CardDb,
     state: &State,
@@ -3089,15 +3222,24 @@ fn effect_choice_node(
     match e {
         Effect::Choose {
             by: ChooseBy::Player,
-            options: Some(opts),
+            pick,
             ..
-        } => Some(ChoiceNode::Modes {
-            options: (0..opts.len() as u8).collect(),
-            pending: PendingChoice {
-                kind: PendingKind::ModeSelect,
-                remaining: 1,
-            },
-        }),
+        } => {
+            let opts = choose_options(db, state, source, e);
+            if opts.is_empty() {
+                return None;
+            }
+            match pick.as_pick() {
+                ChoosePick::All => None,
+                ChoosePick::N(_) => Some(ChoiceNode::Modes {
+                    options: (0..opts.len() as u8).collect(),
+                    pending: PendingChoice {
+                        kind: PendingKind::ModeSelect,
+                        remaining: 1,
+                    },
+                }),
+            }
+        }
         Effect::Damage { select, .. }
         | Effect::Restore { select, .. }
         | Effect::Buff { select, .. }
@@ -3232,9 +3374,7 @@ fn apply_effect_with_targets(
         }
         Effect::Countdown { delta, .. } => {
             let d = eval_amount(db, state, controller, Some(source), delta);
-            for t in targets {
-                countdown_opt(db, state, t, d, events)?;
-            }
+            apply_each_captured(state, targets, |st, t| countdown_opt(db, st, t, d, events))?;
         }
         Effect::GrantAbility { ability, .. } => {
             for t in targets {
@@ -3305,34 +3445,41 @@ fn apply_effect(
                 push_effects(state, controller, source, effects.clone());
             }
         }
-        Effect::Choose {
-            by, pick, options, ..
-        } => match by {
-            ChooseBy::Player => {}
-            ChooseBy::Random | ChooseBy::RandomUnused => {
-                if let Some(opts) = options {
-                    let n = match pick.as_pick() {
-                        crate::card::ChoosePick::All => opts.len(),
-                        crate::card::ChoosePick::N(k) => k as usize,
-                    };
-                    let mut unused: Vec<usize> = (0..opts.len()).collect();
-                    for _ in 0..n {
-                        if unused.is_empty() {
-                            break;
+        Effect::Choose { by, pick, .. } => {
+            let opts = choose_options(db, state, source, e);
+            match by {
+                ChooseBy::Player => {
+                    if pick.as_pick() == ChoosePick::All {
+                        for opt in opts.iter().rev() {
+                            push_effects(state, controller, source, opt.effects.clone());
                         }
-                        let keys: Vec<String> = unused.iter().map(|i| i.to_string()).collect();
-                        let mut emit = Vec::new();
-                        let j = state
-                            .rng
-                            .pick_index(PickWhat::RandomUnused, &keys, &mut emit)
-                            .map_err(Illegal::OraclePickNotLegal)?;
-                        state.picks.extend(emit);
-                        let oi = unused.remove(j.min(unused.len() - 1));
-                        push_effects(state, controller, source, opts[oi].effects.clone());
+                    }
+                }
+                ChooseBy::Random | ChooseBy::RandomUnused => {
+                    if !opts.is_empty() {
+                        let n = match pick.as_pick() {
+                            ChoosePick::All => opts.len(),
+                            ChoosePick::N(k) => k as usize,
+                        };
+                        let mut unused: Vec<usize> = (0..opts.len()).collect();
+                        for _ in 0..n {
+                            if unused.is_empty() {
+                                break;
+                            }
+                            let keys: Vec<String> = unused.iter().map(|i| i.to_string()).collect();
+                            let mut emit = Vec::new();
+                            let j = state
+                                .rng
+                                .pick_index(PickWhat::RandomUnused, &keys, &mut emit)
+                                .map_err(Illegal::OraclePickNotLegal)?;
+                            state.picks.extend(emit);
+                            let oi = unused.remove(j.min(unused.len() - 1));
+                            push_effects(state, controller, source, opts[oi].effects.clone());
+                        }
                     }
                 }
             }
-        },
+        }
         Effect::Damage {
             select,
             amount,
@@ -3533,9 +3680,8 @@ fn apply_effect(
         }
         Effect::Countdown { select, delta, .. } => {
             let d = eval_amount(db, state, controller, Some(source), delta);
-            for t in resolve_select(db, state, controller, source, select) {
-                countdown_opt(db, state, &t, d, events)?;
-            }
+            let ts = resolve_select(db, state, controller, source, select);
+            apply_each_captured(state, &ts, |st, t| countdown_opt(db, st, t, d, events))?;
         }
         Effect::Counter {
             key, how, amount, ..
@@ -5364,6 +5510,11 @@ fn inst_matches_filter(_state: &State, _who: PlayerId, c: &CardInstance, f: &Fil
             return false;
         }
     }
+    if let Some(b) = f.enhanced {
+        if c.flags.enhanced != b {
+            return false;
+        }
+    }
     if f.same_cost_group == Some(true) {
         let Some(base) = _state.event_base_cost else {
             return false;
@@ -5591,6 +5742,12 @@ fn eval_cond(
         Condition::Overflow { overflow } => {
             // Overflow: max PP ≥ 7; Bonus PP does not count — rulebook Overflow
             (state.player(who).pp_max >= 7) == *overflow
+        }
+        Condition::CostEq { cost_eq } => {
+            // Played instance's current cost (Severed Ties). Spells read the
+            // cemetery corpse written at play (`cost = paid`).
+            source_instance_cost(state, source)
+                == Some(eval_amount(db, state, who, source, cost_eq))
         }
         Condition::MaxPpAtLeast { max_pp_at_least } => {
             // Dragonsign / schema `maxPpAtLeast` — current pp_max vs n at resolution.
