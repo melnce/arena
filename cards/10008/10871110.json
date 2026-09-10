@@ -1,0 +1,49 @@
+{
+  "id": "10871110",
+  "name": "Kratos, Everyday Joy",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "text": "Ward\nLast Words: Summon a Kratos, Everyday Joy and remove Last Words from it.",
+  "attack": 7,
+  "defense": 7,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Kratos, Everyday Joy and remove Last Words from it.",
+      "effects": [
+        {
+          "printed": "Summon a Kratos, Everyday Joy and remove Last Words from it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10871110"
+              },
+              "count": 1,
+              "as": "k"
+            },
+            {
+              "op": "removeAbilities",
+              "select": {
+                "pick": "bound",
+                "ref": "k"
+              },
+              "on": [
+                "lastWords"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

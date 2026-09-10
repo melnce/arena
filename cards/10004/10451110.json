@@ -1,0 +1,47 @@
+{
+  "id": "10451110",
+  "name": "Almeida, Headstrong Miner",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Enhance (4): Evolve this follower and give it +1/+1.\n\nRush",
+  "attack": 3,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "tribes": [],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Evolve this follower and give it +1/+1.",
+      "effects": [
+        {
+          "printed": "Evolve this follower and give it +1/+1.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 1,
+              "defense": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

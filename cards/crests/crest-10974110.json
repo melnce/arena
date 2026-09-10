@@ -1,0 +1,33 @@
+{
+  "id": "crest:10974110",
+  "name": "Crest: Cutthroat, Fluxblade Convict",
+  "grantedBy": [
+    "10974110"
+  ],
+  "faith": false,
+  "text": "Once on each of your turns, when you play a follower, evolve it.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_card_played",
+      "filter": {
+        "kind": "follower"
+      },
+      "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      },
+      "printed": "Once on each of your turns, when you play a follower, evolve it.",
+      "effects": [
+        {
+          "printed": "evolve it.",
+          "op": "evolve",
+          "select": {
+            "pick": "entering"
+          },
+          "super": false
+        }
+      ]
+    }
+  ]
+}

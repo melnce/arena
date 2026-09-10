@@ -1,0 +1,59 @@
+{
+  "id": "10852120",
+  "name": "Marsha, Dark Knight",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Deal 1 damage to all enemy followers and both leaders.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 5,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 1 damage to all enemy followers and both leaders.",
+      "effects": [
+        {
+          "printed": "Deal 1 damage to all enemy followers and both leaders.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 1
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "any",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

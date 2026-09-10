@@ -59,6 +59,7 @@ EVENTS = [
     "ally_follower_enter",
     "enemy_follower_enter",
     "ally_follower_destroyed",
+    "enemy_follower_destroyed",
     "ally_amulet_destroyed",
     "ally_card_played",
     "ally_spell_played",
@@ -422,6 +423,8 @@ def condition_schema():
                 {"handSameCostAtLeast": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])},
                 required=["handSameCostAtLeast"],
             ),
+            closed({"deckHasNoDuplicates": {"type": "boolean"}}, required=["deckHasNoDuplicates"]),
+            closed({"attackingLeader": {"type": "boolean"}}, required=["attackingLeader"]),
             closed(
                 {
                     "boundHas": closed(
@@ -483,6 +486,9 @@ def effect_schema():
             "defense": {"$ref": "#/$defs/Amount"},
             "untilEndOfTurn": {"type": "boolean"},
         }, ["select"]),
+        leaf("select", {
+            "select": {"$ref": "#/$defs/Selector"},
+        }, ["select", "as"]),
         leaf("destroy", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
         leaf("banish", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
         leaf("returnToHand", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),

@@ -1,0 +1,60 @@
+{
+  "id": "10771120",
+  "name": "Beat Breaker",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon a Beat Breaker. If at least 3 differently named allied Artifact followers have entered the field this match, summon 2 instead.\n\nRush",
+  "attack": 5,
+  "defense": 4,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Beat Breaker. If at least 3 differently named allied Artifact followers have entered the field this match, summon 2 instead.",
+      "effects": [
+        {
+          "printed": "Summon a Beat Breaker. If at least 3 differently named allied Artifact followers have entered the field this match, summon 2 instead.",
+          "op": "if",
+          "cond": {
+            "amountAtLeast": {
+              "of": {
+                "distinctNames": {
+                  "enteredThisMatch": {
+                    "tribe": "artifact",
+                    "kind": "follower"
+                  }
+                }
+              },
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10771120"
+              },
+              "count": 2
+            }
+          ],
+          "else": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10771120"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

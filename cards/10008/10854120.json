@@ -1,0 +1,75 @@
+{
+  "id": "10854120",
+  "name": "Ceres, Liminal Rose",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Necromancy (20) - Reduce the cost of all Abysscraft cards in your hand by 2.\n\nClash: Deal 4 damage to the opposing follower.\nAt the end of your turn, restore 4 defense to your leader.",
+  "attack": 1,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Necromancy (20) - Reduce the cost of all Abysscraft cards in your hand by 2.",
+      "effects": [
+        {
+          "op": "pay",
+          "resource": "shadows",
+          "amount": 20,
+          "effects": [
+            {
+              "op": "cost",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "card",
+                "filter": {
+                  "class": "abysscraft"
+                }
+              },
+              "delta": -2
+            }
+          ],
+          "printed": "Necromancy (20) - Reduce the cost of all Abysscraft cards in your hand by 2."
+        }
+      ]
+    },
+    {
+      "on": "clash",
+      "printed": "Clash: Deal 4 damage to the opposing follower.",
+      "effects": [
+        {
+          "printed": "Deal 4 damage to the opposing follower.",
+          "op": "damage",
+          "select": {
+            "pick": "opposing"
+          },
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, restore 4 defense to your leader.",
+      "effects": [
+        {
+          "printed": "restore 4 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 4
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

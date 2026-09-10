@@ -1,0 +1,73 @@
+{
+  "id": "10472110",
+  "name": "Eustace, Howl of Thunder",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Skybound Art - Select another unevolved allied follower on the field and evolve it and this follower.\n\nClash: Deal 3 damage to the opposing follower.",
+  "attack": 5,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Skybound Art - Select another unevolved allied follower on the field and evolve it and this follower.",
+      "effects": [
+        {
+          "printed": "Skybound Art - Select another unevolved allied follower on the field and evolve it and this follower.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "seq",
+              "effects": [
+                {
+                  "op": "evolve",
+                  "select": {
+                    "pick": "choose",
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower",
+                    "other": true,
+                    "filter": {
+                      "unevolved": true
+                    }
+                  },
+                  "super": false
+                },
+                {
+                  "op": "evolve",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "super": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "clash",
+      "printed": "Clash: Deal 3 damage to the opposing follower.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to the opposing follower.",
+          "op": "damage",
+          "select": {
+            "pick": "opposing"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -65,6 +65,8 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         invoked_ids: std::collections::BTreeSet::new(),
         event_base_cost: None,
         event_inst_id: None,
+        attack_target_is_leader: false,
+        bind_append: false,
         attacking_follower: false,
         combat_opposing: None,
     };
@@ -751,6 +753,7 @@ fn choose_ok_one(
         Effect::Damage { select, .. }
         | Effect::Restore { select, .. }
         | Effect::Buff { select, .. }
+        | Effect::Select { select, .. }
         | Effect::Destroy { select, .. }
         | Effect::Banish { select, .. }
         | Effect::ReturnToHand { select, .. }
@@ -1253,6 +1256,7 @@ fn apply_attack(
     if matches!(target, AttackTarget::Leader) {
         state.player_mut(me).attacked_leader_this_turn = true;
     }
+    state.attack_target_is_leader = matches!(target, AttackTarget::Leader);
     state.attacking_follower = matches!(target, AttackTarget::Slot(_));
     // Strike `if {attackingFollower}` (Giada / Verdilia) and
     // Follower Strike `pick: opposing` (Okita) read this while those
@@ -1282,9 +1286,9 @@ fn apply_attack(
         Some(&att),
         me,
     );
-    // Keep `attacking_follower` through Strike (Giada `10843110` `op: if`)
-    // and AfterCombat. Verdilia crest already evaluated it on
-    // AllyFollowerAttacks. Cleared with `combat_opposing` after damage.
+    // Keep attack-target flags through Strike (Giada `op: if`, Lu Woh
+    // `attackingLeader`) until AfterCombat. Verdilia already evaluated
+    // `attackingFollower` on AllyFollowerAttacks.
     // Strike / Clash before damage — rulebook Combat Timing
     queue_combat_triggers(db, state, me, attacker.0, target);
     let defender_id = match target {
@@ -1538,6 +1542,7 @@ impl State {
                     kind: PendingKind::ModeSelect,
                     remaining: 1,
                 },
+                picked: vec![],
             },
         }
     }
@@ -1575,10 +1580,39 @@ fn apply_choose(
                 },
             };
         }
-        ChoiceNode::Modes { options, pending } => {
+        ChoiceNode::Modes {
+            options,
+            pending,
+            mut picked,
+        } => {
             let idx = options.get(i as usize).copied().ok_or(Illegal::NotLegal)?;
-            state.phase = Phase::Main;
-            resume_mode(db, state, player, idx, pending, events)?;
+            if picked.contains(&idx) {
+                return Err(Illegal::NotLegal);
+            }
+            picked.push(idx);
+            let left = pending.remaining.saturating_sub(1);
+            if left > 0 {
+                let remain: Vec<u8> = options
+                    .iter()
+                    .copied()
+                    .filter(|o| !picked.contains(o))
+                    .collect();
+                state.phase = Phase::Choice {
+                    player,
+                    node: ChoiceNode::Modes {
+                        options: remain,
+                        pending: PendingChoice {
+                            kind: pending.kind,
+                            remaining: left,
+                        },
+                        picked,
+                    },
+                };
+            } else {
+                state.phase = Phase::Main;
+                picked.sort_unstable();
+                resume_modes(db, state, player, &picked, pending, events)?;
+            }
         }
         ChoiceNode::Targets { options, pending } => {
             // `choose {card}`: by content, lowest-position copy (E30). A
@@ -1820,11 +1854,11 @@ fn commit_fuse(
     Ok(())
 }
 
-fn resume_mode(
+fn resume_modes(
     db: &CardDb,
     state: &mut State,
     _player: PlayerId,
-    idx: u8,
+    idxs: &[u8],
     _pending: PendingChoice,
     _events: &mut [Event],
 ) -> Result<(), Illegal> {
@@ -1841,11 +1875,14 @@ fn resume_mode(
         restore_event_subject(state, subject.clone(), subject_id);
         if let Some(Effect::Choose { .. }) = effects.get(index).cloned() {
             if let Some(opts) = resolve_choose_options(db, state, source, &effects[index]) {
-                if let Some(opt) = opts.get(idx as usize) {
-                    let mut rest = effects;
-                    rest.remove(index);
-                    push_work(state, controller, source, rest, index, subject.clone(), e40);
-                    push_effects(state, controller, source, opt.effects.clone());
+                let mut rest = effects;
+                rest.remove(index);
+                push_work(state, controller, source, rest, index, subject.clone(), e40);
+                // LIFO: push later-listed last so they resolve in listed order.
+                for &idx in idxs.iter().rev() {
+                    if let Some(opt) = opts.get(idx as usize) {
+                        push_effects(state, controller, source, opt.effects.clone());
+                    }
                 }
             }
         } else {
@@ -1888,9 +1925,17 @@ fn resume_target(
             apply_effect_with_targets(db, state, controller, source, &e, &[opt], events)?;
             let left = pending.remaining.saturating_sub(1);
             if left > 0 {
-                if let Some(ChoiceNode::Targets { options, .. }) =
+                state.bind_append = true;
+                if let Some(ChoiceNode::Targets { mut options, .. }) =
                     effect_choice_node(db, state, controller, source, &e)
                 {
+                    if let Some(name) = e.as_bind() {
+                        if let Some(refs) = state.bindings.get(name) {
+                            options.retain(|t| {
+                                opt_to_bound(state, t).is_none_or(|r| !refs.contains(&r))
+                            });
+                        }
+                    }
                     if !options.is_empty() {
                         push_work(
                             state,
@@ -1919,6 +1964,7 @@ fn resume_target(
                     }
                 }
             }
+            state.bind_append = false;
             if index + 1 < effects.len() {
                 push_work(
                     state,
@@ -2034,15 +2080,38 @@ fn tick_crests(db: &CardDb, state: &mut State, who: PlayerId) {
         }
     }
     for order in doomed {
-        let crests = &mut state.player_mut(who).crests;
-        if let Some(i) = crests.iter().position(|c| c.granted_order == order) {
-            let c = crests.remove(i);
-            queue_crest_last_words(db, state, who, &c);
-            state
-                .pending_work
-                .push(WorkFrame::Aftermath(Aftermath::DrainQueue));
+        let _ = expire_crest(db, state, who, order, &mut Vec::new());
+    }
+}
+
+fn expire_crest(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    order: u32,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let crests = &mut state.player_mut(who).crests;
+    let Some(i) = crests.iter().position(|c| c.granted_order == order) else {
+        return Ok(());
+    };
+    let c = crests.remove(i);
+    events.push(Event::CrestRemove {
+        player: who,
+        id: c.id.clone(),
+    });
+    if let Ok(def) = db.crest(&c.id) {
+        let src = SourceRef::Crest {
+            player: who,
+            index: 0,
+        };
+        for a in def.abilities() {
+            if matches!(a, Ability::LastWords { .. }) {
+                push_effects(state, who, src, a.effects().to_vec());
+            }
         }
     }
+    Ok(())
 }
 
 fn tick_amulets(db: &CardDb, state: &mut State, who: PlayerId) {
@@ -2982,6 +3051,7 @@ fn run_aftermath(
                 events,
             )?;
             state.attacking_follower = false;
+            state.attack_target_is_leader = false;
             state.combat_opposing = None;
         }
         Aftermath::ContinueTurnEnd { step: 7 } => {
@@ -3382,18 +3452,26 @@ fn effect_choice_node(
             if matches!(pick.as_pick(), ChoosePick::All) {
                 None
             } else {
-                resolve_choose_options(db, state, source, e).map(|opts| ChoiceNode::Modes {
-                    options: (0..opts.len() as u8).collect(),
-                    pending: PendingChoice {
-                        kind: PendingKind::ModeSelect,
-                        remaining: 1,
-                    },
+                resolve_choose_options(db, state, source, e).map(|opts| {
+                    let n = match pick.as_pick() {
+                        crate::card::ChoosePick::N(k) => (k.max(1) as u8).max(1),
+                        crate::card::ChoosePick::All => 1,
+                    };
+                    ChoiceNode::Modes {
+                        options: (0..opts.len() as u8).collect(),
+                        pending: PendingChoice {
+                            kind: PendingKind::ModeSelect,
+                            remaining: n,
+                        },
+                        picked: vec![],
+                    }
                 })
             }
         }
         Effect::Damage { select, .. }
         | Effect::Restore { select, .. }
         | Effect::Buff { select, .. }
+        | Effect::Select { select, .. }
         | Effect::Destroy { select, .. }
         | Effect::Banish { select, .. }
         | Effect::ReturnToHand { select, .. }
@@ -3484,14 +3562,18 @@ fn apply_effect_with_targets(
             })?;
         }
         Effect::Destroy { .. } => {
+            maybe_bind(state, e, targets);
             apply_each_captured(state, targets, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
                     destroy_by_ability(db, st, *player, *slot, events)?;
                 }
                 Ok(())
             })?;
+            return Ok(());
         }
         Effect::Banish { .. } => {
+            // Bind while the instance is still on the field (Allure exact copy).
+            maybe_bind(state, e, targets);
             let bound: Vec<TargetOpt> = targets
                 .iter()
                 .filter_map(|t| target_as_card(state, t))
@@ -3568,20 +3650,6 @@ fn apply_effect_with_targets(
                 transform_opt(db, st, t, into, events)
             })?;
         }
-        Effect::AddToHand { card, .. } => {
-            let mut added = Vec::new();
-            let exact = match card {
-                CardSource::Copy { exact, .. } => *exact,
-                _ => false,
-            };
-            for t in targets {
-                if let Some(h) = copy_target_to_hand(db, state, controller, t, exact)? {
-                    added.push(h);
-                }
-            }
-            maybe_bind(state, e, &added);
-            return Ok(());
-        }
         Effect::Summon {
             card,
             controller: ctrl,
@@ -3603,6 +3671,20 @@ fn apply_effect_with_targets(
                 }
             }
             maybe_bind(state, e, &summoned);
+            return Ok(());
+        }
+        Effect::AddToHand { card, .. } => {
+            let mut added = Vec::new();
+            let exact = match card {
+                CardSource::Copy { exact, .. } => *exact,
+                _ => false,
+            };
+            for t in targets {
+                if let Some(h) = copy_target_to_hand(db, state, controller, t, exact)? {
+                    added.push(h);
+                }
+            }
+            maybe_bind(state, e, &added);
             return Ok(());
         }
         Effect::GrantTraits { traits, until, .. } => {
@@ -3648,6 +3730,7 @@ fn apply_effect_with_targets(
                 }
             }
         }
+        Effect::Select { .. } => {}
         _ => {
             apply_effect(db, state, controller, source, e, events)?;
             return Ok(());
@@ -3798,6 +3881,10 @@ fn apply_effect(
             })?;
             maybe_bind(state, e, &ts);
         }
+        Effect::Select { select, .. } => {
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            maybe_bind(state, e, &ts);
+        }
         Effect::Destroy { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
             maybe_bind(state, e, &ts);
@@ -3807,6 +3894,7 @@ fn apply_effect(
                 }
                 Ok(())
             })?;
+            maybe_bind(state, e, &ts);
         }
         Effect::Banish { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
@@ -3990,11 +4078,12 @@ fn apply_effect(
         }
         Effect::Countdown { select, delta, .. } => {
             let d = eval_amount(db, state, controller, Some(source), delta);
-            if countdown_crests(db, state, controller, select, d, events) {
-                return Ok(());
+            if matches!(select, Selector::Pool(p) if p.zone == Zone::Crests) {
+                apply_crest_countdown(db, state, controller, source, select, d, events)?;
+            } else {
+                let ts = resolve_select(db, state, controller, source, select);
+                apply_each_captured(state, &ts, |st, t| countdown_opt(db, st, t, d, events))?;
             }
-            let ts = resolve_select(db, state, controller, source, select);
-            apply_each_captured(state, &ts, |st, t| countdown_opt(db, st, t, d, events))?;
         }
         Effect::Counter {
             key, how, amount, ..
@@ -4004,7 +4093,12 @@ fn apply_effect(
         }
         Effect::Reanimate { max_cost, .. } => {
             let x = eval_amount(db, state, controller, Some(source), max_cost);
-            reanimate(db, state, controller, x, events)?;
+            let summoned = reanimate(db, state, controller, x, events)?;
+            if let Some(t) = summoned {
+                maybe_bind(state, e, &[t]);
+            } else {
+                maybe_bind(state, e, &[]);
+            }
         }
         Effect::Replicate { ability, .. } => {
             replicate(db, state, controller, source, *ability)?;
@@ -4940,6 +5034,14 @@ fn destroy_slot(
             Some(&inst),
             who,
         );
+        raise_when(
+            db,
+            state,
+            who.opponent(),
+            EventName::EnemyFollowerDestroyed,
+            Some(&inst),
+            who,
+        );
         state.player_mut(who).banished.push(inst);
         state.player_mut(who).compact_field();
         return Ok(());
@@ -4955,6 +5057,14 @@ fn destroy_slot(
                 state,
                 who,
                 EventName::AllyFollowerDestroyed,
+                Some(&inst),
+                who,
+            );
+            raise_when(
+                db,
+                state,
+                who.opponent(),
+                EventName::EnemyFollowerDestroyed,
                 Some(&inst),
                 who,
             );
@@ -5148,6 +5258,50 @@ fn countdown_opt(
                 }
             }
         }
+    }
+    Ok(())
+}
+
+fn apply_crest_countdown(
+    db: &CardDb,
+    state: &mut State,
+    controller: PlayerId,
+    source: SourceRef,
+    select: &Selector,
+    delta: i32,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let (sides, want) = match select {
+        Selector::Pool(p) if p.zone == Zone::Crests => {
+            let sides = match p.side {
+                Side::Ally => vec![controller],
+                Side::Enemy => vec![controller.opponent()],
+                Side::Any => vec![controller, controller.opponent()],
+            };
+            (sides, p.filter.as_ref().and_then(|f| f.card))
+        }
+        _ => return Ok(()),
+    };
+    let _ = source;
+    let mut doomed: Vec<(PlayerId, u32)> = Vec::new();
+    for who in sides {
+        for c in state.player_mut(who).crests.iter_mut() {
+            let match_id = want
+                .map(|id| c.id == format!("crest:{}", id.as_str()) || c.id.ends_with(&id.as_str()))
+                .unwrap_or(true);
+            if !match_id {
+                continue;
+            }
+            if let Some(cd) = c.countdown.as_mut() {
+                *cd += delta;
+                if *cd <= 0 {
+                    doomed.push((who, c.granted_order));
+                }
+            }
+        }
+    }
+    for (who, order) in doomed {
+        expire_crest(db, state, who, order, events)?;
     }
     Ok(())
 }
@@ -5354,6 +5508,18 @@ fn summon_source(
                 let mut n = CardInstance::from_card(card, state.alloc_id());
                 n.flags.summoning_sick = true;
                 n
+            } else if let Some(c) = bound_copy_from_banished(state, copy_of) {
+                // Allure of the Mightiest: bind then banish; the field ref is
+                // gone, but the instance is still in that player's banished pile.
+                let mut n = if *ex {
+                    c
+                } else {
+                    let card = db.card(c.card).map_err(|_| Illegal::NotLegal)?;
+                    CardInstance::from_card(card, 0)
+                };
+                n.id = state.alloc_id();
+                n.flags.summoning_sick = true;
+                n
             } else {
                 return Ok(None);
             }
@@ -5440,6 +5606,68 @@ fn summon_source(
     Ok(Some(TargetOpt::Slot { player: who, slot }))
 }
 
+fn bound_copy_from_banished(state: &State, copy_of: &Selector) -> Option<CardInstance> {
+    let Selector::Bound(b) = copy_of else {
+        return None;
+    };
+    let refs = state.bindings.get(&b.ref_name)?;
+    for r in refs {
+        if let BoundRef::Field { player, id, .. } = r {
+            if let Some(c) = state.player(*player).banished.iter().find(|c| c.id == *id) {
+                return Some(c.clone());
+            }
+            if let Some(c) = state.player(*player).cemetery.iter().find(|c| c.id == *id) {
+                return Some(c.clone());
+            }
+        }
+    }
+    None
+}
+
+fn add_source_to_deck(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    source: SourceRef,
+    src: &CardSource,
+    position: DeckPosition,
+) -> Result<Option<TargetOpt>, Illegal> {
+    let inst = match src {
+        CardSource::Named { named } => {
+            let card = db.require_supported(*named).map_err(|e| match e {
+                LoadError::Unsupported(u) => Illegal::Unsupported(u),
+                _ => Illegal::NotLegal,
+            })?;
+            Some(CardInstance::from_card(card, state.alloc_id()))
+        }
+        CardSource::Copy { copy_of, exact } => {
+            let ts = resolve_select(db, state, who, source, copy_of);
+            let Some(t) = ts.first() else {
+                return Ok(None);
+            };
+            copy_target_instance(db, state, t, *exact)?
+        }
+        CardSource::RandomFrom { random_from } => {
+            let _ = random_from;
+            return Ok(None);
+        }
+        CardSource::From { .. } => {
+            return Err(Illegal::Unsupported(Unsupported {
+                card: who.as_str().into(),
+                construct: "CardSource.from (addToDeck)".into(),
+            }));
+        }
+    };
+    let Some(inst) = inst else {
+        return Ok(None);
+    };
+    // `position: random` — CanonicalState is a deck multiset; do not emit a pick.
+    let _ = position;
+    let id = inst.id;
+    insert_deck_random(state, who, inst);
+    Ok(Some(TargetOpt::Deck { player: who, id }))
+}
+
 fn add_source_to_hand(
     db: &CardDb,
     state: &mut State,
@@ -5457,16 +5685,12 @@ fn add_source_to_hand(
             Ok(push_hand_target(state, who, inst))
         }
         CardSource::Copy { copy_of, exact } => {
-            let ts = resolve_select(db, state, who, source, copy_of);
-            if let Some(t) = ts.first() {
-                if let Some(inst) = copy_target_instance(db, state, t, *exact)? {
-                    Ok(push_hand_target(state, who, inst))
-                } else {
-                    Ok(None)
-                }
-            } else {
-                Ok(None)
+            let ts = resolve_select_rolling(db, state, who, source, copy_of).unwrap_or_default();
+            let mut last = None;
+            for t in &ts {
+                last = copy_target_to_hand(db, state, who, t, *exact)?;
             }
+            Ok(last)
         }
         CardSource::From { .. } => Err(Illegal::Unsupported(Unsupported {
             card: who.as_str().into(),
@@ -5716,44 +5940,6 @@ fn set_sequence_index(state: &mut State, source: SourceRef, v: u32) {
     }
 }
 
-fn add_source_to_deck(
-    db: &CardDb,
-    state: &mut State,
-    who: PlayerId,
-    source: SourceRef,
-    src: &CardSource,
-    _position: DeckPosition,
-) -> Result<Option<TargetOpt>, Illegal> {
-    let inst = match src {
-        CardSource::Named { named } => {
-            let card = db.require_supported(*named).map_err(|e| match e {
-                LoadError::Unsupported(u) => Illegal::Unsupported(u),
-                _ => Illegal::NotLegal,
-            })?;
-            Some(CardInstance::from_card(card, state.alloc_id()))
-        }
-        CardSource::Copy { copy_of, exact } => {
-            let ts = resolve_select(db, state, who, source, copy_of);
-            let Some(t) = ts.first() else {
-                return Ok(None);
-            };
-            copy_target_instance(db, state, t, *exact)?
-        }
-        _ => {
-            return Err(Illegal::Unsupported(Unsupported {
-                card: who.as_str().into(),
-                construct: "CardSource.randomFrom".into(),
-            }));
-        }
-    };
-    let Some(inst) = inst else {
-        return Ok(None);
-    };
-    let id = inst.id;
-    insert_deck_random(state, who, inst);
-    Ok(Some(TargetOpt::Deck { player: who, id }))
-}
-
 fn crest_matches_filter(c: &CrestInstance, filter: Option<&Filter>) -> bool {
     let Some(f) = filter else {
         return !c.faith;
@@ -5799,55 +5985,6 @@ fn remove_matching_crests(
         });
         queue_crest_last_words(db, state, who, &c);
     }
-}
-
-fn countdown_crests(
-    db: &CardDb,
-    state: &mut State,
-    controller: PlayerId,
-    select: &Selector,
-    delta: i32,
-    events: &mut Vec<Event>,
-) -> bool {
-    let Selector::Pool(p) = select else {
-        return false;
-    };
-    if p.zone != Zone::Crests {
-        return false;
-    }
-    let who = match p.side {
-        Side::Enemy => controller.opponent(),
-        _ => controller,
-    };
-    let filter = p.filter.as_ref();
-    let mut doomed = Vec::new();
-    for c in state.player_mut(who).crests.iter_mut() {
-        if !crest_matches_filter(c, filter) {
-            continue;
-        }
-        if let Some(cd) = c.countdown.as_mut() {
-            *cd += delta;
-            if *cd <= 0 {
-                doomed.push(c.granted_order);
-            }
-        }
-    }
-    for order in doomed {
-        if let Some(i) = state
-            .player(who)
-            .crests
-            .iter()
-            .position(|c| c.granted_order == order)
-        {
-            let c = state.player_mut(who).crests.remove(i);
-            events.push(Event::CrestRemove {
-                player: who,
-                id: c.id.clone(),
-            });
-            queue_crest_last_words(db, state, who, &c);
-        }
-    }
-    true
 }
 
 fn queue_crest_last_words(db: &CardDb, state: &mut State, who: PlayerId, crest: &CrestInstance) {
@@ -6118,7 +6255,7 @@ fn reanimate(
     who: PlayerId,
     max_cost: i32,
     events: &mut Vec<Event>,
-) -> Result<(), Illegal> {
+) -> Result<Option<TargetOpt>, Illegal> {
     let cands: Vec<(CardId, i32)> = state
         .player(who)
         .destroyed_history
@@ -6127,7 +6264,7 @@ fn reanimate(
         .map(|r| (r.card, r.base_cost))
         .collect();
     if cands.is_empty() {
-        return Ok(());
+        return Ok(None);
     }
     let best = cands.iter().map(|(_, c)| *c).max().unwrap_or(0);
     let tied: Vec<CardId> = cands
@@ -6152,7 +6289,7 @@ fn reanimate(
         inst.tribes.push(crate::card::Tribe::Departed);
     }
     let Some(slot) = state.player(who).first_empty_slot() else {
-        return Ok(());
+        return Ok(None);
     };
     state.player_mut(who).rally += 1;
     *state.player_mut(who).enter_counts.entry(id).or_insert(0) += 1;
@@ -6166,7 +6303,7 @@ fn reanimate(
         raise_follower_enter(db, state, who, &entered);
         queue_enter_reactions(db, state, who, id, entered.id, false);
     }
-    Ok(())
+    Ok(Some(TargetOpt::Slot { player: who, slot }))
 }
 
 fn replicate(
@@ -6425,7 +6562,15 @@ fn maybe_bind(state: &mut State, e: &Effect, targets: &[TargetOpt]) {
             .iter()
             .filter_map(|t| opt_to_bound(state, t))
             .collect();
-        state.bindings.insert(name.to_string(), refs);
+        if state.bind_append {
+            state
+                .bindings
+                .entry(name.to_string())
+                .or_default()
+                .extend(refs);
+        } else {
+            state.bindings.insert(name.to_string(), refs);
+        }
     }
 }
 
@@ -6622,6 +6767,41 @@ fn pool_candidates(
     }
     let mut out = Vec::new();
     for who in sides {
+        if p.filter.as_ref().and_then(|f| f.destroyed_this_match) == Some(true) {
+            let mut seen = std::collections::BTreeSet::new();
+            for r in &state.player(who).destroyed_history {
+                if !r.from_field {
+                    continue;
+                }
+                if p.kind == SelectorKind::Follower && r.kind != CardKind::Follower {
+                    continue;
+                }
+                if let Some(f) = &p.filter {
+                    if let Some(t) = &f.tribe {
+                        let Ok(card) = db.card(r.card) else { continue };
+                        let ok = match t {
+                            crate::card::TribeOrList::One(tr) => card.tribes().contains(tr),
+                            crate::card::TribeOrList::Many(ts) => {
+                                ts.iter().any(|tr| card.tribes().contains(tr))
+                            }
+                        };
+                        if !ok {
+                            continue;
+                        }
+                    }
+                    if let Some(id) = f.card {
+                        if r.card != id {
+                            continue;
+                        }
+                    }
+                }
+                if p.pick == PoolPick::RandomDistinct && !seen.insert(r.card) {
+                    continue;
+                }
+                out.push(TargetOpt::Card(r.card));
+            }
+            continue;
+        }
         match p.zone {
             Zone::Leader => {
                 if matches!(
@@ -6900,6 +7080,26 @@ fn inst_matches_filter(_state: &State, _who: PlayerId, c: &CardInstance, f: &Fil
             return false;
         }
     }
+    if let Some(n) = &f.defense_lte {
+        if c.defense > eval_amount_simple(n) {
+            return false;
+        }
+    }
+    if let Some(n) = &f.defense_gte {
+        if c.defense < eval_amount_simple(n) {
+            return false;
+        }
+    }
+    if let Some(n) = &f.base_cost_lte {
+        if c.base_cost > eval_amount_simple(n) {
+            return false;
+        }
+    }
+    if let Some(n) = &f.base_cost_eq {
+        if c.base_cost != eval_amount_simple(n) {
+            return false;
+        }
+    }
     if let Some(tk) = f.has_trait {
         if !c.traits.is_set(tk) {
             return false;
@@ -7051,6 +7251,12 @@ fn eval_amount(
 }
 
 fn inst_stat(state: &State, t: &TargetOpt, which: StatWhich) -> Option<i32> {
+    if let TargetOpt::Leader { player } = t {
+        return Some(match which {
+            StatWhich::Defense => state.player(*player).leader_defense,
+            StatWhich::Attack | StatWhich::Cost | StatWhich::BaseCost => 0,
+        });
+    }
     let c = match t {
         TargetOpt::Slot { player, slot } => state.field_inst(*player, *slot)?,
         TargetOpt::Hand { player, pos } => state.player(*player).hand.get(*pos as usize)?,
@@ -7399,6 +7605,27 @@ fn eval_cond(
             let n = eval_amount(db, state, who, source, &var_at_least.n);
             vars_of(state, source, var_at_least.key) >= n
         }
+        Condition::HandSameCostAtLeast {
+            hand_same_cost_at_least,
+        } => {
+            let n = eval_amount(db, state, who, source, &hand_same_cost_at_least.n);
+            let mut counts: std::collections::BTreeMap<i32, i32> =
+                std::collections::BTreeMap::new();
+            for c in &state.player(who).hand {
+                *counts.entry(c.cost).or_insert(0) += 1;
+            }
+            counts.values().any(|&c| c >= n)
+        }
+        Condition::DeckHasNoDuplicates {
+            deck_has_no_duplicates,
+        } => {
+            let mut seen = std::collections::BTreeSet::new();
+            let unique = state.player(who).deck.iter().all(|c| seen.insert(c.card));
+            unique == *deck_has_no_duplicates
+        }
+        Condition::AttackingLeader { attacking_leader } => {
+            state.attack_target_is_leader == *attacking_leader
+        }
         Condition::EnterCountAtLeast {
             enter_count_at_least,
         } => {
@@ -7418,7 +7645,6 @@ fn eval_cond(
             }
             count >= n
         }
-        _ => false,
     }
 }
 
@@ -7510,6 +7736,13 @@ where
 }
 
 fn order_key(state: &State, t: &TargetOpt, order: Option<OrderBy>) -> i32 {
+    if let TargetOpt::Leader { player } = t {
+        return match order {
+            Some(OrderBy::Defense) | None => state.player(*player).leader_defense,
+            Some(OrderBy::Attack) => 0,
+            Some(OrderBy::Cost) | Some(OrderBy::BaseCost) => 0,
+        };
+    }
     let Some(c) = (match t {
         TargetOpt::Slot { player, slot } => state.field_inst(*player, *slot),
         TargetOpt::Hand { player, pos } => state.player(*player).hand.get(*pos as usize),
@@ -7535,11 +7768,16 @@ fn extremum_without_roll(state: &State, p: &PoolSelector, cands: Vec<TargetOpt>)
         if high { i32::MIN } else { i32::MAX },
         |acc, k| if high { acc.max(k) } else { acc.min(k) },
     );
-    cands
+    let tied: Vec<TargetOpt> = cands
         .into_iter()
         .filter(|t| order_key(state, t, p.order_by) == best)
-        .take(1)
-        .collect()
+        .collect();
+    // `lowest` = all with the lowest (Tyrannical Fists ties hit both leaders).
+    if p.pick == PoolPick::Lowest {
+        tied
+    } else {
+        tied.into_iter().take(1).collect()
+    }
 }
 
 fn pick_extremum(
@@ -7559,6 +7797,9 @@ fn pick_extremum(
         .into_iter()
         .filter(|t| order_key(state, t, p.order_by) == best)
         .collect();
+    if !highest {
+        return Ok(tied);
+    }
     random_pool_apply(state, tied, 1, false)
 }
 

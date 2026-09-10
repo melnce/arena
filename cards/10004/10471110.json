@@ -1,0 +1,43 @@
+{
+  "id": "10471110",
+  "name": "Sho, Reborn Night King",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: If you've unlocked super-evolution, give this follower Barrier.\n\nStorm",
+  "attack": 2,
+  "defense": 1,
+  "traits": {
+    "storm": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If you've unlocked super-evolution, give this follower Barrier.",
+      "effects": [
+        {
+          "printed": "If you've unlocked super-evolution, give this follower Barrier.",
+          "op": "if",
+          "cond": {
+            "superEvolutionUnlocked": true
+          },
+          "then": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "barrier": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,76 @@
+{
+  "id": "10752310",
+  "name": "Harmony of Youth",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "text": "Summon a Ghost, Bat, and Skeleton and evolve them.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Ghost, Bat, and Skeleton and evolve them.",
+      "effects": [
+        {
+          "printed": "Summon a Ghost, Bat, and Skeleton and evolve them.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051130"
+              },
+              "count": 1,
+              "as": "g"
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051120"
+              },
+              "count": 1,
+              "as": "b"
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051110"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "g"
+              },
+              "super": false
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "b"
+              },
+              "super": false
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "10952120",
+  "name": "Sparkly Demoness",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it. Deal 2 damage to the enemy leader.",
+  "attack": 7,
+  "defense": 7,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it. Deal 2 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        },
+        {
+          "printed": "Deal 2 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

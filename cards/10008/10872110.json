@@ -1,0 +1,33 @@
+{
+  "id": "10872110",
+  "name": "Layla, Artificial Gift of Life",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Rush\nLast Words: Add an Ancient Artifact to your hand.",
+  "attack": 6,
+  "defense": 4,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add an Ancient Artifact to your hand.",
+      "effects": [
+        {
+          "printed": "Add an Ancient Artifact to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90071140"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

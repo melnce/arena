@@ -1,0 +1,40 @@
+{
+  "id": "10951310",
+  "name": "Spooky Surprise",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Summon a Ghost and Rotting Zombie.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Ghost and Rotting Zombie.",
+      "effects": [
+        {
+          "printed": "Summon a Ghost and Rotting Zombie.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051130"
+              },
+              "count": 1
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051140"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

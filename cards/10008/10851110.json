@@ -1,0 +1,18 @@
+{
+  "id": "10851110",
+  "name": "Anisage, Clear Resolve",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Storm\nIgnores Ward.",
+  "attack": 2,
+  "defense": 3,
+  "traits": {
+    "storm": true,
+    "ignoresWard": true
+  },
+  "tribes": []
+}

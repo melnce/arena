@@ -1,0 +1,37 @@
+{
+  "id": "10752120",
+  "name": "Juggler Corvid",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it. Reanimate (2).",
+  "attack": 6,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it. Reanimate (2).",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        },
+        {
+          "printed": "Reanimate (2).",
+          "op": "reanimate",
+          "maxCost": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

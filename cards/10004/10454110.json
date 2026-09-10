@@ -1,0 +1,80 @@
+{
+  "id": "10454110",
+  "name": "Fediel, Darkness Personified",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Necromancy (6) - Reanimate (2), Reanimate (1), and evolve them.\n\nAt the end of your turn, give all enemy followers on the field -2/-2.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Necromancy (6) - Reanimate (2), Reanimate (1), and evolve them.",
+      "effects": [
+        {
+          "op": "pay",
+          "resource": "shadows",
+          "amount": 6,
+          "effects": [
+            {
+              "op": "seq",
+              "effects": [
+                {
+                  "op": "reanimate",
+                  "maxCost": 2,
+                  "as": "r2"
+                },
+                {
+                  "op": "reanimate",
+                  "maxCost": 1,
+                  "as": "r1"
+                },
+                {
+                  "op": "evolve",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "r2"
+                  },
+                  "super": false
+                },
+                {
+                  "op": "evolve",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "r1"
+                  },
+                  "super": false
+                }
+              ]
+            }
+          ],
+          "printed": "Necromancy (6) - Reanimate (2), Reanimate (1), and evolve them."
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, give all enemy followers on the field -2/-2.",
+      "effects": [
+        {
+          "printed": "give all enemy followers on the field -2/-2.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": -2,
+          "defense": -2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

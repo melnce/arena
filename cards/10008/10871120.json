@@ -1,0 +1,39 @@
+{
+  "id": "10871120",
+  "name": "Leona, Overbearing Guardian",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Ward\n\nSuper-Evolve: Select another allied follower on the field and give it Ambush.",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select another allied follower on the field and give it Ambush.",
+      "effects": [
+        {
+          "printed": "Select another allied follower on the field and give it Ambush.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "other": true
+          },
+          "traits": {
+            "ambush": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

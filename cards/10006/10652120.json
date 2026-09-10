@@ -1,0 +1,52 @@
+{
+  "id": "10652120",
+  "name": "Devilish Heartbreaker",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Enhance (7): Give this follower Storm.\n\nEvolve: Select an enemy follower on the field and deal it 4 damage.",
+  "attack": 4,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and deal it 4 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 4 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4
+        }
+      ]
+    }
+  ],
+  "tribes": [],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 7,
+      "printed": "Enhance (7): Give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Give this follower Storm.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "storm": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "id": "10473110",
+  "name": "Cassius, Sky-Yearning Arrival",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select an Artifact follower in your hand and deal X damage to all enemy followers. X is the selected follower's attack.\n\nLast Words: Add a Fortifier Artifact to your hand.",
+  "attack": 3,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an Artifact follower in your hand and deal X damage to all enemy followers. X is the selected follower's attack.",
+      "effects": [
+        {
+          "printed": "Select an Artifact follower in your hand and deal X damage to all enemy followers. X is the selected follower's attack.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "select",
+              "select": {
+                "pick": "choose",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "follower",
+                "filter": {
+                  "tribe": "artifact"
+                }
+              },
+              "as": "a"
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": {
+                "stat": {
+                  "of": {
+                    "pick": "bound",
+                    "ref": "a"
+                  },
+                  "which": "attack"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add a Fortifier Artifact to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Fortifier Artifact to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90072120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

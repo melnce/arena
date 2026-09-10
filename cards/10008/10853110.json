@@ -1,0 +1,52 @@
+{
+  "id": "10853110",
+  "name": "Suzy, Sincere Hexcaster",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Select an enemy follower on the field and give it -0/-3.\n\nEvolve: Select a follower in your hand and give it +3/+0.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and give it -0/-3.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and give it -0/-3.",
+          "op": "buff",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 0,
+          "defense": -3
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select a follower in your hand and give it +3/+0.",
+      "effects": [
+        {
+          "printed": "Select a follower in your hand and give it +3/+0.",
+          "op": "buff",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "follower"
+          },
+          "attack": 3,
+          "defense": 0
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

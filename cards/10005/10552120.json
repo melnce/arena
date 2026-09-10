@@ -1,0 +1,53 @@
+{
+  "id": "10552120",
+  "name": "Friendly Blue Ogre",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select an enemy follower on the field and give it \"Can't attack followers or leaders\" until the end of your opponent's turn. Draw a card.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 3,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and give it \"Can't attack followers or leaders\" until the end of your opponent's turn. Draw a card.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "traits": {
+            "cantAttackFollowers": true,
+            "cantAttackLeader": true
+          },
+          "until": "endOfOpponentTurn"
+        },
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

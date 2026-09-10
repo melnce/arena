@@ -1,0 +1,40 @@
+{
+  "id": "10751310",
+  "name": "Soul Tuning",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Select 2 allied followers on the field and give them +0/+1. Draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select 2 allied followers on the field and give them +0/+1. Draw a card.",
+      "effects": [
+        {
+          "printed": "Select 2 allied followers on the field and give them +0/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "count": 2
+          },
+          "attack": 0,
+          "defense": 1
+        },
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

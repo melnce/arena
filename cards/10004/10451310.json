@@ -1,0 +1,37 @@
+{
+  "id": "10451310",
+  "name": "Valiant Edge",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Deal 2 damage to your leader. Gain Crest: Valiant Edge.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 2 damage to your leader. Gain Crest: Valiant Edge.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to your leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        },
+        {
+          "printed": "Gain Crest: Valiant Edge.",
+          "op": "crest",
+          "gain": "crest:10451310",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

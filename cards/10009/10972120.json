@@ -1,0 +1,63 @@
+{
+  "id": "10972120",
+  "name": "Blade Puppeteer",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Summon an Enhanced Puppet and Puppet.\n\nWhenever an allied Puppetry follower enters the field, deal 1 damage to the enemy leader.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon an Enhanced Puppet and Puppet.",
+      "effects": [
+        {
+          "printed": "Summon an Enhanced Puppet and Puppet.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90071120"
+              },
+              "count": 1
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "90071110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "puppetry"
+      },
+      "printed": "Whenever an allied Puppetry follower enters the field, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

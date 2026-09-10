@@ -1,0 +1,49 @@
+{
+  "id": "10973310",
+  "name": "Soulforge",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Select an enemy follower on the field and destroy it. If there are no duplicates in your deck, destroy all enemy followers instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and destroy it. If there are no duplicates in your deck, destroy all enemy followers instead.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it. If there are no duplicates in your deck, destroy all enemy followers instead.",
+          "op": "if",
+          "cond": {
+            "deckHasNoDuplicates": true
+          },
+          "then": [
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              }
+            }
+          ],
+          "else": [
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,49 @@
+{
+  "id": "10972310",
+  "name": "Disgraceful Banishment",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Select a card in your hand and discard it. Draw a card. If there are no duplicates in your deck, draw 3 instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a card in your hand and discard it. Draw a card. If there are no duplicates in your deck, draw 3 instead.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          }
+        },
+        {
+          "printed": "Draw a card. If there are no duplicates in your deck, draw 3 instead.",
+          "op": "if",
+          "cond": {
+            "deckHasNoDuplicates": true
+          },
+          "then": [
+            {
+              "op": "draw",
+              "count": 3
+            }
+          ],
+          "else": [
+            {
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
