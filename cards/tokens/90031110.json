@@ -1,0 +1,16 @@
+{
+  "id": "90031110",
+  "name": "Clay Golem",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "attack": 2,
+  "defense": 2,
+  "text": "",
+  "tribes": [
+    "golem"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "10603210",
+  "name": "Dark Dimensions",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "countdown": 2,
+  "text": "Countdown (2)\nAt the end of your turn, deal 2 damage to all non-Encroacher followers.",
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, deal 2 damage to all non-Encroacher followers.",
+      "effects": [
+        {
+          "printed": "deal 2 damage to all non-Encroacher followers.",
+          "op": "damage",
+          "select": {
+            "side": "any",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all",
+            "filter": {
+              "not": {
+                "tribe": "encroacher"
+              }
+            }
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

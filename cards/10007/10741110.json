@@ -1,0 +1,34 @@
+{
+  "id": "10741110",
+  "name": "Dragonewt Promoter",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "attack": 2,
+  "defense": 1,
+  "text": "Enhance (4): Summon 2 copies of Dragonewt Promoter.\n\nRush",
+  "traits": {
+    "rush": true
+  },
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Summon 2 copies of Dragonewt Promoter.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Dragonewt Promoter.",
+          "op": "summon",
+          "card": {
+            "named": "10741110"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

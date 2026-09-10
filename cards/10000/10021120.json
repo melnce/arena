@@ -1,0 +1,30 @@
+{
+  "id": "10021120",
+  "name": "Arms Peddler",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "attack": 3,
+  "defense": 2,
+  "text": "Rush\nLast Words: Draw a card.",
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

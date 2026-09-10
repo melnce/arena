@@ -1,0 +1,28 @@
+{
+  "id": "10031320",
+  "name": "Truth Summons",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Summon a Clay Golem.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Clay Golem.",
+      "effects": [
+        {
+          "printed": "Summon a Clay Golem.",
+          "op": "summon",
+          "card": {
+            "named": "90031110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

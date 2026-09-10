@@ -1,0 +1,41 @@
+{
+  "id": "10403120",
+  "name": "Lyria, Skydestined",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "attack": 1,
+  "defense": 1,
+  "text": "Enhance (8): Draw a follower that costs 7 or more. Recover 7 play points.\n\nBarrier",
+  "traits": {
+    "barrier": true
+  },
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 8,
+      "printed": "Enhance (8): Draw a follower that costs 7 or more. Recover 7 play points.",
+      "effects": [
+        {
+          "printed": "Draw a follower that costs 7 or more.",
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "kind": "follower",
+            "costGte": 7
+          }
+        },
+        {
+          "printed": "Recover 7 play points.",
+          "op": "pp",
+          "action": "recover",
+          "amount": 7
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

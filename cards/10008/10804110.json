@@ -1,0 +1,73 @@
+{
+  "id": "10804110",
+  "name": "Alabaster Bahamut",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "attack": 13,
+  "defense": 13,
+  "text": "Fanfare: Select a Mode to activate.\n1. Banish all other followers from the field.\n2. Banish all amulets from the field.\n3. Banish all crests.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Banish all other followers from the field.\n2. Banish all amulets from the field.\n3. Banish all crests.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Banish all other followers from the field.\n2. Banish all amulets from the field.\n3. Banish all crests.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Banish all other followers from the field.",
+              "effects": [
+                {
+                  "op": "banish",
+                  "select": {
+                    "side": "any",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "all",
+                    "other": true
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "2. Banish all amulets from the field.",
+              "effects": [
+                {
+                  "op": "banish",
+                  "select": {
+                    "side": "any",
+                    "zone": "field",
+                    "kind": "amulet",
+                    "pick": "all"
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "3. Banish all crests.",
+              "effects": [
+                {
+                  "op": "removeCrests",
+                  "select": {
+                    "side": "any",
+                    "zone": "crests",
+                    "kind": "card",
+                    "pick": "all"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

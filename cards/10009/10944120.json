@@ -1,0 +1,79 @@
+{
+  "id": "10944120",
+  "name": "Normagdala, Ravening Revenant",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "attack": 5,
+  "defense": 6,
+  "text": "Fanfare: Select a Mode to activate.\n1. Draw a card. Restore 3 defense to your leader.\n2. Give all enemy followers on the field -0/-4.\n\nWard\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Draw a card. Restore 3 defense to your leader.\n2. Give all enemy followers on the field -0/-4.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Draw a card. Restore 3 defense to your leader.\n2. Give all enemy followers on the field -0/-4.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Draw a card. Restore 3 defense to your leader.",
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": 1
+                },
+                {
+                  "op": "restore",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 3
+                }
+              ]
+            },
+            {
+              "printed": "2. Give all enemy followers on the field -0/-4.",
+              "effects": [
+                {
+                  "op": "buff",
+                  "select": {
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "all"
+                  },
+                  "attack": 0,
+                  "defense": -4
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,17 @@
+{
+  "id": "90051120",
+  "name": "Bat",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "attack": 1,
+  "defense": 1,
+  "text": "Drain",
+  "traits": {
+    "drain": true
+  },
+  "tribes": []
+}

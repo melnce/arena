@@ -1,0 +1,16 @@
+{
+  "id": "90021110",
+  "name": "Knight",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "attack": 1,
+  "defense": 1,
+  "text": "",
+  "tribes": [
+    "officer"
+  ]
+}

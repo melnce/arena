@@ -311,6 +311,10 @@ def condition_schema():
             closed({"combo": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])}, required=["combo"]),
             closed({"rally": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])}, required=["rally"]),
             closed({"overflow": {"type": "boolean"}}, required=["overflow"]),
+            closed(
+                {"maxPpAtLeast": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])},
+                required=["maxPpAtLeast"],
+            ),
             closed({"skyboundArt": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])}, required=["skyboundArt"]),
             closed(
                 {"wasFused": {"oneOf": [{"type": "boolean"}, {"const": "both"}]}},

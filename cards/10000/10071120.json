@@ -1,0 +1,30 @@
+{
+  "id": "10071120",
+  "name": "Puppet Lancer",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "attack": 2,
+  "defense": 1,
+  "text": "Fanfare: Add an Enhanced Puppet to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add an Enhanced Puppet to your hand.",
+      "effects": [
+        {
+          "printed": "Add an Enhanced Puppet to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90071120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

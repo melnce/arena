@@ -1,0 +1,30 @@
+{
+  "id": "10072110",
+  "name": "Electric Whip Lass",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "attack": 1,
+  "defense": 3,
+  "text": "Fanfare: Add a Gear of Remembrance to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Gear of Remembrance to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Gear of Remembrance to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90071220"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

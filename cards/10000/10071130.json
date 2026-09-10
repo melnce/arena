@@ -1,0 +1,18 @@
+{
+  "id": "10071130",
+  "name": "Mechanized Beast",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "attack": 4,
+  "defense": 9,
+  "text": "Bane\nWard",
+  "traits": {
+    "bane": true,
+    "ward": true
+  },
+  "tribes": []
+}

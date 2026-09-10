@@ -1,0 +1,46 @@
+{
+  "id": "10061130",
+  "name": "Winged Warrior",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "attack": 4,
+  "defense": 4,
+  "text": "Fanfare: Select another allied follower on the field and give it +1/+1.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select another allied follower on the field and give it +1/+1.",
+      "effects": [
+        {
+          "printed": "Select another allied follower on the field and give it +1/+1.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "other": true
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
