@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>arena wasm harness</title>
+  <style>
+    body { font-family: sans-serif; margin: 1rem; max-width: 1100px; }
+    h1 { font-size: 1.1rem; }
+    fieldset { margin: 0 0 0.8rem; }
+    .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .col { flex: 1 1 280px; min-width: 260px; }
+    pre, .log { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 12px; }
+    button { margin: 0.15rem 0.15rem 0.15rem 0; }
+    .legal button { display: block; text-align: left; width: 100%; }
+    .err { color: #a00; }
+    .card { margin: 0.2rem 0; padding: 0.2rem 0; border-bottom: 1px solid #ddd; }
+    #status { margin: 0.4rem 0; }
+  </style>
+</head>
+<body>
+  <h1>arena wasm harness</h1>
+  <p id="meta"></p>
+  <fieldset>
+    <legend>new game</legend>
+    <label>deck A <select id="deckA"></select></label>
+    <label>deck B <select id="deckB"></select></label>
+    <label>seed <input id="seed" type="number" value="1" min="0"></label>
+    <label>first
+      <select id="first">
+        <option value="coin">coin</option>
+        <option value="a">a</option>
+        <option value="b">b</option>
+      </select>
+    </label>
+    <button id="newGame" type="button">New Game</button>
+    <button id="undo" type="button">Undo</button>
+    <button id="redo" type="button">Redo</button>
+    <button id="random" type="button">random until terminal</button>
+    <span id="steps"></span>
+  </fieldset>
+  <p id="status"></p>
+  <p id="err" class="err"></p>
+  <div class="row">
+    <div class="col" id="playerA"></div>
+    <div class="col" id="playerB"></div>
+  </div>
+  <fieldset>
+    <legend>legal actions</legend>
+    <div id="legal" class="legal"></div>
+  </fieldset>
+  <fieldset>
+    <legend>event log</legend>
+    <pre id="log" class="log"></pre>
+  </fieldset>
+  <script type="module">
+    import init, { Game, cardText, bundleInfo, version } from "./pkg/arena_wasm.js";
+
+    const DECKS = [
+      "basic-forest.json",
+      "basic-rune.json",
+      "basic-portal.json",
+      "afnm-minatodao.json",
+      "abyss-p8rfn.json",
+      "elf-neanisu2.json",
+      "ramp-37772.json",
+      "ramp-claywies.json",
+      "royal-nattui.json",
+      "rune-mach15.json",
+    ];
+
+    const textCache = new Map();
+    let game = null;
+    let past = [];
+    let future = [];
+    let logLines = [];
+    let stepCount = 0;
+
+    function deckUrl(name) {
+      return `./decks/${name}`;
+    }
+
+    async function loadDeck(name) {
+      const res = await fetch(deckUrl(name));
+      if (!res.ok) throw new Error(`fetch ${name}: ${res.status}`);
+      return res.text();
+    }
+
+    function lookup(id) {
+      if (textCache.has(id)) return textCache.get(id);
+      try {
+        const info = JSON.parse(cardText(id));
+        textCache.set(id, info);
+        return info;
+      } catch {
+        const fallback = { id, name: id, text: "", kind: "?", cost: "?" };
+        textCache.set(id, fallback);
+        return fallback;
+      }
+    }
+
+    function cardLine(id, extra) {
+      const c = lookup(id);
+      return extra ? `${c.name} (${c.cost}) ${extra}` : `${c.name} (${c.cost})`;
+    }
+
+    function showErr(msg) {
+      document.getElementById("err").textContent = msg || "";
+    }
+
+    function renderPlayer(el, letter, snap) {
+      const p = snap.players[letter];
+      const hand = (p.hand || []).map((h) => {
+        return `<div class="card">${cardLine(h.card)} cost=${h.cost}</div>`;
+      }).join("");
+      const field = (p.field || []).map((f, i) => {
+        if (!f) return `<div class="card">[${i}] empty</div>`;
+        const traits = (f.traits || []).join(",");
+        const evo = f.evolved ? (f.super ? " super-evolved" : " evolved") : "";
+        return `<div class="card">[${i}] ${lookup(f.card).name} ${f.attack}/${f.defense}${evo} ${traits}</div>`;
+      }).join("");
+      el.innerHTML = `<h2>player ${letter}</h2>
+        <div>leader ${p.leader_defense}/${p.leader_max} PP ${p.pp}/${p.pp_max} EP ${p.ep} SEP ${p.sep}</div>
+        <h3>hand</h3>${hand || "<div>(empty)</div>"}
+        <h3>field</h3>${field}`;
+    }
+
+    function render() {
+      if (!game) {
+        document.getElementById("status").textContent = "no game";
+        document.getElementById("legal").innerHTML = "";
+        return;
+      }
+      const snap = JSON.parse(game.snapshot());
+      document.getElementById("status").textContent =
+        `phase=${game.phase()} turn=${snap.turn} active=${snap.active} winner=${snap.winner} hash=${game.hash()}`;
+      renderPlayer(document.getElementById("playerA"), "a", snap);
+      renderPlayer(document.getElementById("playerB"), "b", snap);
+      const legal = JSON.parse(game.legal());
+      const box = document.getElementById("legal");
+      box.innerHTML = "";
+      legal.forEach((act) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        const label = JSON.stringify(act);
+        b.textContent = label;
+        b.addEventListener("click", () => applyAction(label));
+        box.appendChild(b);
+      });
+      document.getElementById("log").textContent = logLines.join("\n");
+      document.getElementById("steps").textContent = stepCount ? `steps ${stepCount}` : "";
+    }
+
+    function applyAction(label) {
+      if (!game) return;
+      showErr("");
+      past.push(game.clone());
+      future = [];
+      try {
+        const events = JSON.parse(game.apply(label));
+        stepCount += 1;
+        events.forEach((e) => logLines.push(JSON.stringify(e)));
+        render();
+      } catch (e) {
+        const undone = past.pop();
+        if (undone) {
+          game.free();
+          game = undone;
+        }
+        showErr(String(e));
+        render();
+      }
+    }
+
+    async function newGame() {
+      showErr("");
+      const seedVal = document.getElementById("seed").value;
+      const seed = seedVal === "" ? 1 : Number(seedVal);
+      const first = document.getElementById("first").value;
+      const deckA = await loadDeck(document.getElementById("deckA").value);
+      const deckB = await loadDeck(document.getElementById("deckB").value);
+      if (game) game.free();
+      past.forEach((g) => g.free());
+      future.forEach((g) => g.free());
+      past = [];
+      future = [];
+      logLines = [];
+      stepCount = 0;
+      try {
+        game = new Game(seed, deckA, deckB, first);
+        render();
+      } catch (e) {
+        game = null;
+        showErr(String(e));
+        render();
+      }
+    }
+
+    function undo() {
+      if (!game || !past.length) return;
+      future.push(game.clone());
+      game.free();
+      game = past.pop();
+      logLines.push("undo");
+      render();
+    }
+
+    function redo() {
+      if (!game || !future.length) return;
+      past.push(game.clone());
+      game.free();
+      game = future.pop();
+      logLines.push("redo");
+      render();
+    }
+
+    function randomUntilTerminal() {
+      if (!game) return;
+      showErr("");
+      past.push(game.clone());
+      future = [];
+      let n = 0;
+      try {
+        while (game.phase() !== "terminal") {
+          const legal = JSON.parse(game.legal());
+          if (!legal.length) break;
+          const pick = legal[Math.floor(Math.random() * legal.length)];
+          const events = JSON.parse(game.apply(JSON.stringify(pick)));
+          n += 1;
+          stepCount += 1;
+          events.forEach((e) => logLines.push(JSON.stringify(e)));
+          if (n > 2000) break;
+        }
+      } catch (e) {
+        showErr(String(e));
+      }
+      logLines.push(`random until terminal: ${n} actions`);
+      render();
+    }
+
+    await init();
+    const info = JSON.parse(bundleInfo());
+    document.getElementById("meta").textContent =
+      `version ${version()} · bundle cards=${info.cards} crests=${info.crests} bytes=${info.bytes}`;
+
+    const selA = document.getElementById("deckA");
+    const selB = document.getElementById("deckB");
+    DECKS.forEach((name) => {
+      const a = document.createElement("option");
+      a.value = name;
+      a.textContent = name;
+      selA.appendChild(a);
+      const b = document.createElement("option");
+      b.value = name;
+      b.textContent = name;
+      selB.appendChild(b);
+    });
+    selA.value = "basic-forest.json";
+    selB.value = "basic-rune.json";
+
+    document.getElementById("newGame").addEventListener("click", () => newGame().catch((e) => showErr(String(e))));
+    document.getElementById("undo").addEventListener("click", undo);
+    document.getElementById("redo").addEventListener("click", redo);
+    document.getElementById("random").addEventListener("click", randomUntilTerminal);
+  </script>
+</body>
+</html>
