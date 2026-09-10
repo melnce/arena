@@ -34,6 +34,8 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 
 `Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, active side category 4 then opponent 6, entry order within a side. Enter reactions sit on the queue before the entering card's Fanfare (`pending_work`). `pick: entering` reads `State.event_subject`.
 
+`CardDb` builds a static `when` index at load: for each `(EventName, AbilityZone)`, the card ids (and crest ids) that print at least one `When` for that pair. `enqueue_when_on` does not clone zones; it walks field instances whose card id is in the index for `(event, Field)` or whose `granted_whens` count is non-zero (grants are dynamic and rare), crests in the crest index, and hand/deck only when the index has any entry for that `(event, zone)` — today's cards have no deck `When` for most events, so those scans cost nothing. Categories, entry order, `oncePerTurn` marks, and `filter`/`when` evaluation are unchanged.
+
 All 15 `EventName`s are raised where the engine produces them (enter, destroy, play, attack, evolve, draw, earth-rite spend, engage, leader restore, self-buff). None are a silent no-op.
 
 ## One evolve per turn
