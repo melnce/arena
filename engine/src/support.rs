@@ -73,12 +73,10 @@ fn walk_ability_effects(a: &Ability) -> Option<String> {
 fn effect_unsupported(e: &Effect) -> Option<String> {
     match e {
         Effect::RandomSplit { .. } => Some("op:randomSplit".into()),
-        Effect::Sequence { .. } => Some("op:sequence".into()),
         Effect::Counter {
             key: crate::card::CounterKey::Named(crate::card::NamedCounter::SkyboundHand),
             ..
         } => Some("op:counter skyboundHand".into()),
-        Effect::AddToDeck { .. } => Some("op:addToDeck".into()),
         other => walk_nested(other),
     }
 }
@@ -130,6 +128,16 @@ fn walk_nested(e: &Effect) -> Option<String> {
             }
             None
         }
+        Effect::Sequence { steps, .. } => {
+            for s in steps {
+                for x in &s.effects {
+                    if let Some(c) = effect_unsupported(x) {
+                        return Some(c);
+                    }
+                }
+            }
+            None
+        }
         Effect::Summon { card, .. } | Effect::AddToHand { card, .. } => source_unsupported(card),
         Effect::Damage { select, .. }
         | Effect::Restore { select, .. }
@@ -171,13 +179,7 @@ fn condition_unsupported(_c: &Condition) -> Option<String> {
 /// M1 `Unsupported` variants reachable from the intended M1 pool (or from
 /// cards on `main` that a deck might try to play). Listed in the PR body.
 pub fn m1_unsupported_list() -> Vec<&'static str> {
-    vec![
-        "on:static",
-        "op:randomSplit",
-        "op:sequence",
-        "op:counter skyboundHand",
-        "op:addToDeck",
-    ]
+    vec!["on:static", "op:randomSplit", "op:counter skyboundHand"]
 }
 
 #[allow(dead_code)]

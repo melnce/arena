@@ -1,0 +1,38 @@
+{
+  "id": "10401120",
+  "name": "Vyrn, Bestest Pal",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: If you've unlocked super-evolution, evolve this follower.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If you've unlocked super-evolution, evolve this follower.",
+      "effects": [
+        {
+          "printed": "If you've unlocked super-evolution, evolve this follower.",
+          "op": "if",
+          "cond": {
+            "superEvolutionUnlocked": true
+          },
+          "then": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

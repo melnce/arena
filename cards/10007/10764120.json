@@ -1,0 +1,74 @@
+{
+  "id": "10764120",
+  "name": "Initia, Chief Ordination Officer",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Select an enemy follower on the field and banish it. If there are at least 3 allied amulets on the field, restore 3 defense to your leader.\n\nWard\nAura\n\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 4,
+  "defense": 7,
+  "traits": {
+    "ward": true,
+    "aura": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and banish it. If there are at least 3 allied amulets on the field, restore 3 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and banish it.",
+          "op": "banish",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        },
+        {
+          "printed": "If there are at least 3 allied amulets on the field, restore 3 defense to your leader.",
+          "op": "if",
+          "cond": {
+            "countAtLeast": {
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "amulet"
+              },
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "restore",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

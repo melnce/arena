@@ -1,0 +1,33 @@
+{
+  "id": "10961120",
+  "name": "Peryton",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Summon 2 copies of Peryton.\n\nRush",
+  "attack": 3,
+  "defense": 4,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Peryton.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Peryton.",
+          "op": "summon",
+          "card": {
+            "named": "10961120"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

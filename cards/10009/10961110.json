@@ -1,0 +1,37 @@
+{
+  "id": "10961110",
+  "name": "Follower of the Tenets",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Ward\nDuring your turn, when your leader's defense is restored, evolve this follower.",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "when",
+      "event": "leader_restored",
+      "printed": "During your turn, when your leader's defense is restored, evolve this follower.",
+      "effects": [
+        {
+          "printed": "evolve this follower.",
+          "op": "evolve",
+          "select": {
+            "pick": "self"
+          },
+          "super": false
+        }
+      ],
+      "when": {
+        "turnOwner": "self"
+      }
+    }
+  ],
+  "tribes": []
+}

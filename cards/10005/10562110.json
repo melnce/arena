@@ -1,0 +1,33 @@
+{
+  "id": "10562110",
+  "name": "Immovable Paladin",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Summon 3 copies of Immovable Paladin.\n\nWard",
+  "attack": 4,
+  "defense": 4,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 3 copies of Immovable Paladin.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies of Immovable Paladin.",
+          "op": "summon",
+          "card": {
+            "named": "10562110"
+          },
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

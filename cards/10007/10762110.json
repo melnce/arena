@@ -1,0 +1,49 @@
+{
+  "id": "10762110",
+  "name": "Sister of Strategic Development",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: If there are at least 3 allied amulets on the field, select an enemy follower on the field and deal it 5 damage.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If there are at least 3 allied amulets on the field, select an enemy follower on the field and deal it 5 damage.",
+      "effects": [
+        {
+          "printed": "If there are at least 3 allied amulets on the field, select an enemy follower on the field and deal it 5 damage.",
+          "op": "if",
+          "cond": {
+            "countAtLeast": {
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "amulet"
+              },
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

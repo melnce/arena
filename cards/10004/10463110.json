@@ -1,0 +1,51 @@
+{
+  "id": "10463110",
+  "name": "Tikoh, Asclepian Surgeon",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 1,
+  "text": "Whenever you Engage an amulet, restore 1 defense to your leader.\n\nEvolve: Select an enemy follower on the field and deal it 3 damage.",
+  "attack": 0,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "printed": "Whenever you Engage an amulet, restore 1 defense to your leader.",
+      "effects": [
+        {
+          "printed": "restore 1 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and deal it 3 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 3 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

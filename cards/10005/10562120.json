@@ -1,0 +1,59 @@
+{
+  "id": "10562120",
+  "name": "Desperate Shrinemouse",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Draw a card.\n\nDuring your turn, whenever you draw a card, deal 1 damage to all enemy followers.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 1,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_draw",
+      "printed": "During your turn, whenever you draw a card, deal 1 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 1
+        }
+      ],
+      "when": {
+        "turnOwner": "self"
+      }
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

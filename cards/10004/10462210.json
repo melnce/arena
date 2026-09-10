@@ -1,0 +1,52 @@
+{
+  "id": "10462210",
+  "name": "Skyfaring Vessel",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Activates in hand. Whenever you Engage an amulet, reduce the cost of this card by 1.\n\nEngage: Destroy this card. Select an unevolved allied follower on the field and evolve it.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "printed": "Activates in hand. Whenever you Engage an amulet, reduce the cost of this card by 1.",
+      "effects": [
+        {
+          "printed": "reduce the cost of this card by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ],
+      "zone": "hand"
+    },
+    {
+      "on": "engage",
+      "cost": 0,
+      "sacrifice": true,
+      "printed": "Engage: Destroy this card. Select an unevolved allied follower on the field and evolve it.",
+      "effects": [
+        {
+          "printed": "Select an unevolved allied follower on the field and evolve it.",
+          "op": "evolve",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "unevolved": true
+            }
+          },
+          "super": false
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

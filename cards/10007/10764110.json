@@ -1,0 +1,52 @@
+{
+  "id": "10764110",
+  "name": "Rodeo, Anathema of Adjudication",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Summon a Rings of Moonlight.\n\nEvolve: Delay the count of a random allied Rings of Moonlight on the field by 1.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Rings of Moonlight.",
+      "effects": [
+        {
+          "printed": "Summon a Rings of Moonlight.",
+          "op": "summon",
+          "card": {
+            "named": "90064210"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Delay the count of a random allied Rings of Moonlight on the field by 1.",
+      "effects": [
+        {
+          "printed": "Delay the count of a random allied Rings of Moonlight on the field by 1.",
+          "op": "countdown",
+          "select": {
+            "pick": "random",
+            "side": "ally",
+            "zone": "field",
+            "kind": "amulet",
+            "filter": {
+              "card": "90064210"
+            }
+          },
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

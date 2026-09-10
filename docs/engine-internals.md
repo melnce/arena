@@ -38,13 +38,31 @@ Enhance that does not `replacesBase` (Zeta & Bea) appends to the Fanfare list of
 
 ## When events
 
-`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, crests before board (active crest 3, active board 4, opponent crest 5, opponent board 6), entry order within a side. Play reactions (`whenever you play`) are flushed onto `pending_work` above Fanfare / spell text (E39). Other cards' enter reactions stay on the queue until the play completes, including across a Fanfare choice (E34). The entrant's own `on:enter` is queued with those reactions and sorts by board age (oldest first) — it is not a priority over older cards' reactions to the same event (E38, pending owner). `pick: entering` reads `State.event_subject`.
+`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, crests before board (active crest 3, active board 4, opponent crest 5, opponent board 6), entry order within a side. Play reactions (`whenever you play`) are flushed onto `pending_work` above Fanfare / spell text (E39). Other cards' enter reactions stay on the queue until the play completes, including across a Fanfare choice (E34). The entrant's own `on:enter` is queued with those reactions and sorts by board age (oldest first) — it is not a priority over older cards' reactions to the same event (E38, pending owner). `pick: entering` reads `State.event_subject`, re-resolved from the captured `event_inst_id` so a mid-resolution `compact_field` (Bahamut "Banish all other followers" then Camiscilla "evolve it") still finds the entering follower.
 
 `CardDb` builds a static `when` index at load: for each `(EventName, AbilityZone)`, the card ids (and crest ids) that print at least one `When` for that pair. `enqueue_when_on` does not clone zones; it walks field instances whose card id is in the index for `(event, Field)` or whose `granted_whens` count is non-zero (grants are dynamic and rare), crests in the crest index, and hand/deck only when the index has any entry for that `(event, zone)` — today's cards have no deck `When` for most events, so those scans cost nothing. Categories, entry order, `oncePerTurn` marks, and `filter`/`when` evaluation are unchanged.
 
 `CardDb` also indexes start/end-of-turn abilities by `(AbilityZone, start)`. `enqueue_boundary` skips the hand and deck scans when `zone_has_boundary` is empty, so a deck without Sandalphon-style `zone: deck` `startOfTurn` costs nothing.
 
 All 15 `EventName`s are raised where the engine produces them (enter, destroy, play, attack, evolve, draw, earth-rite spend, engage, leader restore, self-buff). None are a silent no-op.
+
+`leader_restored` fires when a restore effect **resolves**, including a 0-heal while the leader is already at max defense. Official Cygames Q&A, Burnite, Anathema of Flame (`10144110`): _"Will Crest: Burnite's 'when your leader's defense is restored, deal 1 damage to it' ability activate if my leader's defense is restored by 0?"_ → _"Yes, it will."_ Same reading for Saint of Rehabilitation / Follower of the Tenets / Executor of the Vow (pinned by `saint_fox_per_restore_owner_turn_only`). `Condition.attackingFollower` is true only while `AllyFollowerAttacks` is being enqueued against a follower (Verdilia crest: "attacks a follower").
+
+## `op:sequence`
+
+Per-instance `CardInstance.sequence_index` (0-based, wraps after the last step). Official Q&A on Omerio: after the third ability the next destruction runs the first again. The cursor lives on the instance so it survives the trigger queue (City of Babelon / Omerio).
+
+## `grantTraits.until`
+
+`grantTraits.until` (`endOfTurn` / `endOfOpponentTurn`) is caster-relative: `endOfOpponentTurn` expires when the caster's opponent's turn ends, even if the grant sits on an enemy follower (Measured Attunement / Shaili). Grants are stored on `CardInstance.temp_traits` and `merge_remove`'d at that boundary. Stacked `"Can attack N times"` grants add `(N-1)` extra attacks (Verdilia + Armes official Q&A → 3).
+
+## Destroyed-this-match
+
+`destroyed_history` records field followers **and** amulets (Kandima / Sublime Eld Tome / Depths of the Eld Tome). `Filter.destroyedThisMatch` reads that pool as `TargetOpt::Card`.
+
+## Hand transform
+
+`op:transform` on a hand instance replaces it with `copyOf` from deck / hand / field / card (Encroached World: exact copy of a random enemy-deck card). Field transform is unchanged (no Last Words, no enter).
 
 ## Field transform
 
@@ -102,7 +120,7 @@ The per-hand `skybound` counter is the number of allied evolves (player EP and e
 
 ## Faith
 
-At `new_game`, after decks and opening hands are dealt, every player whose starting deck or opening hand contains a card that carries a Faith gains that Faith crest (`faith:<id>`, no countdown, `faith: 0`) — the Sham-Nacha / engine-api rule. The crest's `when ally_evolve` increments `PlayerState.faith`. `pay faith N` spends only if the value is ≥ N, else the wrapped body fizzles. `grantAbility` onto `zone: crests, kind: faith` appends to `CrestInstance.granted` (not visible in CanonicalState; it fires when the event hits). Faith counts toward the five-icon cap but not toward "the number of crests" (rulings 2026-09-05/06).
+At `new_game`, after decks and opening hands are dealt, every player whose starting deck or opening hand contains a card that carries a Faith gains that Faith crest (`faith:<id>`, no countdown, `faith: 0`) — the Sham-Nacha / engine-api rule. The crest's printed `when` increments `PlayerState.faith` (Yidmetra: `ally_evolve`; Lyanthoth: `ally_amulet_destroyed`). `pay faith N` spends only if the value is ≥ N, else the wrapped body fizzles. `grantAbility` onto `zone: crests, kind: faith` appends to `CrestInstance.granted` (not visible in CanonicalState; it fires when the event hits). Faith counts toward the five-icon cap but not toward "the number of crests" (rulings 2026-09-05/06).
 
 ## E39 — play reactions before Fanfare / spell text
 
@@ -122,8 +140,6 @@ The Faith's "Whenever an allied follower evolves, increase this faith's value by
 
 A `side: any` random pool (Oluon) qualifies keys with the player (`a:slot:0`, `leader:b`) so two leaders or two `slot:0`s do not collapse on scripted replay. Single-side pools still emit `slot:N` / `leader`.
 
-A `side: any` random pool (Oluon) qualifies keys with the player (`a:slot:0`, `leader:b`) so two leaders or two `slot:0`s do not collapse on scripted replay. Single-side pools still emit `slot:N` / `leader`.
-
 Recorded `chose.slot` is the 0-based index among **surviving** cards on that player's field at roll time (followers at 0 defense / marked for destruction and amulets at countdown 0 are skipped; order preserved), not the raw field slot. In a `randomDistinct` wave the first chosen slot is also skipped at later rolls (the old engine applies that destroy before the next roll). A non-distinct `random` wave does not skip a follower that survived the first pick — it stays in the numbering. Live play still picks by index into the candidate list. Scripted replay matches the survivor-index label first; if that misses, a raw field slot is accepted as an alias when that label is not already a survivor key of another candidate (M1 ramp traces numbered by raw slot). Aliases are not added for live RNG.
 
 ## Questions for the owner
@@ -131,7 +147,7 @@ Recorded `chose.slot` is the 0-based index among **surviving** cards on that pla
 Asked; arena follows the rulebook/text until he says otherwise.
 
 1. **World of Games counting itself.** A later 1-cost play sees World of Games (base 1) as "a card on the field other than it". The printed "other than it" excludes only the played card.
-2. **Granted `attacksPerTurn: 2` after attacks already made this turn.** Rulebook is silent. Implemented as `attacks_left = attacks_left.max(n)`.
+2. **Granted `attacksPerTurn: 2` after attacks already made this turn.** Rulebook is silent. Implemented as `attacks_left += (n - 1)` so stacked extras remain usable this turn.
 3. **Duplicate-id draw after `returnToDeck`.** A draw of an id that has both a modified copy and a just-returned printed copy takes the oldest (first in vec; return appends).
 4. **E38 — entrant's own `on:enter` vs older `ally_enter`.** Implemented as same-timing board enter triggers, oldest first (not a jump onto `pending_work` above Fanfare). Pending owner.
 5. **E40 — source must still be in its zone.** See Resolution §1. Trap in the Woods vs a 3-Knight summon: three `enemy_follower_enter` items queue (no mid-effect interrupt); the first destroys the first Knight and the trap; the other two skip.
@@ -150,4 +166,4 @@ A stat debuff lowers `max_defense` by the same amount; current defense drops by 
 
 ## Tests
 
-Integration tests under `engine/tests/` load the repo's `cards/` plus fixtures. Soak is opt-in: `ARENA_SOAK_GAMES=N cargo test --release soak`.
+Integration tests under `engine/tests/` load the repo's `cards/` plus fixtures. Soak is opt-in: `ARENA_SOAK_GAMES=N cargo test --release soak` (fixed fixture deck in `soak.rs`; class-matrix random decks in `soak_random.rs`, default N=20).

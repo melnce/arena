@@ -1,0 +1,64 @@
+{
+  "id": "10903110",
+  "name": "Warden of Selflessness",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Add a Jailor of Antiquity to your hand. Deal X damage to 2 random enemy followers. X is the number of Neutral cards in your hand.\n\nEvolve: Recover 1 play point.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Jailor of Antiquity to your hand. Deal X damage to 2 random enemy followers. X is the number of Neutral cards in your hand.",
+      "effects": [
+        {
+          "printed": "Add a Jailor of Antiquity to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "10901110"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Deal X damage to 2 random enemy followers. X is the number of Neutral cards in your hand.",
+          "op": "damage",
+          "select": {
+            "pick": "randomDistinct",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "count": 2
+          },
+          "amount": {
+            "count": {
+              "pick": "all",
+              "side": "ally",
+              "zone": "hand",
+              "kind": "card",
+              "filter": {
+                "class": "neutral"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Recover 1 play point.",
+      "effects": [
+        {
+          "printed": "Recover 1 play point.",
+          "op": "pp",
+          "action": "recover",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

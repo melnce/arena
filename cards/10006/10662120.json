@@ -1,0 +1,41 @@
+{
+  "id": "10662120",
+  "name": "Pegasus Rider",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Summon a Holy Falcon.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Holy Falcon.",
+      "effects": [
+        {
+          "printed": "Summon a Holy Falcon.",
+          "op": "summon",
+          "card": {
+            "named": "90061110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

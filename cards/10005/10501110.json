@@ -1,0 +1,51 @@
+{
+  "id": "10501110",
+  "name": "Monster Litterateur",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: If there's another 1-base-cost card on the field, give this follower +1/+1.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If there's another 1-base-cost card on the field, give this follower +1/+1.",
+      "effects": [
+        {
+          "printed": "If there's another 1-base-cost card on the field, give this follower +1/+1.",
+          "op": "if",
+          "cond": {
+            "countAtLeast": {
+              "select": {
+                "pick": "all",
+                "side": "any",
+                "zone": "field",
+                "kind": "card",
+                "other": true,
+                "filter": {
+                  "baseCostEq": 1
+                }
+              },
+              "n": 1
+            }
+          },
+          "then": [
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 1,
+              "defense": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

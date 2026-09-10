@@ -1,0 +1,31 @@
+{
+  "id": "10704120",
+  "name": "Altaro, Mayor of Babelon",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 3,
+  "text": "Ambush\nAt the end of your turn, draw a card.",
+  "attack": 0,
+  "defense": 3,
+  "traits": {
+    "ambush": true
+  },
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, draw a card.",
+      "effects": [
+        {
+          "printed": "draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

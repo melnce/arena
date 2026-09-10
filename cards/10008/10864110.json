@@ -1,0 +1,59 @@
+{
+  "id": "10864110",
+  "name": "Verdilia & Castelle, Sisters",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon a random follower that costs 2 or less from your deck and super-evolve it.\n\nSuper-Evolve: Gain Crest: Verdilia & Castelle, Sisters.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a random follower that costs 2 or less from your deck and super-evolve it.",
+      "effects": [
+        {
+          "printed": "Summon a random follower that costs 2 or less from your deck and super-evolve it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "randomFrom": {
+                  "kind": "follower",
+                  "costLte": 2
+                }
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "super": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Gain Crest: Verdilia & Castelle, Sisters.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Verdilia & Castelle, Sisters.",
+          "op": "crest",
+          "gain": "crest:10864110",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,50 @@
+{
+  "id": "10803110",
+  "name": "Aika, Elegy of Loss",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add a copy of a random allied follower destroyed this match to your hand without revealing it.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a copy of a random allied follower destroyed this match to your hand without revealing it.",
+      "effects": [
+        {
+          "printed": "Add a copy of a random allied follower destroyed this match to your hand without revealing it.",
+          "op": "addToHand",
+          "card": {
+            "copyOf": {
+              "pick": "random",
+              "side": "ally",
+              "zone": "field",
+              "kind": "follower",
+              "filter": {
+                "destroyedThisMatch": true
+              }
+            },
+            "exact": false
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

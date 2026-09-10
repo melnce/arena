@@ -1,0 +1,30 @@
+{
+  "id": "10701310",
+  "name": "Tears of Degradation",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Select an enemy card on the field and banish it.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy card on the field and banish it.",
+      "effects": [
+        {
+          "printed": "Select an enemy card on the field and banish it.",
+          "op": "banish",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "card"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,44 @@
+{
+  "id": "10964110",
+  "name": "Erralde, Signet Convict",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it.\n\nEvolve: Gain Crest: Erralde, Signet Convict.",
+  "attack": 6,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Gain Crest: Erralde, Signet Convict.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Erralde, Signet Convict.",
+          "op": "crest",
+          "gain": "crest:10964110",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

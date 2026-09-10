@@ -1,0 +1,51 @@
+{
+  "id": "10761210",
+  "name": "Earrings of Sunlight",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: Select a card in your hand and return it to deck. Draw a card.\n\nEngage: Destroy this card. Replicate the effects of this card's Fanfare ability.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and return it to deck. Draw a card.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and return it to deck.",
+          "op": "returnToDeck",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "position": "random"
+        },
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "engage",
+      "cost": 0,
+      "sacrifice": true,
+      "printed": "Engage: Destroy this card. Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

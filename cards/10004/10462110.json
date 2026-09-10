@@ -1,0 +1,56 @@
+{
+  "id": "10462110",
+  "name": "Sara, Graphos's Chosen",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Enhance (6): Give this follower +0/+10.\n\nWard\n\nEvolve: Select a damaged enemy follower on the field and destroy it.",
+  "attack": 4,
+  "defense": 5,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select a damaged enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select a damaged enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "damaged": true
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 6,
+      "printed": "Enhance (6): Give this follower +0/+10.",
+      "effects": [
+        {
+          "printed": "Give this follower +0/+10.",
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": 0,
+          "defense": 10
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
