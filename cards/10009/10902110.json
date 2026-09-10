@@ -1,0 +1,36 @@
+{
+  "id": "10902110",
+  "name": "Blade Angel",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Select 2 other allied followers on the field and give them +3/+3.",
+  "attack": 6,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select 2 other allied followers on the field and give them +3/+3.",
+      "effects": [
+        {
+          "printed": "Select 2 other allied followers on the field and give them +3/+3.",
+          "op": "buff",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "count": 2,
+            "other": true
+          },
+          "attack": 3,
+          "defense": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

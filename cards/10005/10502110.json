@@ -1,0 +1,48 @@
+{
+  "id": "10502110",
+  "name": "Goddess of Starlight",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Evolve: Select 3 cards in your hand and discard them. Add an exact copy each of the 3 leftmost cards in your hand to your hand without revealing them.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select 3 cards in your hand and discard them. Add an exact copy each of the 3 leftmost cards in your hand to your hand without revealing them.",
+      "effects": [
+        {
+          "printed": "Select 3 cards in your hand and discard them.",
+          "op": "discard",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "count": 3
+          }
+        },
+        {
+          "printed": "Add an exact copy each of the 3 leftmost cards in your hand to your hand without revealing them.",
+          "op": "addToHand",
+          "card": {
+            "copyOf": {
+              "pick": "leftmost",
+              "side": "ally",
+              "zone": "hand",
+              "kind": "card",
+              "count": 3
+            },
+            "exact": true
+          },
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

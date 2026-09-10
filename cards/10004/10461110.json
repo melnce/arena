@@ -1,0 +1,36 @@
+{
+  "id": "10461110",
+  "name": "Troue, Heroic Visionary",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Storm\nWhenever you Engage an amulet, give this follower Drain.",
+  "attack": 2,
+  "defense": 1,
+  "traits": {
+    "storm": true
+  },
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "printed": "Whenever you Engage an amulet, give this follower Drain.",
+      "effects": [
+        {
+          "printed": "give this follower Drain.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "drain": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

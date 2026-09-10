@@ -1,0 +1,54 @@
+{
+  "id": "10462120",
+  "name": "Sophia, Zeyen Priestess",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Summon a random Havencraft follower that costs 2 or less from your deck.\n\nSuper-Evolve: Give all other allied followers on the field Barrier.",
+  "attack": 3,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a random Havencraft follower that costs 2 or less from your deck.",
+      "effects": [
+        {
+          "printed": "Summon a random Havencraft follower that costs 2 or less from your deck.",
+          "op": "summon",
+          "card": {
+            "randomFrom": {
+              "class": "havencraft",
+              "kind": "follower",
+              "costLte": 2
+            }
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give all other allied followers on the field Barrier.",
+      "effects": [
+        {
+          "printed": "Give all other allied followers on the field Barrier.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "other": true
+          },
+          "traits": {
+            "barrier": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

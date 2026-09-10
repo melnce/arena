@@ -1,0 +1,55 @@
+{
+  "id": "10861120",
+  "name": "Theresa, Ergon Priestess",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon a Soulcure Sister and give it +2/-2 and Storm.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Soulcure Sister and give it +2/-2 and Storm.",
+      "effects": [
+        {
+          "printed": "Summon a Soulcure Sister and give it +2/-2 and Storm.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10061110"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "attack": 2,
+              "defense": -2
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

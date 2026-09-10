@@ -1,0 +1,60 @@
+{
+  "id": "10761110",
+  "name": "Reverend of Finance",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: If there are at least 3 allied amulets on the field, summon a Reverend of Finance.\n\nRush\nLast Words: Draw a card.",
+  "attack": 3,
+  "defense": 2,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If there are at least 3 allied amulets on the field, summon a Reverend of Finance.",
+      "effects": [
+        {
+          "printed": "If there are at least 3 allied amulets on the field, summon a Reverend of Finance.",
+          "op": "if",
+          "cond": {
+            "countAtLeast": {
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "amulet"
+              },
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10761110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

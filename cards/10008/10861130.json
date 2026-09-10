@@ -1,0 +1,43 @@
+{
+  "id": "10861130",
+  "name": "Grant, Hunter of Undeath",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 3,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

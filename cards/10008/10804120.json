@@ -1,0 +1,32 @@
+{
+  "id": "10804120",
+  "name": "Olivia, Proud Dark Angel",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "Fanfare: Recover 2 super-evolution points.\n\nWard",
+  "attack": 7,
+  "defense": 7,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Recover 2 super-evolution points.",
+      "effects": [
+        {
+          "printed": "Recover 2 super-evolution points.",
+          "op": "ep",
+          "action": "gain",
+          "super": true,
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

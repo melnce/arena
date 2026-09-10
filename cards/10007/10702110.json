@@ -1,0 +1,41 @@
+{
+  "id": "10702110",
+  "name": "Intrepid Newshound",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Last Words: Draw a card.\n\nSuper-Evolve: Summon 2 copies of Intrepid Newshound.",
+  "attack": 3,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Summon 2 copies of Intrepid Newshound.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Intrepid Newshound.",
+          "op": "summon",
+          "card": {
+            "named": "10702110"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

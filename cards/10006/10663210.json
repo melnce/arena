@@ -1,0 +1,84 @@
+{
+  "id": "10663210",
+  "name": "Sublime Eld Tome",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Select another card on the field and destroy it. If you selected an allied amulet, recover 2 play points.\n\nCountdown (2)\nLast Words: Summon a copy of a random allied amulet destroyed this match with Last Words and a base cost of 2 or less.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select another card on the field and destroy it. If you selected an allied amulet, recover 2 play points.",
+      "effects": [
+        {
+          "printed": "Select another card on the field and destroy it. If you selected an allied amulet, recover 2 play points.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "choose",
+                "side": "any",
+                "zone": "field",
+                "kind": "card",
+                "other": true
+              },
+              "as": "t"
+            },
+            {
+              "op": "if",
+              "cond": {
+                "boundHas": {
+                  "ref": "t",
+                  "filter": {
+                    "kind": "amulet"
+                  },
+                  "side": "ally"
+                }
+              },
+              "then": [
+                {
+                  "op": "pp",
+                  "action": "recover",
+                  "amount": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a copy of a random allied amulet destroyed this match with Last Words and a base cost of 2 or less.",
+      "effects": [
+        {
+          "printed": "Summon a copy of a random allied amulet destroyed this match with Last Words and a base cost of 2 or less.",
+          "op": "summon",
+          "card": {
+            "copyOf": {
+              "pick": "random",
+              "side": "ally",
+              "zone": "field",
+              "kind": "amulet",
+              "filter": {
+                "destroyedThisMatch": true,
+                "hasLastWords": true,
+                "baseCostLte": 2
+              }
+            },
+            "exact": false
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

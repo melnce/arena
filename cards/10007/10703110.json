@@ -1,0 +1,43 @@
+{
+  "id": "10703110",
+  "name": "Hedonistic Socialite",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Select a card in your hand and discard it. Deal 2 damage to all enemy followers.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and discard it. Deal 2 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          }
+        },
+        {
+          "printed": "Deal 2 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

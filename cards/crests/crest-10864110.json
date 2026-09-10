@@ -1,0 +1,35 @@
+{
+  "id": "crest:10864110",
+  "name": "Crest: Verdilia & Castelle, Sisters",
+  "grantedBy": [
+    "10864110"
+  ],
+  "faith": false,
+  "text": "Whenever a super-evolved allied follower attacks a follower, give the allied follower \"Can attack 2 times per turn\" until the end of the turn.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_attacks",
+      "printed": "Whenever a super-evolved allied follower attacks a follower, give the allied follower \"Can attack 2 times per turn\" until the end of the turn.",
+      "effects": [
+        {
+          "printed": "give the allied follower \"Can attack 2 times per turn\" until the end of the turn.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "entering"
+          },
+          "traits": {
+            "attacksPerTurn": 2
+          },
+          "until": "endOfTurn"
+        }
+      ],
+      "filter": {
+        "superEvolved": true
+      },
+      "when": {
+        "attackingFollower": true
+      }
+    }
+  ]
+}

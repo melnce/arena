@@ -1,0 +1,66 @@
+{
+  "id": "10862110",
+  "name": "Edeth, Voice of Heaven",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 8,
+  "text": "Ward\nAura\nLast Words: Summon an Edeth, Voice of Heaven and remove Last Words from it.\n\nSuper-Evolve: Select an enemy follower on the field and destroy it.",
+  "attack": 6,
+  "defense": 7,
+  "traits": {
+    "ward": true,
+    "aura": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon an Edeth, Voice of Heaven and remove Last Words from it.",
+      "effects": [
+        {
+          "printed": "Summon an Edeth, Voice of Heaven and remove Last Words from it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10862110"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "removeAbilities",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "on": [
+                "lastWords"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

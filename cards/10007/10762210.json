@@ -1,0 +1,60 @@
+{
+  "id": "10762210",
+  "name": "Timepiece of Perfection",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Enhance (4): Deal 1 damage to all enemy followers.\n\nEngage: Destroy this card. Deal 1 damage to all enemy followers.",
+  "abilities": [
+    {
+      "on": "engage",
+      "cost": 0,
+      "sacrifice": true,
+      "printed": "Engage: Destroy this card. Deal 1 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 1 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Deal 1 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 1 damage to all enemy followers.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "id": "10863210",
+  "name": "Academy Hijinks",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Countdown (2)\nAt the end of your turn, draw a card and, if there's an evolved allied follower on the field, restore 1 defense to your leader. If there's a super-evolved allied follower on the field, restore 2 defense instead.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, draw a card and, if there's an evolved allied follower on the field, restore 1 defense to your leader. If there's a super-evolved allied follower on the field, restore 2 defense instead.",
+      "effects": [
+        {
+          "printed": "draw a card",
+          "op": "draw",
+          "count": 1
+        },
+        {
+          "printed": "If there's a super-evolved allied follower on the field, restore 2 defense instead.",
+          "op": "if",
+          "cond": {
+            "fieldHas": {
+              "filter": {
+                "superEvolved": true
+              },
+              "side": "ally",
+              "kind": "follower"
+            }
+          },
+          "then": [
+            {
+              "op": "restore",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 2
+            }
+          ],
+          "else": [
+            {
+              "printed": "if there's an evolved allied follower on the field, restore 1 defense to your leader",
+              "op": "if",
+              "cond": {
+                "fieldHas": {
+                  "filter": {
+                    "evolved": true
+                  },
+                  "side": "ally",
+                  "kind": "follower"
+                }
+              },
+              "then": [
+                {
+                  "op": "restore",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
