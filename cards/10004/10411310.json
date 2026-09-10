@@ -1,0 +1,51 @@
+{
+  "id": "10411310",
+  "name": "Comet Drive",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Select an enemy follower on the field and deal it 4 damage. If there's an evolved allied follower on the field, draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 4 damage. If there's an evolved allied follower on the field, draw a card.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 4 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4
+        },
+        {
+          "printed": "If there's an evolved allied follower on the field, draw a card.",
+          "op": "if",
+          "cond": {
+            "fieldHas": {
+              "filter": {
+                "evolved": true
+              },
+              "kind": "follower",
+              "side": "ally"
+            }
+          },
+          "then": [
+            {
+              "printed": "draw a card.",
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

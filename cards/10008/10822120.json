@@ -1,0 +1,36 @@
+{
+  "id": "10822120",
+  "name": "Oda Nobunaga",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 10,
+  "text": "Fanfare: Deal 6 damage to all enemy followers.\n\nIntimidate",
+  "attack": 10,
+  "defense": 10,
+  "traits": {
+    "intimidate": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 6 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 6 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 6
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,46 @@
+{
+  "id": "10813110",
+  "name": "Michelle, Kind Mindreader",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Summon a Lycoris, Barbs of Passion. Give all allied followers on the field Barrier.\n\nWard",
+  "attack": 1,
+  "defense": 1,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Lycoris, Barbs of Passion. Give all allied followers on the field Barrier.",
+      "effects": [
+        {
+          "printed": "Summon a Lycoris, Barbs of Passion.",
+          "op": "summon",
+          "card": {
+            "named": "10812120"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Give all allied followers on the field Barrier.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "traits": {
+            "barrier": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

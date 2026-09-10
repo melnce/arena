@@ -291,7 +291,11 @@ def condition_schema():
             closed(
                 {
                     "countAtLeast": closed(
-                        {"select": {"$ref": "#/$defs/Selector"}, "n": {"$ref": "#/$defs/Amount"}},
+                        {
+                            "select": {"$ref": "#/$defs/Selector"},
+                            "n": {"$ref": "#/$defs/Amount"},
+                            "filter": {"$ref": "#/$defs/Filter"},
+                        },
                         required=["select", "n"],
                     )
                 },
@@ -483,6 +487,7 @@ def effect_schema():
         leaf("grantTraits", {
             "select": {"$ref": "#/$defs/Selector"},
             "traits": {"$ref": "#/$defs/Traits"},
+            "until": {"enum": ["endOfTurn", "endOfOpponentTurn"]},
         }, ["select", "traits"]),
         leaf("removeTraits", {
             "select": {"$ref": "#/$defs/Selector"},

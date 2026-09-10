@@ -1,0 +1,78 @@
+{
+  "id": "10921310",
+  "name": "Phalanx",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Summon a Steelclad Knight and give it Ward.\nEnhance (6): Summon 5 instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Steelclad Knight and give it Ward.",
+      "effects": [
+        {
+          "printed": "Summon a Steelclad Knight and give it Ward.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90021120"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "ward": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 6,
+      "printed": "Enhance (6): Summon 5 instead.",
+      "effects": [
+        {
+          "printed": "Summon 5 instead.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90021120"
+              },
+              "count": 5,
+              "as": "s"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "ward": true
+              }
+            }
+          ]
+        }
+      ],
+      "replacesBase": true
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,56 @@
+{
+  "id": "10814120",
+  "name": "Tia, Eternal Crystalian",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 2,
+  "text": "Enhance (4): Give all allied followers on the field +1/+1.\n\nRush\nOnce on each of your turns, when this follower is given + attack or defense on the field, add an Eve, Blade of Crystalia to your hand.",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "when",
+      "event": "self_buffed_up",
+      "printed": "Once on each of your turns, when this follower is given + attack or defense on the field, add an Eve, Blade of Crystalia to your hand.",
+      "effects": [
+        {
+          "printed": "add an Eve, Blade of Crystalia to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90014110"
+          },
+          "count": 1
+        }
+      ],
+      "oncePerTurn": true
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Give all allied followers on the field +1/+1.",
+      "effects": [
+        {
+          "printed": "Give all allied followers on the field +1/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,122 @@
+{
+  "id": "10413310",
+  "name": "Alfheimr",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Select a Mode to activate. Super Skybound Art - Activate all of them instead.\n1. Draw a card. Restore 1 defense to your leader.\n2. Give all allied followers on the field +1/+0 and Rush.\n3. Give all allied followers on the field +0/+1 and Ward.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate. Super Skybound Art - Activate all of them instead.\n1. Draw a card. Restore 1 defense to your leader.\n2. Give all allied followers on the field +1/+0 and Rush.\n3. Give all allied followers on the field +0/+1 and Ward.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "when": {
+            "not": {
+              "skyboundArt": {
+                "n": 15
+              }
+            }
+          },
+          "options": [
+                {
+                  "printed": "1. Draw a card. Restore 1 defense to your leader.",
+                  "effects": [
+                    {
+                      "op": "draw",
+                      "count": 1
+                    },
+                    {
+                      "op": "restore",
+                      "select": {
+                        "pick": "all",
+                        "side": "ally",
+                        "zone": "leader",
+                        "kind": "leader"
+                      },
+                      "amount": 1
+                    }
+                  ]
+                },
+                {
+                  "printed": "2. Give all allied followers on the field +1/+0 and Rush.",
+                  "effects": [
+                    {
+                      "op": "buff",
+                      "select": {
+                        "pick": "all",
+                        "side": "ally",
+                        "zone": "field",
+                        "kind": "follower"
+                      },
+                      "attack": 1,
+                      "defense": 0
+                    },
+                    {
+                      "op": "grantTraits",
+                      "select": {
+                        "pick": "all",
+                        "side": "ally",
+                        "zone": "field",
+                        "kind": "follower"
+                      },
+                      "traits": {
+                        "rush": true
+                      }
+                    }
+                  ]
+                },
+                {
+                  "printed": "3. Give all allied followers on the field +0/+1 and Ward.",
+                  "effects": [
+                    {
+                      "op": "buff",
+                      "select": {
+                        "pick": "all",
+                        "side": "ally",
+                        "zone": "field",
+                        "kind": "follower"
+                      },
+                      "attack": 0,
+                      "defense": 1
+                    },
+                    {
+                      "op": "grantTraits",
+                      "select": {
+                        "pick": "all",
+                        "side": "ally",
+                        "zone": "field",
+                        "kind": "follower"
+                      },
+                      "traits": {
+                        "ward": true
+                      }
+                    }
+                  ]
+                }
+          ]
+        },
+        {
+          "printed": "Super Skybound Art - Activate all of them instead.",
+          "op": "choose",
+          "pick": "all",
+          "by": "player",
+          "when": {
+            "skyboundArt": {
+              "n": 15
+            }
+          },
+          "optionsFrom": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

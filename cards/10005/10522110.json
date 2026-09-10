@@ -1,0 +1,58 @@
+{
+  "id": "10522110",
+  "name": "Swift Staffmaster",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "When you draw this card, set its cost to 3 until the end of the turn.\n\nFanfare: Draw a card. Restore 3 defense to your leader.\n\nRush",
+  "attack": 3,
+  "defense": 3,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_draw",
+      "printed": "When you draw this card, set its cost to 3 until the end of the turn.",
+      "effects": [
+        {
+          "printed": "set its cost to 3 until the end of the turn.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "set": 3,
+          "untilEndOfTurn": true
+        }
+      ],
+      "zone": "hand"
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw a card. Restore 3 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        },
+        {
+          "printed": "Restore 3 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

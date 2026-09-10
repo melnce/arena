@@ -1,0 +1,62 @@
+{
+  "id": "10512110",
+  "name": "Flowering Friendship",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Combo (5) - Summon a Flowering Friendship and evolve it and this follower.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Combo (5) - Summon a Flowering Friendship and evolve it and this follower.",
+      "effects": [
+        {
+          "printed": "Combo (5) - Summon a Flowering Friendship and evolve it and this follower.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 5
+            }
+          },
+          "then": [
+            {
+              "printed": "Summon a Flowering Friendship and evolve it and this follower.",
+              "op": "seq",
+              "effects": [
+                {
+                  "op": "summon",
+                  "card": {
+                    "named": "10512110"
+                  },
+                  "count": 1,
+                  "as": "s"
+                },
+                {
+                  "op": "evolve",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "s"
+                  },
+                  "super": false
+                },
+                {
+                  "op": "evolve",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "super": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

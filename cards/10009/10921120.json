@@ -1,0 +1,18 @@
+{
+  "id": "10921120",
+  "name": "Kindred Cavalrywoman",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Rush\nWard",
+  "attack": 5,
+  "defense": 5,
+  "traits": {
+    "rush": true,
+    "ward": true
+  },
+  "tribes": []
+}

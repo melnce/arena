@@ -1,0 +1,19 @@
+{
+  "id": "10512120",
+  "name": "Fairy Beastwhisperer",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Rush\nBane\nDrain",
+  "attack": 2,
+  "defense": 6,
+  "traits": {
+    "rush": true,
+    "bane": true,
+    "drain": true
+  },
+  "tribes": []
+}

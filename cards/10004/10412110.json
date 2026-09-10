@@ -1,0 +1,47 @@
+{
+  "id": "10412110",
+  "name": "Chloe, What a Gal",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Enhance (8): Select a follower in your hand and summon it. Return this card to hand.",
+  "attack": 2,
+  "defense": 2,
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 8,
+      "printed": "Enhance (8): Select a follower in your hand and summon it. Return this card to hand.",
+      "effects": [
+        {
+          "printed": "Select a follower in your hand and summon it.",
+          "op": "summon",
+          "card": {
+            "copyOf": {
+              "pick": "choose",
+              "side": "ally",
+              "zone": "hand",
+              "kind": "follower",
+              "filter": {
+                "kind": "follower"
+              }
+            },
+            "exact": true
+          },
+          "count": 1
+        },
+        {
+          "printed": "Return this card to hand.",
+          "op": "returnToHand",
+          "select": {
+            "pick": "self"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

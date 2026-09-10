@@ -681,6 +681,9 @@
                 },
                 "n": {
                   "$ref": "#/$defs/Amount"
+                },
+                "filter": {
+                  "$ref": "#/$defs/Filter"
                 }
               },
               "required": [
@@ -1642,6 +1645,12 @@
             },
             "traits": {
               "$ref": "#/$defs/Traits"
+            },
+            "until": {
+              "enum": [
+                "endOfTurn",
+                "endOfOpponentTurn"
+              ]
             }
           },
           "required": [
