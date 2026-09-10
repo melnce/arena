@@ -3572,7 +3572,9 @@ fn apply_effect_with_targets(
             return Ok(());
         }
         Effect::Banish { .. } => {
-            // Bind while the instance is still on the field (Allure exact copy).
+            // Bind while the instance is still on the field (Allure exact copy
+            // reads BoundRef::Field from the banished pile). Deck/hand binds
+            // are rewritten to Card after so `{count: bound}` survives.
             maybe_bind(state, e, targets);
             let bound: Vec<TargetOpt> = targets
                 .iter()
@@ -3582,7 +3584,9 @@ fn apply_effect_with_targets(
                 banish_opt(st, t, events);
                 Ok(())
             })?;
-            maybe_bind(state, e, &bound);
+            if targets.iter().any(|t| !matches!(t, TargetOpt::Slot { .. })) {
+                maybe_bind(state, e, &bound);
+            }
             return Ok(());
         }
         Effect::Buff {
@@ -3898,13 +3902,16 @@ fn apply_effect(
         }
         Effect::Banish { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            maybe_bind(state, e, &ts);
             let bound: Vec<TargetOpt> =
                 ts.iter().filter_map(|t| target_as_card(state, t)).collect();
             apply_each_captured(state, &ts, |st, t| {
                 banish_opt(st, t, events);
                 Ok(())
             })?;
-            maybe_bind(state, e, &bound);
+            if ts.iter().any(|t| !matches!(t, TargetOpt::Slot { .. })) {
+                maybe_bind(state, e, &bound);
+            }
         }
         Effect::ReturnToHand { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
