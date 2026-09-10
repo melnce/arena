@@ -46,7 +46,7 @@
           }
         },
         {
-          "printed": "If X is at least 2, evolve this follower. X is the number of other allied copies of Drache & Aluzard, Burning Blood that have entered the field this match.",
+          "printed": "If X is at least 2, evolve this follower.",
           "op": "if",
           "cond": {
             "amountAtLeast": {
