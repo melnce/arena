@@ -241,7 +241,11 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 
 ## Card source
 
-`{named: id}` `10724110` · `{copyOf, exact}` `10443310` / `10901310` · `{randomFrom: Filter}` `crest:10564120`
+`{named: id}` `10724110` · `{copyOf, exact}` `10443310` / `10901310` · `{from: Selector}` `10412110` Chloe "Select a follower in your hand and summon it" (the selected instance itself; hand today, legal for a deck selector) · `{randomFrom: Filter}` `crest:10564120`
+
+`copyOf` always copies (exact or printed) regardless of zone — the original stays. `from` is the move: put that instance onto the field; a full field leaves it where it is.
+
+`randomFrom` with count > 1 picks differently named cards; every printed use says so. A future card that summons several from a deck without "differently named" needs its own construction.
 
 ## Amount
 

@@ -20,7 +20,7 @@
           "printed": "Select a follower in your hand and summon it.",
           "op": "summon",
           "card": {
-            "copyOf": {
+            "from": {
               "pick": "choose",
               "side": "ally",
               "zone": "hand",
@@ -28,8 +28,7 @@
               "filter": {
                 "kind": "follower"
               }
-            },
-            "exact": true
+            }
           },
           "count": 1
         },

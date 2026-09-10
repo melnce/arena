@@ -33,6 +33,7 @@ const FAIRY: &str = "90011110";
 const SPRING: &str = "90011120";
 const VANILLA: &str = "88001110";
 const TANK: &str = "88001320";
+const COPY_HAND: &str = "88001830";
 
 fn require_ok(db: &CardDb, ids: &[&str]) {
     for id in ids {
@@ -454,6 +455,44 @@ fn chloe_summon_from_hand_then_returns() {
         0,
         "the selected follower left the hand"
     );
+}
+
+#[test]
+fn summon_copy_of_hand_leaves_the_hand_instance() {
+    let db = load_db();
+    let mut st = started(&db, 519);
+    let me = PlayerId::A;
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    let pos = put_hand(&db, &mut st, me, VANILLA);
+    if let Some(h) = st.player_mut(me).hand.get_mut(pos as usize) {
+        h.attack = 9;
+        h.defense = 7;
+        h.max_defense = 7;
+    }
+    let hand_id = st.player(me).hand[pos as usize].id;
+    play_id(&db, &mut st, me, COPY_HAND);
+    assert!(matches!(st.phase, Phase::Choice { .. }));
+    choose(&db, &mut st, 0);
+    let field = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == VANILLA)
+        .expect("exact copy summoned");
+    assert_eq!(field.attack, 9);
+    assert_eq!(field.defense, 7);
+    assert_ne!(field.id, hand_id, "the copy is a new instance");
+    let still = st
+        .player(me)
+        .hand
+        .iter()
+        .find(|c| c.card.as_str() == VANILLA)
+        .expect("hand instance stays (Cartographer)");
+    assert_eq!(still.id, hand_id);
+    assert_eq!(still.attack, 9);
+    assert_eq!(still.defense, 7);
 }
 
 #[test]

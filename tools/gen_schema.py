@@ -430,6 +430,7 @@ def card_source():
                 {"copyOf": {"$ref": "#/$defs/Selector"}, "exact": {"type": "boolean"}},
                 required=["copyOf", "exact"],
             ),
+            closed({"from": {"$ref": "#/$defs/Selector"}}, required=["from"]),
             closed({"randomFrom": {"$ref": "#/$defs/Filter"}}, required=["randomFrom"]),
         ]
     }

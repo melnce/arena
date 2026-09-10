@@ -80,7 +80,7 @@ That order is what makes play reactions (`whenever you play`) resolve before Fan
 
 A `countdown` selector with `zone: crests` adjusts `CrestInstance.countdown` in place (Majestic Conquest "Delay the count of your Crest … by 2"). `filter.card` `10622310` matches crest id `crest:10622310`.
 
-`summon { copyOf }` from `zone: hand` **moves** that hand instance onto the field (Chloe "summon it"); a full field leaves the card in hand. `addToHand { copyOf }` of several deck targets copies each resolved instance and does not remove the originals (Wolfraud exact copies).
+`summon { from }` **moves** the selected instance onto the field (Chloe "summon it"); a full field leaves the card where it is. `summon { copyOf }` always copies (exact or printed) regardless of zone — the hand/deck/field original stays (Cartographer). `addToHand { copyOf }` of several deck targets copies each resolved instance and does not remove the originals (Wolfraud exact copies).
 
 Hand-zone `when ally_draw` fires only on the drawn instance (`note_draw` takes the last same-id in hand). Other copies of the same card already in hand stay quiet (Swift Staffmaster).
 

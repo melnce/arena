@@ -153,7 +153,10 @@ fn walk_nested(e: &Effect) -> Option<String> {
 
 fn source_unsupported(src: &CardSource) -> Option<String> {
     match src {
-        CardSource::RandomFrom { .. } | CardSource::Named { .. } | CardSource::Copy { .. } => None,
+        CardSource::RandomFrom { .. }
+        | CardSource::Named { .. }
+        | CardSource::Copy { .. }
+        | CardSource::From { .. } => None,
     }
 }
 

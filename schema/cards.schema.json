@@ -1172,6 +1172,18 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "from": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "from"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
             "randomFrom": {
               "$ref": "#/$defs/Filter"
             }

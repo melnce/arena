@@ -3361,13 +3361,14 @@ fn apply_effect_with_targets(
                 CardSource::Copy { exact, .. } => *exact,
                 _ => false,
             };
+            let move_instance = matches!(card, CardSource::From { .. });
             let who = match ctrl {
                 Some(Controller::Opponent) => controller.opponent(),
                 _ => controller,
             };
             let mut summoned = Vec::new();
             for t in targets {
-                if let Some(s) = summon_from_opt(db, state, who, t, exact, events)? {
+                if let Some(s) = summon_from_opt(db, state, who, t, exact, move_instance, events)? {
                     summoned.push(s);
                 }
             }
@@ -4905,21 +4906,45 @@ fn summon_source(
             })?;
             CardInstance::from_card(card, state.alloc_id())
         }
+        CardSource::From { from } => {
+            let ts = resolve_select(db, state, who, source, from);
+            // Full field already returned above — the card stays where it is.
+            match ts.first() {
+                Some(TargetOpt::Hand { player, pos }) => {
+                    if (*pos as usize) >= state.player(*player).hand.len() {
+                        return Ok(None);
+                    }
+                    let mut taken = state.player_mut(*player).hand.remove(*pos as usize);
+                    taken.flags.summoning_sick = true;
+                    taken
+                }
+                Some(TargetOpt::Deck { player, id }) => {
+                    let Some(pos) = state.player(*player).deck.iter().position(|c| c.id == *id)
+                    else {
+                        return Ok(None);
+                    };
+                    let mut taken = state.player_mut(*player).deck.remove(pos);
+                    taken.flags.summoning_sick = true;
+                    taken
+                }
+                _ => return Ok(None),
+            }
+        }
         CardSource::Copy { copy_of, exact: ex } => {
             let ts = resolve_select(db, state, who, source, copy_of);
             if let Some(TargetOpt::Hand { player, pos }) = ts.first() {
-                // Chloe: "summon it" moves the hand card, not a copy.
-                // Full field already returned above — the card stays in hand.
-                if (*pos as usize) >= state.player(*player).hand.len() {
+                let Some(c) = state.player(*player).hand.get(*pos as usize).cloned() else {
                     return Ok(None);
-                }
-                let mut taken = state.player_mut(*player).hand.remove(*pos as usize);
-                if !*ex {
-                    let card = db.card(taken.card).map_err(|_| Illegal::NotLegal)?;
-                    taken = CardInstance::from_card(card, taken.id);
-                }
-                taken.flags.summoning_sick = true;
-                taken
+                };
+                let mut n = if *ex {
+                    c
+                } else {
+                    let card = db.card(c.card).map_err(|_| Illegal::NotLegal)?;
+                    CardInstance::from_card(card, 0)
+                };
+                n.id = state.alloc_id();
+                n.flags.summoning_sick = true;
+                n
             } else if let Some(TargetOpt::Slot { player, slot }) = ts.first() {
                 if let Some(c) = state.field_inst(*player, *slot).cloned() {
                     let mut n = if *ex {
@@ -5070,7 +5095,11 @@ fn add_source_to_hand(
                 Ok(None)
             }
         }
-        _ => Err(Illegal::Unsupported(Unsupported {
+        CardSource::From { .. } => Err(Illegal::Unsupported(Unsupported {
+            card: who.as_str().into(),
+            construct: "CardSource.from (addToHand)".into(),
+        })),
+        CardSource::RandomFrom { .. } => Err(Illegal::Unsupported(Unsupported {
             card: who.as_str().into(),
             construct: "CardSource.randomFrom".into(),
         })),
@@ -5162,6 +5191,12 @@ fn transform_slot(
                 }
                 _ => return Ok(()),
             }
+        }
+        CardSource::From { .. } => {
+            return Err(Illegal::Unsupported(Unsupported {
+                card: player.as_str().into(),
+                construct: "transform from".into(),
+            }));
         }
         CardSource::RandomFrom { .. } => {
             return Err(Illegal::Unsupported(Unsupported {
@@ -5264,6 +5299,9 @@ fn card_source_choose_pool(src: &CardSource) -> Option<&PoolSelector> {
         CardSource::Copy {
             copy_of: Selector::Pool(p),
             ..
+        }
+        | CardSource::From {
+            from: Selector::Pool(p),
         } if p.pick == PoolPick::Choose => Some(p),
         _ => None,
     }
@@ -5624,6 +5662,7 @@ fn summon_from_opt(
     who: PlayerId,
     t: &TargetOpt,
     exact: bool,
+    move_instance: bool,
     events: &mut Vec<Event>,
 ) -> Result<Option<TargetOpt>, Illegal> {
     if state.player(who).first_empty_slot().is_none() {
@@ -5634,15 +5673,48 @@ fn summon_from_opt(
             if (*pos as usize) >= state.player(*player).hand.len() {
                 return Ok(None);
             }
-            let mut taken = state.player_mut(*player).hand.remove(*pos as usize);
-            if !exact {
-                let card = db.card(taken.card).map_err(|_| Illegal::NotLegal)?;
-                taken = CardInstance::from_card(card, taken.id);
+            if move_instance {
+                let mut taken = state.player_mut(*player).hand.remove(*pos as usize);
+                taken.flags.summoning_sick = true;
+                taken
+            } else {
+                let c = state.player(*player).hand[*pos as usize].clone();
+                let mut n = if exact {
+                    c
+                } else {
+                    let card = db.card(c.card).map_err(|_| Illegal::NotLegal)?;
+                    CardInstance::from_card(card, 0)
+                };
+                n.id = state.alloc_id();
+                n.flags.summoning_sick = true;
+                n
             }
-            taken.flags.summoning_sick = true;
-            taken
+        }
+        TargetOpt::Deck { player, id } => {
+            let Some(pos) = state.player(*player).deck.iter().position(|c| c.id == *id) else {
+                return Ok(None);
+            };
+            if move_instance {
+                let mut taken = state.player_mut(*player).deck.remove(pos);
+                taken.flags.summoning_sick = true;
+                taken
+            } else {
+                let c = state.player(*player).deck[pos].clone();
+                let mut n = if exact {
+                    c
+                } else {
+                    let card = db.card(c.card).map_err(|_| Illegal::NotLegal)?;
+                    CardInstance::from_card(card, 0)
+                };
+                n.id = state.alloc_id();
+                n.flags.summoning_sick = true;
+                n
+            }
         }
         TargetOpt::Slot { player, slot } => {
+            if move_instance {
+                return Ok(None);
+            }
             let Some(c) = state.field_inst(*player, *slot).cloned() else {
                 return Ok(None);
             };

@@ -1026,6 +1026,10 @@ pub enum CardSource {
         copy_of: Selector,
         exact: bool,
     },
+    /// Put the selected instance itself onto the field (Chloe "summon it").
+    From {
+        from: Selector,
+    },
     RandomFrom {
         #[serde(rename = "randomFrom")]
         random_from: Filter,
@@ -2648,6 +2652,7 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
 fn walk_source(src: &CardSource, used: &mut BTreeSet<String>) {
     match src {
         CardSource::Copy { copy_of, .. } => walk_selector(copy_of, used),
+        CardSource::From { from } => walk_selector(from, used),
         CardSource::RandomFrom { random_from } => walk_filter(random_from, used),
         CardSource::Named { .. } => {}
     }
