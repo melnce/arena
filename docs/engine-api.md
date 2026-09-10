@@ -90,9 +90,35 @@ trait Rng {
 fn reseed(state: &mut State, seed: u64);
 ```
 
-Default implementation: a small seedable cloneable generator (xoshiro or PCG). A clone is a complete fork; a replay from a clone is bit-identical.
+**Algorithm (M1):** [xoshiro256**](https://prng.di.unimi.it/) (Blackman & Vigna), stored inside `State`. A `u64` seed is expanded with SplitMix64 into the four 64-bit words:
 
-`ScriptedRng` consumes the trace's `rng` array, matching each recorded outcome against the current candidate list. An outcome that is not a candidate is a divergence finding.
+```text
+splitmix64(z):
+  z += 0x9E3779B97F4A7C15
+  z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9
+  z = (z ^ (z >> 27)) * 0x94D049BB133111EB
+  return z ^ (z >> 31)
+
+seed(s):
+  s0,s1,s2,s3 = splitmix64 four times starting from s
+  if all-zero, set s0 = 1
+
+next():
+  result = rotl(s1 * 5, 7) * 9
+  t = s1 << 17
+  s2 ^= s0; s3 ^= s1; s1 ^= s2; s0 ^= s3
+  s2 ^= t
+  s3 = rotl(s3, 45)
+  return result
+```
+
+`gen_range(n)` (n > 0) uses rejection sampling on the high 32 bits of `next()` so the distribution is uniform. A clone is a complete fork; a replay from a clone is bit-identical.
+
+`ScriptedRng` consumes the trace's `rng` array **by outcome**. Each game-level decision (`draw`, `random_target`, `random_card`, `random_unused`, `random_split`, `coin`, `reanimate`, `multiset_pick`) matches `chose` against the current candidate list; a miss is `OraclePickNotLegal`. The live generator is not advanced in scripted mode. Entries with `"what":"raw"` (old-engine shuffles) are ignored before the array is fed to `ScriptedRng`.
+
+Opening-hand draws are **not** `rng` picks. When `GameConfig.opening_hands` is set (replay of a header that carries `opening_hands`), `new_game` removes those card ids from the deck multisets in the listed draw order and does not roll. Live `arena-trace` still rolls the opening four, then writes them onto the header.
+
+The random-legal *policy* (`arena-trace`, soak) uses a **separate** xoshiro256** stream (`policy_rng(seed)` = xoshiro256** seeded with `seed + 0xA5A5_A5A5_A5A5_A5A5`) so the trace's `rng` array contains only the game's rolls.
 
 No global RNG.
 
@@ -104,10 +130,15 @@ struct GameConfig {
     deck_a: Multiset<CardId>,   // 40
     deck_b: Multiset<CardId>,
     first: First,               // Coin | A | B
+    opening_hands: Option<OpeningHands>,  // pre-mulligan draw-order ids; skip RNG draws
 }
 
-fn new_game(cfg: GameConfig) -> State;
+fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError>;
+fn legal_actions(db: &CardDb, state: &State) -> Vec<Action>;
+fn apply(db: &CardDb, state: &mut State, action: Action) -> Result<Vec<Event>, Illegal>;
 ```
+
+M1 takes `&CardDb` on the three verbs so `State` has no lifetime. Missing / unsupported cards fail at `new_game` / `CardDb::require_supported` with a typed error that names the file or `Unsupported { card, construct }`.
 
 **Faith at match start.** A Faith crest is granted to every player whose starting deck (or opening hand) contains a card that carries that Faith — the rulebook's Sham-Nacha rule ("active while … is in your deck"). No card effect ever `crest {gain}`s a `faith:` id. Sathanid / Yidmetra (`10614120`, `10624120`) `grantAbility` onto the player's own Faith (`zone: crests`, `kind: faith`).
 
@@ -120,10 +151,10 @@ enum Action {
     MulliganConfirm { swap: [bool; 4] },
     Play { hand: u8 },
     Attack { attacker: Slot, target: AttackTarget },  // Slot | Leader
-    Evolve { slot: Slot, super: bool },
+    Evolve { slot: Slot, super_evolve: bool }, // NeutralAction JSON key remains "super"
     Engage { slot: Slot },
     Fuse { host: u8 },            // then Phase::Choice for partners
-    BonusPp,
+    BonusPp,                  // toggle: activate / cancel while the bonus orb is unspent (pp_bonus > 0)
     Choose(u8),
     Confirm,
     EndTurn,

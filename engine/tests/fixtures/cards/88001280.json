@@ -1,0 +1,25 @@
+{
+  "id": "88001280",
+  "name": "Synth Reanimate 4",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Reanimate (4).",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Reanimate (4).",
+      "effects": [
+        {
+          "printed": "Reanimate (4).",
+          "op": "reanimate",
+          "maxCost": 4
+        }
+      ]
+    }
+  ]
+}

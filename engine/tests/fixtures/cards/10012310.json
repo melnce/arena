@@ -1,0 +1,41 @@
+{
+  "id": "10012310",
+  "name": "Bug Alert",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Select an allied card on the field and return it to hand. Deal 2 damage to a random enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied card on the field and return it to hand. Deal 2 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Select an allied card on the field and return it to hand.",
+          "op": "returnToHand",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "card",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Deal 2 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "id": "10002210",
+  "name": "Adventurers' Guild",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Draw a follower.\n\nEngage: Destroy this card. Select an allied follower on the field and give it Rush.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw a follower.",
+      "effects": [
+        {
+          "printed": "Draw a follower.",
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "kind": "follower"
+          }
+        }
+      ]
+    },
+    {
+      "on": "engage",
+      "cost": 0,
+      "printed": "Engage: Destroy this card. Select an allied follower on the field and give it Rush.",
+      "effects": [
+        {
+          "printed": "Destroy this card.",
+          "op": "destroy",
+          "select": {
+            "pick": "self"
+          }
+        },
+        {
+          "printed": "Select an allied follower on the field and give it Rush.",
+          "op": "grantTraits",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "traits": {
+            "rush": true
+          }
+        }
+      ],
+      "sacrifice": true
+    }
+  ]
+}

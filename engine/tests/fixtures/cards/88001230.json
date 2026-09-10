@@ -1,0 +1,30 @@
+{
+  "id": "88001230",
+  "name": "Synth Clash Attacker",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Clash: Deal 3 damage to the follower it's attacking.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "clash",
+      "printed": "Clash: Deal 3 damage to the follower it's attacking.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to the follower it's attacking.",
+          "op": "damage",
+          "select": {
+            "pick": "defender"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ]
+}

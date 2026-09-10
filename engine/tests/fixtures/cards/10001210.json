@@ -1,0 +1,42 @@
+{
+  "id": "10001210",
+  "name": "Detective's Lens",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Engage: Destroy this card. Select an enemy follower on the field and remove Ward from it.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "engage",
+      "cost": 0,
+      "printed": "Engage: Destroy this card. Select an enemy follower on the field and remove Ward from it.",
+      "effects": [
+        {
+          "printed": "Destroy this card.",
+          "op": "destroy",
+          "select": {
+            "pick": "self"
+          }
+        },
+        {
+          "printed": "Select an enemy follower on the field and remove Ward from it.",
+          "op": "removeTraits",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "traits": {
+            "ward": true
+          }
+        }
+      ],
+      "sacrifice": true
+    }
+  ]
+}

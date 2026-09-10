@@ -1,0 +1,30 @@
+{
+  "id": "88009930",
+  "name": "Bad",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Deal 1.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1.",
+      "effects": [
+        {
+          "printed": "Deal 1.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "kind": "follower"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "88001240",
+  "name": "Synth Clash Defender",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Clash: Deal 2 damage to the attacker.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "clash",
+      "printed": "Clash: Deal 2 damage to the attacker.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to the attacker.",
+          "op": "damage",
+          "select": {
+            "pick": "attacker"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

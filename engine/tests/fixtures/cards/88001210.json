@@ -1,0 +1,33 @@
+{
+  "id": "88001210",
+  "name": "Synth Fanfare Ping",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 2 damage.",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 2 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 2 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

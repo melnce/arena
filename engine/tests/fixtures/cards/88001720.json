@@ -1,0 +1,36 @@
+{
+  "id": "88001720",
+  "name": "Synth Random Damage Then Draw",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Deal 2 damage to a random enemy follower. Draw a card.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 2 damage to a random enemy follower. Draw a card.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 2
+        },
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

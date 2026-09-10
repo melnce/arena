@@ -1,0 +1,14 @@
+{
+  "id": "88001320",
+  "name": "Synth Big",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 4,
+  "text": "",
+  "attack": 10,
+  "defense": 10,
+  "tribes": []
+}

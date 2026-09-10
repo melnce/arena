@@ -1,0 +1,30 @@
+{
+  "id": "88001480",
+  "name": "Synth Banish Target",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Select an enemy follower on the field and banish it.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and banish it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and banish it.",
+          "op": "banish",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          }
+        }
+      ]
+    }
+  ]
+}

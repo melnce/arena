@@ -1,0 +1,33 @@
+{
+  "id": "88001620",
+  "name": "Synth Destroy Other Allies",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Destroy all allied followers except Synth Death Draw.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy all allied followers except Synth Death Draw.",
+      "effects": [
+        {
+          "printed": "Destroy all allied followers except Synth Death Draw.",
+          "op": "destroy",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all",
+            "filter": {
+              "notCard": "88001250"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

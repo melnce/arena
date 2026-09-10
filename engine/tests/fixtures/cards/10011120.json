@@ -1,0 +1,29 @@
+{
+  "id": "10011120",
+  "name": "Stray Beastman",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Increase your Combo by 1.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Increase your Combo by 1.",
+      "effects": [
+        {
+          "printed": "Increase your Combo by 1.",
+          "op": "counter",
+          "key": "combo",
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

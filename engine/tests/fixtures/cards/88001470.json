@@ -1,0 +1,27 @@
+{
+  "id": "88001470",
+  "name": "Synth Fanfare Last Words Draw",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Last Words: Draw a card.",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

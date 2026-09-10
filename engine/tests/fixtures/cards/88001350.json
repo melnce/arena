@@ -1,0 +1,17 @@
+{
+  "id": "88001350",
+  "name": "Synth Intimidate",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Intimidate",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "traits": {
+    "intimidate": true
+  }
+}

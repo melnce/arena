@@ -1,0 +1,32 @@
+{
+  "id": "88001370",
+  "name": "Synth Buff Self Minus",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Give an allied follower -0/-4.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give an allied follower -0/-4.",
+      "effects": [
+        {
+          "printed": "Give an allied follower -0/-4.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "attack": 0,
+          "defense": -4
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "88001400",
+  "name": "Synth Banish All Crests",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Banish all crests.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Banish all crests.",
+      "effects": [
+        {
+          "printed": "Banish all crests.",
+          "op": "banish",
+          "select": {
+            "side": "any",
+            "zone": "crests",
+            "kind": "card",
+            "pick": "all"
+          }
+        }
+      ]
+    }
+  ]
+}

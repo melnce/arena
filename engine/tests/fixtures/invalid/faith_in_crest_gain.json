@@ -1,0 +1,28 @@
+{
+  "id": "88009940",
+  "name": "Bad",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Fanfare: Gain Faith.",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain Faith.",
+      "effects": [
+        {
+          "printed": "Gain Faith.",
+          "op": "crest",
+          "gain": "faith:10614120",
+          "player": "self"
+        }
+      ]
+    }
+  ]
+}
