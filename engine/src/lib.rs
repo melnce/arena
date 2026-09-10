@@ -9,6 +9,7 @@ pub mod db;
 pub mod error;
 pub mod event;
 pub mod ids;
+pub mod oracle;
 pub mod rng;
 pub mod snapshot;
 pub mod state;
