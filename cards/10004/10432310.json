@@ -51,7 +51,7 @@
                     "side": "enemy",
                     "zone": "field",
                     "kind": "follower",
-                    "pick": "random",
+                    "pick": "randomDistinct",
                     "count": 2
                   },
                   "amount": 4

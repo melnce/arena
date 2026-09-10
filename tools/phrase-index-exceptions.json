@@ -1,0 +1,72 @@
+[
+  {
+    "phrase": "Add a NAME to your hand",
+    "reason": "Leafshadow Assassin 10912110 binds the Fairy so Combo (3) can give that instance Bane; a lone add has no later clause to bind.",
+    "ids": ["10912110", "10011210"]
+  },
+  {
+    "phrase": "Deal N damage to all enemy followers",
+    "reason": "Timepiece of Perfection 10762210 wraps the Enhance copy in seq so validate.mjs does not flag a mode that copies the Engage clause's damage subtree.",
+    "ids": ["10762210", "10422110"]
+  },
+  {
+    "phrase": "Deal N damage instead",
+    "reason": "An instead-clause inherits its target from the card's base sentence (all enemies / all enemy followers / the selected follower), which the leftover printed does not repeat.",
+    "ids": ["10512310", "10923310", "90024320"]
+  },
+  {
+    "phrase": "Summon N instead",
+    "reason": "Official JP on Phalanx 10921310: 『スティールナイト』1枚を自分の場に出す。それは【守護】を持つ。【エンハンス_6】1枚ではなく5枚。 — Enhance substitutes the count only; それは【守護】を持つ still applies to what was summoned.",
+    "ids": ["10921310", "10522310"]
+  },
+  {
+    "phrase": "Draw N cards",
+    "reason": "Ebb and Flow 10853310 binds the drawn cards so the super-evolution clause can reduce their costs; a lone draw has nothing to bind.",
+    "ids": ["10853310", "10052310"]
+  },
+  {
+    "phrase": "Draw a follower",
+    "reason": "Blade of the Crestpetal 10541310 binds the drawn follower so X is that card's cost; Adventurers' Guild 10002210 draws with no later reference.",
+    "ids": ["10541310", "10002210"]
+  },
+  {
+    "phrase": "Select a Mode to activate",
+    "reason": "The numbered options are card-specific and carry their own printed nodes; this prompt is only the choose wrapper.",
+    "ids": ["10864120", "10823310", "10962310", "10912310", "10403110", "10771310", "10413310", "10743110"]
+  },
+  {
+    "phrase": "Select an enemy follower on the field and deal it N damage",
+    "reason": "Measured Attunement 10721310 binds the damaged follower so Rally (10) can give that instance Can't attack until the end of the opponent's turn.",
+    "ids": ["10721310", "10041110"]
+  },
+  {
+    "phrase": "Summon N copies of NAME",
+    "reason": "Amorous Necromancer / Advent of the Eld Sword / Ferocious Commander bind the summoned copies so a later Super-Evolve or additive Enhance can give them Drain or stats; a lone summon has no later clause.",
+    "ids": ["10052120", "10621310", "10922120", "10513110"]
+  },
+  {
+    "phrase": "Summon a NAME",
+    "reason": "Zeta & Bea 10424110 and Mireille & Risette 10432120 bind the summoned copy so Enhance / Earth Rite can give it Bane or evolve it; a lone summon has no later clause.",
+    "ids": ["10424110", "10432120", "10031320"]
+  },
+  {
+    "phrase": "Summon an NAME and NAME",
+    "reason": "Marionette Master 10571110 binds both puppets so Enhance (7) can give them Storm; Blade Puppeteer 10972120 has no later clause on those instances.",
+    "ids": ["10571110", "10972120"]
+  },
+  {
+    "phrase": "Whenever a NAME is destroyed, restore N defense to your leader",
+    "reason": "Lifestealer 10553110 prints \"a Skeleton\" with no side, so both ally_follower_destroyed and enemy_follower_destroyed are required (docs/schema.md Events).",
+    "ids": ["10553110"]
+  },
+  {
+    "phrase": "Whenever an allied Marine follower attacks, give it +N/+N until the end of the turn and, once on each of your turns, add a NAME to your hand",
+    "reason": "Yube's crest is one printed sentence with two triggers (always-buff vs once-per-your-turn add), so the same phrase is two abilities.",
+    "ids": ["crest:10544120"]
+  },
+  {
+    "phrase": "give it +N/+N",
+    "reason": "On a when-enter ability \"it\" is pick:entering; on Obsessed Test Subject 10931110 the enter-route subject is pick:self (owner 2026-08-30 named_enter_count).",
+    "ids": ["10931110", "10022210"]
+  }
+]

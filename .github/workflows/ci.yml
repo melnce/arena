@@ -76,6 +76,12 @@ jobs:
       - name: coverage verb walk
         run: python3 tools/coverage-check.py
 
+      - name: phrase index — no unlisted divergence
+        run: python3 tools/phrase_index.py --check-divergences
+
+      - name: phrase index — doc current
+        run: python3 tools/phrase_index.py --check-doc
+
   wasm:
     runs-on: ubuntu-latest
     timeout-minutes: 20
