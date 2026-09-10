@@ -4824,6 +4824,11 @@ fn reanimate(
         return Ok(());
     };
     state.player_mut(who).rally += 1;
+    *state
+        .player_mut(who)
+        .enter_counts
+        .entry(id)
+        .or_insert(0) += 1;
     state.player_mut(who).field[slot as usize] = Some(inst);
     events.push(Event::Summon {
         player: who,

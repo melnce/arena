@@ -107,6 +107,7 @@ A stat debuff lowers `max_defense` by the same amount; current defense drops by 
 
 - Field slots are entry order, compacted on leave.
 - Deck is an unordered `Vec` treated as a multiset; draws pick uniformly via the state's RNG. When several copies of an id differ (Thestae's crest +1/+1 on a deck follower vs a copy just returned from hand), a recorded `draw` of that id takes the first copy in vec order. `returnToDeck position: random` appends (the old emitter's shuffle is `raw` and ignored) so that copy is the one that has been in the deck longest.
+- `enter_counts` is every follower entry this match (play, summon, reanimate), keyed by card id. Obsessed Test Subject's "5 other allied copies have entered" subtracts this copy. Reanimate is an enter (glossary: it summons a copy onto the field).
 - Earth sigils: a counter plus `earth_slot` (which amulet holds the stack). When an Earth Sigil amulet enters, every other allied Earth Sigil is **banished** (no shadow, no Last Words) and the new amulet takes their counts (official glossary Earth Sigil; owner 2026-09-10 "yes banish them instead"). "Gain X earth sigils" increments the holder on the field, else summons one Magic Sediment with count X; no holder and a full board loses the sigil. A full board still blocks *playing* an Earth Sigil amulet (ruling 2026-09-10).
 - `hash` is FNV-1a 64 of the sorted-key canonical snapshot JSON.
 

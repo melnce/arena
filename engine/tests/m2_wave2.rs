@@ -548,6 +548,56 @@ fn moelle_return_to_deck_then_draw() {
 }
 
 #[test]
+fn reanimate_counts_as_enter_for_obsessed_test_subject() {
+    // rune-29 i=37: Wills United Reanimate (2) is an enter. Five prior
+    // Subject entries (four trades + the reanimate) make the next play's
+    // "5 other allied copies have entered this match" true.
+    let db = load_db();
+    let mut st = started(&db, 110);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    for _ in 0..4 {
+        put_field(&db, &mut st, opp, "88001110");
+        give_pp(&mut st, me, 2, 2);
+        st.player_mut(me).hand.clear();
+        play_id(&db, &mut st, me, SUBJECT);
+        apply(
+            &db,
+            &mut st,
+            Action::Attack {
+                attacker: Slot(0),
+                target: AttackTarget::Slot(Slot(0)),
+            },
+        )
+        .expect("trade");
+    }
+    give_pp(&mut st, me, 2, 2);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10803310");
+    choose(&db, &mut st, 1); // Reanimate (2)
+    drain_choice(&db, &mut st);
+    assert!(
+        field_has(&st, me, SUBJECT),
+        "reanimate put a Subject on the field"
+    );
+    give_pp(&mut st, me, 2, 2);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, SUBJECT);
+    let played = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == SUBJECT && c.attack == 5);
+    let f = played.expect("sixth Subject");
+    assert_eq!(
+        (f.attack, f.defense),
+        (5, 5),
+        "reanimate counted as an enter so 5 others have entered"
+    );
+}
+
+#[test]
 fn return_to_deck_then_draw_takes_oldest_copy() {
     // Two Great Harts: the deck copy is Thestae-buffed +1/+1; Moelle returns
     // a printed copy (appended). Moelle's draw of that id takes the oldest.
