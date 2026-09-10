@@ -1,0 +1,52 @@
+{
+  "id": "90021350",
+  "name": "Glittering Gold",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Select a Mode to activate.\n1. Draw a card.\n2. Deal 2 damage to a random enemy follower.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate.\n1. Draw a card.\n2. Deal 2 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Draw a card.\n2. Deal 2 damage to a random enemy follower.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Draw a card.",
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "printed": "2. Deal 2 damage to a random enemy follower.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "random"
+                  },
+                  "amount": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

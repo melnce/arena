@@ -1,0 +1,36 @@
+{
+  "id": "90073130",
+  "name": "Ominous Artifact γ",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "gold",
+  "token": true,
+  "cost": 5,
+  "text": "At the end of your turn, deal 3 damage to all enemy followers.",
+  "attack": 5,
+  "defense": 3,
+  "tribes": [
+    "artifact"
+  ],
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, deal 3 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "deal 3 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "crest:10724110",
+  "name": "Crest: Gildaria, Anathema of Attunement",
+  "grantedBy": [
+    "10724110"
+  ],
+  "faith": false,
+  "text": "Countdown (1)\nDuring your turn, whenever an allied follower enters the field, deal 1 damage to the enemy leader.",
+  "countdown": 1,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "printed": "During your turn, whenever an allied follower enters the field, deal 1 damage to the enemy leader.",
+      "when": {
+        "turnOwner": "self"
+      },
+      "effects": [
+        {
+          "printed": "deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

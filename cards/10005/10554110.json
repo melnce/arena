@@ -1,0 +1,66 @@
+{
+  "id": "10554110",
+  "name": "Milteo & Luzen",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Reanimate (4) and Reanimate (2).\n\nWhen this follower evolves, destroy 6 other random followers.\nWhen this follower super-evolves, gain Crest: Milteo & Luzen.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Reanimate (4) and Reanimate (2).",
+      "effects": [
+        {
+          "printed": "Reanimate (4) and Reanimate (2).",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "reanimate",
+              "maxCost": 4
+            },
+            {
+              "op": "reanimate",
+              "maxCost": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "anyEvolve",
+      "printed": "When this follower evolves, destroy 6 other random followers.",
+      "effects": [
+        {
+          "printed": "destroy 6 other random followers.",
+          "op": "destroy",
+          "select": {
+            "side": "any",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "randomDistinct",
+            "count": 6,
+            "other": true
+          }
+        }
+      ]
+    },
+    {
+      "on": "anySuperEvolve",
+      "printed": "When this follower super-evolves, gain Crest: Milteo & Luzen.",
+      "effects": [
+        {
+          "printed": "gain Crest: Milteo & Luzen.",
+          "op": "crest",
+          "gain": "crest:10554110",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

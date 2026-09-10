@@ -1,0 +1,60 @@
+{
+  "id": "10561120",
+  "name": "Bouquet Believer",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Enhance (4): Draw a card. Give this follower Bane.\n\nDuring your turn, whenever you draw a card, give this follower Rush.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_draw",
+      "printed": "During your turn, whenever you draw a card, give this follower Rush.",
+      "when": {
+        "turnOwner": "self"
+      },
+      "effects": [
+        {
+          "printed": "give this follower Rush.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "rush": true
+          }
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Draw a card. Give this follower Bane.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        },
+        {
+          "printed": "Give this follower Bane.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "bane": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

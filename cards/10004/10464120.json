@@ -1,0 +1,55 @@
+{
+  "id": "10464120",
+  "name": "Vira, Luminous Primal Knight",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Select 2 enemy followers on the field and banish them. Super Skybound Art - Super-evolve this follower.\n\nWard\nCan't take more than 3 damage at a time.",
+  "attack": 6,
+  "defense": 8,
+  "traits": {
+    "ward": true,
+    "damageCap": 3
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select 2 enemy followers on the field and banish them.\nSuper Skybound Art - Super-evolve this follower.",
+      "effects": [
+        {
+          "printed": "Select 2 enemy followers on the field and banish them.",
+          "op": "banish",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "count": 2
+          }
+        },
+        {
+          "printed": "Super Skybound Art - Super-evolve this follower.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 15
+            }
+          },
+          "then": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

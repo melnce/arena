@@ -1,0 +1,42 @@
+{
+  "id": "10931110",
+  "name": "Obsessed Test Subject",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "When this follower enters the field, if at least 5 other allied copies of Obsessed Test Subject have entered the field this match, give it +3/+3.\n\nRush",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "enter",
+      "printed": "When this follower enters the field, if at least 5 other allied copies of Obsessed Test Subject have entered the field this match, give it +3/+3.",
+      "when": {
+        "enterCountAtLeast": {
+          "n": 5,
+          "other": true,
+          "side": "ally",
+          "card": "10931110"
+        }
+      },
+      "effects": [
+        {
+          "printed": "give it +3/+3.",
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": 3,
+          "defense": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,51 @@
+{
+  "id": "10041310",
+  "name": "Strike of the Dragonewt",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Select an enemy follower on the field and deal it 2 damage. If you're in Overflow, deal 4 damage instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 2 damage. If you're in Overflow, deal 4 damage instead.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 2 damage. If you're in Overflow, deal 4 damage instead.",
+          "op": "if",
+          "cond": {
+            "overflow": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose"
+              },
+              "amount": 4
+            }
+          ],
+          "else": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose"
+              },
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

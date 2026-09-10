@@ -1,0 +1,81 @@
+{
+  "id": "10634120",
+  "name": "Calge-Danthla, Eld Crystals",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 10,
+  "text": "Activates in hand. Whenever an allied Crystalspawn enters the field, reduce the cost of this card by 1.\n\nFanfare: Summon 2 copies of Crystalspawn and give them Storm.\n\nEvolve: Add a Depths of the Eld Crystals to your hand.",
+  "attack": 5,
+  "defense": 5,
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "zone": "hand",
+      "filter": {
+        "card": "10631110"
+      },
+      "printed": "Activates in hand. Whenever an allied Crystalspawn enters the field, reduce the cost of this card by 1.",
+      "effects": [
+        {
+          "printed": "reduce the cost of this card by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Crystalspawn and give them Storm.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Crystalspawn and give them Storm.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10631110"
+              },
+              "count": 2,
+              "as": "s"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Add a Depths of the Eld Crystals to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Depths of the Eld Crystals to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90034330"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

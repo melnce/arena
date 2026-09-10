@@ -1,0 +1,74 @@
+{
+  "id": "crest:10574110",
+  "name": "Crest: Slaus, Revolving Wheel of Fortune",
+  "grantedBy": [
+    "10574110"
+  ],
+  "faith": false,
+  "text": "Countdown (3)\nAt the start of your turn, activate a random ability that hasn't been activated yet from the following.\n1. Increase the cost of all cards in your hand by 1 until the end of the turn.\n2. Give all allied followers on the field -2/-2.\n3. Deal 3 damage to your leader.",
+  "countdown": 3,
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, activate a random ability that hasn't been activated yet from the following.\n1. Increase the cost of all cards in your hand by 1 until the end of the turn.\n2. Give all allied followers on the field -2/-2.\n3. Deal 3 damage to your leader.",
+      "effects": [
+        {
+          "printed": "activate a random ability that hasn't been activated yet from the following.\n1. Increase the cost of all cards in your hand by 1 until the end of the turn.\n2. Give all allied followers on the field -2/-2.\n3. Deal 3 damage to your leader.",
+          "op": "choose",
+          "pick": 1,
+          "by": "randomUnused",
+          "options": [
+            {
+              "printed": "1. Increase the cost of all cards in your hand by 1 until the end of the turn.",
+              "effects": [
+                {
+                  "op": "cost",
+                  "select": {
+                    "side": "ally",
+                    "zone": "hand",
+                    "kind": "card",
+                    "pick": "all"
+                  },
+                  "delta": 1,
+                  "untilEndOfTurn": true
+                }
+              ]
+            },
+            {
+              "printed": "2. Give all allied followers on the field -2/-2.",
+              "effects": [
+                {
+                  "op": "buff",
+                  "select": {
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "all"
+                  },
+                  "attack": -2,
+                  "defense": -2
+                }
+              ]
+            },
+            {
+              "printed": "3. Deal 3 damage to your leader.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

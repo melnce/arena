@@ -1,0 +1,52 @@
+{
+  "id": "10131320",
+  "name": "Stormy Blast",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10001,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "X starts at 2.\nOn Spellboost: Increase X by 1.\n\nSelect an enemy follower on the field and deal it X damage.",
+  "abilities": [
+    {
+      "on": "spellboost",
+      "zone": "hand",
+      "printed": "On Spellboost: Increase X by 1.",
+      "effects": [
+        {
+          "printed": "Increase X by 1.",
+          "op": "counter",
+          "key": {
+            "var": "X"
+          },
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it X damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it X damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": {
+            "var": "X"
+          }
+        }
+      ]
+    }
+  ],
+  "vars": {
+    "X": 2
+  },
+  "tribes": []
+}

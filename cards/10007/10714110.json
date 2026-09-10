@@ -1,0 +1,64 @@
+{
+  "id": "10714110",
+  "name": "Thestae, Anathema of Distortion",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Select an enemy follower on the field and give it -0/-X. X is this follower's attack. Increase your Combo by 1.\n\nEvolve: Gain Crest: Thestae, Anathema of Distortion.",
+  "attack": 3,
+  "defense": 3,
+  "tribes": [
+    "anathema"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and give it -0/-X. X is this follower's attack. Increase your Combo by 1.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and give it -0/-X. X is this follower's attack.",
+          "op": "buff",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "attack": 0,
+          "defense": {
+            "neg": {
+              "stat": {
+                "of": {
+                  "pick": "self"
+                },
+                "which": "attack"
+              }
+            }
+          }
+        },
+        {
+          "printed": "Increase your Combo by 1.",
+          "op": "counter",
+          "key": "combo",
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Gain Crest: Thestae, Anathema of Distortion.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Thestae, Anathema of Distortion.",
+          "op": "crest",
+          "gain": "crest:10714110",
+          "player": "self"
+        }
+      ]
+    }
+  ]
+}

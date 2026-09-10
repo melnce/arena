@@ -1,0 +1,28 @@
+{
+  "id": "faith:10624120",
+  "name": "Faith: Yidmetra, Eld Sword",
+  "grantedBy": [
+    "10624120"
+  ],
+  "faith": true,
+  "text": "This faith's value starts at 0.\n\nWhenever you play an Enhanced card, increase this faith's value by 1.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_card_played",
+      "filter": {
+        "enhanced": true
+      },
+      "printed": "Whenever you play an Enhanced card, increase this faith's value by 1.",
+      "effects": [
+        {
+          "printed": "increase this faith's value by 1.",
+          "op": "counter",
+          "key": "faith",
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

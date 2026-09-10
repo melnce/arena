@@ -1,0 +1,56 @@
+{
+  "id": "10543310",
+  "name": "Sloth of the Crestpetal",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Do this 2 times: \"Deal 2 damage to a random enemy follower.\" If you're in Overflow, deal 2 damage to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Do this 2 times: \"Deal 2 damage to a random enemy follower.\" If you're in Overflow, deal 2 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Do this 2 times: \"Deal 2 damage to a random enemy follower.\"",
+          "op": "repeat",
+          "times": 2,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "random"
+              },
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "printed": "If you're in Overflow, deal 2 damage to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "overflow": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

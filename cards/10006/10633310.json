@@ -1,0 +1,111 @@
+{
+  "id": "10633310",
+  "name": "Bewitching Eld Crystals",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Select a Mode to activate.\n1. Summon a Crystalspawn and give it +1/+0 and Storm.\n2. Summon 2 copies of Crystalspawn and give them +1/+0.\nEnhance (5): Activate all of them instead.",
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate.\n1. Summon a Crystalspawn and give it +1/+0 and Storm.\n2. Summon 2 copies of Crystalspawn and give them +1/+0.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Summon a Crystalspawn and give it +1/+0 and Storm.\n2. Summon 2 copies of Crystalspawn and give them +1/+0.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Summon a Crystalspawn and give it +1/+0 and Storm.",
+              "effects": [
+                {
+                  "op": "seq",
+                  "effects": [
+                    {
+                      "op": "summon",
+                      "card": {
+                        "named": "10631110"
+                      },
+                      "count": 1,
+                      "as": "s"
+                    },
+                    {
+                      "op": "buff",
+                      "select": {
+                        "pick": "bound",
+                        "ref": "s"
+                      },
+                      "attack": 1,
+                      "defense": 0
+                    },
+                    {
+                      "op": "grantTraits",
+                      "select": {
+                        "pick": "bound",
+                        "ref": "s"
+                      },
+                      "traits": {
+                        "storm": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "printed": "2. Summon 2 copies of Crystalspawn and give them +1/+0.",
+              "effects": [
+                {
+                  "op": "seq",
+                  "effects": [
+                    {
+                      "op": "summon",
+                      "card": {
+                        "named": "10631110"
+                      },
+                      "count": 2,
+                      "as": "s"
+                    },
+                    {
+                      "op": "buff",
+                      "select": {
+                        "pick": "bound",
+                        "ref": "s"
+                      },
+                      "attack": 1,
+                      "defense": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 5,
+      "replacesBase": true,
+      "printed": "Enhance (5): Activate all of them instead.",
+      "effects": [
+        {
+          "printed": "Activate all of them instead.",
+          "op": "choose",
+          "pick": "all",
+          "by": "player",
+          "optionsFrom": "fanfare"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "id": "10704110",
+  "name": "Illamrita, Designated Target",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "text": "Follower Strike: Give this follower Barrier. Give the opposing follower \"Can't attack followers or leaders\" and \"At the end of your turn, banish this card.\"\nLast Words: Gain Crest: Illamrita, Designated Target.",
+  "attack": 1,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "followerStrike",
+      "printed": "Follower Strike: Give this follower Barrier. Give the opposing follower \"Can't attack followers or leaders\" and \"At the end of your turn, banish this card.\"",
+      "effects": [
+        {
+          "printed": "Give this follower Barrier.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "barrier": true
+          }
+        },
+        {
+          "printed": "Give the opposing follower \"Can't attack followers or leaders\" and \"At the end of your turn, banish this card.\"",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "opposing"
+              },
+              "traits": {
+                "cantAttackFollowers": true,
+                "cantAttackLeader": true
+              }
+            },
+            {
+              "op": "grantAbility",
+              "select": {
+                "pick": "opposing"
+              },
+              "ability": {
+                "on": "endOfTurn",
+                "whose": "own",
+                "printed": "At the end of your turn, banish this card.",
+                "effects": [
+                  {
+                    "printed": "banish this card.",
+                    "op": "banish",
+                    "select": {
+                      "pick": "self"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Gain Crest: Illamrita, Designated Target.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Illamrita, Designated Target.",
+          "op": "crest",
+          "gain": "crest:10704110",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

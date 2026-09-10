@@ -1,0 +1,19 @@
+{
+  "id": "90011110",
+  "name": "Fairy",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Rush",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [
+    "pixie"
+  ],
+  "traits": {
+    "rush": true
+  }
+}

@@ -1,0 +1,3911 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://arena.invalid/schema/cards.schema.json",
+  "title": "arena card or crest",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Card"
+    },
+    {
+      "$ref": "#/$defs/Crest"
+    }
+  ],
+  "$defs": {
+    "CardId": {
+      "type": "string",
+      "pattern": "^[0-9]{8}$"
+    },
+    "CrestId": {
+      "type": "string",
+      "pattern": "^(crest|faith):[0-9]{8}$"
+    },
+    "Class": {
+      "enum": [
+        "neutral",
+        "forestcraft",
+        "swordcraft",
+        "runecraft",
+        "dragoncraft",
+        "abysscraft",
+        "havencraft",
+        "portalcraft"
+      ]
+    },
+    "Tribe": {
+      "enum": [
+        "anathema",
+        "artifact",
+        "departed",
+        "earth sigil",
+        "encroacher",
+        "golem",
+        "loot",
+        "marine",
+        "mysteria",
+        "officer",
+        "pixie",
+        "puppetry"
+      ]
+    },
+    "Traits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ward": {
+          "type": "boolean"
+        },
+        "bane": {
+          "type": "boolean"
+        },
+        "rush": {
+          "type": "boolean"
+        },
+        "storm": {
+          "type": "boolean"
+        },
+        "ambush": {
+          "type": "boolean"
+        },
+        "aura": {
+          "type": "boolean"
+        },
+        "intimidate": {
+          "type": "boolean"
+        },
+        "drain": {
+          "type": "boolean"
+        },
+        "barrier": {
+          "type": "boolean"
+        },
+        "ignoresWard": {
+          "type": "boolean"
+        },
+        "cantAttackFollowers": {
+          "type": "boolean"
+        },
+        "cantAttackLeader": {
+          "type": "boolean"
+        },
+        "cantBeDestroyedByAbilities": {
+          "type": "boolean"
+        },
+        "cantBePlayed": {
+          "type": "boolean"
+        },
+        "attacksPerTurn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "damageCap": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CounterKey": {
+      "oneOf": [
+        {
+          "enum": [
+            "combo",
+            "earth",
+            "faith",
+            "shadows",
+            "skyboundHand"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "var": {
+              "enum": [
+                "X",
+                "Y",
+                "Z"
+              ]
+            }
+          },
+          "required": [
+            "var"
+          ]
+        }
+      ]
+    },
+    "Filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "all": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Filter"
+          },
+          "minItems": 1
+        },
+        "any": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Filter"
+          },
+          "minItems": 1
+        },
+        "not": {
+          "$ref": "#/$defs/Filter"
+        },
+        "tribe": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Tribe"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Tribe"
+              },
+              "minItems": 1
+            }
+          ]
+        },
+        "card": {
+          "$ref": "#/$defs/CardId"
+        },
+        "cards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CardId"
+          },
+          "minItems": 1
+        },
+        "notCard": {
+          "$ref": "#/$defs/CardId"
+        },
+        "kind": {
+          "enum": [
+            "follower",
+            "spell",
+            "amulet",
+            "card"
+          ]
+        },
+        "class": {
+          "$ref": "#/$defs/Class"
+        },
+        "costEq": {
+          "$ref": "#/$defs/Amount"
+        },
+        "costLte": {
+          "$ref": "#/$defs/Amount"
+        },
+        "costGte": {
+          "$ref": "#/$defs/Amount"
+        },
+        "costIn": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1
+        },
+        "baseCostEq": {
+          "$ref": "#/$defs/Amount"
+        },
+        "baseCostLte": {
+          "$ref": "#/$defs/Amount"
+        },
+        "baseCostGte": {
+          "$ref": "#/$defs/Amount"
+        },
+        "baseCostIn": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1
+        },
+        "attackLte": {
+          "$ref": "#/$defs/Amount"
+        },
+        "attackGte": {
+          "$ref": "#/$defs/Amount"
+        },
+        "defenseLte": {
+          "$ref": "#/$defs/Amount"
+        },
+        "defenseGte": {
+          "$ref": "#/$defs/Amount"
+        },
+        "evolved": {
+          "type": "boolean"
+        },
+        "unevolved": {
+          "type": "boolean"
+        },
+        "damaged": {
+          "type": "boolean"
+        },
+        "hasTrait": {
+          "enum": [
+            "ward",
+            "bane",
+            "rush",
+            "storm",
+            "ambush",
+            "aura",
+            "intimidate",
+            "drain",
+            "barrier",
+            "ignoresWard",
+            "cantAttackFollowers",
+            "cantAttackLeader",
+            "cantBeDestroyedByAbilities",
+            "cantBePlayed",
+            "attacksPerTurn",
+            "damageCap"
+          ]
+        },
+        "enhanced": {
+          "type": "boolean"
+        },
+        "sameCostGroup": {
+          "type": "boolean"
+        },
+        "hasLastWords": {
+          "type": "boolean"
+        },
+        "destroyedThisMatch": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Selector": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "self"
+            }
+          },
+          "required": [
+            "pick"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "entering"
+            }
+          },
+          "required": [
+            "pick"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "attacker"
+            }
+          },
+          "required": [
+            "pick"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "defender"
+            }
+          },
+          "required": [
+            "pick"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "opposing"
+            }
+          },
+          "required": [
+            "pick"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "selected"
+            }
+          },
+          "required": [
+            "pick"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "bound"
+            },
+            "ref": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "pick",
+            "ref"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "enum": [
+                "all",
+                "choose",
+                "random",
+                "randomDistinct",
+                "leftmost",
+                "highest",
+                "lowest"
+              ]
+            },
+            "side": {
+              "enum": [
+                "ally",
+                "enemy",
+                "any"
+              ]
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck",
+                "cemetery",
+                "leader",
+                "crests"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "follower",
+                "amulet",
+                "card",
+                "leader",
+                "character",
+                "faith"
+              ]
+            },
+            "filter": {
+              "$ref": "#/$defs/Filter"
+            },
+            "count": {
+              "$ref": "#/$defs/Amount"
+            },
+            "other": {
+              "type": "boolean"
+            },
+            "includeLeader": {
+              "type": "boolean"
+            },
+            "orderBy": {
+              "enum": [
+                "attack",
+                "defense",
+                "cost",
+                "baseCost"
+              ]
+            }
+          },
+          "required": [
+            "pick",
+            "side",
+            "zone",
+            "kind"
+          ]
+        }
+      ]
+    },
+    "Amount": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "count"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "counter": {
+              "$ref": "#/$defs/CounterKey"
+            }
+          },
+          "required": [
+            "counter"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "stat": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "of": {
+                  "$ref": "#/$defs/Selector"
+                },
+                "which": {
+                  "enum": [
+                    "attack",
+                    "defense",
+                    "cost",
+                    "baseCost"
+                  ]
+                }
+              },
+              "required": [
+                "of",
+                "which"
+              ]
+            }
+          },
+          "required": [
+            "stat"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "var": {
+              "enum": [
+                "X",
+                "Y",
+                "Z"
+              ]
+            }
+          },
+          "required": [
+            "var"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "add": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Amount"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "add"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sub": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Amount"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "sub"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Amount"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "max"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Amount"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "required": [
+            "min"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "neg": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "neg"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "distinctNames": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "distinctNames"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enteredThisMatch": {
+              "$ref": "#/$defs/Filter"
+            }
+          },
+          "required": [
+            "enteredThisMatch"
+          ]
+        }
+      ]
+    },
+    "Condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "all": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Condition"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "all"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "any": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Condition"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "any"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "$ref": "#/$defs/Condition"
+            }
+          },
+          "required": [
+            "not"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "countAtLeast": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "select": {
+                  "$ref": "#/$defs/Selector"
+                },
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "select",
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "countAtLeast"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "counterAtLeast": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "key": {
+                  "$ref": "#/$defs/CounterKey"
+                },
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "key",
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "counterAtLeast"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "evolved": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "evolved"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "superEvolutionUnlocked": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "superEvolutionUnlocked"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "combo": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "combo"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rally": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "rally"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "overflow": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "overflow"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "skyboundArt": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "skyboundArt"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "wasFused": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "const": "both"
+                }
+              ]
+            }
+          },
+          "required": [
+            "wasFused"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "did": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "did"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "attackedLeaderLastTurn": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "attackedLeaderLastTurn"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "turnOwner": {
+              "enum": [
+                "self",
+                "opponent"
+              ]
+            }
+          },
+          "required": [
+            "turnOwner"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "evolvedCountAtLeast": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "evolvedCountAtLeast"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "playedBaseCostsThisMatch": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "playedBaseCostsThisMatch"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "handHas": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "filter": {
+                  "$ref": "#/$defs/Filter"
+                },
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "filter",
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "handHas"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fieldHas": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "filter": {
+                  "$ref": "#/$defs/Filter"
+                },
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                },
+                "side": {
+                  "enum": [
+                    "ally",
+                    "enemy",
+                    "any"
+                  ]
+                },
+                "kind": {
+                  "enum": [
+                    "follower",
+                    "amulet",
+                    "card",
+                    "character"
+                  ]
+                }
+              },
+              "required": [
+                "filter"
+              ]
+            }
+          },
+          "required": [
+            "fieldHas"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "leaderDefenseLte": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "leaderDefenseLte"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "varAtLeast": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "key": {
+                  "enum": [
+                    "X",
+                    "Y",
+                    "Z"
+                  ]
+                },
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "key",
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "varAtLeast"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enterCountAtLeast": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "card": {
+                  "$ref": "#/$defs/CardId"
+                },
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                },
+                "other": {
+                  "type": "boolean"
+                },
+                "side": {
+                  "enum": [
+                    "ally",
+                    "enemy",
+                    "any"
+                  ]
+                }
+              },
+              "required": [
+                "card",
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "enterCountAtLeast"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "handSameCostAtLeast": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "handSameCostAtLeast"
+          ]
+        }
+      ]
+    },
+    "CardSource": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "named": {
+              "$ref": "#/$defs/CardId"
+            }
+          },
+          "required": [
+            "named"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "copyOf": {
+              "$ref": "#/$defs/Selector"
+            },
+            "exact": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "copyOf",
+            "exact"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "randomFrom": {
+              "$ref": "#/$defs/Filter"
+            }
+          },
+          "required": [
+            "randomFrom"
+          ]
+        }
+      ]
+    },
+    "Effect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "damage"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "amount": {
+              "$ref": "#/$defs/Amount"
+            },
+            "split": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "restore"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "amount": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "buff"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "attack": {
+              "$ref": "#/$defs/Amount"
+            },
+            "defense": {
+              "$ref": "#/$defs/Amount"
+            },
+            "untilEndOfTurn": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "op",
+            "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "destroy"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "op",
+            "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "banish"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "op",
+            "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "returnToHand"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "op",
+            "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "returnToDeck"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "position": {
+              "enum": [
+                "random"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "position"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "summon"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "card": {
+              "$ref": "#/$defs/CardSource"
+            },
+            "count": {
+              "$ref": "#/$defs/Amount"
+            },
+            "controller": {
+              "enum": [
+                "self",
+                "opponent"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "card",
+            "count"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "reanimate"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "maxCost": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "op",
+            "maxCost"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "addToHand"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "card": {
+              "$ref": "#/$defs/CardSource"
+            },
+            "count": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "op",
+            "card",
+            "count"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "draw"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "count": {
+              "$ref": "#/$defs/Amount"
+            },
+            "filter": {
+              "$ref": "#/$defs/Filter"
+            }
+          },
+          "required": [
+            "op",
+            "count"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "discard"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "op",
+            "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "addToDeck"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "card": {
+              "$ref": "#/$defs/CardSource"
+            },
+            "count": {
+              "$ref": "#/$defs/Amount"
+            },
+            "position": {
+              "enum": [
+                "random"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "card",
+            "count",
+            "position"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "evolve"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "super": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "super"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "grantTraits"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "traits": {
+              "$ref": "#/$defs/Traits"
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "traits"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "removeTraits"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "traits": {
+              "$ref": "#/$defs/Traits"
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "traits"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "grantAbility"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "ability": {
+              "$ref": "#/$defs/Ability"
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "ability"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "removeAbilities"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "on": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "fanfare",
+                  "lastWords",
+                  "evolve",
+                  "superEvolve",
+                  "anyEvolve",
+                  "anySuperEvolve",
+                  "strike",
+                  "followerStrike",
+                  "clash",
+                  "enter",
+                  "leave",
+                  "discarded",
+                  "invoked",
+                  "fused",
+                  "spellboost",
+                  "engage",
+                  "startOfTurn",
+                  "endOfTurn",
+                  "when",
+                  "enhance"
+                ]
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "op",
+            "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "cost"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "delta": {
+              "$ref": "#/$defs/Amount"
+            },
+            "set": {
+              "$ref": "#/$defs/Amount"
+            },
+            "untilEndOfTurn": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "op",
+            "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "pp"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "action": {
+              "enum": [
+                "gainMax",
+                "recover",
+                "spend"
+              ]
+            },
+            "amount": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "op",
+            "action",
+            "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "ep"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "action": {
+              "enum": [
+                "gain",
+                "spend"
+              ]
+            },
+            "super": {
+              "type": "boolean"
+            },
+            "amount": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "op",
+            "action",
+            "super",
+            "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "crest"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "gain": {
+              "type": "string",
+              "pattern": "^crest:[0-9]{8}$"
+            },
+            "player": {
+              "enum": [
+                "self",
+                "opponent"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "gain",
+            "player"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "removeCrests"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "op",
+            "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "countdown"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "delta": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "delta"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "counter"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "key": {
+              "$ref": "#/$defs/CounterKey"
+            },
+            "how": {
+              "enum": [
+                "add",
+                "set"
+              ]
+            },
+            "amount": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "op",
+            "key",
+            "how",
+            "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "pay"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "resource": {
+              "enum": [
+                "shadows",
+                "earth",
+                "pp",
+                "faith"
+              ]
+            },
+            "amount": {
+              "$ref": "#/$defs/Amount"
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Effect"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "op",
+            "resource",
+            "amount",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "transform"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "into": {
+              "$ref": "#/$defs/CardSource"
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "into"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "leaderModifier"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "maxDefense": {
+              "$ref": "#/$defs/Amount"
+            },
+            "damageCap": {
+              "$ref": "#/$defs/Amount"
+            },
+            "damageTakenBonus": {
+              "$ref": "#/$defs/Amount"
+            },
+            "until": {
+              "enum": [
+                "endOfTurn",
+                "endOfOpponentTurn"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "replicate"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "ability": {
+              "enum": [
+                "fanfare",
+                "evolve",
+                "superEvolve",
+                "lastWords",
+                "engage",
+                "strike",
+                "followerStrike",
+                "clash"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "ability"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "invoke"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            }
+          },
+          "required": [
+            "op"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "spellboostHand"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "times": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "op",
+            "times"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "randomSplit"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "keys": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "X",
+                  "Y",
+                  "Z"
+                ]
+              },
+              "minItems": 2
+            },
+            "times": {
+              "$ref": "#/$defs/Amount"
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "op",
+            "keys",
+            "times",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "seq"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Effect"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "op",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "if"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "cond": {
+              "$ref": "#/$defs/Condition"
+            },
+            "then": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Effect"
+              },
+              "minItems": 1
+            },
+            "else": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Effect"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "op",
+            "cond",
+            "then"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "choose"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "pick": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "const": "all"
+                }
+              ]
+            },
+            "by": {
+              "enum": [
+                "player",
+                "randomUnused",
+                "random"
+              ]
+            },
+            "options": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "printed": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "effects": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/Effect"
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "printed",
+                  "effects"
+                ]
+              }
+            }
+          },
+          "required": [
+            "op",
+            "pick",
+            "by",
+            "options"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "choose"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "pick": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "const": "all"
+                }
+              ]
+            },
+            "by": {
+              "enum": [
+                "player",
+                "randomUnused",
+                "random"
+              ]
+            },
+            "optionsFrom": {
+              "enum": [
+                "fanfare",
+                "lastWords",
+                "evolve",
+                "superEvolve",
+                "anyEvolve",
+                "anySuperEvolve",
+                "strike",
+                "followerStrike",
+                "clash",
+                "enter",
+                "leave",
+                "discarded",
+                "invoked",
+                "fused",
+                "spellboost",
+                "engage",
+                "startOfTurn",
+                "endOfTurn",
+                "when"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "pick",
+            "by",
+            "optionsFrom"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "repeat"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "times": {
+              "$ref": "#/$defs/Amount"
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Effect"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "op",
+            "times",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "sequence"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "steps": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "printed": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "effects": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/Effect"
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "printed",
+                  "effects"
+                ]
+              }
+            }
+          },
+          "required": [
+            "op",
+            "steps"
+          ]
+        }
+      ]
+    },
+    "ClauseRoot": {
+      "allOf": [
+        {
+          "type": "object",
+          "required": [
+            "printed"
+          ],
+          "properties": {
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/Effect"
+        }
+      ]
+    },
+    "Ability": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "fanfare"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "lastWords"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "evolve"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "superEvolve"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "anyEvolve"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "anySuperEvolve"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "strike"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "followerStrike"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "clash"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "enter"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "leave"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "discarded"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "invoked"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "fused"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "spellboost"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "engage"
+            },
+            "cost": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sacrifice": {
+              "type": "boolean"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "cost",
+            "sacrifice",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "startOfTurn"
+            },
+            "whose": {
+              "enum": [
+                "own",
+                "opponent"
+              ]
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "whose",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "endOfTurn"
+            },
+            "whose": {
+              "enum": [
+                "own",
+                "opponent"
+              ]
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "whose",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "when"
+            },
+            "event": {
+              "enum": [
+                "ally_follower_enter",
+                "enemy_follower_enter",
+                "ally_follower_destroyed",
+                "ally_amulet_destroyed",
+                "ally_card_played",
+                "ally_spell_played",
+                "ally_follower_attacks",
+                "enemy_follower_attacks",
+                "ally_evolve",
+                "ally_super_evolve",
+                "ally_draw",
+                "ally_earth_rite",
+                "ally_engage",
+                "leader_restored",
+                "self_buffed_up"
+              ]
+            },
+            "filter": {
+              "$ref": "#/$defs/Filter"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "oncePerTurn": {
+              "type": "boolean"
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "replaces": {
+              "const": "evolve"
+            }
+          },
+          "required": [
+            "on",
+            "event",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "on": {
+              "const": "static"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "modifier": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "suppress": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "fanfare",
+                      "lastWords",
+                      "evolve",
+                      "superEvolve",
+                      "anyEvolve",
+                      "anySuperEvolve",
+                      "strike",
+                      "followerStrike",
+                      "clash",
+                      "enter",
+                      "leave",
+                      "discarded",
+                      "invoked",
+                      "fused",
+                      "spellboost",
+                      "engage",
+                      "startOfTurn",
+                      "endOfTurn",
+                      "when",
+                      "enhance"
+                    ]
+                  },
+                  "minItems": 1
+                },
+                "select": {
+                  "$ref": "#/$defs/Selector"
+                }
+              },
+              "required": [
+                "suppress",
+                "select"
+              ]
+            },
+            "zone": {
+              "enum": [
+                "field",
+                "hand",
+                "deck"
+              ]
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            }
+          },
+          "required": [
+            "on",
+            "printed",
+            "modifier"
+          ]
+        }
+      ]
+    },
+    "Mode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "enhance"
+            },
+            "cost": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            },
+            "replacesBase": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "cost",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "accelerate"
+            },
+            "cost": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "effects": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ClauseRoot"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "kind",
+            "cost",
+            "printed",
+            "effects"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "crystallize"
+            },
+            "cost": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "countdown": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "traits": {
+              "$ref": "#/$defs/Traits"
+            },
+            "abilities": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Ability"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "cost",
+            "printed"
+          ]
+        }
+      ]
+    },
+    "Fuse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "printed": {
+          "type": "string",
+          "minLength": 1
+        },
+        "partners": {
+          "$ref": "#/$defs/Filter"
+        },
+        "recipes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "partners": {
+                "$ref": "#/$defs/Filter"
+              },
+              "costTotal": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "costTotalGte": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "requires": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/CardId"
+                },
+                "minItems": 1
+              },
+              "result": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "transformInto": {
+                        "$ref": "#/$defs/CardId"
+                      }
+                    },
+                    "required": [
+                      "transformInto"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "consume": {
+                        "const": true
+                      }
+                    },
+                    "required": [
+                      "consume"
+                    ]
+                  }
+                ]
+              }
+            },
+            "required": [
+              "result"
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "printed",
+        "partners"
+      ]
+    },
+    "Card": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/CardId"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "class": {
+              "$ref": "#/$defs/Class"
+            },
+            "set": {
+              "type": "integer"
+            },
+            "rarity": {
+              "enum": [
+                "bronze",
+                "silver",
+                "gold",
+                "legendary"
+              ]
+            },
+            "token": {
+              "type": "boolean"
+            },
+            "cost": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tribes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Tribe"
+              }
+            },
+            "text": {
+              "type": "string"
+            },
+            "traits": {
+              "$ref": "#/$defs/Traits"
+            },
+            "abilities": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Ability"
+              }
+            },
+            "modes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Mode"
+              }
+            },
+            "fuse": {
+              "$ref": "#/$defs/Fuse"
+            },
+            "vars": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "X": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "X"
+              ]
+            },
+            "kind": {
+              "const": "follower"
+            },
+            "attack": {
+              "type": "integer"
+            },
+            "defense": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "kind",
+            "class",
+            "set",
+            "rarity",
+            "token",
+            "cost",
+            "attack",
+            "defense",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/CardId"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "class": {
+              "$ref": "#/$defs/Class"
+            },
+            "set": {
+              "type": "integer"
+            },
+            "rarity": {
+              "enum": [
+                "bronze",
+                "silver",
+                "gold",
+                "legendary"
+              ]
+            },
+            "token": {
+              "type": "boolean"
+            },
+            "cost": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tribes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Tribe"
+              }
+            },
+            "text": {
+              "type": "string"
+            },
+            "traits": {
+              "$ref": "#/$defs/Traits"
+            },
+            "abilities": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Ability"
+              }
+            },
+            "modes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Mode"
+              }
+            },
+            "fuse": {
+              "$ref": "#/$defs/Fuse"
+            },
+            "vars": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "X": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "X"
+              ]
+            },
+            "kind": {
+              "const": "spell"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "kind",
+            "class",
+            "set",
+            "rarity",
+            "token",
+            "cost",
+            "text"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/CardId"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "class": {
+              "$ref": "#/$defs/Class"
+            },
+            "set": {
+              "type": "integer"
+            },
+            "rarity": {
+              "enum": [
+                "bronze",
+                "silver",
+                "gold",
+                "legendary"
+              ]
+            },
+            "token": {
+              "type": "boolean"
+            },
+            "cost": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tribes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Tribe"
+              }
+            },
+            "text": {
+              "type": "string"
+            },
+            "traits": {
+              "$ref": "#/$defs/Traits"
+            },
+            "abilities": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Ability"
+              }
+            },
+            "modes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Mode"
+              }
+            },
+            "fuse": {
+              "$ref": "#/$defs/Fuse"
+            },
+            "vars": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "X": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "X"
+              ]
+            },
+            "kind": {
+              "const": "amulet"
+            },
+            "countdown": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "kind",
+            "class",
+            "set",
+            "rarity",
+            "token",
+            "cost",
+            "text"
+          ]
+        }
+      ]
+    },
+    "Crest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/CrestId"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "grantedBy": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CardId"
+          },
+          "minItems": 1
+        },
+        "faith": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "countdown": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "abilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Ability"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "grantedBy",
+        "faith",
+        "text"
+      ]
+    }
+  }
+}

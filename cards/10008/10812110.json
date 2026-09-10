@@ -1,0 +1,46 @@
+{
+  "id": "10812110",
+  "name": "Ruflet, Primeval Fairy",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Once on each of your turns, when this follower is given + attack or defense on the field, summon a Fairy.\nLast Words: Add a Fairy to your hand.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "self_buffed_up",
+      "oncePerTurn": true,
+      "printed": "Once on each of your turns, when this follower is given + attack or defense on the field, summon a Fairy.",
+      "effects": [
+        {
+          "printed": "summon a Fairy.",
+          "op": "summon",
+          "card": {
+            "named": "90011110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add a Fairy to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Fairy to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90011110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

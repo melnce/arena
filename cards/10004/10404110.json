@@ -1,0 +1,90 @@
+{
+  "id": "10404110",
+  "name": "Sandalphon, Primarch Successor",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "text": "Activates in deck. At the start of your turn, if allied followers have evolved at least 6 times this match, Invoke this card.\n\nWhen this card is Invoked, gain Crest: Sandalphon, Primarch Successor and return this card to hand.\nFanfare: Super Skybound Art - Do this 5 times: \"Deal 2 damage to a random enemy.\"",
+  "attack": 7,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "zone": "deck",
+      "printed": "Activates in deck. At the start of your turn, if allied followers have evolved at least 6 times this match, Invoke this card.",
+      "when": {
+        "evolvedCountAtLeast": {
+          "n": 6
+        }
+      },
+      "effects": [
+        {
+          "printed": "Invoke this card.",
+          "op": "invoke"
+        }
+      ]
+    },
+    {
+      "on": "invoked",
+      "printed": "When this card is Invoked, gain Crest: Sandalphon, Primarch Successor and return this card to hand",
+      "effects": [
+        {
+          "printed": "gain Crest: Sandalphon, Primarch Successor and return this card to hand",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "crest",
+              "gain": "crest:10404110",
+              "player": "self"
+            },
+            {
+              "op": "returnToHand",
+              "select": {
+                "pick": "self"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Super Skybound Art - Do this 5 times: \"Deal 2 damage to a random enemy.\"",
+      "effects": [
+        {
+          "printed": "Super Skybound Art - Do this 5 times: \"Deal 2 damage to a random enemy.\"",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 15
+            }
+          },
+          "then": [
+            {
+              "op": "repeat",
+              "times": 5,
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "side": "enemy",
+                    "kind": "character",
+                    "pick": "random",
+                    "includeLeader": true,
+                    "zone": "field"
+                  },
+                  "amount": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

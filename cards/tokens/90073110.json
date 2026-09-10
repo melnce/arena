@@ -1,0 +1,56 @@
+{
+  "id": "90073110",
+  "name": "Ominous Artifact α",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "gold",
+  "token": true,
+  "cost": 5,
+  "text": "Fuse: Ominous Artifact β and Ominous Artifact γ\nWhen you've Fused both to this card, transform it into a Masterwork Artifact Ω.\n\nAt the end of your turn, restore 3 defense to your leader.",
+  "attack": 3,
+  "defense": 5,
+  "tribes": [
+    "artifact"
+  ],
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, restore 3 defense to your leader.",
+      "effects": [
+        {
+          "printed": "restore 3 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "fuse": {
+    "printed": "Fuse: Ominous Artifact β and Ominous Artifact γ",
+    "partners": {
+      "cards": [
+        "90073120",
+        "90073130"
+      ]
+    },
+    "recipes": [
+      {
+        "requires": [
+          "90073120",
+          "90073130"
+        ],
+        "result": {
+          "transformInto": "90074110"
+        }
+      }
+    ]
+  }
+}

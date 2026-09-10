@@ -1,0 +1,54 @@
+{
+  "id": "crest:10954110",
+  "name": "Crest: Istyndet vs. Mitilykket",
+  "grantedBy": [
+    "10954110"
+  ],
+  "faith": false,
+  "text": "At the end of your turn, if there's an allied card on the field with Last Words, destroy a random allied card with Last Words and a random enemy follower.",
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, if there's an allied card on the field with Last Words, destroy a random allied card with Last Words and a random enemy follower.",
+      "when": {
+        "fieldHas": {
+          "filter": {
+            "hasLastWords": true
+          },
+          "side": "ally",
+          "kind": "card"
+        }
+      },
+      "effects": [
+        {
+          "printed": "destroy a random allied card with Last Words and a random enemy follower.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "destroy",
+              "select": {
+                "side": "ally",
+                "zone": "field",
+                "kind": "card",
+                "pick": "random",
+                "filter": {
+                  "hasLastWords": true
+                }
+              }
+            },
+            {
+              "op": "destroy",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "random"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

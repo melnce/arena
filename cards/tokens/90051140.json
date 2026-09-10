@@ -1,0 +1,48 @@
+{
+  "id": "90051140",
+  "name": "Rotting Zombie",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "Last Words: Summon a Rotting Zombie and remove Last Words from it.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [
+    "departed"
+  ],
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Rotting Zombie and remove Last Words from it.",
+      "effects": [
+        {
+          "printed": "Summon a Rotting Zombie and remove Last Words from it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051140"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "removeAbilities",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "on": [
+                "lastWords"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

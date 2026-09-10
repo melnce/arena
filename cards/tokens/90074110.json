@@ -1,0 +1,51 @@
+{
+  "id": "90074110",
+  "name": "Masterwork Artifact Ω",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 10,
+  "text": "Fanfare: Deal 5 damage to all enemy followers. Restore 5 defense to your leader.\n\nStorm\nWard\nAura",
+  "attack": 10,
+  "defense": 10,
+  "tribes": [
+    "artifact"
+  ],
+  "traits": {
+    "storm": true,
+    "ward": true,
+    "aura": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 5 damage to all enemy followers. Restore 5 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Deal 5 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 5
+        },
+        {
+          "printed": "Restore 5 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 5
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "90071210",
+  "name": "Gear of Ambition",
+  "kind": "amulet",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Fuse: Artifact amulets\nWhen you Fuse to this card, transform it into a Striker Artifact.\n\nCan't be played.",
+  "tribes": [
+    "artifact"
+  ],
+  "traits": {
+    "cantBePlayed": true
+  },
+  "fuse": {
+    "printed": "Fuse: Artifact amulets",
+    "partners": {
+      "tribe": "artifact",
+      "kind": "amulet"
+    },
+    "recipes": [
+      {
+        "result": {
+          "transformInto": "90072110"
+        }
+      }
+    ]
+  }
+}

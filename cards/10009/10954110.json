@@ -1,0 +1,56 @@
+{
+  "id": "10954110",
+  "name": "Istyndet vs. Mitilykket",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Do this 3 times: \"Reanimate (2).\" Deal 2 damage to all enemy followers.\n\nSuper-Evolve: Gain Crest: Istyndet vs. Mitilykket.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Do this 3 times: \"Reanimate (2).\" Deal 2 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Do this 3 times: \"Reanimate (2).\"",
+          "op": "repeat",
+          "times": 3,
+          "effects": [
+            {
+              "op": "reanimate",
+              "maxCost": 2
+            }
+          ]
+        },
+        {
+          "printed": "Deal 2 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Gain Crest: Istyndet vs. Mitilykket.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Istyndet vs. Mitilykket.",
+          "op": "crest",
+          "gain": "crest:10954110",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

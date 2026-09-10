@@ -1,0 +1,17 @@
+{
+  "id": "90061110",
+  "name": "Holy Falcon",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "Storm",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "storm": true
+  },
+  "tribes": []
+}

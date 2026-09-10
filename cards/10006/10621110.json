@@ -1,0 +1,35 @@
+{
+  "id": "10621110",
+  "name": "Fearless Soldier",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Enhance (3): Give this follower +1/+1.\n\nRush",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "rush": true
+  },
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 3,
+      "printed": "Enhance (3): Give this follower +1/+1.",
+      "effects": [
+        {
+          "printed": "Give this follower +1/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

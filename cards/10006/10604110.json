@@ -1,0 +1,99 @@
+{
+  "id": "10604110",
+  "name": "Omegotep, the Dreaded One",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "Fanfare: Activate 2 random abilities from the following.\n1. Destroy a random enemy follower.\n2. Deal 2 damage to the enemy leader.\n3. Recover 2 play points.\n4. Give this follower +4/+4 and activate its Fanfare ability.\n\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 4,
+  "defense": 4,
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Activate 2 random abilities from the following.\n1. Destroy a random enemy follower.\n2. Deal 2 damage to the enemy leader.\n3. Recover 2 play points.\n4. Give this follower +4/+4 and activate its Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Activate 2 random abilities from the following.\n1. Destroy a random enemy follower.\n2. Deal 2 damage to the enemy leader.\n3. Recover 2 play points.\n4. Give this follower +4/+4 and activate its Fanfare ability.",
+          "op": "choose",
+          "pick": 2,
+          "by": "random",
+          "options": [
+            {
+              "printed": "1. Destroy a random enemy follower.",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "select": {
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "random"
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "2. Deal 2 damage to the enemy leader.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 2
+                }
+              ]
+            },
+            {
+              "printed": "3. Recover 2 play points.",
+              "effects": [
+                {
+                  "op": "pp",
+                  "action": "recover",
+                  "amount": 2
+                }
+              ]
+            },
+            {
+              "printed": "4. Give this follower +4/+4 and activate its Fanfare ability.",
+              "effects": [
+                {
+                  "op": "buff",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "attack": 4,
+                  "defense": 4
+                },
+                {
+                  "op": "replicate",
+                  "ability": "fanfare"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ]
+}

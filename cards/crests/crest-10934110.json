@@ -1,0 +1,32 @@
+{
+  "id": "crest:10934110",
+  "name": "Crest: Sephie, Maven Convict",
+  "grantedBy": [
+    "10934110"
+  ],
+  "faith": false,
+  "text": "Once on each of your turns, when an allied Obsessed Test Subject enters the field, give it Storm.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "card": "10931110"
+      },
+      "oncePerTurn": true,
+      "printed": "Once on each of your turns, when an allied Obsessed Test Subject enters the field, give it Storm.",
+      "effects": [
+        {
+          "printed": "give it Storm.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "entering"
+          },
+          "traits": {
+            "storm": true
+          }
+        }
+      ]
+    }
+  ]
+}

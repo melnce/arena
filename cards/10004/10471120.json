@@ -1,0 +1,32 @@
+{
+  "id": "10471120",
+  "name": "Tsubasa, Blazing Gearcyclist",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Increase the Skybound Art gauges of all cards in your hand by 1.\n\nRush",
+  "attack": 3,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Increase the Skybound Art gauges of all cards in your hand by 1.",
+      "effects": [
+        {
+          "printed": "Increase the Skybound Art gauges of all cards in your hand by 1.",
+          "op": "counter",
+          "key": "skyboundHand",
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

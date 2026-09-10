@@ -1,0 +1,35 @@
+{
+  "id": "90071110",
+  "name": "Puppet",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Rush\nAt the end of your opponent's turn, destroy this card.",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [
+    "puppetry"
+  ],
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "opponent",
+      "printed": "At the end of your opponent's turn, destroy this card.",
+      "effects": [
+        {
+          "printed": "At the end of your opponent's turn, destroy this card.",
+          "op": "destroy",
+          "select": {
+            "pick": "self"
+          }
+        }
+      ]
+    }
+  ]
+}

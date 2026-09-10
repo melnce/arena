@@ -1,0 +1,43 @@
+{
+  "id": "10012110",
+  "name": "May, Journey Elf",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: Combo (3) - Select an enemy follower on the field and deal it 3 damage.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Combo (3) - Select an enemy follower on the field and deal it 3 damage.",
+      "effects": [
+        {
+          "printed": "Combo (3) - Select an enemy follower on the field and deal it 3 damage.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

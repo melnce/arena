@@ -1,0 +1,109 @@
+{
+  "id": "10854110",
+  "name": "Itsurugi & Taketsumi, Brothers",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Select a Mode to activate.\n1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.\n2. Deal 5 damage to all enemy followers. Recover 1 evolution point.\n\nEvolve: Select a Mode to activate.\n1. Draw 2 cards.\n2. Recover 2 play points.",
+  "attack": 6,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.\n2. Deal 5 damage to all enemy followers. Recover 1 evolution point.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.\n2. Deal 5 damage to all enemy followers. Recover 1 evolution point.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 4
+                },
+                {
+                  "op": "restore",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 4
+                }
+              ]
+            },
+            {
+              "printed": "2. Deal 5 damage to all enemy followers. Recover 1 evolution point.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "all"
+                  },
+                  "amount": 5
+                },
+                {
+                  "op": "ep",
+                  "action": "gain",
+                  "super": false,
+                  "amount": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select a Mode to activate.\n1. Draw 2 cards.\n2. Recover 2 play points.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Draw 2 cards.\n2. Recover 2 play points.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Draw 2 cards.",
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "printed": "2. Recover 2 play points.",
+              "effects": [
+                {
+                  "op": "pp",
+                  "action": "recover",
+                  "amount": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

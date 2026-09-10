@@ -1,0 +1,42 @@
+{
+  "id": "10662110",
+  "name": "Venerating Dyer",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Rush\nBane",
+  "attack": 5,
+  "defense": 3,
+  "traits": {
+    "rush": true,
+    "bane": true
+  },
+  "modes": [
+    {
+      "kind": "crystallize",
+      "cost": 1,
+      "printed": "Crystallize (1): Countdown (3)\nLast Words: Summon a Venerating Dyer.",
+      "countdown": 3,
+      "abilities": [
+        {
+          "on": "lastWords",
+          "printed": "Last Words: Summon a Venerating Dyer.",
+          "effects": [
+            {
+              "printed": "Summon a Venerating Dyer.",
+              "op": "summon",
+              "card": {
+                "named": "10662110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,105 @@
+{
+  "id": "10703210",
+  "name": "City of Babelon",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 1,
+  "text": "Countdown (1)\nAt the end of your turn, activate an ability in sequence from the following.\n1. Deal 2 damage to a random enemy follower.\n2. Restore 2 defense to your leader.\n3. Deal 2 damage to the enemy leader. Destroy this card.\n\nEngage (1): Select a card in your hand and discard it. Delay the count of this amulet by 1.",
+  "countdown": 1,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, activate an ability in sequence from the following.\n1. Deal 2 damage to a random enemy follower.\n2. Restore 2 defense to your leader.\n3. Deal 2 damage to the enemy leader. Destroy this card.",
+      "effects": [
+        {
+          "printed": "activate an ability in sequence from the following.\n1. Deal 2 damage to a random enemy follower.\n2. Restore 2 defense to your leader.\n3. Deal 2 damage to the enemy leader. Destroy this card.",
+          "op": "sequence",
+          "steps": [
+            {
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "random"
+                  },
+                  "amount": 2
+                }
+              ],
+              "printed": "1. Deal 2 damage to a random enemy follower."
+            },
+            {
+              "effects": [
+                {
+                  "op": "restore",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 2
+                }
+              ],
+              "printed": "2. Restore 2 defense to your leader."
+            },
+            {
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 2
+                },
+                {
+                  "op": "destroy",
+                  "select": {
+                    "pick": "self"
+                  }
+                }
+              ],
+              "printed": "3. Deal 2 damage to the enemy leader. Destroy this card."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "engage",
+      "cost": 1,
+      "sacrifice": false,
+      "printed": "Engage (1): Select a card in your hand and discard it. Delay the count of this amulet by 1.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Delay the count of this amulet by 1.",
+          "op": "countdown",
+          "select": {
+            "pick": "self"
+          },
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

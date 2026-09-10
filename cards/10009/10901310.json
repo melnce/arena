@@ -1,0 +1,44 @@
+{
+  "id": "10901310",
+  "name": "Initiation of Rebirth",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Add a copy of a random allied follower destroyed this match with the highest base cost to your deck without revealing it. Draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Add a copy of a random allied follower destroyed this match with the highest base cost to your deck without revealing it. Draw a card.",
+      "effects": [
+        {
+          "printed": "Add a copy of a random allied follower destroyed this match with the highest base cost to your deck without revealing it.",
+          "op": "addToDeck",
+          "card": {
+            "copyOf": {
+              "side": "ally",
+              "kind": "follower",
+              "pick": "highest",
+              "orderBy": "baseCost",
+              "filter": {
+                "destroyedThisMatch": true
+              },
+              "zone": "field"
+            },
+            "exact": true
+          },
+          "count": 1,
+          "position": "random"
+        },
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

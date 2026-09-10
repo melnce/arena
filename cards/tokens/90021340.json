@@ -1,0 +1,50 @@
+{
+  "id": "90021340",
+  "name": "Gilded Necklace",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Select an allied follower on the field and give it +0/+1 and Ward.",
+  "tribes": [
+    "loot"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied follower on the field and give it +0/+1 and Ward.",
+      "effects": [
+        {
+          "printed": "Select an allied follower on the field and give it +0/+1 and Ward.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "buff",
+              "select": {
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose"
+              },
+              "as": "t",
+              "attack": 0,
+              "defense": 1
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "traits": {
+                "ward": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
