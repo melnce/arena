@@ -31,9 +31,15 @@ async function startGame(page: Page, opts: {
   if (opts.deckA) await page.locator("#blueDeckSelect").selectOption(opts.deckA);
   if (opts.deckB) await page.locator("#redDeckSelect").selectOption(opts.deckB);
   if (opts.human) await page.locator("#humanSideSelect").selectOption(opts.human);
-  if (opts.botPolicy) await page.locator("#vsBotPolicy").selectOption(opts.botPolicy);
-  if (opts.policyA) await page.locator("#policyASelect").selectOption(opts.policyA);
-  if (opts.policyB) await page.locator("#policyBSelect").selectOption(opts.policyB);
+  if (opts.botPolicy) {
+    await page.locator("#vsBotPolicy").selectOption(opts.botPolicy);
+    // Hidden per-side selects stay in sync with the vs-bot dropdown.
+    const human = opts.human ?? "a";
+    const other = human === "b" ? "#policyASelect" : "#policyBSelect";
+    await page.locator(other).selectOption(opts.botPolicy, { force: true });
+  }
+  if (opts.policyA) await page.locator("#policyASelect").selectOption(opts.policyA, { force: true });
+  if (opts.policyB) await page.locator("#policyBSelect").selectOption(opts.policyB, { force: true });
   await page.locator("#startGameBtn").click();
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
     timeout: 15_000,
@@ -143,7 +149,6 @@ test("vs bot: human A vs h0, bot turn resolves", async ({ page }) => {
     deckB: "basic-rune",
     human: "a",
     botPolicy: "h0",
-    policyB: "h0",
   });
   await confirmMulligans(page);
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", {
