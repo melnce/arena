@@ -6253,12 +6253,22 @@ fn board_card_survives(c: &CardInstance) -> bool {
 /// 0-based index among surviving cards on that player's field (E36).
 /// Followers at 0 defense / marked for destruction and amulets at
 /// countdown 0 are skipped; order of the rest is preserved.
-fn surviving_board_index(state: &State, player: PlayerId, slot: u8) -> Option<u8> {
+/// `skip` is slots already chosen in this `randomDistinct` wave — they are
+/// gone at the next roll even though destroy has not applied yet.
+fn surviving_board_index(
+    state: &State,
+    player: PlayerId,
+    slot: u8,
+    skip: &[(PlayerId, u8)],
+) -> Option<u8> {
     let mut i = 0u8;
     for (si, cell) in state.player(player).field.iter().enumerate() {
         let Some(c) = cell else {
             continue;
         };
+        if skip.iter().any(|(p, s)| *p == player && *s == si as u8) {
+            continue;
+        }
         if !board_card_survives(c) {
             continue;
         }
@@ -6270,8 +6280,13 @@ fn surviving_board_index(state: &State, player: PlayerId, slot: u8) -> Option<u8
     None
 }
 
-fn surviving_slot_key(state: &State, player: PlayerId, slot: u8) -> String {
-    match surviving_board_index(state, player, slot) {
+fn surviving_slot_key(
+    state: &State,
+    player: PlayerId,
+    slot: u8,
+    skip: &[(PlayerId, u8)],
+) -> String {
+    match surviving_board_index(state, player, slot, skip) {
         Some(i) => format!("slot:{i}"),
         None => format!("slot:{slot}"),
     }
@@ -6291,6 +6306,7 @@ fn random_pool_apply(
         .all(|t| matches!(t, TargetOpt::Card(_) | TargetOpt::Deck { .. }));
     let mut left = cands;
     let mut out = Vec::new();
+    let mut skipped: Vec<(PlayerId, u8)> = Vec::new();
     for _ in 0..n {
         if left.is_empty() {
             break;
@@ -6298,7 +6314,9 @@ fn random_pool_apply(
         let mut keys: Vec<String> = left
             .iter()
             .map(|t| match t {
-                TargetOpt::Slot { player, slot } => surviving_slot_key(state, *player, *slot),
+                TargetOpt::Slot { player, slot } => {
+                    surviving_slot_key(state, *player, *slot, &skipped)
+                }
                 TargetOpt::Leader { .. } => "leader".into(),
                 TargetOpt::Card(c) => c.as_str(),
                 TargetOpt::Deck { player, id } => state
@@ -6327,11 +6345,15 @@ fn random_pool_apply(
         };
         state.picks.extend(emit);
         let i = i.min(left.len() - 1);
-        if distinct {
-            out.push(left.remove(i));
+        let picked = if distinct {
+            left.remove(i)
         } else {
-            out.push(left[i].clone());
+            left[i].clone()
+        };
+        if let TargetOpt::Slot { player, slot } = &picked {
+            skipped.push((*player, *slot));
         }
+        out.push(picked);
     }
     Ok(out)
 }

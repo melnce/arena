@@ -305,6 +305,91 @@ fn asher_enhance_any_evolve_destroys_wards() {
     );
 }
 
+/// Game 4 / E36: destroy 2 Ward. After the first target is chosen it is gone
+/// at the next roll, so the remaining Ward's survivor index is 1 (not raw 2).
+#[test]
+fn e36_destroy_two_ward_second_pick_uses_survivor_index() {
+    let db = load_db();
+    let mut st = started(&db, 48);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, opp, "88001110");
+    put_field(&db, &mut st, opp, "90074150");
+    put_field(&db, &mut st, opp, "90074150");
+    put_field(&db, &mut st, opp, "88001320");
+    give_pp(&mut st, me, 9, 9);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10874110");
+    assert!(matches!(st.phase, Phase::Choice { .. }));
+    st.rng = arena_engine::GameRng::scripted(
+        vec![
+            arena_engine::Pick {
+                what: PickWhat::RandomTarget,
+                among: None,
+                chose: arena_engine::PickChose::Slot { slot: 1 },
+            },
+            arena_engine::Pick {
+                what: PickWhat::RandomTarget,
+                among: None,
+                chose: arena_engine::PickChose::Slot { slot: 1 },
+            },
+        ],
+        48,
+    );
+    // Fanfare: give Ward to the unevolved body at enemy slot 0 (already
+    // unused — choose a printed Ward so grant is a no-op). Index 1 = first Ward.
+    choose(&db, &mut st, 1);
+    assert_eq!(
+        field_count(&st, opp),
+        2,
+        "both printed Wards destroyed; second pick was survivor index 1"
+    );
+}
+
+/// Game 2 shape: one printed Ward plus Fanfare-granted Ward; scripted
+/// `slot:2` twice (raw/survivor of the granted body, then the remaining
+/// Ward's post-pick survivor index).
+#[test]
+fn asher_enhance_granted_ward_is_a_destroy_candidate() {
+    let db = load_db();
+    let mut st = started(&db, 49);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, opp, "10874120");
+    put_field(&db, &mut st, opp, "90071130");
+    put_field(&db, &mut st, opp, "10974120");
+    put_field(&db, &mut st, opp, "90074150");
+    put_field(&db, &mut st, opp, "10574120");
+    give_pp(&mut st, me, 9, 9);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10874110");
+    assert!(matches!(st.phase, Phase::Choice { .. }));
+    st.rng = arena_engine::GameRng::scripted(
+        vec![
+            arena_engine::Pick {
+                what: PickWhat::RandomTarget,
+                among: None,
+                chose: arena_engine::PickChose::Slot { slot: 2 },
+            },
+            arena_engine::Pick {
+                what: PickWhat::RandomTarget,
+                among: None,
+                chose: arena_engine::PickChose::Slot { slot: 2 },
+            },
+        ],
+        49,
+    );
+    choose(&db, &mut st, 2);
+    assert!(
+        !field_has(&st, opp, "10974120"),
+        "Fanfare-granted Ward on Aizeden is a destroy candidate"
+    );
+    assert!(
+        !field_has(&st, opp, "90074150"),
+        "printed Ward Buddies also destroyed"
+    );
+}
+
 #[test]
 fn camiscilla_evolves_each_batch_entrant() {
     let db = load_db();
