@@ -1,0 +1,31 @@
+{
+  "id": "88001310",
+  "name": "Synth AoE 3",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 4,
+  "text": "Deal 3 damage to all enemies.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 3 damage to all enemies.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to all enemies.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "character"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "88001330",
+  "name": "Synth Super Draw",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Super-Evolve: Draw 2 cards.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

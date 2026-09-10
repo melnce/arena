@@ -1,0 +1,33 @@
+{
+  "id": "88001460",
+  "name": "Synth Damage Cap",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Fanfare: Give your leader \"Can't take more than 1 damage at a time.\"",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Give your leader \"Can't take more than 1 damage at a time.\"",
+      "effects": [
+        {
+          "printed": "Give your leader \"Can't take more than 1 damage at a time.\"",
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "damageCap": 1
+        }
+      ]
+    }
+  ]
+}

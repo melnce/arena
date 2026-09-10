@@ -1,0 +1,28 @@
+{
+  "id": "88001260",
+  "name": "Synth Summon Two",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Summon 2 copies of Synth Vanilla.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon 2 copies of Synth Vanilla.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Synth Vanilla.",
+          "op": "summon",
+          "card": {
+            "named": "88001110"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

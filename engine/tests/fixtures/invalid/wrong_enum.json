@@ -1,0 +1,12 @@
+{
+  "id": "88009920",
+  "name": "Bad",
+  "kind": "trap",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "",
+  "tribes": []
+}

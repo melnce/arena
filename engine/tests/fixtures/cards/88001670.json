@@ -1,0 +1,32 @@
+{
+  "id": "88001670",
+  "name": "Synth Defense Debuff",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Give an enemy follower -0/-4.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give an enemy follower -0/-4.",
+      "effects": [
+        {
+          "printed": "Give an enemy follower -0/-4.",
+          "op": "buff",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "attack": 0,
+          "defense": -4
+        }
+      ]
+    }
+  ]
+}

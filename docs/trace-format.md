@@ -13,7 +13,11 @@ One object per line. Keys sorted on `CanonicalState`. No floats, no uids, no eng
   "seed": 0,
   "first": "a",
   "deck_a": ["10001110", "…"],
-  "deck_b": ["…"]
+  "deck_b": ["…"],
+  "opening_hands": {
+    "a": ["10001110", "10001120", "10001130", "10001210"],
+    "b": ["10011110", "10011120", "10011130", "10011210"]
+  }
 }
 ```
 
@@ -21,8 +25,9 @@ One object per line. Keys sorted on `CanonicalState`. No floats, no uids, no eng
 - `seed`: `u64`.
 - `first`: `"a"` or `"b"`.
 - `deck_a` / `deck_b`: multisets of 40 card ids, **sorted** (so `["x","x","y"]` not insertion order). Deck **order is not part of the format**.
+- `opening_hands` (**required**): the four-card opening hands **before** the mulligan, each a list of card ids **in draw order**. The old engine draws those hands inside game setup, before any action line exists, so they cannot be per-line `draw` picks. A replayer builds the pre-mulligan state by removing those ids from the decklist multisets (A's four from `deck_a`, B's four from `deck_b`). Every later draw (mulligan replacements, the first player's turn-1 draw, turn draws, effect draws) stays a per-line `{"what":"draw","chose":"<card id>"}` pick.
 
-Every draw (opening hand, mulligan replacements, turn draws, effect draws) is a `Pick` `{"what":"draw","chose":"<card id>"}`. The replaying engine removes that id from its multiset instead of rolling. The old shuffled array and the new multiset then agree by construction.
+The old engine also emits `{"what":"raw","kind":"shuffle",…}` entries for its deck shuffles — ignore every `raw` pick.
 
 If `first` was decided by a coin, the header's `first` is the outcome and the first `rng` pick of the first action line may repeat `{"what":"coin","chose":"a"}` when the engine actually rolled.
 
@@ -192,3 +197,27 @@ Projection both engines can produce. Keys sorted.
    - `rng` is **not** required to match as a byte string (the old engine may roll more times internally). The **outcomes that affect state** must be consistent with `state`. A harness that drives both engines from one side's `rng` treats a non-candidate outcome as a finding.
 3. First divergence wins. Extra/missing lines are a divergence at that `i`.
 4. Green: every line's `state` matches, and `legal` matches when present, through terminal or the agreed action cap.
+
+## Conventions
+
+Pinned 2026-09-10 from the first differential run. Both emitters follow these; a reader may rely on them.
+
+- **`turn`** is the round number: both players' first turns are turn 1, both second turns are turn 2, and so on (the number the rules text means by "your Nth turn"). It is `0` while `phase` is `mulligan`.
+- **PP before a player's first turn.** A player has `pp: 0, pp_max: 0, pp_bonus: 0` until their first turn has started; during the mulligan that is both players, during the first player's turn 1 it is the second player.
+- **`legal` during the mulligan.** While `phase` is `mulligan`, `legal` is the 16 `mulligan` actions (every `swap` bitmask) of the player whose mulligan is pending, sorted like every other `legal` list. The first player's mulligan is decided first.
+- **Actor.** The `player` of every action is the player who performs it: `end_turn.player` is the player whose turn ends, `mulligan.player` the player deciding, `choose`/`confirm` the player who owns the pending choice.
+- **`play.hand_pos` / `play.card`**, `fuse.host_pos` / `partner_pos` and `choose.option.card` are resolved against the state **before** the action is applied. `play` carries no form: whether the card resolves as Enhance, printed, Accelerate or Crystallize is the engine's decision from the PP available (Enhance when affordable; the printed form when affordable; otherwise the highest payable alternate form).
+- **`legal` is a set** — identical NeutralActions appear once.
+- **A card chosen from hand, deck or cemetery** is `choose {card: "<id>"}`; copies of one id collapse to one option; the engine picks any copy.
+- **When a `choose {card}` names an id with several copies in the zone, the copy at the lowest position is taken.**
+- **`evolves_used` counts every allied follower evolution this match — EP, SEP or effect.**
+- **`leader_defense` is clamped at 0.**
+- **A crest entry carries `countdown` only when it has one.**
+- **At a line whose `phase` is `terminal`, only `phase` and `winner` are compared; the rest of the state is post-mortem and engine-private.**
+- **`bonus_pp`** is a toggle. It activates the second player's current-tier charge, and cancels an activated one while the bonus orb is still unspent (regular orbs are spent first; the orb is spent last). Activate → cancel → activate in one turn is legal; once the orb is spent, `bonus_pp` is not legal again that turn. `legal` lists `bonus_pp` in both the activatable and the cancellable state.
+- **`traits`** is the sorted list of the schema's boolean `Traits` flags that are true on the instance: `ambush, aura, bane, barrier, cantAttackFollowers, cantAttackLeader, cantBeDestroyedByAbilities, cantBePlayed, drain, ignoresWard, intimidate, rush, storm, ward`. Keyword and mechanic names (`lastWords`, `enhance`, `engage`, `countdown`, `spellboost`, `accelerate`, `counter`, …) are never traits.
+- **`granted`** is the sorted **set** of trigger tags present on the instance that the printed card does not carry — runtime grants only — and is omitted when empty. Tags are the schema's trigger names: `fanfare, lastWords, evolve, superEvolve, anyEvolve, anySuperEvolve, strike, followerStrike, clash, enter, leave, discarded, invoked, fused, spellboost, engage, startOfTurn, endOfTurn, when, enhance`. A grant of an ability the card already prints (a second Last Words on a printed Last Words follower) is invisible under this definition; accepted for M1.
+- **Picks for every card that leaves the deck.** A card that leaves the deck by a draw is a `draw` pick; one that leaves by any other effect (a search, a summon from the deck) is `{"what":"multiset_pick","among":"deck","chose":"<card id>"}`, one per card in engine order. Invoke names its card and records nothing. Filtered draws ("draw a follower") are `draw` picks whose `chose` must be among the matching candidates.
+- **`raw` picks** are engine-private (the old engine's shuffles) and are ignored by every reader.
+- **Header extensions.** Header keys prefixed `x_` are engine-private and ignored by readers (`x_final_hash`); every other header key is the format.
+- **Cemetery.** `cemetery` holds every card that went there — destroyed followers and amulets and played spells alike; `shadows` is the separate counter the rules spend.

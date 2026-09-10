@@ -1,0 +1,36 @@
+{
+  "id": "88001420",
+  "name": "Synth Overflow Check",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Fanfare: If you're in Overflow, draw a card.",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If you're in Overflow, draw a card.",
+      "effects": [
+        {
+          "printed": "If you're in Overflow, draw a card.",
+          "op": "if",
+          "cond": {
+            "overflow": true
+          },
+          "then": [
+            {
+              "printed": "draw a card.",
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

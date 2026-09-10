@@ -1,0 +1,15 @@
+{
+  "id": "88009910",
+  "name": "Bad",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [],
+  "notARealField": 1
+}

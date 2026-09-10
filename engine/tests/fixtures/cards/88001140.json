@@ -1,0 +1,17 @@
+{
+  "id": "88001140",
+  "name": "Synth Ward",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Ward",
+  "attack": 1,
+  "defense": 3,
+  "tribes": [],
+  "traits": {
+    "ward": true
+  }
+}

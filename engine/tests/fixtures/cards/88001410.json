@@ -1,0 +1,26 @@
+{
+  "id": "88001410",
+  "name": "Synth Recover Pp",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Recover 7 play points.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Recover 7 play points.",
+      "effects": [
+        {
+          "printed": "Recover 7 play points.",
+          "op": "pp",
+          "action": "recover",
+          "amount": 7
+        }
+      ]
+    }
+  ]
+}

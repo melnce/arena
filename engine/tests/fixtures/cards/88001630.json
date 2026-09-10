@@ -1,0 +1,38 @@
+{
+  "id": "88001630",
+  "name": "Synth Rally Fanfare Select",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Fanfare: Rally (2) - Select an enemy follower and deal 1 damage to it.",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "when": {
+        "rally": {
+          "n": 2
+        }
+      },
+      "printed": "Fanfare: Rally (2) - Select an enemy follower and deal 1 damage to it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower and deal 1 damage to it.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

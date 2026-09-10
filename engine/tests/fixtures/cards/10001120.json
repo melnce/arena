@@ -1,0 +1,41 @@
+{
+  "id": "10001120",
+  "name": "Leah, Bellringer Angel",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Ward\nLast Words: Draw a card.\n\nEvolve: Draw a card.",
+  "attack": 0,
+  "defense": 2,
+  "tribes": [],
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

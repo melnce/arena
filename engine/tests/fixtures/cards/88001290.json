@@ -1,0 +1,31 @@
+{
+  "id": "88001290",
+  "name": "Synth Destroy Two Random",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "Destroy 2 random enemy followers.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy 2 random enemy followers.",
+      "effects": [
+        {
+          "printed": "Destroy 2 random enemy followers.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "randomDistinct",
+            "count": 2
+          }
+        }
+      ]
+    }
+  ]
+}

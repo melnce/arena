@@ -1,0 +1,17 @@
+{
+  "id": "88001360",
+  "name": "Synth Cant Play",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Can't be played.",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [],
+  "traits": {
+    "cantBePlayed": true
+  }
+}
