@@ -1,0 +1,5 @@
+{
+  "install": "set -e; if ! command -v cargo >/dev/null 2>&1; then curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable -c rustfmt -c clippy; fi; . \"$HOME/.cargo/env\" 2>/dev/null || true; rustup component add rustfmt clippy >/dev/null 2>&1 || true; cargo fetch >/dev/null 2>&1; cargo build --all-targets >/tmp/warm-debug.log 2>&1 || tail -n 40 /tmp/warm-debug.log; cargo build --release --all-targets >/tmp/warm-release.log 2>&1 || tail -n 40 /tmp/warm-release.log; (cd tools && npm ci --no-audit --no-fund >/dev/null 2>&1); if [ ! -d \"$HOME/practice-tool\" ]; then git clone --quiet https://github.com/melnce/Practice-Tool \"$HOME/practice-tool\"; fi; (cd \"$HOME/practice-tool\" && git fetch --quiet origin && git checkout --quiet origin/main && npm ci --no-audit --no-fund >/dev/null 2>&1) || true",
+  "start": ". \"$HOME/.cargo/env\" 2>/dev/null || true",
+  "terminals": []
+}
