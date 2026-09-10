@@ -401,7 +401,7 @@ fn adahime_does_not_give_herself_rush() {
 }
 
 #[test]
-fn brew_on_full_field_is_not_playable_pending_owner() {
+fn brew_on_full_field_is_not_playable() {
     let db = load_db();
     let mut st = started(&db, 18);
     let me = PlayerId::A;
@@ -417,8 +417,55 @@ fn brew_on_full_field_is_not_playable_pending_owner() {
     let legal = legal_actions(&db, &st);
     assert!(
         !legal.iter().any(|a| matches!(a, Action::Play { .. })),
-        "full field: Brew is not playable pending owner"
+        "full field: Brew is not playable"
     );
+}
+
+#[test]
+fn gain_earth_sigil_on_full_board_with_brew_adds_to_stack() {
+    let db = load_db();
+    let mut st = started(&db, 19);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, me, "10031210");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    assert_eq!(field_count(&st, me), 5);
+    assert_eq!(st.player(me).earth, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "88001810");
+    assert_eq!(st.player(me).earth, 2, "spell still raises the stack");
+    assert!(
+        !field_has(&st, me, "90031210"),
+        "no Sediment appears; the Brew holds the stack"
+    );
+    assert!(field_has(&st, me, "10031210"));
+}
+
+#[test]
+fn sigil_with_full_board_and_no_holder_is_lost_assumed() {
+    // Assumption — owner has not ruled this half. Full board, no Earth Sigil
+    // amulet: the Magic Sediment that would carry the gain cannot be summoned
+    // (excess summons skipped), so earth stays 0.
+    let db = load_db();
+    let mut st = started(&db, 20);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    assert_eq!(field_count(&st, me), 5);
+    assert_eq!(st.player(me).earth, 0);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "88001810");
+    assert_eq!(
+        st.player(me).earth,
+        0,
+        "no holder and no slot: gain is lost"
+    );
+    assert!(!field_has(&st, me, "90031210"));
 }
 
 #[test]

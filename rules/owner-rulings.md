@@ -756,6 +756,12 @@ Witch's New Brew and Magic Sediment are untargetable by enemy selection (Aura) a
 
 `10031210` Witch's New Brew and `90031210` Magic Sediment set `traits.aura: true`. The catalog `skill_text` does not print Aura; the client has it.
 
+## Earth Sigil amulets and a full board — 2026-09-10
+
+<!-- rulebook: pending — full-board Earth Sigil play vs stack gain not written through to rulebook -->
+
+A full board blocks playing Witch's New Brew (or any Earth Sigil amulet) even though it would only merge into the stack. Effects that say "gain an earth sigil" still add to the stack of the Earth Sigil amulet already on the field when the board is full.
+
 ## Stat modifications and maximum defense — 2026-09-10
 
 <!-- rulebook: absorbed #damage-events-general » restoration cannot raise a follower above its current maximum -->

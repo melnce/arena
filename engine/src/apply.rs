@@ -491,8 +491,8 @@ fn playable(db: &CardDb, state: &State, me: PlayerId, hand_i: usize, inst: &Card
     };
     let _ = paid;
     if kind == CardKind::Follower || kind == CardKind::Amulet {
-        // Earth Sigil merge still runs on a non-full field (2026-08-30). A play
-        // with no free slot is an owner question; match the old engine (no).
+        // Earth Sigil amulet is an amulet play like any other (2026-09-10).
+        // Merge only ever runs on a non-full field.
         if state.player(me).field_free() == 0 {
             return false;
         }
@@ -3024,7 +3024,7 @@ fn apply_effect(
             key, how, amount, ..
         } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
-            apply_counter(state, controller, source, key, *how, n, events);
+            apply_counter(db, state, controller, source, key, *how, n, events)?;
         }
         Effect::Reanimate { max_cost, .. } => {
             let x = eval_amount(db, state, controller, Some(source), max_cost);
@@ -3192,7 +3192,9 @@ fn pay_resource(state: &mut State, who: PlayerId, res: PayResource, n: i32) -> b
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn apply_counter(
+    db: &CardDb,
     state: &mut State,
     who: PlayerId,
     source: SourceRef,
@@ -3200,7 +3202,7 @@ fn apply_counter(
     how: CounterHow,
     n: i32,
     events: &mut Vec<Event>,
-) {
+) -> Result<(), Illegal> {
     match key {
         CounterKey::Named(NamedCounter::Combo) => {
             let p = state.player_mut(who);
@@ -3215,15 +3217,36 @@ fn apply_counter(
             });
         }
         CounterKey::Named(NamedCounter::Earth) => {
-            let p = state.player_mut(who);
-            p.earth = if how == CounterHow::Set {
-                n
-            } else {
-                p.earth + n
-            };
+            if how == CounterHow::Set {
+                let p = state.player_mut(who);
+                p.earth = n;
+                events.push(Event::Counter {
+                    key: "earth".into(),
+                    value: p.earth,
+                });
+                return Ok(());
+            }
+            if state.player(who).earth_slot.is_some() {
+                // Holder on the field: spells (and Engage) raise the stack.
+                // Owner 2026-09-10: a full board still allows this.
+                let p = state.player_mut(who);
+                p.earth += n;
+                events.push(Event::Counter {
+                    key: "earth".into(),
+                    value: p.earth,
+                });
+                return Ok(());
+            }
+            // No holder: the gain is a Magic Sediment summon. Full field →
+            // excess skipped, earth stays 0 (assumption if no holder).
+            let sediment = CardId::parse("90031210").expect("sediment id");
+            let src = CardSource::Named { named: sediment };
+            for _ in 0..n.max(0) {
+                summon_source(db, state, who, &src, source, false, &[], events)?;
+            }
             events.push(Event::Counter {
                 key: "earth".into(),
-                value: p.earth,
+                value: state.player(who).earth,
             });
         }
         CounterKey::Named(NamedCounter::Shadows) => {
@@ -3249,6 +3272,7 @@ fn apply_counter(
         }
         _ => {}
     }
+    Ok(())
 }
 
 fn combat_damage(
@@ -4079,7 +4103,14 @@ fn summon_source(
     }
     let id = inst.card;
     let kind = inst.kind;
+    let is_sigil = inst.is_earth_sigil();
     state.player_mut(who).field[slot as usize] = Some(inst);
+    if is_sigil {
+        state.player_mut(who).earth_slot = Some(slot);
+        if state.player(who).earth == 0 {
+            state.player_mut(who).earth = 1;
+        }
+    }
     events.push(Event::Summon {
         player: who,
         card: id,

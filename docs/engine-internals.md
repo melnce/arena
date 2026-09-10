@@ -74,7 +74,7 @@ A stat debuff lowers `max_defense` by the same amount; current defense drops by 
 
 - Field slots are entry order, compacted on leave.
 - Deck is an unordered `Vec` treated as a multiset; draws pick uniformly via the state's RNG.
-- Earth sigils: a counter plus `earth_slot` (which amulet holds the stack). Merge: collectible replaces token (ruling 2026-08-30).
+- Earth sigils: a counter plus `earth_slot` (which amulet holds the stack). Merge: collectible replaces token (ruling 2026-08-30). A full board blocks playing an Earth Sigil amulet; "gain an earth sigil" still increments the existing stack (ruling 2026-09-10).
 - `hash` is FNV-1a 64 of the sorted-key canonical snapshot JSON.
 
 ## Tests
