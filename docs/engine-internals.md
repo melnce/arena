@@ -179,6 +179,26 @@ A stat debuff lowers `max_defense` by the same amount; current defense drops by 
 - Earth sigils: a counter plus `earth_slot` (which amulet holds the stack). When an Earth Sigil amulet enters, every other allied Earth Sigil is **banished** (no shadow, no Last Words) and the new amulet takes their counts (official glossary Earth Sigil; owner 2026-09-10 "yes banish them instead"). "Gain X earth sigils" increments the holder on the field, else summons one Magic Sediment with count X; no holder and a full board loses the sigil. A full board still blocks *playing* an Earth Sigil amulet (ruling 2026-09-10).
 - `hash` is FNV-1a 64 of the sorted-key canonical snapshot JSON.
 
+## Construct match arms (post-M3 audit)
+
+Every `match` on `Condition`, `Filter` / `inst_matches_filter`, `Amount`, `TriggerTag` / `on`, and `EventName` either resolves the variant or is listed here.
+
+| Arm | Status | Reason |
+|---|---|---|
+| `Condition` (all 31 keys) | live | `eval_cond` covers every variant. Parameters `n` / `of` / `key` / `filter` / `select` / `card` / `side` / `kind` / `other` / `ref` are fields of those keys, not constructs. |
+| `Filter` keys except `destroyedThisMatch` | live | `inst_matches_filter`. `destroyedThisMatch` switches the candidate pool (`pool_destroyed_history`) rather than scoring a live instance. |
+| `Amount` variants | live | `eval_amount`. `Amount::Counter` for `var` / `skyboundHand` is **0** — Skybound lives on the hand instance (`skybound_of`), and `op:counter skyboundHand` stays an honest stub. Filter predicates use `eval_amount_simple` (non-int Amount → 0); pool filters author integer literals. |
+| `Amount::Sub` | live, no floor | Marlone wraps `max(0, sub(…))`. A bare `sub` may be negative (`Amount::Neg` is the authored negative). |
+| `on: leave` (non-banish) | **fixed** | Bounce / return-to-deck from field now enqueue Leave (Ghost `90051130` stay a replacement via `leave_redirects_to_banish`). Destroy still uses Last Words, not a second Leave. |
+| `on: static` `modifier.suppress` | **fixed** | Crest / field statics suppress the listed `TriggerTag`s on matching instances, including play-time Fanfare / Enhance (Milteo & Luzen `crest:10554110`, Mino Q&A). |
+| `Ability::replaces` | SuperEvolve only | `replaces_evolve` ignores `replaces` on any other `on`. Pool use is Super-Evolve `instead` (`10002110`). |
+| `Ability::Static.tag()` | maps to `When` | Static has no `effects`; it is never enqueued as a When. |
+| `TriggerTag::Enhance` | mode, not `on` | Enhance is `Mode::Enhance`. The tag exists so `suppress: ["enhance"]` can strip the mode at play. |
+| `EventName` (all 16) | live | Raised at enter / destroy / play / attack / evolve / draw / earth-rite / engage / restore / self-buff. |
+| `Zone::Cemetery` / `Crests` in `pool_candidates` | empty | Selector-family (sibling PR). Crest countdown uses `zone: crests` on `op:countdown`, not this pool walk. |
+
+`on:static` is no longer in `m1_unsupported_list` — suppress resolves.
+
 ## Tests
 
-Integration tests under `engine/tests/` load the repo's `cards/` plus fixtures. Soak is opt-in: `ARENA_SOAK_GAMES=N cargo test --release soak` (fixed fixture deck in `soak.rs`; class-matrix random decks in `soak_random.rs`, default N=20).
+Integration tests under `engine/tests/` load the repo's `cards/` plus fixtures. Soak is opt-in: `ARENA_SOAK_GAMES=N cargo test --release soak` (fixed fixture deck in `soak.rs`; class-matrix random decks in `soak_random.rs`, default N=20). Discriminating construct pins: `constructs_conditions.rs`, `constructs_filters.rs`, `constructs_amounts.rs`, `constructs_abilities.rs` (synthetic cards under `engine/tests/fixtures/cards/constructs/`).

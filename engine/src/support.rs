@@ -51,9 +51,8 @@ fn mode_unsupported(mode: &Mode) -> Option<String> {
 
 fn ability_unsupported(a: &Ability) -> Option<String> {
     match a {
-        Ability::Static { .. } => Some("on:static".into()),
         Ability::When { event, .. } => {
-            // All 15 events are implemented; keep the hook for future cuts.
+            // All 16 events are implemented; keep the hook for future cuts.
             let _ = event;
             walk_ability_effects(a)
         }
@@ -180,7 +179,7 @@ fn condition_unsupported(_c: &Condition) -> Option<String> {
 /// M1 `Unsupported` variants reachable from the intended M1 pool (or from
 /// cards on `main` that a deck might try to play). Listed in the PR body.
 pub fn m1_unsupported_list() -> Vec<&'static str> {
-    vec!["on:static", "op:randomSplit", "op:counter skyboundHand"]
+    vec!["op:randomSplit", "op:counter skyboundHand"]
 }
 
 #[allow(dead_code)]
