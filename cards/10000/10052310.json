@@ -1,0 +1,35 @@
+{
+  "id": "10052310",
+  "name": "Soul Predation",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Select an allied follower on the field and destroy it. Draw 2 cards.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied follower on the field and destroy it. Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Select an allied follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

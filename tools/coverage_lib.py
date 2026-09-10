@@ -54,6 +54,7 @@ COND_RULES: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"Combo \(\d+\)"), "combo"),
     (re.compile(r"Rally \(\d+\)"), "rally"),
     (re.compile(r"\bOverflow\b"), "overflow"),
+    (re.compile(r"Then, if you have \d+ max play points", re.I), "maxPpAtLeast"),
     (re.compile(r"Skybound Art|Super Skybound"), "skyboundArt"),
     (re.compile(r"if this follower is evolved|if .{0,40}evolved", re.I), "evolved"),
     (re.compile(r"If you've Fused|if you have Fused|Fused both|you've Fused", re.I), "wasFused"),

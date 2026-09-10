@@ -1,0 +1,72 @@
+{
+  "id": "10032110",
+  "name": "Remi & Rami, Two-Faced Witch",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "attack": 4,
+  "defense": 4,
+  "text": "Fanfare: Earth Rite (1) - Summon a Guardian Golem.\n\nSuper-Evolve: Select an allied Golem follower on the field, evolve it, and give it +3/+3.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Earth Rite (1) - Summon a Guardian Golem.",
+      "effects": [
+        {
+          "printed": "Earth Rite (1) - Summon a Guardian Golem.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 1,
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90031120"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select an allied Golem follower on the field, evolve it, and give it +3/+3.",
+      "effects": [
+        {
+          "printed": "Select an allied Golem follower on the field, evolve it, and give it +3/+3.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "evolve",
+              "select": {
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose",
+                "filter": {
+                  "tribe": "golem"
+                }
+              },
+              "as": "g",
+              "super": false
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "g"
+              },
+              "attack": 3,
+              "defense": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

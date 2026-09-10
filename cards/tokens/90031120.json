@@ -1,0 +1,19 @@
+{
+  "id": "90031120",
+  "name": "Guardian Golem",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "attack": 3,
+  "defense": 3,
+  "text": "Ward",
+  "traits": {
+    "ward": true
+  },
+  "tribes": [
+    "golem"
+  ]
+}

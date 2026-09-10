@@ -1,0 +1,17 @@
+{
+  "id": "90041120",
+  "name": "Vastwing Dragon",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 5,
+  "attack": 5,
+  "defense": 5,
+  "text": "Intimidate",
+  "traits": {
+    "intimidate": true
+  },
+  "tribes": []
+}

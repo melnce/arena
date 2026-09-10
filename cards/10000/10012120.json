@@ -1,0 +1,35 @@
+{
+  "id": "10012120",
+  "name": "Selwyn, Sonic Archer",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "attack": 4,
+  "defense": 6,
+  "text": "Storm\n\nSuper-Evolve: Select an enemy follower on the field and return it to hand.",
+  "traits": {
+    "storm": true
+  },
+  "abilities": [
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select an enemy follower on the field and return it to hand.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and return it to hand.",
+          "op": "returnToHand",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

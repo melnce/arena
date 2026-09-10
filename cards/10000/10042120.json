@@ -1,0 +1,31 @@
+{
+  "id": "10042120",
+  "name": "Battleforged Dragon Keeper",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "attack": 5,
+  "defense": 5,
+  "text": "Enhance (7): Summon a Vastwing Dragon.",
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 7,
+      "printed": "Enhance (7): Summon a Vastwing Dragon.",
+      "effects": [
+        {
+          "printed": "Summon a Vastwing Dragon.",
+          "op": "summon",
+          "card": {
+            "named": "90041120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

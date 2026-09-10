@@ -1,0 +1,31 @@
+{
+  "id": "10022210",
+  "name": "Ancestral Crown",
+  "kind": "amulet",
+  "class": "swordcraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "countdown": 4,
+  "text": "Countdown (4)\nWhenever an allied follower enters the field, give it +1/+1.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "printed": "Whenever an allied follower enters the field, give it +1/+1.",
+      "effects": [
+        {
+          "printed": "give it +1/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "entering"
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

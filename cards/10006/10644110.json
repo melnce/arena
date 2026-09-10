@@ -1,0 +1,45 @@
+{
+  "id": "10644110",
+  "name": "Sagatsumatsu, Fair Beheader",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "attack": 5,
+  "defense": 4,
+  "text": "Fanfare: Select a card in your hand and discard it. Add 2 copies of Spilling Red to your hand.\n\nStorm\nBane\nAura",
+  "traits": {
+    "storm": true,
+    "bane": true,
+    "aura": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and discard it. Add 2 copies of Spilling Red to your hand.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Add 2 copies of Spilling Red to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "10642310"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

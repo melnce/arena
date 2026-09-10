@@ -1,0 +1,36 @@
+{
+  "id": "10062120",
+  "name": "Sacred Griffon",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 8,
+  "attack": 6,
+  "defense": 8,
+  "text": "Ward\nWhenever you Engage an amulet, give this follower Storm.",
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "printed": "Whenever you Engage an amulet, give this follower Storm.",
+      "effects": [
+        {
+          "printed": "give this follower Storm.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "storm": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

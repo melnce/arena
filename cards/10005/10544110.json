@@ -1,0 +1,101 @@
+{
+  "id": "10544110",
+  "name": "Erntz, Governing Justice",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 10,
+  "attack": 8,
+  "defense": 8,
+  "text": "Ward\nAt the end of your turn, if this follower is unevolved, deal 8 damage to 2 random enemy followers and restore 8 defense to your leader. If this follower is evolved, deal 8 damage to the enemy leader.\n\nEvolve: Remove Ward from this follower. Give it Intimidate.",
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, if this follower is unevolved, deal 8 damage to 2 random enemy followers and restore 8 defense to your leader. If this follower is evolved, deal 8 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "if this follower is unevolved, deal 8 damage to 2 random enemy followers and restore 8 defense to your leader.",
+          "op": "if",
+          "cond": {
+            "evolved": false
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "randomDistinct",
+                "count": 2
+              },
+              "amount": 8
+            },
+            {
+              "op": "restore",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 8
+            }
+          ]
+        },
+        {
+          "printed": "If this follower is evolved, deal 8 damage to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "evolved": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Remove Ward from this follower. Give it Intimidate.",
+      "effects": [
+        {
+          "printed": "Remove Ward from this follower.",
+          "op": "removeTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "ward": true
+          }
+        },
+        {
+          "printed": "Give it Intimidate.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "intimidate": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

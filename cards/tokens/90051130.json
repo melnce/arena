@@ -1,0 +1,48 @@
+{
+  "id": "90051130",
+  "name": "Ghost",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "attack": 1,
+  "defense": 1,
+  "text": "Storm\nWhen this card leaves the field, banish it.\nAt the end of your turn, banish this card.",
+  "traits": {
+    "storm": true
+  },
+  "tribes": [
+    "departed"
+  ],
+  "abilities": [
+    {
+      "on": "leave",
+      "printed": "When this card leaves the field, banish it.",
+      "effects": [
+        {
+          "printed": "banish it.",
+          "op": "banish",
+          "select": {
+            "pick": "self"
+          }
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, banish this card.",
+      "effects": [
+        {
+          "printed": "banish this card.",
+          "op": "banish",
+          "select": {
+            "pick": "self"
+          }
+        }
+      ]
+    }
+  ]
+}

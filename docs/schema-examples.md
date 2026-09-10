@@ -6299,3 +6299,302 @@ File: `cards/crests/faith-10624120.json`
   ]
 }
 ```
+
+### `10022120` — Rusty, Luxcard Trickster
+
+draw all deck copies by id (`count: {count: Selector}`) then grantTraits on bound draw.
+
+Printed text:
+
+```
+Super-Evolve: Draw all copies of Rusty, Luxcard Trickster and give them Storm.
+```
+
+File: `cards/10000/10022120.json`
+
+```json
+{
+  "id": "10022120",
+  "name": "Rusty, Luxcard Trickster",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Super-Evolve: Draw all copies of Rusty, Luxcard Trickster and give them Storm.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Draw all copies of Rusty, Luxcard Trickster and give them Storm.",
+      "effects": [
+        {
+          "printed": "Draw all copies of Rusty, Luxcard Trickster and give them Storm.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "draw",
+              "filter": {
+                "card": "10022120"
+              },
+              "count": {
+                "count": {
+                  "side": "ally",
+                  "zone": "deck",
+                  "kind": "card",
+                  "pick": "all",
+                  "filter": {
+                    "card": "10022120"
+                  }
+                }
+              },
+              "as": "d"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "d"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
+```
+
+### `10503310` — Fate of the World
+
+destroy random highest-attack enemy follower (`pick: highest`, `orderBy: attack`).
+
+Printed text:
+
+```
+Draw 2 cards. Destroy a random enemy follower with the highest attack.
+Enhance (10): Deal 4 damage to all enemies.
+```
+
+File: `cards/10005/10503310.json`
+
+```json
+{
+  "id": "10503310",
+  "name": "Fate of the World",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Draw 2 cards. Destroy a random enemy follower with the highest attack.\nEnhance (10): Deal 4 damage to all enemies.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw 2 cards. Destroy a random enemy follower with the highest attack.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        },
+        {
+          "printed": "Destroy a random enemy follower with the highest attack.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "highest",
+            "orderBy": "attack"
+          }
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 10,
+      "printed": "Enhance (10): Deal 4 damage to all enemies.",
+      "effects": [
+        {
+          "printed": "Deal 4 damage to all enemies.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "kind": "character",
+            "pick": "all",
+            "includeLeader": true,
+            "zone": "field"
+          },
+          "amount": 4
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
+```
+
+### `10804110` — Alabaster Bahamut
+
+mode 3 `removeCrests` over `zone: crests` (faiths excluded per official Q&A).
+
+Printed text:
+
+```
+Fanfare: Select a Mode to activate.
+1. Banish all other followers from the field.
+2. Banish all amulets from the field.
+3. Banish all crests.
+```
+
+File: `cards/10008/10804110.json`
+
+```json
+{
+  "id": "10804110",
+  "name": "Alabaster Bahamut",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "Fanfare: Select a Mode to activate.\n1. Banish all other followers from the field.\n2. Banish all amulets from the field.\n3. Banish all crests.",
+  "attack": 13,
+  "defense": 13,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Banish all other followers from the field.\n2. Banish all amulets from the field.\n3. Banish all crests.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Banish all other followers from the field.\n2. Banish all amulets from the field.\n3. Banish all crests.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Banish all other followers from the field.",
+              "effects": [
+                {
+                  "op": "banish",
+                  "select": {
+                    "side": "any",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "all",
+                    "other": true
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "2. Banish all amulets from the field.",
+              "effects": [
+                {
+                  "op": "banish",
+                  "select": {
+                    "side": "any",
+                    "zone": "field",
+                    "kind": "amulet",
+                    "pick": "all"
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "3. Banish all crests.",
+              "effects": [
+                {
+                  "op": "removeCrests",
+                  "select": {
+                    "side": "any",
+                    "zone": "crests",
+                    "kind": "card",
+                    "pick": "all"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
+```
+
+### `crest:10744110` — Crest: Burnite, Anathema of Ash
+
+startOfTurn self-damage; `leader_restored` once per turn.
+
+Printed text:
+
+```
+At the start of your turn, deal 2 damage to your leader.
+Once on each of your turns, when your leader's defense is restored, deal 1 damage to it.
+```
+
+File: `cards/crests/crest-10744110.json`
+
+```json
+{
+  "id": "crest:10744110",
+  "name": "Crest: Burnite, Anathema of Ash",
+  "grantedBy": [
+    "10744110"
+  ],
+  "faith": false,
+  "text": "At the start of your turn, deal 2 damage to your leader.\nOnce on each of your turns, when your leader's defense is restored, deal 1 damage to it.",
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, deal 2 damage to your leader.",
+      "effects": [
+        {
+          "printed": "deal 2 damage to your leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "leader_restored",
+      "oncePerTurn": true,
+      "printed": "Once on each of your turns, when your leader's defense is restored, deal 1 damage to it.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to it.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}
+```

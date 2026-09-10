@@ -1,0 +1,49 @@
+{
+  "id": "10051310",
+  "name": "Chaos Cyclone",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Select a Mode to activate.\n1. Draw a follower.\n2. Reanimate (2).",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate.\n1. Draw a follower.\n2. Reanimate (2).",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Draw a follower.\n2. Reanimate (2).",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Draw a follower.",
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": 1,
+                  "filter": {
+                    "kind": "follower"
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "2. Reanimate (2).",
+              "effects": [
+                {
+                  "op": "reanimate",
+                  "maxCost": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

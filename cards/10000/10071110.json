@@ -1,0 +1,33 @@
+{
+  "id": "10071110",
+  "name": "Kitty Cannoneer",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "attack": 3,
+  "defense": 2,
+  "text": "Fanfare: Add a Gear of Ambition to your hand.\n\nRush",
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Gear of Ambition to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Gear of Ambition to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90071210"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

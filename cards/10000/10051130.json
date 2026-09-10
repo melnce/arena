@@ -1,0 +1,39 @@
+{
+  "id": "10051130",
+  "name": "Devious Lesser Mummy",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "attack": 2,
+  "defense": 2,
+  "text": "Fanfare: Necromancy (4) - Give this follower Storm.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Necromancy (4) - Give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Necromancy (4) - Give this follower Storm.",
+          "op": "pay",
+          "resource": "shadows",
+          "amount": 4,
+          "effects": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

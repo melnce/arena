@@ -1,0 +1,35 @@
+{
+  "id": "90071120",
+  "name": "Enhanced Puppet",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "attack": 3,
+  "defense": 3,
+  "text": "Rush\nAt the end of your opponent's turn, destroy this card.",
+  "traits": {
+    "rush": true
+  },
+  "tribes": [
+    "puppetry"
+  ],
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "opponent",
+      "printed": "At the end of your opponent's turn, destroy this card.",
+      "effects": [
+        {
+          "printed": "destroy this card.",
+          "op": "destroy",
+          "select": {
+            "pick": "self"
+          }
+        }
+      ]
+    }
+  ]
+}

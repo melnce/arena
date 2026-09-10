@@ -1,0 +1,43 @@
+{
+  "id": "10032310",
+  "name": "Arcane Eruption",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Deal 2 damage to all followers. Earth Rite (1) - Draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 2 damage to all followers. Earth Rite (1) - Draw a card.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to all followers.",
+          "op": "damage",
+          "select": {
+            "side": "any",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 2
+        },
+        {
+          "printed": "Earth Rite (1) - Draw a card.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 1,
+          "effects": [
+            {
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

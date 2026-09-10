@@ -48,7 +48,7 @@ Status:
 | `10041310` | Strike of the Dragonewt | — | damage | overflow | expressible |
 | `10042110` | Draconic Berserker | evolve, superEvolve | damage | — | expressible |
 | `10042120` | Battleforged Dragon Keeper | — | summon, mode:enhance | — | expressible |
-| `10042310` | Dragonsign | — | draw | — | expressible |
+| `10042310` | Dragonsign | — | draw | maxPpAtLeast | expressible |
 | `10051110` | Mistress of the Fanged | — | — | — | expressible |
 | `10051120` | Night Fiend | fanfare | damage | — | expressible |
 | `10051130` | Devious Lesser Mummy | fanfare | grantTraits, pay | — | expressible |
