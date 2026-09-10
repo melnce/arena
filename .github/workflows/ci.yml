@@ -147,6 +147,56 @@ jobs:
           ARENA_FIRST: coin
         run: node wasm/tests/node.test.mjs
 
+  ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-wasm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-wasm-
+
+      - name: wasm-pack
+        run: |
+          if ! command -v wasm-pack >/dev/null; then
+            curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+          fi
+
+      - name: wasm-pack web
+        run: wasm-pack build wasm --target web --release --out-dir ../ui/pkg
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: typecheck and build
+        working-directory: ui
+        run: npm ci && npm run typecheck && npm run build
+
+      - name: Playwright Chromium
+        run: npx playwright install chromium --with-deps
+        working-directory: ui
+
+      - name: Playwright smoke
+        working-directory: ui
+        run: npx playwright test
+
   py:
     runs-on: ubuntu-latest
     timeout-minutes: 15
