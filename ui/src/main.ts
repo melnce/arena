@@ -1,6 +1,6 @@
 import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
 import { decks, loadCatalog, parseDeckJson } from "./catalog.ts";
-import { spawnFloaters } from "./fct.ts";
+import { clearFloaters, spawnFloaters } from "./fct.ts";
 import { bindPointer } from "./input.ts";
 import * as L from "./legal.ts";
 import { bindTooltips, render, resetZoneCache, type RenderHooks } from "./render.ts";
@@ -8,6 +8,8 @@ import { byId } from "./render/ids.ts";
 import {
   applyAction,
   botStep,
+  canRedo,
+  canUndo,
   createSession,
   disposeSession,
   isHumanActing,
@@ -103,6 +105,14 @@ const hooks: RenderHooks = {
   evoArmed: null,
 };
 
+function exposeArena(): void {
+  window.__arena = {
+    hash: () => session?.game.hash() ?? "",
+    canUndo: () => (session ? canUndo(session) : false),
+    canRedo: () => (session ? canRedo(session) : false),
+  };
+}
+
 function paint(): void {
   if (!session) return;
   hooks.evoArmed = evoArmed;
@@ -110,6 +120,18 @@ function paint(): void {
   if (counter) counter.dataset.botSeq = String(session.botSeq);
   document.body.dataset.watch = watchPlaying ? "1" : "0";
   render(session, hooks);
+  exposeArena();
+}
+
+/** Undo / redo path — never calls maybeBots (replay uses stored snapshots). */
+function applyHistory(fn: (s: Session) => boolean): void {
+  if (!session) return;
+  watchPlaying = false;
+  window.clearTimeout(watchTimer);
+  if (!fn(session)) return;
+  clearFloaters();
+  resetZoneCache();
+  paint();
 }
 
 function paintSafe(): void {
@@ -435,20 +457,30 @@ function closeHistory(): void {
 
 function initHotkeys(): void {
   document.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-      e.preventDefault();
-      if (!session) return;
-      if (e.shiftKey) redo(session);
-      else undo(session);
-      resetZoneCache();
-      paint();
+    const el = e.target as HTMLElement | null | undefined;
+    if (el) {
+      const tag = (el.tagName || "").toUpperCase();
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable) {
+        return;
+      }
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+    const isMac =
+      typeof navigator !== "undefined" &&
+      navigator.platform &&
+      navigator.platform.toUpperCase().includes("MAC");
+    const ctrl = isMac ? e.metaKey : e.ctrlKey;
+    if (ctrl && !e.shiftKey && (e.key === "z" || e.key === "Z")) {
       e.preventDefault();
-      if (!session) return;
-      redo(session);
-      resetZoneCache();
-      paint();
+      applyHistory(undo);
+      return;
+    }
+    if (
+      (ctrl && e.shiftKey && (e.key === "z" || e.key === "Z")) ||
+      (e.ctrlKey && (e.key === "y" || e.key === "Y"))
+    ) {
+      e.preventDefault();
+      applyHistory(redo);
+      return;
     }
     if (e.key === "F6") {
       e.preventDefault();
@@ -611,18 +643,9 @@ async function boot(): Promise<void> {
   });
 
   byId("startGameBtn")?.addEventListener("click", () => void startFromForm());
-  byId("undoBtn")?.addEventListener("click", () => {
-    if (!session) return;
-    undo(session);
-    resetZoneCache();
-    paint();
-  });
-  byId("redoBtn")?.addEventListener("click", () => {
-    if (!session) return;
-    redo(session);
-    resetZoneCache();
-    paint();
-  });
+  byId("undoBtn")?.addEventListener("click", () => applyHistory(undo));
+  byId("redoBtn")?.addEventListener("click", () => applyHistory(redo));
+  exposeArena();
   byId("modeSelect")?.addEventListener("change", syncModeChrome);
   byId("activeOnBottomToggle")?.addEventListener("change", (e) => {
     document.body.classList.toggle(

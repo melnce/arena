@@ -31,7 +31,7 @@ Share URL: `?seed=&deckA=&deckB=&mode=`.
 
 The engine cannot deserialize `Game.full()` today, so Save/Load/Export/Import store a **replayable action log**: `{ seed, decks, first, NeutralAction[] }`. Replay is `new Game` + `apply` in order. Checkpoints (F6 / F7) are live `Game.clone()` snapshots.
 
-Undo / redo is also `Game.clone()` (Ctrl+Z / Ctrl+Shift+Z).
+Undo / redo is a ring of `Game.clone()` snapshots taken before each `NeutralAction` (limit 200). Keys match the old tool: Ctrl/Cmd+Z undo; Ctrl+Y, Ctrl/Cmd+Shift+Z redo. Mid-choice undo jumps to the state before the choice began. In Play vs bot, one undo returns to the human's previous decision (bot steps ride on the redo stack and replay identically). Watch steps one bot action at a time when paused.
 
 ## Bindings added in this milestone
 

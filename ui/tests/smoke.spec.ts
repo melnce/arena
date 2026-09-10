@@ -34,6 +34,20 @@ async function startGame(page: Page, opts: {
   });
 }
 
+async function arenaSnap(page: Page) {
+  return page.evaluate(() => ({
+    hash: window.__arena!.hash(),
+    canUndo: window.__arena!.canUndo(),
+    canRedo: window.__arena!.canRedo(),
+    turn: document.getElementById("turnCounter")?.dataset.turn ?? "",
+    phase: document.getElementById("turnCounter")?.dataset.phase ?? "",
+    acting: document.getElementById("turnCounter")?.dataset.acting ?? "",
+    ply: document.getElementById("turnCounter")?.textContent ?? "",
+    readout: document.getElementById("turnReadout")?.textContent ?? "",
+    events: document.getElementById("eventLog")?.dataset.count ?? "",
+  }));
+}
+
 async function confirmMulligans(page: Page) {
   for (let i = 0; i < 2; i++) {
     const btn = page.locator(".mulligan-confirm-btn").locator("visible=true");
@@ -65,6 +79,52 @@ test("hotseat: seed 1, both mulligans, play, end turn", async ({ page }) => {
   await expect(page.locator("#turnCounter")).not.toHaveText(before, { timeout: 5000 });
   const log = await page.locator("#eventLog").innerText();
   expect(log.length).toBeGreaterThan(0);
+});
+
+test("hotseat: Ctrl+Z / Ctrl+Y restore Game.hash and button state", async ({ page }) => {
+  await boot(page);
+  await startGame(page, {
+    mode: "hotseat",
+    seed: "1",
+    first: "a",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+  });
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await expect.poll(() => page.evaluate(() => window.__arena?.hash() ?? "")).not.toBe("");
+
+  const snap0 = await arenaSnap(page);
+  expect(snap0.hash.length).toBeGreaterThan(0);
+  await expect(page.locator("#undoBtn")).toBeDisabled();
+  await expect(page.locator("#redoBtn")).toBeDisabled();
+  expect(snap0.canUndo).toBe(false);
+  expect(snap0.canRedo).toBe(false);
+
+  await confirmMulligans(page);
+  await expect(page.locator("#undoBtn")).toBeEnabled({ timeout: 10_000 });
+  await expect.poll(() => page.evaluate(() => window.__arena!.hash())).not.toBe(snap0.hash);
+  const snap2 = await arenaSnap(page);
+  expect(snap2.hash).not.toBe(snap0.hash);
+  await expect(page.locator("#redoBtn")).toBeDisabled();
+  expect(snap2.canUndo).toBe(true);
+  expect(snap2.canRedo).toBe(false);
+
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press("Control+z");
+  await page.keyboard.press("Control+z");
+  await expect.poll(() => page.evaluate(() => window.__arena!.hash())).toBe(snap0.hash);
+  const afterUndo = await arenaSnap(page);
+  expect(afterUndo).toEqual({ ...snap0, canUndo: false, canRedo: true });
+  await expect(page.locator("#undoBtn")).toBeDisabled();
+  await expect(page.locator("#redoBtn")).toBeEnabled();
+
+  await page.keyboard.press("Control+y");
+  await page.keyboard.press("Control+y");
+  await expect.poll(() => page.evaluate(() => window.__arena!.hash())).toBe(snap2.hash);
+  const afterRedo = await arenaSnap(page);
+  expect(afterRedo).toEqual({ ...snap2, canUndo: true, canRedo: false });
+  await expect(page.locator("#undoBtn")).toBeEnabled();
+  await expect(page.locator("#redoBtn")).toBeDisabled();
 });
 
 test("vs bot: human A vs random, bot turn resolves", async ({ page }) => {

@@ -2,6 +2,13 @@ import type { EngineEvent, PlayerId } from "./types.ts";
 import { visual } from "./render/ids.ts";
 
 const STAGGER_MS = 130;
+const floaterTimers: number[] = [];
+
+export function clearFloaters(): void {
+  for (const t of floaterTimers) window.clearTimeout(t);
+  floaterTimers.length = 0;
+  document.querySelectorAll(".floating-combat-text").forEach((el) => el.remove());
+}
 
 export function spawnFloaters(events: EngineEvent[], enabled: boolean): void {
   if (!enabled) return;
@@ -48,7 +55,7 @@ function queueFloater(
   amount: number,
   delay: number,
 ): void {
-  window.setTimeout(() => {
+  const show = window.setTimeout(() => {
     const el = document.createElement("div");
     el.className =
       kind === "damage"
@@ -56,6 +63,8 @@ function queueFloater(
         : "floating-combat-text floating-combat-text--heal";
     el.textContent = kind === "damage" ? `-${amount}` : `+${amount}`;
     host.appendChild(el);
-    window.setTimeout(() => el.remove(), 1800);
+    const hide = window.setTimeout(() => el.remove(), 1800);
+    floaterTimers.push(hide);
   }, delay);
+  floaterTimers.push(show);
 }
