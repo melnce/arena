@@ -188,7 +188,12 @@ pub struct DestroyedRecord {
 pub struct BonusPp {
     pub early_charge: bool,
     pub late_charge: bool,
+    /// Extra orb is currently on (usable PP may be max+1).
     pub active: bool,
+    /// Activated this turn and then spent down to `pp <= pp_max`.
+    /// Cancel is a no-op; end of turn commits the charge.
+    /// Old engine `bonusPp.ts` / `canToggleSecondPlayerBonusPp`.
+    pub locked: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -290,12 +295,17 @@ impl PlayerState {
     }
 
     pub fn spend_pp(&mut self, cost: i32) {
+        let was_active = self.bonus_pp.active;
         let mut left = cost;
         let from_reg = left.min(self.pp);
         self.pp -= from_reg;
         left -= from_reg;
         if left > 0 && self.bonus_pp.active {
             self.bonus_pp.active = false;
+        }
+        // Once current PP is at or below max, the orb is spent — cancel is gone.
+        if was_active && self.usable_pp() <= self.pp_max {
+            self.bonus_pp.locked = true;
         }
     }
 

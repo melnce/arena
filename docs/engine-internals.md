@@ -18,6 +18,10 @@ How `arena-engine` is wired. The public contract is `docs/engine-api.md` and `do
 
 A card whose data uses an M1-unsupported construct fails at `require_supported` with `Unsupported { card, construct }`. `legal_actions` never offers a play of such a card.
 
+## Bonus PP toggle
+
+`Action::BonusPp` is a toggle, matching the old engine (`canToggleSecondPlayerBonusPp`). The second player may activate the current-tier charge (early: their turns ≤ 5; late: from turn 6) and may cancel while the extra orb is unspent (`usable_pp > pp_max`). Spending down to max PP or below locks the toggle for the rest of the turn; cancel is not offered. End of turn (after EOT effects, step 7) commits the charge. Activate → cancel → activate in one turn is legal.
+
 ## Bindings
 
 `as` / `{pick: bound, ref}` names live in `State.bindings` for one **resolution**. The map is cleared at the start of `apply` and before each queued trigger. Nested `seq` / `if` / `pay` frames inherit the current map, so an Evolve ability's `as: "g"` is visible to the Super-Evolve ability of the same card when both fire (rulebook: a super-evolve fires both lines unless the super line says `instead`). A `ref` with no live binding is an empty set — never a runtime error. `CardDb::load` rejects a `ref` that no `as` on the same card could produce (`LoadError::UnboundRef`).

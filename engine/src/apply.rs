@@ -256,7 +256,7 @@ fn legal_main(db: &CardDb, state: &State) -> Vec<Action> {
             out.push(Action::Fuse { host: i as u8 });
         }
     }
-    if can_bonus(p) {
+    if can_toggle_bonus_pp(p) {
         out.push(Action::BonusPp);
     }
     for (slot, maybe) in p.field.iter().enumerate() {
@@ -291,13 +291,24 @@ fn legal_main(db: &CardDb, state: &State) -> Vec<Action> {
     out
 }
 
-fn can_bonus(p: &PlayerState) -> bool {
+/// Second-player Bonus PP is a **toggle** (old engine `canToggleSecondPlayerBonusPp`).
+/// Activate the current-tier charge; cancel while the orb is unspent
+/// (`usable_pp > pp_max`); after a spend to ≤ max, the toggle is not offered.
+/// Rulebook "Bonus PP" — two charges (turns ≤ 5 / from turn 6); EOT commits.
+fn can_toggle_bonus_pp(p: &PlayerState) -> bool {
+    if !p.is_second || p.turns_taken == 0 {
+        return false;
+    }
+    if p.bonus_pp.locked {
+        return false;
+    }
     if p.bonus_pp.active {
-        return false;
+        return p.usable_pp() > p.pp_max;
     }
-    if p.turns_taken == 0 {
-        return false;
-    }
+    has_bonus_charge(p)
+}
+
+fn has_bonus_charge(p: &PlayerState) -> bool {
     if p.turns_taken < 6 {
         p.bonus_pp.early_charge
     } else {
@@ -716,14 +727,31 @@ fn apply_mulligan(
 
 fn apply_bonus(state: &mut State, _events: &mut [Event]) -> Result<(), Illegal> {
     let me = state.active;
-    let p = state.player_mut(me);
-    if p.turns_taken < 6 {
-        p.bonus_pp.early_charge = false;
-    } else {
-        p.bonus_pp.late_charge = false;
+    if !can_toggle_bonus_pp(state.player(me)) {
+        return Err(Illegal::NotLegal);
     }
-    p.bonus_pp.active = true;
+    let p = state.player_mut(me);
+    if p.bonus_pp.active {
+        // cancel while unspent — charge stays available
+        p.bonus_pp.active = false;
+    } else {
+        p.bonus_pp.active = true;
+    }
     Ok(())
+}
+
+/// End of turn commits an activated (or spent) Bonus PP charge.
+/// Rulebook Bonus PP; old engine commits on turn end, not on the click.
+fn commit_bonus_pp(p: &mut PlayerState) {
+    if p.bonus_pp.active || p.bonus_pp.locked {
+        if p.turns_taken < 6 {
+            p.bonus_pp.early_charge = false;
+        } else {
+            p.bonus_pp.late_charge = false;
+        }
+    }
+    p.bonus_pp.active = false;
+    p.bonus_pp.locked = false;
 }
 
 fn apply_play(
@@ -1422,6 +1450,7 @@ fn begin_turn(state: &mut State, who: PlayerId, events: &mut Vec<Event>) -> Resu
         }
         p.pp = p.pp_max;
         p.bonus_pp.active = false;
+        p.bonus_pp.locked = false;
         p.combo = 0;
         p.played_this_turn.clear();
         p.attacked_leader_last_turn = p.attacked_leader_this_turn;
@@ -1749,6 +1778,7 @@ fn run_aftermath(
             expire_eot(state, state.active);
             expire_eot(state, state.active.opponent());
             expire_until(state, Until::EndOfTurn, state.active);
+            commit_bonus_pp(state.player_mut(state.active));
             let next = state.active.opponent();
             start_turn_full(db, state, next, events)?;
         }

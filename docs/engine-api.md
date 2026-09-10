@@ -154,7 +154,7 @@ enum Action {
     Evolve { slot: Slot, super_evolve: bool }, // NeutralAction JSON key remains "super"
     Engage { slot: Slot },
     Fuse { host: u8 },            // then Phase::Choice for partners
-    BonusPp,
+    BonusPp,                  // toggle: activate / cancel while unspent (usable PP > max PP)
     Choose(u8),
     Confirm,
     EndTurn,

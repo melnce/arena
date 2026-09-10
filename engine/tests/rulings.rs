@@ -319,6 +319,75 @@ fn bonus_pp_second_player_charges() {
     assert!(legal.iter().any(|a| matches!(a, Action::BonusPp)));
 }
 
+/// Old engine `bonusPp.ts`: Bonus PP is a toggle. Activate → cancel → activate
+/// in one turn is legal. After a spend to ≤ max PP, cancel is not offered.
+#[test]
+fn bonus_pp_toggle_activate_cancel_activate() {
+    let db = load_db();
+    let mut st = started(&db, 14);
+    end_turn(&db, &mut st);
+    let me = PlayerId::B;
+    assert!(st.player(me).bonus_pp.early_charge);
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    assert!(st.player(me).bonus_pp.active);
+    assert!(st.player(me).usable_pp() > st.player(me).pp_max);
+    assert!(
+        legal_actions(&db, &st)
+            .iter()
+            .any(|a| matches!(a, Action::BonusPp)),
+        "unspent orb can be cancelled"
+    );
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    assert!(!st.player(me).bonus_pp.active);
+    assert!(
+        st.player(me).bonus_pp.early_charge,
+        "cancel does not commit"
+    );
+    assert!(
+        legal_actions(&db, &st)
+            .iter()
+            .any(|a| matches!(a, Action::BonusPp)),
+        "activate again in the same turn is legal"
+    );
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    assert!(st.player(me).bonus_pp.active);
+}
+
+#[test]
+fn bonus_pp_spent_to_max_cancel_not_offered() {
+    let db = load_db();
+    let mut st = started(&db, 14);
+    end_turn(&db, &mut st);
+    let me = PlayerId::B;
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    assert!(st.player(me).usable_pp() > st.player(me).pp_max);
+    st.player_mut(me).hand.clear();
+    let h = put_hand(&db, &mut st, me, "88001110");
+    play(&db, &mut st, h);
+    assert!(st.player(me).usable_pp() <= st.player(me).pp_max);
+    assert!(
+        !legal_actions(&db, &st)
+            .iter()
+            .any(|a| matches!(a, Action::BonusPp)),
+        "after spend to ≤ max, cancel is not offered"
+    );
+}
+
+#[test]
+fn bonus_pp_end_of_turn_commits_charge() {
+    let db = load_db();
+    let mut st = started(&db, 14);
+    end_turn(&db, &mut st);
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
+    assert!(
+        !st.player(PlayerId::B).bonus_pp.early_charge,
+        "EOT commits the early charge"
+    );
+    assert!(!st.player(PlayerId::B).bonus_pp.active);
+}
+
 #[test]
 fn attacked_leader_counts_the_attack() {
     // "Attacked a leader last turn" — the attack counts, not the damage — 2026-08-29
