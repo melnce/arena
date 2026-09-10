@@ -1,0 +1,400 @@
+{
+  "_meta": {
+    "source": "https://shadowverse-wb.com/web/System/glossaryList",
+    "fetched_at": "2026-09-10T08:53:46.587Z",
+    "lang": "en",
+    "count": 78
+  },
+  "entries": [
+    {
+      "ordinal": 76,
+      "title": "Accelerate",
+      "text": "An ability that lets you play the card as a spell for a lower cost if you don't have enough play points to play it normally. If the card has another Accelerate or Crystallize ability, the ability with the highest payable cost will be activated."
+    },
+    {
+      "ordinal": 58,
+      "title": "Add to Hand",
+      "text": "An ability that \"adds\" a card to your hand will create a copy of it in your hand. If your hand is full, a shadow will be added to your cemetery instead."
+    },
+    {
+      "ordinal": 38,
+      "title": "Ambush",
+      "text": "Followers with Ambush can't be selected for enemy abilities or attacked by enemy followers. Ambush is lost when the follower attacks or deals damage with an ability."
+    },
+    {
+      "ordinal": 2,
+      "title": "Amulet",
+      "text": "A type of card. Amulets enter the field when played, after which their abilities become active. They can't attack or be attacked."
+    },
+    {
+      "ordinal": 22,
+      "title": "Attack (Action)",
+      "text": "Starting from the turn after an allied follower enters the field, you can attack with it once per turn to deal damage to an enemy. When attacking an enemy follower, the allied follower will take damage equal to the opposing follower's attack value."
+    },
+    {
+      "ordinal": 8,
+      "title": "Attack (Stat)",
+      "text": "The amount of damage a follower deals to enemies when attacking or being attacked, indicated at the bottom left of the card."
+    },
+    {
+      "ordinal": 42,
+      "title": "Aura",
+      "text": "Followers with Aura can't be selected for enemy abilities, but can still be targeted by enemy abilities that affect random targets."
+    },
+    {
+      "ordinal": 37,
+      "title": "Bane",
+      "text": "Followers with Bane destroy any followers they attack or are attacked by, after damage is exchanged. Bane will activate even if the follower with Bane has 0 attack or its damage dealt is reduced to 0 by an ability."
+    },
+    {
+      "ordinal": 61,
+      "title": "Banish",
+      "text": "Banishing a card removes it from the field, hand, or deck without adding a shadow to its controller's cemetery or activating Last Words or other abilities that activate when a card is destroyed."
+    },
+    {
+      "ordinal": 43,
+      "title": "Barrier",
+      "text": "When a follower or leader with Barrier takes damage, that damage is reduced to 0, and Barrier is removed."
+    },
+    {
+      "ordinal": 24,
+      "title": "Bonus Play Point",
+      "text": "When going second, you can press the orange +1 Play Pt button during your turn to gain a bonus play point to use that turn. The button will refresh at the start of your sixth turn if used, so you can use it up to twice per match."
+    },
+    {
+      "ordinal": 15,
+      "title": "Cemetery",
+      "text": "Your cemetery holds shadows, which represent the cards you've used up. Whenever you play a spell, or an allied follower or amulet is destroyed, a shadow is added to your cemetery."
+    },
+    {
+      "ordinal": 49,
+      "title": "Clash",
+      "text": "An ability that activates when the follower attacks or is attacked by another follower, before damage is exchanged. Clash doesn't activate when attacking a leader."
+    },
+    {
+      "ordinal": 5,
+      "title": "Class",
+      "text": "Cards belong to one of eight classes: Forestcraft, Swordcraft, Runecraft, Dragoncraft, Abysscraft, Havencraft, Portalcraft, or Neutral.\n\nLeaders also belong to a class. For example, Dreizehn is a Portalcraft leader and can therefore use Portalcraft cards. Neutral cards can be used by leaders of any class."
+    },
+    {
+      "ordinal": 27,
+      "title": "Combo",
+      "text": "Your Combo is the number of cards you've played this turn. Some abilities require your Combo to be at or above a certain number to activate. When playing a card with such an ability, that card counts toward your Combo."
+    },
+    {
+      "ordinal": 7,
+      "title": "Cost",
+      "text": "The number of play points needed to play a card, indicated at the top left of the card."
+    },
+    {
+      "ordinal": 40,
+      "title": "Countdown",
+      "text": "When a card with Countdown enters the field or leader area, its countdown is set to the number indicated in brackets and is displayed at the bottom right. This countdown advances by 1 at the start of each of its controller's turns, and when it reaches 0, the card is destroyed."
+    },
+    {
+      "ordinal": 3,
+      "title": "Crest",
+      "text": "A type of card. When you gain a crest, it goes to your leader area, after which its abilities become active. You can only have one of each crest in your leader area."
+    },
+    {
+      "ordinal": 77,
+      "title": "Crystallize",
+      "text": "An ability that lets you play the card as an amulet if you don't have enough play points to play it normally. If the card has another Crystallize or Accelerate ability, the ability with the highest payable cost will be activated."
+    },
+    {
+      "ordinal": 55,
+      "title": "Damage",
+      "text": "When a follower or leader takes damage, it loses defense equal to the damage dealt. Abilities that increase or reduce damage take effect before abilities that set damage to a specific value. Damage can't be less than 0."
+    },
+    {
+      "ordinal": 12,
+      "title": "Deck",
+      "text": "The 40 cards you play a match with. At the start of each turn, you draw one card from your deck. If you must draw a card when your deck is empty, you lose the match."
+    },
+    {
+      "ordinal": 9,
+      "title": "Defense",
+      "text": "The amount of damage a follower or leader can take, indicated at the bottom right of cards. When a follower's defense falls to 0, it is destroyed. When your leader's defense falls to 0, you lose the match."
+    },
+    {
+      "ordinal": 60,
+      "title": "Destroy",
+      "text": "Destroying a follower or amulet removes it from the field. Every allied follower or amulet destroyed adds a shadow to your cemetery."
+    },
+    {
+      "ordinal": 68,
+      "title": "Discard",
+      "text": "Discarding a card removes it from your hand and adds a shadow to your cemetery."
+    },
+    {
+      "ordinal": 39,
+      "title": "Drain",
+      "text": "When followers with Drain attack, they restore defense to their leader equal to the attack damage dealt."
+    },
+    {
+      "ordinal": 57,
+      "title": "Draw",
+      "text": "Drawing a card moves it from your deck to your hand. If your hand is full, a shadow will be added to your cemetery instead."
+    },
+    {
+      "ordinal": 29,
+      "title": "Earth Rite",
+      "text": "Earth Rite abilities require a certain number of earth sigils to activate, indicated in brackets. If you have the required amount of sigils on the field, they will be consumed to activate the ability."
+    },
+    {
+      "ordinal": 30,
+      "title": "Earth Sigil",
+      "text": "When an amulet with Earth Sigil enters the field, its sigil count is set to 1 and displayed on the bottom right of the card. Any other allied amulets with Earth Sigil on the field will be banished, and their sigil counts added on to the new amulet.\n\nCards with Earth Sigil can't be destroyed by abilities or selected for enemy abilities. They are destroyed when their sigil count falls to 0.\n\nAn ability that reads \"gain X earth sigils\" will add X to the sigil count of an allied amulet with Earth Sigil on the field. If there isn't one, an allied Magic Sediment will be summoned with a sigil count of X."
+    },
+    {
+      "ordinal": 53,
+      "title": "Engage",
+      "text": "You can activate the Engage ability of an amulet on the field once per turn by pressing the \"Engage\" button on its tooltip. Some Engage abilities cost play points to activate."
+    },
+    {
+      "ordinal": 50,
+      "title": "Enhance",
+      "text": "When you play a card with an Enhance ability, if you have the number of play points indicated in brackets, that many play points will be spent instead of the card's normal cost, and its Enhance ability will activate.\n\nIf a card has multiple Enhance abilities, it will be played at its highest possible Enhance cost, and all of its other Enhance abilities with a lower cost will also activate."
+    },
+    {
+      "ordinal": 18,
+      "title": "EP (Evolution Point)",
+      "text": "Points you spend to evolve followers. You start the match with 2 points."
+    },
+    {
+      "ordinal": 25,
+      "title": "Evolution",
+      "text": "Evolving a follower gives it +2/+2 and the ability to attack enemy followers on the same turn it entered the field. An evolved follower can't be evolved again.\n\nEvolution is unlocked on your fifth turn if you're going first and your fourth turn if you're going second, after which you can spend an evolution point to evolve a follower once per turn.\n\nYou can't evolve and super-evolve using evolution points in the same turn."
+    },
+    {
+      "ordinal": 46,
+      "title": "Evolve",
+      "text": "An ability that activates when the card is evolved or super-evolved using evolution points."
+    },
+    {
+      "ordinal": 65,
+      "title": "Exact Copy",
+      "text": "An exact copy of a card retains any damage and effects on the original, but not whether or not it had attacked or been engaged that turn."
+    },
+    {
+      "ordinal": 71,
+      "title": "Faith",
+      "text": "A type of card. At the start of a match, a faith is put into your leader area for each unique faith in your deck. You can only have one of each faith in your leader area. Each faith displays its faith value on the bottom right of its icon, which can strengthen cards belonging to its faith."
+    },
+    {
+      "ordinal": 44,
+      "title": "Fanfare",
+      "text": "An ability that activates when the card enters the field after being played from hand. If the card is summoned to or created on the field by an ability, Fanfare won't activate."
+    },
+    {
+      "ordinal": 13,
+      "title": "Field",
+      "text": "The area where followers and amulets are put when they're played or summoned. You may have up to 5 cards on the field at a time."
+    },
+    {
+      "ordinal": 0,
+      "title": "Follower",
+      "text": "A type of card. Followers enter the field when played and can attack enemies the following turn."
+    },
+    {
+      "ordinal": 52,
+      "title": "Fuse",
+      "text": "If a card in your hand has a Fuse ability, you can feed it other cards in your hand that fit the specified conditions by pressing the Fuse button in its details window.\n\nYou can only fuse once per turn, but any number of cards can be fused at the same time, unless stated otherwise. Fused cards are removed from your hand and don't add a shadow to your cemetery."
+    },
+    {
+      "ordinal": 54,
+      "title": "Give +X/+Y",
+      "text": "Giving a follower +X/+Y increases its attack by X and its defense and max defense by Y. Negative values (-X/-Y) can also be given, in which case attack, defense, and max defense are reduced instead."
+    },
+    {
+      "ordinal": 14,
+      "title": "Hand",
+      "text": "The area where cards are held before they're played. You may have up to 9 cards in your hand at a time."
+    },
+    {
+      "ordinal": 41,
+      "title": "Intimidate",
+      "text": "Followers with Intimidate can't be attacked by enemy followers."
+    },
+    {
+      "ordinal": 73,
+      "title": "Invoke",
+      "text": "An ability that summons a card from your deck if there's space on your field. If several cards are invoked at once, the order in which they enter the field will be randomized. Only one copy of each card can be invoked at once, but the likelihood a card is invoked increases with the number of copies in your deck."
+    },
+    {
+      "ordinal": 45,
+      "title": "Last Words",
+      "text": "An ability that activates when the card is destroyed. If the card is banished or transformed, Last Words won't activate."
+    },
+    {
+      "ordinal": 11,
+      "title": "Leader",
+      "text": "Leaders such as Dreizehn represent players in a match. If your leader's defense falls to zero, you lose the match."
+    },
+    {
+      "ordinal": 16,
+      "title": "Leader Area",
+      "text": "The area where crests and faiths are placed. You may have a combined total of 5 in your leader area at a time."
+    },
+    {
+      "ordinal": 62,
+      "title": "Leave the Field",
+      "text": "A card leaves the field when it is destroyed, banished, or moved to another area. When a card is transformed, it is not considered to have left the field."
+    },
+    {
+      "ordinal": 10,
+      "title": "Match",
+      "text": "A battle between players wielding decks of their choice. A match ends when the defense of either leader falls to 0."
+    },
+    {
+      "ordinal": 51,
+      "title": "Mode",
+      "text": "An ability that lets you select a specific number of other abilities to activate from a list. You may select abilities even if you don't fulfill their conditions, but they won't activate."
+    },
+    {
+      "ordinal": 32,
+      "title": "Necromancy",
+      "text": "Necromancy abilities require a certain number of shadows to activate, indicated in brackets. If you have the required number of shadows in your cemetery, they will be consumed to activate the ability."
+    },
+    {
+      "ordinal": 31,
+      "title": "Overflow",
+      "text": "You're in Overflow if you have at least 7 max play points."
+    },
+    {
+      "ordinal": 20,
+      "title": "Play",
+      "text": "To \"play\" a card means using it from hand by spending play points equal to its cost."
+    },
+    {
+      "ordinal": 17,
+      "title": "Play Point",
+      "text": "Points you spend to play cards. At the start of each of your turns, you gain 1 max play point, up to a hard limit of 10, and recover all of your used play points."
+    },
+    {
+      "ordinal": 70,
+      "title": "Rally",
+      "text": "Your Rally count is the number of allied followers that have entered the field during the match. Some abilities only activate if your Rally count is equal to or greater than the specified number."
+    },
+    {
+      "ordinal": 33,
+      "title": "Reanimate",
+      "text": "Reanimate summons a copy of the allied follower with the highest base cost destroyed that match and gives it the Departed trait. The cost of the reanimated follower must be equal to or less than the number indicated in brackets. If there are multiple eligible followers, one will be chosen at random. The more copies of a follower have been destroyed, the more likely it is to be chosen."
+    },
+    {
+      "ordinal": 23,
+      "title": "Redraw",
+      "text": "After drawing your initial hand of four cards at the start of a match, you may redraw, or mulligan, any number of them once. You won't draw the exact same card, but if you have multiple copies in your deck, you may end up drawing a different copy."
+    },
+    {
+      "ordinal": 56,
+      "title": "Restore",
+      "text": "Restoring a follower's or leader's defense removes damage taken by it. Defense can't be restored beyond its max value."
+    },
+    {
+      "ordinal": 66,
+      "title": "Return to Deck",
+      "text": "Returning a card to deck moves it from the field or hand to its controller's deck. Cards returned to deck from hand retain any effects applied to them."
+    },
+    {
+      "ordinal": 67,
+      "title": "Return to Hand",
+      "text": "Returning a card to hand moves it from the field to its controller's hand. Any damage or effects applied to it on the field don't carry over. If your hand is full, a shadow will be added to your cemetery instead."
+    },
+    {
+      "ordinal": 35,
+      "title": "Rush",
+      "text": "Followers with Rush can attack followers on the same turn they enter the field."
+    },
+    {
+      "ordinal": 64,
+      "title": "Select",
+      "text": "Some abilities require you to select leaders or a certain number of cards on the field or in your hand.\n\nSpells that require target selection can only be played if you can select the specified number of targets.\n\nIn contrast, followers and amulets with Fanfare abilities that require target selection can still be played even if you can't select the specified number of targets. You must still select as many targets as possible."
+    },
+    {
+      "ordinal": 19,
+      "title": "SEP (Super-Evolution Point)",
+      "text": "Points you spend to super-evolve followers. You start the match with 2 points."
+    },
+    {
+      "ordinal": 74,
+      "title": "Skybound Art",
+      "text": "An ability that activates when the card's Skybound Art gauge is greater than or equal to 10. A card's Skybound Art gauge is equal to the current turn number plus the number of times an allied follower has evolved while the card is in your hand."
+    },
+    {
+      "ordinal": 1,
+      "title": "Spell",
+      "text": "A type of card. Spells activate their abilities when played, then immediately go to your cemetery."
+    },
+    {
+      "ordinal": 28,
+      "title": "Spellboost",
+      "text": "Every spell you play spellboosts the cards in your hand once. Spellboosting doesn't do anything on its own, but some cards have On Spellboost abilities which activate whenever the card is spellboosted."
+    },
+    {
+      "ordinal": 63,
+      "title": "Split Damage",
+      "text": "Damage split between enemies is dealt in order from oldest enemy follower on the field to newest (right to left), with each follower taking up to its defense in damage before the subsequent follower takes damage. Any leftover damage is dealt to the enemy leader or, if the ability only targets followers, the last follower. Transforming a follower doesn't change the order in which damage is split."
+    },
+    {
+      "ordinal": 34,
+      "title": "Storm",
+      "text": "Followers with Storm can attack followers and leaders on the same turn they enter the field."
+    },
+    {
+      "ordinal": 48,
+      "title": "Strike",
+      "text": "An ability that activates when the follower attacks, before damage is exchanged. Follower Strike only activates when attacking another follower, and Leader Strike only activates when attacking a leader."
+    },
+    {
+      "ordinal": 59,
+      "title": "Summon",
+      "text": "An ability that \"summons\" a card will either create a copy of it on the field or move it to the field from your hand or deck. If your field is full, nothing happens."
+    },
+    {
+      "ordinal": 75,
+      "title": "Super Skybound Art",
+      "text": "An ability that activates when the card's Skybound Art gauge is greater than or equal to 15. A card's Skybound Art gauge is equal to the current turn number plus the number of times an allied follower has evolved while the card is in your hand."
+    },
+    {
+      "ordinal": 26,
+      "title": "Super-Evolution",
+      "text": "Super-evolving a follower gives it +3/+3 and the following abilities:\n- This follower can attack enemy followers on the same turn it entered the field.\n- During your turn, this follower can't be destroyed by abilities, and damage it takes is reduced to 0.\n- Whenever this follower attacks and destroys an enemy follower (either with the attack itself or an ability), deal 1 damage to the enemy leader.\n\nSuper-evolved followers are also considered to be evolved followers.\n\nSuper-evolution is unlocked on your seventh turn if you're going first and your sixth turn if you're going second, after which you can spend a super-evolution point to super-evolve a follower once per turn.\n\nYou can't evolve and super-evolve using evolution points in the same turn."
+    },
+    {
+      "ordinal": 47,
+      "title": "Super-Evolve",
+      "text": "An ability that activates when the card is super-evolved using super-evolution points."
+    },
+    {
+      "ordinal": 4,
+      "title": "Token",
+      "text": "Tokens are cards like Puppet that are created during a match by the abilities of other cards. They are removed at the end of the match and can't be used in deck construction."
+    },
+    {
+      "ordinal": 6,
+      "title": "Trait",
+      "text": "Some cards have one or more traits, such as Puppetry. Traits don't have any effects on their own, but some abilities only affect cards with certain traits."
+    },
+    {
+      "ordinal": 69,
+      "title": "Transform",
+      "text": "Transforming a card changes it into a different card. Damage and effects on the original card, as well as whether or not it had attacked or been engaged that turn, do not carry over. A card transformed into a follower cannot attack enemies until the following turn."
+    },
+    {
+      "ordinal": 21,
+      "title": "Turn",
+      "text": "The player going first is decided at the start of a match, after which players take turns playing cards from hand, attacking with followers, and engaging amulets. You can't perform any actions during your opponent's turn. Turns last around 60 seconds before evolution becomes available and 75 seconds after."
+    },
+    {
+      "ordinal": 72,
+      "title": "Victory Card",
+      "text": "If the Reaper Card at the bottom of your deck has been transformed into a Victory Card, and you must draw a card when your deck is empty, you win the match."
+    },
+    {
+      "ordinal": 36,
+      "title": "Ward",
+      "text": "While allied followers with Ward are on the field, enemy followers can't attack your leader or allied followers that don't have Ward. If a follower with Ward also has Ambush or Intimidate, the Ambush or Intimidate takes priority and negates Ward."
+    }
+  ]
+}
