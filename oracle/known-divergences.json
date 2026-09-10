@@ -88,14 +88,6 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-26.jsonl",
-    "i": 120,
-    "path": "players.a.leader_defense",
-    "class": "old-data",
-    "reason": "Macmillan, Reaper of Ceremonies 10754120 prints 'whenever an allied Departed follower enters the field'; the catalog gives Netherworld Lieutenant 10951120 tribes: [] so the reanimated Lieutenant is not Departed and the ping must not fire — the old engine dealt 1 to the enemy leader",
-    "since": "2026-09-10"
-  },
-  {
     "trace": "abyss-p8rfn-mirror/trace-20260910-27.jsonl",
     "i": 46,
     "path": "players.a.field[0].max_defense",

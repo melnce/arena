@@ -514,9 +514,10 @@ fn se_raz(db: &arena_engine::CardDb, st: &mut arena_engine::State, who: PlayerId
 
 #[test]
 fn se_follower_survives_ability_destroy_on_owners_turn() {
-    // Rulebook Evolution stat bonuses: super-evolve, on the owner's turn,
-    // cannot be destroyed by abilities/effects. The follower stays a legal
-    // random_target candidate; destroy fizzles.
+    // Official glossary, 2026-09-10 (Super-Evolution): "During your turn,
+    // this follower can't be destroyed by abilities, and damage it takes is
+    // reduced to 0." Rulebook Evolution stat bonuses: the follower stays a
+    // legal random_target candidate; destroy fizzles.
     let db = load_db();
     let mut st = started(&db, 31);
     let me = PlayerId::A;
@@ -679,4 +680,110 @@ fn adahime_rush_waits_until_fanfare_choice_completes() {
     );
     assert!(g.can_attack, "Rush lifts summoning sickness");
     assert!(g.traits.iter().any(|t| t == "ward"));
+}
+
+// ----- E35 -----
+
+fn destroyed(
+    card: &str,
+    base_cost: i32,
+    owner: PlayerId,
+) -> arena_engine::state::DestroyedRecord {
+    arena_engine::state::DestroyedRecord {
+        card: cid(card),
+        base_cost,
+        kind: arena_engine::card::CardKind::Follower,
+        owner,
+        from_field: true,
+    }
+}
+
+#[test]
+fn reanimate_grants_departed_and_macmillan_fires() {
+    // Official glossary, 2026-09-10 (Reanimate): "Reanimate summons a copy
+    // of the allied follower with the highest base cost destroyed that match
+    // and gives it the Departed trait." Macmillan 10754120 then fires.
+    // Game 26 i=120: reanimated Netherworld Lieutenant is 2/1 Rush Ward and
+    // the enemy leader takes 1. The tribe is on the instance; a later printed
+    // copy of the same card does not have it.
+    let db = load_db();
+    let mut st = started(&db, 35);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, me, "10754120");
+    st.player_mut(me)
+        .destroyed_history
+        .push(destroyed("10951120", 2, me));
+    give_pp(&mut st, me, 2, 2);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "88001280");
+    let f = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == "10951120")
+        .expect("reanimated Lieutenant");
+    assert_eq!(f.attack, 2, "Macmillan +1/+0 on the reanimated copy");
+    assert_eq!(f.defense, 1);
+    assert!(f.is_rush());
+    assert!(f.is_ward());
+    assert!(
+        f.tribes.contains(&arena_engine::card::Tribe::Departed),
+        "reanimated instance carries Departed"
+    );
+    assert_eq!(st.player(opp).leader_defense, 19);
+    let printed = arena_engine::CardInstance::from_card(
+        db.card(cid("10951120")).expect("Lieutenant"),
+        0,
+    );
+    assert!(
+        !printed
+            .tribes
+            .contains(&arena_engine::card::Tribe::Departed),
+        "printed Lieutenant is not Departed; the tribe is instance-only"
+    );
+}
+
+#[test]
+fn reanimate_pick_weighted_by_destroyed_instances() {
+    // Official glossary, 2026-09-10: "The more copies of a follower have been
+    // destroyed, the more likely it is to be chosen." Two dead copies of A
+    // and one of B at the same cost → A chosen ~2/3 over live RNG seeds.
+    let db = load_db();
+    let mut proto = started(&db, 36);
+    let me = PlayerId::A;
+    proto.player_mut(me).destroyed_history = vec![
+        destroyed("88001110", 1, me),
+        destroyed("88001110", 1, me),
+        destroyed("88001150", 1, me),
+    ];
+    give_pp(&mut proto, me, 2, 2);
+    proto.player_mut(me).hand.clear();
+    put_hand(&db, &mut proto, me, "88001280");
+    let mut a = 0u32;
+    let mut b = 0u32;
+    for seed in 0u64..300 {
+        let mut st = proto.clone();
+        arena_engine::reseed(&mut st, seed);
+        play(&db, &mut st, 0);
+        let id = st
+            .player(me)
+            .field
+            .iter()
+            .flatten()
+            .find(|c| c.card.as_str() == "88001110" || c.card.as_str() == "88001150")
+            .map(|c| c.card.as_str().to_string())
+            .expect("reanimated one of the cost-1 followers");
+        if id == "88001110" {
+            a += 1;
+        } else {
+            b += 1;
+        }
+    }
+    assert_eq!(a + b, 300);
+    assert!(
+        (180..=220).contains(&a),
+        "A (two instances) chosen {a}/300, expected ~200 (2/3); B={b}"
+    );
 }

@@ -4241,8 +4241,9 @@ fn add_source_to_hand(
     }
 }
 
-/// Reanimate: field-destroyed only, highest cost ≤ X, random among ties,
-/// summoning-sick, no Fanfare — rulings 2026-09-02.
+/// Reanimate: field-destroyed only, highest cost ≤ X, random among ties
+/// weighted by destroyed *instances* (not distinct names), summoning-sick,
+/// no Fanfare, Departed on the instance — glossary 2026-09-10 / rulings 2026-09-02.
 fn reanimate(
     db: &CardDb,
     state: &mut State,
@@ -4277,6 +4278,11 @@ fn reanimate(
     let card = db.card(id).map_err(|_| Illegal::NotLegal)?;
     let mut inst = CardInstance::from_card(card, state.alloc_id());
     inst.flags.summoning_sick = true;
+    // Official glossary, 2026-09-10: Reanimate "gives it the Departed trait."
+    // On the instance only — a later printed copy does not inherit it.
+    if !inst.tribes.contains(&crate::card::Tribe::Departed) {
+        inst.tribes.push(crate::card::Tribe::Departed);
+    }
     let Some(slot) = state.player(who).first_empty_slot() else {
         return Ok(());
     };

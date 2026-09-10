@@ -12,7 +12,8 @@
     "earth sigil"
   ],
   "traits": {
-    "aura": true
+    "aura": true,
+    "cantBeDestroyedByAbilities": true
   },
   "abilities": [
     {

@@ -752,9 +752,11 @@ Consequences (the rest of the 2026-09-05 / 2026-09-06 chain stands):
 
 <!-- rulebook: pending — unprinted Aura on Earth Sigil amulets not written through to rulebook -->
 
-Witch's New Brew and Magic Sediment are untargetable by enemy selection (Aura) although the printed text does not say so (owner, from the client).
+Witch's New Brew and Magic Sediment are untargetable by enemy selection (Aura) although the printed text does not say so (owner, from the client). Official glossary, 2026-09-10 (Earth Sigil): "Cards with Earth Sigil can't be destroyed by abilities or selected for enemy abilities. They are destroyed when their sigil count falls to 0." The second sentence is this Aura ruling; the first is `traits.cantBeDestroyedByAbilities: true` on `10031210` Witch's New Brew and `90031210` Magic Sediment.
 
-`10031210` Witch's New Brew and `90031210` Magic Sediment set `traits.aura: true`. The catalog `skill_text` does not print Aura; the client has it.
+`10031210` Witch's New Brew and `90031210` Magic Sediment set `traits.aura: true` and `traits.cantBeDestroyedByAbilities: true`. The catalog `skill_text` does not print Aura; the client has it.
+
+The glossary's merge rule (a newly played Earth Sigil amulet **banishes** the others and takes their counts) differs from the old engine's cemetery-and-shadow merge. **Do not change the merge** until the owner rules — listed under Still open.
 
 ## Earth Sigil amulets and a full board — 2026-09-10
 
@@ -777,3 +779,5 @@ A stat modification defines the follower's maximum defense: max = the stat line 
 ~~Related and **unreachable in practice**: whether an Accelerate play triggers Spellboost.~~ **Settled 2026-09-02 — yes.** Accelerate plays trigger Spellboost (and other spell-play mechanics). The earlier "unreachable in practice" reasoning was wrong: it assumed every Accelerate card is Portalcraft or Dragoncraft, but **Jailor of Antiquity (`10901110`) is Neutral**, so any Runecraft deck can contain both. See **Accelerate and spells — 2026-09-02** and **Alternate-form permanence — 2026-09-02** above.
 
 ~~Initiation of Rebirth highest-base-cost ties (assumed, not contested).~~ **Settled 2026-09-02 — randomly among the tied cards.** See **Initiation of Rebirth highest-base-cost ties — 2026-09-02** above.
+
+**Earth Sigil merge: glossary banish vs old-engine cemetery.** Official glossary, 2026-09-10 (Earth Sigil): a newly played Earth Sigil amulet **banishes** the others and takes their counts. The old engine cemeteries them (and they produce a shadow). **Do not change the merge** until the owner rules.
