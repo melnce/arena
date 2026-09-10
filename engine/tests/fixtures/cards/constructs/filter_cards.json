@@ -1,0 +1,36 @@
+{
+  "id": "89600017",
+  "name": "filter_cards",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to Officer Tank or Cost Five.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to Officer Tank or Cost Five.",
+      "effects": [
+        {
+          "printed": "Deal 1 to Officer Tank or Cost Five.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "cards": [
+                "89500005",
+                "89500011"
+              ]
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

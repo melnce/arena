@@ -83,7 +83,7 @@ jobs:
         run: python3 tools/phrase_index.py --check-doc
 
       - name: construct fixture coverage
-        run: python3 tools/constructs.py --check --families effect,source,selector
+        run: python3 tools/constructs.py --check
 
       - name: schema-only fixture cards
         working-directory: tools

@@ -1,0 +1,29 @@
+{
+  "id": "89500014",
+  "name": "Discard Hand",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Discard your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Discard your hand.",
+      "effects": [
+        {
+          "printed": "Discard your hand.",
+          "op": "discard",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          }
+        }
+      ]
+    }
+  ]
+}

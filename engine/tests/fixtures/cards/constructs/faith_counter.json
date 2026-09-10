@@ -1,0 +1,25 @@
+{
+  "id": "faith:89509002",
+  "name": "Faith: Counter Pin",
+  "grantedBy": [
+    "89509002"
+  ],
+  "faith": true,
+  "text": "Whenever an allied follower evolves, increase this faith's value by 1.",
+  "abilities": [
+    {
+      "on": "when",
+      "printed": "Whenever an allied follower evolves, increase this faith's value by 1.",
+      "effects": [
+        {
+          "printed": "increase this faith's value by 1.",
+          "op": "counter",
+          "key": "faith",
+          "how": "add",
+          "amount": 1
+        }
+      ],
+      "event": "ally_evolve"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "89501023",
+  "name": "condition_maxPpAtLeast",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If your max PP is at least 8, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If your max PP is at least 8, deal 1.",
+      "effects": [
+        {
+          "printed": "If your max PP is at least 8, deal 1.",
+          "op": "if",
+          "cond": {
+            "maxPpAtLeast": {
+              "n": 8
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

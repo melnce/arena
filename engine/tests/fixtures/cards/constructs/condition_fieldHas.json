@@ -1,0 +1,45 @@
+{
+  "id": "89501019",
+  "name": "condition_fieldHas",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If the allied field has an officer, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If the allied field has an officer, deal 1.",
+      "effects": [
+        {
+          "printed": "If the allied field has an officer, deal 1.",
+          "op": "if",
+          "cond": {
+            "fieldHas": {
+              "filter": {
+                "tribe": "officer"
+              },
+              "n": 1,
+              "side": "ally",
+              "kind": "follower"
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

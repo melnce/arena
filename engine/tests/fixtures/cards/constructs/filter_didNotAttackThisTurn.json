@@ -1,0 +1,33 @@
+{
+  "id": "89600024",
+  "name": "filter_didNotAttackThisTurn",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy followers that did not attack this turn.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy followers that did not attack this turn.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy followers that did not attack this turn.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "didNotAttackThisTurn": true
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

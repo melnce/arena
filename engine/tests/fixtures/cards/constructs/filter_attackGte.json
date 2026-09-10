@@ -1,0 +1,33 @@
+{
+  "id": "89600004",
+  "name": "filter_attackGte",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy followers with 5 or more attack.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy followers with 5 or more attack.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy followers with 5 or more attack.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "attackGte": 5
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

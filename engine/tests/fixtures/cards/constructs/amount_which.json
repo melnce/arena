@@ -1,0 +1,37 @@
+{
+  "id": "89700013",
+  "name": "amount_which",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Gain attack equal to this follower's attack (which).",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain attack equal to this follower's attack (which).",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": {
+            "stat": {
+              "of": {
+                "pick": "self"
+              },
+              "which": "attack"
+            }
+          },
+          "printed": "Fanfare: Gain attack equal to this follower's attack (which)."
+        }
+      ]
+    }
+  ]
+}

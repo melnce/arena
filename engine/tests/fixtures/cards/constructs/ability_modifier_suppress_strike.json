@@ -1,0 +1,29 @@
+{
+  "id": "89800306",
+  "name": "ability_modifier_suppress_strike",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Allied followers' strike abilities don't activate.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "static",
+      "printed": "Allied followers' strike abilities don't activate.",
+      "modifier": {
+        "suppress": [
+          "strike"
+        ],
+        "select": {
+          "pick": "all",
+          "side": "ally",
+          "zone": "field",
+          "kind": "follower"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "89600007",
+  "name": "filter_defenseLte",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy followers with 2 or less defense.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy followers with 2 or less defense.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy followers with 2 or less defense.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "defenseLte": 2
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

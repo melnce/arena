@@ -1,0 +1,40 @@
+{
+  "id": "89501021",
+  "name": "condition_handSameCostAtLeast",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If your hand has at least 2 cards of the same cost, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If your hand has at least 2 cards of the same cost, deal 1.",
+      "effects": [
+        {
+          "printed": "If your hand has at least 2 cards of the same cost, deal 1.",
+          "op": "if",
+          "cond": {
+            "handSameCostAtLeast": {
+              "n": 2
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

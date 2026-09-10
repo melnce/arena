@@ -1,0 +1,32 @@
+{
+  "id": "89700009",
+  "name": "amount_counter",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Gain attack equal to your shadows.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain attack equal to your shadows.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": {
+            "counter": "shadows"
+          },
+          "printed": "Fanfare: Gain attack equal to your shadows."
+        }
+      ]
+    }
+  ]
+}

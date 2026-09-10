@@ -1,0 +1,47 @@
+{
+  "id": "89501002",
+  "name": "condition_any",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If Overflow or Combo (3), deal 1 to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If Overflow or Combo (3), deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "printed": "If Overflow or Combo (3), deal 1 to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "any": [
+              {
+                "overflow": true
+              },
+              {
+                "combo": {
+                  "n": 3
+                }
+              }
+            ]
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

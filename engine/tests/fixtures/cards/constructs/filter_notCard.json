@@ -1,0 +1,33 @@
+{
+  "id": "89600018",
+  "name": "filter_notCard",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy followers that are not Officer Tank.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy followers that are not Officer Tank.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy followers that are not Officer Tank.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "notCard": "89500005"
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

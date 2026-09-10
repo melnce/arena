@@ -1,0 +1,35 @@
+{
+  "id": "89600003",
+  "name": "filter_not",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy followers that are not officers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy followers that are not officers.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy followers that are not officers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "not": {
+                "tribe": "officer"
+              }
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

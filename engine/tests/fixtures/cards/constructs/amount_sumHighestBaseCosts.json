@@ -1,0 +1,40 @@
+{
+  "id": "89700016",
+  "name": "amount_sumHighestBaseCosts",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Gain attack equal to the highest allied base cost.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain attack equal to the highest allied base cost.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": {
+            "sumHighestBaseCosts": {
+              "n": 1,
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower"
+              }
+            }
+          },
+          "printed": "Fanfare: Gain attack equal to the highest allied base cost."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "89500022",
+  "name": "Cost Two",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Costs 2.",
+  "attack": 2,
+  "defense": 10,
+  "tribes": []
+}

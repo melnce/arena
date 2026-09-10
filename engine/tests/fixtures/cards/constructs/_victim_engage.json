@@ -1,0 +1,35 @@
+{
+  "id": "89800406",
+  "name": "Engage Follower",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Engage (0): Deal 1 to the enemy leader.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "engage",
+      "printed": "Engage (0): Deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Engage (0): Deal 1."
+        }
+      ],
+      "cost": 0,
+      "sacrifice": false
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "89800200",
+  "name": "ability_oncePerTurn",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Once per turn, whenever an allied follower enters, deal 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "when",
+      "printed": "Once per turn, whenever an allied follower enters, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Once per turn, whenever an allied follower enters, deal 1."
+        }
+      ],
+      "event": "ally_follower_enter",
+      "oncePerTurn": true
+    }
+  ]
+}

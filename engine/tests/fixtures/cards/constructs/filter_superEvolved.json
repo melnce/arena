@@ -1,0 +1,33 @@
+{
+  "id": "89600028",
+  "name": "filter_superEvolved",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to super-evolved enemy followers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to super-evolved enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 1 to super-evolved enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "superEvolved": true
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

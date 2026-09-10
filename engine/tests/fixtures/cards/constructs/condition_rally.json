@@ -1,0 +1,40 @@
+{
+  "id": "89501026",
+  "name": "condition_rally",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Rally (3): Deal 1 to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Rally (3): Deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Rally (3): Deal 1 to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "rally": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

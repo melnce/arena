@@ -1,0 +1,40 @@
+{
+  "id": "89600001",
+  "name": "filter_all",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to enemy followers that are officers with Ward.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to enemy followers that are officers with Ward.",
+      "effects": [
+        {
+          "printed": "Deal 1 to enemy followers that are officers with Ward.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "all": [
+                {
+                  "tribe": "officer"
+                },
+                {
+                  "hasTrait": "ward"
+                }
+              ]
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

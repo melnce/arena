@@ -1,0 +1,14 @@
+{
+  "id": "89500024",
+  "name": "High Def",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "1/12.",
+  "attack": 1,
+  "defense": 12,
+  "tribes": []
+}

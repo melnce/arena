@@ -1,0 +1,49 @@
+{
+  "id": "89501015",
+  "name": "condition_did",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Select allied followers as f. If you did f, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select allied followers as f. If you did f, deal 1.",
+      "effects": [
+        {
+          "printed": "Select allied followers as f.",
+          "op": "select",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "as": "f"
+        },
+        {
+          "printed": "If you did f, deal 1.",
+          "op": "if",
+          "cond": {
+            "did": "f"
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "id": "89600033",
+  "name": "filter_sameCostGroup",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "Whenever you play a card with the same base cost as this, deal 1 to the enemy leader.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "when",
+      "printed": "Whenever you play a card with the same base cost as this, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Whenever you play a card with the same base cost as this, deal 1."
+        }
+      ],
+      "event": "ally_card_played",
+      "when": {
+        "fieldHas": {
+          "filter": {
+            "sameCostGroup": true
+          },
+          "side": "ally",
+          "kind": "card"
+        }
+      }
+    }
+  ]
+}

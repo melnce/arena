@@ -1,0 +1,46 @@
+{
+  "id": "89501011",
+  "name": "condition_countAtLeast",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If there are at least 2 allied followers, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If there are at least 2 allied followers, deal 1.",
+      "effects": [
+        {
+          "printed": "If there are at least 2 allied followers, deal 1.",
+          "op": "if",
+          "cond": {
+            "countAtLeast": {
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "n": 2
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

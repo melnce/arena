@@ -1,0 +1,33 @@
+{
+  "id": "89800209",
+  "name": "ability_cost",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Engage (2): Deal 1 to the enemy leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "engage",
+      "printed": "Engage (2): Deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Engage (2): Deal 1."
+        }
+      ],
+      "cost": 2,
+      "sacrifice": false
+    }
+  ]
+}

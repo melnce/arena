@@ -1,0 +1,30 @@
+{
+  "id": "89500021",
+  "name": "Engage Helper",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Engage (0): Do nothing.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "engage",
+      "printed": "Engage (0): Do nothing.",
+      "effects": [
+        {
+          "op": "restore",
+          "select": {
+            "pick": "self"
+          },
+          "amount": 0,
+          "printed": "Engage (0): Do nothing."
+        }
+      ],
+      "cost": 0,
+      "sacrifice": false
+    }
+  ]
+}

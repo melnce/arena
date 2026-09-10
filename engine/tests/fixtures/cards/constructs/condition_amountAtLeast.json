@@ -1,0 +1,43 @@
+{
+  "id": "89501004",
+  "name": "condition_amountAtLeast",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If your shadows are at least 2, deal 1 to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If your shadows are at least 2, deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "printed": "If your shadows are at least 2, deal 1 to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "amountAtLeast": {
+              "of": {
+                "counter": "shadows"
+              },
+              "n": 2
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

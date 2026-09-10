@@ -1,0 +1,27 @@
+{
+  "id": "89500015",
+  "name": "Summon Tank",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Summon a Tank One.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Tank One.",
+      "effects": [
+        {
+          "printed": "Summon a Tank One.",
+          "op": "summon",
+          "card": {
+            "named": "89500001"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

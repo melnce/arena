@@ -1,0 +1,16 @@
+{
+  "id": "89500005",
+  "name": "Officer Tank",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "An officer.",
+  "attack": 2,
+  "defense": 10,
+  "tribes": [
+    "officer"
+  ]
+}

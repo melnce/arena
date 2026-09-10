@@ -446,3 +446,70 @@ fn attacked_leader_counts_the_attack() {
     end_turn(&db, &mut st);
     assert!(st.player(me).attacked_leader_last_turn);
 }
+
+/// In-game 2026-09-10 (owner): Glade, Fragrantwood Ward `10113120` evolved
+/// at X = 9 (`damage {split: true}` all enemy followers) vs a 4/4 Barrier
+/// (and Ward) and a 3/3. Observed: 3/3 destroyed, 4/4 undamaged, Barrier
+/// consumed. A second damage instance for leftover on the last follower
+/// would have left the 4/4 at 4/2 when the 3/3 was older (share 3, leftover
+/// 6 = 4 then 2); the game did not do that — one instance per follower,
+/// leftover included in the last share.
+fn assert_split9_barrier_overkill(db: &arena_engine::CardDb, seed: u64, three_older: bool) {
+    const THREE: &str = "89500002";
+    const FOUR: &str = "89500003";
+    const SPLIT9: &str = "89500032";
+    let mut st = started(db, seed);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    if three_older {
+        put_field(db, &mut st, opp, THREE);
+        put_field(db, &mut st, opp, FOUR);
+    } else {
+        put_field(db, &mut st, opp, FOUR);
+        put_field(db, &mut st, opp, THREE);
+    }
+    for f in st.player_mut(opp).field.iter_mut().flatten() {
+        if f.card == cid(THREE) {
+            f.attack = 3;
+            f.defense = 3;
+            f.max_defense = 3;
+        } else if f.card == cid(FOUR) {
+            f.attack = 4;
+            f.defense = 4;
+            f.max_defense = 4;
+            f.traits.barrier = Some(true);
+            f.traits.ward = Some(true);
+        }
+    }
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(db, &mut st, me, SPLIT9);
+    drain_choice(db, &mut st);
+    assert!(
+        !field_has(&st, opp, THREE),
+        "3/3 destroyed (three_older={three_older})"
+    );
+    let four = st
+        .player(opp)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card == cid(FOUR))
+        .expect("4/4 still on the field");
+    assert_eq!(
+        four.defense, 4,
+        "4/4 undamaged — leftover is one instance, not a second hit to 4/2 (three_older={three_older})"
+    );
+    assert_ne!(
+        four.traits.barrier,
+        Some(true),
+        "Barrier consumed (three_older={three_older})"
+    );
+}
+
+#[test]
+fn split_damage_barrier_overkill_in_game_2026_09_10() {
+    let db = load_db();
+    assert_split9_barrier_overkill(&db, 16, true);
+    assert_split9_barrier_overkill(&db, 17, false);
+}

@@ -1,0 +1,29 @@
+{
+  "id": "89500013",
+  "name": "Bounce Allies",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Return all allied followers to hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Return all allied followers to hand.",
+      "effects": [
+        {
+          "printed": "Return all allied followers to hand.",
+          "op": "returnToHand",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ]
+}

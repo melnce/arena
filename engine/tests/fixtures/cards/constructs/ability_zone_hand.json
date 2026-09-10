@@ -1,0 +1,32 @@
+{
+  "id": "89800202",
+  "name": "ability_zone_hand",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Activates in hand. When you draw this card, deal 1 to the enemy leader.",
+  "abilities": [
+    {
+      "on": "when",
+      "printed": "When you draw this card, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "When you draw this card, deal 1."
+        }
+      ],
+      "event": "ally_draw",
+      "zone": "hand"
+    }
+  ]
+}

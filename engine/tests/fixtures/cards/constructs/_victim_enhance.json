@@ -1,0 +1,54 @@
+{
+  "id": "89800405",
+  "name": "Enhance Victim",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "Fanfare: Deal 1. Enhance (4): Deal 5.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Fanfare: Deal 1."
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Deal 5.",
+      "replacesBase": true,
+      "effects": [
+        {
+          "printed": "Deal 5.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 5
+        }
+      ]
+    }
+  ]
+}

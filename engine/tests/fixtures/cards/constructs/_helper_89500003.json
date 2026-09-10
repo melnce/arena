@@ -1,0 +1,17 @@
+{
+  "id": "89500003",
+  "name": "Ward Tank",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Ward.",
+  "attack": 2,
+  "defense": 10,
+  "tribes": [],
+  "traits": {
+    "ward": true
+  }
+}

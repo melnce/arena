@@ -1,0 +1,30 @@
+{
+  "id": "89500023",
+  "name": "Vanilla Spell",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "A spell.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "A spell.",
+      "effects": [
+        {
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 0,
+          "printed": "A spell."
+        }
+      ]
+    }
+  ]
+}

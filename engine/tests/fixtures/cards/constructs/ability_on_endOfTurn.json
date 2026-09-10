@@ -1,0 +1,34 @@
+{
+  "id": "89800018",
+  "name": "ability_on_endOfTurn",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "At the end of your turn, deal 1 to the enemy leader.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "printed": "At the end of your turn, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "At the end of your turn, deal 1."
+        }
+      ],
+      "whose": "own"
+    }
+  ]
+}

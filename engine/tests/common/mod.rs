@@ -183,3 +183,62 @@ pub fn load_deck_file(path: impl AsRef<Path>) -> Vec<CardId> {
 pub fn deck_ready(db: &CardDb, ids: &[CardId]) -> bool {
     ids.iter().all(|c| db.has_card(*c))
 }
+
+pub fn leader_def(state: &State, who: PlayerId) -> i32 {
+    state.player(who).leader_defense
+}
+
+pub fn set_round(st: &mut State, who: PlayerId, n: u32) {
+    st.player_mut(who).turns_taken = n;
+    st.turn = n;
+    give_pp(st, who, n as i32, n as i32);
+}
+
+pub fn drain_choice(db: &CardDb, st: &mut State) {
+    while matches!(st.phase, Phase::Choice { .. }) {
+        choose(db, st, 0);
+    }
+}
+
+pub fn field_def(state: &State, who: PlayerId, id: &str) -> Option<i32> {
+    let id = cid(id);
+    state
+        .player(who)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card == id)
+        .map(|c| c.defense)
+}
+
+pub fn field_atk(state: &State, who: PlayerId, id: &str) -> Option<i32> {
+    let id = cid(id);
+    state
+        .player(who)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card == id)
+        .map(|c| c.attack)
+}
+
+pub fn put_deck(db: &CardDb, st: &mut State, who: PlayerId, id: &str) {
+    let card = db.card(cid(id)).expect("card");
+    let inst_id = st.alloc_id();
+    let inst = CardInstance::from_card(card, inst_id);
+    st.player_mut(who).deck.push(inst);
+}
+
+pub fn play_fresh(db: &CardDb, st: &mut State, who: PlayerId, id: &str) {
+    clear_hand(st, who);
+    give_pp(st, who, 10, 10);
+    play_id(db, st, who, id);
+    drain_choice(db, st);
+}
+
+/// Play `id` without discarding the rest of the hand (handHas / discard / spellboost).
+pub fn play_keeping_hand(db: &CardDb, st: &mut State, who: PlayerId, id: &str, pp: i32) {
+    give_pp(st, who, pp, pp.max(1));
+    play_id(db, st, who, id);
+    drain_choice(db, st);
+}

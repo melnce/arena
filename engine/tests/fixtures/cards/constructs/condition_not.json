@@ -1,0 +1,40 @@
+{
+  "id": "89501003",
+  "name": "condition_not",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If not Overflow, deal 1 to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If not Overflow, deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "printed": "If not Overflow, deal 1 to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "not": {
+              "overflow": true
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

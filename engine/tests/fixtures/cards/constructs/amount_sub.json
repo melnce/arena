@@ -1,0 +1,42 @@
+{
+  "id": "89700003",
+  "name": "amount_sub",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Gain attack equal to allied followers minus 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain attack equal to allied followers minus 1.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": {
+            "sub": [
+              {
+                "count": {
+                  "pick": "all",
+                  "side": "ally",
+                  "zone": "field",
+                  "kind": "follower"
+                }
+              },
+              1
+            ]
+          },
+          "printed": "Fanfare: Gain attack equal to allied followers minus 1."
+        }
+      ]
+    }
+  ]
+}

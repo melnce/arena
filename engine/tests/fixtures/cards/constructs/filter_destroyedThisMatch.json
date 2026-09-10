@@ -1,0 +1,40 @@
+{
+  "id": "89600023",
+  "name": "filter_destroyedThisMatch",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal damage equal to the number of allied followers destroyed this match.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal damage equal to the number of allied followers destroyed this match.",
+      "effects": [
+        {
+          "printed": "Deal damage equal to the number of allied followers destroyed this match.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": {
+            "count": {
+              "pick": "all",
+              "side": "ally",
+              "zone": "field",
+              "kind": "follower",
+              "filter": {
+                "destroyedThisMatch": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "id": "89501030",
+  "name": "condition_varAtLeast",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: If X is at least 3, deal 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If X is at least 3, deal 1.",
+      "effects": [
+        {
+          "printed": "Fanfare: If X is at least 3, deal 1.",
+          "op": "if",
+          "cond": {
+            "varAtLeast": {
+              "key": "X",
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "vars": {
+    "X": 0
+  }
+}

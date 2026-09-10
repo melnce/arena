@@ -1,0 +1,30 @@
+{
+  "id": "89500030",
+  "name": "Buff Watcher",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Give an allied follower +1/+0.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give an allied follower +1/+0.",
+      "effects": [
+        {
+          "printed": "Give an allied follower +1/+0.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 1
+        }
+      ]
+    }
+  ]
+}

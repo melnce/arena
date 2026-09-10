@@ -1,0 +1,33 @@
+{
+  "id": "89600016",
+  "name": "filter_card",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to Officer Tank.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to Officer Tank.",
+      "effects": [
+        {
+          "printed": "Deal 1 to Officer Tank.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "card": "89500005"
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

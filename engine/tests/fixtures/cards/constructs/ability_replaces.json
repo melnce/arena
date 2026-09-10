@@ -1,0 +1,51 @@
+{
+  "id": "89800210",
+  "name": "ability_replaces",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Evolve: Deal 1. Super-Evolve (instead): Deal 5.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Evolve: Deal 1 to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Deal 5 to the enemy leader instead.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 5,
+          "printed": "Super-Evolve: Deal 5 to the enemy leader instead."
+        }
+      ],
+      "replaces": "evolve"
+    }
+  ]
+}

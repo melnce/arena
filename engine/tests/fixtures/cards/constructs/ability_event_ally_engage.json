@@ -1,0 +1,34 @@
+{
+  "id": "89800113",
+  "name": "ability_event_ally_engage",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Whenever ally engage, deal 1 to the enemy leader.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "when",
+      "printed": "Whenever ally engage, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "Whenever ally engage, deal 1."
+        }
+      ],
+      "event": "ally_engage"
+    }
+  ]
+}

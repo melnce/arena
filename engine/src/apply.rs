@@ -351,9 +351,10 @@ fn legal_choice(state: &State) -> Vec<Action> {
 fn legal_main(db: &CardDb, state: &State) -> Vec<Action> {
     let me = state.active;
     let p = state.player(me);
+    let static_in_play = board_has_static_suppressor(db, state);
     let mut out = Vec::new();
     for (i, inst) in p.hand.iter().enumerate() {
-        if playable(db, state, me, i, inst) {
+        if playable(db, state, me, i, inst, static_in_play) {
             out.push(Action::Play { hand: i as u8 });
         }
     }
@@ -564,7 +565,14 @@ fn attack_targets(
     out
 }
 
-fn playable(db: &CardDb, state: &State, me: PlayerId, hand_i: usize, inst: &CardInstance) -> bool {
+fn playable(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    hand_i: usize,
+    inst: &CardInstance,
+    static_in_play: bool,
+) -> bool {
     if inst.cant_be_played() {
         return false;
     }
@@ -575,7 +583,7 @@ fn playable(db: &CardDb, state: &State, me: PlayerId, hand_i: usize, inst: &Card
         return false;
     }
     let pp = state.player(me).usable_pp();
-    let form = play_form(card, inst, pp, state.player(me).field_free());
+    let form = play_form(db, state, me, card, inst, pp, static_in_play);
     let Some((paid, kind, effects)) = form else {
         return false;
     };
@@ -594,19 +602,32 @@ fn playable(db: &CardDb, state: &State, me: PlayerId, hand_i: usize, inst: &Card
 }
 
 fn play_form(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
     card: &Card,
     inst: &CardInstance,
     pp: i32,
-    _free: usize,
+    static_in_play: bool,
 ) -> Option<(i32, CardKind, Vec<Effect>)> {
     let effective = inst.cost;
-    let enhance: Vec<&Mode> = if inst.printed_tags.contains("enhance") {
+    let (suppress_enhance, suppress_fanfare) = if static_in_play {
+        (
+            static_suppresses_tag(db, state, inst, me, TriggerTag::Enhance),
+            static_suppresses_tag(db, state, inst, me, TriggerTag::Fanfare),
+        )
+    } else {
+        (false, false)
+    };
+    // `printed_tags` loses "enhance" after `removeAbilities`; static suppress
+    // also strips the mode at play (Milteo & Luzen).
+    let enhance: Vec<&Mode> = if suppress_enhance || !inst.printed_tags.contains("enhance") {
+        Vec::new()
+    } else {
         card.modes()
             .iter()
             .filter(|m| matches!(m, Mode::Enhance { cost, .. } if pp >= *cost))
             .collect()
-    } else {
-        Vec::new()
     };
     let accel = card.modes().iter().find_map(|m| match m {
         Mode::Accelerate { cost, effects, .. } if pp < effective && pp >= *cost => {
@@ -624,7 +645,11 @@ fn play_form(
         if pp < paid {
             return None;
         }
-        let mut fx = fanfare_effects(card);
+        let mut fx = if suppress_fanfare {
+            Vec::new()
+        } else {
+            fanfare_effects(card)
+        };
         for m in enhance {
             if let Mode::Enhance {
                 effects,
@@ -652,7 +677,12 @@ fn play_form(
         return Some((cost, CardKind::Amulet, Vec::new()));
     }
     if pp >= effective {
-        Some((effective, card.kind(), fanfare_effects(card)))
+        let fx = if suppress_fanfare {
+            Vec::new()
+        } else {
+            fanfare_effects(card)
+        };
+        Some((effective, card.kind(), fx))
     } else {
         None
     }
@@ -970,8 +1000,16 @@ fn apply_play(
         .ok_or(Illegal::NotLegal)?;
     let card = db.card(inst.card).map_err(|_| Illegal::NotLegal)?;
     let pp = state.player(me).usable_pp();
-    let (paid, kind, effects) =
-        play_form(card, &inst, pp, state.player(me).field_free()).ok_or(Illegal::NotLegal)?;
+    let (paid, kind, effects) = play_form(
+        db,
+        state,
+        me,
+        card,
+        &inst,
+        pp,
+        board_has_static_suppressor(db, state),
+    )
+    .ok_or(Illegal::NotLegal)?;
     state.player_mut(me).spend_pp(paid);
     let mut inst = state.player_mut(me).hand.remove(hand as usize);
     let form = if kind == CardKind::Amulet && card.kind() != CardKind::Amulet {
@@ -1220,12 +1258,21 @@ fn spellboost_instance(
     if let Some(h) = state.player_mut(me).hand.get_mut(pos) {
         h.spellboost_count += 1;
     }
-    let fx: Vec<Effect> = card
-        .abilities()
+    let suppressed = state
+        .player(me)
+        .hand
         .iter()
-        .filter(|a| matches!(a, Ability::Spellboost { .. }))
-        .flat_map(|a| a.effects().iter().cloned())
-        .collect();
+        .find(|c| c.id == hid)
+        .is_some_and(|h| static_suppresses_tag(db, state, h, me, TriggerTag::Spellboost));
+    let fx: Vec<Effect> = if suppressed {
+        Vec::new()
+    } else {
+        card.abilities()
+            .iter()
+            .filter(|a| matches!(a, Ability::Spellboost { .. }))
+            .flat_map(|a| a.effects().iter().cloned())
+            .collect()
+    };
     if fx.is_empty() {
         return Ok(());
     }
@@ -1393,44 +1440,53 @@ fn apply_evolve_action(
         return Ok(());
     };
     let src = SourceRef::Field { player: who, id };
-    let when_ok = |a: &Ability| {
-        a.when_cond()
-            .map(|c| eval_cond(db, state, who, Some(src), c))
-            .unwrap_or(true)
+    let fx = {
+        let live = state.field_inst(who, slot.0);
+        let when_ok = |a: &Ability| {
+            if let Some(inst) = live {
+                if static_suppresses_tag(db, state, inst, who, a.tag()) {
+                    return false;
+                }
+            }
+            a.when_cond()
+                .map(|c| eval_cond(db, state, who, Some(src), c))
+                .unwrap_or(true)
+        };
+        let replace = card.abilities().iter().any(|a| a.replaces_evolve());
+        let mut fx = Vec::new();
+        if supered && replace {
+            for a in card.abilities() {
+                if matches!(a, Ability::SuperEvolve { .. }) && when_ok(a) {
+                    fx.extend(a.effects().iter().cloned());
+                }
+            }
+        } else {
+            if !granted {
+                for a in card.abilities() {
+                    if matches!(a, Ability::Evolve { .. }) && when_ok(a) {
+                        fx.extend(a.effects().iter().cloned());
+                    }
+                }
+            }
+            for a in card.abilities() {
+                if matches!(a, Ability::AnyEvolve { .. }) && when_ok(a) {
+                    fx.extend(a.effects().iter().cloned());
+                }
+            }
+            if supered {
+                for a in card.abilities() {
+                    if matches!(
+                        a,
+                        Ability::SuperEvolve { .. } | Ability::AnySuperEvolve { .. }
+                    ) && when_ok(a)
+                    {
+                        fx.extend(a.effects().iter().cloned());
+                    }
+                }
+            }
+        }
+        fx
     };
-    let replace = card.abilities().iter().any(|a| a.replaces_evolve());
-    let mut fx = Vec::new();
-    if supered && replace {
-        for a in card.abilities() {
-            if matches!(a, Ability::SuperEvolve { .. }) && when_ok(a) {
-                fx.extend(a.effects().iter().cloned());
-            }
-        }
-    } else {
-        if !granted {
-            for a in card.abilities() {
-                if matches!(a, Ability::Evolve { .. }) && when_ok(a) {
-                    fx.extend(a.effects().iter().cloned());
-                }
-            }
-        }
-        for a in card.abilities() {
-            if matches!(a, Ability::AnyEvolve { .. }) && when_ok(a) {
-                fx.extend(a.effects().iter().cloned());
-            }
-        }
-        if supered {
-            for a in card.abilities() {
-                if matches!(
-                    a,
-                    Ability::SuperEvolve { .. } | Ability::AnySuperEvolve { .. }
-                ) && when_ok(a)
-                {
-                    fx.extend(a.effects().iter().cloned());
-                }
-            }
-        }
-    }
     // Skybound Art gauge = current turn number + evolves/boosts stored on the
     // instance (rulebook). Evolves while a copy is in hand increment that
     // copy's stored bonus; turn number is added at evaluation so M1 snapshots
@@ -1496,7 +1552,9 @@ fn apply_engage(
         player: me,
         id: inst.id,
     };
-    push_effects(state, me, src, fx);
+    if !static_suppresses_tag(db, state, &inst, me, TriggerTag::Engage) {
+        push_effects(state, me, src, fx);
+    }
     if sacrifice {
         // Engage self-sacrifice is destruction — 2026-09-09
         destroy_slot(db, state, me, slot.0, false, events)?;
@@ -1845,6 +1903,11 @@ fn commit_fuse(
             if !matches!(a, Ability::Fused { .. }) {
                 continue;
             }
+            if let Some(h) = state.player(me).hand.iter().find(|c| c.id == host_id) {
+                if static_suppresses_tag(db, state, h, me, TriggerTag::Fused) {
+                    continue;
+                }
+            }
             if let Some(cond) = a.when_cond() {
                 if !eval_cond(db, state, me, Some(src), cond) {
                     continue;
@@ -2025,6 +2088,7 @@ fn begin_turn(state: &mut State, who: PlayerId, events: &mut Vec<Event>) -> Resu
         }
         for h in &mut p.hand {
             h.flags.fused_this_turn = false;
+            h.once_used.clear();
         }
         p.turns_taken
     };
@@ -2168,6 +2232,9 @@ fn enqueue_boundary(
             if !boundary_when_ok(db, state, who, source, a) {
                 continue;
             }
+            if source_tag_suppressed(db, state, source, a.tag()) {
+                continue;
+            }
             enqueue(state, cat, entry, printed, who, source, a);
         }
         return;
@@ -2266,6 +2333,9 @@ fn enqueue_boundary_lookups(
         if !boundary_when_ok(db, state, who, source, a) {
             continue;
         }
+        if source_tag_suppressed(db, state, source, a.tag()) {
+            continue;
+        }
         enqueue(state, cat, entry, printed, who, source, a);
     }
 }
@@ -2329,6 +2399,9 @@ fn enqueue_card_triggers(
         .enumerate()
     {
         if a.tag() == tag {
+            if static_suppresses_tag(db, state, &inst, who, tag) {
+                continue;
+            }
             if ord < n_printed && !inst.printed_tags.contains(a.snapshot_tag()) {
                 continue;
             }
@@ -2944,6 +3017,9 @@ fn collect_when_from_list(
             }
         }
         if a.once_per_turn() && once_when {
+            continue;
+        }
+        if source_tag_suppressed(scan.db, state, loc.source, TriggerTag::When) {
             continue;
         }
         pending.push(PendingWhen {
@@ -4920,6 +4996,9 @@ fn effect_is_banish_self(e: &Effect) -> bool {
 }
 
 fn queue_last_words(db: &CardDb, state: &mut State, who: PlayerId, inst: &CardInstance, slot: u8) {
+    if static_suppresses_tag(db, state, inst, who, TriggerTag::LastWords) {
+        return;
+    }
     let cat = if who == state.active { 4 } else { 6 };
     let src = SourceRef::Spell {
         player: who,
@@ -5167,6 +5246,7 @@ fn bounce_opt(
     match t {
         TargetOpt::Slot { player, slot } => {
             if let Some(inst) = state.player_mut(*player).field[*slot as usize].take() {
+                queue_leave(db, state, *player, &inst, *slot);
                 state.player_mut(*player).compact_field();
                 add_to_hand(state, *player, reset_off_field(db, inst));
             }
@@ -5199,6 +5279,7 @@ fn return_deck_opt(db: &CardDb, state: &mut State, t: &TargetOpt) {
         }
         TargetOpt::Slot { player, slot } => {
             if let Some(inst) = state.player_mut(*player).field[*slot as usize].take() {
+                queue_leave(db, state, *player, &inst, *slot);
                 state.player_mut(*player).compact_field();
                 insert_deck_random(state, *player, reset_off_field(db, inst));
             }
@@ -5238,6 +5319,9 @@ fn discard_opt(
             if let Ok(card) = db.card(inst.card) {
                 for a in card.abilities() {
                     if matches!(a, Ability::Discarded { .. }) {
+                        if static_suppresses_tag(db, state, &inst, *player, TriggerTag::Discarded) {
+                            continue;
+                        }
                         state.queue.push(QueuedTrigger {
                             category: if *player == state.active { 4 } else { 6 },
                             entry: *pos as u32,
@@ -6168,7 +6252,13 @@ fn apply_invoke(
             raise_follower_enter(db, state, controller, &entered);
         }
         queue_enter_reactions(db, state, controller, id, inst_uid, false);
-        enqueue_card_triggers(db, state, controller, inst_uid, TriggerTag::Invoked, 4);
+        if let Some(entered) = state.field_inst(controller, slot).cloned() {
+            if !static_suppresses_tag(db, state, &entered, controller, TriggerTag::Invoked) {
+                enqueue_card_triggers(db, state, controller, inst_uid, TriggerTag::Invoked, 4);
+            }
+        } else {
+            enqueue_card_triggers(db, state, controller, inst_uid, TriggerTag::Invoked, 4);
+        }
     }
     Ok(())
 }
@@ -7025,6 +7115,186 @@ fn kind_ok(c: &CardInstance, k: SelectorKind) -> bool {
         SelectorKind::Card => true,
         SelectorKind::Character => c.kind == CardKind::Follower,
         SelectorKind::Leader | SelectorKind::Faith => false,
+    }
+}
+
+/// Any field card or crest whose printed abilities include `on: static`
+/// with a non-empty `suppress`. Id lookup only — no ability walk.
+#[inline]
+fn board_has_static_suppressor(db: &CardDb, state: &State) -> bool {
+    if !db.has_any_static_suppress() {
+        return false;
+    }
+    for who in PlayerId::ALL {
+        if state
+            .player(who)
+            .field
+            .iter()
+            .flatten()
+            .any(|c| db.card_has_static_suppress(c.card))
+        {
+            return true;
+        }
+        if state
+            .player(who)
+            .crests
+            .iter()
+            .any(|c| db.crest_has_static_suppress(&c.id))
+        {
+            return true;
+        }
+    }
+    false
+}
+
+/// Crest / field `on: static` `modifier.suppress` — Milteo & Luzen
+/// (`crest:10554110`) silences Fanfare and Enhance on allied followers.
+/// Evaluated as if `inst` were already an allied field card so play-time
+/// Fanfare / Enhance (Mino Q&A) are covered before enter.
+fn static_suppresses_tag(
+    db: &CardDb,
+    state: &State,
+    inst: &CardInstance,
+    inst_owner: PlayerId,
+    tag: TriggerTag,
+) -> bool {
+    if !board_has_static_suppressor(db, state) {
+        return false;
+    }
+    for who in PlayerId::ALL {
+        for slot in state.player(who).field.iter().flatten() {
+            if !db.card_has_static_suppress(slot.card) {
+                continue;
+            }
+            if let Ok(card) = db.card(slot.card) {
+                for a in card.abilities().iter().chain(slot.granted.iter()) {
+                    if static_modifier_hits(db, state, who, a, inst, inst_owner, tag) {
+                        return true;
+                    }
+                }
+            }
+        }
+        for c in &state.player(who).crests {
+            if !db.crest_has_static_suppress(&c.id) {
+                continue;
+            }
+            if let Ok(def) = db.crest(&c.id) {
+                for a in def.abilities().iter().chain(c.granted.iter()) {
+                    if static_modifier_hits(db, state, who, a, inst, inst_owner, tag) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+fn source_tag_suppressed(db: &CardDb, state: &State, source: SourceRef, tag: TriggerTag) -> bool {
+    match source {
+        SourceRef::Field { player, id } => {
+            let Some(slot) = state.find_field(player, id) else {
+                return false;
+            };
+            let Some(inst) = state.field_inst(player, slot) else {
+                return false;
+            };
+            static_suppresses_tag(db, state, inst, player, tag)
+        }
+        SourceRef::Hand { player, id } => {
+            if let Some(inst) = state
+                .player(player)
+                .hand
+                .iter()
+                .chain(state.player(player).deck.iter())
+                .find(|c| c.id == id)
+            {
+                return static_suppresses_tag(db, state, inst, player, tag);
+            }
+            false
+        }
+        _ => false,
+    }
+}
+
+fn static_modifier_hits(
+    db: &CardDb,
+    state: &State,
+    static_owner: PlayerId,
+    a: &Ability,
+    inst: &CardInstance,
+    inst_owner: PlayerId,
+    tag: TriggerTag,
+) -> bool {
+    let Ability::Static { modifier, when, .. } = a else {
+        return false;
+    };
+    if !modifier.suppress.contains(&tag) {
+        return false;
+    }
+    if let Some(cond) = when {
+        if !eval_cond(
+            db,
+            state,
+            static_owner,
+            Some(SourceRef::Field {
+                player: static_owner,
+                id: 0,
+            }),
+            cond,
+        ) {
+            return false;
+        }
+    }
+    match &modifier.select {
+        Selector::Pool(p) => {
+            let side_ok = match p.side {
+                Side::Ally => inst_owner == static_owner,
+                Side::Enemy => inst_owner != static_owner,
+                Side::Any => true,
+            };
+            if !side_ok {
+                return false;
+            }
+            if !kind_ok(inst, p.kind) {
+                return false;
+            }
+            if let Some(f) = &p.filter {
+                if !inst_matches_filter(state, inst_owner, inst, f) {
+                    return false;
+                }
+            }
+            true
+        }
+        _ => false,
+    }
+}
+
+fn queue_leave(db: &CardDb, state: &mut State, who: PlayerId, inst: &CardInstance, slot: u8) {
+    if static_suppresses_tag(db, state, inst, who, TriggerTag::Leave) {
+        return;
+    }
+    let Ok(card) = db.card(inst.card) else {
+        return;
+    };
+    let cat = if who == state.active { 4 } else { 6 };
+    let src = SourceRef::Spell {
+        player: who,
+        card: inst.card,
+    };
+    for (ord, a) in card.abilities().iter().enumerate() {
+        if !matches!(a, Ability::Leave { .. }) {
+            continue;
+        }
+        if a.effects().iter().any(effect_is_banish_self) {
+            continue;
+        }
+        if let Some(cond) = a.when_cond() {
+            if !eval_cond(db, state, who, Some(src), cond) {
+                continue;
+            }
+        }
+        enqueue(state, cat, slot as u32, ord as u8, who, src, a);
     }
 }
 

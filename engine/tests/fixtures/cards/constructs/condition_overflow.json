@@ -1,0 +1,38 @@
+{
+  "id": "89501024",
+  "name": "condition_overflow",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Overflow: Deal 1 to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Overflow: Deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Overflow: Deal 1 to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "overflow": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

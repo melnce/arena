@@ -1,0 +1,34 @@
+{
+  "id": "89800205",
+  "name": "ability_whose_opponent",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "At the end of the opponent's turn, deal 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "printed": "At the end of the opponent's turn, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "At the end of the opponent's turn, deal 1."
+        }
+      ],
+      "whose": "opponent"
+    }
+  ]
+}

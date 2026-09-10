@@ -1,0 +1,29 @@
+{
+  "id": "89500018",
+  "name": "Destroy Allies",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy all allied followers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy all allied followers.",
+      "effects": [
+        {
+          "printed": "Destroy all allied followers.",
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ]
+}

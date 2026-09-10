@@ -1,0 +1,40 @@
+{
+  "id": "89501009",
+  "name": "condition_combo",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Combo (3): Deal 1 to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Combo (3): Deal 1 to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Combo (3): Deal 1 to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

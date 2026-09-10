@@ -1,0 +1,52 @@
+{
+  "id": "89800027",
+  "name": "mode_skyboundArt",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Skybound Art (10): Deal 3. Otherwise deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Skybound Art (10): Deal 3. Otherwise deal 1.",
+      "effects": [
+        {
+          "printed": "Skybound Art (10): Deal 3. Otherwise deal 1.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 3
+            }
+          ],
+          "else": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

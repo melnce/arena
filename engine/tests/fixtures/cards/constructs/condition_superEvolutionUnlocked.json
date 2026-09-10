@@ -1,0 +1,38 @@
+{
+  "id": "89501028",
+  "name": "condition_superEvolutionUnlocked",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "If super-evolution is unlocked, deal 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "If super-evolution is unlocked, deal 1.",
+      "effects": [
+        {
+          "printed": "If super-evolution is unlocked, deal 1.",
+          "op": "if",
+          "cond": {
+            "superEvolutionUnlocked": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

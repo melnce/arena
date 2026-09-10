@@ -1,0 +1,29 @@
+{
+  "id": "89800312",
+  "name": "ability_modifier_suppress_invoked",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Allied followers' invoked abilities don't activate.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "static",
+      "printed": "Allied followers' invoked abilities don't activate.",
+      "modifier": {
+        "suppress": [
+          "invoked"
+        ],
+        "select": {
+          "pick": "all",
+          "side": "ally",
+          "zone": "field",
+          "kind": "follower"
+        }
+      }
+    }
+  ]
+}

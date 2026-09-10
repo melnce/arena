@@ -1,0 +1,14 @@
+{
+  "id": "89500010",
+  "name": "Atk Five",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "5 attack.",
+  "attack": 5,
+  "defense": 10,
+  "tribes": []
+}

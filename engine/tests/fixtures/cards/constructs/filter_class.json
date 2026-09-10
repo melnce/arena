@@ -1,0 +1,33 @@
+{
+  "id": "89600019",
+  "name": "filter_class",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to Forestcraft enemy followers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to Forestcraft enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 1 to Forestcraft enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "class": "forestcraft"
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

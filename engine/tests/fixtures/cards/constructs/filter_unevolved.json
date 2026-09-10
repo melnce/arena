@@ -1,0 +1,33 @@
+{
+  "id": "89600027",
+  "name": "filter_unevolved",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 to unevolved enemy followers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 to unevolved enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 1 to unevolved enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "unevolved": true
+            }
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

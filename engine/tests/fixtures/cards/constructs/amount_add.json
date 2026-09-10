@@ -1,0 +1,35 @@
+{
+  "id": "89700002",
+  "name": "amount_add",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Gain attack equal to 1+2.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain attack equal to 1+2.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": {
+            "add": [
+              1,
+              2
+            ]
+          },
+          "printed": "Fanfare: Gain attack equal to 1+2."
+        }
+      ]
+    }
+  ]
+}
