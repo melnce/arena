@@ -168,7 +168,6 @@ fn selector_unsupported(_s: &Selector) -> Option<String> {
 fn condition_unsupported(c: &Condition) -> Option<String> {
     match c {
         Condition::SkyboundArt { .. } => Some("condition:skyboundArt".into()),
-        Condition::Rally { .. } => Some("condition:rally".into()),
         _ => None,
     }
 }
@@ -191,7 +190,6 @@ pub fn m1_unsupported_list() -> Vec<&'static str> {
         "mode:crystallize",
         "CardSource.randomFrom",
         "condition:skyboundArt",
-        "condition:rally",
     ]
 }
 

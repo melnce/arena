@@ -26,6 +26,24 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 
 `as` / `{pick: bound, ref}` names live in `State.bindings` for one **resolution**. The map is cleared at the start of `apply` and before each queued trigger. Nested `seq` / `if` / `pay` frames inherit the current map, so an Evolve ability's `as: "g"` is visible to the Super-Evolve ability of the same card when both fire (rulebook: a super-evolve fires both lines unless the super line says `instead`). A `ref` with no live binding is an empty set — never a runtime error. `CardDb::load` rejects a `ref` that no `as` on the same card could produce (`LoadError::UnboundRef`).
 
+## Turn-boundary abilities
+
+`ability_boundary` matches `StartOfTurn` only when `start` and `EndOfTurn` only when `!start`. `queue_turn_boundary` calls the same matcher for both boundaries with that flag, so an `endOfTurn { whose: opponent }` (Enhanced Puppet) does not fire at the opponent's start, and an `endOfTurn { whose: own }` (Puppet Theater, Dark Dimensions) does not fire at the owner's start.
+
+## When events
+
+`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, active side category 4 then opponent 6, entry order within a side. Enter reactions sit on the queue before the entering card's Fanfare (`pending_work`). `pick: entering` reads `State.event_subject`.
+
+All 15 `EventName`s are raised where the engine produces them (enter, destroy, play, attack, evolve, draw, earth-rite spend, engage, leader restore, self-buff). None are a silent no-op.
+
+## One evolve per turn
+
+`PlayerState.evolved_this_turn` is set on a manual EP/SEP evolve and cleared at `begin_turn`. `can_evolve` rejects both `evolve` and `evolve {super}` for the rest of that player's turn. Effect-granted evolves (`granted: true`) do not set the flag.
+
+## Rally on play
+
+A **played** follower's Rally increment is deferred until the play sequence is quiet (after Fanfare, including any Fanfare choice). Summons and reanimates still increment at entry. A `Fanfare: if Rally (N)` therefore sees the pre-entry count, as does the snapshot during that Fanfare's choice node.
+
 ## Resolution
 
 `apply` runs the action then `drain_until_quiet`:
@@ -36,6 +54,8 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 4. Settle 0-defense deaths.
 
 That order is what makes enter-reactions precede Fanfare, Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
+
+A completed old-engine `fuse { host_pos, partner_pos }` line is applied by `apply_neutral`: start the fuse, map each `partner_pos` (pre-action hand position) to the index in `options`, then Confirm. Confirm with no partners is not legal. `Choose` with an out-of-range index is `NotLegal`.
 
 ## State notes
 

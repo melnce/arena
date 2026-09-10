@@ -77,6 +77,9 @@ pub fn to_neutral(state: &State, action: &Action) -> NeutralAction {
             player: p,
             slot: slot.0,
         },
+        // Fuse *start* — partners are chosen next. Completed old-engine lines
+        // carry pre-action hand positions in `partner_pos`; `apply_neutral`
+        // maps those onto `options`. Arena traces emit Choose/Confirm instead.
         Action::Fuse { host } => NeutralAction::Fuse {
             player: p,
             host_pos: *host,

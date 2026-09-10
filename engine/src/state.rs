@@ -209,6 +209,9 @@ pub struct PlayerState {
     pub ep: i32,
     pub sep: i32,
     pub evolves_used: i32,
+    /// Manual EP/SEP evolve this turn locks both kinds until the next turn.
+    /// Effect-granted evolves do not set this. Old engine `canEvolve` / `usedThisTurn`.
+    pub evolved_this_turn: bool,
     pub shadows: i32,
     pub combo: i32,
     pub earth: i32,
@@ -243,6 +246,7 @@ impl PlayerState {
             ep: 2,
             sep: 2,
             evolves_used: 0,
+            evolved_this_turn: false,
             shadows: 0,
             combo: 0,
             earth: 0,
@@ -435,6 +439,11 @@ pub struct State {
     /// Per-resolution `as` / `bound` map. Shared by evolve + superEvolve
     /// of one card when both fire. Cleared at each new resolution.
     pub bindings: BTreeMap<String, Vec<BoundRef>>,
+    /// Played follower: Rally increments when the play sequence (Fanfare)
+    /// completes, not at entry. Summons increment at entry.
+    pub pending_play_rally: Option<PlayerId>,
+    /// Subject of the current `When` event (`pick: entering`, etc.).
+    pub event_subject: Option<TargetOpt>,
 }
 
 #[derive(Debug, Clone)]

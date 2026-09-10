@@ -6,9 +6,9 @@ use std::fs;
 use std::process::ExitCode;
 
 use arena_engine::{
-    apply, from_neutral, legal_actions, legal_divergence_parts, neutral_json, new_game,
-    picks_from_trace_rng, snapshot_json, to_neutral, Action, CardDb, CardId, First, GameConfig,
-    GameRng, NeutralAction, OpeningHands, ReplayError, TraceHeader,
+    apply_neutral, legal_actions, legal_divergence_parts, neutral_json, new_game,
+    picks_from_trace_rng, snapshot_json, to_neutral, CardDb, CardId, First, GameConfig, GameRng,
+    NeutralAction, OpeningHands, ReplayError, TraceHeader,
 };
 
 fn main() -> ExitCode {
@@ -78,44 +78,11 @@ fn run(path: &str) -> Result<(), ReplayError> {
         })?;
         let rng = rec.get("rng").map(picks_from_trace_rng).unwrap_or_default();
         state.rng = GameRng::scripted(rng, header.seed);
-        let act = from_neutral(&state, &action).ok_or_else(|| {
-            illegal_at(
-                i,
-                &action,
-                &legal_json(&db, &state),
-                arena_engine::Illegal::NotLegal,
-            )
+        apply_neutral(&db, &mut state, &action).map_err(|e| match e {
+            arena_engine::Illegal::Unsupported(u) => ReplayError::Unsupported(u),
+            arena_engine::Illegal::OraclePickNotLegal(o) => ReplayError::Oracle(o),
+            other => illegal_at(i, &action, &legal_json(&db, &state), other),
         })?;
-        // Old-engine completed fuse: partners in the same line.
-        if let NeutralAction::Fuse {
-            host_pos,
-            partner_pos,
-            ..
-        } = &action
-        {
-            if !partner_pos.is_empty() {
-                apply(&db, &mut state, Action::Fuse { host: *host_pos })
-                    .map_err(|source| illegal_at(i, &action, &legal_json(&db, &state), source))?;
-                if let arena_engine::Phase::Choice { .. } = state.phase {
-                    // choose each partner then confirm
-                    for p in partner_pos {
-                        let _ = apply(&db, &mut state, Action::Choose(*p));
-                    }
-                    apply(&db, &mut state, Action::Confirm).map_err(|source| {
-                        illegal_at(i, &action, &legal_json(&db, &state), source)
-                    })?;
-                }
-            } else {
-                apply(&db, &mut state, act)
-                    .map_err(|source| illegal_at(i, &action, &legal_json(&db, &state), source))?;
-            }
-        } else {
-            apply(&db, &mut state, act).map_err(|e| match e {
-                arena_engine::Illegal::Unsupported(u) => ReplayError::Unsupported(u),
-                arena_engine::Illegal::OraclePickNotLegal(o) => ReplayError::Oracle(o),
-                other => illegal_at(i, &action, &legal_json(&db, &state), other),
-            })?;
-        }
         let got = snapshot_json(&state);
         let want = rec.get("state").cloned().unwrap_or(serde_json::Value::Null);
         if let Some((path, a, b)) = arena_engine::json_eq_first_diff(&got, &want, "") {
