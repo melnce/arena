@@ -1,0 +1,44 @@
+{
+  "id": "10921110",
+  "name": "Open-Sea Scout",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Summon a Dread Pirate's Flag.\n\nEvolve: Add a Gilded Boots to your hand.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Dread Pirate's Flag.",
+      "effects": [
+        {
+          "printed": "Summon a Dread Pirate's Flag.",
+          "op": "summon",
+          "card": {
+            "named": "90021210"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Add a Gilded Boots to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Gilded Boots to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021330"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

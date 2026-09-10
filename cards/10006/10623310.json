@@ -1,0 +1,71 @@
+{
+  "id": "10623310",
+  "name": "Ruthless Eld Sword",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 1,
+  "text": "Select a Mode to activate.\n1. Draw a card.\n2. Deal 3 damage to a random enemy follower.\nEnhance (3): Activate all of them instead.",
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate.\n1. Draw a card.\n2. Deal 3 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Draw a card.\n2. Deal 3 damage to a random enemy follower.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Draw a card.",
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "printed": "2. Deal 3 damage to a random enemy follower.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "random"
+                  },
+                  "amount": 3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 3,
+      "replacesBase": true,
+      "printed": "Enhance (3): Activate all of them instead.",
+      "effects": [
+        {
+          "printed": "Activate all of them instead.",
+          "op": "choose",
+          "pick": "all",
+          "by": "player",
+          "optionsFrom": "fanfare"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "90021330",
+  "name": "Gilded Boots",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Select an allied follower on the field and give it +1/+0 and Rush.",
+  "tribes": [
+    "loot"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied follower on the field and give it +1/+0 and Rush.",
+      "effects": [
+        {
+          "printed": "Select an allied follower on the field and give it +1/+0 and Rush.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "buff",
+              "select": {
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose"
+              },
+              "as": "t",
+              "attack": 1,
+              "defense": 0
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "traits": {
+                "rush": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

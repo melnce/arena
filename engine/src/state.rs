@@ -28,6 +28,8 @@ pub struct InstanceFlags {
     pub eot_attack: i32,
     pub eot_defense: i32,
     pub eot_cost: Option<i32>,
+    /// True when this copy was played with an Enhance tier active.
+    pub enhanced: bool,
 }
 
 impl Default for InstanceFlags {
@@ -44,6 +46,7 @@ impl Default for InstanceFlags {
             eot_attack: 0,
             eot_defense: 0,
             eot_cost: None,
+            enhanced: false,
         }
     }
 }

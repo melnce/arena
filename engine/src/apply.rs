@@ -971,6 +971,9 @@ fn apply_play(
     } else {
         PlayForm::Normal
     };
+    if matches!(form, PlayForm::Enhance { .. }) {
+        inst.flags.enhanced = true;
+    }
     if matches!(form, PlayForm::Crystallize { .. }) {
         apply_crystallize_form(card, &mut inst, paid);
     }
@@ -3074,6 +3077,28 @@ fn resolve_effect_list(
     Ok(())
 }
 
+fn source_instance_cost(state: &State, source: Option<SourceRef>) -> Option<i32> {
+    match source {
+        Some(SourceRef::Field { player, id }) => state
+            .find_field(player, id)
+            .and_then(|s| state.field_inst(player, s).map(|c| c.cost)),
+        Some(SourceRef::Hand { player, id }) => state
+            .player(player)
+            .hand
+            .iter()
+            .find(|c| c.id == id)
+            .map(|c| c.cost),
+        Some(SourceRef::Spell { player, card }) => state
+            .player(player)
+            .cemetery
+            .iter()
+            .rev()
+            .find(|c| c.card == card)
+            .map(|c| c.cost),
+        _ => None,
+    }
+}
+
 fn effect_choice_node(
     db: &CardDb,
     state: &State,
@@ -3286,9 +3311,7 @@ fn apply_effect_with_targets(
         }
         Effect::Countdown { delta, .. } => {
             let d = eval_amount(db, state, controller, Some(source), delta);
-            for t in targets {
-                countdown_opt(db, state, t, d, events)?;
-            }
+            apply_each_captured(state, targets, |st, t| countdown_opt(db, st, t, d, events))?;
         }
         Effect::GrantAbility { ability, .. } => {
             for t in targets {
@@ -3617,9 +3640,8 @@ fn apply_effect(
         }
         Effect::Countdown { select, delta, .. } => {
             let d = eval_amount(db, state, controller, Some(source), delta);
-            for t in resolve_select(db, state, controller, source, select) {
-                countdown_opt(db, state, &t, d, events)?;
-            }
+            let ts = resolve_select(db, state, controller, source, select);
+            apply_each_captured(state, &ts, |st, t| countdown_opt(db, st, t, d, events))?;
         }
         Effect::Counter {
             key, how, amount, ..
@@ -5729,6 +5751,11 @@ fn inst_matches_filter(_state: &State, _who: PlayerId, c: &CardInstance, f: &Fil
             return false;
         }
     }
+    if let Some(b) = f.enhanced {
+        if c.flags.enhanced != b {
+            return false;
+        }
+    }
     if f.same_cost_group == Some(true) {
         let Some(base) = _state.event_base_cost else {
             return false;
@@ -5967,6 +5994,12 @@ fn eval_cond(
         Condition::Overflow { overflow } => {
             // Overflow: max PP ≥ 7; Bonus PP does not count — rulebook Overflow
             (state.player(who).pp_max >= 7) == *overflow
+        }
+        Condition::CostEq { cost_eq } => {
+            // Played instance's current cost (Severed Ties). Spells read the
+            // cemetery corpse written at play (`cost = paid`).
+            source_instance_cost(state, source)
+                == Some(eval_amount(db, state, who, source, cost_eq))
         }
         Condition::MaxPpAtLeast { max_pp_at_least } => {
             // Dragonsign / schema `maxPpAtLeast` — current pp_max vs n at resolution.

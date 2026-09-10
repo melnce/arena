@@ -1,0 +1,61 @@
+{
+  "id": "10922310",
+  "name": "Severed Ties",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Select an enemy follower on the field and deal it 5 damage. If this card's cost is 3, add a Severed Ties to your hand and set its cost to 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 5 damage. If this card's cost is 3, add a Severed Ties to your hand and set its cost to 1.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 5 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 5
+        },
+        {
+          "printed": "If this card's cost is 3, add a Severed Ties to your hand and set its cost to 1.",
+          "op": "if",
+          "cond": {
+            "costEq": 3
+          },
+          "then": [
+            {
+              "op": "seq",
+              "effects": [
+                {
+                  "op": "addToHand",
+                  "card": {
+                    "named": "10922310"
+                  },
+                  "count": 1,
+                  "as": "t"
+                },
+                {
+                  "op": "cost",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "t"
+                  },
+                  "set": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

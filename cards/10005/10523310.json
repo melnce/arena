@@ -1,0 +1,46 @@
+{
+  "id": "10523310",
+  "name": "Splendor of the Goldbloom",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Add 2 copies of Glittering Gold to your hand.\nEnhance (5): Add 4 instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Add 2 copies of Glittering Gold to your hand.",
+      "effects": [
+        {
+          "printed": "Add 2 copies of Glittering Gold to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021350"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 5,
+      "replacesBase": true,
+      "printed": "Enhance (5): Add 4 instead.",
+      "effects": [
+        {
+          "printed": "Add 4 instead.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021350"
+          },
+          "count": 4
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

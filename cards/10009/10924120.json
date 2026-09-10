@@ -1,0 +1,21 @@
+{
+  "id": "10924120",
+  "name": "Beltezore, Valorous Revenant",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 10,
+  "text": "Storm\nBane\nWard\nAura\nCan attack 3 times per turn.",
+  "attack": 2,
+  "defense": 12,
+  "traits": {
+    "storm": true,
+    "bane": true,
+    "ward": true,
+    "aura": true,
+    "attacksPerTurn": 3
+  },
+  "tribes": []
+}

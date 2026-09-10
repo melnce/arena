@@ -800,6 +800,18 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "costEq": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "costEq"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
             "maxPpAtLeast": {
               "type": "object",
               "additionalProperties": false,

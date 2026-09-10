@@ -1,0 +1,27 @@
+{
+  "id": "crest:10524120",
+  "name": "Crest: Unkei, Goldbloom",
+  "grantedBy": [
+    "10524120"
+  ],
+  "faith": false,
+  "text": "Countdown (4)\nAt the end of your turn, add a Glittering Gold to your hand.",
+  "countdown": 4,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, add a Glittering Gold to your hand.",
+      "effects": [
+        {
+          "printed": "add a Glittering Gold to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021350"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

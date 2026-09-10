@@ -600,6 +600,46 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "royal-nattui-mirror/trace-20260910-26.jsonl",
+    "i": 63,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Gilded Necklace 90021340 'give it +0/+1 and Ward' raises max_defense; the old engine left Super-Evolved Unkei, Goldbloom 10524120 max at 7",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-4.jsonl",
+    "i": 59,
+    "path": "players.a.field[4]",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Spilling Red 10642310 summons after the destroy, not before the second selection",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-6.jsonl",
+    "i": 28,
+    "path": "players.a.field[2]",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Spilling Red 10642310 summons after the destroy, not before the second selection",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-8.jsonl",
+    "i": 43,
+    "path": "players.b.field[2]",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Lumiore & Argente 10844120 ('Select 2 cards in your hand and discard them') summons after both discards and the damage, not after the first selection",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-18.jsonl",
+    "i": 50,
+    "path": "players.a.leader_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: Depths of the Eld Blades 90044330 discarded by Spilling Red 10642310 ('When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader') resolves after the destroy, not before the second selection",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "afnm-minatodao-mirror/trace-20260910-11.jsonl",
     "i": 88,
     "path": "players.a.field[1].attack",

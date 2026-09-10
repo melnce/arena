@@ -1,0 +1,81 @@
+{
+  "id": "10722310",
+  "name": "Orchestrated Silence",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Add a Steelclad Knight to your hand and give it Rush. Rally (10) - Add 2 copies instead.",
+  "tribes": [
+    "anathema"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Add a Steelclad Knight to your hand and give it Rush. Rally (10) - Add 2 copies instead.",
+      "effects": [
+        {
+          "printed": "Add a Steelclad Knight to your hand and give it Rush. Rally (10) - Add 2 copies instead.",
+          "op": "if",
+          "cond": {
+            "rally": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "seq",
+              "effects": [
+                {
+                  "op": "addToHand",
+                  "card": {
+                    "named": "90021120"
+                  },
+                  "count": 2,
+                  "as": "k"
+                },
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "k"
+                  },
+                  "traits": {
+                    "rush": true
+                  }
+                }
+              ]
+            }
+          ],
+          "else": [
+            {
+              "op": "seq",
+              "effects": [
+                {
+                  "op": "addToHand",
+                  "card": {
+                    "named": "90021120"
+                  },
+                  "count": 1,
+                  "as": "k"
+                },
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "k"
+                  },
+                  "traits": {
+                    "rush": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

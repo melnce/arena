@@ -1,0 +1,33 @@
+{
+  "id": "90021320",
+  "name": "Gilded Goblet",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Restore 2 defense to your leader.",
+  "tribes": [
+    "loot"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Restore 2 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Restore 2 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

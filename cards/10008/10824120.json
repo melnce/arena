@@ -1,0 +1,89 @@
+{
+  "id": "10824120",
+  "name": "Mars, Conflagrant Commander",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Summon 3 copies of Knight.\n\nStorm\nBane\nWhenever an allied Officer follower enters the field, give it +2/+0 and Rush and give this follower +1/+0.\n\nSuper-Evolve: Summon a Knight.",
+  "attack": 1,
+  "defense": 5,
+  "traits": {
+    "storm": true,
+    "bane": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 3 copies of Knight.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies of Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021110"
+          },
+          "count": 3
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "officer"
+      },
+      "printed": "Whenever an allied Officer follower enters the field, give it +2/+0 and Rush and give this follower +1/+0.",
+      "effects": [
+        {
+          "printed": "give it +2/+0 and Rush and give this follower +1/+0.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "buff",
+              "select": {
+                "pick": "entering"
+              },
+              "attack": 2,
+              "defense": 0
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "entering"
+              },
+              "traits": {
+                "rush": true
+              }
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 1,
+              "defense": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Summon a Knight.",
+      "effects": [
+        {
+          "printed": "Summon a Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

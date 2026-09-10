@@ -311,6 +311,7 @@ def condition_schema():
             closed({"combo": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])}, required=["combo"]),
             closed({"rally": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])}, required=["rally"]),
             closed({"overflow": {"type": "boolean"}}, required=["overflow"]),
+            closed({"costEq": {"$ref": "#/$defs/Amount"}}, required=["costEq"]),
             closed(
                 {"maxPpAtLeast": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])},
                 required=["maxPpAtLeast"],
