@@ -3093,7 +3093,13 @@ fn e40_applies(tag: TriggerTag) -> bool {
 fn trigger_source_still_present(state: &State, source: SourceRef) -> bool {
     match source {
         SourceRef::Field { player, id } => state.find_field(player, id).is_some(),
-        SourceRef::Hand { player, id } => state.player(player).hand.iter().any(|c| c.id == id),
+        SourceRef::Hand { player, id } => {
+            // Deck-zone boundary abilities are stored as `SourceRef::Hand`
+            // (Sandalphon Invoke). Treat the instance as present if it is
+            // still in hand or still in deck.
+            let p = state.player(player);
+            p.hand.iter().any(|c| c.id == id) || p.deck.iter().any(|c| c.id == id)
+        }
         SourceRef::Crest { player, index } => state.player(player).crests.get(index).is_some(),
         SourceRef::Spell { .. } | SourceRef::Leader { .. } => true,
     }
