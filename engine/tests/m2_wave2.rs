@@ -479,6 +479,7 @@ fn thestae_crest_deck_buff_survives_draw_and_play() {
             once_used: vec![],
             granted_order: 1,
             granted: vec![],
+            choose_used: Default::default(),
         });
     st.player_mut(me).combo = 3;
     let deck_atk = st

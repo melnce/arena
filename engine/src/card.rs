@@ -238,6 +238,33 @@ pub enum TriggerTag {
     Enhance,
 }
 
+impl TriggerTag {
+    pub fn snapshot(self) -> &'static str {
+        match self {
+            TriggerTag::Fanfare => "fanfare",
+            TriggerTag::LastWords => "lastWords",
+            TriggerTag::Evolve => "evolve",
+            TriggerTag::SuperEvolve => "superEvolve",
+            TriggerTag::AnyEvolve => "anyEvolve",
+            TriggerTag::AnySuperEvolve => "anySuperEvolve",
+            TriggerTag::Strike => "strike",
+            TriggerTag::FollowerStrike => "followerStrike",
+            TriggerTag::Clash => "clash",
+            TriggerTag::Enter => "enter",
+            TriggerTag::Leave => "leave",
+            TriggerTag::Discarded => "discarded",
+            TriggerTag::Invoked => "invoked",
+            TriggerTag::Fused => "fused",
+            TriggerTag::Spellboost => "spellboost",
+            TriggerTag::Engage => "engage",
+            TriggerTag::StartOfTurn => "startOfTurn",
+            TriggerTag::EndOfTurn => "endOfTurn",
+            TriggerTag::When => "when",
+            TriggerTag::Enhance => "enhance",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EventName {
@@ -2146,26 +2173,8 @@ impl Ability {
 
     pub fn snapshot_tag(&self) -> &'static str {
         match self {
-            Ability::Fanfare { .. } => "fanfare",
-            Ability::LastWords { .. } => "lastWords",
-            Ability::Evolve { .. } => "evolve",
-            Ability::SuperEvolve { .. } => "superEvolve",
-            Ability::AnyEvolve { .. } => "anyEvolve",
-            Ability::AnySuperEvolve { .. } => "anySuperEvolve",
-            Ability::Strike { .. } => "strike",
-            Ability::FollowerStrike { .. } => "followerStrike",
-            Ability::Clash { .. } => "clash",
-            Ability::Enter { .. } => "enter",
-            Ability::Leave { .. } => "leave",
-            Ability::Discarded { .. } => "discarded",
-            Ability::Invoked { .. } => "invoked",
-            Ability::Fused { .. } => "fused",
-            Ability::Spellboost { .. } => "spellboost",
-            Ability::Engage { .. } => "engage",
-            Ability::StartOfTurn { .. } => "startOfTurn",
-            Ability::EndOfTurn { .. } => "endOfTurn",
-            Ability::When { .. } => "when",
             Ability::Static { .. } => "static",
+            _ => self.tag().snapshot(),
         }
     }
 }
