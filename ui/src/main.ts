@@ -111,6 +111,10 @@ function exposeArena(): void {
     hash: () => session?.game.hash() ?? "",
     canUndo: () => (session ? canUndo(session) : false),
     canRedo: () => (session ? canRedo(session) : false),
+    botAction: (policy, seed) => {
+      if (!session) throw new Error("no session");
+      return session.game.botAction(policy, seed);
+    },
   };
 }
 

@@ -6,6 +6,7 @@ declare global {
       hash(): string;
       canUndo(): boolean;
       canRedo(): boolean;
+      botAction(policy: string, seed: string | number | bigint): string;
     };
   }
 }
