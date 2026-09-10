@@ -292,7 +292,11 @@ def condition_schema():
             closed(
                 {
                     "countAtLeast": closed(
-                        {"select": {"$ref": "#/$defs/Selector"}, "n": {"$ref": "#/$defs/Amount"}},
+                        {
+                            "select": {"$ref": "#/$defs/Selector"},
+                            "n": {"$ref": "#/$defs/Amount"},
+                            "filter": {"$ref": "#/$defs/Filter"},
+                        },
                         required=["select", "n"],
                     )
                 },
@@ -428,6 +432,7 @@ def card_source():
                 {"copyOf": {"$ref": "#/$defs/Selector"}, "exact": {"type": "boolean"}},
                 required=["copyOf", "exact"],
             ),
+            closed({"from": {"$ref": "#/$defs/Selector"}}, required=["from"]),
             closed({"randomFrom": {"$ref": "#/$defs/Filter"}}, required=["randomFrom"]),
         ]
     }

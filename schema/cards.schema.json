@@ -684,6 +684,9 @@
                 },
                 "n": {
                   "$ref": "#/$defs/Amount"
+                },
+                "filter": {
+                  "$ref": "#/$defs/Filter"
                 }
               },
               "required": [
@@ -1178,6 +1181,18 @@
           "required": [
             "copyOf",
             "exact"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "from"
           ]
         },
         {

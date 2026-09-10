@@ -1,0 +1,34 @@
+{
+  "id": "crest:10414120",
+  "name": "Crest: Yuel & Societte, Dancing Duo",
+  "grantedBy": [
+    "10414120"
+  ],
+  "faith": false,
+  "text": "Countdown (4)\nOnce on each of your turns, when you play a follower, evolve it.",
+  "countdown": 4,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_card_played",
+      "printed": "Once on each of your turns, when you play a follower, evolve it.",
+      "effects": [
+        {
+          "printed": "evolve it.",
+          "op": "evolve",
+          "select": {
+            "pick": "entering"
+          },
+          "super": false
+        }
+      ],
+      "filter": {
+        "kind": "follower"
+      },
+      "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      }
+    }
+  ]
+}

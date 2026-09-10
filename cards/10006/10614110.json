@@ -1,0 +1,49 @@
+{
+  "id": "10614110",
+  "name": "Althenia, Nurturing Bloom",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Summon 3 copies of Springbloom Fairy.\n\nCan attack 2 times per turn.\n\nSuper-Evolve: Select an enemy follower on the field and destroy it.",
+  "attack": 7,
+  "defense": 7,
+  "traits": {
+    "attacksPerTurn": 2
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 3 copies of Springbloom Fairy.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies of Springbloom Fairy.",
+          "op": "summon",
+          "card": {
+            "named": "90011120"
+          },
+          "count": 3
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

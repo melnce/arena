@@ -1,0 +1,32 @@
+{
+  "id": "88001850",
+  "name": "Synth Buff All Enemy Followers",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Give all enemy followers on the field +1/+1.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give all enemy followers on the field +1/+1.",
+      "effects": [
+        {
+          "printed": "Give all enemy followers on the field +1/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ]
+}

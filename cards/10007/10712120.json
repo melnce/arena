@@ -1,0 +1,51 @@
+{
+  "id": "10712120",
+  "name": "Hawkeyed Tactician",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 4 damage. Increase your Combo by 1.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 4 damage. Increase your Combo by 1.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 4 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4
+        },
+        {
+          "printed": "Increase your Combo by 1.",
+          "op": "counter",
+          "key": "combo",
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "op": "replicate",
+          "ability": "fanfare",
+          "printed": "Replicate the effects of this card's Fanfare ability."
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

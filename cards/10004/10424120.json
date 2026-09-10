@@ -1,0 +1,74 @@
+{
+  "id": "10424120",
+  "name": "Seofon, Leader of the Eternals",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Skybound Art - Evolve all unevolved allied followers on the field. Super Skybound Art - Super-evolve them instead.",
+  "attack": 4,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Skybound Art - Evolve all unevolved allied followers on the field. Super Skybound Art - Super-evolve them instead.",
+      "effects": [
+        {
+          "printed": "Skybound Art - Evolve all unevolved allied followers on the field. Super Skybound Art - Super-evolve them instead.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 15
+            }
+          },
+          "then": [
+            {
+              "printed": "Super-evolve them instead.",
+              "op": "evolve",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower",
+                "filter": {
+                  "unevolved": true
+                }
+              },
+              "super": true
+            }
+          ],
+          "else": [
+            {
+              "printed": "Skybound Art - Evolve all unevolved allied followers on the field.",
+              "op": "if",
+              "cond": {
+                "skyboundArt": {
+                  "n": 10
+                }
+              },
+              "then": [
+                {
+                  "printed": "Evolve all unevolved allied followers on the field.",
+                  "op": "evolve",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower",
+                    "filter": {
+                      "unevolved": true
+                    }
+                  },
+                  "super": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

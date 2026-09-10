@@ -1,0 +1,40 @@
+{
+  "id": "10821120",
+  "name": "Shaili, Prowling Assassin",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Ambush\n\nEvolve: Select an enemy follower on the field and give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+  "attack": 2,
+  "defense": 1,
+  "traits": {
+    "ambush": true
+  },
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and give it \"Can't attack followers or leaders\" until the end of your opponent's turn.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "traits": {
+            "cantAttackFollowers": true,
+            "cantAttackLeader": true
+          },
+          "until": "endOfOpponentTurn"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

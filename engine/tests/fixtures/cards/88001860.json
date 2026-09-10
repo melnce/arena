@@ -1,0 +1,28 @@
+{
+  "id": "88001860",
+  "name": "Synth Summon 3 Knights",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Summon 3 copies of Knight.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon 3 copies of Knight.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies of Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021110"
+          },
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

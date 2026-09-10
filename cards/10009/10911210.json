@@ -1,0 +1,39 @@
+{
+  "id": "10911210",
+  "name": "Trap in the Woods",
+  "kind": "amulet",
+  "class": "forestcraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Whenever an enemy follower enters the field, destroy it and this card.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "enemy_follower_enter",
+      "printed": "Whenever an enemy follower enters the field, destroy it and this card.",
+      "effects": [
+        {
+          "printed": "Whenever an enemy follower enters the field, destroy it and this card.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "entering"
+              }
+            },
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "self"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,39 @@
+{
+  "id": "10711310",
+  "name": "Cognitive Shift",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Select 2 cards in your hand and return them to deck. Draw 2 cards.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select 2 cards in your hand and return them to deck. Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Select 2 cards in your hand and return them to deck.",
+          "op": "returnToDeck",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "count": 2
+          },
+          "position": "random"
+        },
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

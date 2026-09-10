@@ -1,0 +1,49 @@
+{
+  "id": "10622310",
+  "name": "Majestic Conquest",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Gain Crest: Majestic Conquest.\nEnhance (3): Delay the count of your Crest: Majestic Conquest by 2.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Gain Crest: Majestic Conquest.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Majestic Conquest.",
+          "op": "crest",
+          "gain": "crest:10622310",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 3,
+      "printed": "Enhance (3): Delay the count of your Crest: Majestic Conquest by 2.",
+      "effects": [
+        {
+          "printed": "Delay the count of your Crest: Majestic Conquest by 2.",
+          "op": "countdown",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "crests",
+            "kind": "card",
+            "filter": {
+              "card": "10622310"
+            }
+          },
+          "delta": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

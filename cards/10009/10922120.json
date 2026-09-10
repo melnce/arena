@@ -1,0 +1,82 @@
+{
+  "id": "10922120",
+  "name": "Ferocious Commander",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Summon 2 copies of Steelclad Knight.\nEnhance (7): Give them and this follower +3/+0 and Rush.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Steelclad Knight.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Steelclad Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021120"
+          },
+          "count": 2,
+          "as": "s"
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 7,
+      "printed": "Enhance (7): Give them and this follower +3/+0 and Rush.",
+      "effects": [
+        {
+          "printed": "Give them and this follower +3/+0 and Rush.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "attack": 3,
+              "defense": 0
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "rush": true
+              }
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 3,
+              "defense": 0
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "rush": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

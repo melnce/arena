@@ -237,3 +237,26 @@ fn encode(state: &State, perspective: PlayerId) -> Features;
 ## Throughput
 
 M1's benchmark reports games/second for both engines on the same seeded games. No speedup factor is claimed in M0.
+
+## Bindings (`wasm/`, M4)
+
+JSON-neutral JS API over `arena-engine` compiled to WASM. The client never depends on Rust types — every method takes or returns a JSON string (or a thrown string). `apply` accepts a `NeutralAction` exactly as `arena-replay` reads it (`from_neutral` / `apply_neutral`). Undo/redo is not an engine concept; the client keeps `clone()` snapshots.
+
+JSON strings (not `serde-wasm-bindgen` JS objects) so the wire format is the same as `docs/trace-format.md` and a JS client can replay traces without a type mapping.
+
+The WASM binary `include_str!`s every authored `cards/**/*.json` except `cards/official/`, produced by `wasm/build.rs`. The engine crate itself gains no wasm dependency.
+
+| Method | Returns | Notes |
+|---|---|---|
+| `new Game(seed, deckA, deckB, first)` | `Game` | `seed` is a bigint or number; `deckA` / `deckB` are JSON multisets `{id: n}`; `first` is `"coin"` \| `"a"` \| `"b"` |
+| `legal()` | string | JSON array of `NeutralAction`, same order as `legal_actions` |
+| `apply(action)` | string | JSON array of `Event`; throws a string naming the action and `legal` length on `Illegal` |
+| `snapshot()` | string | `CanonicalState` JSON (`snapshot_json`) |
+| `full()` | string | the full `State` as JSON (perfect information; the client masks nothing yet) |
+| `hash()` | string | `u64` as a decimal string |
+| `phase()` | string | `"mulligan"` \| `"main"` \| `"choice"` \| `"end"` \| `"terminal"` |
+| `clone()` | `Game` | deep copy for undo/redo |
+| `free()` | void | wasm-bindgen drop |
+| `cardText(id)` | string | JSON `{id, name, text, kind, cost}` from the baked bundle |
+| `bundleInfo()` | string | `{cards, crests, bytes}` |
+| `version()` | string | git SHA baked at build, or `"dev"` |

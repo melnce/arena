@@ -1,0 +1,41 @@
+{
+  "id": "10611310",
+  "name": "Advent of the Eld Lance",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "text": "Deal 4 damage to all enemy followers. Summon 2 copies of Springbloom Fairy.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 4 damage to all enemy followers. Summon 2 copies of Springbloom Fairy.",
+      "effects": [
+        {
+          "printed": "Deal 4 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4
+        },
+        {
+          "printed": "Summon 2 copies of Springbloom Fairy.",
+          "op": "summon",
+          "card": {
+            "named": "90011120"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

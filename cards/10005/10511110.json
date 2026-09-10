@@ -1,0 +1,30 @@
+{
+  "id": "10511110",
+  "name": "Prudent Tanuki",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Ambush\n\nEvolve: Draw a card.",
+  "attack": 1,
+  "defense": 3,
+  "traits": {
+    "ambush": true
+  },
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

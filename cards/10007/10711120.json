@@ -1,0 +1,41 @@
+{
+  "id": "10711120",
+  "name": "Elven Trapper",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: Select a card in your hand and return it to deck. Add 2 copies of Fairy to your hand.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and return it to deck. Add 2 copies of Fairy to your hand.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and return it to deck.",
+          "op": "returnToDeck",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "position": "random"
+        },
+        {
+          "printed": "Add 2 copies of Fairy to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90011110"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

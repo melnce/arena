@@ -1,0 +1,81 @@
+{
+  "id": "10912310",
+  "name": "Verdant Ring Kindred",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Select a Mode to activate. Combo (3) - Activate all of them instead.\n1. Deal 4 damage to a random enemy follower.\n2. Add a Deepwood Bounty and Fairy to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate. Combo (3) - Activate all of them instead.\n1. Deal 4 damage to a random enemy follower.\n2. Add a Deepwood Bounty and Fairy to your hand.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "when": {
+            "not": {
+              "combo": {
+                "n": 3
+              }
+            }
+          },
+          "options": [
+                {
+                  "printed": "1. Deal 4 damage to a random enemy follower.",
+                  "effects": [
+                    {
+                      "op": "damage",
+                      "select": {
+                        "pick": "random",
+                        "side": "enemy",
+                        "zone": "field",
+                        "kind": "follower"
+                      },
+                      "amount": 4
+                    }
+                  ]
+                },
+                {
+                  "printed": "2. Add a Deepwood Bounty and Fairy to your hand.",
+                  "effects": [
+                    {
+                      "op": "addToHand",
+                      "card": {
+                        "named": "90011310"
+                      },
+                      "count": 1
+                    },
+                    {
+                      "op": "addToHand",
+                      "card": {
+                        "named": "90011110"
+                      },
+                      "count": 1
+                    }
+                  ]
+                }
+          ]
+        },
+        {
+          "printed": "Combo (3) - Activate all of them instead.",
+          "op": "choose",
+          "pick": "all",
+          "by": "player",
+          "when": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "optionsFrom": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

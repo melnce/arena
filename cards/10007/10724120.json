@@ -1,0 +1,86 @@
+{
+  "id": "10724120",
+  "name": "Cesar, Accordant Major",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon 2 copies of Steelclad Knight. Give all other allied Swordcraft followers on the field +1/+3 and Ward.\n\nWard\n\nSuper-Evolve: Select an enemy follower on the field and destroy it.",
+  "attack": 5,
+  "defense": 7,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Steelclad Knight. Give all other allied Swordcraft followers on the field +1/+3 and Ward.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Steelclad Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021120"
+          },
+          "count": 2
+        },
+        {
+          "printed": "Give all other allied Swordcraft followers on the field +1/+3 and Ward.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "buff",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower",
+                "other": true,
+                "filter": {
+                  "class": "swordcraft"
+                }
+              },
+              "attack": 1,
+              "defense": 3
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower",
+                "other": true,
+                "filter": {
+                  "class": "swordcraft"
+                }
+              },
+              "traits": {
+                "ward": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
