@@ -747,6 +747,7 @@ fn choose_ok_one(
         Effect::Damage { select, .. }
         | Effect::Restore { select, .. }
         | Effect::Buff { select, .. }
+        | Effect::Select { select, .. }
         | Effect::Destroy { select, .. }
         | Effect::Banish { select, .. }
         | Effect::ReturnToHand { select, .. }
@@ -3247,6 +3248,7 @@ fn effect_choice_node(
         Effect::Damage { select, .. }
         | Effect::Restore { select, .. }
         | Effect::Buff { select, .. }
+        | Effect::Select { select, .. }
         | Effect::Destroy { select, .. }
         | Effect::Banish { select, .. }
         | Effect::ReturnToHand { select, .. }
@@ -3464,6 +3466,7 @@ fn apply_effect_with_targets(
                 }
             }
         }
+        Effect::Select { .. } => {}
         _ => {
             apply_effect(db, state, controller, source, e, events)?;
             return Ok(());
@@ -3611,6 +3614,10 @@ fn apply_effect(
                 buff_opt(db, st, t, da, dd, until_end_of_turn.unwrap_or(false));
                 Ok(())
             })?;
+            maybe_bind(state, e, &ts);
+        }
+        Effect::Select { select, .. } => {
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
             maybe_bind(state, e, &ts);
         }
         Effect::Destroy { select, .. } => {

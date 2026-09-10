@@ -396,6 +396,29 @@ fn cassius_no_artifact_in_hand_zero_damage() {
     );
 }
 
+/// Chains of the Past Enhance is `replacesBase` + `repeat 2`, not an added copy.
+#[test]
+fn chains_of_the_past_enhance_replaces_not_adds() {
+    let db = load_db();
+    let mut st = started(&db, 122);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, opp, "88001320");
+    give_pp(&mut st, me, 4, 4);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10952310");
+    let tank = st
+        .player(opp)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == "88001320")
+        .expect("tank lives");
+    assert_eq!(tank.defense, 4, "two 3-damage hits, not three");
+    assert_eq!(st.player(me).leader_defense, 18);
+    assert_eq!(st.player(opp).leader_defense, 18);
+}
+
 /// Beelzebub's "Takes 1 more damage" stacking twice and applying to a
 /// super-evolved follower's destroy damage.
 #[test]

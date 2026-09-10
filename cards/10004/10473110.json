@@ -20,7 +20,7 @@
           "op": "seq",
           "effects": [
             {
-              "op": "buff",
+              "op": "select",
               "select": {
                 "pick": "choose",
                 "side": "ally",
@@ -30,8 +30,6 @@
                   "tribe": "artifact"
                 }
               },
-              "attack": 0,
-              "defense": 0,
               "as": "a"
             },
             {

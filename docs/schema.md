@@ -198,6 +198,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `damage` | `10904110`; `split: true` `10434110` Wamdus |
 | `restore` | `10002110` |
 | `buff` | `10001110`; negative via `Amount.neg` `10714110`; `untilEndOfTurn` `10574110` option 1 (cost, not buff) — buff until EOT: `10474110` Lu Woh |
+| `select` | `10473110` Cassius: "Select an Artifact follower in your hand and deal X damage to all enemy followers. X is the selected follower's attack" — opens the choice, binds (`as`), does nothing else. Empty pool binds nothing; a later `Amount.stat` of an empty binding is 0 (official Q&A: the ability still resolves). |
 | `setStats` | omitted — no pool card sets a follower's ATK/DEF to a number (Zooey sets leader max defense via `leaderModifier`) |
 | `destroy` | `10963210` |
 | `banish` | `10574110`, `10443310` |
@@ -252,7 +253,7 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 `oneOf` two closed shapes.
 
-**Reference picks** — `pick ∈ {self, bound, entering, attacker, defender, opposing, selected}`. No other fields. `bound` requires `ref`. `self` `10001110` · `bound` `10633310` · `entering` `10724110` · `opposing` `10654110` · `selected` `10473110` Cassius.
+**Reference picks** — `pick ∈ {self, bound, entering, attacker, defender, opposing, selected}`. No other fields. `bound` requires `ref`. `self` `10001110` · `bound` `10633310` · `entering` `10724110` · `opposing` `10654110`. `selected` omitted — no pool card; Cassius `10473110` is `op: select` + bind, not `pick: selected`.
 
 **Pool picks** — `pick ∈ {all, choose, random, randomDistinct, leftmost, highest, lowest}` with **required** `side`, `zone`, `kind`. Optional `filter`, `count`, `other`, `includeLeader`, `orderBy`.
 

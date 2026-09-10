@@ -451,6 +451,9 @@ def effect_schema():
             "defense": {"$ref": "#/$defs/Amount"},
             "untilEndOfTurn": {"type": "boolean"},
         }, ["select"]),
+        leaf("select", {
+            "select": {"$ref": "#/$defs/Selector"},
+        }, ["select", "as"]),
         leaf("destroy", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
         leaf("banish", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
         leaf("returnToHand", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),

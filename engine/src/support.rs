@@ -133,6 +133,7 @@ fn walk_nested(e: &Effect) -> Option<String> {
         Effect::Damage { select, .. }
         | Effect::Restore { select, .. }
         | Effect::Buff { select, .. }
+        | Effect::Select { select, .. }
         | Effect::Destroy { select, .. }
         | Effect::Banish { select, .. }
         | Effect::ReturnToHand { select, .. }
