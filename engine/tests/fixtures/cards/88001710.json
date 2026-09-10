@@ -1,0 +1,31 @@
+{
+  "id": "88001710",
+  "name": "Synth Highest Attack Destroy",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Destroy a random enemy follower with the highest attack.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy a random enemy follower with the highest attack.",
+      "effects": [
+        {
+          "printed": "Destroy a random enemy follower with the highest attack.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "highest",
+            "orderBy": "attack"
+          }
+        }
+      ]
+    }
+  ]
+}
