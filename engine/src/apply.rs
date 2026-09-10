@@ -5768,7 +5768,7 @@ fn pick_extremum(
 fn board_card_survives(c: &CardInstance) -> bool {
     match c.kind {
         CardKind::Follower => c.defense > 0,
-        CardKind::Amulet => !c.countdown.is_some_and(|n| n <= 0),
+        CardKind::Amulet => c.countdown.is_none_or(|n| n > 0),
         CardKind::Spell => true,
     }
 }
