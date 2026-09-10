@@ -156,7 +156,7 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 
 `zone`: `field` default · `hand` `10634120` / `10534120` · `deck` `10404110` / `10904110`
 
-`oncePerTurn`: `10812110`, `10822110`, `crest:10934110`
+`oncePerTurn`: `10812110`, `10822110`, `crest:10934110`. The printed phrase "Once on each of your turns" always pairs with `when: {turnOwner: self}` (owner 2026-09-10 — `rules/owner-rulings.md`).
 
 `when` on the ability: `evolved` `10574110`; `turnOwner` `10724110`; `wasFused` `10933110`; `evolvedCountAtLeast` `10404110`; `playedBaseCostsThisMatch` `10904110`
 

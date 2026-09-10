@@ -25,7 +25,10 @@
       "filter": {
         "kind": "follower"
       },
-      "oncePerTurn": true
+      "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      }
     }
   ]
 }

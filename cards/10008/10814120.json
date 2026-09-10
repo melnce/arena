@@ -28,7 +28,10 @@
           "count": 1
         }
       ],
-      "oncePerTurn": true
+      "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      }
     }
   ],
   "modes": [
