@@ -61,6 +61,9 @@ pub struct CardInstance {
     pub super_evolved: bool,
     pub traits: Traits,
     pub granted: Vec<Ability>,
+    /// Count of `Ability::When` entries in `granted`. Grants are dynamic and
+    /// rare; a non-zero count forces the instance into the `when` scan.
+    pub granted_whens: u8,
     /// Printed trigger tags at construction; `granted` snapshot is instance − this.
     pub printed_tags: BTreeSet<String>,
     pub flags: InstanceFlags,
@@ -97,6 +100,7 @@ impl CardInstance {
             super_evolved: false,
             traits,
             granted: Vec::new(),
+            granted_whens: 0,
             printed_tags: card.printed_trigger_tags(),
             flags: InstanceFlags {
                 ambush_active: ambush,
@@ -158,6 +162,25 @@ impl CardInstance {
     }
     pub fn damaged(&self) -> bool {
         self.defense < self.max_defense
+    }
+
+    pub fn grant_ability(&mut self, ability: Ability) {
+        if matches!(ability, Ability::When { .. }) {
+            self.granted_whens = self.granted_whens.saturating_add(1);
+        }
+        self.granted.push(ability);
+    }
+
+    pub fn remove_granted_abilities(&mut self, on: Option<&[TriggerTag]>) {
+        match on {
+            Some(tags) => self.granted.retain(|a| !tags.contains(&a.tag())),
+            None => self.granted.clear(),
+        }
+        self.granted_whens = self
+            .granted
+            .iter()
+            .filter(|a| matches!(a, Ability::When { .. }))
+            .count() as u8;
     }
 }
 
