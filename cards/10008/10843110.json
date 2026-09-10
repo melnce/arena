@@ -1,0 +1,53 @@
+{
+  "id": "10843110",
+  "name": "Giada, Peerless Flame of War",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 6,
+  "text": "Rush\nIntimidate\nStrike: Give this follower Barrier. If attacking a follower, give this follower \"Can attack 2 times per turn\" until the end of the turn.",
+  "attack": 6,
+  "defense": 2,
+  "traits": {
+    "rush": true,
+    "intimidate": true
+  },
+  "abilities": [
+    {
+      "on": "strike",
+      "printed": "Strike: Give this follower Barrier.",
+      "effects": [
+        {
+          "printed": "Give this follower Barrier.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "barrier": true
+          }
+        }
+      ]
+    },
+    {
+      "on": "followerStrike",
+      "printed": "If attacking a follower, give this follower \"Can attack 2 times per turn\" until the end of the turn.",
+      "effects": [
+        {
+          "printed": "give this follower \"Can attack 2 times per turn\" until the end of the turn.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "attacksPerTurn": 2
+          },
+          "until": "endOfTurn"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

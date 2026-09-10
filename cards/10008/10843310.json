@@ -1,0 +1,54 @@
+{
+  "id": "10843310",
+  "name": "Ephemeral Foxfire",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 1,
+  "text": "Select an enemy follower on the field or the enemy leader and deal it 1 damage. Add an Ephemeral Foxfire to your deck. If you're in Overflow, draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field or the enemy leader and deal it 1 damage. Add an Ephemeral Foxfire to your deck. If you're in Overflow, draw a card.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field or the enemy leader and deal it 1 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "includeLeader": true
+          },
+          "amount": 1
+        },
+        {
+          "printed": "Add an Ephemeral Foxfire to your deck.",
+          "op": "addToDeck",
+          "card": {
+            "named": "10843310"
+          },
+          "count": 1,
+          "position": "random"
+        },
+        {
+          "printed": "If you're in Overflow, draw a card.",
+          "op": "if",
+          "cond": {
+            "overflow": true
+          },
+          "then": [
+            {
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

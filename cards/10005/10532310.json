@@ -1,0 +1,73 @@
+{
+  "id": "10532310",
+  "name": "Kitty Cunning",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Earth Rite (2) - Activate 2 random abilities from the following.\n1. Summon a Clay Golem.\n2. Restore 2 defense to your leader.\n3. Gain 3 earth sigils.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Earth Rite (2) - Activate 2 random abilities from the following.\n1. Summon a Clay Golem.\n2. Restore 2 defense to your leader.\n3. Gain 3 earth sigils.",
+      "effects": [
+        {
+          "printed": "Earth Rite (2) - Activate 2 random abilities from the following.\n1. Summon a Clay Golem.\n2. Restore 2 defense to your leader.\n3. Gain 3 earth sigils.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 2,
+          "effects": [
+            {
+              "op": "choose",
+              "pick": 2,
+              "by": "random",
+              "options": [
+                {
+                  "printed": "1. Summon a Clay Golem.",
+                  "effects": [
+                    {
+                      "op": "summon",
+                      "card": {
+                        "named": "90031110"
+                      },
+                      "count": 1
+                    }
+                  ]
+                },
+                {
+                  "printed": "2. Restore 2 defense to your leader.",
+                  "effects": [
+                    {
+                      "op": "restore",
+                      "select": {
+                        "pick": "all",
+                        "side": "ally",
+                        "zone": "leader",
+                        "kind": "leader"
+                      },
+                      "amount": 2
+                    }
+                  ]
+                },
+                {
+                  "printed": "3. Gain 3 earth sigils.",
+                  "effects": [
+                    {
+                      "op": "counter",
+                      "key": "earth",
+                      "how": "add",
+                      "amount": 3
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

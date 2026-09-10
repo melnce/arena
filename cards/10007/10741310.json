@@ -1,0 +1,64 @@
+{
+  "id": "10741310",
+  "name": "Apathetic Gaze",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Gain 1 max play point. Transform all copies of Apathetic Gaze in your hand and deck into copies of Lazing Flame.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Gain 1 max play point. Transform all copies of Apathetic Gaze in your hand and deck into copies of Lazing Flame.",
+      "effects": [
+        {
+          "printed": "Gain 1 max play point.",
+          "op": "pp",
+          "action": "gainMax",
+          "amount": 1
+        },
+        {
+          "printed": "Transform all copies of Apathetic Gaze in your hand and deck into copies of Lazing Flame.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "transform",
+              "select": {
+                "side": "ally",
+                "zone": "hand",
+                "kind": "card",
+                "pick": "all",
+                "filter": {
+                  "card": "10741310"
+                }
+              },
+              "into": {
+                "named": "10742310"
+              }
+            },
+            {
+              "op": "transform",
+              "select": {
+                "side": "ally",
+                "zone": "deck",
+                "kind": "card",
+                "pick": "all",
+                "filter": {
+                  "card": "10741310"
+                }
+              },
+              "into": {
+                "named": "10742310"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

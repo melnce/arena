@@ -1,0 +1,41 @@
+{
+  "id": "crest:10734110",
+  "name": "Crest: Lilanthim, Anathema of Predation",
+  "grantedBy": [
+    "10734110"
+  ],
+  "faith": false,
+  "text": "Countdown (1)\nAt the end of your opponent's turn, summon a Lilanthim, Anathema of Predation and evolve it.",
+  "countdown": 1,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "opponent",
+      "printed": "At the end of your opponent's turn, summon a Lilanthim, Anathema of Predation and evolve it.",
+      "effects": [
+        {
+          "printed": "summon a Lilanthim, Anathema of Predation and evolve it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10734110"
+              },
+              "count": 1,
+              "as": "l"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "l"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "10532120",
+  "name": "Woodsong Haikumaster",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "On Spellboost: Reduce the cost of this card by 1.\n\nFanfare: Draw a card.\n\nLast Words: Spellboost your hand.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "spellboost",
+      "zone": "hand",
+      "printed": "On Spellboost: Reduce the cost of this card by 1.",
+      "effects": [
+        {
+          "printed": "Reduce the cost of this card by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Spellboost your hand.",
+      "effects": [
+        {
+          "printed": "Spellboost your hand.",
+          "op": "spellboostHand",
+          "times": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

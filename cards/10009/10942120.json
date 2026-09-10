@@ -1,0 +1,58 @@
+{
+  "id": "10942120",
+  "name": "Dragonfolk Butler",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Restore 3 defense to your leader. Recover 3 play points.\n\nEvolve: Select another allied follower on the field and give it +3/+3.",
+  "attack": 6,
+  "defense": 9,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Restore 3 defense to your leader. Recover 3 play points.",
+      "effects": [
+        {
+          "printed": "Restore 3 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 3
+        },
+        {
+          "printed": "Recover 3 play points.",
+          "op": "pp",
+          "action": "recover",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select another allied follower on the field and give it +3/+3.",
+      "effects": [
+        {
+          "printed": "Select another allied follower on the field and give it +3/+3.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "other": true
+          },
+          "attack": 3,
+          "defense": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

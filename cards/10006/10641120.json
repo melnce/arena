@@ -1,0 +1,50 @@
+{
+  "id": "10641120",
+  "name": "Fruitfish",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Enhance (6): Summon 2 copies of Fruitfish.\n\nLast Words: Restore 1 defense to your leader.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Restore 1 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Restore 1 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 6,
+      "printed": "Enhance (6): Summon 2 copies of Fruitfish.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Fruitfish.",
+          "op": "summon",
+          "card": {
+            "named": "10641120"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,32 @@
+{
+  "id": "10732120",
+  "name": "Pretty Predator",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Gain 2 earth sigils.\n\nWard",
+  "attack": 1,
+  "defense": 3,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain 2 earth sigils.",
+      "effects": [
+        {
+          "printed": "Gain 2 earth sigils.",
+          "op": "counter",
+          "key": "earth",
+          "how": "add",
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

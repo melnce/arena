@@ -1,0 +1,39 @@
+{
+  "id": "10533310",
+  "name": "Grandeur of the Dawnblossom",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 7,
+  "text": "Transform all allied followers on the field into exact copies of random followers in your deck.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Transform all allied followers on the field into exact copies of random followers in your deck.",
+      "effects": [
+        {
+          "printed": "Transform all allied followers on the field into exact copies of random followers in your deck.",
+          "op": "transform",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "into": {
+            "copyOf": {
+              "side": "ally",
+              "zone": "deck",
+              "kind": "follower",
+              "pick": "random"
+            },
+            "exact": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

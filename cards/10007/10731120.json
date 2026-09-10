@@ -1,0 +1,51 @@
+{
+  "id": "10731120",
+  "name": "Little Beastie",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 1 damage. Gain an earth sigil.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 1 damage. Gain an earth sigil.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 1 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 1
+        },
+        {
+          "printed": "Gain an earth sigil.",
+          "op": "counter",
+          "key": "earth",
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

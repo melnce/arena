@@ -1,0 +1,45 @@
+{
+  "id": "10634110",
+  "name": "Shymm, Love Bewitched",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Summon 2 copies of Crystalspawn.\n\nDrain\n\nSuper-Evolve: Gain Crest: Shymm, Love Bewitched.",
+  "attack": 1,
+  "defense": 2,
+  "traits": {
+    "drain": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Crystalspawn.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Crystalspawn.",
+          "op": "summon",
+          "card": {
+            "named": "10631110"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Gain Crest: Shymm, Love Bewitched.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Shymm, Love Bewitched.",
+          "op": "crest",
+          "gain": "crest:10634110",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

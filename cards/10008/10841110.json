@@ -1,0 +1,42 @@
+{
+  "id": "10841110",
+  "name": "Gido, Leader of the Pack",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: If your leader's defense is 10 or less, evolve this follower.\n\nBane\nWard",
+  "attack": 1,
+  "defense": 7,
+  "traits": {
+    "bane": true,
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If your leader's defense is 10 or less, evolve this follower.",
+      "effects": [
+        {
+          "printed": "If your leader's defense is 10 or less, evolve this follower.",
+          "op": "if",
+          "cond": {
+            "leaderDefenseLte": 10
+          },
+          "then": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

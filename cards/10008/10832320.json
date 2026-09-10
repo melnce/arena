@@ -1,0 +1,58 @@
+{
+  "id": "10832320",
+  "name": "Earth-Shattering Bolt",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Deal 8 damage to a random enemy follower with the highest attack. Deal 2 damage to the enemy leader. Earth Rite (2) - Add an Earth-Shattering Bolt to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 8 damage to a random enemy follower with the highest attack. Deal 2 damage to the enemy leader. Earth Rite (2) - Add an Earth-Shattering Bolt to your hand.",
+      "effects": [
+        {
+          "printed": "Deal 8 damage to a random enemy follower with the highest attack.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "highest",
+            "orderBy": "attack"
+          },
+          "amount": 8
+        },
+        {
+          "printed": "Deal 2 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        },
+        {
+          "printed": "Earth Rite (2) - Add an Earth-Shattering Bolt to your hand.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 2,
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "10832320"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

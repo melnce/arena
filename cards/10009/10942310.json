@@ -1,0 +1,57 @@
+{
+  "id": "10942310",
+  "name": "Parting Jaws",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Select 2 cards in your hand and discard them. Deal 3 damage to a random enemy follower and the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select 2 cards in your hand and discard them. Deal 3 damage to a random enemy follower and the enemy leader.",
+      "effects": [
+        {
+          "printed": "Select 2 cards in your hand and discard them.",
+          "op": "discard",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose",
+            "count": 2
+          }
+        },
+        {
+          "printed": "Deal 3 damage to a random enemy follower and the enemy leader.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "random"
+              },
+              "amount": 3
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

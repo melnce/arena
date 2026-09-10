@@ -1,0 +1,50 @@
+{
+  "id": "10631120",
+  "name": "Daydream Librarian",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Summon a Caravan Mammoth.\n\nSuper-Evolve: Give all other allied followers on the field Rush.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Caravan Mammoth.",
+      "effects": [
+        {
+          "printed": "Summon a Caravan Mammoth.",
+          "op": "summon",
+          "card": {
+            "named": "10002120"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give all other allied followers on the field Rush.",
+      "effects": [
+        {
+          "printed": "Give all other allied followers on the field Rush.",
+          "op": "grantTraits",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all",
+            "other": true
+          },
+          "traits": {
+            "rush": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

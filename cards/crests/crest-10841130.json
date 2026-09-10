@@ -1,0 +1,30 @@
+{
+  "id": "crest:10841130",
+  "name": "Crest: Spirit of Wadatsumi",
+  "grantedBy": [
+    "10841130"
+  ],
+  "faith": false,
+  "text": "Whenever an allied Marine follower enters the field, give it +1/+1.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "marine"
+      },
+      "printed": "Whenever an allied Marine follower enters the field, give it +1/+1.",
+      "effects": [
+        {
+          "printed": "give it +1/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "entering"
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ]
+}

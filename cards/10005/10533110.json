@@ -1,0 +1,55 @@
+{
+  "id": "10533110",
+  "name": "Emperor of Elements",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon 2 copies of Guardian Golem.\n\nWhenever an allied Golem follower enters the field, Earth Rite (1) - Evolve it.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Guardian Golem.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Guardian Golem.",
+          "op": "summon",
+          "card": {
+            "named": "90031120"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "golem"
+      },
+      "printed": "Whenever an allied Golem follower enters the field, Earth Rite (1) - Evolve it.",
+      "effects": [
+        {
+          "printed": "Earth Rite (1) - Evolve it.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 1,
+          "effects": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "entering"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

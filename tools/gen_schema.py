@@ -176,6 +176,7 @@ def filter_schema():
             "enhanced": {"type": "boolean"},
             "sameCostGroup": {"type": "boolean"},
             "hasLastWords": {"type": "boolean"},
+            "hasSpellboost": {"type": "boolean"},
             "destroyedThisMatch": {"type": "boolean"},
         }
     )
@@ -469,6 +470,7 @@ def effect_schema():
             "count": {"$ref": "#/$defs/Amount"},
             "filter": {"$ref": "#/$defs/Filter"},
             "distinctNames": {"type": "boolean"},
+            "player": {"enum": ["self", "opponent"]},
         }, ["count"]),
         leaf("discard", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
         leaf("addToDeck", {
@@ -483,6 +485,7 @@ def effect_schema():
         leaf("grantTraits", {
             "select": {"$ref": "#/$defs/Selector"},
             "traits": {"$ref": "#/$defs/Traits"},
+            "until": {"enum": ["endOfTurn", "endOfOpponentTurn"]},
         }, ["select", "traits"]),
         leaf("removeTraits", {
             "select": {"$ref": "#/$defs/Selector"},
@@ -549,6 +552,7 @@ def effect_schema():
         leaf("invoke", {}, []),
         leaf("spellboostHand", {
             "times": {"$ref": "#/$defs/Amount"},
+            "select": {"$ref": "#/$defs/Selector"},
         }, ["times"]),
         leaf("randomSplit", {
             "keys": {"type": "array", "items": {"enum": VARS}, "minItems": 2},

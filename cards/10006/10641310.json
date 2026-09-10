@@ -1,0 +1,65 @@
+{
+  "id": "10641310",
+  "name": "Advent of the Eld Blades",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "When this card is discarded, if its cost is 4, add an Advent of the Eld Blades to your hand and set its cost to 2.\n\nSelect an allied follower on the field and give it +2/+2.",
+  "abilities": [
+    {
+      "on": "discarded",
+      "printed": "When this card is discarded, if its cost is 4, add an Advent of the Eld Blades to your hand and set its cost to 2.",
+      "effects": [
+        {
+          "printed": "if its cost is 4, add an Advent of the Eld Blades to your hand and set its cost to 2.",
+          "op": "if",
+          "cond": {
+            "costEq": 4
+          },
+          "then": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "10641310"
+              },
+              "count": 1,
+              "as": "c"
+            },
+            {
+              "op": "cost",
+              "select": {
+                "pick": "bound",
+                "ref": "c"
+              },
+              "set": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Select an allied follower on the field and give it +2/+2.",
+      "effects": [
+        {
+          "printed": "Select an allied follower on the field and give it +2/+2.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "attack": 2,
+          "defense": 2
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

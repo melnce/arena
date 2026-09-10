@@ -1,0 +1,63 @@
+{
+  "id": "10732310",
+  "name": "Haphazard Snacking",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Select a Mode to activate.\n1. Gain 4 earth sigils.\n2. Earth Rite (2) - Deal 2 damage to all enemy followers.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate.\n1. Gain 4 earth sigils.\n2. Earth Rite (2) - Deal 2 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Gain 4 earth sigils.\n2. Earth Rite (2) - Deal 2 damage to all enemy followers.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Gain 4 earth sigils.",
+              "effects": [
+                {
+                  "op": "counter",
+                  "key": "earth",
+                  "how": "add",
+                  "amount": 4
+                }
+              ]
+            },
+            {
+              "printed": "2. Earth Rite (2) - Deal 2 damage to all enemy followers.",
+              "effects": [
+                {
+                  "op": "pay",
+                  "resource": "earth",
+                  "amount": 2,
+                  "effects": [
+                    {
+                      "op": "damage",
+                      "select": {
+                        "side": "enemy",
+                        "zone": "field",
+                        "kind": "follower",
+                        "pick": "all"
+                      },
+                      "amount": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "10741120",
+  "name": "Carrier Wyvern",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Select another allied follower on the field and give it +2/+2.\n\nEvolve: Select a follower in your hand and give it +2/+2.",
+  "attack": 3,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select another allied follower on the field and give it +2/+2.",
+      "effects": [
+        {
+          "printed": "Select another allied follower on the field and give it +2/+2.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "other": true
+          },
+          "attack": 2,
+          "defense": 2
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select a follower in your hand and give it +2/+2.",
+      "effects": [
+        {
+          "printed": "Select a follower in your hand and give it +2/+2.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "attack": 2,
+          "defense": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

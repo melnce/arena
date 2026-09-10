@@ -1,0 +1,79 @@
+{
+  "id": "10943110",
+  "name": "Barren-Earth Tyrant",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Do this 1 time: \"Deal 4 damage to a random enemy follower.\" If an allied follower attacked a leader on your last turn, do it 2 times instead.\n\nEvolve: Summon a High-Spirited Marauder.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Do this 1 time: \"Deal 4 damage to a random enemy follower.\" If an allied follower attacked a leader on your last turn, do it 2 times instead.",
+      "effects": [
+        {
+          "printed": "Do this 1 time: \"Deal 4 damage to a random enemy follower.\" If an allied follower attacked a leader on your last turn, do it 2 times instead.",
+          "op": "if",
+          "cond": {
+            "attackedLeaderLastTurn": true
+          },
+          "then": [
+            {
+              "op": "repeat",
+              "times": 2,
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "random"
+                  },
+                  "amount": 4
+                }
+              ]
+            }
+          ],
+          "else": [
+            {
+              "op": "repeat",
+              "times": 1,
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower",
+                    "pick": "random"
+                  },
+                  "amount": 4
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon a High-Spirited Marauder.",
+      "effects": [
+        {
+          "printed": "Summon a High-Spirited Marauder.",
+          "op": "summon",
+          "card": {
+            "named": "10942110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

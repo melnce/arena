@@ -1,0 +1,47 @@
+{
+  "id": "10532110",
+  "name": "Insomniac Witch",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Gain Crest: Insomniac Witch.\n\nEvolve: Destroy your Crest: Insomniac Witch.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain Crest: Insomniac Witch.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Insomniac Witch.",
+          "op": "crest",
+          "gain": "crest:10532110",
+          "player": "self"
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Destroy your Crest: Insomniac Witch.",
+      "effects": [
+        {
+          "printed": "Destroy your Crest: Insomniac Witch.",
+          "op": "removeCrests",
+          "select": {
+            "side": "ally",
+            "zone": "crests",
+            "kind": "card",
+            "pick": "all",
+            "filter": {
+              "card": "10532110"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,52 @@
+{
+  "id": "10541110",
+  "name": "Springwell Steward",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Evolve: Select an enemy follower on the field and deal it 5 damage.\nSuper-Evolve: Select 2 instead.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and deal it 5 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 5 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "replaces": "evolve",
+      "printed": "Super-Evolve: Select 2 instead.",
+      "effects": [
+        {
+          "printed": "Select 2 instead.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "count": 2
+          },
+          "amount": 5
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

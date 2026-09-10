@@ -1,0 +1,32 @@
+{
+  "id": "crest:10534110",
+  "name": "Crest: Lhynkal, Wandering Fool",
+  "grantedBy": [
+    "10534110"
+  ],
+  "faith": false,
+  "text": "Whenever an allied Lhynkal, Wandering Fool enters the field, reduce the enemy leader's max defense by 2.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "card": "10534110"
+      },
+      "printed": "Whenever an allied Lhynkal, Wandering Fool enters the field, reduce the enemy leader's max defense by 2.",
+      "effects": [
+        {
+          "printed": "reduce the enemy leader's max defense by 2.",
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "maxDefense": -2
+        }
+      ]
+    }
+  ]
+}

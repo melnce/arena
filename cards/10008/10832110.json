@@ -1,0 +1,48 @@
+{
+  "id": "10832110",
+  "name": "Sammy & Marie, Flowers of Joy",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "On Spellboost: Reduce the cost of this card by 1.\n\nFanfare: Draw 2 cards. Your opponent draws a card.",
+  "attack": 1,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "spellboost",
+      "zone": "hand",
+      "printed": "On Spellboost: Reduce the cost of this card by 1.",
+      "effects": [
+        {
+          "printed": "Reduce the cost of this card by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw 2 cards. Your opponent draws a card.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        },
+        {
+          "printed": "Your opponent draws a card.",
+          "op": "draw",
+          "count": 1,
+          "player": "opponent"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,44 @@
+{
+  "id": "10743310",
+  "name": "Blackflame Deluge",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 7,
+  "text": "Deal 5 damage to all enemy followers. Deal 3 damage to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 5 damage to all enemy followers. Deal 3 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 5 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 5
+        },
+        {
+          "printed": "Deal 3 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

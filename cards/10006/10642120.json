@@ -1,0 +1,49 @@
+{
+  "id": "10642120",
+  "name": "Spiked Dragon",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 8,
+  "text": "At the end of your turn, evolve this follower.\n\nWhen this follower evolves, deal 3 damage to all enemies.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, evolve this follower.",
+      "effects": [
+        {
+          "printed": "evolve this follower.",
+          "op": "evolve",
+          "select": {
+            "pick": "self"
+          },
+          "super": false
+        }
+      ]
+    },
+    {
+      "on": "anyEvolve",
+      "printed": "When this follower evolves, deal 3 damage to all enemies.",
+      "effects": [
+        {
+          "printed": "deal 3 damage to all enemies.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "character",
+            "pick": "all",
+            "includeLeader": true
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

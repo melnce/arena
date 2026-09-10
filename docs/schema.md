@@ -205,12 +205,12 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `summon` | `10724110`; `controller: opponent` `crest:10564120` |
 | `reanimate` | `10954110`, `10554110` |
 | `addToHand` | `10434120` Ars Magna |
-| `draw` | `10564120`; `filter` `10021310` |
+| `draw` | `10564120`; `filter` `10021310`; `player: opponent` `10832110` Sammy & Marie |
 | `discard` | `10703210` |
 | `search` | omitted — measured 0 printed "search" in the pool. `10021310` is `draw` + filter |
 | `addToDeck` | `10901310` |
 | `evolve` | effect-granted `10724110` Fanfare; `super: true` `10464120` |
-| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane |
+| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane; `until` `10442310` Maximum Love Bomb / `10843110` Giada |
 | `grantAbility` | `10704110` quoted end-of-turn banish |
 | `removeAbilities` | `90051140` (optional `on: ["lastWords"]` removes only Last Words) |
 | `cost` | `delta` `10534120`; `set` `10923110`; `untilEndOfTurn` `10574110` |
@@ -225,7 +225,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `leaderModifier` | `10444120` maxDefense + damageCap + until |
 | `replicate` | `10604110`, `10923110` |
 | `invoke` | `10404110`, `10904110` |
-| `spellboostHand` | `10031110` |
+| `spellboostHand` | `10031110`; optional `select` `10931120` Key Spirit ("spellboost it 4 times") |
 | `randomSplit` | `90034330` (ruling: one independent draw per faith point) |
 
 ### Combinators
@@ -261,7 +261,7 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Filter
 
-`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `destroyedThisMatch` `10901310`
+`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `hasSpellboost` `10931120` Key Spirit ("a card in your hand with On Spellboost") · `destroyedThisMatch` `10901310`
 
 ## Condition
 

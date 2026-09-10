@@ -1,0 +1,42 @@
+{
+  "id": "10842310",
+  "name": "Art of Decay",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Deal 4 damage to a random enemy follower. Deal 4 damage to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 4 damage to a random enemy follower. Deal 4 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 4 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 4
+        },
+        {
+          "printed": "Deal 4 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 4
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

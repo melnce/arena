@@ -273,6 +273,9 @@
         "hasLastWords": {
           "type": "boolean"
         },
+        "hasSpellboost": {
+          "type": "boolean"
+        },
         "destroyedThisMatch": {
           "type": "boolean"
         }
@@ -1517,6 +1520,12 @@
             },
             "distinctNames": {
               "type": "boolean"
+            },
+            "player": {
+              "enum": [
+                "self",
+                "opponent"
+              ]
             }
           },
           "required": [
@@ -1642,6 +1651,12 @@
             },
             "traits": {
               "$ref": "#/$defs/Traits"
+            },
+            "until": {
+              "enum": [
+                "endOfTurn",
+                "endOfOpponentTurn"
+              ]
             }
           },
           "required": [
@@ -2203,6 +2218,9 @@
             },
             "times": {
               "$ref": "#/$defs/Amount"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
             }
           },
           "required": [

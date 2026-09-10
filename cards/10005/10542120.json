@@ -1,0 +1,51 @@
+{
+  "id": "10542120",
+  "name": "Jellyfish Dancer",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add a Majestic Megalorca to your hand.\n\nWhenever an allied Marine follower enters the field, give this follower Rush and Bane.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Majestic Megalorca to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Majestic Megalorca to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90041130"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "marine"
+      },
+      "printed": "Whenever an allied Marine follower enters the field, give this follower Rush and Bane.",
+      "effects": [
+        {
+          "printed": "give this follower Rush and Bane.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "rush": true,
+            "bane": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

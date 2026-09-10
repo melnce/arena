@@ -1,0 +1,48 @@
+{
+  "id": "10842110",
+  "name": "Reef & Lolo, Serene Sirens",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Summon a Reef & Lolo, Serene Sirens.\n\nRush\nAt the end of your turn, add a Majestic Megalorca to your hand.",
+  "attack": 3,
+  "defense": 4,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Reef & Lolo, Serene Sirens.",
+      "effects": [
+        {
+          "printed": "Summon a Reef & Lolo, Serene Sirens.",
+          "op": "summon",
+          "card": {
+            "named": "10842110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, add a Majestic Megalorca to your hand.",
+      "effects": [
+        {
+          "printed": "add a Majestic Megalorca to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90041130"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,41 @@
+{
+  "id": "10542110",
+  "name": "Ironmace Dragoon",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 7 damage. Summon a Vastwing Dragon.",
+  "attack": 7,
+  "defense": 7,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 7 damage. Summon a Vastwing Dragon.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 7 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 7
+        },
+        {
+          "printed": "Summon a Vastwing Dragon.",
+          "op": "summon",
+          "card": {
+            "named": "90041120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
