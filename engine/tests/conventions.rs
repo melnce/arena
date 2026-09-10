@@ -1,8 +1,9 @@
 //! Pinned 2026-09-10 trace conventions (`docs/trace-format.md`).
 
 use arena_engine::{
-    apply, legal_actions, legal_divergence_parts, snapshot, to_neutral, Action, GameRng, Illegal,
-    NeutralAction, Phase, Pick, PickChose, PickWhat, PlayerId, ReplayError, TraceHeader,
+    apply, from_neutral, legal_actions, legal_divergence_parts, snapshot, to_neutral, Action,
+    GameRng, Illegal, NeutralAction, Phase, Pick, PickChose, PickWhat, PlayerId, ReplayError,
+    TraceHeader,
 };
 
 mod common;
@@ -164,6 +165,35 @@ fn scripted_multiset_pick_not_candidate_is_oracle_error() {
         }
         other => panic!("{other}"),
     }
+}
+
+/// Old-engine emitter bug: `{"play":{"card":"uid_24","hand_pos":0}}` must
+/// not play whatever sits at position 0 — `from_neutral` is `None` / NotLegal.
+#[test]
+fn play_mismatched_card_is_not_legal() {
+    let db = load_db();
+    let mut st = started(&db, 3);
+    let me = PlayerId::A;
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    let h = put_hand(&db, &mut st, me, "88001110");
+    let actual = st.player(me).hand[h as usize].card.as_str();
+    assert_eq!(actual, "88001110");
+    let neu = NeutralAction::Play {
+        player: "a".into(),
+        hand_pos: h,
+        card: "uid_24".into(),
+    };
+    assert!(
+        from_neutral(&st, &neu).is_none(),
+        "mismatched play.card must not map to Play {{ hand }}"
+    );
+    let ok = NeutralAction::Play {
+        player: "a".into(),
+        hand_pos: h,
+        card: actual,
+    };
+    assert_eq!(from_neutral(&st, &ok), Some(Action::Play { hand: h }));
 }
 
 #[test]

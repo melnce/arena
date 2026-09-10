@@ -123,10 +123,22 @@ fn choose_option_json(state: &State, i: u8) -> ChooseOptionJson {
     ChooseOptionJson::Mode { mode: i }
 }
 
+/// Map a NeutralAction onto the current state. `None` if the line names a
+/// card that is not at the given hand index (`play.card` vs `hand_pos`;
+/// `fuse.host_pos` / `partner_pos` must each hold a card). Replay treats
+/// `None` as `Illegal::NotLegal` at that line.
 pub fn from_neutral(state: &State, n: &NeutralAction) -> Option<Action> {
+    let who = acting_player(state);
+    let hand = &state.player(who).hand;
     match n {
         NeutralAction::Mulligan { swap, .. } => Some(Action::MulliganConfirm { swap: *swap }),
-        NeutralAction::Play { hand_pos, .. } => Some(Action::Play { hand: *hand_pos }),
+        NeutralAction::Play { hand_pos, card, .. } => {
+            let inst = hand.get(*hand_pos as usize)?;
+            if inst.card.as_str() != *card {
+                return None;
+            }
+            Some(Action::Play { hand: *hand_pos })
+        }
         NeutralAction::Attack {
             attacker_slot,
             target,
@@ -150,13 +162,11 @@ pub fn from_neutral(state: &State, n: &NeutralAction) -> Option<Action> {
             partner_pos,
             ..
         } => {
-            if partner_pos.is_empty() {
-                Some(Action::Fuse { host: *host_pos })
-            } else {
-                // Completed fuse from the old engine: stash partners on a
-                // synthetic Confirm after setting a fuse node. Handled in apply.
-                Some(Action::Fuse { host: *host_pos })
+            hand.get(*host_pos as usize)?;
+            for p in partner_pos {
+                hand.get(*p as usize)?;
             }
+            Some(Action::Fuse { host: *host_pos })
         }
         NeutralAction::BonusPp { .. } => Some(Action::BonusPp),
         NeutralAction::Choose { option, .. } => Some(Action::Choose(option_index(state, option))),
