@@ -1,0 +1,52 @@
+{
+  "id": "10671310",
+  "name": "Advent of the Eld Axe",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Select an enemy follower on the field and deal it 4 damage. If there's an allied follower on the field with a base cost of 5 or more, draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 4 damage. If there's an allied follower on the field with a base cost of 5 or more, draw a card.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 4 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4
+        },
+        {
+          "printed": "If there's an allied follower on the field with a base cost of 5 or more, draw a card.",
+          "op": "if",
+          "cond": {
+            "fieldHas": {
+              "filter": {
+                "baseCostGte": 5
+              },
+              "kind": "follower",
+              "side": "ally"
+            }
+          },
+          "then": [
+            {
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

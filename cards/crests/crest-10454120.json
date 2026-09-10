@@ -1,0 +1,29 @@
+{
+  "id": "crest:10454120",
+  "name": "Crest: Belial, Archangel of Cunning",
+  "grantedBy": [
+    "10454120"
+  ],
+  "faith": false,
+  "text": "Countdown (4)\nLast Words: Deal 20 damage to the enemy leader.",
+  "countdown": 4,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Deal 20 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 20 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 20
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "id": "10453310",
+  "name": "Corruption",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Give all followers on the field -2/-2. Give yourself and your opponent Crest: Corruption. Super Skybound Art - Destroy your Crest: Corruption.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give all followers on the field -2/-2. Give yourself and your opponent Crest: Corruption. Super Skybound Art - Destroy your Crest: Corruption.",
+      "effects": [
+        {
+          "printed": "Give all followers on the field -2/-2.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "any",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": -2,
+          "defense": -2
+        },
+        {
+          "printed": "Give yourself and your opponent Crest: Corruption.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "crest",
+              "gain": "crest:10453310",
+              "player": "self"
+            },
+            {
+              "op": "crest",
+              "gain": "crest:10453310",
+              "player": "opponent"
+            }
+          ]
+        },
+        {
+          "printed": "Super Skybound Art - Destroy your Crest: Corruption.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 15
+            }
+          },
+          "then": [
+            {
+              "op": "removeCrests",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "crests",
+                "kind": "card",
+                "filter": {
+                  "card": "10453310"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

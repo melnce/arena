@@ -1,0 +1,50 @@
+{
+  "id": "10551110",
+  "name": "Support Wolf",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Enhance (6): Give this follower +0/+6, Bane, and Barrier.\n\nRush",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "rush": true
+  },
+  "tribes": [],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 6,
+      "printed": "Enhance (6): Give this follower +0/+6, Bane, and Barrier.",
+      "effects": [
+        {
+          "printed": "Give this follower +0/+6, Bane, and Barrier.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 0,
+              "defense": 6
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "bane": true,
+                "barrier": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

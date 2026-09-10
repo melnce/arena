@@ -1,0 +1,40 @@
+{
+  "id": "10873110",
+  "name": "Miriam, Reciprocator",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it. Summon a Radiant Artifact.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it. Summon a Radiant Artifact.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        },
+        {
+          "printed": "Summon a Radiant Artifact.",
+          "op": "summon",
+          "card": {
+            "named": "90071160"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

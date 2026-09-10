@@ -1,0 +1,47 @@
+{
+  "id": "10652310",
+  "name": "Allure of the Mightiest",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "text": "Select an enemy follower on the field, banish it, and summon an exact copy of it.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field, banish it, and summon an exact copy of it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field, banish it, and summon an exact copy of it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "banish",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "as": "t"
+            },
+            {
+              "op": "summon",
+              "card": {
+                "copyOf": {
+                  "pick": "bound",
+                  "ref": "t"
+                },
+                "exact": true
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

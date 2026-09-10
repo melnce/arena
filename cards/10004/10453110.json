@@ -1,0 +1,50 @@
+{
+  "id": "10453110",
+  "name": "Nehan, Dispenser of Samsara",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Evolve all unevolved allied followers on the field. Deal 2 damage to your leader.\n\nDrain",
+  "attack": 2,
+  "defense": 4,
+  "traits": {
+    "drain": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Evolve all unevolved allied followers on the field. Deal 2 damage to your leader.",
+      "effects": [
+        {
+          "printed": "Evolve all unevolved allied followers on the field.",
+          "op": "evolve",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "unevolved": true
+            }
+          },
+          "super": false
+        },
+        {
+          "printed": "Deal 2 damage to your leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

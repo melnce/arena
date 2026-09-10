@@ -1,0 +1,44 @@
+{
+  "id": "10971110",
+  "name": "Bluerust Underling",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: If there are no duplicates in your deck, select an enemy follower on the field and deal it 5 damage.\n\nRush",
+  "attack": 1,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If there are no duplicates in your deck, select an enemy follower on the field and deal it 5 damage.",
+      "effects": [
+        {
+          "printed": "If there are no duplicates in your deck, select an enemy follower on the field and deal it 5 damage.",
+          "op": "if",
+          "cond": {
+            "deckHasNoDuplicates": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

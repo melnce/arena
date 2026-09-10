@@ -1,0 +1,32 @@
+{
+  "id": "10552310",
+  "name": "Tyrannical Fists",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Deal 3 damage to all leaders with the lowest defense.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 3 damage to all leaders with the lowest defense.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to all leaders with the lowest defense.",
+          "op": "damage",
+          "select": {
+            "pick": "lowest",
+            "side": "any",
+            "zone": "leader",
+            "kind": "leader",
+            "orderBy": "defense"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

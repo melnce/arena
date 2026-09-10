@@ -1,0 +1,60 @@
+{
+  "id": "10572110",
+  "name": "New-Age Cartographer",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Add an Ominous Artifact β to your hand.\n\nSuper-Evolve: Select an Artifact follower in your hand that costs 5 or less and summon an exact copy of it.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add an Ominous Artifact β to your hand.",
+      "effects": [
+        {
+          "printed": "Add an Ominous Artifact β to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90073120"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Select an Artifact follower in your hand that costs 5 or less and summon an exact copy of it.",
+      "effects": [
+        {
+          "printed": "Select an Artifact follower in your hand that costs 5 or less and summon an exact copy of it.",
+          "op": "summon",
+          "card": {
+            "copyOf": {
+              "pick": "choose",
+              "side": "ally",
+              "zone": "hand",
+              "kind": "follower",
+              "filter": {
+                "all": [
+                  {
+                    "tribe": "artifact"
+                  },
+                  {
+                    "costLte": 5
+                  }
+                ]
+              }
+            },
+            "exact": true
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

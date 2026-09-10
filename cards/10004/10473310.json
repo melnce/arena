@@ -1,0 +1,55 @@
+{
+  "id": "10473310",
+  "name": "Chaos Legion",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 6,
+  "text": "Deal 3 damage to all enemies. Super Skybound Art - Deal 6 damage instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 3 damage to all enemies. Super Skybound Art - Deal 6 damage instead.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to all enemies. Super Skybound Art - Deal 6 damage instead.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 15
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "character",
+                "includeLeader": true
+              },
+              "amount": 6
+            }
+          ],
+          "else": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "character",
+                "includeLeader": true
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

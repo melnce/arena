@@ -1,0 +1,82 @@
+{
+  "id": "10653110",
+  "name": "Deprived Destroyer",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select another allied follower on the field. If you selected one, destroy it and evolve this follower.\n\nWhen this follower evolves, summon a Bat and evolve it.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select another allied follower on the field. If you selected one, destroy it and evolve this follower.",
+      "effects": [
+        {
+          "printed": "Select another allied follower on the field. If you selected one, destroy it and evolve this follower.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "choose",
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower",
+                "other": true
+              },
+              "as": "t"
+            },
+            {
+              "op": "if",
+              "cond": {
+                "did": "t"
+              },
+              "then": [
+                {
+                  "op": "evolve",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "super": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "anyEvolve",
+      "printed": "When this follower evolves, summon a Bat and evolve it.",
+      "effects": [
+        {
+          "printed": "summon a Bat and evolve it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051120"
+              },
+              "count": 1,
+              "as": "b"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "b"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

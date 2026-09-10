@@ -1,0 +1,25 @@
+{
+  "id": "10571310",
+  "name": "Light of the Dewdrop",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
