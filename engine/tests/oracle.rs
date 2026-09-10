@@ -8,7 +8,9 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use arena_engine::oracle::{replay_trace, Divergence, KnownDivergence, ReplayOutcome};
+use arena_engine::oracle::{
+    replay_trace, Divergence, DivergenceClass, KnownDivergence, ReplayOutcome,
+};
 use arena_engine::ReplayError;
 use flate2::read::GzDecoder;
 
@@ -117,6 +119,19 @@ fn oracle_traces() {
     );
 }
 
+#[test]
+fn known_divergence_classes_include_old_rule() {
+    // Allowlist contract: docs/oracle.md. `old-rule` = the old engine
+    // disagrees with an owner ruling; arena is right.
+    let text = fs::read_to_string(repo_root().join("oracle/known-divergences.json"))
+        .expect("known-divergences.json");
+    let rows = KnownDivergence::parse_list(&text).expect("allowlist json");
+    assert!(
+        rows.iter().any(|r| r.class == DivergenceClass::OldRule),
+        "old-rule must appear in the allowlist"
+    );
+}
+
 fn collect_gz(dir: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     walk_gz(dir, &mut out);
@@ -211,6 +226,30 @@ fn red_from_err(trace: String, e: ReplayError) -> Red {
                 i,
                 path: "illegal".into(),
                 arena: legal,
+                trace_val: source.to_string(),
+                line,
+                side: "-",
+            }
+        }
+        ReplayError::OracleAt { i, err } => {
+            let line = format!("{trace} i={i} error arena= trace={err} action= cards=");
+            Red {
+                trace,
+                i,
+                path: "error".into(),
+                arena: String::new(),
+                trace_val: err.to_string(),
+                line,
+                side: "-",
+            }
+        }
+        ReplayError::Oracle(source) => {
+            let line = format!("{trace} i=0 error arena= trace={source} action= cards=");
+            Red {
+                trace,
+                i: 0,
+                path: "error".into(),
+                arena: String::new(),
                 trace_val: source.to_string(),
                 line,
                 side: "-",

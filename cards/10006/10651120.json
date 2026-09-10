@@ -1,0 +1,33 @@
+{
+  "id": "10651120",
+  "name": "Ghost Dodger",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "attack": 3,
+  "defense": 2,
+  "text": "Rush\nLast Words: Add a Ghost to your hand.",
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add a Ghost to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Ghost to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90051130"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

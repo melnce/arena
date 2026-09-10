@@ -1,0 +1,44 @@
+{
+  "id": "10451120",
+  "name": "Vaseraga, Unyielding Scythe",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "attack": 2,
+  "defense": 7,
+  "text": "Intimidate\nLast Words: Summon a Vaseraga, Unyielding Scythe. Deal 2 damage to your leader.",
+  "traits": {
+    "intimidate": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Vaseraga, Unyielding Scythe. Deal 2 damage to your leader.",
+      "effects": [
+        {
+          "printed": "Summon a Vaseraga, Unyielding Scythe.",
+          "op": "summon",
+          "card": {
+            "named": "10451120"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Deal 2 damage to your leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

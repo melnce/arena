@@ -1,0 +1,52 @@
+{
+  "id": "10752110",
+  "name": "Highwire Feline",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "attack": 4,
+  "defense": 5,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 3 damage. Summon a Skeleton.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 3 damage. Summon a Skeleton.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 3 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        },
+        {
+          "printed": "Summon a Skeleton.",
+          "op": "summon",
+          "card": {
+            "named": "90051110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -28,7 +28,16 @@ pub fn card_unsupported(card: &Card) -> Option<Unsupported> {
 
 fn mode_unsupported(mode: &Mode) -> Option<String> {
     match mode {
-        Mode::Crystallize { .. } => Some("mode:crystallize".into()),
+        Mode::Crystallize { abilities, .. } => {
+            if let Some(abs) = abilities {
+                for a in abs {
+                    if let Some(c) = ability_unsupported(a) {
+                        return Some(c);
+                    }
+                }
+            }
+            None
+        }
         Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => {
             for e in effects {
                 if let Some(c) = effect_unsupported(e) {
@@ -80,7 +89,6 @@ fn effect_unsupported(e: &Effect) -> Option<String> {
             key: crate::card::CounterKey::Named(crate::card::NamedCounter::SkyboundHand),
             ..
         } => Some("op:counter skyboundHand".into()),
-        Effect::Ep { .. } => Some("op:ep".into()),
         Effect::AddToDeck { .. } => Some("op:addToDeck".into()),
         other => walk_nested(other),
     }
@@ -156,8 +164,7 @@ fn walk_nested(e: &Effect) -> Option<String> {
 
 fn source_unsupported(src: &CardSource) -> Option<String> {
     match src {
-        CardSource::RandomFrom { .. } => Some("CardSource.randomFrom".into()),
-        _ => None,
+        CardSource::RandomFrom { .. } | CardSource::Named { .. } | CardSource::Copy { .. } => None,
     }
 }
 
@@ -165,11 +172,8 @@ fn selector_unsupported(_s: &Selector) -> Option<String> {
     None
 }
 
-fn condition_unsupported(c: &Condition) -> Option<String> {
-    match c {
-        Condition::SkyboundArt { .. } => Some("condition:skyboundArt".into()),
-        _ => None,
-    }
+fn condition_unsupported(_c: &Condition) -> Option<String> {
+    None
 }
 
 /// M1 `Unsupported` variants reachable from the intended M1 pool (or from
@@ -185,11 +189,7 @@ pub fn m1_unsupported_list() -> Vec<&'static str> {
         "op:pay resource:faith",
         "op:counter faith",
         "op:counter skyboundHand",
-        "op:ep",
         "op:addToDeck",
-        "mode:crystallize",
-        "CardSource.randomFrom",
-        "condition:skyboundArt",
     ]
 }
 

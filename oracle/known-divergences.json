@@ -1,10 +1,226 @@
 [
   {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-0.jsonl",
+    "i": 115,
+    "path": "error",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-23 / 2026-09-05: Void Colonel 10952110 Last Words 'Destroy a random enemy follower' picks after deaths settle and the board compact; the old engine still addressed pre-compact slot 1",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-1.jsonl",
+    "i": 83,
+    "path": "error",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random targeting after combat uses the compacted field; the old engine chose ally slot 4 which no longer existed",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-10.jsonl",
+    "i": 97,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'Summon 2 random differently named Abysscraft followers that cost 2 or less from your deck'; the old engine's second multiset_pick repeated 10751120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-12.jsonl",
+    "i": 43,
+    "path": "players.a.cemetery.10752110",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-29: Hark to the Night Song 10753310 'Deal 6 damage split between all enemy followers' is oldest-first; the old engine rolled random_target and killed Highwire Feline 10752110",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-13.jsonl",
+    "i": 63,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-16.jsonl",
+    "i": 66,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-17.jsonl",
+    "i": 83,
+    "path": "players.b.cemetery.10751120",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random destroy after combat selects on the compacted board; the old engine's ally random_target left a different Raz 10751120 cemetery count",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-18.jsonl",
+    "i": 53,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Highwire Feline 10752110 max at the printed 5",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-19.jsonl",
+    "i": 52,
+    "path": "players.b.cemetery.10951120",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-29: Hark to the Night Song 10753310 split damage is oldest-first; the old engine recorded random_target / random_card and killed an extra Netherworld Lieutenant 10951120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-2.jsonl",
+    "i": 70,
+    "path": "error",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-23 / 2026-09-05: Void Colonel 10952110 Last Words random destroy picks after compact; the old engine chose ally slot 1 which was not a live candidate",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-20.jsonl",
+    "i": 75,
+    "path": "players.a.cemetery.10752110",
+    "class": "old-data",
+    "reason": "Garodeth vs. Zeth 10954120 mode 2 prints 'Deal 8 damage to all enemy followers'; the old engine rolled random_target among allies instead of the AoE, so Highwire Feline 10752110 cemetery counts disagree",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-21.jsonl",
+    "i": 69,
+    "path": "error",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random targeting after combat uses the compacted field; the old engine chose ally slot 1 with only slot 0 live",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-22.jsonl",
+    "i": 80,
+    "path": "players.b.cemetery.10052110",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random destroy after combat selects on the compacted board; the old engine's ally random_target left a different Lilith 10052110 cemetery count",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-24.jsonl",
+    "i": 43,
+    "path": "error",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random targeting after combat uses the compacted field; the old engine chose ally slot 4 which was not a live candidate",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-26.jsonl",
+    "i": 66,
+    "path": "error",
+    "class": "old-emitter",
+    "reason": "Void Colonel 10952110 Last Words 'Destroy a random enemy follower': the old emitter recorded random_card 90051110 (Skeleton); arena asks for random_target slots",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-27.jsonl",
+    "i": 46,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Raz, Demon on the Drums 10751120 max at the printed 2",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-4.jsonl",
+    "i": 89,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-5.jsonl",
+    "i": 49,
+    "path": "players.a.cemetery.10751120",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random destroy after combat selects on the compacted board; the old engine's ally random_target left a different Raz 10751120 cemetery count",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-6.jsonl",
+    "i": 99,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10751120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-7.jsonl",
+    "i": 52,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10751120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-9.jsonl",
+    "i": 107,
+    "path": "players.b.field[4].can_attack",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'Whenever another allied Abysscraft follower enters the field, give it Rush'; Highwire Feline 10752110 played from hand is an enter and should have Rush, but the old engine left it summoning-sick",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "basic-rune-mirror/trace-20260910-16.jsonl",
+    "i": 120,
+    "path": "legal",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-30: playing Witch's New Brew 10031210 onto a full field is a legal Earth Sigil merge; the old engine omits that play from legal",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "basic-rune-mirror/trace-20260910-17.jsonl",
+    "i": 97,
+    "path": "legal",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-30: playing Witch's New Brew 10031210 onto a full field is a legal Earth Sigil merge; the old engine omits that play from legal",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "basic-rune-mirror/trace-20260910-19.jsonl",
+    "i": 51,
+    "path": "legal",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-08-30: playing Witch's New Brew 10031210 onto a full field is a legal Earth Sigil merge; the old engine omits that play from legal",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "ramp-37772-mirror/trace-20260910-2.jsonl",
     "i": 33,
     "path": "players.a.field[0].max_defense",
-    "class": "engine",
-    "reason": "a −0/−4 on an already-damaged evolved Zooey: old engine sets max_defense to the current defense (1), arena lowers it by the debuff (3); owner ruling pending 2026-09-10",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: a −0/−4 lowers max_defense by 4; the old engine set it to the current defense",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-13.jsonl",
+    "i": 52,
+    "path": "players.b.field[1]",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Spilling Red summons after the destroy, not before the second selection",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-15.jsonl",
+    "i": 57,
+    "path": "players.a.leader_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: Depths of the Eld Blades discarded by Spilling Red ('When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader') resolves after the destroy, not before the second selection",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-16.jsonl",
+    "i": 51,
+    "path": "players.a.field[2]",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Spilling Red summons after the destroy, not before the second selection",
     "since": "2026-09-10"
   }
 ]

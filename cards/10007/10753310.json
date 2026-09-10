@@ -1,0 +1,52 @@
+{
+  "id": "10753310",
+  "name": "Hark to the Night Song",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Deal 6 damage split between all enemy followers. Necromancy (6) - Deal 2 damage to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 6 damage split between all enemy followers. Necromancy (6) - Deal 2 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 6 damage split between all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 6,
+          "split": true
+        },
+        {
+          "printed": "Necromancy (6) - Deal 2 damage to the enemy leader.",
+          "op": "pay",
+          "resource": "shadows",
+          "amount": 6,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

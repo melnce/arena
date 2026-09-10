@@ -11,6 +11,9 @@
   "tribes": [
     "earth sigil"
   ],
+  "traits": {
+    "aura": true
+  },
   "abilities": [
     {
       "on": "fanfare",
@@ -26,7 +29,7 @@
     {
       "on": "engage",
       "cost": 1,
-      "sacrifice": true,
+      "sacrifice": false,
       "printed": "Engage (1): Gain an earth sigil.",
       "effects": [
         {

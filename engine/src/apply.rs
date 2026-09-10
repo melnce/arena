@@ -3,9 +3,10 @@
 use crate::action::{from_neutral, Action};
 use crate::card::{
     Ability, AbilityZone, Amount, Card, CardId, CardKind, CardSource, ChooseBy, Condition,
-    Controller, CounterHow, CounterKey, CrestPlayer, Effect, EventName, Filter, FilterKind,
-    FuseResult, Mode, NamedCounter, OrderBy, PayResource, PoolPick, PoolSelector, PpAction,
-    RefPick, ReplicateKey, Selector, SelectorKind, Side, Traits, TriggerTag, Until, Whose, Zone,
+    Controller, CounterHow, CounterKey, CrestPlayer, Effect, EpAction, EventName, FieldHasKind,
+    Filter, FilterKind, FuseResult, Mode, NamedCounter, OrderBy, PayResource, PoolPick,
+    PoolSelector, PpAction, RefPick, ReplicateKey, Selector, SelectorKind, Side, Traits,
+    TriggerTag, TurnOwner, Until, Whose, Zone,
 };
 use crate::db::CardDb;
 use crate::error::{Illegal, LoadError, Unsupported};
@@ -554,10 +555,42 @@ fn play_form(
     if let Some((cost, fx)) = accel {
         return Some((cost, CardKind::Spell, fx));
     }
+    let crystal = card.modes().iter().find_map(|m| match m {
+        Mode::Crystallize { cost, .. } if pp < effective && pp >= *cost => Some(*cost),
+        _ => None,
+    });
+    if let Some(cost) = crystal {
+        return Some((cost, CardKind::Amulet, Vec::new()));
+    }
     if pp >= effective {
         Some((effective, card.kind(), fanfare_effects(card)))
     } else {
         None
+    }
+}
+
+fn apply_crystallize_form(card: &Card, inst: &mut CardInstance, paid: i32) {
+    inst.kind = CardKind::Amulet;
+    inst.base_cost = paid;
+    inst.cost = paid;
+    inst.attack = 0;
+    inst.defense = 0;
+    inst.max_defense = 0;
+    inst.traits = Traits::default();
+    if let Some(Mode::Crystallize {
+        countdown,
+        abilities,
+        ..
+    }) = card
+        .modes()
+        .iter()
+        .find(|m| matches!(m, Mode::Crystallize { .. }))
+    {
+        inst.countdown = *countdown;
+        inst.printed_tags = abilities
+            .as_ref()
+            .map(|abs| abs.iter().map(|a| a.snapshot_tag().to_string()).collect())
+            .unwrap_or_default();
     }
 }
 
@@ -836,8 +869,10 @@ fn apply_play(
     let (paid, kind, effects) =
         play_form(card, &inst, pp, state.player(me).field_free()).ok_or(Illegal::NotLegal)?;
     state.player_mut(me).spend_pp(paid);
-    let inst = state.player_mut(me).hand.remove(hand as usize);
-    let form = if kind == CardKind::Spell && card.kind() != CardKind::Spell {
+    let mut inst = state.player_mut(me).hand.remove(hand as usize);
+    let form = if kind == CardKind::Amulet && card.kind() != CardKind::Amulet {
+        PlayForm::Crystallize { paid }
+    } else if kind == CardKind::Spell && card.kind() != CardKind::Spell {
         PlayForm::Accelerate { paid }
     } else if paid > inst.cost
         || card
@@ -849,10 +884,16 @@ fn apply_play(
     } else {
         PlayForm::Normal
     };
+    if matches!(form, PlayForm::Crystallize { .. }) {
+        apply_crystallize_form(card, &mut inst, paid);
+    }
     // Combo counts the played card — official Q&A May
     state.player_mut(me).combo += 1;
     state.player_mut(me).played_this_turn.push(inst.card);
-    let base_for_ladder = if matches!(form, PlayForm::Accelerate { .. }) {
+    let base_for_ladder = if matches!(
+        form,
+        PlayForm::Accelerate { .. } | PlayForm::Crystallize { .. }
+    ) {
         paid
     } else {
         inst.base_cost
@@ -1012,7 +1053,11 @@ fn merge_earth(
         state.player_mut(me).earth_slot = Some(empty);
         return Ok(true);
     }
-    // token into collectible, or same-class merge: increment only
+    // token into collectible, or same-class merge: increment only.
+    // The absorbed amulet is a spent card (cemetery + shadow), matching the
+    // old engine's Witch's New Brew-on-Brew merge.
+    state.player_mut(me).shadows += 1;
+    state.player_mut(me).cemetery.push(incoming.clone());
     Ok(true)
 }
 
@@ -1205,6 +1250,15 @@ fn apply_evolve_action(
         }
     }
     let src = SourceRef::Field { player: me, id };
+    // Skybound Art gauge = current turn number + evolves/boosts stored on the
+    // instance (rulebook). Evolves while a copy is in hand increment that
+    // copy's stored bonus; turn number is added at evaluation so M1 snapshots
+    // (no Skybound cards) stay at the omitted-zero the old traces emit.
+    for h in &mut state.player_mut(me).hand {
+        if card_tracks_skybound(db, h.card) {
+            h.skybound += 1;
+        }
+    }
     if let Some(evolved) = state.field_inst(me, slot.0).cloned() {
         raise_when(db, state, me, EventName::AllyEvolve, Some(&evolved), me);
         if supered {
@@ -1512,6 +1566,7 @@ fn resume_mode(
         source,
         effects,
         index,
+        subject,
     }) = state.pending_work.pop()
     {
         if let Some(Effect::Choose {
@@ -1522,21 +1577,11 @@ fn resume_mode(
             if let Some(opt) = opts.get(idx as usize) {
                 let mut rest = effects;
                 rest.remove(index);
-                state.pending_work.push(WorkFrame::Effects {
-                    controller,
-                    source,
-                    effects: rest,
-                    index,
-                });
+                push_work(state, controller, source, rest, index, subject.clone());
                 push_effects(state, controller, source, opt.effects.clone());
             }
         } else {
-            state.pending_work.push(WorkFrame::Effects {
-                controller,
-                source,
-                effects,
-                index,
-            });
+            push_work(state, controller, source, effects, index, subject.clone());
         }
     }
     let _ = db;
@@ -1556,6 +1601,7 @@ fn resume_target(
         source,
         effects,
         index,
+        subject,
     }) = state.pending_work.pop()
     {
         if index < effects.len() {
@@ -1563,17 +1609,18 @@ fn resume_target(
             apply_effect_with_targets(db, state, controller, source, &e, &[opt], events)?;
             let left = pending.remaining.saturating_sub(1);
             if left > 0 {
-                flush_reactions(db, state, events)?;
                 if let Some(ChoiceNode::Targets { options, .. }) =
                     effect_choice_node(db, state, controller, source, &e)
                 {
                     if !options.is_empty() {
-                        state.pending_work.push(WorkFrame::Effects {
+                        push_work(
+                            state,
                             controller,
                             source,
-                            effects,
+                            effects.clone(),
                             index,
-                        });
+                            subject.clone(),
+                        );
                         state.phase = Phase::Choice {
                             player,
                             node: ChoiceNode::Targets {
@@ -1593,12 +1640,14 @@ fn resume_target(
                 }
             }
             if index + 1 < effects.len() {
-                state.pending_work.push(WorkFrame::Effects {
+                push_work(
+                    state,
                     controller,
                     source,
                     effects,
-                    index: index + 1,
-                });
+                    index + 1,
+                    state.event_subject.clone(),
+                );
             }
         }
     }
@@ -1746,7 +1795,7 @@ fn enqueue_boundary(
         for (i, c) in state.player(who).crests.iter().enumerate() {
             if let Ok(def) = db.crest(&c.id) {
                 for (ord, a) in def.abilities().iter().enumerate() {
-                    if ability_boundary(a, whose, start) {
+                    if ability_boundary(a, whose, start, AbilityZone::Field) {
                         pending.push((
                             c.granted_order,
                             ord as u8,
@@ -1765,7 +1814,7 @@ fn enqueue_boundary(
             let Some(inst) = s else { continue };
             if let Ok(card) = db.card(inst.card) {
                 for (ord, a) in card.abilities().iter().enumerate() {
-                    if ability_boundary(a, whose, start) {
+                    if ability_boundary(a, whose, start, AbilityZone::Field) {
                         pending.push((
                             si as u32,
                             ord as u8,
@@ -1779,13 +1828,55 @@ fn enqueue_boundary(
                 }
             }
         }
+        for (hi, h) in state.player(who).hand.iter().enumerate() {
+            if let Ok(card) = db.card(h.card) {
+                for (ord, a) in card.abilities().iter().enumerate() {
+                    if ability_boundary(a, whose, start, AbilityZone::Hand) {
+                        pending.push((
+                            hi as u32,
+                            ord as u8,
+                            SourceRef::Hand {
+                                player: who,
+                                id: h.id,
+                            },
+                            a.clone(),
+                        ));
+                    }
+                }
+            }
+        }
+        for (di, d) in state.player(who).deck.iter().enumerate() {
+            if let Ok(card) = db.card(d.card) {
+                for (ord, a) in card.abilities().iter().enumerate() {
+                    if ability_boundary(a, whose, start, AbilityZone::Deck) {
+                        pending.push((
+                            di as u32,
+                            ord as u8,
+                            SourceRef::Hand {
+                                player: who,
+                                id: d.id,
+                            },
+                            a.clone(),
+                        ));
+                    }
+                }
+            }
+        }
     }
     for (entry, printed, source, a) in pending {
+        if let Some(cond) = a.when_cond() {
+            if !eval_cond(db, state, who, Some(source), cond) {
+                continue;
+            }
+        }
         enqueue(state, cat, entry, printed, who, source, &a);
     }
 }
 
-fn ability_boundary(a: &Ability, whose: Whose, start: bool) -> bool {
+fn ability_boundary(a: &Ability, whose: Whose, start: bool, zone: AbilityZone) -> bool {
+    if a.zone() != zone {
+        return false;
+    }
     match a {
         Ability::StartOfTurn { whose: w, .. } => start && *w == whose,
         Ability::EndOfTurn { whose: w, .. } => !start && *w == whose,
@@ -1813,6 +1904,7 @@ fn enqueue(
         source,
         tag: a.tag(),
         effects: a.effects().to_vec(),
+        subject: state.event_subject.clone(),
     });
 }
 
@@ -2154,6 +2246,15 @@ fn collect_when_from_list(
         if *ev != scan.event {
             continue;
         }
+        // "Whenever another allied follower enters" — the observer is not
+        // "another" relative to its own enter (Adahime / Gildaria).
+        if scan.event == EventName::AllyFollowerEnter {
+            if let (Some(subj), SourceRef::Field { id, .. }) = (scan.subject, loc.source) {
+                if subj.id == id {
+                    continue;
+                }
+            }
+        }
         // Crests default to Field in the schema; treat them as in-play.
         if a.zone() != loc.zone {
             continue;
@@ -2206,9 +2307,12 @@ fn drain_until_quiet(
         // of the enclosing list (E28). Nested bodies sit on top as index-0
         // frames (E25). Newly pushed frames still wait behind the queue
         // (play sequence, Strike-before-damage, start-of-turn draw at step 8).
+        // Exception (owner 2026-09-10): when the next frame is a later op of
+        // the same list that will pause for a player choice, leave the queue
+        // until that list completes.
         // Rulebook: Trigger queue; Fanfare and Enter-Play Trigger Order;
         // Combat Timing; Start-of-Turn and End-of-Turn Sequences.
-        if !state.queue.is_empty() {
+        if !state.queue.is_empty() && !next_frame_is_choice_continuation(db, state) {
             drain_queue(db, state, events)?;
             continue;
         }
@@ -2219,7 +2323,11 @@ fn drain_until_quiet(
                     source,
                     effects,
                     index,
+                    subject,
                 } => {
+                    if subject.is_some() {
+                        state.event_subject = subject;
+                    }
                     resolve_effect_list(db, state, controller, source, effects, index, events)?;
                 }
                 WorkFrame::Aftermath(a) => {
@@ -2287,6 +2395,9 @@ fn run_aftermath(
             }
         }
         Aftermath::DrainQueue => drain_queue(db, state, events)?,
+        Aftermath::RestoreBindings(map) => {
+            state.bindings = map;
+        }
         _ => {}
     }
     Ok(())
@@ -2322,41 +2433,24 @@ fn expire_until(state: &mut State, until: Until, whose_turn_ended: PlayerId) {
     }
 }
 
-/// Drain the reactive queue and any frames it pushes, leaving pre-existing
-/// `pending_work` untouched. Used before a player-choice pause.
-fn flush_reactions(db: &CardDb, state: &mut State, events: &mut Vec<Event>) -> Result<(), Illegal> {
-    let floor = state.pending_work.len();
-    loop {
-        if state.winner.is_some() {
-            return Ok(());
-        }
-        if matches!(state.phase, Phase::Choice { .. }) {
-            return Ok(());
-        }
-        state.bump_step()?;
-        if !state.queue.is_empty() {
-            drain_queue(db, state, events)?;
-            continue;
-        }
-        if state.pending_work.len() <= floor {
-            break;
-        }
-        match state.pending_work.pop() {
-            Some(WorkFrame::Effects {
-                controller,
-                source,
-                effects,
-                index,
-            }) => {
-                resolve_effect_list(db, state, controller, source, effects, index, events)?;
-            }
-            Some(WorkFrame::Aftermath(a)) => {
-                run_aftermath(db, state, a, events)?;
-            }
-            None => break,
-        }
+/// True when the next pending frame is a later op of an in-flight list that
+/// will immediately offer a player choice. The reactive queue then waits
+/// (owner 2026-09-10 / E19).
+fn next_frame_is_choice_continuation(db: &CardDb, state: &State) -> bool {
+    let Some(WorkFrame::Effects {
+        controller,
+        source,
+        effects,
+        index,
+        ..
+    }) = state.pending_work.last()
+    else {
+        return false;
+    };
+    if *index == 0 || *index >= effects.len() {
+        return false;
     }
-    Ok(())
+    effect_choice_node(db, state, *controller, *source, &effects[*index]).is_some()
 }
 
 fn drain_queue(db: &CardDb, state: &mut State, _events: &mut [Event]) -> Result<(), Illegal> {
@@ -2370,24 +2464,44 @@ fn drain_queue(db: &CardDb, state: &mut State, _events: &mut [Event]) -> Result<
         .queue
         .sort_by_key(|t| (t.category, t.entry, t.printed_order));
     let batch = std::mem::take(&mut state.queue);
-    state.bindings.clear();
+    // Isolate trigger binds without dropping the enclosing list's `as`
+    // names: restore after this wave (Lieutenant Last Words summon-then-buff).
+    let saved = std::mem::take(&mut state.bindings);
+    state
+        .pending_work
+        .push(WorkFrame::Aftermath(Aftermath::RestoreBindings(saved)));
     for t in batch.into_iter().rev() {
-        push_effects(state, t.controller, t.source, t.effects);
+        if t.subject.is_some() {
+            state.event_subject = t.subject.clone();
+        }
+        push_work(state, t.controller, t.source, t.effects, 0, t.subject);
     }
     let _ = db;
     Ok(())
+}
+
+fn push_work(
+    state: &mut State,
+    controller: PlayerId,
+    source: SourceRef,
+    effects: Vec<Effect>,
+    index: usize,
+    subject: Option<TargetOpt>,
+) {
+    state.pending_work.push(WorkFrame::Effects {
+        controller,
+        source,
+        effects,
+        index,
+        subject,
+    });
 }
 
 fn push_effects(state: &mut State, controller: PlayerId, source: SourceRef, effects: Vec<Effect>) {
     if effects.is_empty() {
         return;
     }
-    state.pending_work.push(WorkFrame::Effects {
-        controller,
-        source,
-        effects,
-        index: 0,
-    });
+    push_work(state, controller, source, effects, 0, None);
 }
 
 fn resolve_effect_list(
@@ -2406,37 +2520,30 @@ fn resolve_effect_list(
     if let Some(cond) = e.when_cond() {
         if !eval_cond(db, state, controller, Some(source), cond) {
             if index + 1 < effects.len() {
-                state.pending_work.push(WorkFrame::Effects {
+                push_work(
+                    state,
                     controller,
                     source,
                     effects,
-                    index: index + 1,
-                });
+                    index + 1,
+                    state.event_subject.clone(),
+                );
             }
             return Ok(());
         }
     }
-    // pause if this effect needs a player choose — drain reactions first
-    // so the choice-node snapshot shows them (`docs/engine-internals.md`).
-    if effect_choice_node(db, state, controller, source, &e).is_some() {
-        flush_reactions(db, state, events)?;
-        if matches!(state.phase, Phase::Choice { .. }) {
-            state.pending_work.push(WorkFrame::Effects {
-                controller,
-                source,
-                effects,
-                index,
-            });
-            return Ok(());
-        }
-    }
+    // pause if this effect needs a player choose — do not drain the
+    // reactive queue first (owner 2026-09-10); it waits until the list
+    // completes (`docs/engine-internals.md`).
     if let Some(node) = effect_choice_node(db, state, controller, source, &e) {
-        state.pending_work.push(WorkFrame::Effects {
+        push_work(
+            state,
             controller,
             source,
             effects,
             index,
-        });
+            state.event_subject.clone(),
+        );
         state.phase = Phase::Choice {
             player: controller,
             node,
@@ -2451,12 +2558,14 @@ fn resolve_effect_list(
     // `seq` / `choose` options) pushed by `apply_effect` sits on top and
     // resolves completely before the next enclosing op (E25).
     if index + 1 < effects.len() {
-        state.pending_work.push(WorkFrame::Effects {
+        push_work(
+            state,
             controller,
             source,
             effects,
-            index: index + 1,
-        });
+            index + 1,
+            state.event_subject.clone(),
+        );
     }
     apply_effect(db, state, controller, source, &e, events)?;
     Ok(())
@@ -2492,6 +2601,9 @@ fn effect_choice_node(
         | Effect::Evolve { select, .. }
         | Effect::GrantTraits { select, .. }
         | Effect::RemoveTraits { select, .. }
+        | Effect::GrantAbility { select, .. }
+        | Effect::RemoveAbilities { select, .. }
+        | Effect::Cost { select, .. }
         | Effect::Countdown { select, .. } => {
             if let Selector::Pool(p) = select {
                 if p.pick == PoolPick::Choose {
@@ -2614,6 +2726,15 @@ fn apply_effect_with_targets(
             let d = eval_amount(db, state, controller, Some(source), delta);
             for t in targets {
                 countdown_opt(db, state, t, d, events)?;
+            }
+        }
+        Effect::GrantAbility { ability, .. } => {
+            for t in targets {
+                if let TargetOpt::Slot { player, slot } = t {
+                    if let Some(f) = state.field_inst_mut(*player, *slot) {
+                        f.granted.push((**ability).clone());
+                    }
+                }
             }
         }
         _ => {
@@ -2792,9 +2913,17 @@ fn apply_effect(
                 _ => controller,
             };
             let mut summoned = Vec::new();
+            let mut used_names = Vec::new();
             for _ in 0..n {
                 // sequential one-at-a-time — ruling 2026-09-05
-                if let Some(t) = summon_source(db, state, who, card, false, events)? {
+                if let Some(t) =
+                    summon_source(db, state, who, card, source, false, &used_names, events)?
+                {
+                    if let TargetOpt::Slot { player, slot } = t {
+                        if let Some(c) = state.field_inst(player, slot) {
+                            used_names.push(c.card);
+                        }
+                    }
                     summoned.push(t);
                 }
             }
@@ -2908,6 +3037,21 @@ fn apply_effect(
         Effect::Replicate { ability, .. } => {
             replicate(db, state, controller, source, *ability)?;
         }
+        Effect::Ep {
+            action,
+            super_ep,
+            amount,
+            ..
+        } => {
+            let n = eval_amount(db, state, controller, Some(source), amount);
+            let p = state.player_mut(controller);
+            match (*action, *super_ep) {
+                (EpAction::Gain, false) => p.ep += n,
+                (EpAction::Gain, true) => p.sep += n,
+                (EpAction::Spend, false) => p.ep = (p.ep - n).max(0),
+                (EpAction::Spend, true) => p.sep = (p.sep - n).max(0),
+            }
+        }
         Effect::SpellboostHand { times, .. } => {
             let n = eval_amount(db, state, controller, Some(source), times).max(0);
             for _ in 0..n {
@@ -2983,8 +3127,14 @@ fn apply_effect(
                     if let Some(f) = state.field_inst_mut(*player, *slot) {
                         if let Some(tags) = on {
                             f.granted.retain(|a| !tags.contains(&a.tag()));
+                            for t in tags {
+                                if let TriggerTag::LastWords = t {
+                                    f.printed_tags.remove("lastWords");
+                                }
+                            }
                         } else {
                             f.granted.clear();
+                            f.printed_tags.clear();
                         }
                     }
                 }
@@ -2995,8 +3145,7 @@ fn apply_effect(
         | Effect::RandomSplit { .. }
         | Effect::Sequence { .. }
         | Effect::Transform { .. }
-        | Effect::AddToDeck { .. }
-        | Effect::Ep { .. } => {
+        | Effect::AddToDeck { .. } => {
             return Err(Illegal::Unsupported(Unsupported {
                 card: format!("{controller:?}"),
                 construct: "reached unimplemented op".into(),
@@ -3022,8 +3171,11 @@ fn pay_resource(state: &mut State, who: PlayerId, res: PayResource, n: i32) -> b
                 p.earth -= n;
                 if p.earth <= 0 {
                     if let Some(slot) = p.earth_slot.take() {
-                        p.field[slot as usize] = None;
-                        p.compact_field();
+                        if let Some(inst) = p.field[slot as usize].take() {
+                            p.shadows += 1;
+                            p.cemetery.push(inst);
+                            p.compact_field();
+                        }
                     }
                     p.earth = 0;
                 }
@@ -3404,6 +3556,119 @@ fn cost_opt(
     }
 }
 
+fn leave_redirects_to_banish(db: &CardDb, inst: &CardInstance) -> bool {
+    let mut abs: Vec<Ability> = Vec::new();
+    if let Ok(card) = db.card(inst.card) {
+        abs.extend(card.abilities().iter().cloned());
+    }
+    abs.extend(inst.granted.iter().cloned());
+    abs.iter().any(|a| {
+        matches!(a, Ability::Leave { .. }) && a.effects().iter().any(effect_is_banish_self)
+    })
+}
+
+fn effect_is_banish_self(e: &Effect) -> bool {
+    match e {
+        Effect::Banish {
+            select: Selector::Ref(r),
+            ..
+        } if r.pick == RefPick::Self_ => true,
+        Effect::Seq { effects, .. } | Effect::Pay { effects, .. } => {
+            effects.iter().any(effect_is_banish_self)
+        }
+        _ => false,
+    }
+}
+
+fn queue_last_words(db: &CardDb, state: &mut State, who: PlayerId, inst: &CardInstance, slot: u8) {
+    let cat = if who == state.active { 4 } else { 6 };
+    let src = SourceRef::Spell {
+        player: who,
+        card: inst.card,
+    };
+    let mut printed = 0u8;
+    if inst.kind == CardKind::Amulet {
+        if let Ok(card) = db.card(inst.card) {
+            if card.kind() == CardKind::Follower {
+                // Crystallize form: Last Words from the amulet mode, not the follower.
+                for m in card.modes() {
+                    if let Mode::Crystallize {
+                        abilities: Some(abs),
+                        ..
+                    } = m
+                    {
+                        for a in abs {
+                            if matches!(a, Ability::LastWords { .. }) {
+                                state.queue.push(QueuedTrigger {
+                                    category: cat,
+                                    entry: slot as u32,
+                                    printed_order: printed,
+                                    controller: who,
+                                    source: src,
+                                    tag: TriggerTag::LastWords,
+                                    effects: a.effects().to_vec(),
+                                    subject: None,
+                                });
+                                printed += 1;
+                            }
+                        }
+                    }
+                }
+                for a in &inst.granted {
+                    if matches!(a, Ability::LastWords { .. }) {
+                        state.queue.push(QueuedTrigger {
+                            category: cat,
+                            entry: slot as u32,
+                            printed_order: printed,
+                            controller: who,
+                            source: src,
+                            tag: TriggerTag::LastWords,
+                            effects: a.effects().to_vec(),
+                            subject: None,
+                        });
+                        printed += 1;
+                    }
+                }
+                return;
+            }
+        }
+    }
+    if inst.printed_tags.contains("lastWords") {
+        if let Ok(card) = db.card(inst.card) {
+            for a in card.abilities() {
+                if matches!(a, Ability::LastWords { .. }) {
+                    state.queue.push(QueuedTrigger {
+                        category: cat,
+                        entry: slot as u32,
+                        printed_order: printed,
+                        controller: who,
+                        source: src,
+                        tag: TriggerTag::LastWords,
+                        effects: a.effects().to_vec(),
+                        subject: None,
+                    });
+                    printed += 1;
+                }
+            }
+        }
+    }
+    for a in &inst.granted {
+        if matches!(a, Ability::LastWords { .. }) {
+            state.queue.push(QueuedTrigger {
+                category: cat,
+                entry: slot as u32,
+                printed_order: printed,
+                controller: who,
+                source: src,
+                tag: TriggerTag::LastWords,
+                effects: a.effects().to_vec(),
+                subject: None,
+            });
+            printed += 1;
+        }
+    }
+}
+
 fn destroy_slot(
     db: &CardDb,
     state: &mut State,
@@ -3415,6 +3680,24 @@ fn destroy_slot(
     let Some(inst) = state.player_mut(who).field[slot as usize].take() else {
         return Ok(());
     };
+    if leave_redirects_to_banish(db, &inst) {
+        // Ghost-style "When this card leaves the field, banish it."
+        events.push(Event::Banish {
+            card: inst.card,
+            from: ZoneLabel::Field,
+        });
+        raise_when(
+            db,
+            state,
+            who,
+            EventName::AllyFollowerDestroyed,
+            Some(&inst),
+            who,
+        );
+        state.player_mut(who).banished.push(inst);
+        state.player_mut(who).compact_field();
+        return Ok(());
+    }
     events.push(Event::Destroy {
         slot: Slot(slot),
         card: inst.card,
@@ -3455,24 +3738,7 @@ fn destroy_slot(
             });
     }
     if !no_lw {
-        if let Ok(card) = db.card(inst.card) {
-            for a in card.abilities() {
-                if matches!(a, Ability::LastWords { .. }) {
-                    state.queue.push(QueuedTrigger {
-                        category: if who == state.active { 4 } else { 6 },
-                        entry: slot as u32,
-                        printed_order: 0,
-                        controller: who,
-                        source: SourceRef::Spell {
-                            player: who,
-                            card: inst.card,
-                        },
-                        tag: TriggerTag::LastWords,
-                        effects: a.effects().to_vec(),
-                    });
-                }
-            }
-        }
+        queue_last_words(db, state, who, &inst, slot);
     }
     state.player_mut(who).shadows += 1;
     state.player_mut(who).cemetery.push(inst);
@@ -3585,6 +3851,7 @@ fn discard_opt(
                             },
                             tag: TriggerTag::Discarded,
                             effects: a.effects().to_vec(),
+                            subject: None,
                         });
                     }
                 }
@@ -3642,13 +3909,31 @@ fn split_damage(
     mut pool: i32,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
-    // oldest first — Barrier consumes allocation — 2026-08-29
+    // Live: oldest first — Barrier consumes allocation — 2026-08-29.
+    // Scripted: the old engine records `random_split` counts per target in
+    // field order; consume and apply those so the pick stream stays aligned.
     let caps = capture_targets(state, targets);
-    for cap in caps {
+    if state.rng.peek_what() == Some(PickWhat::RandomSplit) {
+        if let Ok(counts) = state.rng.take_scripted_split() {
+            for (cap, take) in caps.iter().zip(counts.iter()) {
+                if *take <= 0 {
+                    continue;
+                }
+                let Some(TargetOpt::Slot { player, slot }) = live_captured(state, cap) else {
+                    continue;
+                };
+                deal_follower(state, player, slot, *take, ctrl, events);
+            }
+            let _ = db;
+            return Ok(());
+        }
+    }
+    let mut counts = vec![0i32; caps.len()];
+    for (i, cap) in caps.iter().enumerate() {
         if pool <= 0 {
             break;
         }
-        let Some(TargetOpt::Slot { player, slot }) = live_captured(state, &cap) else {
+        let Some(TargetOpt::Slot { player, slot }) = live_captured(state, cap) else {
             continue;
         };
         let def = state
@@ -3657,20 +3942,42 @@ fn split_damage(
             .unwrap_or(0);
         let take = pool.min(def.max(1));
         deal_follower(state, player, slot, take, ctrl, events);
+        counts[i] = take;
         pool -= take;
     }
+    state.picks.push(crate::trace::Pick {
+        what: PickWhat::RandomSplit,
+        among: None,
+        chose: crate::trace::PickChose::Counts(counts),
+    });
     let _ = db;
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn summon_source(
     db: &CardDb,
     state: &mut State,
     who: PlayerId,
     src: &CardSource,
+    source: SourceRef,
     exact: bool,
+    used_names: &[CardId],
     events: &mut Vec<Event>,
 ) -> Result<Option<TargetOpt>, Illegal> {
+    if state.player(who).first_empty_slot().is_none() {
+        // Excess summons are skipped with no Rally and no RNG — ruling 2026-08-12.
+        let earth = match src {
+            CardSource::Named { named } => db
+                .card(*named)
+                .map(|c| c.tribes().contains(&crate::card::Tribe::EarthSigil))
+                .unwrap_or(false),
+            _ => false,
+        };
+        if !earth {
+            return Ok(None);
+        }
+    }
     let inst = match src {
         CardSource::Named { named } => {
             let card = db.require_supported(*named).map_err(|e| match e {
@@ -3680,7 +3987,7 @@ fn summon_source(
             CardInstance::from_card(card, state.alloc_id())
         }
         CardSource::Copy { copy_of, exact: ex } => {
-            let ts = resolve_select(db, state, who, SourceRef::Leader { player: who }, copy_of);
+            let ts = resolve_select(db, state, who, source, copy_of);
             if let Some(TargetOpt::Slot { player, slot }) = ts.first() {
                 if let Some(c) = state.field_inst(*player, *slot).cloned() {
                     let mut n = if *ex {
@@ -3695,15 +4002,66 @@ fn summon_source(
                 } else {
                     return Ok(None);
                 }
+            } else if matches!(
+                copy_of,
+                Selector::Ref(r) if r.pick == RefPick::Self_
+            ) {
+                // Last Words after death: host is gone; "a copy" is a fresh print
+                // (owner 2026-08-13 / 2026-09-05).
+                let card_id = match source {
+                    SourceRef::Spell { card, .. } => card,
+                    SourceRef::Field { player, id } => {
+                        if let Some(c) = state
+                            .find_field(player, id)
+                            .and_then(|s| state.field_inst(player, s).map(|c| c.card))
+                        {
+                            c
+                        } else if let Some(c) = state.player(who).cemetery.last() {
+                            c.card
+                        } else {
+                            return Ok(None);
+                        }
+                    }
+                    _ => return Ok(None),
+                };
+                let card = db.card(card_id).map_err(|_| Illegal::NotLegal)?;
+                let mut n = CardInstance::from_card(card, state.alloc_id());
+                n.flags.summoning_sick = true;
+                n
             } else {
                 return Ok(None);
             }
         }
-        CardSource::RandomFrom { .. } => {
-            return Err(Illegal::Unsupported(Unsupported {
-                card: who.as_str().into(),
-                construct: "CardSource.randomFrom".into(),
-            }));
+        CardSource::RandomFrom { random_from } => {
+            let mut idxs: Vec<usize> = state
+                .player(who)
+                .deck
+                .iter()
+                .enumerate()
+                .filter(|(_, c)| {
+                    !used_names.contains(&c.card) && inst_matches_filter(state, who, c, random_from)
+                })
+                .map(|(i, _)| i)
+                .collect();
+            if idxs.is_empty() {
+                return Ok(None);
+            }
+            let keys: Vec<String> = idxs
+                .iter()
+                .map(|&i| state.player(who).deck[i].card.as_str())
+                .collect();
+            let mut emit = Vec::new();
+            let i = state
+                .rng
+                .pick_index_among(PickWhat::MultisetPick, Some("deck"), &keys, &mut emit)
+                .map_err(Illegal::OraclePickNotLegal)?;
+            state.picks.extend(emit);
+            let i = i.min(idxs.len() - 1);
+            let pos = idxs.swap_remove(i);
+            let mut taken = state.player_mut(who).deck.remove(pos);
+            taken.id = state.alloc_id();
+            taken.flags.summoning_sick = true;
+            taken
         }
     };
     let _ = exact;
@@ -4174,15 +4532,15 @@ fn kind_ok(c: &CardInstance, k: SelectorKind) -> bool {
     }
 }
 
-fn inst_matches_filter(state: &State, who: PlayerId, c: &CardInstance, f: &Filter) -> bool {
+fn inst_matches_filter(_state: &State, _who: PlayerId, c: &CardInstance, f: &Filter) -> bool {
     if let Some(all) = &f.all {
-        return all.iter().all(|x| inst_matches_filter(state, who, c, x));
+        return all.iter().all(|x| inst_matches_filter(_state, _who, c, x));
     }
     if let Some(any) = &f.any {
-        return any.iter().any(|x| inst_matches_filter(state, who, c, x));
+        return any.iter().any(|x| inst_matches_filter(_state, _who, c, x));
     }
     if let Some(n) = &f.not {
-        return !inst_matches_filter(state, who, c, n);
+        return !inst_matches_filter(_state, _who, c, n);
     }
     if let Some(t) = &f.tribe {
         let ok = match t {
@@ -4270,7 +4628,13 @@ fn inst_matches_filter(state: &State, who: PlayerId, c: &CardInstance, f: &Filte
         }
     }
     if let Some(b) = f.has_last_words {
-        let _ = (b, who, state);
+        let has = c.printed_tags.contains("lastWords")
+            || c.granted
+                .iter()
+                .any(|a| matches!(a, Ability::LastWords { .. }));
+        if has != b {
+            return false;
+        }
     }
     true
 }
@@ -4335,6 +4699,84 @@ fn eval_amount(
             }
             0
         }
+        _ => 0,
+    }
+}
+
+fn card_tracks_skybound(db: &CardDb, id: CardId) -> bool {
+    let Ok(card) = db.card(id) else {
+        return false;
+    };
+    card.abilities()
+        .iter()
+        .any(|a| a.effects().iter().any(effect_has_skybound))
+        || card.modes().iter().any(|m| match m {
+            Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => {
+                effects.iter().any(effect_has_skybound)
+            }
+            Mode::Crystallize { abilities, .. } => abilities.as_ref().is_some_and(|abs| {
+                abs.iter()
+                    .any(|a| a.effects().iter().any(effect_has_skybound))
+            }),
+        })
+}
+
+fn effect_has_skybound(e: &Effect) -> bool {
+    match e {
+        Effect::If {
+            cond,
+            then,
+            else_effects,
+            ..
+        } => {
+            cond_has_skybound(cond)
+                || then.iter().any(effect_has_skybound)
+                || else_effects
+                    .as_ref()
+                    .is_some_and(|els| els.iter().any(effect_has_skybound))
+        }
+        Effect::Pay { effects, .. }
+        | Effect::Seq { effects, .. }
+        | Effect::Repeat { effects, .. } => effects.iter().any(effect_has_skybound),
+        Effect::Choose { options, .. } => options.as_ref().is_some_and(|opts| {
+            opts.iter()
+                .any(|o| o.effects.iter().any(effect_has_skybound))
+        }),
+        _ => false,
+    }
+}
+
+fn cond_has_skybound(c: &Condition) -> bool {
+    match c {
+        Condition::SkyboundArt { .. } => true,
+        Condition::All { all } => all.iter().any(cond_has_skybound),
+        Condition::Any { any } => any.iter().any(cond_has_skybound),
+        Condition::Not { not } => cond_has_skybound(not),
+        _ => false,
+    }
+}
+
+fn skybound_of(state: &State, source: Option<SourceRef>) -> i32 {
+    match source {
+        Some(SourceRef::Field { player, id }) => state
+            .find_field(player, id)
+            .and_then(|s| state.field_inst(player, s).map(|c| c.skybound))
+            .unwrap_or(0),
+        Some(SourceRef::Hand { player, id }) => state
+            .player(player)
+            .hand
+            .iter()
+            .find(|c| c.id == id)
+            .map(|c| c.skybound)
+            .unwrap_or(0),
+        Some(SourceRef::Spell { player, card }) => state
+            .player(player)
+            .cemetery
+            .iter()
+            .rev()
+            .find(|c| c.card == card)
+            .map(|c| c.skybound)
+            .unwrap_or(0),
         _ => 0,
     }
 }
@@ -4424,6 +4866,52 @@ fn eval_cond(
                     counter: counter_at_least.key.clone(),
                 },
             ) >= eval_amount(db, state, who, source, &counter_at_least.n)
+        }
+        Condition::LeaderDefenseLte { leader_defense_lte } => {
+            state.player(who).leader_defense
+                <= eval_amount(db, state, who, source, leader_defense_lte)
+        }
+        Condition::SkyboundArt { skybound_art } => {
+            let n = eval_amount(db, state, who, source, &skybound_art.n);
+            // Rulebook: gauge = current turn number + evolves/boosts while
+            // this copy was in hand. `skybound` on the instance is only the
+            // evolve/Tsubasa bonus; `turns_taken` is the turn number.
+            state.player(who).turns_taken as i32 + skybound_of(state, source) >= n
+        }
+        Condition::TurnOwner { turn_owner } => match turn_owner {
+            TurnOwner::Self_ => state.active == who,
+            TurnOwner::Opponent => state.active != who,
+        },
+        Condition::FieldHas { field_has } => {
+            let n = field_has
+                .n
+                .as_ref()
+                .map(|a| eval_amount(db, state, who, source, a))
+                .unwrap_or(1);
+            let sides: Vec<PlayerId> = match field_has.side {
+                Some(Side::Enemy) => vec![who.opponent()],
+                Some(Side::Any) => vec![who, who.opponent()],
+                None | Some(Side::Ally) => vec![who],
+            };
+            let mut count = 0i32;
+            for p in sides {
+                for c in state.player(p).field.iter().flatten() {
+                    if let Some(k) = field_has.kind {
+                        let ok = match k {
+                            FieldHasKind::Follower => c.kind == CardKind::Follower,
+                            FieldHasKind::Amulet => c.kind == CardKind::Amulet,
+                            FieldHasKind::Card | FieldHasKind::Character => true,
+                        };
+                        if !ok {
+                            continue;
+                        }
+                    }
+                    if inst_matches_filter(state, who, c, &field_has.filter) {
+                        count += 1;
+                    }
+                }
+            }
+            count >= n
         }
         _ => false,
     }

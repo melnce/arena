@@ -24,7 +24,7 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 
 ## Bindings
 
-`as` / `{pick: bound, ref}` names live in `State.bindings` for one **resolution**. The map is cleared at the start of `apply` and before each queued trigger. Nested `seq` / `if` / `pay` frames inherit the current map, so an Evolve ability's `as: "g"` is visible to the Super-Evolve ability of the same card when both fire (rulebook: a super-evolve fires both lines unless the super line says `instead`). A `ref` with no live binding is an empty set — never a runtime error. `CardDb::load` rejects a `ref` that no `as` on the same card could produce (`LoadError::UnboundRef`).
+`as` / `{pick: bound, ref}` names live in `State.bindings` for one **resolution**. The map is cleared at the start of `apply`. Nested `seq` / `if` / `pay` frames share the live map, so an Evolve ability's `as: "g"` is visible to the Super-Evolve ability of the same card when both fire (rulebook: a super-evolve fires both lines unless the super line says `instead`). A reactive-queue drain between ops of the same list saves the map and restores it after the wave (`Aftermath::RestoreBindings`), so an enclosing `as` name survives enter-triggers that run before the next op (Netherworld Lieutenant: summon `as: s`, then buff the bound copy). Queued triggers themselves start from an empty map. A `ref` with no live binding is an empty set — never a runtime error. `CardDb::load` rejects a `ref` that no `as` on the same card could produce (`LoadError::UnboundRef`).
 
 ## Turn-boundary abilities
 
@@ -62,13 +62,13 @@ Super-evolve knockback (1 to the enemy leader when the SE attacker destroys the 
 
 `arena-replay` (and library replay) compare only `phase` and `winner` when both snapshots are `phase: terminal`; the rest of the state and `legal` are post-mortem.
 
-When an effect list pauses for a player choice, the reactive queue drains first, so reactions to the clause just resolved (e.g. `on: discarded`) are visible in the choice-node snapshot.
+When an effect list pauses for a player choice, the reactive queue is **not** drained first; it drains when the list completes (owner ruling 2026-09-10: Vorlalai discarded by Spilling Red summons after the destroy, not before the second selection). Choice-node snapshots therefore do not show reactions to earlier clauses of the same list.
 
 A completed old-engine `fuse { host_pos, partner_pos }` line is applied by `apply_neutral`: start the fuse, map each `partner_pos` (pre-action hand position) to the index in `options`, then Confirm. Confirm with no partners is not legal. `Choose` with an out-of-range index is `NotLegal`.
 
 ## Defense debuff and `max_defense`
 
-A stat debuff lowers `max_defense` by the same amount; current defense drops by the same amount; healing restores up to the new maximum. Example: a 7/5 (max 7) given −0/−4 becomes 7/1 (max 3). This is the rulebook reading ("restoration cannot raise a follower above its current maximum — the highest it has been set to via base or buffs"). Owner confirmation pending; if he rules the old engine's max-1 reading, this is a one-line change.
+A stat debuff lowers `max_defense` by the same amount; current defense drops by the same amount; healing restores up to the new maximum. Example: a 7/5 (max 7) given −0/−4 becomes 7/1 (max 3). Owner ruling 2026-09-10: modifications define the max (Azurifrit's "fully restore" goes to the buffed maximum).
 
 ## State notes
 

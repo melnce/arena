@@ -456,6 +456,7 @@ pub enum WorkFrame {
         source: SourceRef,
         effects: Vec<crate::card::Effect>,
         index: usize,
+        subject: Option<TargetOpt>,
     },
     Aftermath(Aftermath),
 }
@@ -481,6 +482,7 @@ pub enum Aftermath {
         granted: bool,
     },
     DrainQueue,
+    RestoreBindings(BTreeMap<String, Vec<BoundRef>>),
     ContinueTurnStart {
         step: u8,
     },
@@ -494,6 +496,7 @@ pub enum PlayForm {
     Normal,
     Enhance { paid: i32 },
     Accelerate { paid: i32 },
+    Crystallize { paid: i32 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -514,6 +517,9 @@ pub struct QueuedTrigger {
     pub source: SourceRef,
     pub tag: TriggerTag,
     pub effects: Vec<crate::card::Effect>,
+    /// Entering/attacking subject captured at enqueue so sequential enters
+    /// (Adahime fanfare summons, Macmillan's 3 Zombies) each keep `pick: entering`.
+    pub subject: Option<TargetOpt>,
 }
 
 impl State {

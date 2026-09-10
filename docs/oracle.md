@@ -24,9 +24,10 @@ npm run trace -- --seed=20260910 --games=30 --deck-a=oracle/decks/ramp-37772.jso
 npm run trace -- --seed=20260910 --games=20 --deck-a=oracle/decks/basic-forest.json --deck-b=oracle/decks/basic-forest.json --out=<tmp>/basic-forest-mirror
 npm run trace -- --seed=20260910 --games=20 --deck-a=oracle/decks/basic-rune.json --deck-b=oracle/decks/basic-rune.json --out=<tmp>/basic-rune-mirror
 npm run trace -- --seed=20260910 --games=20 --deck-a=oracle/decks/basic-portal.json --deck-b=oracle/decks/basic-portal.json --out=<tmp>/basic-portal-mirror
+npm run trace -- --seed=20260910 --games=30 --deck-a=oracle/decks/abyss-p8rfn.json --deck-b=oracle/decks/abyss-p8rfn.json --out=<tmp>/abyss-p8rfn-mirror
 ```
 
-`basic-rune.json` deliberately omits Witch's New Brew `10031210` (the old repo's data gives that amulet an unprinted Aura). The 40th card is Fairy Tamer `10011110`.
+`basic-rune.json` is the original 14-card Basic Rune list, including Witch's New Brew `10031210` ×3. Owner ruling 2026-09-10: Brew (and Magic Sediment) have Aura even though the catalog text does not print it, matching the old engine.
 
 ### Re-gzip
 
@@ -58,13 +59,13 @@ A valid entry:
   "trace": "ramp-37772-mirror/trace-20260910-2.jsonl",
   "i": 33,
   "path": "players.a.field[0].max_defense",
-  "class": "engine",
-  "reason": "a −0/−4 on an already-damaged evolved Zooey: old engine sets max_defense to the current defense (1), arena lowers it by the debuff (3); owner ruling pending 2026-09-10",
+  "class": "old-rule",
+  "reason": "owner ruling 2026-09-10: a −0/−4 lowers max_defense by 4; the old engine set it to the current defense",
   "since": "2026-09-10"
 }
 ```
 
-`class` is one of `old-data` | `old-emitter` | `engine` | `convention`. `reason` is one sentence a stranger can check and must name the card or rule. `path` is a JSON path, or `legal` / `illegal`.
+`class` is one of `old-data` | `old-emitter` | `engine` | `convention` | `old-rule`. `old-rule` means the old engine disagrees with an owner ruling; arena is right. `reason` is one sentence a stranger can check and must name the card or rule. `path` is a JSON path, or `legal` / `illegal` / `error` (`error` is an `OraclePickNotLegal` failure at that `i`).
 
 `ARENA_ORACLE_STRICT=1` ignores the allowlist (the true red set). CI does not set it.
 
@@ -76,4 +77,4 @@ Do not fix an `engine` divergence in the same change that records it. One brief 
 cargo test --release --test oracle
 ```
 
-CI shares the release build with the soak step (`cargo test --release --test oracle`). Debug replay of the 90 traces is ~6 s, so the test stays in the default `cargo test`.
+CI shares the release build with the soak step (`cargo test --release --test oracle`). Debug replay of the 120 traces is ~8 s, so the test stays in the default `cargo test`.

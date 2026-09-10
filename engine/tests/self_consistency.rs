@@ -9,7 +9,15 @@ mod common;
 use common::*;
 
 fn emit_and_replay(db: &CardDb, seed: u64) {
-    let decks = load_deck_file("engine/tests/fixtures/decks/basic-neutral-forest.json");
+    emit_and_replay_deck(
+        db,
+        seed,
+        "engine/tests/fixtures/decks/basic-neutral-forest.json",
+    );
+}
+
+fn emit_and_replay_deck(db: &CardDb, seed: u64, deck_path: &str) {
+    let decks = load_deck_file(deck_path);
     let mut live = new_game(
         db,
         GameConfig {
@@ -38,7 +46,7 @@ fn emit_and_replay(db: &CardDb, seed: u64) {
     let mut policy = policy_rng(seed);
     let mut recs = Vec::new();
     let mut i = 0u32;
-    while live.winner.is_none() && !matches!(live.phase, Phase::Terminal) && i < 200 {
+    while live.winner.is_none() && !matches!(live.phase, Phase::Terminal) && i < 800 {
         let legal = legal_actions(db, &live);
         if legal.is_empty() {
             break;
@@ -80,5 +88,15 @@ fn self_consistency_50_seeds() {
     assert!(deck_ready(&db, &decks));
     for seed in 1u64..=50 {
         emit_and_replay(&db, seed);
+    }
+}
+
+#[test]
+fn self_consistency_abyss_30_seeds() {
+    let db = load_db();
+    let decks = load_deck_file("oracle/decks/abyss-p8rfn.json");
+    assert!(deck_ready(&db, &decks), "abyss-p8rfn must load");
+    for g in 0u64..30 {
+        emit_and_replay_deck(&db, 20260910 + g, "oracle/decks/abyss-p8rfn.json");
     }
 }

@@ -1,0 +1,70 @@
+{
+  "id": "10452130",
+  "name": "Baal, Elemental Resonance",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "attack": 2,
+  "defense": 2,
+  "text": "Fanfare: Select a Mode to activate.\n1. Give this follower and another random allied follower on the field +1/+1.\n2. Deal 3 damage to a random enemy follower.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Give this follower and another random allied follower on the field +1/+1.\n2. Deal 3 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Give this follower and another random allied follower on the field +1/+1.\n2. Deal 3 damage to a random enemy follower.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Give this follower and another random allied follower on the field +1/+1.",
+              "effects": [
+                {
+                  "op": "buff",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "attack": 1,
+                  "defense": 1
+                },
+                {
+                  "op": "buff",
+                  "select": {
+                    "pick": "random",
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower",
+                    "other": true
+                  },
+                  "attack": 1,
+                  "defense": 1
+                }
+              ]
+            },
+            {
+              "printed": "2. Deal 3 damage to a random enemy follower.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "random",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  },
+                  "amount": 3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

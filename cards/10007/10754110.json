@@ -1,0 +1,78 @@
+{
+  "id": "10754110",
+  "name": "Adahime, Anathema of Death",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "attack": 5,
+  "defense": 4,
+  "text": "Fanfare: Summon 2 random differently named Abysscraft followers that cost 2 or less from your deck.\n\nWhenever another allied Abysscraft follower enters the field, give it Rush.\n\nSuper-Evolve: Give all other allied Abysscraft followers on the field +2/+2.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 random differently named Abysscraft followers that cost 2 or less from your deck.",
+      "effects": [
+        {
+          "printed": "Summon 2 random differently named Abysscraft followers that cost 2 or less from your deck.",
+          "op": "summon",
+          "card": {
+            "randomFrom": {
+              "class": "abysscraft",
+              "kind": "follower",
+              "costLte": 2
+            }
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "class": "abysscraft"
+      },
+      "printed": "Whenever another allied Abysscraft follower enters the field, give it Rush.",
+      "effects": [
+        {
+          "printed": "give it Rush.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "entering"
+          },
+          "traits": {
+            "rush": true
+          }
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give all other allied Abysscraft followers on the field +2/+2.",
+      "effects": [
+        {
+          "printed": "Give all other allied Abysscraft followers on the field +2/+2.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "other": true,
+            "filter": {
+              "class": "abysscraft"
+            }
+          },
+          "attack": 2,
+          "defense": 2
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

@@ -748,6 +748,22 @@ Consequences (the rest of the 2026-09-05 / 2026-09-06 chain stands):
 
 ---
 
+## Earth Sigil amulets have Aura — 2026-09-10
+
+<!-- rulebook: pending — unprinted Aura on Earth Sigil amulets not written through to rulebook -->
+
+Witch's New Brew and Magic Sediment are untargetable by enemy selection (Aura) although the printed text does not say so (owner, from the client).
+
+`10031210` Witch's New Brew and `90031210` Magic Sediment set `traits.aura: true`. The catalog `skill_text` does not print Aura; the client has it.
+
+## Stat modifications and maximum defense — 2026-09-10
+
+<!-- rulebook: absorbed #damage-events-general » restoration cannot raise a follower above its current maximum -->
+
+A stat modification defines the follower's maximum defense: max = the stat line after all +/− modifications; damage is tracked separately; healing restores up to that max. A −0/−4 therefore lowers `max_defense` by 4 (it does not snap max to the current defense). Owner's reasoning: Azurifrit's "fully restore" goes to the buffed maximum, so modifications define the max.
+
+---
+
 ## Still open — Chris will test in game
 
 ~~Whether a **cost reduction moves the Accelerate value N**, or only the normal cost.~~ **Settled 2026-09-02** — see **Alternate and Enhance costs are fixed; only the card's own cost moves — 2026-09-02** above. Alternate cost N is fixed; only the card's own effective play cost moves.

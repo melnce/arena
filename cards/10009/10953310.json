@@ -1,0 +1,47 @@
+{
+  "id": "10953310",
+  "name": "Reaper's Due",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Select an allied follower on the field and give it \"Last Words: Summon a copy of this card.\"",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied follower on the field and give it \"Last Words: Summon a copy of this card.\"",
+      "effects": [
+        {
+          "printed": "Select an allied follower on the field and give it \"Last Words: Summon a copy of this card.\"",
+          "op": "grantAbility",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "ability": {
+            "on": "lastWords",
+            "printed": "Last Words: Summon a copy of this card.",
+            "effects": [
+              {
+                "printed": "Summon a copy of this card.",
+                "op": "summon",
+                "card": {
+                  "copyOf": {
+                    "pick": "self"
+                  },
+                  "exact": false
+                },
+                "count": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
