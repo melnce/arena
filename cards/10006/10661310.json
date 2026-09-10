@@ -1,0 +1,30 @@
+{
+  "id": "10661310",
+  "name": "Advent of the Eld Tome",
+  "kind": "spell",
+  "class": "havencraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Draw 2 amulets.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw 2 amulets.",
+      "effects": [
+        {
+          "printed": "Draw 2 amulets.",
+          "op": "draw",
+          "count": 2,
+          "filter": {
+            "kind": "amulet"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

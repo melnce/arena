@@ -1,0 +1,74 @@
+{
+  "id": "10663110",
+  "name": "Worshipful Crusader",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Summon a Worshipful Crusader.\n\nBane\nAura\n\nEvolve: Select an enemy follower on the field and destroy it.",
+  "attack": 2,
+  "defense": 4,
+  "traits": {
+    "bane": true,
+    "aura": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Worshipful Crusader.",
+      "effects": [
+        {
+          "printed": "Summon a Worshipful Crusader.",
+          "op": "summon",
+          "card": {
+            "named": "10663110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "crystallize",
+      "cost": 1,
+      "printed": "Crystallize (1): Countdown (3)\nLast Words: Summon a Worshipful Crusader.",
+      "countdown": 3,
+      "abilities": [
+        {
+          "on": "lastWords",
+          "printed": "Last Words: Summon a Worshipful Crusader.",
+          "effects": [
+            {
+              "printed": "Summon a Worshipful Crusader.",
+              "op": "summon",
+              "card": {
+                "named": "10663110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,49 @@
+{
+  "id": "10802110",
+  "name": "Alfied, Squire of Joy",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 4 damage.\n\nEvolve: Give this follower Storm.",
+  "attack": 1,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 4 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 4 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Give this follower Storm.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "storm": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

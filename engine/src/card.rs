@@ -479,8 +479,11 @@ impl Traits {
         );
         or_bool(&mut self.cant_be_played, other.cant_be_played);
         if let Some(n) = other.attacks_per_turn {
+            // "Can attack N times" grants stack as extra attacks (Verdilia +
+            // Armes official Q&A: 2 + 2 printed extras → 3 attacks).
+            let extra = (n - 1).max(0);
             let cur = self.attacks_per_turn.unwrap_or(1);
-            self.attacks_per_turn = Some(cur.max(n));
+            self.attacks_per_turn = Some(cur + extra);
         }
         if let Some(n) = other.damage_cap {
             self.damage_cap = Some(match self.damage_cap {
@@ -533,8 +536,11 @@ impl Traits {
         if other.cant_be_played == Some(true) {
             self.cant_be_played = None;
         }
-        if other.attacks_per_turn.is_some() {
-            self.attacks_per_turn = None;
+        if let Some(n) = other.attacks_per_turn {
+            let extra = (n - 1).max(0);
+            let cur = self.attacks_per_turn.unwrap_or(1);
+            let next = (cur - extra).max(1);
+            self.attacks_per_turn = if next <= 1 { None } else { Some(next) };
         }
         if other.damage_cap.is_some() {
             self.damage_cap = None;
@@ -676,6 +682,15 @@ pub struct Filter {
     pub has_spellboost: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub destroyed_this_match: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "didNotAttackThisTurn")]
+    pub did_not_attack_this_turn: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "superEvolved")]
+    pub super_evolved: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "notBound")]
+    pub not_bound: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -803,6 +818,10 @@ pub enum Amount {
         #[serde(rename = "enteredThisMatch")]
         entered_this_match: Filter,
     },
+    SumHighestBaseCosts {
+        #[serde(rename = "sumHighestBaseCosts")]
+        sum_highest_base_costs: SumHighestBaseCosts,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -811,6 +830,14 @@ pub enum Amount {
 pub struct AmountStat {
     pub of: Box<Selector>,
     pub which: StatWhich,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct SumHighestBaseCosts {
+    pub n: i32,
+    pub select: Box<Selector>,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -876,6 +903,11 @@ pub enum Condition {
         #[serde(rename = "attackedLeaderLastTurn")]
         attacked_leader_last_turn: bool,
     },
+    /// Verdilia crest: "Whenever a super-evolved allied follower attacks a follower"
+    AttackingFollower {
+        #[serde(rename = "attackingFollower")]
+        attacking_follower: bool,
+    },
     TurnOwner {
         #[serde(rename = "turnOwner")]
         turn_owner: TurnOwner,
@@ -916,10 +948,9 @@ pub enum Condition {
         #[serde(rename = "amountAtLeast")]
         amount_at_least: AmountAtLeast,
     },
-    /// Strike is attacking a follower (Giada `10843110`; Verdilia crest on Haven).
-    AttackingFollower {
-        #[serde(rename = "attackingFollower")]
-        attacking_follower: bool,
+    BoundHas {
+        #[serde(rename = "boundHas")]
+        bound_has: BoundHas,
     },
 }
 
@@ -1003,6 +1034,17 @@ pub struct VarAtLeast {
 pub struct AmountAtLeast {
     pub of: Amount,
     pub n: Amount,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct BoundHas {
+    #[serde(rename = "ref")]
+    pub ref_name: String,
+    pub filter: Filter,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub side: Option<Side>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2445,6 +2487,10 @@ pub enum CardOrCrest {
     Crest(Crest),
 }
 
+fn default_deck_enabled() -> i32 {
+    3
+}
+
 /// Catalog facts used for cross-checks (not a closed schema object).
 #[derive(Debug, Clone, Deserialize)]
 pub struct CatalogRecord {
@@ -2466,6 +2512,8 @@ pub struct CatalogRecord {
     pub rotation: bool,
     #[serde(default)]
     pub text: String,
+    #[serde(default = "default_deck_enabled")]
+    pub deck_enabled_num: i32,
     #[serde(default)]
     pub related_card_ids: Vec<String>,
     #[serde(default)]

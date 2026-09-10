@@ -1,0 +1,67 @@
+{
+  "id": "10504110",
+  "name": "Getenou, Eightfold Glory",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Discard your hand. Select a Mode to activate.\n1. Draw 8 cards.\n2. Draw 2 cards and reduce their costs by 8.",
+  "attack": 8,
+  "defense": 8,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Discard your hand. Select a Mode to activate.\n1. Draw 8 cards.\n2. Draw 2 cards and reduce their costs by 8.",
+      "effects": [
+        {
+          "printed": "Discard your hand.",
+          "op": "discard",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          }
+        },
+        {
+          "printed": "Select a Mode to activate.\n1. Draw 8 cards.\n2. Draw 2 cards and reduce their costs by 8.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Draw 8 cards.",
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": 8
+                }
+              ]
+            },
+            {
+              "printed": "2. Draw 2 cards and reduce their costs by 8.",
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": 2,
+                  "as": "d"
+                },
+                {
+                  "op": "cost",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "d"
+                  },
+                  "delta": -8
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

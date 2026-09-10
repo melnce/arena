@@ -1,0 +1,36 @@
+{
+  "id": "10862120",
+  "name": "Viche, Abyssal Researcher",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Activates in hand. Whenever an allied follower super-evolves, reduce the cost of this card by 3.\n\nRush\nBane",
+  "attack": 3,
+  "defense": 4,
+  "traits": {
+    "rush": true,
+    "bane": true
+  },
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_super_evolve",
+      "printed": "Activates in hand. Whenever an allied follower super-evolves, reduce the cost of this card by 3.",
+      "effects": [
+        {
+          "printed": "reduce the cost of this card by 3.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -3
+        }
+      ],
+      "zone": "hand"
+    }
+  ],
+  "tribes": []
+}

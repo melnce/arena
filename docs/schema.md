@@ -179,7 +179,7 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 | `ally_draw` | `10561120`, `crest:10564120` |
 | `ally_earth_rite` | `10731310` Heel, My Dearie |
 | `ally_engage` | `10062120` Sacred Griffon |
-| `leader_restored` | `10563110` Saint of Rehabilitation; `10963110` Executor of the Vow |
+| `leader_restored` | `10563110` Saint of Rehabilitation; `10961110` Follower of the Tenets; `10963110` Executor of the Vow — 0-heal still fires (official Q&A Burnite `10144110`) |
 | `self_buffed_up` | `10812110` Ruflet |
 
 Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`, `enemy_follower_destroyed`. Ghost's leave is `on: leave`, not an event. The schema lists exactly the 15 events in the table.
@@ -210,7 +210,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `search` | omitted — measured 0 printed "search" in the pool. `10021310` is `draw` + filter |
 | `addToDeck` | `10901310` |
 | `evolve` | effect-granted `10724110` Fanfare; `super: true` `10464120` |
-| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane; `until` `10442310` Maximum Love Bomb / `10843110` Giada; `until: endOfOpponentTurn` `10721310` Measured Attunement / `10821120` Shaili |
+| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane; `until: endOfTurn` `10461120` Lamretta / `10442310` Maximum Love Bomb / `10843110` Giada; `until: endOfOpponentTurn` `10721310` Measured Attunement / `10821120` Shaili / `10962110` Agent of the Testaments |
 | `grantAbility` | `10704110` quoted end-of-turn banish |
 | `removeAbilities` | `90051140` (optional `on: ["lastWords"]` removes only Last Words) |
 | `cost` | `delta` `10534120`; `set` `10923110`; `untilEndOfTurn` `10574110` |
@@ -249,7 +249,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 
 ## Amount
 
-integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{stat: {of, which}}` `10714110` · `{var}` `10131320` · `{add}/{sub}/{max}/{min}` `10811110` Marlone (sub) · `{neg}` `10714110` · `{distinctNames}` `10773310` · `{enteredThisMatch}` `10773310`. `{turn}` omitted (no pool card).
+integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{stat: {of, which}}` `10714110` · `{var}` `10131320` · `{add}/{sub}/{max}/{min}` `10811110` Marlone (sub) · `{neg}` `10714110` · `{distinctNames}` `10773310` · `{enteredThisMatch}` `10773310` · `{sumHighestBaseCosts: {n, select}}` `10502120` Behemoth ("the sum of the 3 highest base costs in your hand"). `{turn}` omitted (no pool card).
 
 ## Selector
 
@@ -265,11 +265,11 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Filter
 
-`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `hasSpellboost` `10931120` Key Spirit ("a card in your hand with On Spellboost") · `destroyedThisMatch` `10901310`
+`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `hasSpellboost` `10931120` Key Spirit ("a card in your hand with On Spellboost") · `destroyedThisMatch` `10901310` · `didNotAttackThisTurn` `10464110` Galleon ("that didn't attack this turn") · `superEvolved` `10863210` Academy Hijinks · `notBound` `10901110` Jailor ("unselected")
 
 ## Condition
 
-`all`/`any`/`not` · `countAtLeast` (`filter` `10521110` "If you selected a spell") · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `attackedLeaderLastTurn` `10944110` · `attackingFollower` `10843110` Giada (one Strike; second sentence) · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120`. Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
+`all`/`any`/`not` · `countAtLeast` (`filter` `10521110` "If you selected a spell") · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `boundHas` `10663210` Sublime Eld Tome ("If you selected an allied amulet") · `attackedLeaderLastTurn` `10944110` · `attackingFollower` `10843110` Giada / `crest:10864110` Verdilia ("attacks a follower") · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120` · `amountAtLeast` `10502120` Behemoth. Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
 
 ## Modes
 

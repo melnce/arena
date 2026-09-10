@@ -1,0 +1,46 @@
+{
+  "id": "10464110",
+  "name": "Galleon, Earth Personified",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 3,
+  "text": "Ward\nCan't attack followers or leaders.\nAt the end of your turn, if you've unlocked super-evolution, evolve a random unevolved allied follower on the field that didn't attack this turn.",
+  "attack": 5,
+  "defense": 5,
+  "traits": {
+    "ward": true,
+    "cantAttackFollowers": true,
+    "cantAttackLeader": true
+  },
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, if you've unlocked super-evolution, evolve a random unevolved allied follower on the field that didn't attack this turn.",
+      "effects": [
+        {
+          "printed": "evolve a random unevolved allied follower on the field that didn't attack this turn.",
+          "op": "evolve",
+          "select": {
+            "pick": "random",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "unevolved": true,
+              "didNotAttackThisTurn": true
+            }
+          },
+          "super": false
+        }
+      ],
+      "when": {
+        "superEvolutionUnlocked": true
+      }
+    }
+  ],
+  "tribes": []
+}

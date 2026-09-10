@@ -178,6 +178,9 @@ def filter_schema():
             "hasLastWords": {"type": "boolean"},
             "hasSpellboost": {"type": "boolean"},
             "destroyedThisMatch": {"type": "boolean"},
+            "didNotAttackThisTurn": {"type": "boolean"},
+            "superEvolved": {"type": "boolean"},
+            "notBound": {"type": "string", "minLength": 1},
         }
     )
 
@@ -278,6 +281,18 @@ def amount_schema():
             closed(
                 {"enteredThisMatch": {"$ref": "#/$defs/Filter"}},
                 required=["enteredThisMatch"],
+            ),
+            closed(
+                {
+                    "sumHighestBaseCosts": closed(
+                        {
+                            "n": {"type": "integer", "minimum": 1},
+                            "select": {"$ref": "#/$defs/Selector"},
+                        },
+                        required=["n", "select"],
+                    )
+                },
+                required=["sumHighestBaseCosts"],
             ),
         ]
     }
@@ -406,6 +421,19 @@ def condition_schema():
             closed(
                 {"handSameCostAtLeast": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])},
                 required=["handSameCostAtLeast"],
+            ),
+            closed(
+                {
+                    "boundHas": closed(
+                        {
+                            "ref": {"type": "string", "minLength": 1},
+                            "filter": {"$ref": "#/$defs/Filter"},
+                            "side": {"enum": ["ally", "enemy", "any"]},
+                        },
+                        required=["ref", "filter"],
+                    )
+                },
+                required=["boundHas"],
             ),
         ]
     }

@@ -1,0 +1,53 @@
+{
+  "id": "10463210",
+  "name": "De La Fille's Gleaming Gems",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Engage: Destroy this card. Select a Mode to activate.\n1. Destroy a random enemy follower.\n2. Draw 2 cards.",
+  "abilities": [
+    {
+      "on": "engage",
+      "cost": 0,
+      "sacrifice": true,
+      "printed": "Engage: Destroy this card. Select a Mode to activate.\n1. Destroy a random enemy follower.\n2. Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Destroy a random enemy follower.\n2. Draw 2 cards.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Destroy a random enemy follower.",
+              "effects": [
+                {
+                  "op": "destroy",
+                  "select": {
+                    "pick": "random",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "2. Draw 2 cards.",
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

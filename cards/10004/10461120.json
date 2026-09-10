@@ -1,0 +1,55 @@
+{
+  "id": "10461120",
+  "name": "Lamretta, Sisterly Shepherd",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "At the end of your turn, if this follower is evolved, deal 2 damage to all followers.\n\nEvolve: Give this follower \"Can't attack followers or leaders\" until the end of the turn.",
+  "attack": 1,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, if this follower is evolved, deal 2 damage to all followers.",
+      "effects": [
+        {
+          "printed": "deal 2 damage to all followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "any",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 2
+        }
+      ],
+      "when": {
+        "evolved": true
+      }
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Give this follower \"Can't attack followers or leaders\" until the end of the turn.",
+      "effects": [
+        {
+          "printed": "Give this follower \"Can't attack followers or leaders\" until the end of the turn.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "cantAttackFollowers": true,
+            "cantAttackLeader": true
+          },
+          "until": "endOfTurn"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

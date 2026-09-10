@@ -1,0 +1,37 @@
+{
+  "id": "10562210",
+  "name": "Protective Shell",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Engage: Destroy this card. Draw X cards. X is the number of allied followers on the field with Ward.",
+  "abilities": [
+    {
+      "on": "engage",
+      "cost": 0,
+      "sacrifice": true,
+      "printed": "Engage: Destroy this card. Draw X cards. X is the number of allied followers on the field with Ward.",
+      "effects": [
+        {
+          "printed": "Draw X cards. X is the number of allied followers on the field with Ward.",
+          "op": "draw",
+          "count": {
+            "count": {
+              "pick": "all",
+              "side": "ally",
+              "zone": "field",
+              "kind": "follower",
+              "filter": {
+                "hasTrait": "ward"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

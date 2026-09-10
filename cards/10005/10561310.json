@@ -1,0 +1,36 @@
+{
+  "id": "10561310",
+  "name": "Malice of the Mistbloom",
+  "kind": "spell",
+  "class": "havencraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Return a random card from your hand to deck. Draw 3 cards.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Return a random card from your hand to deck. Draw 3 cards.",
+      "effects": [
+        {
+          "printed": "Return a random card from your hand to deck.",
+          "op": "returnToDeck",
+          "select": {
+            "pick": "random",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "position": "random"
+        },
+        {
+          "printed": "Draw 3 cards.",
+          "op": "draw",
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

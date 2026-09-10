@@ -301,6 +301,7 @@ fn work_frame(w: &WorkFrame) -> Value {
             effects,
             index,
             subject,
+            subject_id,
             e40,
         } => json!({
             "effects": {
@@ -309,6 +310,7 @@ fn work_frame(w: &WorkFrame) -> Value {
                 "effects": effects,
                 "index": index,
                 "subject": subject.as_ref().map(target_opt),
+                "subject_id": subject_id,
                 "e40": e40,
             }
         }),
@@ -326,6 +328,7 @@ fn queued(q: &QueuedTrigger) -> Value {
         "tag": q.tag,
         "effects": q.effects,
         "subject": q.subject.as_ref().map(target_opt),
+        "subject_id": q.subject_id,
     })
 }
 
@@ -345,7 +348,19 @@ fn source_ref(s: &SourceRef) -> Value {
 
 fn bound_ref(b: &BoundRef) -> Value {
     match b {
-        BoundRef::Field { player, id } => json!({"field": {"player": pl(*player), "id": id}}),
+        BoundRef::Field {
+            player,
+            id,
+            card,
+            kind,
+        } => json!({
+            "field": {
+                "player": pl(*player),
+                "id": id,
+                "card": card.as_str(),
+                "kind": format!("{kind:?}").to_ascii_lowercase(),
+            }
+        }),
         BoundRef::Leader { player } => json!({"leader": pl(*player)}),
         BoundRef::Hand { player, id } => json!({"hand": {"player": pl(*player), "id": id}}),
         BoundRef::Deck { player, id } => json!({"deck": {"player": pl(*player), "id": id}}),

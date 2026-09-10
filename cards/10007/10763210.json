@@ -1,0 +1,52 @@
+{
+  "id": "10763210",
+  "name": "Trident of Eroding Tides",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 4 damage.\n\nEngage: Destroy this card. Select an enemy follower on the field and deal it 2 damage.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 4 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 4 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "on": "engage",
+      "cost": 0,
+      "sacrifice": true,
+      "printed": "Engage: Destroy this card. Select an enemy follower on the field and deal it 2 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 2 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

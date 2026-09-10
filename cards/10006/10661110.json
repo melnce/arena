@@ -1,0 +1,61 @@
+{
+  "id": "10661110",
+  "name": "Prostrating Coward",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 5,
+  "text": "When this follower enters the field, restore 2 defense to your leader.\n\nBane\nWard",
+  "attack": 4,
+  "defense": 5,
+  "traits": {
+    "bane": true,
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "enter",
+      "printed": "When this follower enters the field, restore 2 defense to your leader.",
+      "effects": [
+        {
+          "printed": "restore 2 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "crystallize",
+      "cost": 2,
+      "printed": "Crystallize (2): Countdown (3)\nLast Words: Summon a Prostrating Coward.",
+      "countdown": 3,
+      "abilities": [
+        {
+          "on": "lastWords",
+          "printed": "Last Words: Summon a Prostrating Coward.",
+          "effects": [
+            {
+              "printed": "Summon a Prostrating Coward.",
+              "op": "summon",
+              "card": {
+                "named": "10661110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
