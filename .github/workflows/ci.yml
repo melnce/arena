@@ -66,7 +66,7 @@ jobs:
 
       - name: validate cards
         working-directory: tools
-        run: npm ci && node validate.mjs && node corruption-proofs.mjs
+        run: npm ci && node validate.mjs && node validate-glossary.mjs && node corruption-proofs.mjs
 
       - name: coverage verb walk
         run: python3 tools/coverage-check.py

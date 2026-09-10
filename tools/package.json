@@ -2,6 +2,11 @@
   "name": "arena-tools",
   "private": true,
   "type": "module",
+  "scripts": {
+    "glossary": "node fetch-glossary.mjs",
+    "glossary:check": "node fetch-glossary.mjs --check",
+    "validate:glossary": "node validate-glossary.mjs"
+  },
   "dependencies": {
     "ajv": "8.17.1",
     "ajv-formats": "3.0.1"
