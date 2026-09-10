@@ -5510,7 +5510,7 @@ fn transform_slot(
 
 enum ResolvedTransform {
     Fresh(CardId),
-    Exact(CardInstance),
+    Exact(Box<CardInstance>),
 }
 
 fn resolve_transform_into(
@@ -5548,7 +5548,7 @@ fn resolve_transform_into(
                 _ => None,
             };
             Ok(match inst {
-                Some(c) if *exact => Some(ResolvedTransform::Exact(c)),
+                Some(c) if *exact => Some(ResolvedTransform::Exact(Box::new(c))),
                 Some(c) => Some(ResolvedTransform::Fresh(c.card)),
                 None => None,
             })
@@ -5581,7 +5581,7 @@ fn materialize_transform(
         }
         Some(ResolvedTransform::Exact(mut inst)) => {
             inst.id = state.alloc_id();
-            Ok(Some(inst))
+            Ok(Some(*inst))
         }
     }
 }
