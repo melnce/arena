@@ -1011,6 +1011,7 @@ fn apply_play(
         raise_when(db, state, me, EventName::AllySpellPlayed, Some(&inst), me);
     }
     let play_rx = std::mem::take(&mut state.queue);
+    let played_id = inst.id;
     if kind == CardKind::Spell {
         let src = SourceRef::Spell {
             player: me,
@@ -1029,6 +1030,13 @@ fn apply_play(
         push_effects(state, me, src, effects);
     } else {
         enter_from_play(db, state, me, inst, effects, events)?;
+        // AllyCardPlayed is raised before enter, so `subject_target` is None
+        // and `raise_when` restores `event_subject`. Play reactions (Yuel
+        // `pick: entering`) resolve after the body is on the field.
+        if let Some(slot) = state.find_field(me, played_id) {
+            state.event_subject = Some(TargetOpt::Slot { player: me, slot });
+            state.event_inst_id = Some(played_id);
+        }
     }
     flush_play_reactions_ahead(state, play_rx);
     Ok(())
