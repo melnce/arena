@@ -2,9 +2,10 @@
 
 use std::collections::BTreeMap;
 
+use arena_engine::action::acting_player;
 use arena_engine::{
-    apply_neutral, hash, legal_actions_neutral, new_game, snapshot_json, CardDb, CardId, First,
-    GameConfig, NeutralAction, State,
+    apply_neutral, hash, legal_actions_neutral, new_game, policy_rng, snapshot_json, CardDb,
+    CardId, First, GameConfig, NeutralAction, State,
 };
 
 use crate::bundle::card_db;
@@ -69,8 +70,63 @@ impl GameInner {
         phase_str(&self.state.phase).to_string()
     }
 
+    pub fn acting(&self) -> String {
+        acting_player(&self.state).as_str().to_string()
+    }
+
+    pub fn active(&self) -> String {
+        self.state.active.as_str().to_string()
+    }
+
+    pub fn turn(&self) -> u32 {
+        self.state.turn
+    }
+
+    pub fn winner(&self) -> Option<String> {
+        self.state.winner.map(|p| p.as_str().to_string())
+    }
+
+    /// One NeutralAction for the acting player.
+    ///
+    /// Until `engine::policy` (M5a / RY) is on this tree, `"random"` and
+    /// `"first-legal"` pick from `legal()` with `policy_rng(seed)`. When that
+    /// module lands, route every name through it so `"h0"` works with no
+    /// client change.
+    pub fn bot_action(&self, policy: &str, seed: u64) -> Result<String, String> {
+        let chosen = pick_bot_action(&self.state, policy, seed)?;
+        serde_json::to_string(&chosen).map_err(|e| e.to_string())
+    }
+
     fn legal_len(&self) -> usize {
         legal_actions_neutral(db(), &self.state).len()
+    }
+}
+
+pub fn bot_policy_names() -> &'static [&'static str] {
+    // After RY: read this list from engine::policy so `"h0"` appears here.
+    &["random", "first-legal"]
+}
+
+pub fn bot_policies_json() -> String {
+    serde_json::to_string(bot_policy_names()).expect("botPolicies")
+}
+
+fn pick_bot_action(state: &State, policy: &str, seed: u64) -> Result<NeutralAction, String> {
+    let acts = legal_actions_neutral(db(), state);
+    if acts.is_empty() {
+        return Err("no legal actions".into());
+    }
+    match policy {
+        "first-legal" => Ok(acts[0].clone()),
+        "random" => {
+            let mut rng = policy_rng(seed);
+            let i = rng.gen_range(acts.len() as u32) as usize;
+            Ok(acts[i].clone())
+        }
+        other => Err(format!(
+            "unknown policy {other}; available {}",
+            bot_policies_json()
+        )),
     }
 }
 
