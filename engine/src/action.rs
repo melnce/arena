@@ -101,20 +101,23 @@ fn choose_option_json(state: &State, i: u8) -> ChooseOptionJson {
             ChoiceNode::Targets { options, .. } | ChoiceNode::MultiPick { options, .. } => {
                 return match options.get(i as usize) {
                     Some(TargetOpt::Slot { player, slot }) => {
-                        // Trace format is `{slot: N}`. Include `player` only
-                        // when both boards offer the same slot number (Sincerity
-                        // "a card on the field"); otherwise old traces stay
-                        // byte-compatible and `{slot: N}` is unambiguous.
-                        let ambiguous = options.iter().any(|t| {
-                            matches!(
-                                t,
-                                TargetOpt::Slot { player: p, slot: s }
-                                    if *s == *slot && *p != *player
-                            )
-                        });
+                        // `{slot}` alone = one-board pool. When the pool spans
+                        // both boards, every option carries `player` (the board
+                        // owner) — not only colliding slot numbers (PR #392 /
+                        // Practice-Tool b3bd5473).
+                        let mut saw_a = false;
+                        let mut saw_b = false;
+                        for t in options {
+                            if let TargetOpt::Slot { player: p, .. } = t {
+                                match p {
+                                    PlayerId::A => saw_a = true,
+                                    PlayerId::B => saw_b = true,
+                                }
+                            }
+                        }
                         ChooseOptionJson::Slot {
                             slot: *slot,
-                            player: ambiguous.then(|| player.as_str().to_string()),
+                            player: (saw_a && saw_b).then(|| player.as_str().to_string()),
                         }
                     }
                     Some(TargetOpt::Leader { .. }) => ChooseOptionJson::Leader(LeaderWord::Leader),

@@ -174,8 +174,10 @@ pub enum ChooseOptionJson {
     },
     Slot {
         slot: u8,
-        /// Target controller. Omitted on old traces; those prefer the enemy
-        /// board (Practice-Tool CHOOSE_TARGET: enemy slot, then self).
+        /// Target controller. Present when the selection pool spans both
+        /// boards (trace-format: `{slot, player}` on every matching legal
+        /// entry). Omitted when the pool is one board. Old traces without
+        /// `player` prefer the enemy board (Practice-Tool CHOOSE_TARGET).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         player: Option<String>,
     },

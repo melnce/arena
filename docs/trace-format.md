@@ -64,11 +64,13 @@ Closed. Discriminator is the single key.
 | engage | `{ "engage": { "player", "slot": 0 } }` |
 | fuse | `{ "fuse": { "player", "host_pos": 0, "partner_pos": [1, 2] } }` |
 | bonus_pp | `{ "bonus_pp": { "player" } }` |
-| choose | `{ "choose": { "player", "option": { "card": "<id>" } \| { "slot": 0 } \| "leader" \| { "mode": 0 } } }` |
+| choose | `{ "choose": { "player", "option": { "card": "<id>" } \| { "slot": 0 } \| { "slot": 0, "player": "a"\|"b" } \| "leader" \| { "mode": 0 } } }` |
 | confirm | `{ "confirm": { "player" } }` |
 | end_turn | `{ "end_turn": { "player" } }` |
 
 `choose.option` names the chosen thing **by content**, not by the old engine's uid.
+
+`{slot}` alone means the selection pool was one board (enemy board for enemy-only selections, own board for allied-only ones). When the pool spans both boards, the option carries `player`, the owner of that board (`"a"` / `"b"`), on both the action and every matching `legal` entry.
 
 ### Map from the old engine (`src/core/types/actions.ts`)
 
