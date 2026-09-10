@@ -1,130 +1,18 @@
 [
   {
     "trace": "abyss-p8rfn-mirror/trace-20260910-0.jsonl",
-    "i": 115,
-    "path": "error",
-    "class": "old-emitter",
-    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-1.jsonl",
-    "i": 83,
-    "path": "error",
-    "class": "old-emitter",
-    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-10.jsonl",
-    "i": 97,
+    "i": 129,
     "path": "error",
     "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'Summon 2 random differently named Abysscraft followers that cost 2 or less from your deck'; the old engine's second multiset_pick repeated 10751120",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-12.jsonl",
-    "i": 43,
-    "path": "players.a.cemetery.10752110",
-    "class": "old-data",
-    "reason": "old repo's Hark data resolves the split as random targets; the 2026-08-29 ruling (which names Hark) is oldest-first — arena follows the ruling",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-13.jsonl",
-    "i": 63,
-    "path": "error",
-    "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-16.jsonl",
-    "i": 66,
-    "path": "error",
-    "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-17.jsonl",
-    "i": 83,
-    "path": "players.b.cemetery.10751120",
-    "class": "old-emitter",
-    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-18.jsonl",
-    "i": 53,
-    "path": "players.a.field[0].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Highwire Feline 10752110 max at the printed 5",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-19.jsonl",
-    "i": 52,
-    "path": "players.b.cemetery.10951120",
-    "class": "old-data",
-    "reason": "old repo's Hark data resolves the split as random targets; the 2026-08-29 ruling (which names Hark) is oldest-first — arena follows the ruling",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'Summon 2 random differently named Abysscraft followers that cost 2 or less from your deck'; the old engine's two multiset_picks both chose 10951120",
     "since": "2026-09-10"
   },
   {
     "trace": "abyss-p8rfn-mirror/trace-20260910-2.jsonl",
-    "i": 70,
+    "i": 83,
     "path": "error",
-    "class": "old-emitter",
-    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-20.jsonl",
-    "i": 75,
-    "path": "players.a.cemetery.10752110",
     "class": "old-data",
-    "reason": "Garodeth vs. Zeth 10954120 mode 2 prints 'Deal 8 damage to all enemy followers'; the old engine rolled random_target among allies instead of the AoE, so Highwire Feline 10752110 cemetery counts disagree",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-21.jsonl",
-    "i": 69,
-    "path": "error",
-    "class": "old-emitter",
-    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-22.jsonl",
-    "i": 80,
-    "path": "players.b.cemetery.10052110",
-    "class": "old-emitter",
-    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-24.jsonl",
-    "i": 43,
-    "path": "error",
-    "class": "old-emitter",
-    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-26.jsonl",
-    "i": 66,
-    "path": "error",
-    "class": "old-emitter",
-    "reason": "old emitter records `random_card` 90051110 (Skeleton) for Void Colonel 10952110 Last Words 'Destroy a random enemy follower' instead of a `random_target` slot; same family as the pre-compaction slot indices (verified on games 21 and 24); emitter fix pending in the old repo",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-27.jsonl",
-    "i": 46,
-    "path": "players.a.field[0].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Raz, Demon on the Drums 10751120 max at the printed 2",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's two multiset_picks both chose 10052110",
     "since": "2026-09-10"
   },
   {
@@ -137,10 +25,10 @@
   },
   {
     "trace": "abyss-p8rfn-mirror/trace-20260910-5.jsonl",
-    "i": 49,
-    "path": "players.a.cemetery.10751120",
-    "class": "old-emitter",
-    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
+    "i": 98,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's two multiset_picks both chose 10052110",
     "since": "2026-09-10"
   },
   {
@@ -160,11 +48,59 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-9.jsonl",
-    "i": 107,
-    "path": "players.b.field[4].can_attack",
+    "trace": "abyss-p8rfn-mirror/trace-20260910-10.jsonl",
+    "i": 97,
+    "path": "error",
     "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'Whenever another allied Abysscraft follower enters the field, give it Rush'; Highwire Feline 10752110 played from hand is an enter and should have Rush, but the old engine left it summoning-sick",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10751120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-13.jsonl",
+    "i": 63,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-16.jsonl",
+    "i": 66,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-18.jsonl",
+    "i": 53,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Highwire Feline 10752110 max at the printed 5",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-19.jsonl",
+    "i": 108,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's two multiset_picks both chose 10052110",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-26.jsonl",
+    "i": 120,
+    "path": "players.a.leader_defense",
+    "class": "old-data",
+    "reason": "Macmillan, Reaper of Ceremonies 10754120 prints 'whenever an allied Departed follower enters the field'; the catalog gives Netherworld Lieutenant 10951120 tribes: [] so the reanimated Lieutenant is not Departed and the ping must not fire — the old engine dealt 1 to the enemy leader",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-27.jsonl",
+    "i": 46,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Raz, Demon on the Drums 10751120 max at the printed 2",
     "since": "2026-09-10"
   },
   {
