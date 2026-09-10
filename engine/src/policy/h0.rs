@@ -96,6 +96,14 @@ impl Policy for H0 {
             roots.push(determinize(state, me, rng.next_u64()));
         }
 
+        // `fast()` is 1-ply on the determinized root: a depth-2 consensus
+        // lethal walk (every legal × every reply, plus `search_key` on each
+        // apply) was the 8× regression vs pre-R2 greedy. Immediate wins are
+        // still taken; constructed lethals use `H0::default()`.
+        if self.depth <= 2 {
+            return cand[one_ply(&roots, db, &subset, me, &mut nodes, self.node_cap)];
+        }
+
         if let Some(j) = consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, self.node_cap) {
             return cand[j];
         }
@@ -113,16 +121,6 @@ impl Policy for H0 {
                 };
                 let v = if s.winner == Some(me) {
                     FINITE_WIN
-                } else if self.depth <= 2 {
-                    greedy_after(
-                        db,
-                        &s,
-                        me,
-                        a,
-                        &mut nodes,
-                        self.node_cap.min(80),
-                        &[root_key],
-                    )
                 } else {
                     let line = vec![root_key, search_key(&s)];
                     search_own(
@@ -282,30 +280,57 @@ fn is_lethal(
     })
 }
 
-fn greedy_after(
+fn one_ply(
+    roots: &[State],
     db: &CardDb,
-    state: &State,
+    subset: &[Action],
     me: PlayerId,
-    first: &Action,
     nodes: &mut u32,
     cap: u32,
-    line: &[u64],
-) -> f32 {
-    if state.winner == Some(me) {
-        return FINITE_WIN;
-    }
-    let mut v = value(state, me);
-    if matches!(
-        first,
-        Action::Attack {
-            target: crate::ids::AttackTarget::Leader,
-            ..
+) -> usize {
+    let mut acc = vec![0.0f32; subset.len()];
+    let mut n = vec![0u32; subset.len()];
+    for root in roots {
+        for (j, a) in subset.iter().enumerate() {
+            if *nodes >= cap {
+                break;
+            }
+            *nodes += 1;
+            let mut s = root.clone();
+            if apply(db, &mut s, a.clone()).is_err() {
+                continue;
+            }
+            let mut v = if s.winner == Some(me) {
+                FINITE_WIN
+            } else {
+                value(&s, me)
+            };
+            if matches!(
+                a,
+                Action::Attack {
+                    target: crate::ids::AttackTarget::Leader,
+                    ..
+                }
+            ) {
+                v += 3.0;
+            }
+            acc[j] += finite(v);
+            n[j] += 1;
         }
-    ) {
-        v += 3.0;
     }
-    let _ = (db, nodes, cap, line);
-    v
+    let mut best_i = 0usize;
+    let mut best_v = f32::NEG_INFINITY;
+    for (j, &c) in n.iter().enumerate() {
+        if c == 0 {
+            continue;
+        }
+        let v = acc[j] / c as f32;
+        if v > best_v {
+            best_v = v;
+            best_i = j;
+        }
+    }
+    best_i
 }
 
 fn greedy_index(

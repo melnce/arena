@@ -98,12 +98,11 @@ fn collect_states(
     (out, max_choice)
 }
 
-#[test]
-fn action_id_table_and_legal_mask() {
+fn check_action_id_mask(n: usize) {
     let db = load_db();
-    let (states, max_choice) = collect_states(&db, 20_000, false);
-    assert_eq!(states.len(), 20_000, "could not reach 20k states");
-    eprintln!("m5a max ChoiceNode options in 20k-state sample: {max_choice}");
+    let (states, max_choice) = collect_states(&db, n, false);
+    assert_eq!(states.len(), n, "could not reach {n} states");
+    eprintln!("m5a max ChoiceNode options in {n}-state sample: {max_choice}");
     assert!(
         max_choice <= ActionId::CHOOSE_N,
         "choice options {max_choice} exceed Choose cap {}",
@@ -138,9 +137,19 @@ fn action_id_table_and_legal_mask() {
 }
 
 #[test]
-fn observation_layout_and_masking() {
+fn action_id_table_and_legal_mask_smoke() {
+    check_action_id_mask(2_000);
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn action_id_table_and_legal_mask() {
+    check_action_id_mask(20_000);
+}
+
+fn check_observation_layout(n: usize) {
     let db = load_db();
-    let (states, _) = collect_states(&db, 20_000, false);
+    let (states, _) = collect_states(&db, n, false);
     let mut last_off = 0usize;
     for f in Observation::LAYOUT {
         assert_eq!(f.offset, last_off, "{}", f.name);
@@ -191,6 +200,17 @@ fn observation_layout_and_masking() {
             );
         }
     }
+}
+
+#[test]
+fn observation_layout_and_masking_smoke() {
+    check_observation_layout(2_000);
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn observation_layout_and_masking() {
+    check_observation_layout(20_000);
 }
 
 #[test]
@@ -272,12 +292,11 @@ fn search_key_sees_hidden_and_ignores_rng() {
     );
 }
 
-#[test]
-fn determinize_preserves_observation() {
+fn check_determinize(n: usize) {
     let db = load_db();
-    let (states, _) = collect_states(&db, 5_000, true);
+    let (states, _) = collect_states(&db, n, true);
     assert!(
-        states.len() >= 100,
+        states.len() >= n.min(100),
         "need mid-game states, got {}",
         states.len()
     );
@@ -320,6 +339,17 @@ fn determinize_preserves_observation() {
         saw_diff_hand,
         "two seeds should differ in opponent hand at least once"
     );
+}
+
+#[test]
+fn determinize_preserves_observation_smoke() {
+    check_determinize(500);
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn determinize_preserves_observation() {
+    check_determinize(5_000);
 }
 
 fn h0_pick(db: &arena_engine::CardDb, state: &arena_engine::State) -> Action {
@@ -506,20 +536,18 @@ fn play_pair(
     }
 }
 
-#[test]
-fn h0_beats_random_basic_forest_mirror() {
+fn check_h0_beats_random(n: u32) {
     let db = load_db();
     let decks = load_deck_file("oracle/decks/basic-forest.json");
     assert!(deck_ready(&db, &decks));
-    const N: u32 = 200;
     const SEED: u64 = 20260910;
     let mut wins = 0u32;
     let mut losses = 0u32;
     let mut draws = 0u32;
     let mut draw_turns = 0u32;
     let mut draw_acts = 0u32;
-    let mut results = Vec::with_capacity(N as usize);
-    for i in 0..N {
+    let mut results = Vec::with_capacity(n as usize);
+    for i in 0..n {
         let first = if i % 2 == 0 { First::A } else { First::B };
         let out = play_pair(
             &db,
@@ -540,9 +568,9 @@ fn h0_beats_random_basic_forest_mirror() {
             }
         }
     }
-    let rate = f64::from(wins) / f64::from(N);
+    let rate = f64::from(wins) / f64::from(n);
     eprintln!(
-        "H0 vs Random basic-forest-mirror: {wins}/{N} ({:.1}%) losses={losses} draws={draws} draw_mean_turns={} draw_mean_acts={}",
+        "H0 vs Random basic-forest-mirror: {wins}/{n} ({:.1}%) losses={losses} draws={draws} draw_mean_turns={} draw_mean_acts={}",
         rate * 100.0,
         draw_turns.checked_div(draws).unwrap_or(0),
         draw_acts.checked_div(draws).unwrap_or(0),
@@ -553,8 +581,8 @@ fn h0_beats_random_basic_forest_mirror() {
         rate * 100.0
     );
 
-    let mut again = Vec::with_capacity(N as usize);
-    for i in 0..N {
+    let mut again = Vec::with_capacity(n as usize);
+    for i in 0..n {
         let first = if i % 2 == 0 { First::A } else { First::B };
         again.push(
             play_pair(
@@ -575,6 +603,17 @@ fn h0_beats_random_basic_forest_mirror() {
 }
 
 #[test]
+fn h0_beats_random_basic_forest_mirror_smoke() {
+    check_h0_beats_random(20);
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn h0_beats_random_basic_forest_mirror() {
+    check_h0_beats_random(200);
+}
+
+#[test]
 fn policy_by_name_is_object_safe() {
     assert_eq!(names(), &["random", "first-legal", "h0"]);
     assert!(by_name("nope", 1).is_none());
@@ -592,13 +631,12 @@ fn policy_by_name_is_object_safe() {
     assert_eq!(first.choose(&db, &state, &legal, &mut rng), 0);
 }
 
-#[test]
-fn h0_decides_from_the_observation_only() {
+fn check_observation_only(want: usize, mut mk: impl FnMut() -> H0) {
     let db = load_db();
-    let (states, _) = collect_states(&db, 400, true);
+    let (states, _) = collect_states(&db, want.saturating_mul(8).max(40), true);
     let mut used = 0usize;
     for (n, state) in states.into_iter().enumerate() {
-        if used >= 50 {
+        if used >= want {
             break;
         }
         if !matches!(state.phase, Phase::Main) {
@@ -619,8 +657,8 @@ fn h0_decides_from_the_observation_only() {
             continue;
         }
         let seed = 20260910u64.wrapping_add(n as u64);
-        let mut a = H0::default();
-        let mut b = H0::default();
+        let mut a = mk();
+        let mut b = mk();
         let mut rng_a = policy_rng(seed);
         let mut rng_b = policy_rng(seed);
         let i1 = a.choose(&db, &state, &legal, &mut rng_a);
@@ -631,7 +669,18 @@ fn h0_decides_from_the_observation_only() {
         );
         used += 1;
     }
-    assert_eq!(used, 50, "need 50 main-phase mid-game states");
+    assert_eq!(used, want, "need {want} main-phase mid-game states");
+}
+
+#[test]
+fn h0_decides_from_the_observation_only_smoke() {
+    check_observation_only(5, H0::fast);
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn h0_decides_from_the_observation_only() {
+    check_observation_only(50, H0::default);
 }
 
 #[test]

@@ -361,7 +361,8 @@ policy rng. Own-turn search, lethal, and the opponent's greedy reply all
 run on those roots — the true hidden hand and live game RNG are never
 read. A lethal is taken only when every root agrees (a random lethal is
 a bet, not a lethal). Candidate values are averaged over the K roots.
-The node cap is global. `H0::fast()` uses `K = 1`.
+The node cap is global. `H0::fast()` uses `K = 1` and a 1-ply value
+on that root (no depth-2 consensus-lethal walk).
 
 `BonusPp` is considered only in the **activate** direction
 (`!bonus_pp.active`); cancel is never chosen. Cycles are skipped: any
