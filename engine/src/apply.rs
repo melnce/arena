@@ -983,11 +983,12 @@ fn enter_from_play(
             raise_follower_enter(db, state, me, &entered);
         }
     }
-    // play sequence: enter reactions → Fanfare → crest → board
-    // rulebook Fanfare and Enter-Play Trigger Order
-    queue_enter_reactions(db, state, me, card_id, id, true);
+    // Rulebook Fanfare and Enter-Play Trigger Order: the played card's own
+    // enter ability (step 1) sits on pending_work above Fanfare; other cards'
+    // enter/play reactions stay on the queue until the play completes (E34).
     let gated = gated_fanfare(db, state, me, src, card_id, fanfare);
     push_effects(state, me, src, gated);
+    push_own_enter(db, state, me, id);
     Ok(())
 }
 
@@ -1942,15 +1943,43 @@ fn enqueue_card_triggers(
     }
 }
 
+fn push_own_enter(db: &CardDb, state: &mut State, me: PlayerId, inst_id: u32) {
+    let Some(slot) = state.find_field(me, inst_id) else {
+        return;
+    };
+    let Some(inst) = state.field_inst(me, slot).cloned() else {
+        return;
+    };
+    let Ok(card) = db.card(inst.card) else { return };
+    let mut own = Vec::new();
+    for a in card.abilities().iter().chain(inst.granted.iter()) {
+        if a.tag() == TriggerTag::Enter {
+            own.push(a.effects().to_vec());
+        }
+    }
+    for fx in own.into_iter().rev() {
+        push_work(
+            state,
+            me,
+            SourceRef::Field {
+                player: me,
+                id: inst.id,
+            },
+            fx,
+            0,
+            None,
+        );
+    }
+}
+
 fn queue_enter_reactions(
     db: &CardDb,
     state: &mut State,
     me: PlayerId,
-    card: CardId,
+    _card: CardId,
     inst_id: u32,
-    from_play: bool,
+    _from_play: bool,
 ) {
-    let _ = (db, card, from_play);
     enqueue_card_triggers(db, state, me, inst_id, TriggerTag::Enter, 4);
 }
 
@@ -2298,17 +2327,17 @@ fn drain_until_quiet(
             return Ok(());
         }
         state.bump_step()?;
-        // Queue first: reactions to the op that just finished (ally_draw after
-        // `draw count: N`, Last Words after a settle) run before the next op
-        // of the enclosing list (E28). Nested bodies sit on top as index-0
-        // frames (E25). Newly pushed frames still wait behind the queue
-        // (play sequence, Strike-before-damage, start-of-turn draw at step 8).
-        // Exception (owner 2026-09-10): when the next frame is a later op of
-        // the same list that will pause for a player choice, leave the queue
-        // until that list completes.
-        // Rulebook: Trigger queue; Fanfare and Enter-Play Trigger Order;
-        // Combat Timing; Start-of-Turn and End-of-Turn Sequences.
-        if !state.queue.is_empty() && !next_frame_is_choice_continuation(db, state) {
+        // Queue first when the next frame is a later op of an in-flight list
+        // (E28: ally_draw after `draw count: N` before the next op). Nested
+        // bodies and freshly flushed trigger waves sit as index-0 frames;
+        // leave the queue behind those so a later-raised Last Words cannot
+        // jump a trigger already in the wave (E32 / Grimnir) and so other
+        // cards' enter/play reactions wait for Fanfare, including a Fanfare
+        // choice (E34 / A2).
+        if !state.queue.is_empty()
+            && !next_frame_is_choice_continuation(db, state)
+            && next_frame_allows_queue_drain(state)
+        {
             drain_queue(db, state, events)?;
             continue;
         }
@@ -2447,6 +2476,29 @@ fn next_frame_is_choice_continuation(db: &CardDb, state: &State) -> bool {
         return false;
     }
     effect_choice_node(db, state, *controller, *source, &effects[*index]).is_some()
+}
+
+fn next_frame_allows_queue_drain(state: &State) -> bool {
+    // A flushed trigger wave sits above RestoreBindings. Newly raised items
+    // (Last Words of a follower destroyed by queued item (1)) wait until
+    // (2) and (3) — already on pending_work — finish (E32 / Grimnir).
+    if trigger_wave_in_flight(state) {
+        return false;
+    }
+    match state.pending_work.last() {
+        None => true,
+        Some(WorkFrame::Effects { index, .. }) => *index > 0,
+        Some(WorkFrame::Aftermath(Aftermath::RestoreBindings(_))) => false,
+        Some(WorkFrame::Aftermath(Aftermath::AfterCombat { .. })) => true,
+        Some(WorkFrame::Aftermath(_)) => true,
+    }
+}
+
+fn trigger_wave_in_flight(state: &State) -> bool {
+    state
+        .pending_work
+        .iter()
+        .any(|f| matches!(f, WorkFrame::Aftermath(Aftermath::RestoreBindings(_))))
 }
 
 fn drain_queue(db: &CardDb, state: &mut State, _events: &mut [Event]) -> Result<(), Illegal> {
@@ -3697,6 +3749,13 @@ fn destroy_slot(
     no_lw: bool,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
+    let Some(peek) = state.player(who).field[slot as usize].as_ref() else {
+        return Ok(());
+    };
+    // Super-evolve own-turn: legal candidate, destroy fizzles (E31).
+    if bane_blocked(state, who, peek) {
+        return Ok(());
+    }
     let Some(inst) = state.player_mut(who).field[slot as usize].take() else {
         return Ok(());
     };

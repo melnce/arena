@@ -1,7 +1,7 @@
 //! M2 wave 1 constructs: crystallize, hand-zone endOfTurn, summon from deck,
 //! granted Last Words copy, split damage, necromancy evolve, Strike both leaders.
 
-use arena_engine::{apply, legal_actions, Action, AttackTarget, Phase, PlayerId, Slot};
+use arena_engine::{apply, legal_actions, snapshot, Action, AttackTarget, Phase, PlayerId, Slot};
 
 mod common;
 use common::*;
@@ -495,4 +495,188 @@ fn require_supported_abyss_closure() {
         db.require_supported(common::cid(id))
             .unwrap_or_else(|e| panic!("{id}: {e}"));
     }
+}
+
+fn se_raz(db: &arena_engine::CardDb, st: &mut arena_engine::State, who: PlayerId) -> u8 {
+    let slot = put_field(db, st, who, "10751120");
+    if let Some(f) = st.field_inst_mut(who, slot) {
+        f.super_evolved = true;
+        f.evolved = true;
+        f.attack += 3;
+        f.defense += 3;
+        f.max_defense += 3;
+        f.flags.summoning_sick = false;
+    }
+    slot
+}
+
+// ----- E31 -----
+
+#[test]
+fn se_follower_survives_ability_destroy_on_owners_turn() {
+    // Rulebook Evolution stat bonuses: super-evolve, on the owner's turn,
+    // cannot be destroyed by abilities/effects. The follower stays a legal
+    // random_target candidate; destroy fizzles.
+    let db = load_db();
+    let mut st = started(&db, 31);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    se_raz(&db, &mut st, me);
+    se_raz(&db, &mut st, me);
+    let col = put_field(&db, &mut st, opp, "10952110");
+    if let Some(f) = st.field_inst_mut(opp, col) {
+        f.defense = 1;
+        f.max_defense = 1;
+    }
+    apply(
+        &db,
+        &mut st,
+        Action::Attack {
+            attacker: Slot(0),
+            target: AttackTarget::Slot(Slot(col)),
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        st.player(me)
+            .field
+            .iter()
+            .flatten()
+            .filter(|c| c.card.as_str() == "10751120")
+            .count(),
+        2,
+        "both SE Raz survive the Colonel's Last Words destroy"
+    );
+    assert!(
+        st.picks
+            .iter()
+            .any(|p| p.what == arena_engine::PickWhat::RandomTarget),
+        "SE follower remains in the destroy candidate pool"
+    );
+    assert!(
+        !st.player(me)
+            .cemetery
+            .iter()
+            .any(|c| c.card.as_str() == "10751120"),
+        "destroy fizzled; Raz is not cemeteried"
+    );
+}
+
+#[test]
+fn se_follower_dies_to_ability_destroy_on_opponents_turn() {
+    let db = load_db();
+    let mut st = started(&db, 32);
+    end_turn(&db, &mut st);
+    let me = PlayerId::B;
+    let opp = PlayerId::A;
+    se_raz(&db, &mut st, opp);
+    let col = put_field(&db, &mut st, me, "10952110");
+    if let Some(f) = st.field_inst_mut(me, col) {
+        f.defense = 1;
+        f.max_defense = 1;
+        f.flags.summoning_sick = false;
+    }
+    apply(
+        &db,
+        &mut st,
+        Action::Attack {
+            attacker: Slot(col),
+            target: AttackTarget::Slot(Slot(0)),
+        },
+    )
+    .unwrap();
+    assert!(
+        !field_has(&st, opp, "10751120"),
+        "SE Raz is destroyable on the opponent's turn"
+    );
+    assert!(st
+        .player(opp)
+        .cemetery
+        .iter()
+        .any(|c| c.card.as_str() == "10751120"));
+}
+
+// ----- E32 -----
+
+#[test]
+fn last_words_raised_mid_wave_wait_behind_already_queued() {
+    // Rulebook Grimnir example: resolving queued (1) queues Last Words (4);
+    // already-queued (2) and (3) resolve before (4). Game-19 shape: Hark
+    // kills B's Void Colonel, Lieutenant, and Bat together.
+    let db = load_db();
+    let mut st = started(&db, 33);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, me, "10952110");
+    put_field(&db, &mut st, opp, "10952110");
+    put_field(&db, &mut st, opp, "10951120");
+    put_field(&db, &mut st, opp, "90051120");
+    for slot in 0..3 {
+        if let Some(f) = st.field_inst_mut(opp, slot) {
+            f.defense = 1;
+            f.max_defense = 1;
+        }
+    }
+    give_pp(&mut st, me, 3, 3);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10753310");
+    let lt = st
+        .player(opp)
+        .cemetery
+        .iter()
+        .filter(|c| c.card.as_str() == "10951120")
+        .count();
+    assert_eq!(
+        lt, 2,
+        "Lieutenant summons its copy; A's Colonel Last Words then destroys that copy"
+    );
+    assert!(
+        !field_has(&st, opp, "10951120"),
+        "the summoned copy does not survive"
+    );
+}
+
+// ----- E34 -----
+
+#[test]
+fn adahime_rush_waits_until_fanfare_choice_completes() {
+    // Rulebook Fanfare and Enter-Play Trigger Order: other cards' enter
+    // reactions drain after the played card's Fanfare, including across a
+    // Fanfare choice (owner 2026-09-10 A2).
+    let db = load_db();
+    let mut st = started(&db, 34);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, me, "10754110");
+    give_pp(&mut st, me, 8, 8);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10954120");
+    assert!(
+        matches!(st.phase, Phase::Choice { .. }),
+        "Garodeth Fanfare offers a mode"
+    );
+    let snap = snapshot(&st);
+    let g = snap.players.a.field[1]
+        .as_ref()
+        .expect("Garodeth at slot 1");
+    assert_eq!(g.card, "10954120");
+    assert!(
+        !g.can_attack,
+        "Adahime Rush has not resolved at the Fanfare choice"
+    );
+    assert!(
+        !g.traits.iter().any(|t| t == "rush"),
+        "no Rush at the choice node"
+    );
+    // Mode 2: Ward. Storm would also lift sickness; Ward does not.
+    choose(&db, &mut st, 1);
+    let snap = snapshot(&st);
+    let g = snap.players.a.field[1]
+        .as_ref()
+        .expect("Garodeth after choice");
+    assert!(
+        g.traits.iter().any(|t| t == "rush"),
+        "Adahime Rush after Fanfare completes"
+    );
+    assert!(g.can_attack, "Rush lifts summoning sickness");
+    assert!(g.traits.iter().any(|t| t == "ward"));
 }

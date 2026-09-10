@@ -32,7 +32,7 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 
 ## When events
 
-`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, active side category 4 then opponent 6, entry order within a side. Enter reactions sit on the queue before the entering card's Fanfare (`pending_work`). `pick: entering` reads `State.event_subject`.
+`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, active side category 4 then opponent 6, entry order within a side. The played card's own `enter` ability sits on `pending_work` above Fanfare (rulebook step 1). Other cards' enter/play reactions stay on the queue until the play completes, including across a Fanfare choice (E34). `pick: entering` reads `State.event_subject`.
 
 All 15 `EventName`s are raised where the engine produces them (enter, destroy, play, attack, evolve, draw, earth-rite spend, engage, leader restore, self-buff). None are a silent no-op.
 
@@ -48,13 +48,15 @@ A **played** follower's Rally increment is deferred until the play sequence is q
 
 `apply` runs the action then `drain_until_quiet`:
 
-1. Drain the current trigger-queue wave (8-category order, entry-order then printed-order; the whole wave is flushed onto `pending_work` so LIFO still resolves active side first).
+1. Drain the current trigger-queue wave (8-category order, entry-order then printed-order; the whole wave is flushed onto `pending_work` so LIFO still resolves active side first) **unless** the next frame is an index-0 list (Fanfare, a nested body, a freshly flushed trigger) or a trigger wave is still in flight (`RestoreBindings` still on the stack). A trigger raised while a queued item resolves goes to the back of the queue (E32 / Grimnir: (2) and (3) before the Last Words (4) that (1) just queued).
 2. Pop newly pushed effect lists and aftermaths (combat damage, turn-boundary step 7/8). Nested bodies sit on top of the enclosing remainder.
 3. Settle 0-defense deaths (by instance id).
 
-Reactions to an op (`ally_draw` after `draw count: N`, Last Words after a settle) therefore run before the next op of the enclosing list. Countdown expiry captures doomed amulets/crests by instance id / `granted_order` before any destroy, so compact cannot retarget a neighbour. Fuse partner `legal` is `choose {card}` like every other hand choice.
+Reactions to an op of an in-flight list that is *not* inside a flushed wave (`ally_draw` after `draw count: N`) still run before the next op of that list (E28). Countdown expiry captures doomed amulets/crests by instance id / `granted_order` before any destroy, so compact cannot retarget a neighbour. Fuse partner `legal` is `choose {card}` like every other hand choice.
 
-That order is what makes enter-reactions precede Fanfare, Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
+That order is what makes the played card's own enter precede Fanfare, other cards' enter/play reactions wait until the play completes (E34), Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
+
+A super-evolved follower on its owner's turn is still a legal `destroy` candidate; `destroy_slot` fizzles via `cantBeDestroyedByAbilities` / own-turn SE protection (E31). The candidate pool is unchanged so `random_target` picks still match.
 
 Lethal **damage** marks a follower destroyed (`defense <= 0`) and it stays in its slot — not a candidate, not attackable — until pending work is quiet, when deaths settle together and Last Words queue (rulebook Meteor / simultaneous destruction). Explicit `destroy` / `banish` remove at once (Last Words still wait in the queue). An op's targets are selected when that op is reached (after previous ops in the list), then captured by instance id for that op's applications only. A nested body (`repeat`, `if`/`else`, `seq`, `choose` options) is pushed on top of the enclosing remainder and resolves completely before the next enclosing op.
 
