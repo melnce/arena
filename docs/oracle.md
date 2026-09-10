@@ -8,12 +8,12 @@ A divergence caused by the old repo's card JSON is `old-data`: allowlist it with
 
 Repo: `melnce/Practice-Tool`, branch `cursor/trace-emitter` / [PR #390](https://github.com/melnce/Practice-Tool/pull/390).
 
-**Emitter commit for the committed set:** `5089c2c8d52fd46327b11f6512f6958010367c6f` (use exactly this SHA).
+**Emitter commit for the committed set:** `c9c7aad226ffd1b5cd0067da12e43e6a24c4b1a5` (use exactly this SHA; head of PR #390).
 
 ```
 git clone https://github.com/melnce/Practice-Tool.git
 cd Practice-Tool
-git checkout 5089c2c8d52fd46327b11f6512f6958010367c6f
+git checkout c9c7aad226ffd1b5cd0067da12e43e6a24c4b1a5
 npm ci
 ```
 
@@ -45,7 +45,7 @@ gzip -n -k -c trace-20260910-0.jsonl > oracle/traces/<set>/trace-20260910-0.json
 
 If any of those fail, the emitter commit is wrong — do not patch the traces.
 
-The committed set at `5089c2c8` passes the first three checks. Six `basic-portal-mirror` games end on `phase: "main"` because the emitter left the loop when `legal` was empty (not a turn/action cap): `trace-20260910-{0,6,11,15,16,18}.jsonl`. They are committed as emitted; replay is green through the last line.
+The committed set at `c9c7aad2` passes all four checks: every game's last line is `phase: "terminal"`.
 
 ## Allowlist
 
