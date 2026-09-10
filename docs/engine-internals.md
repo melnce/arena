@@ -50,7 +50,7 @@ All 15 `EventName`s are raised where the engine produces them (enter, destroy, p
 
 ## One evolve per follower, once per turn
 
-`can_evolve` rejects an already-evolved instance (glossary: "An evolved follower can't be evolved again"; owner 2026-09-10: cannot EP then SEP later). `legal_actions` therefore offers no super-evolve on a normally evolved follower even with SEP available and the turn unlocked. `PlayerState.evolved_this_turn` is set on a manual EP/SEP evolve and cleared at `begin_turn`; `can_evolve` also rejects both `evolve` and `evolve {super}` for the rest of that player's turn. Effect-granted evolves (`granted: true`) do not set the flag; targeting an already-evolved follower is a no-op (no stats, no `evolves_used`, no evolve abilities).
+`can_evolve` rejects an already-evolved instance. `rules/official-glossary.md` Evolution: "An evolved follower can't be evolved again" (owner 2026-09-10: cannot EP then SEP later). `legal_actions` therefore offers no super-evolve on a normally evolved follower even with SEP available and the turn unlocked. `PlayerState.evolved_this_turn` is set on a manual EP/SEP evolve and cleared at `begin_turn`; `can_evolve` also rejects both `evolve` and `evolve {super}` for the rest of that player's turn. Effect-granted evolves (`granted: true`) do not set the flag. Camiscilla's "evolve it" on an already-evolved Puppet is a no-op (no stats, no `evolves_used`, no evolve abilities) — same glossary sentence.
 
 ## Rally on play
 
@@ -104,7 +104,7 @@ The Faith's "Whenever an allied follower evolves, increase this faith's value by
 
 ## E36 — `random_target` among surviving board cards
 
-Recorded `chose.slot` is the 0-based index among **surviving** cards on that player's field at roll time (followers at 0 defense / marked for destruction, amulets at countdown 0, and slots already chosen in this `randomDistinct` wave are skipped; order preserved), not the raw field slot. Live play still picks by index into the candidate list. Scripted replay matches the survivor-index label first; if that misses, a raw field slot is accepted as an alias when that label is not already a survivor key of another candidate (M1 ramp traces numbered by raw slot). Aliases are not added for live RNG.
+Recorded `chose.slot` is the 0-based index among **surviving** cards on that player's field at roll time (followers at 0 defense / marked for destruction and amulets at countdown 0 are skipped; order preserved), not the raw field slot. In a `randomDistinct` wave the first chosen slot is also skipped at later rolls (the old engine applies that destroy before the next roll). A non-distinct `random` wave does not skip a follower that survived the first pick — it stays in the numbering. Live play still picks by index into the candidate list. Scripted replay matches the survivor-index label first; if that misses, a raw field slot is accepted as an alias when that label is not already a survivor key of another candidate (M1 ramp traces numbered by raw slot). Aliases are not added for live RNG.
 
 ## Questions for the owner
 
@@ -114,7 +114,6 @@ Asked; arena follows the rulebook/text until he says otherwise.
 2. **Granted `attacksPerTurn: 2` after attacks already made this turn.** Rulebook is silent. Implemented as `attacks_left = attacks_left.max(n)`.
 3. **Duplicate-id draw after `returnToDeck`.** A draw of an id that has both a modified copy and a just-returned printed copy takes the oldest (first in vec; return appends).
 4. **E38 — entrant's own `on:enter` vs older `ally_enter`.** Implemented as same-timing board enter triggers, oldest first (not a jump onto `pending_work` above Fanfare). Pending owner.
-5. **Camiscilla / Substandard — effect-evolve of an already-evolved follower.** Skipped (no stats, no `evolves_used`, no evolve abilities). Pending owner.
 
 ## Defense debuff and `max_defense`
 

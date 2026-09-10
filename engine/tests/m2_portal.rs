@@ -390,6 +390,53 @@ fn asher_enhance_granted_ward_is_a_destroy_candidate() {
     );
 }
 
+/// Non-distinct `pick: random` count 2: the first target survives 1 damage
+/// and must stay in the survivor numbering at the second roll. Scripted
+/// `slot:0` twice both hit the first body (not the second).
+#[test]
+fn e36_non_distinct_second_pick_still_counts_survivor() {
+    let db = load_db();
+    let mut st = started(&db, 50);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    let a = put_field(&db, &mut st, opp, "88001110");
+    let b = put_field(&db, &mut st, opp, "88001110");
+    if let Some(f) = st.field_inst_mut(opp, a) {
+        f.defense = 5;
+        f.max_defense = 5;
+    }
+    if let Some(f) = st.field_inst_mut(opp, b) {
+        f.defense = 5;
+        f.max_defense = 5;
+    }
+    give_pp(&mut st, me, 0, 0);
+    st.player_mut(me).hand.clear();
+    let h = put_hand(&db, &mut st, me, "88001820");
+    st.rng = arena_engine::GameRng::scripted(
+        vec![
+            arena_engine::Pick {
+                what: PickWhat::RandomTarget,
+                among: None,
+                chose: arena_engine::PickChose::Slot { slot: 0 },
+            },
+            arena_engine::Pick {
+                what: PickWhat::RandomTarget,
+                among: None,
+                chose: arena_engine::PickChose::Slot { slot: 0 },
+            },
+        ],
+        50,
+    );
+    apply(&db, &mut st, Action::Play { hand: h }).expect("two 1-damage randoms");
+    let d0 = st.field_inst(opp, a).map(|c| c.defense);
+    let d1 = st.field_inst(opp, b).map(|c| c.defense);
+    assert_eq!(
+        (d0, d1),
+        (Some(3), Some(5)),
+        "both rolls hit the first body; it stayed in the numbering"
+    );
+}
+
 #[test]
 fn camiscilla_evolves_each_batch_entrant() {
     let db = load_db();

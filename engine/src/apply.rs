@@ -6350,8 +6350,10 @@ fn random_pool_apply(
         } else {
             left[i].clone()
         };
-        if let TargetOpt::Slot { player, slot } = &picked {
-            skipped.push((*player, *slot));
+        if distinct {
+            if let TargetOpt::Slot { player, slot } = &picked {
+                skipped.push((*player, *slot));
+            }
         }
         out.push(picked);
     }
