@@ -1,0 +1,32 @@
+{
+  "id": "88001820",
+  "name": "Synth Random 1 Twice",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 1 damage to a random enemy follower. Do that twice (same body may be hit again).",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 1 damage to a random enemy follower. Do that twice (same body may be hit again).",
+      "effects": [
+        {
+          "printed": "Deal 1 damage to a random enemy follower. Do that twice (same body may be hit again).",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random",
+            "count": 2
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "90071130",
+  "name": "Analyzing Artifact",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "When this card enters the field, draw a card.",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [
+    "artifact"
+  ],
+  "abilities": [
+    {
+      "on": "enter",
+      "printed": "When this card enters the field, draw a card.",
+      "effects": [
+        {
+          "printed": "draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

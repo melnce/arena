@@ -1,0 +1,49 @@
+{
+  "id": "10674120",
+  "name": "Yog-Zentha, Eld Axe",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: If there's an allied follower on the field with a base cost of 5 or more, add a Depths of the Eld Axe to your hand.\n\nRush",
+  "attack": 2,
+  "defense": 1,
+  "tribes": [
+    "encroacher"
+  ],
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If there's an allied follower on the field with a base cost of 5 or more, add a Depths of the Eld Axe to your hand.",
+      "effects": [
+        {
+          "printed": "If there's an allied follower on the field with a base cost of 5 or more, add a Depths of the Eld Axe to your hand.",
+          "op": "if",
+          "cond": {
+            "fieldHas": {
+              "side": "ally",
+              "kind": "follower",
+              "filter": {
+                "baseCostGte": 5
+              }
+            }
+          },
+          "then": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90074320"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

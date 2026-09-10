@@ -1,0 +1,46 @@
+{
+  "id": "10774110",
+  "name": "Scarlet, Anathema of Dislocation",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Deal X damage to all enemy followers. X is the number of differently named allied Artifact followers that have entered the field this match.\n\nStorm\nWard",
+  "attack": 6,
+  "defense": 6,
+  "tribes": [
+    "anathema"
+  ],
+  "traits": {
+    "storm": true,
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal X damage to all enemy followers. X is the number of differently named allied Artifact followers that have entered the field this match.",
+      "effects": [
+        {
+          "printed": "Deal X damage to all enemy followers. X is the number of differently named allied Artifact followers that have entered the field this match.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": {
+            "distinctNames": {
+              "enteredThisMatch": {
+                "tribe": "artifact",
+                "kind": "follower"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

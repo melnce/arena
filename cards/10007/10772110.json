@@ -1,0 +1,41 @@
+{
+  "id": "10772110",
+  "name": "Cool Courier",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add an Ancient Artifact to your hand.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add an Ancient Artifact to your hand.",
+      "effects": [
+        {
+          "printed": "Add an Ancient Artifact to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90071140"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

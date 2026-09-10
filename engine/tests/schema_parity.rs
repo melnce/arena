@@ -90,9 +90,10 @@ fn schema_parity_rejects_faith_in_crest_gain() {
 #[test]
 fn m1_unsupported_list_is_nonempty() {
     let v = m1_unsupported_list();
-    assert!(v.contains(&"on:invoked"));
-    assert!(v.contains(&"op:transform"));
-    assert!(v.contains(&"op:invoke"));
+    assert!(!v.is_empty());
+    assert!(!v.contains(&"on:invoked"));
+    assert!(!v.contains(&"op:transform"));
+    assert!(!v.contains(&"op:invoke"));
 }
 
 #[test]

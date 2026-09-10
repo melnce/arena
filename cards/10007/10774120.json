@@ -1,0 +1,86 @@
+{
+  "id": "10774120",
+  "name": "Myuu, Hot on His Heels",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 4,
+  "text": "Whenever an allied Artifact follower enters the field, deal 3 damage to a random enemy follower.\n\nEvolve: Summon an Ancient Artifact.\nSuper-Evolve: Then, if at least 3 differently named allied Artifact followers have entered the field this match, give this follower Storm.",
+  "attack": 3,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "artifact",
+        "kind": "follower"
+      },
+      "printed": "Whenever an allied Artifact follower enters the field, deal 3 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "deal 3 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon an Ancient Artifact.",
+      "effects": [
+        {
+          "printed": "Summon an Ancient Artifact.",
+          "op": "summon",
+          "card": {
+            "named": "90071140"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Then, if at least 3 differently named allied Artifact followers have entered the field this match, give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Then, if at least 3 differently named allied Artifact followers have entered the field this match, give this follower Storm.",
+          "op": "if",
+          "cond": {
+            "amountAtLeast": {
+              "of": {
+                "distinctNames": {
+                  "enteredThisMatch": {
+                    "tribe": "artifact",
+                    "kind": "follower"
+                  }
+                }
+              },
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

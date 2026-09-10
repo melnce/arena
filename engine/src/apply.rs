@@ -1,12 +1,12 @@
 //! `apply` / `legal_actions` / `new_game`. Every rule cites its source.
 
-use crate::action::{from_neutral, Action};
+use crate::action::{from_neutral, to_neutral, Action};
 use crate::card::{
-    Ability, AbilityZone, Amount, Card, CardId, CardKind, CardSource, ChooseBy, ChoosePick,
-    Condition, Controller, CounterHow, CounterKey, CrestPlayer, Effect, EpAction, EventName,
-    FieldHasKind, Filter, FilterKind, FuseResult, Mode, NamedCounter, OptionsFrom, OrderBy,
-    PayResource, PoolPick, PoolSelector, PpAction, RefPick, ReplicateKey, Selector, SelectorKind,
-    Side, StatWhich, Traits, TriggerTag, TurnOwner, Until, Whose, Zone,
+    Ability, AbilityZone, Amount, Card, CardId, CardKind, CardSource, ChooseBy, ChooseOption,
+    ChoosePick, Condition, Controller, CounterHow, CounterKey, CrestPlayer, Effect, EpAction,
+    EventName, FieldHasKind, Filter, FilterKind, FuseResult, Mode, NamedCounter, OptionsFrom,
+    OrderBy, PayResource, PoolPick, PoolSelector, PpAction, RefPick, ReplicateKey, Selector,
+    SelectorKind, Side, StatWhich, Traits, TriggerTag, TurnOwner, Until, Whose, Zone,
 };
 use crate::db::CardDb;
 use crate::error::{Illegal, LoadError, Unsupported};
@@ -61,6 +61,7 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         bindings: std::collections::BTreeMap::new(),
         pending_play_rally: None,
         event_subject: None,
+        invoked_ids: std::collections::BTreeSet::new(),
         event_base_cost: None,
         event_inst_id: None,
     };
@@ -90,7 +91,7 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
     } else {
         for p in PlayerId::ALL {
             for _ in 0..4 {
-                let _ = draw_one(&mut state, p, None).map_err(|e| {
+                let _ = draw_one(&mut state, p, None, &[]).map_err(|e| {
                     LoadError::Unsupported(Unsupported {
                         card: "draw".into(),
                         construct: e.to_string(),
@@ -191,6 +192,7 @@ fn draw_one(
     state: &mut State,
     who: PlayerId,
     filter: Option<&Filter>,
+    exclude_names: &[CardId],
 ) -> Result<Option<CardId>, Illegal> {
     if state.winner.is_some() {
         return Ok(None);
@@ -201,9 +203,10 @@ fn draw_one(
             .iter()
             .enumerate()
             .filter(|(_, c)| {
-                filter
-                    .map(|f| inst_matches_filter(state, who, c, f))
-                    .unwrap_or(true)
+                !exclude_names.contains(&c.card)
+                    && filter
+                        .map(|f| inst_matches_filter(state, who, c, f))
+                        .unwrap_or(true)
             })
             .map(|(i, _)| i)
             .collect()
@@ -224,9 +227,10 @@ fn draw_one(
         .map(|&i| state.player(who).deck[i].card.as_str())
         .collect();
     let mut emit = Vec::new();
+    let among = if filter.is_some() { Some("deck") } else { None };
     let pick = state
         .rng
-        .pick_index(PickWhat::Draw, &keys, &mut emit)
+        .pick_index_among(PickWhat::Draw, among, &keys, &mut emit)
         .map_err(Illegal::OraclePickNotLegal)?;
     state.picks.extend(emit);
     // Duplicate ids can carry different mods (Thestae deck +1/+1 vs a copy
@@ -282,14 +286,17 @@ pub fn legal_actions(db: &CardDb, state: &State) -> Vec<Action> {
             }
             out
         }
-        Phase::Choice { node, .. } => legal_choice(node),
+        Phase::Choice { .. } => legal_choice(state),
         Phase::Main | Phase::Combat => legal_main(db, state),
         Phase::End | Phase::Terminal => Vec::new(),
     }
 }
 
-fn legal_choice(node: &ChoiceNode) -> Vec<Action> {
-    match node {
+fn legal_choice(state: &State) -> Vec<Action> {
+    let Phase::Choice { node, .. } = &state.phase else {
+        return Vec::new();
+    };
+    let raw: Vec<Action> = match node {
         ChoiceNode::Targets { options, .. } | ChoiceNode::MultiPick { options, .. } => {
             let mut v: Vec<Action> = (0..options.len() as u8).map(Action::Choose).collect();
             if matches!(node, ChoiceNode::MultiPick { .. }) {
@@ -316,7 +323,21 @@ fn legal_choice(node: &ChoiceNode) -> Vec<Action> {
             }
             v
         }
+    };
+    // Trace convention: `legal` is a set; `choose {card}` collapses copies of
+    // one id to the lowest position (docs/trace-format.md). Without this,
+    // a policy can pick a later copy, emit `{card: id}`, and replay takes
+    // the first copy — self-consistency then diverges on hand order.
+    let mut out = Vec::new();
+    let mut seen = Vec::new();
+    for a in raw {
+        let n = to_neutral(state, &a);
+        if !seen.contains(&n) {
+            seen.push(n);
+            out.push(a);
+        }
     }
+    out
 }
 
 fn legal_main(db: &CardDb, state: &State) -> Vec<Action> {
@@ -732,7 +753,15 @@ fn choose_ok_one(
         | Effect::Evolve { select, .. }
         | Effect::GrantTraits { select, .. }
         | Effect::RemoveTraits { select, .. }
-        | Effect::Countdown { select, .. } => choose_select_ok(db, state, me, hand_i, select),
+        | Effect::Countdown { select, .. }
+        | Effect::Transform { select, .. } => choose_select_ok(db, state, me, hand_i, select),
+        Effect::AddToHand { card, .. } => {
+            if let Some(p) = card_source_choose_pool(card) {
+                choose_select_ok(db, state, me, hand_i, &Selector::Pool(p.clone()))
+            } else {
+                true
+            }
+        }
         _ => true,
     }
 }
@@ -783,7 +812,8 @@ pub fn apply(db: &CardDb, state: &mut State, action: Action) -> Result<Vec<Event
             apply_attack(db, state, attacker, target, &mut events)?
         }
         Action::Evolve { slot, super_evolve } => {
-            apply_evolve_action(db, state, slot, super_evolve, false, &mut events)?;
+            let who = state.active;
+            apply_evolve_action(db, state, who, slot, super_evolve, false, &mut events)?;
         }
         Action::Engage { slot } => apply_engage(db, state, slot, &mut events)?,
         Action::Fuse { host } => apply_fuse_start(db, state, host, &mut events)?,
@@ -862,7 +892,7 @@ fn apply_mulligan(
     }
     state.player_mut(player).hand = keep;
     for _ in 0..returning.len() {
-        let _ = draw_one(state, player, None)?;
+        let _ = draw_one(state, player, None, &[])?;
     }
     for inst in returning {
         state.player_mut(player).deck.push(inst);
@@ -1053,13 +1083,13 @@ fn enter_from_play(
             raise_follower_enter(db, state, me, &entered);
         }
     }
-    // Rulebook Fanfare and Enter-Play Trigger Order: the played card's own
-    // enter ability sits on pending_work above Fanfare. Play reactions are
-    // flushed above both (E39). Enter reactions stay on the queue until the
-    // play completes (E34).
+    // E39: play reactions (`whenever you play`) are flushed onto pending_work
+    // above Fanfare in `apply_play`. E34: other cards' enter reactions stay on
+    // the queue until the play completes. E38: the entrant's own `on:enter` is
+    // one of those reactions (board age, oldest first), not a jump ahead of them.
     let gated = gated_fanfare(db, state, me, src, card_id, fanfare);
     push_effects(state, me, src, gated);
-    push_own_enter(db, state, me, id);
+    queue_enter_reactions(db, state, me, card_id, id, true);
     Ok(())
 }
 
@@ -1247,17 +1277,19 @@ fn queue_combat_triggers(
 fn apply_evolve_action(
     db: &CardDb,
     state: &mut State,
+    who: PlayerId,
     slot: Slot,
     supered: bool,
     granted: bool,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
-    let me = state.active;
-    let Some(inst) = state.field_inst_mut(me, slot.0) else {
+    let Some(inst) = state.field_inst_mut(who, slot.0) else {
         return Err(Illegal::NotLegal);
     };
     // Glossary Evolution / owner 2026-09-10: an evolved follower can't be
     // evolved again (including EP then SEP, and an effect-evolve).
+    // Effect-evolve of an already-evolved follower is skipped (Camiscilla /
+    // Substandard). A player EP/SEP evolve of one is illegal.
     if inst.evolved {
         if granted {
             return Ok(());
@@ -1266,15 +1298,15 @@ fn apply_evolve_action(
     }
     if !granted {
         if supered {
-            state.player_mut(me).sep -= 1;
+            state.player_mut(who).sep -= 1;
         } else {
-            state.player_mut(me).ep -= 1;
+            state.player_mut(who).ep -= 1;
         }
-        state.player_mut(me).evolved_this_turn = true;
+        state.player_mut(who).evolved_this_turn = true;
     }
     // EP, SEP or effect — `docs/trace-format.md` evolves_used.
-    state.player_mut(me).evolves_used += 1;
-    let Some(inst) = state.field_inst_mut(me, slot.0) else {
+    state.player_mut(who).evolves_used += 1;
+    let Some(inst) = state.field_inst_mut(who, slot.0) else {
         return Err(Illegal::NotLegal);
     };
     inst.evolved = true;
@@ -1295,10 +1327,10 @@ fn apply_evolve_action(
     let Ok(card) = db.card(card_id) else {
         return Ok(());
     };
-    let src = SourceRef::Field { player: me, id };
+    let src = SourceRef::Field { player: who, id };
     let when_ok = |a: &Ability| {
         a.when_cond()
-            .map(|c| eval_cond(db, state, me, Some(src), c))
+            .map(|c| eval_cond(db, state, who, Some(src), c))
             .unwrap_or(true)
     };
     let replace = card.abilities().iter().any(|a| a.replaces_evolve());
@@ -1338,7 +1370,7 @@ fn apply_evolve_action(
     // instance (rulebook). Evolves while a copy is in hand increment that
     // copy's stored bonus; turn number is added at evaluation so M1 snapshots
     // (no Skybound cards) stay at the omitted-zero the old traces emit.
-    for h in &mut state.player_mut(me).hand {
+    for h in &mut state.player_mut(who).hand {
         if card_tracks_skybound(db, h.card) {
             h.skybound += 1;
         }
@@ -1348,17 +1380,17 @@ fn apply_evolve_action(
     // when-triggers and flush them on top — Faith/crests and other cards'
     // `when ally_evolve` drain before the Evolve: list starts. Reactions
     // raised *during* that list still wait (A2 / play-sequence E34).
-    push_effects(state, me, src, fx);
-    if let Some(evolved) = state.field_inst(me, slot.0).cloned() {
-        raise_when(db, state, me, EventName::AllyEvolve, Some(&evolved), me);
+    push_effects(state, who, src, fx);
+    if let Some(evolved) = state.field_inst(who, slot.0).cloned() {
+        raise_when(db, state, who, EventName::AllyEvolve, Some(&evolved), who);
         if supered {
             raise_when(
                 db,
                 state,
-                me,
+                who,
                 EventName::AllySuperEvolve,
                 Some(&evolved),
-                me,
+                who,
             );
         }
     }
@@ -1746,15 +1778,14 @@ fn resume_mode(
         subject,
     }) = state.pending_work.pop()
     {
-        if let Some(e) = effects.get(index).cloned() {
-            let opts = choose_options(db, state, source, &e);
-            if let Some(opt) = opts.get(idx as usize) {
-                let mut rest = effects;
-                rest.remove(index);
-                push_work(state, controller, source, rest, index, subject.clone());
-                push_effects(state, controller, source, opt.effects.clone());
-            } else {
-                push_work(state, controller, source, effects, index, subject.clone());
+        if let Some(Effect::Choose { .. }) = effects.get(index).cloned() {
+            if let Some(opts) = resolve_choose_options(db, state, source, &effects[index]) {
+                if let Some(opt) = opts.get(idx as usize) {
+                    let mut rest = effects;
+                    rest.remove(index);
+                    push_work(state, controller, source, rest, index, subject.clone());
+                    push_effects(state, controller, source, opt.effects.clone());
+                }
             }
         } else {
             push_work(state, controller, source, effects, index, subject.clone());
@@ -1896,6 +1927,10 @@ fn start_turn_full(
 }
 
 fn queue_turn_boundary(db: &CardDb, state: &mut State, whose_turn: PlayerId, start: bool) {
+    // One Invoke copy per card id per boundary window (official glossary).
+    if start {
+        state.invoked_ids.clear();
+    }
     // crests before board; owner-scoped — ruling 2026-08-31
     let own = whose_turn;
     let opp = whose_turn.opponent();
@@ -2015,43 +2050,47 @@ fn enqueue_boundary(
     }
     enqueue_boundary_lookups(db, state, who, cat, field);
 
-    let mut hand: Vec<(u32, u8, CardId, SourceRef)> = Vec::new();
-    for (hi, h) in state.player(who).hand.iter().enumerate() {
-        let Ok(card) = db.card(h.card) else { continue };
-        for (ord, a) in card.abilities().iter().enumerate() {
-            if ability_boundary(a, whose, start, AbilityZone::Hand) {
-                hand.push((
-                    hi as u32,
-                    ord as u8,
-                    h.card,
-                    SourceRef::Hand {
-                        player: who,
-                        id: h.id,
-                    },
-                ));
+    if db.zone_has_boundary(AbilityZone::Hand, start) {
+        let mut hand: Vec<(u32, u8, CardId, SourceRef)> = Vec::new();
+        for (hi, h) in state.player(who).hand.iter().enumerate() {
+            let Ok(card) = db.card(h.card) else { continue };
+            for (ord, a) in card.abilities().iter().enumerate() {
+                if ability_boundary(a, whose, start, AbilityZone::Hand) {
+                    hand.push((
+                        hi as u32,
+                        ord as u8,
+                        h.card,
+                        SourceRef::Hand {
+                            player: who,
+                            id: h.id,
+                        },
+                    ));
+                }
             }
         }
+        enqueue_boundary_lookups(db, state, who, cat, hand);
     }
-    enqueue_boundary_lookups(db, state, who, cat, hand);
 
-    let mut deck: Vec<(u32, u8, CardId, SourceRef)> = Vec::new();
-    for (di, d) in state.player(who).deck.iter().enumerate() {
-        let Ok(card) = db.card(d.card) else { continue };
-        for (ord, a) in card.abilities().iter().enumerate() {
-            if ability_boundary(a, whose, start, AbilityZone::Deck) {
-                deck.push((
-                    di as u32,
-                    ord as u8,
-                    d.card,
-                    SourceRef::Hand {
-                        player: who,
-                        id: d.id,
-                    },
-                ));
+    if db.zone_has_boundary(AbilityZone::Deck, start) {
+        let mut deck: Vec<(u32, u8, CardId, SourceRef)> = Vec::new();
+        for (di, d) in state.player(who).deck.iter().enumerate() {
+            let Ok(card) = db.card(d.card) else { continue };
+            for (ord, a) in card.abilities().iter().enumerate() {
+                if ability_boundary(a, whose, start, AbilityZone::Deck) {
+                    deck.push((
+                        di as u32,
+                        ord as u8,
+                        d.card,
+                        SourceRef::Hand {
+                            player: who,
+                            id: d.id,
+                        },
+                    ));
+                }
             }
         }
+        enqueue_boundary_lookups(db, state, who, cat, deck);
     }
-    enqueue_boundary_lookups(db, state, who, cat, deck);
 }
 
 fn boundary_when_ok(
@@ -2170,49 +2209,6 @@ fn enqueue_card_triggers(
                 a,
             );
         }
-    }
-}
-
-fn push_own_enter(db: &CardDb, state: &mut State, me: PlayerId, inst_id: u32) {
-    let Some(slot) = state.find_field(me, inst_id) else {
-        return;
-    };
-    let Some(inst) = state.field_inst(me, slot).cloned() else {
-        return;
-    };
-    let Ok(card) = db.card(inst.card) else { return };
-    let mut own = Vec::new();
-    for a in card.abilities().iter().chain(inst.granted.iter()) {
-        if a.tag() == TriggerTag::Enter {
-            if let Some(cond) = a.when_cond() {
-                if !eval_cond(
-                    db,
-                    state,
-                    me,
-                    Some(SourceRef::Field {
-                        player: me,
-                        id: inst.id,
-                    }),
-                    cond,
-                ) {
-                    continue;
-                }
-            }
-            own.push(a.effects().to_vec());
-        }
-    }
-    for fx in own.into_iter().rev() {
-        push_work(
-            state,
-            me,
-            SourceRef::Field {
-                player: me,
-                id: inst.id,
-            },
-            fx,
-            0,
-            None,
-        );
     }
 }
 
@@ -2815,7 +2811,7 @@ fn run_aftermath(
         }
         Aftermath::ContinueTurnStart { step: 8 } => {
             let who = state.active;
-            if let Some(id) = draw_one(state, who, None)? {
+            if let Some(id) = draw_one(state, who, None, &[])? {
                 events.push(Event::Draw {
                     player: who,
                     card: id,
@@ -3081,22 +3077,6 @@ fn resolve_effect_list(
     Ok(())
 }
 
-fn source_card_id(state: &State, source: SourceRef) -> Option<CardId> {
-    match source {
-        SourceRef::Field { player, id } => state
-            .find_field(player, id)
-            .and_then(|s| state.field_inst(player, s).map(|c| c.card)),
-        SourceRef::Hand { player, id } => state
-            .player(player)
-            .hand
-            .iter()
-            .find(|c| c.id == id)
-            .map(|c| c.card),
-        SourceRef::Spell { card, .. } => Some(card),
-        _ => None,
-    }
-}
-
 fn source_instance_cost(state: &State, source: Option<SourceRef>) -> Option<i32> {
     match source {
         Some(SourceRef::Field { player, id }) => state
@@ -3119,99 +3099,6 @@ fn source_instance_cost(state: &State, source: Option<SourceRef>) -> Option<i32>
     }
 }
 
-fn options_from_tag(from: OptionsFrom) -> TriggerTag {
-    match from {
-        OptionsFrom::Fanfare => TriggerTag::Fanfare,
-        OptionsFrom::LastWords => TriggerTag::LastWords,
-        OptionsFrom::Evolve => TriggerTag::Evolve,
-        OptionsFrom::SuperEvolve => TriggerTag::SuperEvolve,
-        OptionsFrom::AnyEvolve => TriggerTag::AnyEvolve,
-        OptionsFrom::AnySuperEvolve => TriggerTag::AnySuperEvolve,
-        OptionsFrom::Strike => TriggerTag::Strike,
-        OptionsFrom::FollowerStrike => TriggerTag::FollowerStrike,
-        OptionsFrom::Clash => TriggerTag::Clash,
-        OptionsFrom::Enter => TriggerTag::Enter,
-        OptionsFrom::Leave => TriggerTag::Leave,
-        OptionsFrom::Discarded => TriggerTag::Discarded,
-        OptionsFrom::Invoked => TriggerTag::Invoked,
-        OptionsFrom::Fused => TriggerTag::Fused,
-        OptionsFrom::Spellboost => TriggerTag::Spellboost,
-        OptionsFrom::Engage => TriggerTag::Engage,
-        OptionsFrom::StartOfTurn => TriggerTag::StartOfTurn,
-        OptionsFrom::EndOfTurn => TriggerTag::EndOfTurn,
-        OptionsFrom::When => TriggerTag::When,
-    }
-}
-
-fn find_choose_in_effects(effects: &[Effect]) -> Option<Vec<crate::card::ChooseOption>> {
-    for e in effects {
-        match e {
-            Effect::Choose {
-                options: Some(opts),
-                ..
-            } => return Some(opts.clone()),
-            Effect::If {
-                then, else_effects, ..
-            } => {
-                if let Some(o) = find_choose_in_effects(then) {
-                    return Some(o);
-                }
-                if let Some(els) = else_effects {
-                    if let Some(o) = find_choose_in_effects(els) {
-                        return Some(o);
-                    }
-                }
-            }
-            Effect::Seq { effects, .. }
-            | Effect::Pay { effects, .. }
-            | Effect::Repeat { effects, .. } => {
-                if let Some(o) = find_choose_in_effects(effects) {
-                    return Some(o);
-                }
-            }
-            _ => {}
-        }
-    }
-    None
-}
-
-fn choose_options(
-    db: &CardDb,
-    state: &State,
-    source: SourceRef,
-    e: &Effect,
-) -> Vec<crate::card::ChooseOption> {
-    let Effect::Choose {
-        options,
-        options_from,
-        ..
-    } = e
-    else {
-        return Vec::new();
-    };
-    if let Some(opts) = options {
-        return opts.clone();
-    }
-    let Some(from) = options_from else {
-        return Vec::new();
-    };
-    let Some(cid) = source_card_id(state, source) else {
-        return Vec::new();
-    };
-    let Ok(card) = db.card(cid) else {
-        return Vec::new();
-    };
-    let tag = options_from_tag(*from);
-    for a in card.abilities() {
-        if a.tag() == tag {
-            if let Some(opts) = find_choose_in_effects(a.effects()) {
-                return opts;
-            }
-        }
-    }
-    Vec::new()
-}
-
 fn effect_choice_node(
     db: &CardDb,
     state: &State,
@@ -3225,19 +3112,16 @@ fn effect_choice_node(
             pick,
             ..
         } => {
-            let opts = choose_options(db, state, source, e);
-            if opts.is_empty() {
-                return None;
-            }
-            match pick.as_pick() {
-                ChoosePick::All => None,
-                ChoosePick::N(_) => Some(ChoiceNode::Modes {
+            if matches!(pick.as_pick(), ChoosePick::All) {
+                None
+            } else {
+                resolve_choose_options(db, state, source, e).map(|opts| ChoiceNode::Modes {
                     options: (0..opts.len() as u8).collect(),
                     pending: PendingChoice {
                         kind: PendingKind::ModeSelect,
                         remaining: 1,
                     },
-                }),
+                })
             }
         }
         Effect::Damage { select, .. }
@@ -3254,7 +3138,8 @@ fn effect_choice_node(
         | Effect::GrantAbility { select, .. }
         | Effect::RemoveAbilities { select, .. }
         | Effect::Cost { select, .. }
-        | Effect::Countdown { select, .. } => {
+        | Effect::Countdown { select, .. }
+        | Effect::Transform { select, .. } => {
             if let Selector::Pool(p) = select {
                 if p.pick == PoolPick::Choose {
                     let opts = pool_target_opts(db, state, controller, source, p);
@@ -3275,6 +3160,28 @@ fn effect_choice_node(
                         },
                     });
                 }
+            }
+            None
+        }
+        Effect::AddToHand { card, .. } => {
+            if let Some(p) = card_source_choose_pool(card) {
+                let opts = pool_target_opts(db, state, controller, source, p);
+                if opts.is_empty() {
+                    return None;
+                }
+                let n = p
+                    .count
+                    .as_ref()
+                    .map(|a| eval_amount(db, state, controller, Some(source), a).max(1) as u8)
+                    .unwrap_or(1);
+                let remaining = n.max(1).min(opts.len() as u8);
+                return Some(ChoiceNode::Targets {
+                    options: opts,
+                    pending: PendingChoice {
+                        kind: PendingKind::EffectSelect,
+                        remaining,
+                    },
+                });
             }
             None
         }
@@ -3357,10 +3264,40 @@ fn apply_effect_with_targets(
             for t in targets {
                 if let TargetOpt::Slot { player, slot } = t {
                     if *player == controller {
-                        apply_evolve_action(db, state, Slot(*slot), *super_evolve, true, events)?;
+                        apply_evolve_action(
+                            db,
+                            state,
+                            *player,
+                            Slot(*slot),
+                            *super_evolve,
+                            true,
+                            events,
+                        )?;
                     }
                 }
             }
+        }
+        Effect::Transform { into, .. } => {
+            apply_each_captured(state, targets, |st, t| {
+                if let TargetOpt::Slot { player, slot } = t {
+                    transform_slot(db, st, *player, *slot, into, events)?;
+                }
+                Ok(())
+            })?;
+        }
+        Effect::AddToHand { card, .. } => {
+            let mut added = Vec::new();
+            let exact = match card {
+                CardSource::Copy { exact, .. } => *exact,
+                _ => false,
+            };
+            for t in targets {
+                if let Some(h) = copy_target_to_hand(db, state, controller, t, exact)? {
+                    added.push(h);
+                }
+            }
+            maybe_bind(state, e, &added);
+            return Ok(());
         }
         Effect::GrantTraits { traits, .. } => {
             for t in targets {
@@ -3445,41 +3382,47 @@ fn apply_effect(
                 push_effects(state, controller, source, effects.clone());
             }
         }
-        Effect::Choose { by, pick, .. } => {
-            let opts = choose_options(db, state, source, e);
-            match by {
-                ChooseBy::Player => {
-                    if pick.as_pick() == ChoosePick::All {
+        Effect::Choose {
+            by, pick, options, ..
+        } => match by {
+            ChooseBy::Player => {
+                if matches!(pick.as_pick(), ChoosePick::All) {
+                    if let Some(opts) = resolve_choose_options(db, state, source, e) {
                         for opt in opts.iter().rev() {
                             push_effects(state, controller, source, opt.effects.clone());
                         }
                     }
                 }
-                ChooseBy::Random | ChooseBy::RandomUnused => {
-                    if !opts.is_empty() {
-                        let n = match pick.as_pick() {
-                            ChoosePick::All => opts.len(),
-                            ChoosePick::N(k) => k as usize,
-                        };
-                        let mut unused: Vec<usize> = (0..opts.len()).collect();
-                        for _ in 0..n {
-                            if unused.is_empty() {
-                                break;
-                            }
-                            let keys: Vec<String> = unused.iter().map(|i| i.to_string()).collect();
-                            let mut emit = Vec::new();
-                            let j = state
-                                .rng
-                                .pick_index(PickWhat::RandomUnused, &keys, &mut emit)
-                                .map_err(Illegal::OraclePickNotLegal)?;
-                            state.picks.extend(emit);
-                            let oi = unused.remove(j.min(unused.len() - 1));
-                            push_effects(state, controller, source, opts[oi].effects.clone());
+            }
+            ChooseBy::Random | ChooseBy::RandomUnused => {
+                let resolved = if options.is_some() {
+                    options.clone()
+                } else {
+                    resolve_choose_options(db, state, source, e)
+                };
+                if let Some(opts) = resolved {
+                    let n = match pick.as_pick() {
+                        crate::card::ChoosePick::All => opts.len(),
+                        crate::card::ChoosePick::N(k) => k as usize,
+                    };
+                    let mut unused: Vec<usize> = (0..opts.len()).collect();
+                    for _ in 0..n {
+                        if unused.is_empty() {
+                            break;
                         }
+                        let keys: Vec<String> = unused.iter().map(|i| i.to_string()).collect();
+                        let mut emit = Vec::new();
+                        let j = state
+                            .rng
+                            .pick_index(PickWhat::RandomUnused, &keys, &mut emit)
+                            .map_err(Illegal::OraclePickNotLegal)?;
+                        state.picks.extend(emit);
+                        let oi = unused.remove(j.min(unused.len() - 1));
+                        push_effects(state, controller, source, opts[oi].effects.clone());
                     }
                 }
             }
-        }
+        },
         Effect::Damage {
             select,
             amount,
@@ -3589,16 +3532,25 @@ fn apply_effect(
             let n = eval_amount(db, state, controller, Some(source), count).max(0);
             let mut added = Vec::new();
             for _ in 0..n {
-                if let Some(t) = add_source_to_hand(db, state, controller, card)? {
+                if let Some(t) = add_source_to_hand(db, state, controller, source, card)? {
                     added.push(t);
                 }
             }
             maybe_bind(state, e, &added);
         }
-        Effect::Draw { count, filter, .. } => {
+        Effect::Draw {
+            count,
+            filter,
+            distinct_names,
+            ..
+        } => {
             let n = eval_amount(db, state, controller, Some(source), count).max(0);
+            let mut exclude: Vec<CardId> = Vec::new();
             for _ in 0..n {
-                if let Some(id) = draw_one(state, controller, filter.as_ref())? {
+                if let Some(id) = draw_one(state, controller, filter.as_ref(), &exclude)? {
+                    if distinct_names == &Some(true) {
+                        exclude.push(id);
+                    }
                     events.push(Event::Draw {
                         player: controller,
                         card: id,
@@ -3620,7 +3572,15 @@ fn apply_effect(
             apply_each_captured(state, &ts, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
                     if *player == controller {
-                        apply_evolve_action(db, st, Slot(*slot), *super_evolve, true, events)?;
+                        apply_evolve_action(
+                            db,
+                            st,
+                            *player,
+                            Slot(*slot),
+                            *super_evolve,
+                            true,
+                            events,
+                        )?;
                     }
                 }
                 Ok(())
@@ -3805,11 +3765,20 @@ fn apply_effect(
             }
             maybe_bind(state, e, &ts);
         }
-        Effect::Invoke { .. }
-        | Effect::RandomSplit { .. }
-        | Effect::Sequence { .. }
-        | Effect::Transform { .. }
-        | Effect::AddToDeck { .. } => {
+        Effect::Invoke { .. } => {
+            apply_invoke(db, state, controller, source, events)?;
+        }
+        Effect::Transform { select, into, .. } => {
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            apply_each_captured(state, &ts, |st, t| {
+                if let TargetOpt::Slot { player, slot } = t {
+                    transform_slot(db, st, *player, *slot, into, events)?;
+                }
+                Ok(())
+            })?;
+            maybe_bind(state, e, &ts);
+        }
+        Effect::RandomSplit { .. } | Effect::Sequence { .. } | Effect::AddToDeck { .. } => {
             return Err(Illegal::Unsupported(Unsupported {
                 card: format!("{controller:?}"),
                 construct: "reached unimplemented op".into(),
@@ -4938,6 +4907,7 @@ fn add_source_to_hand(
     db: &CardDb,
     state: &mut State,
     who: PlayerId,
+    source: SourceRef,
     src: &CardSource,
 ) -> Result<Option<TargetOpt>, Illegal> {
     match src {
@@ -4947,50 +4917,321 @@ fn add_source_to_hand(
                 _ => Illegal::NotLegal,
             })?;
             let inst = CardInstance::from_card(card, state.alloc_id());
-            let id = inst.id;
-            add_to_hand(state, who, inst);
-            let pos = state
-                .player(who)
-                .hand
-                .iter()
-                .position(|c| c.id == id)
-                .map(|p| TargetOpt::Hand {
-                    player: who,
-                    pos: p as u8,
-                });
-            Ok(pos)
+            Ok(push_hand_target(state, who, inst))
         }
         CardSource::Copy { copy_of, exact } => {
-            let ts = resolve_select(db, state, who, SourceRef::Leader { player: who }, copy_of);
-            if let Some(TargetOpt::Slot { player, slot }) = ts.first() {
-                if let Some(c) = state.field_inst(*player, *slot).cloned() {
-                    let mut n = if *exact {
-                        c
-                    } else {
-                        let card = db.card(c.card).map_err(|_| Illegal::NotLegal)?;
-                        CardInstance::from_card(card, 0)
-                    };
-                    n.id = state.alloc_id();
-                    let id = n.id;
-                    add_to_hand(state, who, n);
-                    let pos = state
-                        .player(who)
-                        .hand
-                        .iter()
-                        .position(|c| c.id == id)
-                        .map(|p| TargetOpt::Hand {
-                            player: who,
-                            pos: p as u8,
-                        });
-                    return Ok(pos);
-                }
+            let ts = resolve_select(db, state, who, source, copy_of);
+            if let Some(t) = ts.first() {
+                copy_target_to_hand(db, state, who, t, *exact)
+            } else {
+                Ok(None)
             }
-            Ok(None)
         }
         _ => Err(Illegal::Unsupported(Unsupported {
             card: who.as_str().into(),
             construct: "CardSource.randomFrom".into(),
         })),
+    }
+}
+
+fn push_hand_target(state: &mut State, who: PlayerId, inst: CardInstance) -> Option<TargetOpt> {
+    let before = state.player(who).hand.len();
+    add_to_hand(state, who, inst);
+    if state.player(who).hand.len() > before {
+        Some(TargetOpt::Hand {
+            player: who,
+            pos: before as u8,
+        })
+    } else {
+        None
+    }
+}
+
+fn copy_target_to_hand(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    t: &TargetOpt,
+    exact: bool,
+) -> Result<Option<TargetOpt>, Illegal> {
+    let src_inst = match t {
+        TargetOpt::Slot { player, slot } => state.field_inst(*player, *slot).cloned(),
+        TargetOpt::Hand { player, pos } => state.player(*player).hand.get(*pos as usize).cloned(),
+        _ => None,
+    };
+    let Some(c) = src_inst else {
+        return Ok(None);
+    };
+    let mut n = if exact {
+        c
+    } else {
+        // A copy, not an exact copy: fresh printed card — ruling 2026-09-05.
+        let card = db.card(c.card).map_err(|_| Illegal::NotLegal)?;
+        CardInstance::from_card(card, 0)
+    };
+    n.id = state.alloc_id();
+    Ok(push_hand_target(state, who, n))
+}
+
+/// Field transform: original ceases in place (no Last Words, no shadow, no
+/// cemetery, not a leave). The new card is a fresh print in the same slot and
+/// did not enter (no Rally, no enter triggers, no enteredThisMatch). Rush/Storm
+/// on the new card allow attacking that turn — owner 2026-09-10.
+fn transform_slot(
+    db: &CardDb,
+    state: &mut State,
+    player: PlayerId,
+    slot: u8,
+    into: &CardSource,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let Some(old) = state.player_mut(player).field[slot as usize].take() else {
+        return Ok(());
+    };
+    if old.is_earth_sigil() && state.player(player).earth_slot == Some(slot) {
+        state.player_mut(player).earth_slot = None;
+        state.player_mut(player).earth = 0;
+    }
+    let named = match into {
+        CardSource::Named { named } => *named,
+        CardSource::Copy { copy_of, exact } => {
+            let ts = resolve_select(db, state, player, SourceRef::Leader { player }, copy_of);
+            match ts.first() {
+                Some(TargetOpt::Slot { player: p, slot: s }) => {
+                    if let Some(c) = state.field_inst(*p, *s) {
+                        if *exact {
+                            // exact copy of another field card still becomes a
+                            // new instance in this slot; use its printed id.
+                            c.card
+                        } else {
+                            c.card
+                        }
+                    } else {
+                        return Ok(());
+                    }
+                }
+                _ => return Ok(()),
+            }
+        }
+        CardSource::RandomFrom { .. } => {
+            return Err(Illegal::Unsupported(Unsupported {
+                card: player.as_str().into(),
+                construct: "transform randomFrom".into(),
+            }));
+        }
+    };
+    let card = db.require_supported(named).map_err(|e| match e {
+        LoadError::Unsupported(u) => Illegal::Unsupported(u),
+        _ => Illegal::NotLegal,
+    })?;
+    let mut neu = CardInstance::from_card(card, state.alloc_id());
+    neu.flags.summoning_sick = true;
+    neu.flags.attacks_left = neu.traits.attacks_per_turn.unwrap_or(1);
+    state.player_mut(player).field[slot as usize] = Some(neu);
+    events.push(Event::Transform {
+        slot: Slot(slot),
+        into: named,
+    });
+    let _ = old;
+    Ok(())
+}
+
+/// Invoke: named deck summon, no pick. One copy per card id per window.
+/// Full field: stay in deck, Invoked does not fire. Rally and enter do count
+/// (ruling 2026-08-12). Then `on: invoked`.
+fn apply_invoke(
+    db: &CardDb,
+    state: &mut State,
+    controller: PlayerId,
+    source: SourceRef,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let inst_id = match source {
+        SourceRef::Hand { id, .. } | SourceRef::Field { id, .. } => id,
+        _ => return Ok(()),
+    };
+    let Some(pos) = state
+        .player(controller)
+        .deck
+        .iter()
+        .position(|c| c.id == inst_id)
+    else {
+        return Ok(());
+    };
+    let card_id = state.player(controller).deck[pos].card;
+    if state.invoked_ids.contains(&card_id) {
+        return Ok(());
+    }
+    if state.player(controller).first_empty_slot().is_none() {
+        return Ok(());
+    }
+    let mut inst = state.player_mut(controller).deck.remove(pos);
+    state.invoked_ids.insert(card_id);
+    inst.flags.summoning_sick = true;
+    inst.flags.attacks_left = inst.traits.attacks_per_turn.unwrap_or(1);
+    if inst.is_earth_sigil() && merge_earth(db, state, controller, &inst, events)? {
+        return Ok(());
+    }
+    let Some(slot) = state.player(controller).first_empty_slot() else {
+        return Ok(());
+    };
+    if inst.kind == CardKind::Follower {
+        state.player_mut(controller).rally += 1;
+        *state
+            .player_mut(controller)
+            .enter_counts
+            .entry(inst.card)
+            .or_insert(0) += 1;
+    }
+    let id = inst.card;
+    let kind = inst.kind;
+    let inst_uid = inst.id;
+    let is_sigil = inst.is_earth_sigil();
+    state.player_mut(controller).field[slot as usize] = Some(inst);
+    if is_sigil {
+        state.player_mut(controller).earth_slot = Some(slot);
+        if state.player(controller).earth == 0 {
+            state.player_mut(controller).earth = 1;
+        }
+    }
+    events.push(Event::Summon {
+        player: controller,
+        card: id,
+        slot: Slot(slot),
+    });
+    if kind == CardKind::Follower {
+        if let Some(entered) = state.field_inst(controller, slot).cloned() {
+            raise_follower_enter(db, state, controller, &entered);
+        }
+        queue_enter_reactions(db, state, controller, id, inst_uid, false);
+        enqueue_card_triggers(db, state, controller, inst_uid, TriggerTag::Invoked, 4);
+    }
+    Ok(())
+}
+
+fn card_source_choose_pool(src: &CardSource) -> Option<&PoolSelector> {
+    match src {
+        CardSource::Copy {
+            copy_of: Selector::Pool(p),
+            ..
+        } if p.pick == PoolPick::Choose => Some(p),
+        _ => None,
+    }
+}
+
+fn resolve_choose_options(
+    db: &CardDb,
+    state: &State,
+    source: SourceRef,
+    e: &Effect,
+) -> Option<Vec<ChooseOption>> {
+    let Effect::Choose {
+        options,
+        options_from,
+        ..
+    } = e
+    else {
+        return None;
+    };
+    if let Some(opts) = options {
+        return Some(opts.clone());
+    }
+    let from = options_from.as_ref()?;
+    let card_id = source_card_id(state, source)?;
+    let card = db.card(card_id).ok()?;
+    let tag = match from {
+        OptionsFrom::Fanfare => TriggerTag::Fanfare,
+        OptionsFrom::LastWords => TriggerTag::LastWords,
+        OptionsFrom::Evolve => TriggerTag::Evolve,
+        OptionsFrom::SuperEvolve => TriggerTag::SuperEvolve,
+        OptionsFrom::AnyEvolve => TriggerTag::AnyEvolve,
+        OptionsFrom::AnySuperEvolve => TriggerTag::AnySuperEvolve,
+        OptionsFrom::Strike => TriggerTag::Strike,
+        OptionsFrom::FollowerStrike => TriggerTag::FollowerStrike,
+        OptionsFrom::Clash => TriggerTag::Clash,
+        OptionsFrom::Enter => TriggerTag::Enter,
+        OptionsFrom::Leave => TriggerTag::Leave,
+        OptionsFrom::Discarded => TriggerTag::Discarded,
+        OptionsFrom::Invoked => TriggerTag::Invoked,
+        OptionsFrom::Fused => TriggerTag::Fused,
+        OptionsFrom::Spellboost => TriggerTag::Spellboost,
+        OptionsFrom::Engage => TriggerTag::Engage,
+        OptionsFrom::StartOfTurn => TriggerTag::StartOfTurn,
+        OptionsFrom::EndOfTurn => TriggerTag::EndOfTurn,
+        OptionsFrom::When => TriggerTag::When,
+    };
+    for a in card.abilities() {
+        if a.tag() == tag {
+            if let Some(opts) = first_choose_options(a.effects()) {
+                return Some(opts);
+            }
+        }
+    }
+    None
+}
+
+fn first_choose_options(effects: &[Effect]) -> Option<Vec<ChooseOption>> {
+    for e in effects {
+        match e {
+            Effect::Choose {
+                options: Some(opts),
+                ..
+            } => return Some(opts.clone()),
+            Effect::If {
+                then, else_effects, ..
+            } => {
+                if let Some(o) = first_choose_options(then) {
+                    return Some(o);
+                }
+                if let Some(els) = else_effects {
+                    if let Some(o) = first_choose_options(els) {
+                        return Some(o);
+                    }
+                }
+            }
+            Effect::Seq { effects, .. }
+            | Effect::Pay { effects, .. }
+            | Effect::Repeat { effects, .. } => {
+                if let Some(o) = first_choose_options(effects) {
+                    return Some(o);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+fn source_card_id(state: &State, source: SourceRef) -> Option<CardId> {
+    match source {
+        SourceRef::Field { player, id } => state
+            .find_field(player, id)
+            .and_then(|s| state.field_inst(player, s).map(|c| c.card)),
+        SourceRef::Hand { player, id } => state
+            .player(player)
+            .hand
+            .iter()
+            .find(|c| c.id == id)
+            .map(|c| c.card)
+            .or_else(|| {
+                state
+                    .player(player)
+                    .deck
+                    .iter()
+                    .find(|c| c.id == id)
+                    .map(|c| c.card)
+            })
+            .or_else(|| {
+                state
+                    .player(player)
+                    .cemetery
+                    .iter()
+                    .rev()
+                    .find(|c| c.id == id)
+                    .map(|c| c.card)
+            }),
+        SourceRef::Spell { card, .. } => Some(card),
+        _ => None,
     }
 }
 
@@ -5576,6 +5817,18 @@ fn eval_amount(
         Amount::Min { min } => eval_amount(db, state, who, source, &min[0])
             .min(eval_amount(db, state, who, source, &min[1])),
         Amount::Neg { neg } => -eval_amount(db, state, who, source, neg),
+        Amount::DistinctNames { distinct_names } => match distinct_names.as_ref() {
+            Amount::EnteredThisMatch { entered_this_match } => {
+                entered_ids_matching(db, state, who, entered_this_match).len() as i32
+            }
+            inner => eval_amount(db, state, who, source, inner),
+        },
+        Amount::EnteredThisMatch { entered_this_match } => {
+            entered_ids_matching(db, state, who, entered_this_match)
+                .into_iter()
+                .map(|(_, n)| n)
+                .sum()
+        }
         Amount::Var { var } => {
             if let Some(SourceRef::Field { player, id } | SourceRef::Hand { player, id }) = source {
                 if let Some(c) = state.player(player).hand.iter().find(|c| c.id == id) {
@@ -5599,7 +5852,6 @@ fn eval_amount(
             };
             inst_stat(state, t, stat.which).unwrap_or(0)
         }
-        _ => 0,
     }
 }
 
@@ -5864,6 +6116,16 @@ fn eval_cond(
             }
             count >= n
         }
+        Condition::AmountAtLeast { amount_at_least } => {
+            eval_amount(db, state, who, source, &amount_at_least.of)
+                >= eval_amount(db, state, who, source, &amount_at_least.n)
+        }
+        Condition::EvolvedCountAtLeast {
+            evolved_count_at_least,
+        } => {
+            state.player(who).evolves_used
+                >= eval_amount(db, state, who, source, &evolved_count_at_least.n)
+        }
         Condition::VarAtLeast { var_at_least } => {
             let n = eval_amount(db, state, who, source, &var_at_least.n);
             vars_of(state, source, var_at_least.key) >= n
@@ -5889,6 +6151,27 @@ fn eval_cond(
         }
         _ => false,
     }
+}
+
+fn entered_ids_matching(
+    db: &CardDb,
+    state: &State,
+    who: PlayerId,
+    filter: &Filter,
+) -> Vec<(CardId, i32)> {
+    state
+        .player(who)
+        .enter_counts
+        .iter()
+        .filter(|(id, _)| {
+            let Ok(card) = db.card(**id) else {
+                return false;
+            };
+            let inst = CardInstance::from_card(card, 0);
+            inst_matches_filter(state, who, &inst, filter)
+        })
+        .map(|(id, n)| (*id, *n))
+        .collect()
 }
 
 enum CapturedTarget {
@@ -6003,12 +6286,22 @@ fn board_card_survives(c: &CardInstance) -> bool {
 /// 0-based index among surviving cards on that player's field (E36).
 /// Followers at 0 defense / marked for destruction and amulets at
 /// countdown 0 are skipped; order of the rest is preserved.
-fn surviving_board_index(state: &State, player: PlayerId, slot: u8) -> Option<u8> {
+/// `skip` is slots already chosen in this `randomDistinct` wave — they are
+/// gone at the next roll even though destroy has not applied yet.
+fn surviving_board_index(
+    state: &State,
+    player: PlayerId,
+    slot: u8,
+    skip: &[(PlayerId, u8)],
+) -> Option<u8> {
     let mut i = 0u8;
     for (si, cell) in state.player(player).field.iter().enumerate() {
         let Some(c) = cell else {
             continue;
         };
+        if skip.iter().any(|(p, s)| *p == player && *s == si as u8) {
+            continue;
+        }
         if !board_card_survives(c) {
             continue;
         }
@@ -6020,8 +6313,13 @@ fn surviving_board_index(state: &State, player: PlayerId, slot: u8) -> Option<u8
     None
 }
 
-fn surviving_slot_key(state: &State, player: PlayerId, slot: u8) -> String {
-    match surviving_board_index(state, player, slot) {
+fn surviving_slot_key(
+    state: &State,
+    player: PlayerId,
+    slot: u8,
+    skip: &[(PlayerId, u8)],
+) -> String {
+    match surviving_board_index(state, player, slot, skip) {
         Some(i) => format!("slot:{i}"),
         None => format!("slot:{slot}"),
     }
@@ -6041,6 +6339,7 @@ fn random_pool_apply(
         .all(|t| matches!(t, TargetOpt::Card(_) | TargetOpt::Deck { .. }));
     let mut left = cands;
     let mut out = Vec::new();
+    let mut skipped: Vec<(PlayerId, u8)> = Vec::new();
     for _ in 0..n {
         if left.is_empty() {
             break;
@@ -6048,7 +6347,9 @@ fn random_pool_apply(
         let mut keys: Vec<String> = left
             .iter()
             .map(|t| match t {
-                TargetOpt::Slot { player, slot } => surviving_slot_key(state, *player, *slot),
+                TargetOpt::Slot { player, slot } => {
+                    surviving_slot_key(state, *player, *slot, &skipped)
+                }
                 TargetOpt::Leader { .. } => "leader".into(),
                 TargetOpt::Card(c) => c.as_str(),
                 TargetOpt::Deck { player, id } => state
@@ -6077,11 +6378,17 @@ fn random_pool_apply(
         };
         state.picks.extend(emit);
         let i = i.min(left.len() - 1);
-        if distinct {
-            out.push(left.remove(i));
+        let picked = if distinct {
+            left.remove(i)
         } else {
-            out.push(left[i].clone());
+            left[i].clone()
+        };
+        if distinct {
+            if let TargetOpt::Slot { player, slot } = &picked {
+                skipped.push((*player, *slot));
+            }
         }
+        out.push(picked);
     }
     Ok(out)
 }

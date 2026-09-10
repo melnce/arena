@@ -670,5 +670,37 @@
     "class": "old-rule",
     "reason": "owner ruling 2026-09-10: Depths of the Eld Blades 90044330 discarded by Spilling Red 10642310 ('When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader') resolves after the destroy, not before the second selection",
     "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-11.jsonl",
+    "i": 88,
+    "path": "players.a.field[1].attack",
+    "class": "old-rule",
+    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not, and a card in hand is never evolved; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 5/6 (Ludicrous Ordnance 10673110)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-20.jsonl",
+    "i": 56,
+    "path": "players.a.field[4].attack",
+    "class": "old-rule",
+    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not, and a card in hand is never evolved; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 7/7 (Asher & Lydia 10874110)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-1.jsonl",
+    "i": 84,
+    "path": "players.b.field[3].attack",
+    "class": "old-rule",
+    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 8/8 (Asher & Lydia 10874110)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-21.jsonl",
+    "i": 93,
+    "path": "players.a.field[3].attack",
+    "class": "old-rule",
+    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 7/7 (Asher & Lydia 10874110)",
+    "since": "2026-09-10"
   }
 ]

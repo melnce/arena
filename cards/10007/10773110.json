@@ -1,0 +1,68 @@
+{
+  "id": "10773110",
+  "name": "Brazen Broadcaster",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Summon an Analyzing Artifact.\nEnhance (5): Summon a Mystic Artifact.\n\nWhenever an allied Artifact follower enters the field, give it Rush.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon an Analyzing Artifact.",
+      "effects": [
+        {
+          "printed": "Summon an Analyzing Artifact.",
+          "op": "summon",
+          "card": {
+            "named": "90071130"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "artifact",
+        "kind": "follower"
+      },
+      "printed": "Whenever an allied Artifact follower enters the field, give it Rush.",
+      "effects": [
+        {
+          "printed": "give it Rush.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "entering"
+          },
+          "traits": {
+            "rush": true
+          }
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 5,
+      "printed": "Enhance (5): Summon a Mystic Artifact.",
+      "effects": [
+        {
+          "printed": "Summon a Mystic Artifact.",
+          "op": "summon",
+          "card": {
+            "named": "90071150"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

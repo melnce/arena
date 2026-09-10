@@ -38,15 +38,25 @@ Enhance that does not `replacesBase` (Zeta & Bea) appends to the Fanfare list of
 
 ## When events
 
-`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, crests before board (active crest 3, active board 4, opponent crest 5, opponent board 6), entry order within a side. Play reactions (`whenever you play`) are flushed onto `pending_work` above Fanfare / spell text (E39). The played card's own `enter` ability also sits above Fanfare. Other cards' enter reactions stay on the queue until the play completes, including across a Fanfare choice (E34). `pick: entering` reads `State.event_subject`.
+`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, crests before board (active crest 3, active board 4, opponent crest 5, opponent board 6), entry order within a side. Play reactions (`whenever you play`) are flushed onto `pending_work` above Fanfare / spell text (E39). Other cards' enter reactions stay on the queue until the play completes, including across a Fanfare choice (E34). The entrant's own `on:enter` is queued with those reactions and sorts by board age (oldest first) — it is not a priority over older cards' reactions to the same event (E38, pending owner). `pick: entering` reads `State.event_subject`.
 
 `CardDb` builds a static `when` index at load: for each `(EventName, AbilityZone)`, the card ids (and crest ids) that print at least one `When` for that pair. `enqueue_when_on` does not clone zones; it walks field instances whose card id is in the index for `(event, Field)` or whose `granted_whens` count is non-zero (grants are dynamic and rare), crests in the crest index, and hand/deck only when the index has any entry for that `(event, zone)` — today's cards have no deck `When` for most events, so those scans cost nothing. Categories, entry order, `oncePerTurn` marks, and `filter`/`when` evaluation are unchanged.
 
+`CardDb` also indexes start/end-of-turn abilities by `(AbilityZone, start)`. `enqueue_boundary` skips the hand and deck scans when `zone_has_boundary` is empty, so a deck without Sandalphon-style `zone: deck` `startOfTurn` costs nothing.
+
 All 15 `EventName`s are raised where the engine produces them (enter, destroy, play, attack, evolve, draw, earth-rite spend, engage, leader restore, self-buff). None are a silent no-op.
+
+## Field transform
+
+`op:transform` replaces the targeted field instance in its slot with `CardInstance::from_card` of the destination (new instance id). The original is dropped — no Last Words, no shadow, no cemetery, no leave triggers, no compact. The new card is a fresh print (base stats, unevolved, summoning-sick, printed keywords). It is not an enter: no Rally, no `enter_counts` / `enteredThisMatch`, no `on:enter` / `ally_enter`. Rush/Storm on the new card still allow attacking that turn (owner 2026-09-10). In-hand fuse `recipes.transformInto` is the same replacement on the host hand index and is unchanged. Sincerity (`10573310`) targets `any:any` on both boards; `choose {slot}` carries `player` on every option when the pool spans both boards (trace-format / Practice-Tool PR #392). `{slot}` alone means a one-board pool. Old traces that omit `player` prefer the enemy board.
+
+## Invoke
+
+`op:invoke` moves the sourced deck instance onto the field if there is a slot and `State.invoked_ids` does not already contain that card id this boundary window (one copy per name). No RNG pick. Full field: the card stays in the deck and `on:invoked` does not fire. A successful Invoke increments Rally and `enter_counts`, raises enter triggers, then enqueues `on:invoked`. `invoked_ids` is cleared at the start of each start-of-turn boundary.
 
 ## One evolve per follower, once per turn
 
-`can_evolve` rejects an already-evolved instance (glossary: "An evolved follower can't be evolved again"; owner 2026-09-10: cannot EP then SEP later). `legal_actions` therefore offers no super-evolve on a normally evolved follower even with SEP available and the turn unlocked. `PlayerState.evolved_this_turn` is set on a manual EP/SEP evolve and cleared at `begin_turn`; `can_evolve` also rejects both `evolve` and `evolve {super}` for the rest of that player's turn. Effect-granted evolves (`granted: true`) do not set the flag; targeting an already-evolved follower is a no-op (no stats, no `evolves_used`, no evolve abilities).
+`can_evolve` rejects an already-evolved instance. `rules/official-glossary.md` Evolution: "An evolved follower can't be evolved again" (owner 2026-09-10: cannot EP then SEP later). `legal_actions` therefore offers no super-evolve on a normally evolved follower even with SEP available and the turn unlocked. `PlayerState.evolved_this_turn` is set on a manual EP/SEP evolve and cleared at `begin_turn`; `can_evolve` also rejects both `evolve` and `evolve {super}` for the rest of that player's turn. Effect-granted evolves (`granted: true`) do not set the flag. Camiscilla's "evolve it" on an already-evolved Puppet is a no-op (no stats, no `evolves_used`, no evolve abilities) — same glossary sentence.
 
 ## Rally on play
 
@@ -62,7 +72,7 @@ A **played** follower's Rally increment is deferred until the play sequence is q
 
 Reactions to an op of an in-flight list that is *not* inside a flushed wave (`ally_draw` after `draw count: N`) still run before the next op of that list (E28). Countdown expiry captures doomed amulets/crests by instance id / `granted_order` before any destroy, so compact cannot retarget a neighbour. A `countdown delta` over a selector (Barbaros) likewise captures each hit by instance id before applying, so a Flag that reaches 0 and is destroyed does not steal the next Flag's slot. Fuse partner `legal` is `choose {card}` like every other hand choice.
 
-That order is what makes play reactions (`whenever you play`) resolve before Fanfare (E39), the played card's own enter precede Fanfare, other cards' enter reactions wait until the play completes (E34), Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
+That order is what makes play reactions (`whenever you play`) resolve before Fanfare (E39), other cards' enter reactions wait until the play completes (E34), the entrant's own `on:enter` sort with those reactions by board age (E38), Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
 
 A super-evolved follower on its owner's turn is still a legal `destroy` candidate; `destroy_by_ability` fizzles via `cantBeDestroyedByAbilities` / own-turn SE protection (E31). Lethal 0-defense still settles. The candidate pool is unchanged so `random_target` picks still match.
 
@@ -100,7 +110,7 @@ The Faith's "Whenever an allied follower evolves, increase this faith's value by
 
 ## E36 — `random_target` among surviving board cards
 
-Recorded `chose.slot` is the 0-based index among **surviving** cards on that player's field at roll time (followers at 0 defense / marked for destruction and amulets at countdown 0 are skipped; order preserved), not the raw field slot. Live play still picks by index into the candidate list. Scripted replay matches the survivor-index label first; if that misses, a raw field slot is accepted as an alias when that label is not already a survivor key of another candidate (M1 ramp traces numbered by raw slot). Aliases are not added for live RNG.
+Recorded `chose.slot` is the 0-based index among **surviving** cards on that player's field at roll time (followers at 0 defense / marked for destruction and amulets at countdown 0 are skipped; order preserved), not the raw field slot. In a `randomDistinct` wave the first chosen slot is also skipped at later rolls (the old engine applies that destroy before the next roll). A non-distinct `random` wave does not skip a follower that survived the first pick — it stays in the numbering. Live play still picks by index into the candidate list. Scripted replay matches the survivor-index label first; if that misses, a raw field slot is accepted as an alias when that label is not already a survivor key of another candidate (M1 ramp traces numbered by raw slot). Aliases are not added for live RNG.
 
 ## Questions for the owner
 
@@ -109,6 +119,7 @@ Asked; arena follows the rulebook/text until he says otherwise.
 1. **World of Games counting itself.** A later 1-cost play sees World of Games (base 1) as "a card on the field other than it". The printed "other than it" excludes only the played card.
 2. **Granted `attacksPerTurn: 2` after attacks already made this turn.** Rulebook is silent. Implemented as `attacks_left = attacks_left.max(n)`.
 3. **Duplicate-id draw after `returnToDeck`.** A draw of an id that has both a modified copy and a just-returned printed copy takes the oldest (first in vec; return appends).
+4. **E38 — entrant's own `on:enter` vs older `ally_enter`.** Implemented as same-timing board enter triggers, oldest first (not a jump onto `pending_work` above Fanfare). Pending owner.
 
 ## Defense debuff and `max_defense`
 

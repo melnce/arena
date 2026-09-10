@@ -1,0 +1,19 @@
+{
+  "id": "90071150",
+  "name": "Mystic Artifact",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "Ward",
+  "attack": 4,
+  "defense": 5,
+  "tribes": [
+    "artifact"
+  ],
+  "traits": {
+    "ward": true
+  }
+}

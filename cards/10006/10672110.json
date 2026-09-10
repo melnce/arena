@@ -1,0 +1,68 @@
+{
+  "id": "10672110",
+  "name": "Substandard Puppet",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Summon a Substandard Puppet and evolve it and this follower.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Substandard Puppet and evolve it and this follower.",
+      "effects": [
+        {
+          "printed": "Summon a Substandard Puppet and evolve it and this follower.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10672110"
+              },
+              "count": 1,
+              "as": "c"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "c"
+              },
+              "super": false
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "accelerate",
+      "cost": 3,
+      "printed": "Accelerate (3): Summon 2 copies of Substandard Puppet.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Substandard Puppet.",
+          "op": "summon",
+          "card": {
+            "named": "10672110"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
