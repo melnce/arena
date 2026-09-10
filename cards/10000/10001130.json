@@ -1,0 +1,17 @@
+{
+  "id": "10001130",
+  "name": "Quake Goliath",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "attack": 4,
+  "defense": 5,
+  "text": "Ward",
+  "traits": {
+    "ward": true
+  },
+  "tribes": []
+}

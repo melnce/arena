@@ -1,0 +1,14 @@
+{
+  "id": "10002120",
+  "name": "Caravan Mammoth",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "attack": 10,
+  "defense": 10,
+  "text": "",
+  "tribes": []
+}

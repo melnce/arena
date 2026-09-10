@@ -1,0 +1,40 @@
+{
+  "id": "10642310",
+  "name": "Spilling Red",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Select a card in your hand and discard it. Select an enemy follower on the field and destroy it.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a card in your hand and discard it. Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,71 @@
+{
+  "id": "10844120",
+  "name": "Lumiore & Argente, Shining Wings",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "attack": 6,
+  "defense": 6,
+  "text": "Fanfare: Select 2 cards in your hand and discard them. Deal 4 damage to all enemies.\n\nSuper-Evolve: Draw 3 cards.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select 2 cards in your hand and discard them. Deal 4 damage to all enemies.",
+      "effects": [
+        {
+          "printed": "Select 2 cards in your hand and discard them.",
+          "op": "discard",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose",
+            "count": 2
+          }
+        },
+        {
+          "printed": "Deal 4 damage to all enemies.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "kind": "character",
+            "pick": "all",
+            "includeLeader": true,
+            "zone": "field"
+          },
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Draw 3 cards.",
+      "effects": [
+        {
+          "printed": "Draw 3 cards.",
+          "op": "draw",
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "accelerate",
+      "cost": 3,
+      "printed": "Accelerate (3): Gain 1 max play point.",
+      "effects": [
+        {
+          "printed": "Gain 1 max play point.",
+          "op": "pp",
+          "action": "gainMax",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

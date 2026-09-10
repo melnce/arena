@@ -1,0 +1,56 @@
+{
+  "id": "10022120",
+  "name": "Rusty, Luxcard Trickster",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "attack": 3,
+  "defense": 3,
+  "text": "Super-Evolve: Draw all copies of Rusty, Luxcard Trickster and give them Storm.",
+  "abilities": [
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Draw all copies of Rusty, Luxcard Trickster and give them Storm.",
+      "effects": [
+        {
+          "printed": "Draw all copies of Rusty, Luxcard Trickster and give them Storm.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "draw",
+              "filter": {
+                "card": "10022120"
+              },
+              "count": {
+                "count": {
+                  "side": "ally",
+                  "zone": "deck",
+                  "kind": "card",
+                  "pick": "all",
+                  "filter": {
+                    "card": "10022120"
+                  }
+                }
+              },
+              "as": "d"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "d"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

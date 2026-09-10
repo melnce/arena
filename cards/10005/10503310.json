@@ -1,0 +1,57 @@
+{
+  "id": "10503310",
+  "name": "Fate of the World",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Draw 2 cards. Destroy a random enemy follower with the highest attack.\nEnhance (10): Deal 4 damage to all enemies.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw 2 cards. Destroy a random enemy follower with the highest attack.",
+      "effects": [
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        },
+        {
+          "printed": "Destroy a random enemy follower with the highest attack.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "highest",
+            "orderBy": "attack"
+          }
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 10,
+      "printed": "Enhance (10): Deal 4 damage to all enemies.",
+      "effects": [
+        {
+          "printed": "Deal 4 damage to all enemies.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "kind": "character",
+            "pick": "all",
+            "includeLeader": true,
+            "zone": "field"
+          },
+          "amount": 4
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,47 @@
+{
+  "id": "10744110",
+  "name": "Burnite, Anathema of Ash",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "attack": 9,
+  "defense": 9,
+  "text": "Fanfare: Deal 9 damage to all enemy followers.\n\nSuper-Evolve: Give your opponent Crest: Burnite, Anathema of Ash.",
+  "tribes": [
+    "anathema"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 9 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 9 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 9
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give your opponent Crest: Burnite, Anathema of Ash.",
+      "effects": [
+        {
+          "printed": "Give your opponent Crest: Burnite, Anathema of Ash.",
+          "op": "crest",
+          "gain": "crest:10744110",
+          "player": "opponent"
+        }
+      ]
+    }
+  ]
+}

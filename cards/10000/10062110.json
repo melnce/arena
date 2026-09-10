@@ -1,0 +1,55 @@
+{
+  "id": "10062110",
+  "name": "Ironfist Priest",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "attack": 5,
+  "defense": 4,
+  "text": "Evolve: Select an enemy follower on the field with 3 defense or less and banish it.\nSuper-Evolve: Banish all enemy followers with 3 defense or less instead.",
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field with 3 defense or less and banish it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field with 3 defense or less and banish it.",
+          "op": "banish",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "filter": {
+              "defenseLte": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "replaces": "evolve",
+      "printed": "Super-Evolve: Banish all enemy followers with 3 defense or less instead.",
+      "effects": [
+        {
+          "printed": "Banish all enemy followers with 3 defense or less instead.",
+          "op": "banish",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all",
+            "filter": {
+              "defenseLte": 3
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

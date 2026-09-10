@@ -1,0 +1,64 @@
+{
+  "id": "10644120",
+  "name": "Vorlalai, Eld Blades",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 2,
+  "attack": 0,
+  "defense": 2,
+  "text": "When this card is discarded, summon a Vorlalai, Eld Blades.\n\nBane\n\nEvolve: Add a Depths of the Eld Blades to your hand.\nSuper-Evolve: Add 3 copies instead.",
+  "traits": {
+    "bane": true
+  },
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "discarded",
+      "printed": "When this card is discarded, summon a Vorlalai, Eld Blades.",
+      "effects": [
+        {
+          "printed": "summon a Vorlalai, Eld Blades.",
+          "op": "summon",
+          "card": {
+            "named": "10644120"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Add a Depths of the Eld Blades to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Depths of the Eld Blades to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90044330"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "replaces": "evolve",
+      "printed": "Super-Evolve: Add 3 copies instead.",
+      "effects": [
+        {
+          "printed": "Add 3 copies instead.",
+          "op": "addToHand",
+          "card": {
+            "named": "90044330"
+          },
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "id": "10042110",
+  "name": "Draconic Berserker",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "attack": 4,
+  "defense": 5,
+  "text": "Evolve: Select an enemy follower on the field and deal it 4 damage.\nSuper-Evolve: Deal damage to all enemy followers instead.",
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and deal it 4 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 4 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "replaces": "evolve",
+      "printed": "Super-Evolve: Deal damage to all enemy followers instead.",
+      "effects": [
+        {
+          "printed": "Deal damage to all enemy followers instead.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 4
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

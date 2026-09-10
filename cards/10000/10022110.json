@@ -1,0 +1,30 @@
+{
+  "id": "10022110",
+  "name": "Royal Coachwoman",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "attack": 1,
+  "defense": 2,
+  "text": "Last Words: Summon a Knight.",
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Knight.",
+      "effects": [
+        {
+          "printed": "Summon a Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

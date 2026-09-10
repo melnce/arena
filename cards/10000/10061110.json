@@ -1,0 +1,36 @@
+{
+  "id": "10061110",
+  "name": "Soulcure Sister",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "attack": 3,
+  "defense": 5,
+  "text": "Fanfare: Restore 5 defense to your leader.\n\nWard",
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Restore 5 defense to your leader.",
+      "effects": [
+        {
+          "printed": "Restore 5 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 5
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

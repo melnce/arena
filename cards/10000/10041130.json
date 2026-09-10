@@ -1,0 +1,33 @@
+{
+  "id": "10041130",
+  "name": "Warrior of the Deep",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 8,
+  "attack": 6,
+  "defense": 6,
+  "text": "Fanfare: Deal 6 damage to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 6 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 6 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 6
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

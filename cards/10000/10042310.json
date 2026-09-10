@@ -1,0 +1,31 @@
+{
+  "id": "10042310",
+  "name": "Dragonsign",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Gain 1 max play point. Then, if you have 10 max play points, draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Gain 1 max play point. Then, if you have 10 max play points, draw a card.",
+      "effects": [
+        {
+          "printed": "Gain 1 max play point.",
+          "op": "pp",
+          "action": "gainMax",
+          "amount": 1
+        },
+        {
+          "printed": "Then, if you have 10 max play points, draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

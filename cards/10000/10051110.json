@@ -1,0 +1,18 @@
+{
+  "id": "10051110",
+  "name": "Mistress of the Fanged",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "attack": 3,
+  "defense": 6,
+  "text": "Storm\nBane",
+  "traits": {
+    "storm": true,
+    "bane": true
+  },
+  "tribes": []
+}

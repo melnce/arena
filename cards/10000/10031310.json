@@ -1,0 +1,25 @@
+{
+  "id": "10031310",
+  "name": "Foresight",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Draw a card.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw a card.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,48 @@
+{
+  "id": "10072120",
+  "name": "Mecha Cavalier",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "attack": 4,
+  "defense": 4,
+  "text": "Ward\n\nEvolve: Summon a Mecha Cavalier.\nSuper-Evolve: Summon 2 instead.",
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon a Mecha Cavalier.",
+      "effects": [
+        {
+          "printed": "Summon a Mecha Cavalier.",
+          "op": "summon",
+          "card": {
+            "named": "10072120"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "replaces": "evolve",
+      "printed": "Super-Evolve: Summon 2 instead.",
+      "effects": [
+        {
+          "printed": "Summon 2 instead.",
+          "op": "summon",
+          "card": {
+            "named": "10072120"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

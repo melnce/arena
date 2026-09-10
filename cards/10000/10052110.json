@@ -1,0 +1,30 @@
+{
+  "id": "10052110",
+  "name": "Lilith, Enchanting Succubus",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10000,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "attack": 1,
+  "defense": 1,
+  "text": "Last Words: Add a Bat to your hand.",
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add a Bat to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Bat to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90051120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

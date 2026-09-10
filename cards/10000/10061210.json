@@ -1,0 +1,45 @@
+{
+  "id": "10061210",
+  "name": "Avian Statue",
+  "kind": "amulet",
+  "class": "havencraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "countdown": 2,
+  "text": "Countdown (2)\nLast Words: Summon a Regal Falcon.\n\nEngage (2): Advance this amulet's count by 2.",
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Regal Falcon.",
+      "effects": [
+        {
+          "printed": "Summon a Regal Falcon.",
+          "op": "summon",
+          "card": {
+            "named": "90061130"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "engage",
+      "cost": 2,
+      "sacrifice": false,
+      "printed": "Engage (2): Advance this amulet's count by 2.",
+      "effects": [
+        {
+          "printed": "Advance this amulet's count by 2.",
+          "op": "countdown",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

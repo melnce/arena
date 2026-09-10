@@ -1,0 +1,17 @@
+{
+  "id": "10021130",
+  "name": "Centaur Centurion",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 8,
+  "attack": 7,
+  "defense": 5,
+  "text": "Storm",
+  "traits": {
+    "storm": true
+  },
+  "tribes": []
+}

@@ -1,0 +1,17 @@
+{
+  "id": "10021110",
+  "name": "Flashstep Quickblader",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10000,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "attack": 1,
+  "defense": 1,
+  "text": "Storm",
+  "traits": {
+    "storm": true
+  },
+  "tribes": []
+}
