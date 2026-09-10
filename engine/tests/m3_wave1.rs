@@ -689,15 +689,13 @@ fn encroached_world_hand_transform_from_enemy_deck() {
     );
 }
 
-/// Camiscilla's `pick: entering` must survive Bahamut mode 1 compacting the board.
-///
-/// E40 (Sword/Forest PR, not implemented here): a queued When does not
-/// resolve if its source has left the field. Camiscilla is banished by
-/// Bahamut mode 1 before this trigger drains, so after merging main this
-/// fixture should assert Bahamut is **unevolved**. Last Words are the
-/// exception; this ability is not Last Words.
+/// E40: Camiscilla's queued "evolve the entering follower" does not resolve
+/// after Bahamut mode 1 banishes her. Last Words are the exception; this
+/// ability is not Last Words. Encodes the ruling ahead of the Sword/Forest
+/// engine change — ignored until that lands on `main`.
 #[test]
-fn camiscilla_evolve_entering_survives_bahamut_banish() {
+#[ignore = "E40: queued When dropped when source left the field — un-ignore after merging main (Sword/Forest)"]
+fn camiscilla_reaction_dropped_when_banished_before_it_resolves() {
     let db = load_db();
     let mut st = started_decks(&db, 27, &["10804110"], &[VANILLA]);
     let me = PlayerId::A;
@@ -720,9 +718,9 @@ fn camiscilla_evolve_entering_survives_bahamut_banish() {
         .find(|c| c.card == cid("10804110"))
         .expect("bahamut");
     assert!(
-        bahamut.evolved,
-        "Camiscilla evolve-entering finds Bahamut after compact"
+        !bahamut.evolved,
+        "E40: departed Camiscilla's enter reaction does not evolve Bahamut"
     );
-    assert_eq!(bahamut.attack, 15);
-    assert_eq!(bahamut.defense, 15);
+    assert_eq!(bahamut.attack, 13);
+    assert_eq!(bahamut.defense, 13);
 }
