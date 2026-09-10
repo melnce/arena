@@ -3404,10 +3404,12 @@ fn combat_damage(
     Ok(())
 }
 
-/// Super-evolved own-turn protection: cannot be destroyed by abilities/effects
-/// (including Bane). Rulebook Evolution stat bonuses.
+/// Cannot be destroyed by abilities/effects (including Bane): printed
+/// `cantBeDestroyedByAbilities`, Earth Sigil (official glossary 2026-09-10),
+/// or super-evolved on the owner's turn (E31).
 fn bane_blocked(state: &State, owner: PlayerId, inst: &CardInstance) -> bool {
     inst.traits.cant_be_destroyed_by_abilities == Some(true)
+        || inst.is_earth_sigil()
         || (inst.super_evolved && state.active == owner)
 }
 

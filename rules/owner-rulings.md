@@ -754,7 +754,7 @@ Consequences (the rest of the 2026-09-05 / 2026-09-06 chain stands):
 
 Witch's New Brew and Magic Sediment are untargetable by enemy selection (Aura) although the printed text does not say so (owner, from the client). Official glossary, 2026-09-10 (Earth Sigil): "Cards with Earth Sigil can't be destroyed by abilities or selected for enemy abilities. They are destroyed when their sigil count falls to 0." The second sentence is this Aura ruling; the first is `traits.cantBeDestroyedByAbilities: true` on `10031210` Witch's New Brew and `90031210` Magic Sediment.
 
-`10031210` Witch's New Brew and `90031210` Magic Sediment set `traits.aura: true` and `traits.cantBeDestroyedByAbilities: true`. The catalog `skill_text` does not print Aura; the client has it.
+`10031210` Witch's New Brew and `90031210` Magic Sediment set `traits.aura: true` and `traits.cantBeDestroyedByAbilities: true`. The catalog `skill_text` does not print Aura; the client has it. CanonicalState still lists only `aura` on Earth Sigil amulets (the old engine does not snapshot `cantBeDestroyedByAbilities`); destroy-by-ability fizzles from the instance trait and the Earth Sigil tribe.
 
 The glossary's merge rule (a newly played Earth Sigil amulet **banishes** the others and takes their counts) differs from the old engine's cemetery-and-shadow merge. **Do not change the merge** until the owner rules — listed under Still open.
 

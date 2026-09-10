@@ -91,6 +91,16 @@ fn multiset(cards: &[crate::state::CardInstance]) -> BTreeMap<String, u32> {
     m
 }
 
+/// Earth Sigil's glossary `cantBeDestroyedByAbilities` stays on the card and
+/// instance; CanonicalState still lists only `aura`, matching the old engine.
+fn field_trait_tags(c: &crate::state::CardInstance) -> Vec<String> {
+    let mut t = c.traits.snapshot_tags();
+    if c.is_earth_sigil() {
+        t.retain(|s| s != "cantBeDestroyedByAbilities");
+    }
+    t
+}
+
 /// Runtime grants only: instance trigger tags minus the printed card's tags.
 /// Omitted when empty — `docs/trace-format.md` Conventions.
 fn granted_tags(c: &crate::state::CardInstance) -> Option<Vec<String>> {
@@ -138,7 +148,7 @@ fn snap_player(p: &PlayerState) -> CanonicalPlayer {
             evolved: c.evolved,
             max_defense: c.max_defense,
             super_evolved: c.super_evolved,
-            traits: c.traits.snapshot_tags(),
+            traits: field_trait_tags(c),
             vars: vars_map(&c.vars),
             granted: granted_tags(c),
         });

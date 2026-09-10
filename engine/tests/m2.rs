@@ -475,6 +475,14 @@ fn brew_engage_gains_a_sigil_and_stays() {
     let me = PlayerId::A;
     give_pp(&mut st, me, 2, 2);
     let slot = put_field(&db, &mut st, me, "10031210");
+    assert_eq!(
+        st.field_inst(me, slot)
+            .unwrap()
+            .traits
+            .cant_be_destroyed_by_abilities,
+        Some(true),
+        "glossary Earth Sigil: can't be destroyed by abilities"
+    );
     assert_eq!(st.player(me).earth, 1);
     apply(&db, &mut st, Action::Engage { slot: Slot(slot) }).unwrap();
     assert!(field_has(&st, me, "10031210"));
@@ -684,11 +692,7 @@ fn adahime_rush_waits_until_fanfare_choice_completes() {
 
 // ----- E35 -----
 
-fn destroyed(
-    card: &str,
-    base_cost: i32,
-    owner: PlayerId,
-) -> arena_engine::state::DestroyedRecord {
+fn destroyed(card: &str, base_cost: i32, owner: PlayerId) -> arena_engine::state::DestroyedRecord {
     arena_engine::state::DestroyedRecord {
         card: cid(card),
         base_cost,
@@ -733,10 +737,8 @@ fn reanimate_grants_departed_and_macmillan_fires() {
         "reanimated instance carries Departed"
     );
     assert_eq!(st.player(opp).leader_defense, 19);
-    let printed = arena_engine::CardInstance::from_card(
-        db.card(cid("10951120")).expect("Lieutenant"),
-        0,
-    );
+    let printed =
+        arena_engine::CardInstance::from_card(db.card(cid("10951120")).expect("Lieutenant"), 0);
     assert!(
         !printed
             .tribes
