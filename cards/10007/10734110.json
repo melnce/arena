@@ -1,0 +1,63 @@
+{
+  "id": "10734110",
+  "name": "Lilanthim, Anathema of Predation",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Earth Rite (1) - Gain Crest: Lilanthim, Anathema of Predation.\n\nAura\n\nEvolve: Earth Rite (1) - Select an enemy follower on the field and destroy it.",
+  "attack": 4,
+  "defense": 4,
+  "traits": {
+    "aura": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Earth Rite (1) - Gain Crest: Lilanthim, Anathema of Predation.",
+      "effects": [
+        {
+          "printed": "Earth Rite (1) - Gain Crest: Lilanthim, Anathema of Predation.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 1,
+          "effects": [
+            {
+              "op": "crest",
+              "gain": "crest:10734110",
+              "player": "self"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Earth Rite (1) - Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Earth Rite (1) - Select an enemy follower on the field and destroy it.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 1,
+          "effects": [
+            {
+              "op": "destroy",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

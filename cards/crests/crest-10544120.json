@@ -1,0 +1,53 @@
+{
+  "id": "crest:10544120",
+  "name": "Crest: Yube, Crestpetal",
+  "grantedBy": [
+    "10544120"
+  ],
+  "faith": false,
+  "text": "Whenever an allied Marine follower attacks, give it +1/+0 until the end of the turn and, once on each of your turns, add a Majestic Megalorca to your hand.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_attacks",
+      "filter": {
+        "tribe": "marine"
+      },
+      "printed": "Whenever an allied Marine follower attacks, give it +1/+0 until the end of the turn and, once on each of your turns, add a Majestic Megalorca to your hand.",
+      "effects": [
+        {
+          "printed": "give it +1/+0 until the end of the turn",
+          "op": "buff",
+          "select": {
+            "pick": "entering"
+          },
+          "attack": 1,
+          "defense": 0,
+          "untilEndOfTurn": true
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_attacks",
+      "filter": {
+        "tribe": "marine"
+      },
+      "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      },
+      "printed": "Whenever an allied Marine follower attacks, give it +1/+0 until the end of the turn and, once on each of your turns, add a Majestic Megalorca to your hand.",
+      "effects": [
+        {
+          "printed": "once on each of your turns, add a Majestic Megalorca to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90041130"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

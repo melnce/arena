@@ -1,0 +1,60 @@
+{
+  "id": "10443110",
+  "name": "Meg, Girl Next Door",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Skybound Art - Super-evolve this follower.\n\nWhenever a 2-base-cost allied follower enters the field, give this follower Ward.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Skybound Art - Super-evolve this follower.",
+      "effects": [
+        {
+          "printed": "Skybound Art - Super-evolve this follower.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "baseCostEq": 2
+      },
+      "printed": "Whenever a 2-base-cost allied follower enters the field, give this follower Ward.",
+      "effects": [
+        {
+          "printed": "give this follower Ward.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "ward": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

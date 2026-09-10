@@ -1,0 +1,48 @@
+{
+  "id": "10941310",
+  "name": "Drake Whelp's Tantrum",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Summon a Fire Drake Whelp.\nEnhance (3): Deal 3 damage to a random enemy follower.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Fire Drake Whelp.",
+      "effects": [
+        {
+          "printed": "Summon a Fire Drake Whelp.",
+          "op": "summon",
+          "card": {
+            "named": "90041110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 3,
+      "printed": "Enhance (3): Deal 3 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

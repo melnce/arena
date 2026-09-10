@@ -1,0 +1,38 @@
+{
+  "id": "10632310",
+  "name": "Reaved Order",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Select an allied Crystalspawn on the field and destroy it. Draw 2 cards.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied Crystalspawn on the field and destroy it. Draw 2 cards.",
+      "effects": [
+        {
+          "printed": "Select an allied Crystalspawn on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "filter": {
+              "card": "10631110"
+            }
+          }
+        },
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

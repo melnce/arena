@@ -1,0 +1,44 @@
+{
+  "id": "10932120",
+  "name": "Noble Philosopher",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Return your hand to deck. Draw X cards. X is the number of cards you returned.",
+  "attack": 2,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Return your hand to deck. Draw X cards. X is the number of cards you returned.",
+      "effects": [
+        {
+          "printed": "Return your hand to deck.",
+          "op": "returnToDeck",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "all"
+          },
+          "position": "random",
+          "as": "r"
+        },
+        {
+          "printed": "Draw X cards. X is the number of cards you returned.",
+          "op": "draw",
+          "count": {
+            "count": {
+              "pick": "bound",
+              "ref": "r"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

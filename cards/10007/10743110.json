@@ -1,0 +1,67 @@
+{
+  "id": "10743110",
+  "name": "Dragonewt Pathfinder",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select a Mode to activate. Destroy a random enemy follower with the highest attack.\n1. Evolve this follower.\n2. Give this follower Ambush.\n",
+  "attack": 2,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate. Destroy a random enemy follower with the highest attack.\n1. Evolve this follower.\n2. Give this follower Ambush.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Evolve this follower.",
+              "effects": [
+                {
+                  "op": "evolve",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "super": false
+                }
+              ]
+            },
+            {
+              "printed": "2. Give this follower Ambush.",
+              "effects": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "ambush": true
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "printed": "Destroy a random enemy follower with the highest attack.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "highest",
+            "orderBy": "attack"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

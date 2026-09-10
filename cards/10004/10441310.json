@@ -1,0 +1,26 @@
+{
+  "id": "10441310",
+  "name": "Crescent Tube Ride",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Gain Crest: Crescent Tube Ride.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Gain Crest: Crescent Tube Ride.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Crescent Tube Ride.",
+          "op": "crest",
+          "gain": "crest:10441310",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

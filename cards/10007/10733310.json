@@ -1,0 +1,55 @@
+{
+  "id": "10733310",
+  "name": "Bottomless Gluttony",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Activates in hand. Whenever you perform Earth Rite, reduce the cost of this card by 1.\n\nSelect an enemy follower on the field and destroy it. Gain 2 earth sigils.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_earth_rite",
+      "zone": "hand",
+      "printed": "Activates in hand. Whenever you perform Earth Rite, reduce the cost of this card by 1.",
+      "effects": [
+        {
+          "printed": "reduce the cost of this card by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and destroy it. Gain 2 earth sigils.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Gain 2 earth sigils.",
+          "op": "counter",
+          "key": "earth",
+          "how": "add",
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

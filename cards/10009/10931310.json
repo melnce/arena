@@ -1,0 +1,28 @@
+{
+  "id": "10931310",
+  "name": "Miscalculated Experiment",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Add 3 copies of Truth Summons to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Add 3 copies of Truth Summons to your hand.",
+      "effects": [
+        {
+          "printed": "Add 3 copies of Truth Summons to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "10031320"
+          },
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -150,3 +150,23 @@ fn self_consistency_ramp_claywies_20_seeds() {
         emit_and_replay_deck(&db, 20260910 + g, "oracle/decks/ramp-claywies.json");
     }
 }
+
+#[test]
+fn self_consistency_rune_pool_20_seeds() {
+    let db = load_db();
+    let decks = load_deck_file("oracle/decks/rune-pool.json");
+    assert!(deck_ready(&db, &decks), "rune-pool must load");
+    for g in 0u64..20 {
+        emit_and_replay_deck(&db, 20260910 + g, "oracle/decks/rune-pool.json");
+    }
+}
+
+#[test]
+fn self_consistency_dragon_pool_20_seeds() {
+    let db = load_db();
+    let decks = load_deck_file("oracle/decks/dragon-pool.json");
+    assert!(deck_ready(&db, &decks), "dragon-pool must load");
+    for g in 0u64..20 {
+        emit_and_replay_deck(&db, 20260910 + g, "oracle/decks/dragon-pool.json");
+    }
+}

@@ -207,12 +207,12 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `summon` | `10724110`; `controller: opponent` `crest:10564120` |
 | `reanimate` | `10954110`, `10554110` |
 | `addToHand` | `10434120` Ars Magna |
-| `draw` | `10564120`; `filter` `10021310` |
+| `draw` | `10564120`; `filter` `10021310`; `player: opponent` `10832110` Sammy & Marie |
 | `discard` | `10703210` |
 | `search` | omitted — measured 0 printed "search" in the pool. `10021310` is `draw` + filter |
 | `addToDeck` | `10901310` |
 | `evolve` | effect-granted `10724110` Fanfare; `super: true` `10464120` |
-| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane; `until: endOfTurn` `10461120` Lamretta / `until: endOfOpponentTurn` `10721310` Measured Attunement / `10821120` Shaili / Friendly Blue Ogre `10552120` / `10962110` Agent of the Testaments |
+| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane; `until: endOfTurn` `10461120` Lamretta / `10442310` Maximum Love Bomb / `10843110` Giada; `until: endOfOpponentTurn` `10721310` Measured Attunement / `10821120` Shaili / Friendly Blue Ogre `10552120` / `10962110` Agent of the Testaments |
 | `grantAbility` | `10704110` quoted end-of-turn banish |
 | `removeAbilities` | `90051140` (optional `on: ["lastWords"]` removes only Last Words) |
 | `cost` | `delta` `10534120`; `set` `10923110`; `untilEndOfTurn` `10574110` |
@@ -224,10 +224,10 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `counter` | `earth` `10434120`; `combo` `10714110`; `skyboundHand` `10471120`; `shadows` via `pay`; `faith` `faith:10634120`; `{var: X}` `10131320` |
 | `pay` | `shadows` `10754120`; `earth` `10031110`; `pp` `10934110`; `faith` `10624120` Yidmetra |
 | `transform` | `10534120`, `10573310` |
-| `leaderModifier` | `10444120` maxDefense + damageCap + until |
+| `leaderModifier` | Forced `maxDefense: {set: N}` Zooey `10444120` (existing file; was a bare int) or `maxDefense: {delta: N}` Lhynkal `crest:10534110` — same split as `cost`. After either, current defense clamps to the new max. `delta` floors the max at 0; a leader whose max (and therefore defense) is 0 is destroyed. `damageCap` + `until` `10444120` |
 | `replicate` | `10604110`, `10923110` |
 | `invoke` | `10404110`, `10904110` |
-| `spellboostHand` | `10031110` |
+| `spellboostHand` | `10031110`; optional `select` `10931120` Key Spirit ("spellboost it 4 times") |
 | `randomSplit` | `90034330` (ruling: one independent draw per faith point) |
 
 ### Combinators
@@ -243,7 +243,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 
 ## Card source
 
-`{named: id}` `10724110` · `{copyOf, exact}` `10443310` / `10901310` · `{from: Selector}` `10412110` Chloe "Select a follower in your hand and summon it" (the selected instance itself; hand today, legal for a deck selector) · `{randomFrom: Filter}` `crest:10564120`
+`{named: id}` `10724110` · `{copyOf, exact}` `10443310` / `10901310` · `{from: Selector}` `10412110` Chloe "Select a follower in your hand and summon it" (the selected instance itself; hand today, legal for a deck selector) · Grandeur `10533310` `exact: true` clones the rolled deck instance (modifiers included) · `{randomFrom: Filter}` `crest:10564120`
 
 `copyOf` always copies (exact or printed) regardless of zone — the original stays. `from` is the move: put that instance onto the field; a full field leaves it where it is.
 
@@ -267,11 +267,11 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Filter
 
-`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `destroyedThisMatch` `10901310` · `didNotAttackThisTurn` `10464110` Galleon ("that didn't attack this turn") · `superEvolved` `10863210` Academy Hijinks · `notBound` `10901110` Jailor ("unselected")
+`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `hasSpellboost` `10931120` Key Spirit ("a card in your hand with On Spellboost") · `destroyedThisMatch` `10901310` · `didNotAttackThisTurn` `10464110` Galleon ("that didn't attack this turn") · `superEvolved` `10863210` Academy Hijinks · `notBound` `10901110` Jailor ("unselected")
 
 ## Condition
 
-`all`/`any`/`not` · `countAtLeast` (`filter` `10521110` "If you selected a spell") · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `boundHas` `10663210` Sublime Eld Tome ("If you selected an allied amulet") · `attackedLeaderLastTurn` `10944110` · `attackingFollower` `crest:10864110` Verdilia ("attacks a follower") · `attackingLeader` Lu Woh crest `crest:10474110` "attacks a leader" · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120` · `amountAtLeast` `10502120` Behemoth · `deckHasNoDuplicates` Bluerust Underling `10971110` / Cutthroat `10974110` "If there are no duplicates in your deck". Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
+`all`/`any`/`not` · `countAtLeast` (`filter` `10521110` "If you selected a spell") · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `boundHas` `10663210` Sublime Eld Tome ("If you selected an allied amulet") · `attackedLeaderLastTurn` `10944110` · `attackingFollower` `10843110` Giada / `crest:10864110` Verdilia ("attacks a follower") · `attackingLeader` Lu Woh crest `crest:10474110` "attacks a leader" · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120` · `amountAtLeast` `10502120` Behemoth · `deckHasNoDuplicates` Bluerust Underling `10971110` / Cutthroat `10974110` "If there are no duplicates in your deck". Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
 
 ## Modes
 

@@ -1,0 +1,59 @@
+{
+  "id": "10543110",
+  "name": "Ruinbringer",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 7,
+  "text": "Super-Evolve: Banish all 1-, 3-, 5-, 7-, and 9-cost cards from your deck. Deal X damage split between all enemy followers. X is the number of cards you banished.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Banish all 1-, 3-, 5-, 7-, and 9-cost cards from your deck. Deal X damage split between all enemy followers. X is the number of cards you banished.",
+      "effects": [
+        {
+          "printed": "Banish all 1-, 3-, 5-, 7-, and 9-cost cards from your deck.",
+          "op": "banish",
+          "select": {
+            "side": "ally",
+            "zone": "deck",
+            "kind": "card",
+            "pick": "all",
+            "filter": {
+              "costIn": [
+                1,
+                3,
+                5,
+                7,
+                9
+              ]
+            }
+          },
+          "as": "b"
+        },
+        {
+          "printed": "Deal X damage split between all enemy followers. X is the number of cards you banished.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": {
+            "count": {
+              "pick": "bound",
+              "ref": "b"
+            }
+          },
+          "split": true
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,47 @@
+{
+  "id": "10632120",
+  "name": "Adventurous Grimoire",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Enhance (6): Summon 2 copies of Adventurous Grimoire.\n\nRush\nLast Words: Spellboost your hand.",
+  "attack": 3,
+  "defense": 3,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Spellboost your hand.",
+      "effects": [
+        {
+          "printed": "Spellboost your hand.",
+          "op": "spellboostHand",
+          "times": 1
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 6,
+      "printed": "Enhance (6): Summon 2 copies of Adventurous Grimoire.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Adventurous Grimoire.",
+          "op": "summon",
+          "card": {
+            "named": "10632120"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

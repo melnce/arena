@@ -1,0 +1,96 @@
+{
+  "id": "10643310",
+  "name": "Beheading Eld Blades",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 7,
+  "text": "When this card is discarded, if its cost is 7, add a Beheading Eld Blades to your hand and set its cost to 5. If this card's cost is 5, add a Beheading Eld Blades to your hand and set its cost to 3.\n\nDeal X damage to all enemy followers. X is this card's cost.",
+  "abilities": [
+    {
+      "on": "discarded",
+      "printed": "When this card is discarded, if its cost is 7, add a Beheading Eld Blades to your hand and set its cost to 5. If this card's cost is 5, add a Beheading Eld Blades to your hand and set its cost to 3.",
+      "effects": [
+        {
+          "printed": "if its cost is 7, add a Beheading Eld Blades to your hand and set its cost to 5.",
+          "op": "if",
+          "cond": {
+            "costEq": 7
+          },
+          "then": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "10643310"
+              },
+              "count": 1,
+              "as": "c"
+            },
+            {
+              "op": "cost",
+              "select": {
+                "pick": "bound",
+                "ref": "c"
+              },
+              "set": 5
+            }
+          ]
+        },
+        {
+          "printed": "If this card's cost is 5, add a Beheading Eld Blades to your hand and set its cost to 3.",
+          "op": "if",
+          "cond": {
+            "costEq": 5
+          },
+          "then": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "10643310"
+              },
+              "count": 1,
+              "as": "c"
+            },
+            {
+              "op": "cost",
+              "select": {
+                "pick": "bound",
+                "ref": "c"
+              },
+              "set": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Deal X damage to all enemy followers. X is this card's cost.",
+      "effects": [
+        {
+          "printed": "Deal X damage to all enemy followers. X is this card's cost.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": {
+            "stat": {
+              "of": {
+                "pick": "self"
+              },
+              "which": "cost"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

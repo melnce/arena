@@ -1,0 +1,30 @@
+{
+  "id": "10431110",
+  "name": "Philosophia, Cryptic Sophist",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Draw a spell.",
+  "attack": 1,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Draw a spell.",
+      "effects": [
+        {
+          "printed": "Draw a spell.",
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "kind": "spell"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

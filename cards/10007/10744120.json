@@ -1,0 +1,59 @@
+{
+  "id": "10744120",
+  "name": "Dragon's Vale Elder",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10007,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 10,
+  "text": "Fanfare: Summon a Vastwing Dragon. Gain Crest: Dragon's Vale Elder.\n\nWard\n\nSuper-Evolve: Delay the count of your Crest: Dragon's Vale Elder by 2.",
+  "attack": 7,
+  "defense": 7,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Vastwing Dragon. Gain Crest: Dragon's Vale Elder.",
+      "effects": [
+        {
+          "printed": "Summon a Vastwing Dragon.",
+          "op": "summon",
+          "card": {
+            "named": "90041120"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Gain Crest: Dragon's Vale Elder.",
+          "op": "crest",
+          "gain": "crest:10744120",
+          "player": "self"
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Delay the count of your Crest: Dragon's Vale Elder by 2.",
+      "effects": [
+        {
+          "printed": "Delay the count of your Crest: Dragon's Vale Elder by 2.",
+          "op": "countdown",
+          "select": {
+            "side": "ally",
+            "zone": "crests",
+            "kind": "card",
+            "pick": "all",
+            "filter": {
+              "card": "10744120"
+            }
+          },
+          "delta": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,54 @@
+{
+  "id": "10432120",
+  "name": "Mireille & Risette, Penitent Duo",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Summon a Mireille & Risette, Penitent Duo. Earth Rite (2) - Evolve it and this follower.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Mireille & Risette, Penitent Duo. Earth Rite (2) - Evolve it and this follower.",
+      "effects": [
+        {
+          "printed": "Summon a Mireille & Risette, Penitent Duo.",
+          "op": "summon",
+          "card": {
+            "named": "10432120"
+          },
+          "count": 1,
+          "as": "m"
+        },
+        {
+          "printed": "Earth Rite (2) - Evolve it and this follower.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 2,
+          "effects": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "m"
+              },
+              "super": false
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,35 @@
+{
+  "id": "10742110",
+  "name": "Gallant Gatekeeper",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it.\n\nWard",
+  "attack": 10,
+  "defense": 10,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

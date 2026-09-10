@@ -177,6 +177,7 @@ def filter_schema():
             "enhanced": {"type": "boolean"},
             "sameCostGroup": {"type": "boolean"},
             "hasLastWords": {"type": "boolean"},
+            "hasSpellboost": {"type": "boolean"},
             "destroyedThisMatch": {"type": "boolean"},
             "didNotAttackThisTurn": {"type": "boolean"},
             "superEvolved": {"type": "boolean"},
@@ -509,6 +510,7 @@ def effect_schema():
             "count": {"$ref": "#/$defs/Amount"},
             "filter": {"$ref": "#/$defs/Filter"},
             "distinctNames": {"type": "boolean"},
+            "player": {"enum": ["self", "opponent"]},
         }, ["count"]),
         leaf("discard", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
         leaf("addToDeck", {
@@ -579,7 +581,12 @@ def effect_schema():
         }, ["select", "into"]),
         leaf("leaderModifier", {
             "select": {"$ref": "#/$defs/Selector"},
-            "maxDefense": {"$ref": "#/$defs/Amount"},
+            "maxDefense": {
+                "oneOf": [
+                    closed({"set": {"$ref": "#/$defs/Amount"}}, required=["set"]),
+                    closed({"delta": {"$ref": "#/$defs/Amount"}}, required=["delta"]),
+                ]
+            },
             "damageCap": {"$ref": "#/$defs/Amount"},
             "damageTakenBonus": {"$ref": "#/$defs/Amount"},
             "until": {"enum": ["endOfTurn", "endOfOpponentTurn"]},
@@ -590,6 +597,7 @@ def effect_schema():
         leaf("invoke", {}, []),
         leaf("spellboostHand", {
             "times": {"$ref": "#/$defs/Amount"},
+            "select": {"$ref": "#/$defs/Selector"},
         }, ["times"]),
         leaf("randomSplit", {
             "keys": {"type": "array", "items": {"enum": VARS}, "minItems": 2},

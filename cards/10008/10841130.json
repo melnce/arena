@@ -1,0 +1,42 @@
+{
+  "id": "10841130",
+  "name": "Spirit of Wadatsumi",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add a Majestic Megalorca to your hand.\n\nEvolve: Gain Crest: Spirit of Wadatsumi.",
+  "attack": 1,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Majestic Megalorca to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Majestic Megalorca to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90041130"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Gain Crest: Spirit of Wadatsumi.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Spirit of Wadatsumi.",
+          "op": "crest",
+          "gain": "crest:10841130",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

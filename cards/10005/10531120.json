@@ -1,0 +1,39 @@
+{
+  "id": "10531120",
+  "name": "Waterbending Charmwielder",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Deal 3 damage to 3 random enemy followers. Spellboost your hand 3 times.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 3 damage to 3 random enemy followers. Spellboost your hand 3 times.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage to 3 random enemy followers.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random",
+            "count": 3
+          },
+          "amount": 3
+        },
+        {
+          "printed": "Spellboost your hand 3 times.",
+          "op": "spellboostHand",
+          "times": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

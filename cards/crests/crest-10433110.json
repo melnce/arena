@@ -1,0 +1,29 @@
+{
+  "id": "crest:10433110",
+  "name": "Crest: Elmott, Remembrance Aflame",
+  "grantedBy": [
+    "10433110"
+  ],
+  "faith": false,
+  "text": "At the start of your turn, deal 1 damage to the enemy leader.",
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

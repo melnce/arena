@@ -1,0 +1,51 @@
+{
+  "id": "10633110",
+  "name": "Spellbound Professor",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Summon 2 copies of Crystalspawn.\n\nEvolve: Give all allied copies of Crystalspawn on the field +1/+0.",
+  "attack": 3,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Crystalspawn.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Crystalspawn.",
+          "op": "summon",
+          "card": {
+            "named": "10631110"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Give all allied copies of Crystalspawn on the field +1/+0.",
+      "effects": [
+        {
+          "printed": "Give all allied copies of Crystalspawn on the field +1/+0.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all",
+            "filter": {
+              "card": "10631110"
+            }
+          },
+          "attack": 1,
+          "defense": 0
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

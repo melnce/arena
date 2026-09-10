@@ -1,0 +1,30 @@
+{
+  "id": "10841120",
+  "name": "Sandstorm Watchdragon",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "text": "Ward\nLast Words: Draw 3 cards.",
+  "attack": 7,
+  "defense": 11,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Draw 3 cards.",
+      "effects": [
+        {
+          "printed": "Draw 3 cards.",
+          "op": "draw",
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
