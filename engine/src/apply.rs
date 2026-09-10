@@ -2683,6 +2683,7 @@ fn enqueue_when_on(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn collect_when_from_abilities(
     scan: &WhenScan<'_>,
     state: &State,
@@ -2718,6 +2719,7 @@ fn collect_when_from_abilities(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn collect_when_from_list(
     scan: &WhenScan<'_>,
     state: &State,
