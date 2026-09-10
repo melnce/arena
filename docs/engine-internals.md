@@ -66,7 +66,7 @@ A **played** follower's Rally increment is deferred until the play sequence is q
 
 `apply` runs the action then `drain_until_quiet`:
 
-1. Drain the current trigger-queue wave (8-category order, entry-order then printed-order; the whole wave is flushed onto `pending_work` so LIFO still resolves active side first) **unless** the next frame is an index-0 list (Fanfare, a nested body, a freshly flushed trigger) or a trigger wave is still in flight (`RestoreBindings` still on the stack). A trigger raised while a queued item resolves goes to the back of the queue (E32 / Grimnir: (2) and (3) before the Last Words (4) that (1) just queued).
+1. Drain the current trigger-queue wave (8-category order, entry-order then printed-order; the whole wave is flushed onto `pending_work` so LIFO still resolves active side first) **unless** the next frame is an index-0 list (Fanfare, a nested body, a freshly flushed trigger) or a trigger wave is still in flight (`RestoreBindings` still on the stack). A trigger raised while a queued item resolves goes to the back of the queue (E32 / Grimnir: (2) and (3) before the Last Words (4) that (1) just queued). **E40:** when a flushed trigger (`When`, turn-boundary, enter — not Last Words / Leave / Strike / Clash) comes up for resolution, skip it if its `SourceRef` is a field instance that is no longer on the field (destroyed, banished, bounced, transformed — transform is a new instance), a crest no longer at that index, or a hand-zone instance no longer in hand. Last Words are `SourceRef::Spell` and Leave is raised because the source left, so they are exempt. Same skip applies to play-reaction items flushed onto `pending_work` (E39). Source: Shadowverse 効果処理 wiki, https://w.atwiki.jp/svkoukasyori/pages/16.html — 「ラストワード・「場を離れる時」以外の効果は、解決前に効果を持ったカードが場を離れた場合解決されない。」 plus 「ひとつの効果の解決中に他の誘発効果は割り込まない」. Owner 2026-09-10: Trap in the Woods vs three Knights kills only the first.
 2. Pop newly pushed effect lists and aftermaths (combat damage, turn-boundary step 7/8). Nested bodies sit on top of the enclosing remainder.
 3. Settle 0-defense deaths (by instance id).
 
@@ -134,6 +134,7 @@ Asked; arena follows the rulebook/text until he says otherwise.
 2. **Granted `attacksPerTurn: 2` after attacks already made this turn.** Rulebook is silent. Implemented as `attacks_left = attacks_left.max(n)`.
 3. **Duplicate-id draw after `returnToDeck`.** A draw of an id that has both a modified copy and a just-returned printed copy takes the oldest (first in vec; return appends).
 4. **E38 — entrant's own `on:enter` vs older `ally_enter`.** Implemented as same-timing board enter triggers, oldest first (not a jump onto `pending_work` above Fanfare). Pending owner.
+5. **E40 — source must still be in its zone.** See Resolution §1. Trap in the Woods vs a 3-Knight summon: three `enemy_follower_enter` items queue (no mid-effect interrupt); the first destroys the first Knight and the trap; the other two skip.
 
 ## Defense debuff and `max_defense`
 

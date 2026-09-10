@@ -1791,6 +1791,7 @@ fn resume_mode(
         effects,
         index,
         subject,
+        e40,
     }) = state.pending_work.pop()
     {
         if let Some(Effect::Choose { .. }) = effects.get(index).cloned() {
@@ -1798,12 +1799,20 @@ fn resume_mode(
                 if let Some(opt) = opts.get(idx as usize) {
                     let mut rest = effects;
                     rest.remove(index);
-                    push_work(state, controller, source, rest, index, subject.clone());
+                    push_work(state, controller, source, rest, index, subject.clone(), e40);
                     push_effects(state, controller, source, opt.effects.clone());
                 }
             }
         } else {
-            push_work(state, controller, source, effects, index, subject.clone());
+            push_work(
+                state,
+                controller,
+                source,
+                effects,
+                index,
+                subject.clone(),
+                e40,
+            );
         }
     }
     let _ = db;
@@ -1824,6 +1833,7 @@ fn resume_target(
         effects,
         index,
         subject,
+        e40,
     }) = state.pending_work.pop()
     {
         if index < effects.len() {
@@ -1842,6 +1852,7 @@ fn resume_target(
                             effects.clone(),
                             index,
                             subject.clone(),
+                            e40,
                         );
                         state.phase = Phase::Choice {
                             player,
@@ -1869,6 +1880,7 @@ fn resume_target(
                     effects,
                     index + 1,
                     state.event_subject.clone(),
+                    e40,
                 );
             }
         }
@@ -2771,11 +2783,17 @@ fn drain_until_quiet(
                     effects,
                     index,
                     subject,
+                    e40,
                 } => {
+                    if e40 && index == 0 && !trigger_source_still_present(state, source) {
+                        continue;
+                    }
                     if subject.is_some() {
                         state.event_subject = subject;
                     }
-                    resolve_effect_list(db, state, controller, source, effects, index, events)?;
+                    resolve_effect_list(
+                        db, state, controller, source, effects, index, e40, events,
+                    )?;
                 }
                 WorkFrame::Aftermath(a) => {
                     run_aftermath(db, state, a, events)?;
@@ -2974,7 +2992,15 @@ fn flush_play_reactions_ahead(state: &mut State, mut play_rx: Vec<QueuedTrigger>
         if t.subject.is_some() {
             state.event_subject = t.subject.clone();
         }
-        push_work(state, t.controller, t.source, t.effects, 0, t.subject);
+        push_work(
+            state,
+            t.controller,
+            t.source,
+            t.effects,
+            0,
+            t.subject,
+            e40_applies(t.tag),
+        );
     }
 }
 
@@ -3005,7 +3031,15 @@ fn flush_play_last_words(
         if t.subject.is_some() {
             state.event_subject = t.subject.clone();
         }
-        push_work(state, t.controller, t.source, t.effects, 0, t.subject);
+        push_work(
+            state,
+            t.controller,
+            t.source,
+            t.effects,
+            0,
+            t.subject,
+            e40_applies(t.tag),
+        );
     }
     Ok(())
 }
@@ -3031,10 +3065,38 @@ fn drain_queue(db: &CardDb, state: &mut State, _events: &mut [Event]) -> Result<
         if t.subject.is_some() {
             state.event_subject = t.subject.clone();
         }
-        push_work(state, t.controller, t.source, t.effects, 0, t.subject);
+        push_work(
+            state,
+            t.controller,
+            t.source,
+            t.effects,
+            0,
+            t.subject,
+            e40_applies(t.tag),
+        );
     }
     let _ = db;
     Ok(())
+}
+
+fn e40_applies(tag: TriggerTag) -> bool {
+    !matches!(
+        tag,
+        TriggerTag::LastWords
+            | TriggerTag::Leave
+            | TriggerTag::Strike
+            | TriggerTag::FollowerStrike
+            | TriggerTag::Clash
+    )
+}
+
+fn trigger_source_still_present(state: &State, source: SourceRef) -> bool {
+    match source {
+        SourceRef::Field { player, id } => state.find_field(player, id).is_some(),
+        SourceRef::Hand { player, id } => state.player(player).hand.iter().any(|c| c.id == id),
+        SourceRef::Crest { player, index } => state.player(player).crests.get(index).is_some(),
+        SourceRef::Spell { .. } | SourceRef::Leader { .. } => true,
+    }
 }
 
 fn push_work(
@@ -3044,6 +3106,7 @@ fn push_work(
     effects: Vec<Effect>,
     index: usize,
     subject: Option<TargetOpt>,
+    e40: bool,
 ) {
     state.pending_work.push(WorkFrame::Effects {
         controller,
@@ -3051,6 +3114,7 @@ fn push_work(
         effects,
         index,
         subject,
+        e40,
     });
 }
 
@@ -3058,7 +3122,7 @@ fn push_effects(state: &mut State, controller: PlayerId, source: SourceRef, effe
     if effects.is_empty() {
         return;
     }
-    push_work(state, controller, source, effects, 0, None);
+    push_work(state, controller, source, effects, 0, None, false);
 }
 
 fn resolve_effect_list(
@@ -3068,6 +3132,7 @@ fn resolve_effect_list(
     source: SourceRef,
     effects: Vec<Effect>,
     index: usize,
+    e40: bool,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
     if index >= effects.len() {
@@ -3084,6 +3149,7 @@ fn resolve_effect_list(
                     effects,
                     index + 1,
                     state.event_subject.clone(),
+                    e40,
                 );
             }
             return Ok(());
@@ -3100,6 +3166,7 @@ fn resolve_effect_list(
             effects,
             index,
             state.event_subject.clone(),
+            e40,
         );
         state.phase = Phase::Choice {
             player: controller,
@@ -3122,6 +3189,7 @@ fn resolve_effect_list(
             effects,
             index + 1,
             state.event_subject.clone(),
+            e40,
         );
     }
     apply_effect(db, state, controller, source, &e, events)?;

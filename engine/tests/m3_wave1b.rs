@@ -34,6 +34,13 @@ const SPRING: &str = "90011120";
 const VANILLA: &str = "88001110";
 const TANK: &str = "88001320";
 const COPY_HAND: &str = "88001830";
+const RUFLET: &str = "10812110";
+const KNIGHT: &str = "90021110";
+const SUMMON3: &str = "88001860";
+const SKIPPER: &str = "10513110";
+const WATCHER: &str = "88001840";
+const BUFF_ENEMY: &str = "88001850";
+const SELECT_DESTROY: &str = "88001300";
 
 fn require_ok(db: &CardDb, ids: &[&str]) {
     for id in ids {
@@ -607,6 +614,35 @@ fn tia_once_per_turn_eve_on_own_enhance_buff() {
 }
 
 #[test]
+fn tia_opponent_turn_buff_adds_no_eve() {
+    let db = load_db();
+    let mut st = started(&db, 523);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    give_pp(&mut st, me, 2, 2);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, TIA);
+    drain_choice(&db, &mut st);
+    assert!(!hand_has(&st, me, EVE), "no Enhance, no Eve yet");
+    end_turn(&db, &mut st);
+    give_pp(&mut st, opp, 1, 1);
+    st.player_mut(opp).hand.clear();
+    play_id(&db, &mut st, opp, BUFF_ENEMY);
+    assert!(
+        !hand_has(&st, me, EVE),
+        "buff on the opponent's turn does not add Eve"
+    );
+    let tia = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == TIA)
+        .expect("Tia");
+    assert!(tia.attack > 2, "the opponent's buff landed");
+}
+
+#[test]
 fn trap_in_the_woods_e31_super_evolved_entrant() {
     let db = load_db();
     let mut st = started(&db, 514);
@@ -627,6 +663,86 @@ fn trap_in_the_woods_e31_super_evolved_entrant() {
         "SE on the owner's turn cannot be destroyed by the trap (E31)"
     );
     assert!(!field_has(&st, me, TRAP), "the trap still destroys itself");
+}
+
+#[test]
+fn trap_in_the_woods_kills_only_first_of_three_knights() {
+    let db = load_db();
+    let mut st = started(&db, 524);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    give_pp(&mut st, me, 3, 3);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, TRAP);
+    drain_choice(&db, &mut st);
+    end_turn(&db, &mut st);
+    give_pp(&mut st, opp, 1, 1);
+    st.player_mut(opp).hand.clear();
+    play_id(&db, &mut st, opp, SUMMON3);
+    drain_choice(&db, &mut st);
+    let knights: Vec<_> = st
+        .player(opp)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == KNIGHT)
+        .collect();
+    assert_eq!(
+        knights.len(),
+        2,
+        "E40: trap resolves once, two Knights stay"
+    );
+    assert!(!field_has(&st, me, TRAP), "the trap destroyed itself");
+}
+
+#[test]
+fn e40_destroyed_enter_watcher_skips_later_entrants() {
+    let db = load_db();
+    let mut st = started(&db, 525);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, me, WATCHER);
+    let hp = st.player(me).leader_defense;
+    give_pp(&mut st, me, 5, 5);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, SKIPPER);
+    drain_choice(&db, &mut st);
+    assert_eq!(
+        st.player(me).leader_defense,
+        hp - 1,
+        "first allied enter deals 1; later queued copies skip (E40)"
+    );
+    assert!(
+        !field_has(&st, me, WATCHER),
+        "the watcher destroyed itself on the first enter"
+    );
+    let fairies = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == FAIRY)
+        .count();
+    assert_eq!(fairies, 3);
+}
+
+#[test]
+fn last_words_still_resolves_after_source_destroyed() {
+    let db = load_db();
+    let mut st = started(&db, 526);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, me, RUFLET);
+    end_turn(&db, &mut st);
+    give_pp(&mut st, opp, 2, 2);
+    st.player_mut(opp).hand.clear();
+    play_id(&db, &mut st, opp, SELECT_DESTROY);
+    assert!(matches!(st.phase, Phase::Choice { .. }));
+    choose(&db, &mut st, 0);
+    assert!(!field_has(&st, me, RUFLET), "Ruflet was destroyed");
+    assert!(
+        hand_has(&st, me, FAIRY),
+        "Last Words still adds a Fairy after the source left"
+    );
 }
 
 #[test]

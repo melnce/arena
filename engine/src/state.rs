@@ -518,6 +518,8 @@ pub enum WorkFrame {
         effects: Vec<crate::card::Effect>,
         index: usize,
         subject: Option<TargetOpt>,
+        /// E40: skip this list at `index == 0` if `source` has left its zone.
+        e40: bool,
     },
     Aftermath(Aftermath),
 }
