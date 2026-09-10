@@ -1,0 +1,51 @@
+{
+  "id": "10874120",
+  "name": "Eudie, Your Dependable Mentor",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Add an Analyzing Artifact to your hand.\n\nEvolve: Select another unevolved allied follower on the field and evolve it.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add an Analyzing Artifact to your hand.",
+      "effects": [
+        {
+          "printed": "Add an Analyzing Artifact to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90071130"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select another unevolved allied follower on the field and evolve it.",
+      "effects": [
+        {
+          "printed": "Select another unevolved allied follower on the field and evolve it.",
+          "op": "evolve",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose",
+            "other": true,
+            "filter": {
+              "unevolved": true
+            }
+          },
+          "super": false
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,87 @@
+{
+  "id": "10674110",
+  "name": "Camiscilla, Unfeeling Heart",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10006,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon a Shoddy Plaything and Substandard Puppet.\n\nWhenever another allied follower with a base cost of 5 or more enters the field, evolve it.\n\nSuper-Evolve: Deal X damage to the enemy leader. X is the number of allied followers on the field with a base cost of 5 or more.",
+  "attack": 6,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Shoddy Plaything and Substandard Puppet.",
+      "effects": [
+        {
+          "printed": "Summon a Shoddy Plaything and Substandard Puppet.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "10671110"
+              },
+              "count": 1
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "10672110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "baseCostGte": 5
+      },
+      "printed": "Whenever another allied follower with a base cost of 5 or more enters the field, evolve it.",
+      "effects": [
+        {
+          "printed": "evolve it.",
+          "op": "evolve",
+          "select": {
+            "pick": "entering"
+          },
+          "super": false
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Deal X damage to the enemy leader. X is the number of allied followers on the field with a base cost of 5 or more.",
+      "effects": [
+        {
+          "printed": "Deal X damage to the enemy leader. X is the number of allied followers on the field with a base cost of 5 or more.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": {
+            "count": {
+              "pick": "all",
+              "side": "ally",
+              "zone": "field",
+              "kind": "follower",
+              "filter": {
+                "baseCostGte": 5
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -271,7 +271,7 @@ def amount_schema():
             ),
             closed({"neg": {"$ref": "#/$defs/Amount"}}, required=["neg"]),
             closed(
-                {"distinctNames": {"$ref": "#/$defs/Selector"}},
+                {"distinctNames": {"$ref": "#/$defs/Amount"}},
                 required=["distinctNames"],
             ),
             closed(
@@ -385,6 +385,18 @@ def condition_schema():
                 required=["enterCountAtLeast"],
             ),
             closed(
+                {
+                    "amountAtLeast": closed(
+                        {
+                            "of": {"$ref": "#/$defs/Amount"},
+                            "n": {"$ref": "#/$defs/Amount"},
+                        },
+                        required=["of", "n"],
+                    )
+                },
+                required=["amountAtLeast"],
+            ),
+            closed(
                 {"handSameCostAtLeast": closed({"n": {"$ref": "#/$defs/Amount"}}, required=["n"])},
                 required=["handSameCostAtLeast"],
             ),
@@ -455,6 +467,7 @@ def effect_schema():
         leaf("draw", {
             "count": {"$ref": "#/$defs/Amount"},
             "filter": {"$ref": "#/$defs/Filter"},
+            "distinctNames": {"type": "boolean"},
         }, ["count"]),
         leaf("discard", {"select": {"$ref": "#/$defs/Selector"}}, ["select"]),
         leaf("addToDeck", {

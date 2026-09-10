@@ -1,0 +1,84 @@
+{
+  "id": "10673110",
+  "name": "Ludicrous Ordnance",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Summon 2 copies of Ludicrous Ordnance.\n\nAt the end of your turn, deal 3 damage split between all enemy followers.\n\nEvolve: Deal 3 damage split between all enemy followers.",
+  "attack": 3,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Ludicrous Ordnance.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Ludicrous Ordnance.",
+          "op": "summon",
+          "card": {
+            "named": "10673110"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, deal 3 damage split between all enemy followers.",
+      "effects": [
+        {
+          "printed": "deal 3 damage split between all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3,
+          "split": true
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Deal 3 damage split between all enemy followers.",
+      "effects": [
+        {
+          "printed": "Deal 3 damage split between all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3,
+          "split": true
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "accelerate",
+      "cost": 4,
+      "printed": "Accelerate (4): Summon a Ludicrous Ordnance.",
+      "effects": [
+        {
+          "printed": "Summon a Ludicrous Ordnance.",
+          "op": "summon",
+          "card": {
+            "named": "10673110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

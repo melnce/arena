@@ -1,0 +1,86 @@
+{
+  "id": "10874110",
+  "name": "Asher & Lydia, Paths Beyond",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Select an enemy follower on the field and give it Ward.\nEnhance (9): Evolve this follower and give it Storm.\n\nWhen this follower evolves, destroy 2 random enemy followers with Ward.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and give it Ward.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and give it Ward.",
+          "op": "grantTraits",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "traits": {
+            "ward": true
+          }
+        }
+      ]
+    },
+    {
+      "on": "anyEvolve",
+      "printed": "When this follower evolves, destroy 2 random enemy followers with Ward.",
+      "effects": [
+        {
+          "printed": "destroy 2 random enemy followers with Ward.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "randomDistinct",
+            "count": 2,
+            "filter": {
+              "hasTrait": "ward"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 9,
+      "printed": "Enhance (9): Evolve this follower and give it Storm.",
+      "effects": [
+        {
+          "printed": "Evolve this follower and give it Storm.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

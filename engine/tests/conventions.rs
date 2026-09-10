@@ -1,9 +1,10 @@
 //! Pinned 2026-09-10 trace conventions (`docs/trace-format.md`).
 
+use arena_engine::trace::ChooseOptionJson;
 use arena_engine::{
-    apply, from_neutral, legal_actions, legal_divergence_parts, snapshot, to_neutral, Action,
-    GameRng, Illegal, NeutralAction, Phase, Pick, PickChose, PickWhat, PlayerId, ReplayError,
-    TraceHeader,
+    apply, from_neutral, legal_actions, legal_actions_neutral, legal_divergence_parts, snapshot,
+    to_neutral, Action, GameRng, Illegal, NeutralAction, Phase, Pick, PickChose, PickWhat,
+    PlayerId, ReplayError, TraceHeader,
 };
 
 mod common;
@@ -244,6 +245,78 @@ fn legal_divergence_prints_symmetric_difference() {
     assert!(a.contains("\"bonus_pp\""), "{a}");
     assert!(t.starts_with("1 actions; only trace: "), "{t}");
     assert!(t.contains("\"end_turn\""), "{t}");
+}
+
+/// Sincerity: pool spans both boards. Unique slot numbers still carry `player`
+/// (Practice-Tool PR #392 / b3bd5473), not only colliding slot numbers.
+#[test]
+fn choose_slot_carries_player_when_pool_spans_both_boards() {
+    let db = load_db();
+    let mut st = started(&db, 392);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, opp, "88001110");
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10573310");
+    let slots: Vec<_> = legal_actions_neutral(&db, &st)
+        .into_iter()
+        .filter_map(|a| match a {
+            NeutralAction::Choose {
+                option: ChooseOptionJson::Slot { slot, player },
+                ..
+            } => Some((slot, player)),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        slots.iter().all(|(_, p)| p.is_some()),
+        "every both-board option names the board: {slots:?}"
+    );
+    assert!(
+        slots
+            .iter()
+            .any(|(s, p)| *s == 2 && p.as_deref() == Some("a")),
+        "unique allied slot 2 still carries player: {slots:?}"
+    );
+    assert!(
+        slots
+            .iter()
+            .any(|(s, p)| *s == 0 && p.as_deref() == Some("b")),
+        "enemy slot 0 carries player: {slots:?}"
+    );
+}
+
+/// Asher Fanfare: enemy-only Ward grant. `{slot}` omits `player`.
+#[test]
+fn choose_slot_omits_player_when_pool_is_one_board() {
+    let db = load_db();
+    let mut st = started(&db, 393);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, opp, "88001110");
+    put_field(&db, &mut st, opp, "88001110");
+    give_pp(&mut st, me, 5, 5);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10874110");
+    let slots: Vec<_> = legal_actions_neutral(&db, &st)
+        .into_iter()
+        .filter_map(|a| match a {
+            NeutralAction::Choose {
+                option: ChooseOptionJson::Slot { slot, player },
+                ..
+            } => Some((slot, player)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        slots,
+        vec![(0, None), (1, None)],
+        "one-board pool is {{slot}} only"
+    );
 }
 
 #[test]

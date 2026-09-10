@@ -1,0 +1,19 @@
+{
+  "id": "90071140",
+  "name": "Ancient Artifact",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Rush",
+  "attack": 3,
+  "defense": 1,
+  "tribes": [
+    "artifact"
+  ],
+  "traits": {
+    "rush": true
+  }
+}
