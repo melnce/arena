@@ -1,0 +1,30 @@
+{
+  "id": "89201160",
+  "name": "C PickRand",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy a random enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy a random enemy follower.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "random",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "printed": "Destroy a random enemy follower."
+        }
+      ]
+    }
+  ]
+}

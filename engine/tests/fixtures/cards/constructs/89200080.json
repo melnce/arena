@@ -1,0 +1,30 @@
+{
+  "id": "89200080",
+  "name": "C Bounce",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Return all enemy followers to the hand.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Return all enemy followers to the hand.",
+      "effects": [
+        {
+          "op": "returnToHand",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "printed": "Return all enemy followers to the hand."
+        }
+      ]
+    }
+  ]
+}

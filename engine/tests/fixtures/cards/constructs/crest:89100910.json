@@ -1,0 +1,30 @@
+{
+  "id": "crest:89100910",
+  "name": "Crest: Construct",
+  "grantedBy": [
+    "89200010"
+  ],
+  "faith": false,
+  "text": "At the end of your turn, deal 1 damage to the enemy leader.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

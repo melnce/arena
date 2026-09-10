@@ -1,0 +1,26 @@
+{
+  "id": "89200460",
+  "name": "C DrawDist",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Draw 2 cards with different names.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw 2 cards with different names.",
+      "effects": [
+        {
+          "op": "draw",
+          "count": 2,
+          "distinctNames": true,
+          "printed": "Draw 2 cards with different names."
+        }
+      ]
+    }
+  ]
+}

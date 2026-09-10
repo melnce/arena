@@ -1,0 +1,30 @@
+{
+  "id": "89100070",
+  "name": "Synth Spellboost Host",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 5,
+  "text": "On Spellboost: Subtract 1 from the cost of this card.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "spellboost",
+      "printed": "On Spellboost: Subtract 1 from the cost of this card.",
+      "effects": [
+        {
+          "printed": "Subtract 1 from the cost of this card.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": {
+            "neg": 1
+          }
+        }
+      ]
+    }
+  ]
+}

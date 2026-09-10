@@ -1,0 +1,17 @@
+{
+  "id": "89100010",
+  "name": "Synth Construct Ward",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Ward",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "traits": {
+    "ward": true
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "89201220",
+  "name": "C ZnHand",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Discard all cards from the enemy hand.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Discard all cards from the enemy hand.",
+      "effects": [
+        {
+          "op": "discard",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "printed": "Discard all cards from the enemy hand."
+        }
+      ]
+    }
+  ]
+}

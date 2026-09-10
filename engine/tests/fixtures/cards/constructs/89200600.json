@@ -1,0 +1,31 @@
+{
+  "id": "89200600",
+  "name": "C LeadBonus",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "The enemy leader takes 2 more damage.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "The enemy leader takes 2 more damage.",
+      "effects": [
+        {
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "damageTakenBonus": 2,
+          "printed": "The enemy leader takes 2 more damage."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "89201110",
+  "name": "C SrcFrom",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Summon a follower from your hand.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a follower from your hand.",
+      "effects": [
+        {
+          "op": "summon",
+          "card": {
+            "from": {
+              "pick": "choose",
+              "side": "ally",
+              "zone": "hand",
+              "kind": "follower"
+            }
+          },
+          "count": 1,
+          "printed": "Summon a follower from your hand."
+        }
+      ]
+    }
+  ]
+}

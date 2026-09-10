@@ -1,0 +1,33 @@
+{
+  "id": "89200880",
+  "name": "C RmOn startOfTurn",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove startOfTurn from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove startOfTurn from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "startOfTurn"
+          ],
+          "printed": "Remove startOfTurn from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

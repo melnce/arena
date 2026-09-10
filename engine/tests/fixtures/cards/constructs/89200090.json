@@ -1,0 +1,31 @@
+{
+  "id": "89200090",
+  "name": "C ReturnDeck",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Return all enemy followers to the deck.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Return all enemy followers to the deck.",
+      "effects": [
+        {
+          "op": "returnToDeck",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "position": "random",
+          "printed": "Return all enemy followers to the deck."
+        }
+      ]
+    }
+  ]
+}

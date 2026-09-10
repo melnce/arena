@@ -1,0 +1,33 @@
+{
+  "id": "89200840",
+  "name": "C RmOn invoked",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove invoked from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove invoked from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "invoked"
+          ],
+          "printed": "Remove invoked from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

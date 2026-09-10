@@ -1,0 +1,44 @@
+{
+  "id": "89200930",
+  "name": "C Rep evolve",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Replicate evolve. evolve: Deal 1 damage to the enemy leader.",
+  "attack": 2,
+  "defense": 2,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "evolve: Deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "evolve: Deal 1 damage to the enemy leader."
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Replicate evolve.",
+      "effects": [
+        {
+          "op": "replicate",
+          "ability": "evolve",
+          "printed": "Fanfare: Replicate evolve."
+        }
+      ]
+    }
+  ]
+}

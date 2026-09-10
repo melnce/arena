@@ -1,0 +1,29 @@
+{
+  "id": "89200150",
+  "name": "C AddDeck",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Put a Synth Vanilla into your deck.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Put a Synth Vanilla into your deck.",
+      "effects": [
+        {
+          "op": "addToDeck",
+          "card": {
+            "named": "88001110"
+          },
+          "count": 1,
+          "position": "random",
+          "printed": "Put a Synth Vanilla into your deck."
+        }
+      ]
+    }
+  ]
+}

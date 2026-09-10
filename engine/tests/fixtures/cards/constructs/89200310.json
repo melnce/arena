@@ -1,0 +1,25 @@
+{
+  "id": "89200310",
+  "name": "C InvokeDummy",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Draw a card.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw a card.",
+      "effects": [
+        {
+          "op": "draw",
+          "count": 1,
+          "printed": "Draw a card."
+        }
+      ]
+    }
+  ]
+}

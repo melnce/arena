@@ -1,0 +1,33 @@
+{
+  "id": "89200290",
+  "name": "C LeadSet",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Set the enemy leader's max defense to 10.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Set the enemy leader's max defense to 10.",
+      "effects": [
+        {
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "maxDefense": {
+            "set": 10
+          },
+          "printed": "Set the enemy leader's max defense to 10."
+        }
+      ]
+    }
+  ]
+}

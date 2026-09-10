@@ -1,0 +1,38 @@
+{
+  "id": "89200530",
+  "name": "C Pay shadows",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Pay 2 shadows and deal 5 damage to the enemy leader.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Pay 2 shadows and deal 5 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "pay",
+          "resource": "shadows",
+          "amount": 2,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 5
+            }
+          ],
+          "printed": "Pay 2 shadows and deal 5 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

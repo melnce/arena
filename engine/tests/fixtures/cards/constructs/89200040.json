@@ -1,0 +1,32 @@
+{
+  "id": "89200040",
+  "name": "C Buff",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Give an enemy follower +2/+2.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give an enemy follower +2/+2.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 2,
+          "defense": 2,
+          "printed": "Give an enemy follower +2/+2."
+        }
+      ]
+    }
+  ]
+}

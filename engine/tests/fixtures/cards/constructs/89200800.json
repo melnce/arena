@@ -1,0 +1,33 @@
+{
+  "id": "89200800",
+  "name": "C RmOn clash",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove clash from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove clash from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "clash"
+          ],
+          "printed": "Remove clash from an enemy follower."
+        }
+      ]
+    }
+  ]
+}

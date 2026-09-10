@@ -1,0 +1,30 @@
+{
+  "id": "89201280",
+  "name": "C KindA",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Destroy all enemy amulets.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy all enemy amulets.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "amulet"
+          },
+          "printed": "Destroy all enemy amulets."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "89201340",
+  "name": "C SideEn",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Give all enemy followers +0/-2.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give all enemy followers +0/-2.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "defense": {
+            "neg": 2
+          },
+          "printed": "Give all enemy followers +0/-2."
+        }
+      ]
+    }
+  ]
+}

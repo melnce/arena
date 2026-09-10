@@ -76,6 +76,13 @@ jobs:
       - name: coverage verb walk
         run: python3 tools/coverage-check.py
 
+      - name: construct fixture coverage
+        run: python3 tools/constructs.py --check --families effect,source,selector
+
+      - name: schema-only fixture cards
+        working-directory: tools
+        run: node validate.mjs --schema-only ../engine/tests/fixtures/cards
+
   wasm:
     runs-on: ubuntu-latest
     timeout-minutes: 20

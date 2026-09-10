@@ -1,0 +1,28 @@
+{
+  "id": "89200120",
+  "name": "C AddHand",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Put a Synth Vanilla into your hand.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Put a Synth Vanilla into your hand.",
+      "effects": [
+        {
+          "op": "addToHand",
+          "card": {
+            "named": "88001110"
+          },
+          "count": 1,
+          "printed": "Put a Synth Vanilla into your hand."
+        }
+      ]
+    }
+  ]
+}

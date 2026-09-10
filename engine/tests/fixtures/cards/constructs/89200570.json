@@ -1,0 +1,33 @@
+{
+  "id": "89200570",
+  "name": "C LeadSet8",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Set the enemy leader's max defense to 8.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Set the enemy leader's max defense to 8.",
+      "effects": [
+        {
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "maxDefense": {
+            "set": 8
+          },
+          "printed": "Set the enemy leader's max defense to 8."
+        }
+      ]
+    }
+  ]
+}

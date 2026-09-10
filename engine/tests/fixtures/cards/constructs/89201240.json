@@ -1,0 +1,34 @@
+{
+  "id": "89201240",
+  "name": "C ZnCem",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Put a copy of a follower in your cemetery into your hand.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Put a copy of a follower in your cemetery into your hand.",
+      "effects": [
+        {
+          "op": "addToHand",
+          "card": {
+            "copyOf": {
+              "pick": "all",
+              "side": "ally",
+              "zone": "cemetery",
+              "kind": "follower"
+            },
+            "exact": false
+          },
+          "count": 1,
+          "printed": "Put a copy of a follower in your cemetery into your hand."
+        }
+      ]
+    }
+  ]
+}

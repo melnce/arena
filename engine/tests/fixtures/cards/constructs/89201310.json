@@ -1,0 +1,31 @@
+{
+  "id": "89201310",
+  "name": "C KindCh",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Deal 2 damage to all enemy characters.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 2 damage to all enemy characters.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "character"
+          },
+          "amount": 2,
+          "printed": "Deal 2 damage to all enemy characters."
+        }
+      ]
+    }
+  ]
+}

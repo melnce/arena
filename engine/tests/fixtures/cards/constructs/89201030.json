@@ -1,0 +1,44 @@
+{
+  "id": "89201030",
+  "name": "C RepeatAmt",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Do this X times: Deal 1 damage to the enemy leader. X is the number of allied followers.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Do this X times: Deal 1 damage to the enemy leader. X is the number of allied followers.",
+      "effects": [
+        {
+          "op": "repeat",
+          "times": {
+            "count": {
+              "pick": "all",
+              "side": "ally",
+              "zone": "field",
+              "kind": "follower"
+            }
+          },
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ],
+          "printed": "Do this X times: Deal 1 damage to the enemy leader. X is the number of allied followers."
+        }
+      ]
+    }
+  ]
+}

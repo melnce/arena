@@ -1,0 +1,16 @@
+{
+  "id": "89100060",
+  "name": "Synth Officer",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "text": "",
+  "attack": 3,
+  "defense": 3,
+  "tribes": [
+    "officer"
+  ]
+}

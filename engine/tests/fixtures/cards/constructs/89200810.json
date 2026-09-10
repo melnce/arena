@@ -1,0 +1,33 @@
+{
+  "id": "89200810",
+  "name": "C RmOn enter",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Remove enter from an enemy follower.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Remove enter from an enemy follower.",
+      "effects": [
+        {
+          "op": "removeAbilities",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "on": [
+            "enter"
+          ],
+          "printed": "Remove enter from an enemy follower."
+        }
+      ]
+    }
+  ]
+}
