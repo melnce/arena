@@ -480,6 +480,9 @@ pub struct State {
     pub pending_play_rally: Option<PlayerId>,
     /// Subject of the current `When` event (`pick: entering`, etc.).
     pub event_subject: Option<TargetOpt>,
+    /// Card ids invoked during the current turn-boundary wave. Only one copy
+    /// of each card can be invoked at once (official glossary).
+    pub invoked_ids: BTreeSet<CardId>,
 }
 
 #[derive(Debug, Clone)]

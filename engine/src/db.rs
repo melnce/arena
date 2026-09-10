@@ -21,6 +21,9 @@ pub struct CardDb {
     when_cards: HashMap<(EventName, AbilityZone), HashSet<CardId>>,
     /// Printed `When` abilities on crests, keyed by `(event, zone)` → crest ids.
     when_crests: HashMap<(EventName, AbilityZone), HashSet<String>>,
+    /// Cards that print a start/end-of-turn ability in a given zone.
+    /// `true` = startOfTurn, `false` = endOfTurn.
+    boundary_cards: HashMap<(AbilityZone, bool), HashSet<CardId>>,
 }
 
 impl CardDb {
@@ -33,6 +36,7 @@ impl CardDb {
             paths: BTreeMap::new(),
             when_cards: HashMap::new(),
             when_crests: HashMap::new(),
+            boundary_cards: HashMap::new(),
         };
         let catalog_path = root.join("cards/official/catalog.json");
         if catalog_path.exists() {
@@ -66,6 +70,7 @@ impl CardDb {
             })?;
         }
         db.rebuild_when_index();
+        db.rebuild_boundary_index();
         Ok(db)
     }
 
@@ -79,6 +84,7 @@ impl CardDb {
         }
         walk_json(dir, &mut |path| self.load_file(path, true))?;
         self.rebuild_when_index();
+        self.rebuild_boundary_index();
         Ok(())
     }
 
@@ -183,6 +189,15 @@ impl CardDb {
             .is_some_and(|set| !set.is_empty())
     }
 
+    /// Any printed start/end-of-turn ability in `zone`. Skip deck/hand scans
+    /// when the index is empty (Sandalphon's deck `startOfTurn` is the first
+    /// deck-boundary card; decks without it cost nothing).
+    pub fn zone_has_boundary(&self, zone: AbilityZone, start: bool) -> bool {
+        self.boundary_cards
+            .get(&(zone, start))
+            .is_some_and(|set| !set.is_empty())
+    }
+
     fn rebuild_when_index(&mut self) {
         let mut when_cards: HashMap<(EventName, AbilityZone), HashSet<CardId>> = HashMap::new();
         let mut when_crests: HashMap<(EventName, AbilityZone), HashSet<String>> = HashMap::new();
@@ -201,6 +216,26 @@ impl CardDb {
         }
         self.when_cards = when_cards;
         self.when_crests = when_crests;
+    }
+
+    fn rebuild_boundary_index(&mut self) {
+        let mut boundary_cards: HashMap<(AbilityZone, bool), HashSet<CardId>> = HashMap::new();
+        for (id, card) in &self.cards {
+            for a in card.abilities() {
+                let start = match a {
+                    Ability::StartOfTurn { .. } => Some(true),
+                    Ability::EndOfTurn { .. } => Some(false),
+                    _ => None,
+                };
+                if let Some(start) = start {
+                    boundary_cards
+                        .entry((a.zone(), start))
+                        .or_default()
+                        .insert(*id);
+                }
+            }
+        }
+        self.boundary_cards = boundary_cards;
     }
 }
 

@@ -1,0 +1,74 @@
+{
+  "id": "10574120",
+  "name": "Imari, Dewdrop",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10005,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Select a card in your hand and discard it. Draw a spell.\n\nWhenever you play a spell, if this follower is evolved, summon an Imari's Little Buddies.\n\nSuper-Evolve: Draw 2 differently named 1-cost spells.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and discard it. Draw a spell.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Draw a spell.",
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "kind": "spell"
+          }
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_spell_played",
+      "printed": "Whenever you play a spell, if this follower is evolved, summon an Imari's Little Buddies.",
+      "when": {
+        "evolved": true
+      },
+      "effects": [
+        {
+          "printed": "summon an Imari's Little Buddies.",
+          "op": "summon",
+          "card": {
+            "named": "90074140"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Draw 2 differently named 1-cost spells.",
+      "effects": [
+        {
+          "printed": "Draw 2 differently named 1-cost spells.",
+          "op": "draw",
+          "count": 2,
+          "filter": {
+            "kind": "spell",
+            "costEq": 1
+          },
+          "distinctNames": true
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

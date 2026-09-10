@@ -1,0 +1,52 @@
+{
+  "id": "10771110",
+  "name": "Brusque Barkeep",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Whenever an allied Artifact follower enters the field, restore 1 defense to your leader.\n\nEvolve: Summon a Mystic Artifact.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "artifact",
+        "kind": "follower"
+      },
+      "printed": "Whenever an allied Artifact follower enters the field, restore 1 defense to your leader.",
+      "effects": [
+        {
+          "printed": "restore 1 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon a Mystic Artifact.",
+      "effects": [
+        {
+          "printed": "Summon a Mystic Artifact.",
+          "op": "summon",
+          "card": {
+            "named": "90071150"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

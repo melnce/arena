@@ -1,0 +1,89 @@
+{
+  "id": "10771310",
+  "name": "Freerunning",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Select a Mode to activate. If at least 3 differently named allied Artifact followers have entered the field this match, activate all of them instead.\n1. Add an Analyzing Artifact to your hand.\n2. Add an Ancient Artifact to your hand.",
+  "tribes": [
+    "anathema"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate. If at least 3 differently named allied Artifact followers have entered the field this match, activate all of them instead.\n1. Add an Analyzing Artifact to your hand.\n2. Add an Ancient Artifact to your hand.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "when": {
+            "not": {
+              "amountAtLeast": {
+                "of": {
+                  "distinctNames": {
+                    "enteredThisMatch": {
+                      "tribe": "artifact",
+                      "kind": "follower"
+                    }
+                  }
+                },
+                "n": 3
+              }
+            }
+          },
+          "options": [
+            {
+              "printed": "1. Add an Analyzing Artifact to your hand.",
+              "effects": [
+                {
+                  "op": "addToHand",
+                  "card": {
+                    "named": "90071130"
+                  },
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "printed": "2. Add an Ancient Artifact to your hand.",
+              "effects": [
+                {
+                  "op": "addToHand",
+                  "card": {
+                    "named": "90071140"
+                  },
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "printed": "If at least 3 differently named allied Artifact followers have entered the field this match, activate all of them instead.",
+          "op": "choose",
+          "pick": "all",
+          "by": "player",
+          "when": {
+            "amountAtLeast": {
+              "of": {
+                "distinctNames": {
+                  "enteredThisMatch": {
+                    "tribe": "artifact",
+                    "kind": "follower"
+                  }
+                }
+              },
+              "n": 3
+            }
+          },
+          "optionsFrom": "fanfare"
+        }
+      ]
+    }
+  ]
+}

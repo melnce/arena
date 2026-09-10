@@ -169,10 +169,20 @@ pub enum LeaderWord {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ChooseOptionJson {
-    Card { card: String },
-    Slot { slot: u8 },
+    Card {
+        card: String,
+    },
+    Slot {
+        slot: u8,
+        /// Target controller. Omitted on old traces; those prefer the enemy
+        /// board (Practice-Tool CHOOSE_TARGET: enemy slot, then self).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        player: Option<String>,
+    },
     Leader(LeaderWord),
-    Mode { mode: u8 },
+    Mode {
+        mode: u8,
+    },
 }
 
 pub fn player_str(p: PlayerId) -> String {

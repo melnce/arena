@@ -51,7 +51,6 @@ fn mode_unsupported(mode: &Mode) -> Option<String> {
 
 fn ability_unsupported(a: &Ability) -> Option<String> {
     match a {
-        Ability::Invoked { .. } => Some("on:invoked".into()),
         Ability::Static { .. } => Some("on:static".into()),
         Ability::When { event, .. } => {
             // All 15 events are implemented; keep the hook for future cuts.
@@ -73,10 +72,8 @@ fn walk_ability_effects(a: &Ability) -> Option<String> {
 
 fn effect_unsupported(e: &Effect) -> Option<String> {
     match e {
-        Effect::Invoke { .. } => Some("op:invoke".into()),
         Effect::RandomSplit { .. } => Some("op:randomSplit".into()),
         Effect::Sequence { .. } => Some("op:sequence".into()),
-        Effect::Transform { .. } => Some("op:transform".into()),
         Effect::Pay {
             resource: crate::card::PayResource::Faith,
             ..
@@ -180,12 +177,9 @@ fn condition_unsupported(_c: &Condition) -> Option<String> {
 /// cards on `main` that a deck might try to play). Listed in the PR body.
 pub fn m1_unsupported_list() -> Vec<&'static str> {
     vec![
-        "on:invoked",
         "on:static",
-        "op:invoke",
         "op:randomSplit",
         "op:sequence",
-        "op:transform",
         "op:pay resource:faith",
         "op:counter faith",
         "op:counter skyboundHand",

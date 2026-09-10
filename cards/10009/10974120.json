@@ -1,0 +1,62 @@
+{
+  "id": "10974120",
+  "name": "Aizeden, Killshot Revenant",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon a Warden of the Trigger.\n\nWhenever an allied Artifact follower enters the field, destroy a random enemy follower.\n\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Warden of the Trigger.",
+      "effects": [
+        {
+          "printed": "Summon a Warden of the Trigger.",
+          "op": "summon",
+          "card": {
+            "named": "90074150"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "artifact",
+        "kind": "follower"
+      },
+      "printed": "Whenever an allied Artifact follower enters the field, destroy a random enemy follower.",
+      "effects": [
+        {
+          "printed": "destroy a random enemy follower.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          }
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

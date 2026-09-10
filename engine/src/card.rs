@@ -795,7 +795,7 @@ pub enum Amount {
     },
     DistinctNames {
         #[serde(rename = "distinctNames")]
-        distinct_names: Box<Selector>,
+        distinct_names: Box<Amount>,
     },
     EnteredThisMatch {
         #[serde(rename = "enteredThisMatch")]
@@ -905,6 +905,10 @@ pub enum Condition {
         #[serde(rename = "handSameCostAtLeast")]
         hand_same_cost_at_least: ComboN,
     },
+    AmountAtLeast {
+        #[serde(rename = "amountAtLeast")]
+        amount_at_least: AmountAtLeast,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -976,6 +980,14 @@ pub struct FieldHas {
 #[serde(deny_unknown_fields)]
 pub struct VarAtLeast {
     pub key: VarKey,
+    pub n: Amount,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct AmountAtLeast {
+    pub of: Amount,
     pub n: Amount,
 }
 
@@ -1182,6 +1194,12 @@ pub enum Effect {
         count: Amount,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         filter: Option<Filter>,
+        #[serde(
+            default,
+            rename = "distinctNames",
+            skip_serializing_if = "Option::is_none"
+        )]
+        distinct_names: Option<bool>,
     },
     Discard {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2678,12 +2696,8 @@ fn walk_filter(f: &Filter, used: &mut BTreeSet<String>) {
 
 fn walk_amount(a: &Amount, used: &mut BTreeSet<String>) {
     match a {
-        Amount::Count { count }
-        | Amount::DistinctNames {
-            distinct_names: count,
-        } => {
-            walk_selector(count, used);
-        }
+        Amount::Count { count } => walk_selector(count, used),
+        Amount::DistinctNames { distinct_names } => walk_amount(distinct_names, used),
         Amount::Stat { stat } => walk_selector(&stat.of, used),
         Amount::Add { add }
         | Amount::Sub { sub: add }
@@ -2717,6 +2731,10 @@ fn walk_condition(c: &Condition, used: &mut BTreeSet<String>) {
         }
         Condition::MaxPpAtLeast { max_pp_at_least } => walk_amount(&max_pp_at_least.n, used),
         Condition::Combo { combo } => walk_amount(&combo.n, used),
+        Condition::AmountAtLeast { amount_at_least } => {
+            walk_amount(&amount_at_least.of, used);
+            walk_amount(&amount_at_least.n, used);
+        }
         _ => {}
     }
 }

@@ -601,7 +601,7 @@
           "additionalProperties": false,
           "properties": {
             "distinctNames": {
-              "$ref": "#/$defs/Selector"
+              "$ref": "#/$defs/Amount"
             }
           },
           "required": [
@@ -1079,6 +1079,31 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "amountAtLeast": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "of": {
+                  "$ref": "#/$defs/Amount"
+                },
+                "n": {
+                  "$ref": "#/$defs/Amount"
+                }
+              },
+              "required": [
+                "of",
+                "n"
+              ]
+            }
+          },
+          "required": [
+            "amountAtLeast"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
             "handSameCostAtLeast": {
               "type": "object",
               "additionalProperties": false,
@@ -1477,6 +1502,9 @@
             },
             "filter": {
               "$ref": "#/$defs/Filter"
+            },
+            "distinctNames": {
+              "type": "boolean"
             }
           },
           "required": [

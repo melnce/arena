@@ -1,0 +1,30 @@
+{
+  "id": "10471130",
+  "name": "Isaac, Congenial Engineer",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Last Words: Add a Striker Artifact to your hand.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add a Striker Artifact to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Striker Artifact to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90072110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -36,7 +36,17 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 
 `CardDb` builds a static `when` index at load: for each `(EventName, AbilityZone)`, the card ids (and crest ids) that print at least one `When` for that pair. `enqueue_when_on` does not clone zones; it walks field instances whose card id is in the index for `(event, Field)` or whose `granted_whens` count is non-zero (grants are dynamic and rare), crests in the crest index, and hand/deck only when the index has any entry for that `(event, zone)` — today's cards have no deck `When` for most events, so those scans cost nothing. Categories, entry order, `oncePerTurn` marks, and `filter`/`when` evaluation are unchanged.
 
+`CardDb` also indexes start/end-of-turn abilities by `(AbilityZone, start)`. `enqueue_boundary` skips the hand and deck scans when `zone_has_boundary` is empty, so a deck without Sandalphon-style `zone: deck` `startOfTurn` costs nothing.
+
 All 15 `EventName`s are raised where the engine produces them (enter, destroy, play, attack, evolve, draw, earth-rite spend, engage, leader restore, self-buff). None are a silent no-op.
+
+## Field transform
+
+`op:transform` replaces the targeted field instance in its slot with `CardInstance::from_card` of the destination (new instance id). The original is dropped — no Last Words, no shadow, no cemetery, no leave triggers, no compact. The new card is a fresh print (base stats, unevolved, summoning-sick, printed keywords). It is not an enter: no Rally, no `enter_counts` / `enteredThisMatch`, no `on:enter` / `ally_enter`. Rush/Storm on the new card still allow attacking that turn (owner 2026-09-10). In-hand fuse `recipes.transformInto` is the same replacement on the host hand index and is unchanged. Sincerity (`10573310`) targets `any:any` on both boards; `choose {slot}` includes `player` only when that slot number is occupied on both sides (old traces omit it and prefer the enemy board).
+
+## Invoke
+
+`op:invoke` moves the sourced deck instance onto the field if there is a slot and `State.invoked_ids` does not already contain that card id this boundary window (one copy per name). No RNG pick. Full field: the card stays in the deck and `on:invoked` does not fire. A successful Invoke increments Rally and `enter_counts`, raises enter triggers, then enqueues `on:invoked`. `invoked_ids` is cleared at the start of each start-of-turn boundary.
 
 ## One evolve per turn
 

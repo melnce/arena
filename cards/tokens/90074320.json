@@ -1,0 +1,53 @@
+{
+  "id": "90074320",
+  "name": "Depths of the Eld Axe",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 0,
+  "text": "Select an allied follower on the field with a base cost of 5 or more, add a copy of it to your hand without revealing it, and reduce the cost of the copy by 3.",
+  "tribes": [
+    "encroacher"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied follower on the field with a base cost of 5 or more, add a copy of it to your hand without revealing it, and reduce the cost of the copy by 3.",
+      "effects": [
+        {
+          "printed": "Select an allied follower on the field with a base cost of 5 or more, add a copy of it to your hand without revealing it, and reduce the cost of the copy by 3.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "copyOf": {
+                  "side": "ally",
+                  "zone": "field",
+                  "kind": "follower",
+                  "pick": "choose",
+                  "filter": {
+                    "baseCostGte": 5
+                  }
+                },
+                "exact": false
+              },
+              "count": 1,
+              "as": "c"
+            },
+            {
+              "op": "cost",
+              "select": {
+                "pick": "bound",
+                "ref": "c"
+              },
+              "delta": -3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

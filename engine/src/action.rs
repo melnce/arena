@@ -100,7 +100,23 @@ fn choose_option_json(state: &State, i: u8) -> ChooseOptionJson {
         match node {
             ChoiceNode::Targets { options, .. } | ChoiceNode::MultiPick { options, .. } => {
                 return match options.get(i as usize) {
-                    Some(TargetOpt::Slot { slot, .. }) => ChooseOptionJson::Slot { slot: *slot },
+                    Some(TargetOpt::Slot { player, slot }) => {
+                        // Trace format is `{slot: N}`. Include `player` only
+                        // when both boards offer the same slot number (Sincerity
+                        // "a card on the field"); otherwise old traces stay
+                        // byte-compatible and `{slot: N}` is unambiguous.
+                        let ambiguous = options.iter().any(|t| {
+                            matches!(
+                                t,
+                                TargetOpt::Slot { player: p, slot: s }
+                                    if *s == *slot && *p != *player
+                            )
+                        });
+                        ChooseOptionJson::Slot {
+                            slot: *slot,
+                            player: ambiguous.then(|| player.as_str().to_string()),
+                        }
+                    }
                     Some(TargetOpt::Leader { .. }) => ChooseOptionJson::Leader(LeaderWord::Leader),
                     Some(TargetOpt::Card(id)) => ChooseOptionJson::Card { card: id.as_str() },
                     Some(TargetOpt::Mode(m)) => ChooseOptionJson::Mode { mode: *m },
@@ -180,10 +196,7 @@ pub fn from_neutral(state: &State, n: &NeutralAction) -> Option<Action> {
         NeutralAction::Engage { slot, .. } => Some(Action::Engage { slot: Slot(*slot) }),
         NeutralAction::Fuse { host_pos, .. } => Some(Action::Fuse { host: *host_pos }),
         NeutralAction::BonusPp { .. } => Some(Action::BonusPp),
-        NeutralAction::Choose { option, .. } => match option {
-            ChooseOptionJson::Card { .. } => Some(Action::Choose(option_index(state, option)?)),
-            _ => Some(Action::Choose(option_index(state, option).unwrap_or(0))),
-        },
+        NeutralAction::Choose { option, .. } => Some(Action::Choose(option_index(state, option)?)),
         NeutralAction::Confirm { .. } => Some(Action::Confirm),
         NeutralAction::EndTurn { .. } => Some(Action::EndTurn),
     }
@@ -191,6 +204,33 @@ pub fn from_neutral(state: &State, n: &NeutralAction) -> Option<Action> {
 
 fn option_index(state: &State, opt: &ChooseOptionJson) -> Option<u8> {
     if let Phase::Choice { node, .. } = &state.phase {
+        if let ChoiceNode::Targets { options, .. } | ChoiceNode::MultiPick { options, .. } = node {
+            if let ChooseOptionJson::Slot { slot, player } = opt {
+                if let Some(p) = player.as_deref().and_then(crate::trace::parse_player) {
+                    return options
+                        .iter()
+                        .position(|t| {
+                            matches!(t, TargetOpt::Slot { player, slot: s } if *player == p && *s == *slot)
+                        })
+                        .map(|i| i as u8);
+                }
+                // Old traces omit player. Enemy board first, then self —
+                // Practice-Tool CHOOSE_TARGET.
+                let chooser = acting_player(state);
+                let enemy = chooser.opponent();
+                return options
+                    .iter()
+                    .position(|t| {
+                        matches!(t, TargetOpt::Slot { player, slot: s } if *player == enemy && *s == *slot)
+                    })
+                    .or_else(|| {
+                        options.iter().position(|t| {
+                            matches!(t, TargetOpt::Slot { player, slot: s } if *player == chooser && *s == *slot)
+                        })
+                    })
+                    .map(|i| i as u8);
+            }
+        }
         let opts: Vec<ChooseOptionJson> = match node {
             ChoiceNode::Targets { options, .. } | ChoiceNode::MultiPick { options, .. } => options
                 .iter()
