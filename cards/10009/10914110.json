@@ -1,0 +1,71 @@
+{
+  "id": "10914110",
+  "name": "Magachiyo, Aromatic Convict",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 4 damage. Combo (3) - Deal damage to all enemy followers instead.\n\nSuper-Evolve: Give this follower Storm.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 4 damage. Combo (3) - Deal damage to all enemy followers instead.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 4 damage. Combo (3) - Deal damage to all enemy followers instead.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 4
+            }
+          ],
+          "else": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "choose"
+              },
+              "amount": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Give this follower Storm.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "storm": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

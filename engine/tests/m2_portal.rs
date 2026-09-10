@@ -553,10 +553,12 @@ fn e38_aizeden_destroy_before_analyzing_draw() {
 }
 
 /// Imari 10574120 "Whenever you play a spell, if this follower is evolved,
-/// summon an Imari's Little Buddies" waits until Freerunning's Mode choose
-/// completes (E34: reactions drain after the play, including a player choice).
+/// summon an Imari's Little Buddies" is a play reaction. E39: play reactions
+/// resolve when the card is played, before the spell's text or mode choice
+/// (rulebook Fanfare and Enter-Play item 1; official Q&A World of Games /
+/// Divine Thunder; `docs/engine-internals.md` § E39).
 #[test]
-fn imari_summons_after_freerunning_mode_choose() {
+fn imari_summons_before_freerunning_mode_choose() {
     let db = load_db();
     let mut st = started(&db, 57);
     let me = PlayerId::A;
@@ -569,12 +571,7 @@ fn imari_summons_after_freerunning_mode_choose() {
     play_id(&db, &mut st, me, "10771310");
     assert!(matches!(st.phase, Phase::Choice { .. }));
     assert!(
-        !field_has(&st, me, "90074140"),
-        "play reactions wait for the spell's Mode choose"
-    );
-    choose(&db, &mut st, 0);
-    assert!(
         field_has(&st, me, "90074140"),
-        "Little Buddies after Freerunning resolves"
+        "play reactions summon before the spell's Mode choose"
     );
 }

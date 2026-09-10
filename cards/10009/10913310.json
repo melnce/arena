@@ -1,0 +1,61 @@
+{
+  "id": "10913310",
+  "name": "Crimson Incense",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Activates in hand. At the end of your turn, Combo (3) - Reduce the cost of this card by 1.\n\nSelect an enemy follower on the field and destroy it. Draw a card.",
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "zone": "hand",
+      "printed": "Activates in hand. At the end of your turn, Combo (3) - Reduce the cost of this card by 1.",
+      "effects": [
+        {
+          "printed": "Combo (3) - Reduce the cost of this card by 1.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "cost",
+              "select": {
+                "pick": "self"
+              },
+              "delta": -1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and destroy it. Draw a card.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

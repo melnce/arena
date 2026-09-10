@@ -1,0 +1,45 @@
+{
+  "id": "10933310",
+  "name": "Obsidian Raven",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10009,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Summon an Obsessed Test Subject. Do this 2 times: \"Deal 7 damage to a random enemy follower.\"",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon an Obsessed Test Subject. Do this 2 times: \"Deal 7 damage to a random enemy follower.\"",
+      "effects": [
+        {
+          "printed": "Summon an Obsessed Test Subject.",
+          "op": "summon",
+          "card": {
+            "named": "10931110"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Do this 2 times: \"Deal 7 damage to a random enemy follower.\"",
+          "op": "repeat",
+          "times": 2,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

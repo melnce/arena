@@ -1,0 +1,27 @@
+{
+  "id": "10513310",
+  "name": "Grace of the Swarmpetal",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10005,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Draw X cards. X is your Combo.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw X cards. X is your Combo.",
+      "effects": [
+        {
+          "printed": "Draw X cards. X is your Combo.",
+          "op": "draw",
+          "count": {
+            "counter": "combo"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

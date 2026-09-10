@@ -131,6 +131,14 @@ fn choose_option_json(state: &State, i: u8) -> ChooseOptionJson {
                             None => ChooseOptionJson::Mode { mode: i },
                         }
                     }
+                    Some(TargetOpt::Deck { player, id }) => {
+                        match state.player(*player).deck.iter().find(|c| c.id == *id) {
+                            Some(c) => ChooseOptionJson::Card {
+                                card: c.card.as_str(),
+                            },
+                            None => ChooseOptionJson::Mode { mode: i },
+                        }
+                    }
                     None => ChooseOptionJson::Mode { mode: i },
                 };
             }
@@ -248,11 +256,30 @@ fn option_index(state: &State, opt: &ChooseOptionJson) -> Option<u8> {
                 .iter()
                 .map(|c| ChooseOptionJson::Card { card: c.as_str() })
                 .collect(),
-            ChoiceNode::FusePartners { options, .. } => options
-                .iter()
-                .enumerate()
-                .map(|(i, _)| choose_option_json(state, i as u8))
-                .collect(),
+            ChoiceNode::FusePartners {
+                options, picked, ..
+            } => {
+                let who = match &state.phase {
+                    Phase::Choice { player, .. } => *player,
+                    _ => acting_player(state),
+                };
+                return options
+                    .iter()
+                    .enumerate()
+                    .position(|(i, pos)| {
+                        if picked.contains(pos) {
+                            return false;
+                        }
+                        let Some(c) = state.player(who).hand.get(*pos as usize) else {
+                            return false;
+                        };
+                        match opt {
+                            ChooseOptionJson::Card { card } => c.card.as_str() == *card,
+                            _ => choose_option_json(state, i as u8) == *opt,
+                        }
+                    })
+                    .map(|i| i as u8);
+            }
         };
         return opts.iter().position(|o| o == opt).map(|i| i as u8);
     }

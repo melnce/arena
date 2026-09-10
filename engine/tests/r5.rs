@@ -112,7 +112,29 @@ fn sloth_scripted(picks: Vec<Pick>) -> Result<arena_engine::State, Illegal> {
 }
 
 #[test]
-fn sloth_scripted_slot0_then_slot1_replays() {
+fn sloth_scripted_slot0_then_slot0_replays() {
+    // E36: after the first 2 damage, that follower is at 0 defense and is
+    // skipped; the remaining body is survivor index 0 (not raw slot 1).
+    let st = sloth_scripted(vec![
+        Pick {
+            what: PickWhat::RandomTarget,
+            among: None,
+            chose: PickChose::Slot { slot: 0 },
+        },
+        Pick {
+            what: PickWhat::RandomTarget,
+            among: None,
+            chose: PickChose::Slot { slot: 0 },
+        },
+    ])
+    .expect("slot0 then slot0");
+    assert_eq!(field_count(&st, PlayerId::B), 0);
+}
+
+#[test]
+fn sloth_scripted_slot0_then_slot1_replays_as_raw_alias() {
+    // M1 traces numbered random_target by raw slot. After the first body
+    // dies, survivor index 0 is raw slot 1; both labels map to that body.
     let st = sloth_scripted(vec![
         Pick {
             what: PickWhat::RandomTarget,
@@ -125,12 +147,12 @@ fn sloth_scripted_slot0_then_slot1_replays() {
             chose: PickChose::Slot { slot: 1 },
         },
     ])
-    .expect("slot0 then slot1");
+    .expect("slot0 then raw slot1 alias");
     assert_eq!(field_count(&st, PlayerId::B), 0);
 }
 
 #[test]
-fn sloth_scripted_double_slot0_is_oracle_failure() {
+fn sloth_scripted_slot0_then_slot2_is_oracle_failure() {
     let err = sloth_scripted(vec![
         Pick {
             what: PickWhat::RandomTarget,
@@ -140,15 +162,15 @@ fn sloth_scripted_double_slot0_is_oracle_failure() {
         Pick {
             what: PickWhat::RandomTarget,
             among: None,
-            chose: PickChose::Slot { slot: 0 },
+            chose: PickChose::Slot { slot: 2 },
         },
     ])
     .unwrap_err();
     match err {
         Illegal::OraclePickNotLegal(o) => {
             assert_eq!(o.what, PickWhat::RandomTarget);
-            assert_eq!(o.chose, "slot:0");
-            assert_eq!(o.candidates, vec!["slot:1".to_string()]);
+            assert_eq!(o.chose, "slot:2");
+            assert_eq!(o.candidates, vec!["slot:0".to_string()]);
         }
         other => panic!("{other}"),
     }
@@ -393,6 +415,7 @@ fn crest_without_countdown_omits_the_key() {
             faith: false,
             once_used: vec![],
             granted_order: 1,
+            granted: vec![],
         });
     let snap = snapshot_json(&st);
     let crest = &snap["players"]["a"]["crests"][0];

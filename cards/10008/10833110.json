@@ -1,0 +1,65 @@
+{
+  "id": "10833110",
+  "name": "Tico, Mysterian Spellcrafter",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Add 2 copies of Mysterian Missile to your hand.\n\nEvolve: Reduce the cost of all Mysteria spells in your hand by 1.\nSuper-Evolve: Gain Crest: Tico, Mysterian Spellcrafter.",
+  "attack": 3,
+  "defense": 2,
+  "tribes": [
+    "mysteria"
+  ],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add 2 copies of Mysterian Missile to your hand.",
+      "effects": [
+        {
+          "printed": "Add 2 copies of Mysterian Missile to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90031310"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Reduce the cost of all Mysteria spells in your hand by 1.",
+      "effects": [
+        {
+          "printed": "Reduce the cost of all Mysteria spells in your hand by 1.",
+          "op": "cost",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "filter": {
+              "tribe": "mysteria",
+              "kind": "spell"
+            }
+          },
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Gain Crest: Tico, Mysterian Spellcrafter.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Tico, Mysterian Spellcrafter.",
+          "op": "crest",
+          "gain": "crest:10833110",
+          "player": "self"
+        }
+      ]
+    }
+  ]
+}

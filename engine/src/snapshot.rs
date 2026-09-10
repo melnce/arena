@@ -125,6 +125,9 @@ fn vars_map(v: &BTreeMap<VarKey, i32>) -> Option<BTreeMap<String, i32>> {
     }
     let mut m = BTreeMap::new();
     for (k, n) in v {
+        if *n == 0 {
+            continue;
+        }
         let key = match k {
             VarKey::X => "X",
             VarKey::Y => "Y",
@@ -132,7 +135,11 @@ fn vars_map(v: &BTreeMap<VarKey, i32>) -> Option<BTreeMap<String, i32>> {
         };
         m.insert(key.into(), *n);
     }
-    Some(m)
+    if m.is_empty() {
+        None
+    } else {
+        Some(m)
+    }
 }
 
 fn snap_player(p: &PlayerState) -> CanonicalPlayer {

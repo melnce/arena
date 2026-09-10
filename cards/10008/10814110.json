@@ -1,0 +1,49 @@
+{
+  "id": "10814110",
+  "name": "Setus & Maisha, Bladerights",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Select an enemy follower on the field and destroy it. Give all other allied followers on the field +1/+1.\n\nStorm\nWard",
+  "attack": 4,
+  "defense": 6,
+  "traits": {
+    "storm": true,
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy it. Give all other allied followers on the field +1/+1.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          }
+        },
+        {
+          "printed": "Give all other allied followers on the field +1/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "other": true
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

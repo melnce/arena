@@ -1,0 +1,40 @@
+{
+  "id": "10911110",
+  "name": "Sprouting Initiate",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Fanfare: Combo (3) - Draw a card.\n\nRush",
+  "attack": 1,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Combo (3) - Draw a card.",
+      "effects": [
+        {
+          "printed": "Combo (3) - Draw a card.",
+          "op": "if",
+          "cond": {
+            "combo": {
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

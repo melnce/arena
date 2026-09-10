@@ -756,7 +756,7 @@ Witch's New Brew and Magic Sediment are untargetable by enemy selection (Aura) a
 
 `10031210` Witch's New Brew and `90031210` Magic Sediment set `traits.aura: true` and `traits.cantBeDestroyedByAbilities: true`. The catalog `skill_text` does not print Aura; the client has it. CanonicalState still lists only `aura` on Earth Sigil amulets (the old engine does not snapshot `cantBeDestroyedByAbilities`); destroy-by-ability fizzles from the instance trait and the Earth Sigil tribe.
 
-The glossary's merge rule (a newly played Earth Sigil amulet **banishes** the others and takes their counts) differs from the old engine's cemetery-and-shadow merge. **Do not change the merge** until the owner rules — listed under Still open.
+**Merge — owner 2026-09-10 ("yes banish them instead"):** when an Earth Sigil amulet enters, its count is set to 1, every other allied Earth Sigil amulet is **banished** (banished multiset, no shadow, no Last Words) and their counts are added to the new amulet. "Gain X earth sigils" adds X to the holder on the field, else summons a Magic Sediment with count X (glossary, Earth Sigil). A generated Sediment still merges into a Brew already on the field (the agreed part of 2026-08-30). The 2026-08-30 "collectible survives" identity is superseded: the newest amulet survives.
 
 ## Earth Sigil amulets and a full board — 2026-09-10
 
@@ -770,6 +770,38 @@ A full board blocks playing Witch's New Brew (or any Earth Sigil amulet) even th
 
 A stat modification defines the follower's maximum defense: max = the stat line after all +/− modifications; damage is tracked separately; healing restores up to that max. A −0/−4 therefore lowers `max_defense` by 4 (it does not snap max to the current defense). Owner's reasoning: Azurifrit's "fully restore" goes to the buffed maximum, so modifications define the max.
 
+## Play reactions resolve at play time — 2026-09-10
+
+<!-- rulebook: absorbed #fanfare-and-enter-play-trigger-order -->
+
+> "WoG says 'whenever you play' so it should die on play and make space."
+
+World of Games (`10503210`) and other "whenever you play …" abilities (crests included) resolve when the card is played, **before** that card's Fanfare or spell text. Official Cygames Q&A on World of Games: _"The only card on my field is a World of Games with a count of 5, and the only enemy card on the field is a Quake Goliath. If I play Divine Thunder, what will World of Games's count be?"_ → _"Its count will be 4."_ Divine Thunder destroys the Goliath; the count still advances. Enter reactions ("whenever … enters the field") still wait until the play sequence finishes.
+
+## World of Games counts either side — 2026-09-10
+
+<!-- rulebook: absorbed #fanfare-and-enter-play-trigger-order -->
+
+> "yes any card"
+
+World of Games prints "a card on the field other than it" with no side. The same official Q&A (the only same-cost card is the **enemy** Goliath) and the owner confirm an enemy card with the same base cost counts. The old engine counted allied cards only (`old-rule`).
+
+## Evolve reactions before the Evolve list — 2026-09-10
+
+<!-- rulebook: absorbed #timing-windows-and-trigger-resolution -->
+
+> "evolve comes first so the faith ticks up first"
+
+Crests and Faith that react to an allied evolve resolve before that follower's printed `Evolve:` / `Super-Evolve:` list. No official Cygames Q&A exists for this ordering.
+
+## A follower evolves only once — 2026-09-10
+
+<!-- rulebook: absorbed #play-point-pp-and-evolution-point-rules -->
+
+> "a card cannot evolve multiple times: only once. also it cant normal evolve and then super evolve later."
+
+Official glossary (Evolution): "An evolved follower can't be evolved again." `legal_actions` offers no super-evolve on a normally evolved follower. An effect-evolve on an already-evolved follower is a no-op.
+
 ---
 
 ## Still open — Chris will test in game
@@ -780,4 +812,4 @@ A stat modification defines the follower's maximum defense: max = the stat line 
 
 ~~Initiation of Rebirth highest-base-cost ties (assumed, not contested).~~ **Settled 2026-09-02 — randomly among the tied cards.** See **Initiation of Rebirth highest-base-cost ties — 2026-09-02** above.
 
-**Earth Sigil merge: glossary banish vs old-engine cemetery.** Official glossary, 2026-09-10 (Earth Sigil): a newly played Earth Sigil amulet **banishes** the others and takes their counts. The old engine cemeteries them (and they produce a shadow). **Do not change the merge** until the owner rules.
+~~**Earth Sigil merge: glossary banish vs old-engine cemetery.**~~ **Settled 2026-09-10 — banish, newest survives.** See **Earth Sigil amulets have Aura — 2026-09-10** above. Official glossary plus owner "yes banish them instead": other allied Earth Sigil amulets are banished and their counts move to the new amulet. The old engine's cemetery-and-shadow merge is `old-rule`.

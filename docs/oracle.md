@@ -14,6 +14,8 @@ Repo: `melnce/Practice-Tool`.
 
 **Artifact Portal** (`afnm-minatodao-mirror`): emitter `b3bd5473e421cf2fd1cf7ac80184beadf6308274` — [PR #392](https://github.com/melnce/Practice-Tool/pull/392) (`choose {slot}` carries `player` when the pool spans both boards; deck-insert shuffle tagged). Deck `oracle/decks/afnm-minatodao.json` (same list as `decks/trace/afnm-minatodao-mirror.json` in the old repo; 40 cards, no Sandalphon). 30 games, seed `20260910`, all `phase: "terminal"`.
 
+**Rune / Elf** (`rune-mach15-mirror`, `elf-neanisu2-mirror`): emitter `4552f1b0` on Practice-Tool `main` (PR #390 merged at `c923611b`; this SHA also includes PR #391). Recorded 2026-09-10, 30 games each, seed `20260910`. The Rune oracle deck swaps Tetra & Ladica `10834110` ×3 for Dazzling Runeknight `10031110` ×3 (Basic Rune, already in `basic-rune-mirror`): the old repo's card JSON has no X for Tetra, so every game stopped at the first hand snapshot with `vars`. Tetra stays authored and fixture-tested (`tetra_vars_increment_on_spellboost`); the oracle list stays 40 and all-Rune.
+
 ```
 git clone https://github.com/melnce/Practice-Tool.git
 cd Practice-Tool
@@ -34,6 +36,10 @@ npm run trace -- --seed=20260910 --games=30 --deck-a=decks/trace/abyss-p8rfn.jso
 
 git checkout b3bd5473e421cf2fd1cf7ac80184beadf6308274
 npm run trace -- --seed=20260910 --games=30 --deck-a=decks/trace/afnm-minatodao-mirror.json --deck-b=decks/trace/afnm-minatodao-mirror.json --out=<tmp>/afnm-minatodao-mirror
+
+git checkout 4552f1b0   # Practice-Tool main; decks/trace/ has no Rune list — pass this repo's file
+npm run trace -- --seed=20260910 --games=30 --deck-a=/workspace/oracle/decks/rune-mach15.json --deck-b=/workspace/oracle/decks/rune-mach15.json --out=<tmp>/rune-mach15-mirror
+npm run trace -- --seed=20260910 --games=30 --deck-a=/workspace/oracle/decks/elf-neanisu2.json --deck-b=/workspace/oracle/decks/elf-neanisu2.json --out=<tmp>/elf-neanisu2-mirror
 ```
 
 `decks/trace/abyss-p8rfn.json` on that branch is the same 40-card list as `oracle/decks/abyss-p8rfn.json`.
@@ -57,7 +63,7 @@ gzip -n -k -c trace-20260910-0.jsonl > oracle/traces/<set>/trace-20260910-0.json
 
 If any of those fail, the emitter commit is wrong — do not patch the traces.
 
-The committed M1 sets at `c9c7aad2`, the Abyss set at `2dfd184c`, and the Artifact Portal set at `b3bd5473` pass all four checks: every game's last line is `phase: "terminal"`.
+The committed M1 sets at `c9c7aad2`, the Abyss set at `2dfd184c`, the Artifact Portal set at `b3bd5473`, and the Rune / Elf sets at `4552f1b0` pass all four checks: every game's last line is `phase: "terminal"`.
 
 ## Allowlist
 
@@ -88,4 +94,4 @@ Do not fix an `engine` divergence in the same change that records it. One brief 
 cargo test --release --test oracle
 ```
 
-CI shares the release build with the soak step (`cargo test --release --test oracle`). Debug replay of the 150 traces is ~8 s, so the test stays in the default `cargo test`.
+CI shares the release build with the soak step (`cargo test --release --test oracle`). Debug replay of the 210 traces is ~8 s, so the test stays in the default `cargo test`.

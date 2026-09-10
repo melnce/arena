@@ -1,0 +1,59 @@
+{
+  "id": "10433310",
+  "name": "Alchemic Flare",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10004,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Select an enemy follower on the field and deal it 4 damage. Gain an earth sigil. Skybound Art - Deal 2 damage to the enemy leader.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 4 damage. Gain an earth sigil. Skybound Art - Deal 2 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 4 damage.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "amount": 4
+        },
+        {
+          "printed": "Gain an earth sigil.",
+          "op": "counter",
+          "key": "earth",
+          "how": "add",
+          "amount": 1
+        },
+        {
+          "printed": "Skybound Art - Deal 2 damage to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

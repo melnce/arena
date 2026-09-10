@@ -1,0 +1,33 @@
+{
+  "id": "crest:10833110",
+  "name": "Crest: Tico, Mysterian Spellcrafter",
+  "grantedBy": [
+    "10833110"
+  ],
+  "faith": false,
+  "text": "Whenever you play a Mysteria spell, deal 1 damage to the enemy leader.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_card_played",
+      "filter": {
+        "tribe": "mysteria",
+        "kind": "spell"
+      },
+      "printed": "Whenever you play a Mysteria spell, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}
