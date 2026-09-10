@@ -159,6 +159,17 @@ impl GameRng {
         candidates: &[String],
         emit: &mut Vec<Pick>,
     ) -> Result<usize, OraclePickNotLegal> {
+        self.pick_index_among(what, None, candidates, emit)
+    }
+
+    /// Like `pick_index`, but records `among` (e.g. `"deck"` for `multiset_pick`).
+    pub fn pick_index_among(
+        &mut self,
+        what: PickWhat,
+        among: Option<&str>,
+        candidates: &[String],
+        emit: &mut Vec<Pick>,
+    ) -> Result<usize, OraclePickNotLegal> {
         if candidates.is_empty() {
             return Ok(0);
         }
@@ -167,7 +178,7 @@ impl GameRng {
                 let i = g.gen_range(candidates.len() as u32) as usize;
                 emit.push(Pick {
                     what,
-                    among: None,
+                    among: among.map(str::to_string),
                     chose: PickChose::Id(candidates[i].clone()),
                 });
                 Ok(i)

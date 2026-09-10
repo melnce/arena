@@ -1,6 +1,6 @@
 //! Flat cloneable match state — `docs/engine-api.md`.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::card::{Ability, Card, CardId, CardKind, Class, Traits, Tribe, TriggerTag, VarKey};
 use crate::ids::{First, PlayerId};
@@ -61,6 +61,8 @@ pub struct CardInstance {
     pub super_evolved: bool,
     pub traits: Traits,
     pub granted: Vec<Ability>,
+    /// Printed trigger tags at construction; `granted` snapshot is instance − this.
+    pub printed_tags: BTreeSet<String>,
     pub flags: InstanceFlags,
     pub vars: BTreeMap<VarKey, i32>,
     pub skybound: i32,
@@ -95,6 +97,7 @@ impl CardInstance {
             super_evolved: false,
             traits,
             granted: Vec::new(),
+            printed_tags: card.printed_trigger_tags(),
             flags: InstanceFlags {
                 ambush_active: ambush,
                 attacks_left: attacks,
@@ -190,8 +193,8 @@ pub struct BonusPp {
     pub late_charge: bool,
     /// Extra orb is currently on (usable PP may be max+1).
     pub active: bool,
-    /// Activated this turn and then spent down to `pp <= pp_max`.
-    /// Cancel is a no-op; end of turn commits the charge.
+    /// The bonus orb was spent this turn (regular first, orb last).
+    /// Cancel is a no-op; the toggle is not offered again; EOT commits.
     /// Old engine `bonusPp.ts` / `canToggleSecondPlayerBonusPp`.
     pub locked: bool,
 }
@@ -295,16 +298,13 @@ impl PlayerState {
     }
 
     pub fn spend_pp(&mut self, cost: i32) {
-        let was_active = self.bonus_pp.active;
         let mut left = cost;
         let from_reg = left.min(self.pp);
         self.pp -= from_reg;
         left -= from_reg;
+        // Regular orbs first; the bonus orb is spent last.
         if left > 0 && self.bonus_pp.active {
             self.bonus_pp.active = false;
-        }
-        // Once current PP is at or below max, the orb is spent — cancel is gone.
-        if was_active && self.usable_pp() <= self.pp_max {
             self.bonus_pp.locked = true;
         }
     }

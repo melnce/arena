@@ -275,6 +275,41 @@ pub fn json_eq_first_diff<'a>(
     }
 }
 
+/// Compact one-line JSON of a NeutralAction (replay diagnostics).
+pub fn neutral_json(a: &NeutralAction) -> String {
+    serde_json::to_string(a).unwrap_or_else(|_| format!("{a:?}"))
+}
+
+/// Symmetric-difference message for a `legal` divergence.
+/// `arena=N actions; only arena: {…} trace=M actions; only trace: {…}`
+pub fn legal_divergence_parts(
+    ours: &[NeutralAction],
+    theirs: &[NeutralAction],
+) -> (String, String) {
+    let only_arena: Vec<String> = ours
+        .iter()
+        .filter(|a| !theirs.contains(a))
+        .map(neutral_json)
+        .collect();
+    let only_trace: Vec<String> = theirs
+        .iter()
+        .filter(|a| !ours.contains(a))
+        .map(neutral_json)
+        .collect();
+    (
+        format!(
+            "{} actions; only arena: {}",
+            ours.len(),
+            only_arena.join(" ")
+        ),
+        format!(
+            "{} actions; only trace: {}",
+            theirs.len(),
+            only_trace.join(" ")
+        ),
+    )
+}
+
 /// FNV-1a 64 of the canonical JSON bytes (sorted keys, compact).
 pub fn fnv1a64(bytes: &[u8]) -> u64 {
     let mut h: u64 = 0xcbf2_9ce4_8422_2325;

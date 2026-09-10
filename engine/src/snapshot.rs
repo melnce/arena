@@ -90,6 +90,24 @@ fn multiset(cards: &[crate::state::CardInstance]) -> BTreeMap<String, u32> {
     m
 }
 
+/// Runtime grants only: instance trigger tags minus the printed card's tags.
+/// Omitted when empty — `docs/trace-format.md` Conventions.
+fn granted_tags(c: &crate::state::CardInstance) -> Option<Vec<String>> {
+    let mut tags: std::collections::BTreeSet<String> = c
+        .granted
+        .iter()
+        .map(|a| a.snapshot_tag().to_string())
+        .collect();
+    for printed in &c.printed_tags {
+        tags.remove(printed);
+    }
+    if tags.is_empty() {
+        None
+    } else {
+        Some(tags.into_iter().collect())
+    }
+}
+
 fn vars_map(v: &BTreeMap<VarKey, i32>) -> Option<BTreeMap<String, i32>> {
     if v.is_empty() {
         return None;
@@ -109,31 +127,19 @@ fn vars_map(v: &BTreeMap<VarKey, i32>) -> Option<BTreeMap<String, i32>> {
 fn snap_player(p: &PlayerState) -> CanonicalPlayer {
     let mut field: [Option<CanonicalField>; FIELD_SIZE] = Default::default();
     for (i, slot) in p.field.iter().enumerate() {
-        field[i] = slot.as_ref().map(|c| {
-            let mut granted: Vec<String> = c
-                .granted
-                .iter()
-                .map(|a| a.snapshot_tag().to_string())
-                .collect();
-            granted.sort();
-            CanonicalField {
-                attack: c.attack,
-                attacks_left: c.flags.attacks_left,
-                can_attack: can_attack_now(c),
-                card: c.card.as_str(),
-                countdown: c.countdown,
-                defense: c.defense,
-                evolved: c.evolved,
-                max_defense: c.max_defense,
-                super_evolved: c.super_evolved,
-                traits: c.traits.snapshot_tags(),
-                vars: vars_map(&c.vars),
-                granted: if granted.is_empty() {
-                    None
-                } else {
-                    Some(granted)
-                },
-            }
+        field[i] = slot.as_ref().map(|c| CanonicalField {
+            attack: c.attack,
+            attacks_left: c.flags.attacks_left,
+            can_attack: can_attack_now(c),
+            card: c.card.as_str(),
+            countdown: c.countdown,
+            defense: c.defense,
+            evolved: c.evolved,
+            max_defense: c.max_defense,
+            super_evolved: c.super_evolved,
+            traits: c.traits.snapshot_tags(),
+            vars: vars_map(&c.vars),
+            granted: granted_tags(c),
         });
     }
     let hand = p

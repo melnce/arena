@@ -1,0 +1,30 @@
+{
+  "id": "88001610",
+  "name": "Synth Deck Search",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Put a follower from your deck into your hand.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Put a follower from your deck into your hand.",
+      "effects": [
+        {
+          "printed": "Put a follower from your deck into your hand.",
+          "op": "returnToHand",
+          "select": {
+            "side": "ally",
+            "zone": "deck",
+            "kind": "follower",
+            "pick": "random"
+          }
+        }
+      ]
+    }
+  ]
+}

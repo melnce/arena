@@ -2315,6 +2315,22 @@ impl Card {
         }
     }
 
+    /// Trigger tags the printed card carries (`docs/trace-format.md` `granted`).
+    pub fn printed_trigger_tags(&self) -> BTreeSet<String> {
+        let mut tags = BTreeSet::new();
+        for a in self.abilities() {
+            tags.insert(a.snapshot_tag().to_string());
+        }
+        if self
+            .modes()
+            .iter()
+            .any(|m| matches!(m, Mode::Enhance { .. }))
+        {
+            tags.insert("enhance".into());
+        }
+        tags
+    }
+
     pub fn modes(&self) -> &[Mode] {
         match self {
             Card::Follower { modes, .. }

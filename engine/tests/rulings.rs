@@ -73,7 +73,7 @@ fn select_is_forced_opens_choice() {
     let h = put_hand(&db, &mut st, me, "88001300");
     play(&db, &mut st, h);
     assert!(
-        matches!(st.phase, Phase::Choice { .. }),
+        matches!(st.phase, Phase::Choice { player, .. } if player == me),
         "printed Select must open a node, not auto-pick leftmost"
     );
 }
@@ -320,7 +320,8 @@ fn bonus_pp_second_player_charges() {
 }
 
 /// Old engine `bonusPp.ts`: Bonus PP is a toggle. Activate → cancel → activate
-/// in one turn is legal. After a spend to ≤ max PP, cancel is not offered.
+/// in one turn is legal. Cancel is offered while `pp_bonus > 0`, not while
+/// usable PP > max PP.
 #[test]
 fn bonus_pp_toggle_activate_cancel_activate() {
     let db = load_db();
@@ -330,7 +331,6 @@ fn bonus_pp_toggle_activate_cancel_activate() {
     assert!(st.player(me).bonus_pp.early_charge);
     apply(&db, &mut st, Action::BonusPp).unwrap();
     assert!(st.player(me).bonus_pp.active);
-    assert!(st.player(me).usable_pp() > st.player(me).pp_max);
     assert!(
         legal_actions(&db, &st)
             .iter()
@@ -353,23 +353,50 @@ fn bonus_pp_toggle_activate_cancel_activate() {
     assert!(st.player(me).bonus_pp.active);
 }
 
+/// 1-cost play at 1/1, then activate → cancel is still legal (orb unspent
+/// even though usable == max). Cancel → re-activate. Activate then pay a
+/// 2-cost (regular then bonus) → `bonus_pp` leaves `legal`.
 #[test]
-fn bonus_pp_spent_to_max_cancel_not_offered() {
+fn bonus_pp_cancel_while_orb_unspent_not_usable_gt_max() {
     let db = load_db();
     let mut st = started(&db, 14);
     end_turn(&db, &mut st);
     let me = PlayerId::B;
-    apply(&db, &mut st, Action::BonusPp).unwrap();
-    assert!(st.player(me).usable_pp() > st.player(me).pp_max);
+    assert_eq!(st.player(me).pp, 1);
+    assert_eq!(st.player(me).pp_max, 1);
     st.player_mut(me).hand.clear();
     let h = put_hand(&db, &mut st, me, "88001110");
     play(&db, &mut st, h);
-    assert!(st.player(me).usable_pp() <= st.player(me).pp_max);
+    assert_eq!(st.player(me).pp, 0);
+    assert_eq!(st.player(me).pp_max, 1);
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    assert!(st.player(me).bonus_pp.active);
+    assert_eq!(st.player(me).usable_pp(), st.player(me).pp_max);
+    assert!(
+        legal_actions(&db, &st)
+            .iter()
+            .any(|a| matches!(a, Action::BonusPp)),
+        "cancel is legal while pp_bonus > 0 even if usable == max"
+    );
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    assert!(!st.player(me).bonus_pp.active);
+    assert!(
+        legal_actions(&db, &st)
+            .iter()
+            .any(|a| matches!(a, Action::BonusPp)),
+        "re-activate after cancel"
+    );
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    let h2 = put_hand(&db, &mut st, me, "88001120");
+    play(&db, &mut st, h2);
+    assert!(!st.player(me).bonus_pp.active);
     assert!(
         !legal_actions(&db, &st)
             .iter()
             .any(|a| matches!(a, Action::BonusPp)),
-        "after spend to ≤ max, cancel is not offered"
+        "after spending the bonus orb, bonus_pp is not legal"
     );
 }
 

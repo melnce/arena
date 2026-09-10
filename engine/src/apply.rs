@@ -292,9 +292,10 @@ fn legal_main(db: &CardDb, state: &State) -> Vec<Action> {
 }
 
 /// Second-player Bonus PP is a **toggle** (old engine `canToggleSecondPlayerBonusPp`).
-/// Activate the current-tier charge; cancel while the orb is unspent
-/// (`usable_pp > pp_max`); after a spend to ≤ max, the toggle is not offered.
-/// Rulebook "Bonus PP" — two charges (turns ≤ 5 / from turn 6); EOT commits.
+/// Activate the current-tier charge; cancel while the bonus orb is unspent
+/// (`pp_bonus > 0`), regardless of regular PP. Regular orbs are spent first;
+/// the bonus orb last. Once the orb is spent, the toggle is not offered again
+/// that turn. Rulebook "Bonus PP" — two charges (turns ≤ 5 / from turn 6); EOT commits.
 fn can_toggle_bonus_pp(p: &PlayerState) -> bool {
     if !p.is_second || p.turns_taken == 0 {
         return false;
@@ -303,7 +304,7 @@ fn can_toggle_bonus_pp(p: &PlayerState) -> bool {
         return false;
     }
     if p.bonus_pp.active {
-        return p.usable_pp() > p.pp_max;
+        return true;
     }
     has_bonus_charge(p)
 }
@@ -2014,7 +2015,7 @@ fn apply_effect_with_targets(
         }
         Effect::ReturnToHand { .. } => {
             for t in targets {
-                bounce_opt(db, state, t, events)?;
+                bounce_opt(db, state, controller, t, events)?;
             }
         }
         Effect::ReturnToDeck { .. } => {
@@ -2186,7 +2187,7 @@ fn apply_effect(
         }
         Effect::ReturnToHand { select, .. } => {
             for t in resolve_select_rolling(db, state, controller, source, select)? {
-                bounce_opt(db, state, &t, events)?;
+                bounce_opt(db, state, controller, &t, events)?;
             }
         }
         Effect::ReturnToDeck { select, .. } => {
@@ -2855,14 +2856,27 @@ fn banish_opt(state: &mut State, t: &TargetOpt, events: &mut Vec<Event>) {
 fn bounce_opt(
     _db: &CardDb,
     state: &mut State,
+    controller: PlayerId,
     t: &TargetOpt,
     _events: &mut [Event],
 ) -> Result<(), Illegal> {
-    if let TargetOpt::Slot { player, slot } = t {
-        if let Some(inst) = state.player_mut(*player).field[*slot as usize].take() {
-            state.player_mut(*player).compact_field();
-            add_to_hand(state, *player, inst);
+    match t {
+        TargetOpt::Slot { player, slot } => {
+            if let Some(inst) = state.player_mut(*player).field[*slot as usize].take() {
+                state.player_mut(*player).compact_field();
+                add_to_hand(state, *player, inst);
+            }
         }
+        TargetOpt::Card(id) => {
+            // Search / put-from-deck: the pick (if random) already ran.
+            for who in [controller, controller.opponent()] {
+                if let Some(inst) = remove_from_deck_by_id(state, who, *id) {
+                    add_to_hand(state, controller, inst);
+                    break;
+                }
+            }
+        }
+        _ => {}
     }
     Ok(())
 }
@@ -3433,6 +3447,9 @@ fn pool_candidates(
             }
             Zone::Deck => {
                 for c in &state.player(who).deck {
+                    if !kind_ok(c, p.kind) {
+                        continue;
+                    }
                     if let Some(f) = &p.filter {
                         if !inst_matches_filter(state, who, c, f) {
                             continue;
@@ -3760,6 +3777,7 @@ fn random_pool_apply(
     if cands.is_empty() {
         return Ok(Vec::new());
     }
+    let deck_search = cands.iter().all(|t| matches!(t, TargetOpt::Card(_)));
     let mut left = cands;
     let mut out = Vec::new();
     for _ in 0..n {
@@ -3777,10 +3795,17 @@ fn random_pool_apply(
             })
             .collect();
         let mut emit = Vec::new();
-        let i = state
-            .rng
-            .pick_index(PickWhat::RandomTarget, &keys, &mut emit)
-            .map_err(Illegal::OraclePickNotLegal)?;
+        let i = if deck_search {
+            state
+                .rng
+                .pick_index_among(PickWhat::MultisetPick, Some("deck"), &keys, &mut emit)
+                .map_err(Illegal::OraclePickNotLegal)?
+        } else {
+            state
+                .rng
+                .pick_index(PickWhat::RandomTarget, &keys, &mut emit)
+                .map_err(Illegal::OraclePickNotLegal)?
+        };
         state.picks.extend(emit);
         let i = i.min(left.len() - 1);
         if distinct {
@@ -3790,6 +3815,13 @@ fn random_pool_apply(
         }
     }
     Ok(out)
+}
+
+/// Remove one copy of `id` from `who`'s deck. No extra pick — the caller
+/// already recorded `multiset_pick` (or the player chose).
+fn remove_from_deck_by_id(state: &mut State, who: PlayerId, id: CardId) -> Option<CardInstance> {
+    let pos = state.player(who).deck.iter().position(|c| c.card == id)?;
+    Some(state.player_mut(who).deck.remove(pos))
 }
 
 /// Used by soak / accounting.

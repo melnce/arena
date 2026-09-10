@@ -124,9 +124,11 @@ pub enum ReplayError {
     Unsupported(Unsupported),
     #[error("{0}")]
     Oracle(OraclePickNotLegal),
-    #[error("illegal action at i={i}: {source}")]
+    #[error("illegal action at i={i}: {action}; legal={legal} ({source})")]
     Illegal {
         i: u32,
+        action: String,
+        legal: String,
         #[source]
         source: Illegal,
     },
