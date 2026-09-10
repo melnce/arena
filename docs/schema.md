@@ -179,7 +179,7 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 | `ally_draw` | `10561120`, `crest:10564120` |
 | `ally_earth_rite` | `10731310` Heel, My Dearie |
 | `ally_engage` | `10062120` Sacred Griffon |
-| `leader_restored` | `10563110` Saint of Rehabilitation; `10963110` Executor of the Vow |
+| `leader_restored` | `10563110` Saint of Rehabilitation; `10961110` Follower of the Tenets; `10963110` Executor of the Vow — 0-heal still fires (official Q&A Burnite `10144110`) |
 | `self_buffed_up` | `10812110` Ruflet |
 
 Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`, `enemy_follower_destroyed`. Ghost's leave is `on: leave`, not an event. The schema lists exactly the 15 events in the table.

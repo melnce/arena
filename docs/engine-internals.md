@@ -46,7 +46,7 @@ Enhance that does not `replacesBase` (Zeta & Bea) appends to the Fanfare list of
 
 All 15 `EventName`s are raised where the engine produces them (enter, destroy, play, attack, evolve, draw, earth-rite spend, engage, leader restore, self-buff). None are a silent no-op.
 
-`leader_restored` fires when a restore effect **resolves**, including a 0-heal while the leader is already at max defense (authored reading of Saint of Rehabilitation / Follower of the Tenets / Executor of the Vow; pinned by fixture; owner question). `Condition.attackingFollower` is true only while `AllyFollowerAttacks` is being enqueued against a follower (Verdilia crest: "attacks a follower").
+`leader_restored` fires when a restore effect **resolves**, including a 0-heal while the leader is already at max defense. Official Cygames Q&A, Burnite, Anathema of Flame (`10144110`): _"Will Crest: Burnite's 'when your leader's defense is restored, deal 1 damage to it' ability activate if my leader's defense is restored by 0?"_ → _"Yes, it will."_ Same reading for Saint of Rehabilitation / Follower of the Tenets / Executor of the Vow (pinned by `saint_fox_per_restore_owner_turn_only`). `Condition.attackingFollower` is true only while `AllyFollowerAttacks` is being enqueued against a follower (Verdilia crest: "attacks a follower").
 
 ## `op:sequence`
 

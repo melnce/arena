@@ -231,7 +231,7 @@ fn saint_fox_per_restore_owner_turn_only() {
         .flatten()
         .filter(|c| c.card == cid(FOX))
         .count();
-    // 0-heal at max still counts as restored.
+    // 0-heal at max still counts as restored (official Q&A Burnite `10144110`).
     st.player_mut(me).leader_defense = st.player(me).leader_max;
     give_pp(&mut st, me, 3, 3);
     play_id(&db, &mut st, me, "10962110"); // Agent EOT restore; also fanfare

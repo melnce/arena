@@ -4422,7 +4422,7 @@ fn restore_leader(db: &CardDb, state: &mut State, who: PlayerId, n: i32, events:
         amount: g,
     });
     // Any restore effect that resolves counts as "restored", including a
-    // 0-heal at max defense (owner question 2026-09-10; pinned by fixture).
+    // 0-heal at max defense (official Q&A Burnite `10144110`).
     raise_when(db, state, who, EventName::LeaderRestored, None, who);
 }
 
