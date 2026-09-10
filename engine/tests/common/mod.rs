@@ -53,6 +53,7 @@ pub fn started_decks(db: &CardDb, seed: u64, a: &[&str], b: &[&str]) -> State {
             deck_a: pad_deck(a, 40),
             deck_b: pad_deck(b, 40),
             first: First::A,
+            opening_hands: None,
         },
     )
     .expect("new_game");

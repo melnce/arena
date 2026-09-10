@@ -13,7 +13,11 @@ One object per line. Keys sorted on `CanonicalState`. No floats, no uids, no eng
   "seed": 0,
   "first": "a",
   "deck_a": ["10001110", "…"],
-  "deck_b": ["…"]
+  "deck_b": ["…"],
+  "opening_hands": {
+    "a": ["10001110", "10001120", "10001130", "10001210"],
+    "b": ["10011110", "10011120", "10011130", "10011210"]
+  }
 }
 ```
 
@@ -21,8 +25,9 @@ One object per line. Keys sorted on `CanonicalState`. No floats, no uids, no eng
 - `seed`: `u64`.
 - `first`: `"a"` or `"b"`.
 - `deck_a` / `deck_b`: multisets of 40 card ids, **sorted** (so `["x","x","y"]` not insertion order). Deck **order is not part of the format**.
+- `opening_hands` (**required**): the four-card opening hands **before** the mulligan, each a list of card ids **in draw order**. The old engine draws those hands inside game setup, before any action line exists, so they cannot be per-line `draw` picks. A replayer builds the pre-mulligan state by removing those ids from the decklist multisets (A's four from `deck_a`, B's four from `deck_b`). Every later draw (mulligan replacements, the first player's turn-1 draw, turn draws, effect draws) stays a per-line `{"what":"draw","chose":"<card id>"}` pick.
 
-Every draw (opening hand, mulligan replacements, turn draws, effect draws) is a `Pick` `{"what":"draw","chose":"<card id>"}`. The replaying engine removes that id from its multiset instead of rolling. The old shuffled array and the new multiset then agree by construction.
+The old engine also emits `{"what":"raw","kind":"shuffle",…}` entries for its deck shuffles — ignore every `raw` pick.
 
 If `first` was decided by a coin, the header's `first` is the outcome and the first `rng` pick of the first action line may repeat `{"what":"coin","chose":"a"}` when the engine actually rolled.
 

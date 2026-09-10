@@ -2,6 +2,7 @@
 //! Field names match the schema (camelCase JSON). All closed enums;
 //! every object is `deny_unknown_fields`.
 
+use std::collections::BTreeSet;
 use std::fmt;
 
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -847,6 +848,12 @@ pub enum Condition {
     Overflow {
         overflow: bool,
     },
+    /// Exact check of current `pp_max` against `n` (Dragonsign: 10).
+    /// Overflow remains the separate ≥7-max-PP keyword.
+    MaxPpAtLeast {
+        #[serde(rename = "maxPpAtLeast")]
+        max_pp_at_least: MaxPpAtLeast,
+    },
     SkyboundArt {
         #[serde(rename = "skyboundArt")]
         skybound_art: ComboN,
@@ -920,6 +927,13 @@ pub struct CounterAtLeast {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct ComboN {
+    pub n: Amount,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct MaxPpAtLeast {
     pub n: Amount,
 }
 
@@ -2395,4 +2409,298 @@ pub struct CatalogRecord {
     pub evo_card_image_hash: Option<String>,
     #[serde(default)]
     pub evo_card_banner_image_hash: Option<String>,
+}
+
+impl Card {
+    /// `ref` names on this card that no `as` on the same card can produce.
+    pub fn unbound_refs(&self) -> Vec<String> {
+        let mut produced = BTreeSet::new();
+        let mut used = BTreeSet::new();
+        for a in self.abilities() {
+            walk_ability(a, &mut produced, &mut used);
+        }
+        for m in self.modes() {
+            walk_mode(m, &mut produced, &mut used);
+        }
+        used.into_iter().filter(|n| !produced.contains(n)).collect()
+    }
+}
+
+impl Crest {
+    pub fn unbound_refs(&self) -> Vec<String> {
+        let mut produced = BTreeSet::new();
+        let mut used = BTreeSet::new();
+        for a in self.abilities() {
+            walk_ability(a, &mut produced, &mut used);
+        }
+        used.into_iter().filter(|n| !produced.contains(n)).collect()
+    }
+}
+
+fn walk_ability(a: &Ability, produced: &mut BTreeSet<String>, used: &mut BTreeSet<String>) {
+    for e in a.effects() {
+        walk_effect(e, produced, used);
+    }
+    if let Ability::Static { modifier, .. } = a {
+        walk_selector(&modifier.select, used);
+    }
+}
+
+fn walk_mode(m: &Mode, produced: &mut BTreeSet<String>, used: &mut BTreeSet<String>) {
+    match m {
+        Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => {
+            for e in effects {
+                walk_effect(e, produced, used);
+            }
+        }
+        Mode::Crystallize { abilities, .. } => {
+            if let Some(abs) = abilities {
+                for a in abs {
+                    walk_ability(a, produced, used);
+                }
+            }
+        }
+    }
+}
+
+fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<String>) {
+    if let Some(name) = e.as_bind() {
+        produced.insert(name.to_string());
+    }
+    match e {
+        Effect::Damage { select, amount, .. } => {
+            walk_selector(select, used);
+            walk_amount(amount, used);
+        }
+        Effect::Restore { select, amount, .. } => {
+            walk_selector(select, used);
+            walk_amount(amount, used);
+        }
+        Effect::Buff {
+            select,
+            attack,
+            defense,
+            ..
+        } => {
+            walk_selector(select, used);
+            if let Some(a) = attack {
+                walk_amount(a, used);
+            }
+            if let Some(a) = defense {
+                walk_amount(a, used);
+            }
+        }
+        Effect::Destroy { select, .. }
+        | Effect::Banish { select, .. }
+        | Effect::ReturnToHand { select, .. }
+        | Effect::ReturnToDeck { select, .. }
+        | Effect::Discard { select, .. }
+        | Effect::Evolve { select, .. }
+        | Effect::GrantTraits { select, .. }
+        | Effect::RemoveTraits { select, .. }
+        | Effect::RemoveAbilities { select, .. }
+        | Effect::RemoveCrests { select, .. }
+        | Effect::LeaderModifier { select, .. } => walk_selector(select, used),
+        Effect::Countdown { select, delta, .. } => {
+            walk_selector(select, used);
+            walk_amount(delta, used);
+        }
+        Effect::Summon { card, count, .. } | Effect::AddToHand { card, count, .. } => {
+            walk_source(card, used);
+            walk_amount(count, used);
+        }
+        Effect::AddToDeck { card, count, .. } => {
+            walk_source(card, used);
+            walk_amount(count, used);
+        }
+        Effect::Draw { count, .. }
+        | Effect::Pp { amount: count, .. }
+        | Effect::Ep { amount: count, .. }
+        | Effect::Reanimate {
+            max_cost: count, ..
+        }
+        | Effect::SpellboostHand { times: count, .. } => walk_amount(count, used),
+        Effect::Cost {
+            select, delta, set, ..
+        } => {
+            walk_selector(select, used);
+            if let Some(a) = delta {
+                walk_amount(a, used);
+            }
+            if let Some(a) = set {
+                walk_amount(a, used);
+            }
+        }
+        Effect::Counter { amount, .. } => walk_amount(amount, used),
+        Effect::Pay {
+            amount, effects, ..
+        } => {
+            walk_amount(amount, used);
+            for x in effects {
+                walk_effect(x, produced, used);
+            }
+        }
+        Effect::Repeat { times, effects, .. } => {
+            walk_amount(times, used);
+            for x in effects {
+                walk_effect(x, produced, used);
+            }
+        }
+        Effect::Seq { effects, .. } => {
+            for x in effects {
+                walk_effect(x, produced, used);
+            }
+        }
+        Effect::GrantAbility {
+            select, ability, ..
+        } => {
+            walk_selector(select, used);
+            walk_ability(ability, produced, used);
+        }
+        Effect::If {
+            cond,
+            then,
+            else_effects,
+            ..
+        } => {
+            walk_condition(cond, used);
+            for x in then {
+                walk_effect(x, produced, used);
+            }
+            if let Some(els) = else_effects {
+                for x in els {
+                    walk_effect(x, produced, used);
+                }
+            }
+        }
+        Effect::Choose {
+            options: Some(opts),
+            ..
+        } => {
+            for o in opts {
+                for x in &o.effects {
+                    walk_effect(x, produced, used);
+                }
+            }
+        }
+        Effect::Choose { options: None, .. } => {}
+        Effect::Sequence { steps, .. } => {
+            for s in steps {
+                for x in &s.effects {
+                    walk_effect(x, produced, used);
+                }
+            }
+        }
+        Effect::Transform { into, select, .. } => {
+            walk_selector(select, used);
+            walk_source(into, used);
+        }
+        _ => {}
+    }
+    if let Some(c) = e.when_cond() {
+        walk_condition(c, used);
+    }
+}
+
+fn walk_source(src: &CardSource, used: &mut BTreeSet<String>) {
+    match src {
+        CardSource::Copy { copy_of, .. } => walk_selector(copy_of, used),
+        CardSource::RandomFrom { random_from } => walk_filter(random_from, used),
+        CardSource::Named { .. } => {}
+    }
+}
+
+fn walk_selector(s: &Selector, used: &mut BTreeSet<String>) {
+    match s {
+        Selector::Bound(b) => {
+            used.insert(b.ref_name.clone());
+        }
+        Selector::Pool(p) => {
+            if let Some(f) = &p.filter {
+                walk_filter(f, used);
+            }
+            if let Some(c) = &p.count {
+                walk_amount(c, used);
+            }
+        }
+        Selector::Ref(_) => {}
+    }
+}
+
+fn walk_filter(f: &Filter, used: &mut BTreeSet<String>) {
+    if let Some(xs) = &f.all {
+        for x in xs {
+            walk_filter(x, used);
+        }
+    }
+    if let Some(xs) = &f.any {
+        for x in xs {
+            walk_filter(x, used);
+        }
+    }
+    if let Some(x) = &f.not {
+        walk_filter(x, used);
+    }
+    for amt in [
+        f.cost_eq.as_deref(),
+        f.cost_lte.as_deref(),
+        f.cost_gte.as_deref(),
+        f.base_cost_eq.as_deref(),
+        f.base_cost_lte.as_deref(),
+        f.base_cost_gte.as_deref(),
+        f.attack_lte.as_deref(),
+        f.attack_gte.as_deref(),
+        f.defense_lte.as_deref(),
+        f.defense_gte.as_deref(),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        walk_amount(amt, used);
+    }
+}
+
+fn walk_amount(a: &Amount, used: &mut BTreeSet<String>) {
+    match a {
+        Amount::Count { count }
+        | Amount::DistinctNames {
+            distinct_names: count,
+        } => {
+            walk_selector(count, used);
+        }
+        Amount::Stat { stat } => walk_selector(&stat.of, used),
+        Amount::Add { add }
+        | Amount::Sub { sub: add }
+        | Amount::Max { max: add }
+        | Amount::Min { min: add } => {
+            walk_amount(&add[0], used);
+            walk_amount(&add[1], used);
+        }
+        Amount::Neg { neg } => walk_amount(neg, used),
+        Amount::EnteredThisMatch { entered_this_match } => walk_filter(entered_this_match, used),
+        _ => {}
+    }
+}
+
+fn walk_condition(c: &Condition, used: &mut BTreeSet<String>) {
+    match c {
+        Condition::All { all } => {
+            for x in all {
+                walk_condition(x, used);
+            }
+        }
+        Condition::Any { any } => {
+            for x in any {
+                walk_condition(x, used);
+            }
+        }
+        Condition::Not { not } => walk_condition(not, used),
+        Condition::CountAtLeast { count_at_least } => {
+            walk_selector(&count_at_least.select, used);
+            walk_amount(&count_at_least.n, used);
+        }
+        Condition::MaxPpAtLeast { max_pp_at_least } => walk_amount(&max_pp_at_least.n, used),
+        Condition::Combo { combo } => walk_amount(&combo.n, used),
+        _ => {}
+    }
 }

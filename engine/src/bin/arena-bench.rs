@@ -69,6 +69,7 @@ fn main() {
                 deck_a: da.clone(),
                 deck_b: dbk.clone(),
                 first: First::A,
+                opening_hands: None,
             },
         )
         .expect("game");

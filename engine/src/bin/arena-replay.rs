@@ -6,8 +6,9 @@ use std::fs;
 use std::process::ExitCode;
 
 use arena_engine::{
-    apply, from_neutral, legal_actions, new_game, snapshot_json, to_neutral, Action, CardDb,
-    CardId, First, GameConfig, GameRng, NeutralAction, ReplayError, TraceHeader,
+    apply, from_neutral, legal_actions, new_game, picks_from_trace_rng, snapshot_json, to_neutral,
+    Action, CardDb, CardId, First, GameConfig, GameRng, NeutralAction, OpeningHands, ReplayError,
+    TraceHeader,
 };
 
 fn main() -> ExitCode {
@@ -43,6 +44,10 @@ fn run(path: &str) -> Result<(), ReplayError> {
     } else {
         First::A
     };
+    let opening = OpeningHands {
+        a: parse_ids(&header.opening_hands.a),
+        b: parse_ids(&header.opening_hands.b),
+    };
     let mut state = new_game(
         &db,
         GameConfig {
@@ -50,6 +55,7 @@ fn run(path: &str) -> Result<(), ReplayError> {
             deck_a,
             deck_b,
             first,
+            opening_hands: Some(opening),
         },
     )
     .map_err(|e| match e {
@@ -70,10 +76,7 @@ fn run(path: &str) -> Result<(), ReplayError> {
             line: ln + 2,
             source,
         })?;
-        let rng: Vec<arena_engine::Pick> = rec
-            .get("rng")
-            .and_then(|v| serde_json::from_value(v.clone()).ok())
-            .unwrap_or_default();
+        let rng = rec.get("rng").map(picks_from_trace_rng).unwrap_or_default();
         state.rng = GameRng::scripted(rng, header.seed);
         let act = from_neutral(&state, &action).ok_or(ReplayError::Illegal {
             i,

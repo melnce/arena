@@ -90,6 +90,12 @@ impl CardDb {
                         second: path.display().to_string(),
                     });
                 }
+                if let Some(name) = card.unbound_refs().into_iter().next() {
+                    return Err(LoadError::UnboundRef {
+                        card: key.clone(),
+                        name,
+                    });
+                }
                 self.paths.insert(key, path.to_path_buf());
                 self.cards.insert(id, card);
             }
@@ -100,6 +106,12 @@ impl CardDb {
                         id: key,
                         first: prev.display().to_string(),
                         second: path.display().to_string(),
+                    });
+                }
+                if let Some(name) = crest.unbound_refs().into_iter().next() {
+                    return Err(LoadError::UnboundRef {
+                        card: key.clone(),
+                        name,
                     });
                 }
                 self.paths.insert(key.clone(), path.to_path_buf());

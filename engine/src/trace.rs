@@ -64,6 +64,12 @@ pub struct Pick {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OpeningHandsJson {
+    pub a: Vec<String>,
+    pub b: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TraceHeader {
     pub v: u32,
     pub engine: String,
@@ -71,6 +77,21 @@ pub struct TraceHeader {
     pub first: String,
     pub deck_a: Vec<String>,
     pub deck_b: Vec<String>,
+    pub opening_hands: OpeningHandsJson,
+}
+
+/// Parse a trace line's `rng` array, ignoring every `{"what":"raw",…}` pick
+/// (old-engine shuffles). Other objects must be `Pick`s.
+pub fn picks_from_trace_rng(value: &serde_json::Value) -> Vec<Pick> {
+    let Some(arr) = value.as_array() else {
+        return Vec::new();
+    };
+    let filtered: Vec<serde_json::Value> = arr
+        .iter()
+        .filter(|item| item.get("what").and_then(|w| w.as_str()) != Some("raw"))
+        .cloned()
+        .collect();
+    serde_json::from_value(serde_json::Value::Array(filtered)).unwrap_or_default()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

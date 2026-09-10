@@ -2,7 +2,7 @@
 
 use arena_engine::{
     apply, from_neutral, legal_actions, new_game, policy_rng, snapshot_json, to_neutral, CardDb,
-    First, GameConfig, GameRng, Phase,
+    First, GameConfig, GameRng, OpeningHands, Phase, PlayerId,
 };
 
 mod common;
@@ -17,9 +17,24 @@ fn emit_and_replay(db: &CardDb, seed: u64) {
             deck_a: decks.clone(),
             deck_b: decks.clone(),
             first: First::A,
+            opening_hands: None,
         },
     )
     .unwrap();
+    let opening = OpeningHands {
+        a: live
+            .player(PlayerId::A)
+            .hand
+            .iter()
+            .map(|c| c.card)
+            .collect(),
+        b: live
+            .player(PlayerId::B)
+            .hand
+            .iter()
+            .map(|c| c.card)
+            .collect(),
+    };
     let mut policy = policy_rng(seed);
     let mut recs = Vec::new();
     let mut i = 0u32;
@@ -43,6 +58,7 @@ fn emit_and_replay(db: &CardDb, seed: u64) {
             deck_a: decks.clone(),
             deck_b: decks,
             first: First::A,
+            opening_hands: Some(opening),
         },
     )
     .unwrap();

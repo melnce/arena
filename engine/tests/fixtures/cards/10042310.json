@@ -24,7 +24,7 @@
           "printed": "if you have 10 max play points, draw a card.",
           "op": "if",
           "cond": {
-            "overflow": true
+            "maxPpAtLeast": { "n": 10 }
           },
           "then": [
             {

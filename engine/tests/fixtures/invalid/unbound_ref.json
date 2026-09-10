@@ -1,0 +1,27 @@
+{
+  "id": "88009990",
+  "name": "Synth Unbound Ref",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 88000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Fanfare: Give the bound nothing Drain.",
+  "attack": 1,
+  "defense": 1,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give the bound nothing Drain.",
+      "effects": [
+        {
+          "op": "grantTraits",
+          "select": { "pick": "bound", "ref": "missing" },
+          "traits": { "drain": true }
+        }
+      ]
+    }
+  ]
+}

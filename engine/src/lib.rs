@@ -23,11 +23,13 @@ pub use error::{Illegal, LoadError, OraclePickNotLegal, ReplayError, Unsupported
 pub use ids::{AttackTarget, First, PlayerId, Slot};
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
 pub use snapshot::{hash, snapshot, snapshot_json};
-pub use state::{CardInstance, ChoiceNode, GameConfig, Phase, PlayForm, PlayerState, State};
+pub use state::{
+    CardInstance, ChoiceNode, GameConfig, OpeningHands, Phase, PlayForm, PlayerState, State,
+};
 pub use support::m1_unsupported_list;
 pub use trace::{
-    json_eq_first_diff, sort_json, ActionLine, NeutralAction, Pick, PickChose, PickWhat,
-    TraceHeader,
+    json_eq_first_diff, picks_from_trace_rng, sort_json, ActionLine, NeutralAction,
+    OpeningHandsJson, Pick, PickChose, PickWhat, TraceHeader,
 };
 
 /// Re-export used by bins that only need to list legal actions as NeutralAction.

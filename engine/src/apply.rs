@@ -13,9 +13,9 @@ use crate::event::{Event, EventTarget, ZoneLabel};
 use crate::ids::{AttackTarget, First, PlayerId, Slot};
 use crate::rng::GameRng;
 use crate::state::{
-    Aftermath, CardInstance, ChoiceNode, CrestInstance, DestroyedRecord, GameConfig, LeaderMod,
-    PendingChoice, PendingKind, Phase, PlayForm, PlayerState, QueuedTrigger, SourceRef, State,
-    TargetOpt, WorkFrame, CREST_CAP, DECK_SIZE, HAND_LIMIT, PP_CAP,
+    Aftermath, BoundRef, CardInstance, ChoiceNode, CrestInstance, DestroyedRecord, GameConfig,
+    LeaderMod, PendingChoice, PendingKind, Phase, PlayForm, PlayerState, QueuedTrigger, SourceRef,
+    State, TargetOpt, WorkFrame, CREST_CAP, DECK_SIZE, HAND_LIMIT, PP_CAP,
 };
 use crate::support;
 use crate::trace::PickWhat;
@@ -52,6 +52,7 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         pending_work: Vec::new(),
         queue: Vec::new(),
         suppress_last_words: false,
+        bindings: std::collections::BTreeMap::new(),
     };
     fill_deck(db, &mut state, PlayerId::A, &cfg.deck_a)?;
     fill_deck(db, &mut state, PlayerId::B, &cfg.deck_b)?;
@@ -73,18 +74,42 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
     state.player_mut(second).is_second = true;
     state.player_mut(second).bonus_pp.early_charge = true;
     state.player_mut(second).bonus_pp.late_charge = true;
-    for p in PlayerId::ALL {
-        for _ in 0..4 {
-            let _ = draw_one(&mut state, p, None).map_err(|e| {
-                LoadError::Unsupported(Unsupported {
-                    card: "draw".into(),
-                    construct: e.to_string(),
-                })
-            })?;
+    if let Some(hands) = &cfg.opening_hands {
+        deal_opening_hand(&mut state, PlayerId::A, &hands.a)?;
+        deal_opening_hand(&mut state, PlayerId::B, &hands.b)?;
+    } else {
+        for p in PlayerId::ALL {
+            for _ in 0..4 {
+                let _ = draw_one(&mut state, p, None).map_err(|e| {
+                    LoadError::Unsupported(Unsupported {
+                        card: "draw".into(),
+                        construct: e.to_string(),
+                    })
+                })?;
+            }
         }
     }
     state.phase = Phase::Mulligan { player: first };
     Ok(state)
+}
+
+/// Build the pre-mulligan hand by removing listed ids from the deck multiset
+/// in draw order — `docs/trace-format.md` `opening_hands`.
+fn deal_opening_hand(state: &mut State, who: PlayerId, ids: &[CardId]) -> Result<(), LoadError> {
+    for id in ids {
+        let pos = state
+            .player(who)
+            .deck
+            .iter()
+            .position(|c| c.card == *id)
+            .ok_or(LoadError::OpeningHandNotInDeck {
+                player: who.as_str().into(),
+                card: id.as_str(),
+            })?;
+        let inst = state.player_mut(who).deck.remove(pos);
+        add_to_hand(state, who, inst);
+    }
+    Ok(())
 }
 
 fn fill_deck(
@@ -621,6 +646,7 @@ pub fn apply(db: &CardDb, state: &mut State, action: Action) -> Result<Vec<Event
         }
     }
     state.picks.clear();
+    state.bindings.clear();
     let mut events = Vec::new();
     match action {
         Action::MulliganConfirm { swap } => apply_mulligan(db, state, swap, &mut events)?,
@@ -1779,6 +1805,7 @@ fn drain_queue(db: &CardDb, state: &mut State, _events: &mut [Event]) -> Result<
         .queue
         .sort_by_key(|t| (t.category, t.entry, t.printed_order));
     let t = state.queue.remove(0);
+    state.bindings.clear();
     push_effects(state, t.controller, t.source, t.effects);
     let _ = db;
     Ok(())
@@ -1997,8 +2024,10 @@ fn apply_effect_with_targets(
         }
         _ => {
             apply_effect(db, state, controller, source, e, events)?;
+            return Ok(());
         }
     }
+    maybe_bind(state, e, targets);
     Ok(())
 }
 
@@ -2146,10 +2175,14 @@ fn apply_effect(
                 Some(Controller::Opponent) => controller.opponent(),
                 _ => controller,
             };
+            let mut summoned = Vec::new();
             for _ in 0..n {
                 // sequential one-at-a-time — ruling 2026-09-05
-                summon_source(db, state, who, card, false, events)?;
+                if let Some(t) = summon_source(db, state, who, card, false, events)? {
+                    summoned.push(t);
+                }
             }
+            maybe_bind(state, e, &summoned);
         }
         Effect::AddToHand { card, count, .. } => {
             let n = eval_amount(db, state, controller, Some(source), count).max(0);
@@ -2186,14 +2219,18 @@ fn apply_effect(
             }
         }
         Effect::GrantTraits { select, traits, .. } => {
-            for t in resolve_select(db, state, controller, source, select) {
-                grant_traits_opt(state, &t, traits);
+            let ts = resolve_select(db, state, controller, source, select);
+            for t in &ts {
+                grant_traits_opt(state, t, traits);
             }
+            maybe_bind(state, e, &ts);
         }
         Effect::RemoveTraits { select, traits, .. } => {
-            for t in resolve_select(db, state, controller, source, select) {
-                remove_traits_opt(state, &t, traits);
+            let ts = resolve_select(db, state, controller, source, select);
+            for t in &ts {
+                remove_traits_opt(state, t, traits);
             }
+            maybe_bind(state, e, &ts);
         }
         Effect::Pp { action, amount, .. } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
@@ -2322,9 +2359,10 @@ fn apply_effect(
             }
         }
         Effect::RemoveAbilities { select, on, .. } => {
-            for t in resolve_select(db, state, controller, source, select) {
+            let ts = resolve_select(db, state, controller, source, select);
+            for t in &ts {
                 if let TargetOpt::Slot { player, slot } = t {
-                    if let Some(f) = state.field_inst_mut(player, slot) {
+                    if let Some(f) = state.field_inst_mut(*player, *slot) {
                         if let Some(tags) = on {
                             f.granted.retain(|a| !tags.contains(&a.tag()));
                         } else {
@@ -2333,6 +2371,7 @@ fn apply_effect(
                     }
                 }
             }
+            maybe_bind(state, e, &ts);
         }
         Effect::Invoke { .. }
         | Effect::RandomSplit { .. }
@@ -2917,7 +2956,7 @@ fn summon_source(
     src: &CardSource,
     exact: bool,
     events: &mut Vec<Event>,
-) -> Result<(), Illegal> {
+) -> Result<Option<TargetOpt>, Illegal> {
     let inst = match src {
         CardSource::Named { named } => {
             let card = db.require_supported(*named).map_err(|e| match e {
@@ -2940,10 +2979,10 @@ fn summon_source(
                     n.flags.summoning_sick = true;
                     n
                 } else {
-                    return Ok(());
+                    return Ok(None);
                 }
             } else {
-                return Ok(());
+                return Ok(None);
             }
         }
         CardSource::RandomFrom { .. } => {
@@ -2957,10 +2996,10 @@ fn summon_source(
     let mut inst = inst;
     inst.flags.summoning_sick = true;
     if inst.is_earth_sigil() && merge_earth(db, state, who, &inst, events)? {
-        return Ok(());
+        return Ok(None);
     }
     let Some(slot) = state.player(who).first_empty_slot() else {
-        return Ok(());
+        return Ok(None);
     };
     if inst.kind == CardKind::Follower {
         state.player_mut(who).rally += 1;
@@ -2977,7 +3016,7 @@ fn summon_source(
         card: id,
         slot: Slot(slot),
     });
-    Ok(())
+    Ok(Some(TargetOpt::Slot { player: who, slot }))
 }
 
 fn add_source_to_hand(
@@ -3134,6 +3173,67 @@ fn gain_crest(db: &CardDb, state: &mut State, who: PlayerId, id: &str, events: &
 
 // ----- selectors / filters / conditions / amounts -----
 
+fn maybe_bind(state: &mut State, e: &Effect, targets: &[TargetOpt]) {
+    if let Some(name) = e.as_bind() {
+        let refs: Vec<BoundRef> = targets
+            .iter()
+            .filter_map(|t| opt_to_bound(state, t))
+            .collect();
+        state.bindings.insert(name.to_string(), refs);
+    }
+}
+
+fn opt_to_bound(state: &State, t: &TargetOpt) -> Option<BoundRef> {
+    match t {
+        TargetOpt::Slot { player, slot } => {
+            state.field_inst(*player, *slot).map(|c| BoundRef::Field {
+                player: *player,
+                id: c.id,
+            })
+        }
+        TargetOpt::Leader { player } => Some(BoundRef::Leader { player: *player }),
+        TargetOpt::Hand { player, pos } => {
+            state
+                .player(*player)
+                .hand
+                .get(*pos as usize)
+                .map(|c| BoundRef::Hand {
+                    player: *player,
+                    id: c.id,
+                })
+        }
+        TargetOpt::Card(id) => Some(BoundRef::Card(*id)),
+        TargetOpt::Mode(_) => None,
+    }
+}
+
+fn resolve_bound(state: &State, name: &str) -> Vec<TargetOpt> {
+    let Some(refs) = state.bindings.get(name) else {
+        return Vec::new();
+    };
+    refs.iter()
+        .filter_map(|r| match r {
+            BoundRef::Field { player, id } => {
+                state.find_field(*player, *id).map(|slot| TargetOpt::Slot {
+                    player: *player,
+                    slot,
+                })
+            }
+            BoundRef::Leader { player } => Some(TargetOpt::Leader { player: *player }),
+            BoundRef::Hand { player, id } => state
+                .player(*player)
+                .hand
+                .iter()
+                .position(|c| c.id == *id)
+                .map(|pos| TargetOpt::Hand {
+                    player: *player,
+                    pos: pos as u8,
+                }),
+            BoundRef::Card(id) => Some(TargetOpt::Card(*id)),
+        })
+        .collect()
+}
+
 fn resolve_select_rolling(
     db: &CardDb,
     state: &mut State,
@@ -3171,7 +3271,7 @@ fn resolve_select(
             | RefPick::Defender
             | RefPick::Opposing => Vec::new(),
         },
-        Selector::Bound(_) => Vec::new(),
+        Selector::Bound(b) => resolve_bound(state, &b.ref_name),
         Selector::Pool(p) => {
             let mut c = pool_target_opts(db, state, controller, source, p);
             match p.pick {
@@ -3446,6 +3546,7 @@ fn filter_matches_card(db: &CardDb, inst: &CardInstance, f: &Filter) -> bool {
             pending_work: Vec::new(),
             queue: Vec::new(),
             suppress_last_words: false,
+            bindings: std::collections::BTreeMap::new(),
         },
         PlayerId::A,
         inst,
@@ -3550,6 +3651,10 @@ fn eval_cond(
         Condition::Overflow { overflow } => {
             // Overflow: max PP ≥ 7; Bonus PP does not count — rulebook Overflow
             (state.player(who).pp_max >= 7) == *overflow
+        }
+        Condition::MaxPpAtLeast { max_pp_at_least } => {
+            // Dragonsign / schema `maxPpAtLeast` — current pp_max vs n at resolution.
+            state.player(who).pp_max >= eval_amount(db, state, who, source, &max_pp_at_least.n)
         }
         Condition::Evolved { evolved } => {
             if let Some(SourceRef::Field { player, id }) = source {

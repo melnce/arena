@@ -114,7 +114,9 @@ next():
 
 `gen_range(n)` (n > 0) uses rejection sampling on the high 32 bits of `next()` so the distribution is uniform. A clone is a complete fork; a replay from a clone is bit-identical.
 
-`ScriptedRng` consumes the trace's `rng` array **by outcome**. Each game-level decision (`draw`, `random_target`, `random_card`, `random_unused`, `random_split`, `coin`, `reanimate`, `multiset_pick`) matches `chose` against the current candidate list; a miss is `OraclePickNotLegal`. The live generator is not advanced in scripted mode.
+`ScriptedRng` consumes the trace's `rng` array **by outcome**. Each game-level decision (`draw`, `random_target`, `random_card`, `random_unused`, `random_split`, `coin`, `reanimate`, `multiset_pick`) matches `chose` against the current candidate list; a miss is `OraclePickNotLegal`. The live generator is not advanced in scripted mode. Entries with `"what":"raw"` (old-engine shuffles) are ignored before the array is fed to `ScriptedRng`.
+
+Opening-hand draws are **not** `rng` picks. When `GameConfig.opening_hands` is set (replay of a header that carries `opening_hands`), `new_game` removes those card ids from the deck multisets in the listed draw order and does not roll. Live `arena-trace` still rolls the opening four, then writes them onto the header.
 
 The random-legal *policy* (`arena-trace`, soak) uses a **separate** xoshiro256** stream (`policy_rng(seed)` = xoshiro256** seeded with `seed + 0xA5A5_A5A5_A5A5_A5A5`) so the trace's `rng` array contains only the game's rolls.
 
@@ -128,6 +130,7 @@ struct GameConfig {
     deck_a: Multiset<CardId>,   // 40
     deck_b: Multiset<CardId>,
     first: First,               // Coin | A | B
+    opening_hands: Option<OpeningHands>,  // pre-mulligan draw-order ids; skip RNG draws
 }
 
 fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError>;

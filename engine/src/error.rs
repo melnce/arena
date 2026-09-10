@@ -40,6 +40,10 @@ pub enum LoadError {
     MissingCrest(String),
     #[error("{0}")]
     Unsupported(Unsupported),
+    #[error("card {card} has bound ref {name} that no `as` on the same card can produce")]
+    UnboundRef { card: String, name: String },
+    #[error("opening hand card {card} is not in player {player}'s deck")]
+    OpeningHandNotInDeck { player: String, card: String },
 }
 
 /// A card uses a schema construct the M1 engine does not implement.

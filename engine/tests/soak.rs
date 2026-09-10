@@ -21,6 +21,7 @@ fn play_game(
             deck_a: decks.to_vec(),
             deck_b: decks.to_vec(),
             first: First::A,
+            opening_hands: None,
         },
     )
     .expect("new_game");
@@ -120,6 +121,7 @@ fn clone_replay_determinism_one_game() {
             deck_a: decks.clone(),
             deck_b: decks,
             first: First::A,
+            opening_hands: None,
         },
     )
     .unwrap();

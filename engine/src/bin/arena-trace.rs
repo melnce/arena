@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use arena_engine::{
     apply, legal_actions, new_game, policy_rng, snapshot_json, to_neutral, Action, CardDb, CardId,
-    First, GameConfig, NeutralAction, Phase, PlayerId, TraceHeader,
+    First, GameConfig, NeutralAction, OpeningHandsJson, Phase, PlayerId, TraceHeader,
 };
 
 fn main() {
@@ -110,6 +110,7 @@ fn play_one(
             deck_a: deck_a.to_vec(),
             deck_b: deck_b.to_vec(),
             first,
+            opening_hands: None,
         },
     )
     .map_err(|e| e.to_string())?;
@@ -127,6 +128,20 @@ fn play_one(
             let mut v: Vec<String> = deck_b.iter().map(|c| c.as_str()).collect();
             v.sort();
             v
+        },
+        opening_hands: OpeningHandsJson {
+            a: state
+                .player(PlayerId::A)
+                .hand
+                .iter()
+                .map(|c| c.card.as_str())
+                .collect(),
+            b: state
+                .player(PlayerId::B)
+                .hand
+                .iter()
+                .map(|c| c.card.as_str())
+                .collect(),
         },
     };
     let mut lines = vec![serde_json::to_string(&header).unwrap()];

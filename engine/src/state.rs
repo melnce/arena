@@ -384,6 +384,25 @@ pub struct GameConfig {
     pub deck_a: Vec<CardId>,
     pub deck_b: Vec<CardId>,
     pub first: First,
+    /// When set, `new_game` deals these ids from the deck multisets in
+    /// draw order and does not roll opening-hand draws (`docs/trace-format.md`).
+    pub opening_hands: Option<OpeningHands>,
+}
+
+/// Pre-mulligan opening hands in draw order.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OpeningHands {
+    pub a: Vec<CardId>,
+    pub b: Vec<CardId>,
+}
+
+/// A bound `as` target, stored by instance id so later `ref`s survive compaction.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BoundRef {
+    Field { player: PlayerId, id: u32 },
+    Leader { player: PlayerId },
+    Hand { player: PlayerId, id: u32 },
+    Card(CardId),
 }
 
 #[derive(Debug, Clone)]
@@ -403,6 +422,9 @@ pub struct State {
     pub pending_work: Vec<WorkFrame>,
     pub queue: Vec<QueuedTrigger>,
     pub suppress_last_words: bool,
+    /// Per-resolution `as` / `bound` map. Shared by evolve + superEvolve
+    /// of one card when both fire. Cleared at each new resolution.
+    pub bindings: BTreeMap<String, Vec<BoundRef>>,
 }
 
 #[derive(Debug, Clone)]
