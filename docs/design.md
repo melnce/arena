@@ -8,6 +8,8 @@ The end goal (2026-09-05) is matchup simulation statistics — mulligan win rate
 
 Cygames' card list API is the source of truth for card **facts and texts** (`id`, `name`, `kind`, `class`, `tribes`, `rarity`, `cost`, `attack`, `defense`, `set`, `token`, rotation, related ids, stripped `skill_text`, specific effects, official Q&A) and for **image hashes** (`card_image_hash`, `card_banner_image_hash`, `evo_card_image_hash`, `evo_card_banner_image_hash`). Endpoint: `GET https://shadowverse-wb.com/web/CardList/cardList?offset=<n>&include_token=1` with header `Lang: en`. The committed dump is `cards/official/catalog.json`. Raw hashes only — no URLs in the catalog, no image fields on authored card files.
 
+Cygames' client help glossary is the second official rules source for **keyword semantics** (78 entries today). Endpoint: `GET https://shadowverse-wb.com/web/System/glossaryList` with header `Lang: en` (and `Lang: ja`). Committed dumps: `cards/official/glossary.en.json`, `cards/official/glossary.ja.json`; rendered reference: `rules/official-glossary.md`; audit vs `rules/rulebook.md`: `rules/official-glossary-audit.md`.
+
 The site builds image paths as `/uploads/card_image/{resourceLang}/card/{card_image_hash}.png` (full card, PNG 530×687) and `/uploads/card_image/{resourceLang}/list/{card_banner_image_hash}.png` (deck-list strip, 800×160) on `https://shadowverse-wb.com`. Language map: `{ja: "jpn", en: "eng", cht: "cht", chs: "chs", ko: "kor"}`. The `en` and `ja` path segments 403; use `eng` / `jpn`. Evolved art uses the `evo_*` hashes in the same templates. Measured: Deepwood Bounty `90011310` `https://shadowverse-wb.com/uploads/card_image/eng/card/3927581ba7464f77ac9c1fd5467cae2d.png` → 200 `image/png`.
 
 The M4 client derives those URLs from the catalog at runtime (hot-linking Cygames' host). A `tools/fetch-images.mjs` mirror into an ignored directory is the fallback if hot-linking is ever blocked — not written now.
@@ -25,6 +27,9 @@ node tools/fetch-official.mjs              # live fetch → catalog + rules/offi
 node tools/fetch-official.mjs --check      # re-fetch; exit 1 if records differ (fetched_at ignored)
 node tools/fetch-official.mjs --qa-from-catalog
 node tools/apply-official-catalog.mjs      # rewrite authored fact fields + text from the committed catalog
+node tools/fetch-glossary.mjs              # live fetch → glossary JSON + rules/official-glossary.md
+node tools/fetch-glossary.mjs --check      # re-fetch; exit 1 if entries differ (fetched_at ignored)
+node tools/validate-glossary.mjs           # regenerate markdown from JSON; exit 1 on diff
 ```
 
 `--check` is a documented manual command. **Do not put the live fetch in CI** — network flakiness. CI validates authored files against the committed catalog only (`node tools/validate.mjs`).

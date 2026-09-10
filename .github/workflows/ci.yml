@@ -39,6 +39,9 @@ jobs:
       - name: soak 100 games
         run: ARENA_SOAK_GAMES=100 cargo test --release soak -- --nocapture
 
+      - name: throughput floor
+        run: ARENA_BENCH_MIN_GAMES_PER_SEC=800 cargo test --release --test throughput -- --nocapture
+
       - name: oracle traces
         run: cargo test --release --test oracle -- --nocapture
 
@@ -63,7 +66,7 @@ jobs:
 
       - name: validate cards
         working-directory: tools
-        run: npm ci && node validate.mjs && node corruption-proofs.mjs
+        run: npm ci && node validate.mjs && node validate-glossary.mjs && node corruption-proofs.mjs
 
       - name: coverage verb walk
         run: python3 tools/coverage-check.py

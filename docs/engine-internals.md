@@ -28,11 +28,13 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 
 ## Turn-boundary abilities
 
-`ability_boundary` matches `StartOfTurn` only when `start` and `EndOfTurn` only when `!start`. `queue_turn_boundary` calls the same matcher for both boundaries with that flag, so an `endOfTurn { whose: opponent }` (Enhanced Puppet) does not fire at the opponent's start, and an `endOfTurn { whose: own }` (Puppet Theater, Dark Dimensions) does not fire at the owner's start.
+`ability_boundary` matches `StartOfTurn` only when `start` and `EndOfTurn` only when `!start`, and only when `a.zone()` matches the scan (field / hand / deck). `queue_turn_boundary` calls the same matcher for both boundaries with that flag, so an `endOfTurn { whose: opponent }` (Enhanced Puppet) does not fire at the opponent's start, and an `endOfTurn { whose: own }` (Puppet Theater, Dark Dimensions) does not fire at the owner's start. `enqueue_boundary` looks up abilities by index (no `Ability` clones) and also scans hand (and deck) so a `zone: hand` endOfTurn (Garodeth) fires; `when` conditions are evaluated at enqueue.
 
 ## When events
 
 `Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, active side category 4 then opponent 6, entry order within a side. The played card's own `enter` ability sits on `pending_work` above Fanfare (rulebook step 1). Other cards' enter/play reactions stay on the queue until the play completes, including across a Fanfare choice (E34). `pick: entering` reads `State.event_subject`.
+
+`CardDb` builds a static `when` index at load: for each `(EventName, AbilityZone)`, the card ids (and crest ids) that print at least one `When` for that pair. `enqueue_when_on` does not clone zones; it walks field instances whose card id is in the index for `(event, Field)` or whose `granted_whens` count is non-zero (grants are dynamic and rare), crests in the crest index, and hand/deck only when the index has any entry for that `(event, zone)` — today's cards have no deck `When` for most events, so those scans cost nothing. Categories, entry order, `oncePerTurn` marks, and `filter`/`when` evaluation are unchanged.
 
 All 15 `EventName`s are raised where the engine produces them (enter, destroy, play, attack, evolve, draw, earth-rite spend, engage, leader restore, self-buff). None are a silent no-op.
 

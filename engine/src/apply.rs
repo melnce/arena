@@ -1787,86 +1787,123 @@ fn enqueue_boundary(
     cat: u8,
     start: bool,
 ) {
-    let mut pending: Vec<(u32, u8, SourceRef, Ability)> = Vec::new();
+    // RF: look up abilities by index (no Ability clones). Wave-1: also scan
+    // hand/deck with AbilityZone so zone:hand endOfTurn fires, and evaluate
+    // `when` at enqueue (Garodeth leaderDefenseLte).
     if crests {
+        let mut pending: Vec<(u32, u8, usize, String)> = Vec::new();
         for (i, c) in state.player(who).crests.iter().enumerate() {
-            if let Ok(def) = db.crest(&c.id) {
-                for (ord, a) in def.abilities().iter().enumerate() {
-                    if ability_boundary(a, whose, start, AbilityZone::Field) {
-                        pending.push((
-                            c.granted_order,
-                            ord as u8,
-                            SourceRef::Crest {
-                                player: who,
-                                index: i,
-                            },
-                            a.clone(),
-                        ));
-                    }
+            let Ok(def) = db.crest(&c.id) else { continue };
+            for (ord, a) in def.abilities().iter().enumerate() {
+                if ability_boundary(a, whose, start, AbilityZone::Field) {
+                    pending.push((c.granted_order, ord as u8, i, c.id.clone()));
                 }
             }
         }
-    } else {
-        for (si, s) in state.player(who).field.iter().enumerate() {
-            let Some(inst) = s else { continue };
-            if let Ok(card) = db.card(inst.card) {
-                for (ord, a) in card.abilities().iter().enumerate() {
-                    if ability_boundary(a, whose, start, AbilityZone::Field) {
-                        pending.push((
-                            si as u32,
-                            ord as u8,
-                            SourceRef::Field {
-                                player: who,
-                                id: inst.id,
-                            },
-                            a.clone(),
-                        ));
-                    }
-                }
+        for (entry, printed, index, id) in pending {
+            let Ok(def) = db.crest(&id) else { continue };
+            let Some(a) = def.abilities().get(printed as usize) else {
+                continue;
+            };
+            let source = SourceRef::Crest { player: who, index };
+            if !boundary_when_ok(db, state, who, source, a) {
+                continue;
             }
+            enqueue(state, cat, entry, printed, who, source, a);
         }
-        for (hi, h) in state.player(who).hand.iter().enumerate() {
-            if let Ok(card) = db.card(h.card) {
-                for (ord, a) in card.abilities().iter().enumerate() {
-                    if ability_boundary(a, whose, start, AbilityZone::Hand) {
-                        pending.push((
-                            hi as u32,
-                            ord as u8,
-                            SourceRef::Hand {
-                                player: who,
-                                id: h.id,
-                            },
-                            a.clone(),
-                        ));
-                    }
-                }
-            }
-        }
-        for (di, d) in state.player(who).deck.iter().enumerate() {
-            if let Ok(card) = db.card(d.card) {
-                for (ord, a) in card.abilities().iter().enumerate() {
-                    if ability_boundary(a, whose, start, AbilityZone::Deck) {
-                        pending.push((
-                            di as u32,
-                            ord as u8,
-                            SourceRef::Hand {
-                                player: who,
-                                id: d.id,
-                            },
-                            a.clone(),
-                        ));
-                    }
-                }
+        return;
+    }
+
+    let mut field: Vec<(u32, u8, CardId, SourceRef)> = Vec::new();
+    for (si, s) in state.player(who).field.iter().enumerate() {
+        let Some(inst) = s else { continue };
+        let Ok(card) = db.card(inst.card) else {
+            continue;
+        };
+        for (ord, a) in card.abilities().iter().enumerate() {
+            if ability_boundary(a, whose, start, AbilityZone::Field) {
+                field.push((
+                    si as u32,
+                    ord as u8,
+                    inst.card,
+                    SourceRef::Field {
+                        player: who,
+                        id: inst.id,
+                    },
+                ));
             }
         }
     }
-    for (entry, printed, source, a) in pending {
-        if let Some(cond) = a.when_cond() {
-            if !eval_cond(db, state, who, Some(source), cond) {
-                continue;
+    enqueue_boundary_lookups(db, state, who, cat, field);
+
+    let mut hand: Vec<(u32, u8, CardId, SourceRef)> = Vec::new();
+    for (hi, h) in state.player(who).hand.iter().enumerate() {
+        let Ok(card) = db.card(h.card) else { continue };
+        for (ord, a) in card.abilities().iter().enumerate() {
+            if ability_boundary(a, whose, start, AbilityZone::Hand) {
+                hand.push((
+                    hi as u32,
+                    ord as u8,
+                    h.card,
+                    SourceRef::Hand {
+                        player: who,
+                        id: h.id,
+                    },
+                ));
             }
         }
-        enqueue(state, cat, entry, printed, who, source, &a);
+    }
+    enqueue_boundary_lookups(db, state, who, cat, hand);
+
+    let mut deck: Vec<(u32, u8, CardId, SourceRef)> = Vec::new();
+    for (di, d) in state.player(who).deck.iter().enumerate() {
+        let Ok(card) = db.card(d.card) else { continue };
+        for (ord, a) in card.abilities().iter().enumerate() {
+            if ability_boundary(a, whose, start, AbilityZone::Deck) {
+                deck.push((
+                    di as u32,
+                    ord as u8,
+                    d.card,
+                    SourceRef::Hand {
+                        player: who,
+                        id: d.id,
+                    },
+                ));
+            }
+        }
+    }
+    enqueue_boundary_lookups(db, state, who, cat, deck);
+}
+
+fn boundary_when_ok(
+    db: &CardDb,
+    state: &State,
+    who: PlayerId,
+    source: SourceRef,
+    a: &Ability,
+) -> bool {
+    match a.when_cond() {
+        Some(cond) => eval_cond(db, state, who, Some(source), cond),
+        None => true,
+    }
+}
+
+fn enqueue_boundary_lookups(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    cat: u8,
+    pending: Vec<(u32, u8, CardId, SourceRef)>,
+) {
+    for (entry, printed, card_id, source) in pending {
+        let Ok(card) = db.card(card_id) else { continue };
+        let Some(a) = card.abilities().get(printed as usize) else {
+            continue;
+        };
+        if !boundary_when_ok(db, state, who, source, a) {
+            continue;
+        }
+        enqueue(state, cat, entry, printed, who, source, a);
     }
 }
 
@@ -2070,12 +2107,19 @@ struct WhenScan<'a> {
     subject: Option<&'a CardInstance>,
 }
 
+#[derive(Clone, Copy)]
 struct WhenLoc {
     zone: AbilityZone,
     entry: u32,
     source: SourceRef,
     mark_id: Option<u32>,
     mark_crest: Option<usize>,
+}
+
+struct WhenCand {
+    entry: u32,
+    id: u32,
+    card: CardId,
 }
 
 fn enqueue_when_on(
@@ -2096,56 +2140,93 @@ fn enqueue_when_on(
         subject,
     };
 
-    let field: Vec<(u8, CardInstance)> = state
+    let field_cands: Vec<WhenCand> = state
         .player(observer_side)
         .field
         .iter()
         .enumerate()
-        .filter_map(|(si, s)| s.as_ref().map(|c| (si as u8, c.clone())))
-        .collect();
-    let crests = state.player(observer_side).crests.clone();
-    let hand = state.player(observer_side).hand.clone();
-    let deck = state.player(observer_side).deck.clone();
-
-    for (si, inst) in &field {
-        if let Some(id) = only_inst {
-            if inst.id != id {
-                continue;
+        .filter_map(|(si, s)| {
+            let inst = s.as_ref()?;
+            if let Some(id) = only_inst {
+                if inst.id != id {
+                    return None;
+                }
             }
-        }
+            if inst.granted_whens == 0 && !db.card_has_when(inst.card, event, AbilityZone::Field) {
+                return None;
+            }
+            Some(WhenCand {
+                entry: si as u32,
+                id: inst.id,
+                card: inst.card,
+            })
+        })
+        .collect();
+
+    for cand in &field_cands {
         if self_buff {
             state.event_subject = Some(TargetOpt::Slot {
                 player: observer_side,
-                slot: *si,
+                slot: cand.entry as u8,
             });
         }
+        let (granted, once_when) = {
+            let Some(inst) = state
+                .player(observer_side)
+                .field
+                .get(cand.entry as usize)
+                .and_then(|s| s.as_ref())
+                .filter(|c| c.id == cand.id)
+            else {
+                continue;
+            };
+            let granted = if inst.granted_whens > 0 {
+                inst.granted.clone()
+            } else {
+                Vec::new()
+            };
+            (granted, inst.once_used.contains(&TriggerTag::When))
+        };
         collect_when_from_abilities(
             &scan,
             state,
             WhenLoc {
                 zone: AbilityZone::Field,
-                entry: *si as u32,
+                entry: cand.entry,
                 source: SourceRef::Field {
                     player: observer_side,
-                    id: inst.id,
+                    id: cand.id,
                 },
-                mark_id: Some(inst.id),
+                mark_id: Some(cand.id),
                 mark_crest: None,
             },
-            inst.card,
-            &inst.granted,
-            &inst.once_used,
+            cand.card,
+            &granted,
+            once_when,
             &mut pending,
         );
     }
 
     if only_inst.is_none() {
-        for (i, c) in crests.iter().enumerate() {
-            let Ok(def) = db.crest(&c.id) else { continue };
+        let crest_cands: Vec<(usize, String)> = state
+            .player(observer_side)
+            .crests
+            .iter()
+            .enumerate()
+            .filter(|(_, c)| db.crest_has_when(&c.id, event, AbilityZone::Field))
+            .map(|(i, c)| (i, c.id.clone()))
+            .collect();
+        for (i, id) in crest_cands {
+            let once_when = match state.player(observer_side).crests.get(i) {
+                Some(c) if c.id == id => c.once_used.contains(&TriggerTag::When),
+                _ => continue,
+            };
+            let Ok(def) = db.crest(&id) else { continue };
             collect_when_from_list(
                 &scan,
                 state,
                 def.abilities(),
+                0,
                 WhenLoc {
                     zone: AbilityZone::Field,
                     entry: i as u32,
@@ -2156,49 +2237,115 @@ fn enqueue_when_on(
                     mark_id: None,
                     mark_crest: Some(i),
                 },
-                &c.once_used,
+                once_when,
                 &mut pending,
             );
         }
-        for (hi, h) in hand.iter().enumerate() {
-            collect_when_from_abilities(
-                &scan,
-                state,
-                WhenLoc {
-                    zone: AbilityZone::Hand,
+
+        if db.zone_has_when(event, AbilityZone::Hand) {
+            let hand_cands: Vec<WhenCand> = state
+                .player(observer_side)
+                .hand
+                .iter()
+                .enumerate()
+                .filter(|(_, h)| {
+                    h.granted_whens > 0 || db.card_has_when(h.card, event, AbilityZone::Hand)
+                })
+                .map(|(hi, h)| WhenCand {
                     entry: hi as u32,
-                    source: SourceRef::Hand {
-                        player: observer_side,
-                        id: h.id,
+                    id: h.id,
+                    card: h.card,
+                })
+                .collect();
+            for cand in hand_cands {
+                let (granted, once_when) = {
+                    let Some(h) = state
+                        .player(observer_side)
+                        .hand
+                        .iter()
+                        .find(|c| c.id == cand.id)
+                    else {
+                        continue;
+                    };
+                    let granted = if h.granted_whens > 0 {
+                        h.granted.clone()
+                    } else {
+                        Vec::new()
+                    };
+                    (granted, h.once_used.contains(&TriggerTag::When))
+                };
+                collect_when_from_abilities(
+                    &scan,
+                    state,
+                    WhenLoc {
+                        zone: AbilityZone::Hand,
+                        entry: cand.entry,
+                        source: SourceRef::Hand {
+                            player: observer_side,
+                            id: cand.id,
+                        },
+                        mark_id: Some(cand.id),
+                        mark_crest: None,
                     },
-                    mark_id: Some(h.id),
-                    mark_crest: None,
-                },
-                h.card,
-                &h.granted,
-                &h.once_used,
-                &mut pending,
-            );
+                    cand.card,
+                    &granted,
+                    once_when,
+                    &mut pending,
+                );
+            }
         }
-        for (di, d) in deck.iter().enumerate() {
-            collect_when_from_abilities(
-                &scan,
-                state,
-                WhenLoc {
-                    zone: AbilityZone::Deck,
+
+        if db.zone_has_when(event, AbilityZone::Deck) {
+            let deck_cands: Vec<WhenCand> = state
+                .player(observer_side)
+                .deck
+                .iter()
+                .enumerate()
+                .filter(|(_, d)| {
+                    d.granted_whens > 0 || db.card_has_when(d.card, event, AbilityZone::Deck)
+                })
+                .map(|(di, d)| WhenCand {
                     entry: di as u32,
-                    source: SourceRef::Hand {
-                        player: observer_side,
-                        id: d.id,
+                    id: d.id,
+                    card: d.card,
+                })
+                .collect();
+            for cand in deck_cands {
+                let (granted, once_when) = {
+                    let Some(d) = state
+                        .player(observer_side)
+                        .deck
+                        .iter()
+                        .find(|c| c.id == cand.id)
+                    else {
+                        continue;
+                    };
+                    let granted = if d.granted_whens > 0 {
+                        d.granted.clone()
+                    } else {
+                        Vec::new()
+                    };
+                    (granted, d.once_used.contains(&TriggerTag::When))
+                };
+                collect_when_from_abilities(
+                    &scan,
+                    state,
+                    WhenLoc {
+                        zone: AbilityZone::Deck,
+                        entry: cand.entry,
+                        source: SourceRef::Hand {
+                            player: observer_side,
+                            id: cand.id,
+                        },
+                        mark_id: Some(cand.id),
+                        mark_crest: None,
                     },
-                    mark_id: Some(d.id),
-                    mark_crest: None,
-                },
-                d.card,
-                &d.granted,
-                &d.once_used,
-                &mut pending,
-            );
+                    cand.card,
+                    &granted,
+                    once_when,
+                    &mut pending,
+                );
+            }
         }
     }
 
@@ -2242,23 +2389,23 @@ fn collect_when_from_abilities(
     loc: WhenLoc,
     card_id: CardId,
     granted: &[Ability],
-    once_used: &[TriggerTag],
+    once_when: bool,
     pending: &mut Vec<PendingWhen>,
 ) {
-    let mut list: Vec<Ability> = Vec::new();
-    if let Ok(card) = scan.db.card(card_id) {
-        list.extend(card.abilities().iter().cloned());
+    let printed = scan.db.card(card_id).map(Card::abilities).unwrap_or(&[]);
+    collect_when_from_list(scan, state, printed, 0, loc, once_when, pending);
+    if !granted.is_empty() {
+        collect_when_from_list(scan, state, granted, printed.len(), loc, once_when, pending);
     }
-    list.extend(granted.iter().cloned());
-    collect_when_from_list(scan, state, &list, loc, once_used, pending);
 }
 
 fn collect_when_from_list(
     scan: &WhenScan<'_>,
     state: &State,
     abilities: &[Ability],
+    order_base: usize,
     loc: WhenLoc,
-    once_used: &[TriggerTag],
+    once_when: bool,
     pending: &mut Vec<PendingWhen>,
 ) {
     for (ord, a) in abilities.iter().enumerate() {
@@ -2295,12 +2442,12 @@ fn collect_when_from_list(
                 continue;
             }
         }
-        if a.once_per_turn() && once_used.contains(&TriggerTag::When) {
+        if a.once_per_turn() && once_when {
             continue;
         }
         pending.push(PendingWhen {
             entry: loc.entry,
-            printed: ord as u8,
+            printed: (order_base + ord) as u8,
             source: loc.source,
             ability: a.clone(),
             mark_id: loc.mark_id,
@@ -3163,7 +3310,7 @@ fn apply_effect(
             for t in resolve_select(db, state, controller, source, select) {
                 if let TargetOpt::Slot { player, slot } = t {
                     if let Some(f) = state.field_inst_mut(player, slot) {
-                        f.granted.push((**ability).clone());
+                        f.grant_ability((**ability).clone());
                     }
                 }
             }
@@ -3173,17 +3320,7 @@ fn apply_effect(
             for t in &ts {
                 if let TargetOpt::Slot { player, slot } = t {
                     if let Some(f) = state.field_inst_mut(*player, *slot) {
-                        if let Some(tags) = on {
-                            f.granted.retain(|a| !tags.contains(&a.tag()));
-                            for t in tags {
-                                if let TriggerTag::LastWords = t {
-                                    f.printed_tags.remove("lastWords");
-                                }
-                            }
-                        } else {
-                            f.granted.clear();
-                            f.printed_tags.clear();
-                        }
+                        f.remove_granted_abilities(on.as_deref());
                     }
                 }
             }

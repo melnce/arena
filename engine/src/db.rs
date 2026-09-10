@@ -1,11 +1,13 @@
 //! `CardDb::load(root)` — every `cards/**/*.json` except the catalog, plus
 //! the catalog for facts.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::card::{Card, CardId, CardOrCrest, CatalogRecord, Crest};
+use crate::card::{
+    Ability, AbilityZone, Card, CardId, CardOrCrest, CatalogRecord, Crest, EventName,
+};
 use crate::error::LoadError;
 use crate::support;
 
@@ -15,6 +17,10 @@ pub struct CardDb {
     pub crests: BTreeMap<String, Crest>,
     pub catalog: BTreeMap<String, CatalogRecord>,
     pub paths: BTreeMap<String, PathBuf>,
+    /// Printed `When` abilities, keyed by `(event, zone)` → card ids.
+    when_cards: HashMap<(EventName, AbilityZone), HashSet<CardId>>,
+    /// Printed `When` abilities on crests, keyed by `(event, zone)` → crest ids.
+    when_crests: HashMap<(EventName, AbilityZone), HashSet<String>>,
 }
 
 impl CardDb {
@@ -25,6 +31,8 @@ impl CardDb {
             crests: BTreeMap::new(),
             catalog: BTreeMap::new(),
             paths: BTreeMap::new(),
+            when_cards: HashMap::new(),
+            when_crests: HashMap::new(),
         };
         let catalog_path = root.join("cards/official/catalog.json");
         if catalog_path.exists() {
@@ -57,6 +65,7 @@ impl CardDb {
                 db.load_file(path, false)
             })?;
         }
+        db.rebuild_when_index();
         Ok(db)
     }
 
@@ -68,7 +77,9 @@ impl CardDb {
         if !dir.exists() {
             return Ok(());
         }
-        walk_json(dir, &mut |path| self.load_file(path, true))
+        walk_json(dir, &mut |path| self.load_file(path, true))?;
+        self.rebuild_when_index();
+        Ok(())
     }
 
     fn load_file(&mut self, path: &Path, skip_existing: bool) -> Result<(), LoadError> {
@@ -150,6 +161,47 @@ impl CardDb {
     pub fn has_card(&self, id: CardId) -> bool {
         self.cards.contains_key(&id)
     }
+
+    /// Card ids that print a `When` for `(event, zone)`.
+    pub fn card_has_when(&self, id: CardId, event: EventName, zone: AbilityZone) -> bool {
+        self.when_cards
+            .get(&(event, zone))
+            .is_some_and(|set| set.contains(&id))
+    }
+
+    /// Crest ids that print a `When` for `(event, zone)`.
+    pub fn crest_has_when(&self, id: &str, event: EventName, zone: AbilityZone) -> bool {
+        self.when_crests
+            .get(&(event, zone))
+            .is_some_and(|set| set.contains(id))
+    }
+
+    /// Any printed card `When` for this `(event, zone)` — used to skip hand/deck.
+    pub fn zone_has_when(&self, event: EventName, zone: AbilityZone) -> bool {
+        self.when_cards
+            .get(&(event, zone))
+            .is_some_and(|set| !set.is_empty())
+    }
+
+    fn rebuild_when_index(&mut self) {
+        let mut when_cards: HashMap<(EventName, AbilityZone), HashSet<CardId>> = HashMap::new();
+        let mut when_crests: HashMap<(EventName, AbilityZone), HashSet<String>> = HashMap::new();
+        for (id, card) in &self.cards {
+            index_when_abilities(card.abilities(), |event, zone| {
+                when_cards.entry((event, zone)).or_default().insert(*id);
+            });
+        }
+        for (id, crest) in &self.crests {
+            index_when_abilities(crest.abilities(), |event, zone| {
+                when_crests
+                    .entry((event, zone))
+                    .or_default()
+                    .insert(id.clone());
+            });
+        }
+        self.when_cards = when_cards;
+        self.when_crests = when_crests;
+    }
 }
 
 fn walk_json(
@@ -176,4 +228,12 @@ fn walk_json(
         }
     }
     Ok(())
+}
+
+fn index_when_abilities(abilities: &[Ability], mut on_when: impl FnMut(EventName, AbilityZone)) {
+    for a in abilities {
+        if let Ability::When { event, .. } = a {
+            on_when(*event, a.zone());
+        }
+    }
 }
