@@ -97,6 +97,7 @@ fn put_crest(
             once_used: vec![],
             granted_order: order,
             granted: vec![],
+            choose_used: Default::default(),
         });
 }
 
