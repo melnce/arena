@@ -1,0 +1,62 @@
+{
+  "id": "10522120",
+  "name": "Amphibian Goldmuncher",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10005,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "text": "At the end of your turn, if you have at least 2 spells in your hand, deal 5 damage to all enemy followers.\n\nEvolve: Add 2 copies of Glittering Gold to your hand.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, if you have at least 2 spells in your hand, deal 5 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "if you have at least 2 spells in your hand, deal 5 damage to all enemy followers.",
+          "op": "if",
+          "cond": {
+            "handHas": {
+              "filter": {
+                "kind": "spell"
+              },
+              "n": 2
+            }
+          },
+          "then": [
+            {
+              "printed": "deal 5 damage to all enemy followers.",
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Add 2 copies of Glittering Gold to your hand.",
+      "effects": [
+        {
+          "printed": "Add 2 copies of Glittering Gold to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021350"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

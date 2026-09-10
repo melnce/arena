@@ -1,0 +1,17 @@
+{
+  "id": "10612120",
+  "name": "Howling Wolfman",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Storm",
+  "attack": 5,
+  "defense": 3,
+  "traits": {
+    "storm": true
+  },
+  "tribes": []
+}

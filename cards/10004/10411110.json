@@ -1,0 +1,37 @@
+{
+  "id": "10411110",
+  "name": "Kou & You, Love and Hatred",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "text": "Can attack 2 times per turn.\nStrike: Restore 3 defense to all allies.",
+  "attack": 8,
+  "defense": 6,
+  "traits": {
+    "attacksPerTurn": 2
+  },
+  "abilities": [
+    {
+      "on": "strike",
+      "printed": "Strike: Restore 3 defense to all allies.",
+      "effects": [
+        {
+          "printed": "Restore 3 defense to all allies.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "character",
+            "includeLeader": true
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

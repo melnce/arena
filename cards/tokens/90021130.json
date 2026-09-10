@@ -1,0 +1,16 @@
+{
+  "id": "90021130",
+  "name": "Naht's Henchman",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 3,
+  "text": "",
+  "attack": 4,
+  "defense": 4,
+  "tribes": [
+    "officer"
+  ]
+}

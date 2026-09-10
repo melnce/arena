@@ -1,0 +1,49 @@
+{
+  "id": "10721110",
+  "name": "Bombastic Bombardier",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Activates in hand. Whenever an allied follower super-evolves, set the cost of this card to 1.\n\nFanfare: Select an enemy follower on the field and deal it 3 damage.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_super_evolve",
+      "printed": "Activates in hand. Whenever an allied follower super-evolves, set the cost of this card to 1.",
+      "effects": [
+        {
+          "printed": "set the cost of this card to 1.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "set": 1
+        }
+      ],
+      "zone": "hand"
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 3 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 3 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

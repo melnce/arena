@@ -1,0 +1,62 @@
+{
+  "id": "10511120",
+  "name": "Battledore Woodsmaiden",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Summon a Fairy.\n\nWhenever an allied Pixie follower enters the field, deal 1 damage to the enemy leader.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 4,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Fairy.",
+      "effects": [
+        {
+          "printed": "Summon a Fairy.",
+          "op": "summon",
+          "card": {
+            "named": "90011110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "printed": "Whenever an allied Pixie follower enters the field, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ],
+      "filter": {
+        "tribe": "pixie"
+      }
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "op": "replicate",
+          "ability": "fanfare",
+          "printed": "Replicate the effects of this card's Fanfare ability."
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

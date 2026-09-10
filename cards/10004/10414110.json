@@ -1,0 +1,43 @@
+{
+  "id": "10414110",
+  "name": "Ewiyar, Wind Personified",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Skybound Art - Recover 1 evolution point.\n\nRush",
+  "attack": 2,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Skybound Art - Recover 1 evolution point.",
+      "effects": [
+        {
+          "printed": "Skybound Art - Recover 1 evolution point.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "printed": "Recover 1 evolution point.",
+              "op": "ep",
+              "action": "gain",
+              "super": false,
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

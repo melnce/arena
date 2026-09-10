@@ -1,0 +1,48 @@
+{
+  "id": "10411120",
+  "name": "Manamel, Super Cutest",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10004,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "At the end of your turn, evolve this follower.\n\nWhen this follower evolves, deal 1 damage to all enemy followers.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, evolve this follower.",
+      "effects": [
+        {
+          "printed": "evolve this follower.",
+          "op": "evolve",
+          "select": {
+            "pick": "self"
+          },
+          "super": false
+        }
+      ]
+    },
+    {
+      "on": "anyEvolve",
+      "printed": "When this follower evolves, deal 1 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

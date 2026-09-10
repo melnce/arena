@@ -1,0 +1,38 @@
+{
+  "id": "10711110",
+  "name": "Macrobear",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Summon an exact copy of this card.\n\nRush\nWard\nCan't take more than 3 damage at a time.",
+  "attack": 6,
+  "defense": 6,
+  "traits": {
+    "rush": true,
+    "ward": true,
+    "damageCap": 3
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon an exact copy of this card.",
+      "effects": [
+        {
+          "printed": "Summon an exact copy of this card.",
+          "op": "summon",
+          "card": {
+            "copyOf": {
+              "pick": "self"
+            },
+            "exact": true
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

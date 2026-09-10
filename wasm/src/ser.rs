@@ -302,6 +302,7 @@ fn work_frame(w: &WorkFrame) -> Value {
             index,
             subject,
             subject_id,
+            e40,
         } => json!({
             "effects": {
                 "controller": pl(*controller),
@@ -310,6 +311,7 @@ fn work_frame(w: &WorkFrame) -> Value {
                 "index": index,
                 "subject": subject.as_ref().map(target_opt),
                 "subject_id": subject_id,
+                "e40": e40,
             }
         }),
         WorkFrame::Aftermath(a) => json!({"aftermath": format!("{a:?}")}),

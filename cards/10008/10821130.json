@@ -1,0 +1,76 @@
+{
+  "id": "10821130",
+  "name": "Sasha, Knight Everlasting",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Summon a Steelclad Knight and give it Rush.\n\nEvolve: Summon a Steelclad Knight and give it Ward.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Steelclad Knight and give it Rush.",
+      "effects": [
+        {
+          "printed": "Summon a Steelclad Knight and give it Rush.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90021120"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "rush": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon a Steelclad Knight and give it Ward.",
+      "effects": [
+        {
+          "printed": "Summon a Steelclad Knight and give it Ward.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90021120"
+              },
+              "count": 1,
+              "as": "s"
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "ward": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

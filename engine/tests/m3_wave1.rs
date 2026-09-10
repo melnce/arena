@@ -691,10 +691,8 @@ fn encroached_world_hand_transform_from_enemy_deck() {
 
 /// E40: Camiscilla's queued "evolve the entering follower" does not resolve
 /// after Bahamut mode 1 banishes her. Last Words are the exception; this
-/// ability is not Last Words. Encodes the ruling ahead of the Sword/Forest
-/// engine change — ignored until that lands on `main`.
+/// ability is not Last Words.
 #[test]
-#[ignore = "E40: queued When dropped when source left the field — un-ignore after merging main (Sword/Forest)"]
 fn camiscilla_reaction_dropped_when_banished_before_it_resolves() {
     let db = load_db();
     let mut st = started_decks(&db, 27, &["10804110"], &[VANILLA]);

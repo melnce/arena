@@ -1,0 +1,98 @@
+{
+  "id": "10723110",
+  "name": "Knellclaw Lieutenant",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10007,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Summon 3 copies of Knight. Select a Mode to activate.\n1. Give all other allied followers on the field +1/+0 and Rush.\n2. Give all other allied followers on the field +0/+1 and Ward.",
+  "attack": 3,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 3 copies of Knight. Select a Mode to activate.\n1. Give all other allied followers on the field +1/+0 and Rush.\n2. Give all other allied followers on the field +0/+1 and Ward.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies of Knight.",
+          "op": "summon",
+          "card": {
+            "named": "90021110"
+          },
+          "count": 3
+        },
+        {
+          "printed": "Select a Mode to activate.\n1. Give all other allied followers on the field +1/+0 and Rush.\n2. Give all other allied followers on the field +0/+1 and Ward.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Give all other allied followers on the field +1/+0 and Rush.",
+              "effects": [
+                {
+                  "op": "buff",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower",
+                    "other": true
+                  },
+                  "attack": 1,
+                  "defense": 0
+                },
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower",
+                    "other": true
+                  },
+                  "traits": {
+                    "rush": true
+                  }
+                }
+              ]
+            },
+            {
+              "printed": "2. Give all other allied followers on the field +0/+1 and Ward.",
+              "effects": [
+                {
+                  "op": "buff",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower",
+                    "other": true
+                  },
+                  "attack": 0,
+                  "defense": 1
+                },
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower",
+                    "other": true
+                  },
+                  "traits": {
+                    "ward": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

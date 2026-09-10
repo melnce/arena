@@ -1,0 +1,43 @@
+{
+  "id": "10813310",
+  "name": "Curiosity Abounds",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Summon 2 random differently named followers that cost 2 or less from your deck. Give all allied followers on the field +1/+1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon 2 random differently named followers that cost 2 or less from your deck. Give all allied followers on the field +1/+1.",
+      "effects": [
+        {
+          "printed": "Summon 2 random differently named followers that cost 2 or less from your deck.",
+          "op": "summon",
+          "card": {
+            "randomFrom": {
+              "kind": "follower",
+              "costLte": 2
+            }
+          },
+          "count": 2
+        },
+        {
+          "printed": "Give all allied followers on the field +1/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,18 @@
+{
+  "id": "90014110",
+  "name": "Eve, Blade of Crystalia",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 90000,
+  "rarity": "legendary",
+  "token": true,
+  "cost": 3,
+  "text": "Storm\nWard",
+  "attack": 3,
+  "defense": 3,
+  "traits": {
+    "storm": true,
+    "ward": true
+  },
+  "tribes": []
+}

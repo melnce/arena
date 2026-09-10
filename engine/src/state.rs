@@ -83,10 +83,16 @@ pub struct CardInstance {
     /// Next `op:sequence` step (wraps after the last). Per-instance; survives
     /// the trigger queue so Omerio / City of Babelon keep their cursor.
     pub sequence_index: u32,
-    /// Traits granted with `until: endOfTurn` — stripped at this player's EOT.
-    pub eot_granted: Traits,
-    /// Traits granted with `until: endOfOpponentTurn`.
-    pub eoot_granted: Traits,
+    /// Trait grants with an `until` expiry (Measured Attunement / Shaili).
+    pub temp_traits: Vec<TempTraitGrant>,
+}
+
+/// A `grantTraits` that expires at a turn boundary.
+#[derive(Debug, Clone)]
+pub struct TempTraitGrant {
+    pub traits: Traits,
+    pub until: crate::card::Until,
+    pub caster: PlayerId,
 }
 
 impl CardInstance {
@@ -128,8 +134,7 @@ impl CardInstance {
             name: card.name().to_string(),
             once_used: Vec::new(),
             sequence_index: 0,
-            eot_granted: Traits::default(),
-            eoot_granted: Traits::default(),
+            temp_traits: Vec::new(),
         }
     }
 
@@ -520,6 +525,8 @@ pub struct State {
     pub event_inst_id: Option<u32>,
     /// Set while `AllyFollowerAttacks` is enqueued: the attack targets a follower.
     pub attacking_follower: bool,
+    /// Attack target while Strike / Follower Strike / Clash resolve.
+    pub combat_opposing: Option<TargetOpt>,
 }
 
 #[derive(Debug, Clone)]
@@ -533,6 +540,8 @@ pub enum WorkFrame {
         /// Instance id of `subject` when it was a field slot, so `pick: entering`
         /// survives `compact_field` after a mid-resolution banish/destroy.
         subject_id: Option<u32>,
+        /// E40: skip this list at `index == 0` if `source` has left its zone.
+        e40: bool,
     },
     Aftermath(Aftermath),
 }

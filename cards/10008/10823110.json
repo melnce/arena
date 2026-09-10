@@ -1,0 +1,81 @@
+{
+  "id": "10823110",
+  "name": "Okita Souji",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: If you've unlocked super-evolution, evolve this follower.\n\nRush\nFollower Strike: Do this 1 time: \"Deal 3 damage to the opposing follower.\" If this follower is evolved, do it 3 times instead.",
+  "attack": 2,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If you've unlocked super-evolution, evolve this follower.",
+      "effects": [
+        {
+          "printed": "If you've unlocked super-evolution, evolve this follower.",
+          "op": "if",
+          "cond": {
+            "superEvolutionUnlocked": true
+          },
+          "then": [
+            {
+              "printed": "evolve this follower.",
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "followerStrike",
+      "printed": "Follower Strike: Do this 1 time: \"Deal 3 damage to the opposing follower.\" If this follower is evolved, do it 3 times instead.",
+      "effects": [
+        {
+          "printed": "Do this 1 time: \"Deal 3 damage to the opposing follower.\" If this follower is evolved, do it 3 times instead.",
+          "op": "if",
+          "cond": {
+            "evolved": true
+          },
+          "then": [
+            {
+              "printed": "do it 3 times instead.",
+              "op": "repeat",
+              "times": 3,
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "opposing"
+                  },
+                  "amount": 3
+                }
+              ]
+            }
+          ],
+          "else": [
+            {
+              "printed": "Do this 1 time: \"Deal 3 damage to the opposing follower.\"",
+              "op": "damage",
+              "select": {
+                "pick": "opposing"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

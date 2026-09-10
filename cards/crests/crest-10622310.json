@@ -1,0 +1,30 @@
+{
+  "id": "crest:10622310",
+  "name": "Crest: Majestic Conquest",
+  "grantedBy": [
+    "10622310"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nWhenever you play an Enhanced card, summon a Fearless Soldier.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_card_played",
+      "printed": "Whenever you play an Enhanced card, summon a Fearless Soldier.",
+      "effects": [
+        {
+          "printed": "summon a Fearless Soldier.",
+          "op": "summon",
+          "card": {
+            "named": "10621110"
+          },
+          "count": 1
+        }
+      ],
+      "filter": {
+        "enhanced": true
+      }
+    }
+  ]
+}

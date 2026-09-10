@@ -1,0 +1,69 @@
+{
+  "id": "10824110",
+  "name": "Bunny & Baron, Fate's Bullet",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10008,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Summon a Bunny & Baron, Fate's Bullet. Rally (20) - Deal 4 damage to the enemy leader.\n\nRush\n\nEvolve: Add a Desperados' Shot to your hand.",
+  "attack": 4,
+  "defense": 4,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Bunny & Baron, Fate's Bullet. Rally (20) - Deal 4 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Summon a Bunny & Baron, Fate's Bullet.",
+          "op": "summon",
+          "card": {
+            "named": "10824110"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Rally (20) - Deal 4 damage to the enemy leader.",
+          "op": "if",
+          "cond": {
+            "rally": {
+              "n": 20
+            }
+          },
+          "then": [
+            {
+              "printed": "Deal 4 damage to the enemy leader.",
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Add a Desperados' Shot to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Desperados' Shot to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90024330"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
