@@ -243,7 +243,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 
 ## Card source
 
-`{named: id}` `10724110` · `{copyOf, exact}` `10443310` / `10901310` · `{from: Selector}` `10412110` Chloe "Select a follower in your hand and summon it" (the selected instance itself; hand today, legal for a deck selector) · Grandeur `10533310` `exact: true` clones the rolled deck instance (modifiers included) · `{randomFrom: Filter}` `crest:10564120`
+`{named: id}` `10724110` · `{copyOf, exact}` Allure `10652310` / Grandeur `10533310` (`exact: true` on printed "exact copy") · Initiation of Rebirth `10901310` / Primal Beast Absorption `10443310` (`exact: false` on printed "a copy") · `{from: Selector}` `10412110` Chloe "Select a follower in your hand and summon it" (the selected instance itself; hand today, legal for a deck selector) · Grandeur `10533310` `exact: true` clones the rolled deck instance (modifiers included) · `{randomFrom: Filter}` `crest:10564120`
 
 `copyOf` always copies (exact or printed) regardless of zone — the original stays. `from` is the move: put that instance onto the field; a full field leaves it where it is.
 
@@ -284,6 +284,14 @@ Required `printed` (the literal `Fuse: …` line) plus `partners` Filter. "Cards
 What a fuse does to the **host** is `recipes` data (`partners`, cost conditions, `requires: [ids]`, `result`). The action enumerator reads recipes without running effects. `on: fused` exists only for effects *beyond* the host transform (Sephie `10934110` summon). Ability `effects` is `minItems: 1` — no empty fused stub.
 
 `recipes`: `{costTotal}` / `{costTotalGte}` + `{transformInto}` `90072110`; `{requires: ["90073120","90073130"]}` → Ω on α (`90073110`). Across-turns memory of which partners were fused is a rule (official Q&A `90073110`).
+
+## One construction per printed phrase
+
+The pool was authored in parallel waves. Review enforced "one construction per printed phrase" per PR, never across PRs. The engine is a bot-training target: two constructions for one phrase are two behaviours for one card text.
+
+`tools/phrase_index.py` walks every authored `printed` node under `cards/**` (skip `cards/official/`) and groups by a normalized phrase. Normalization strips the trigger prefix already encoded by `on` / mode `kind` (`Fanfare:`, `Enhance (N):`, … — `At the start/end of your turn,` and `Skybound Art` stay; Skybound is a condition, not `on`), replaces catalog names with `NAME` (`Crest: <name>` → `CREST`), maps `+N/+N` and other digits to `N`, keeps `X` in `X is …`, and uses the same markup strip as the coverage walk. The construction shape is the node's JSON with `printed` removed, ids → `ID`, bindings → `REF`, numbers → `N`, canonical key order; ability `on`/`whose` and mode `kind`/`cost` are omitted (they are the stripped prefix). Divergence is per node kind so a wrapper is not compared to its inner clause. `--check` fails on an unlisted divergence or a stale `docs/phrase-index.md`. Forced same-phrase-different-shape cases live in `tools/phrase-index-exceptions.json` with the sentence that forces them.
+
+Copy family (glossary **Exact Copy** / owner 2026-08-13): printed "exact copy/copies" → `exact: true`; printed "a copy" / "copies of" → `exact: false`. "Once on each of your turns, when/whenever …" → `oncePerTurn: true` + `when: {turnOwner: "self"}` (owner 2026-09-10). "until the end of the turn" uses one expiry form per op (`until` or `untilEndOfTurn`, never both on the same op). "Do this N times" → `repeat` + `times: N`. Enhance/Combo/Rally `replacesBase` matches printed "instead" (Zeta & Bea `10424110` is the additive reference). "a random enemy follower with the highest/lowest attack" → `pick: highest|lowest` + `orderBy`. "differently named" → `distinctNames` (`randomFrom` count>1 is documented to mean that).
 
 ## Sentence structure
 
