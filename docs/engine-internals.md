@@ -50,6 +50,20 @@ All 15 `EventName`s are raised where the engine produces them (enter, destroy, p
 
 `op:transform` replaces the targeted field instance in its slot with `CardInstance::from_card` of the destination (new instance id). The original is dropped — no Last Words, no shadow, no cemetery, no leave triggers, no compact. The new card is a fresh print (base stats, unevolved, summoning-sick, printed keywords). It is not an enter: no Rally, no `enter_counts` / `enteredThisMatch`, no `on:enter` / `ally_enter`. Rush/Storm on the new card still allow attacking that turn (owner 2026-09-10). In-hand fuse `recipes.transformInto` is the same replacement on the host hand index and is unchanged. Sincerity (`10573310`) targets `any:any` on both boards; `choose {slot}` carries `player` on every option when the pool spans both boards (trace-format / Practice-Tool PR #392). `{slot}` alone means a one-board pool. Old traces that omit `player` prefer the enemy board.
 
+Hand and deck transforms (Apathetic Gaze `10741310`) replace the instance in place with a fresh print of the destination id. Deck is a multiset: the instance's card id is rewritten (same instance id). `copyOf` with `pick: random` rolls independently per target via `resolve_select_rolling` (Grandeur `10533310` official Q&A: two Clay Golems each 50/50, not the same card for both). Exact copies are a fresh print of the rolled id, not a clone of deck-instance mods.
+
+## addToDeck / leaderModifier
+
+`op:addToDeck` (Lhynkal `10534110`, Ephemeral Foxfire `10843310`) inserts fresh prints into the deck multiset (`position: random` appends, same as `returnToDeck`). No shadow. `op:leaderModifier` applies to the selected leader (enemy for Lhynkal's crest). `maxDefense` below 0 is a delta; a non-negative value is a set (Zooey `10444120`). Current defense clamps to the new max. Floor of max defense after repeated −2 is 1 (question for the owner). The owner 2026-09-10 `max_defense` ruling is about follower defense, not leaders.
+
+## Spellboost / crest destroy / hand removeAbilities
+
+`op:spellboostHand` walks `on: spellboost` on each hand card. Optional `select` (Key Spirit `10931120`) boosts only the chosen card, `times` times. `Filter.hasSpellboost` is `printed_tags` containing `spellboost`. Crest `removeCrests` honors `filter.card` (`crest:{id}` / the 8-digit id); matching crests leave and their Last Words queue (Insomniac Witch `10532110`). Countdown expiry on a crest does the same. `countdown` with `zone: crests` delays/advances the crest counter (Dragon's Vale Elder `10744120`). `removeAbilities` applies to hand and deck instances as well as field (Ripper-Clawed Thief `10941110` Last Words copy). Draw / returnToDeck / banish bind the affected card ids (`as`) so a later `{count: {pick: bound}}` or `{stat: {of: bound, which: cost}}` survives the zone move.
+
+## Temp trait grants
+
+`grantTraits.until` stores `(until, traits, caster)` on the instance. `endOfTurn` expires for everyone when the current turn ends; `endOfOpponentTurn` expires when the caster's opponent ends their turn (Maximum Love Bomb `10442310`). Mid-combat `attacksPerTurn: n` (Giada `10843110` FollowerStrike, after this attack has already spent one) leaves `n-1` attacks remaining so the second attack is available after this one.
+
 ## Invoke
 
 `op:invoke` moves the sourced deck instance onto the field if there is a slot and `State.invoked_ids` does not already contain that card id this boundary window (one copy per name). No RNG pick. Full field: the card stays in the deck and `on:invoked` does not fire. A successful Invoke increments Rally and `enter_counts`, raises enter triggers, then enqueues `on:invoked`. `invoked_ids` is cleared at the start of each start-of-turn boundary.
@@ -117,7 +131,7 @@ Recorded `chose.slot` is the 0-based index among **surviving** cards on that pla
 Asked; arena follows the rulebook/text until he says otherwise.
 
 1. **World of Games counting itself.** A later 1-cost play sees World of Games (base 1) as "a card on the field other than it". The printed "other than it" excludes only the played card.
-2. **Granted `attacksPerTurn: 2` after attacks already made this turn.** Rulebook is silent. Implemented as `attacks_left = attacks_left.max(n)`.
+2. **Granted `attacksPerTurn: n` after attacks already made this turn.** Rulebook is silent. If `attacked_this_turn`, leave `n-1` remaining (Giada: the Strike/FollowerStrike grant is before damage, so the extra attack is available after this combat). Otherwise `attacks_left = attacks_left.max(n)`.
 3. **Duplicate-id draw after `returnToDeck`.** A draw of an id that has both a modified copy and a just-returned printed copy takes the oldest (first in vec; return appends).
 4. **E38 — entrant's own `on:enter` vs older `ally_enter`.** Implemented as same-timing board enter triggers, oldest first (not a jump onto `pending_work` above Fanfare). Pending owner.
 

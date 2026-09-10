@@ -673,6 +673,8 @@ pub struct Filter {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub has_last_words: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub has_spellboost: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub destroyed_this_match: Option<bool>,
 }
 
@@ -1205,6 +1207,8 @@ pub enum Effect {
             skip_serializing_if = "Option::is_none"
         )]
         distinct_names: Option<bool>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        player: Option<CrestPlayer>,
     },
     Discard {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1248,6 +1252,8 @@ pub enum Effect {
         when: Option<Condition>,
         select: Selector,
         traits: Traits,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        until: Option<Until>,
     },
     #[serde(rename = "removeTraits")]
     RemoveTraits {
@@ -1432,6 +1438,8 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         when: Option<Condition>,
         times: Amount,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        select: Option<Selector>,
     },
     #[serde(rename = "randomSplit")]
     RandomSplit {
@@ -2557,8 +2565,17 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
         | Effect::Ep { amount: count, .. }
         | Effect::Reanimate {
             max_cost: count, ..
+        } => walk_amount(count, used),
+        Effect::SpellboostHand {
+            times: count,
+            select,
+            ..
+        } => {
+            walk_amount(count, used);
+            if let Some(s) = select {
+                walk_selector(s, used);
+            }
         }
-        | Effect::SpellboostHand { times: count, .. } => walk_amount(count, used),
         Effect::Cost {
             select, delta, set, ..
         } => {
