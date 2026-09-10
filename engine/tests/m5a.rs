@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use arena_engine::{
     apply, by_name, determinize, encode, legal_actions, legal_ids, legal_mask, names, new_game,
     policy_rng, search_key, Action, ActionId, AttackTarget, CardId, First, GameConfig, Observation,
-    Phase, PlayerId, Policy, Random, Slot, H0, MAX_ACTIONS, MAX_TURNS,
+    OpeningHands, Phase, PlayerId, Policy, Random, Slot, H0, MAX_ACTIONS, MAX_TURNS,
 };
 
 mod common;
@@ -544,8 +544,8 @@ fn h0_beats_random_basic_forest_mirror() {
     eprintln!(
         "H0 vs Random basic-forest-mirror: {wins}/{N} ({:.1}%) losses={losses} draws={draws} draw_mean_turns={} draw_mean_acts={}",
         rate * 100.0,
-        if draws == 0 { 0 } else { draw_turns / draws },
-        if draws == 0 { 0 } else { draw_acts / draws },
+        draw_turns.checked_div(draws).unwrap_or(0),
+        draw_acts.checked_div(draws).unwrap_or(0),
     );
     assert!(
         rate >= 0.90,
@@ -590,4 +590,143 @@ fn policy_by_name_is_object_safe() {
     }
     let mut first = by_name("first-legal", 0).unwrap();
     assert_eq!(first.choose(&db, &state, &legal, &mut rng), 0);
+}
+
+#[test]
+fn h0_decides_from_the_observation_only() {
+    let db = load_db();
+    let (states, _) = collect_states(&db, 400, true);
+    let mut used = 0usize;
+    for (n, state) in states.into_iter().enumerate() {
+        if used >= 50 {
+            break;
+        }
+        if !matches!(state.phase, Phase::Main) {
+            continue;
+        }
+        let me = arena_engine::acting_player(&state);
+        if state.active != me {
+            continue;
+        }
+        let legal = legal_actions(&db, &state);
+        if legal.len() <= 1 {
+            continue;
+        }
+        let mut d = determinize(&state, me, 50_000 + n as u64);
+        arena_engine::reseed(&mut d, 9_000 + n as u64);
+        let legal_d = legal_actions(&db, &d);
+        if legal != legal_d {
+            continue;
+        }
+        let seed = 20260910u64.wrapping_add(n as u64);
+        let mut a = H0::default();
+        let mut b = H0::default();
+        let mut rng_a = policy_rng(seed);
+        let mut rng_b = policy_rng(seed);
+        let i1 = a.choose(&db, &state, &legal, &mut rng_a);
+        let i2 = b.choose(&db, &d, &legal_d, &mut rng_b);
+        assert_eq!(
+            i1, i2,
+            "H0 must ignore the hidden hand and game RNG (state {n})"
+        );
+        used += 1;
+    }
+    assert_eq!(used, 50, "need 50 main-phase mid-game states");
+}
+
+#[test]
+fn h0_uses_bonus_pp_when_it_enables_a_play() {
+    let db = load_db();
+    let mut st = started(&db, 21);
+    st.active = PlayerId::B;
+    st.turn = 2;
+    st.player_mut(PlayerId::B).is_second = true;
+    st.player_mut(PlayerId::B).turns_taken = 2;
+    st.player_mut(PlayerId::B).bonus_pp.early_charge = true;
+    st.player_mut(PlayerId::B).bonus_pp.late_charge = true;
+    st.player_mut(PlayerId::B).bonus_pp.active = false;
+    st.player_mut(PlayerId::B).bonus_pp.locked = false;
+    give_pp(&mut st, PlayerId::B, 2, 2);
+    clear_hand(&mut st, PlayerId::A);
+    clear_hand(&mut st, PlayerId::B);
+    st.player_mut(PlayerId::A).field = Default::default();
+    st.player_mut(PlayerId::B).field = Default::default();
+    put_hand(&db, &mut st, PlayerId::B, "10002110");
+    let first = h0_pick(&db, &st);
+    assert!(
+        matches!(first, Action::BonusPp),
+        "expected BonusPp activate, got {first:?}"
+    );
+    apply(&db, &mut st, first).unwrap();
+    assert!(st.player(PlayerId::B).bonus_pp.active);
+    let second = h0_pick(&db, &st);
+    assert!(
+        matches!(second, Action::Play { .. }),
+        "expected play after BonusPp, got {second:?}"
+    );
+}
+
+#[test]
+fn h0_never_cancels_bonus_pp() {
+    let db = load_db();
+    let mut st = started(&db, 22);
+    st.active = PlayerId::B;
+    st.turn = 2;
+    st.player_mut(PlayerId::B).is_second = true;
+    st.player_mut(PlayerId::B).turns_taken = 2;
+    st.player_mut(PlayerId::B).bonus_pp.early_charge = true;
+    st.player_mut(PlayerId::B).bonus_pp.active = true;
+    st.player_mut(PlayerId::B).bonus_pp.locked = false;
+    give_pp(&mut st, PlayerId::B, 2, 2);
+    clear_hand(&mut st, PlayerId::B);
+    put_hand(&db, &mut st, PlayerId::B, "10001110");
+    let legal = legal_actions(&db, &st);
+    assert!(
+        legal.iter().any(|a| matches!(a, Action::BonusPp)),
+        "cancel must still be legal"
+    );
+    let a = h0_pick(&db, &st);
+    assert!(
+        !matches!(a, Action::BonusPp),
+        "H0 must not cancel an unspent orb, got {a:?}"
+    );
+}
+
+#[test]
+fn h0_mulligan_swaps_expensive_cards() {
+    let db = load_db();
+    let cheap = cid("10001110");
+    let dear = cid("10011130");
+    let st = new_game(
+        &db,
+        GameConfig {
+            seed: 23,
+            deck_a: pad_deck(
+                &["10001110", "10001110", "10011130", "10011130", "88001110"],
+                40,
+            ),
+            deck_b: pad_deck(&["88001110"], 40),
+            first: First::A,
+            opening_hands: Some(OpeningHands {
+                a: vec![cheap, cheap, dear, dear],
+                b: vec![cid("88001110"); 4],
+            }),
+        },
+    )
+    .unwrap();
+    assert!(matches!(
+        st.phase,
+        Phase::Mulligan {
+            player: PlayerId::A
+        }
+    ));
+    assert_eq!(st.player(PlayerId::A).hand[0].cost, 2);
+    assert_eq!(st.player(PlayerId::A).hand[2].cost, 4);
+    let a = h0_pick(&db, &st);
+    assert_eq!(
+        a,
+        Action::MulliganConfirm {
+            swap: [false, false, true, true]
+        }
+    );
 }

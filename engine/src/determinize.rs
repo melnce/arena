@@ -18,8 +18,12 @@ pub fn determinize(state: &State, perspective: PlayerId, seed: u64) -> State {
     let (_, additions) = out.player(opp).derive_public_knowledge();
     let mut add_left = counts(&additions);
 
-    let hand = std::mem::take(&mut out.player_mut(opp).hand);
-    let deck = std::mem::take(&mut out.player_mut(opp).deck);
+    let mut hand = std::mem::take(&mut out.player_mut(opp).hand);
+    let mut deck = std::mem::take(&mut out.player_mut(opp).deck);
+    // Instance order is not information; sort so the same multiset + seed
+    // yields the same deal (needed so H0's roots are observation-stable).
+    canon_sort(&mut hand);
+    canon_sort(&mut deck);
     let mut stay = Vec::new();
     let mut rest = Vec::new();
     for inst in hand {
@@ -30,6 +34,8 @@ pub fn determinize(state: &State, perspective: PlayerId, seed: u64) -> State {
         }
     }
     rest.extend(deck);
+    canon_sort(&mut stay);
+    canon_sort(&mut rest);
 
     let mut rng = Xoshiro256ss::from_seed(seed);
     shuffle(&mut rest, &mut rng);
@@ -58,6 +64,10 @@ fn take_one(m: &mut std::collections::BTreeMap<CardId, u32>, id: CardId) -> bool
         }
         _ => false,
     }
+}
+
+fn canon_sort(items: &mut [CardInstance]) {
+    items.sort_by(|a, b| a.card.cmp(&b.card).then(a.id.cmp(&b.id)));
 }
 
 fn shuffle(items: &mut [CardInstance], rng: &mut Xoshiro256ss) {

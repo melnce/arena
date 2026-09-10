@@ -355,13 +355,22 @@ streams and output as before). `H0` is a determinized search bot:
 | `determinizations` | 4 | opponent-reply samples |
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
 
-H0 evaluates every legal action on clones, searches its own turn to
-`EndTurn` (beam + depth), then the opponent's reply via a **greedy value
-maximiser** on each determinization (not a nested H0 — a depth-2 H0 × 4
-samples would spend the node cap on the opponent and miss own-turn lethal).
+H0 builds `K = max(1, determinizations)` search roots via
+`determinize(state, me, seed)` (which reseeds the game RNG) from the
+policy rng. Own-turn search, lethal, and the opponent's greedy reply all
+run on those roots — the true hidden hand and live game RNG are never
+read. A lethal is taken only when every root agrees (a random lethal is
+a bet, not a lethal). Candidate values are averaged over the K roots.
+The node cap is global. `H0::fast()` uses `K = 1`.
+
+`BonusPp` is considered only in the **activate** direction
+(`!bonus_pp.active`); cancel is never chosen. Cycles are skipped: any
+action whose resulting `search_key` is already on the current line is
+dropped. Mulligan: swap every card whose cost is ≥ 4 (both seats).
+
 Value: leader-defense difference, board (atk+def with Ward/Storm/evolved
 weights), hand size, next-turn PP / EP / SEP, crest / countdown presence;
-terminal = ±∞. Lethal lines on the current turn are taken first.
+terminal = ±∞ on a single root, finite-clamped when averaging.
 
 `arena-bench` accepts `--policy random|first-legal|h0` and `--vs` for
 asymmetric seats. Caps: `engine::limits::{MAX_TURNS, MAX_ACTIONS}` = 60 / 800.

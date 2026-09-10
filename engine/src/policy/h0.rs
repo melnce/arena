@@ -1,5 +1,10 @@
-//! H0: depth-limited beam search with a hand-written value and
-//! determinized opponent replies.
+//! H0: depth-limited beam search with a hand-written value.
+//!
+//! Search starts from `K = max(1, determinizations)` roots produced by
+//! `determinize(state, me, seed)` (which reseeds the game RNG). Own-turn
+//! search, lethal, and the opponent reply all run on those roots — the
+//! true hidden hand and live game RNG are never consulted. A lethal is
+//! taken only when every root agrees. The node cap is global.
 
 use crate::action::{acting_player, Action};
 use crate::apply::{apply, legal_actions};
@@ -8,15 +13,18 @@ use crate::determinize::determinize;
 use crate::ids::PlayerId;
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
+use crate::search_key::search_key;
 use crate::state::{Phase, State};
 
 use super::Policy;
 
 const INF: f32 = 1.0e9;
+/// Finite stand-in for a terminal when averaging across roots so a lucky
+/// lethal does not look like consensus.
+const FINITE_WIN: f32 = 80.0;
 
 /// Determinized search bot. Opponent replies use a greedy value maximiser
-/// (not a nested H0): four determinizations × a depth-2 H0 would spend the
-/// 2 000-`apply` node cap on the opponent and starve own-turn lethal search.
+/// on the already-determinized root (not a nested H0).
 #[derive(Debug, Clone)]
 pub struct H0 {
     pub depth: u32,
@@ -37,7 +45,7 @@ impl Default for H0 {
 }
 
 impl H0 {
-    /// Shallow lethal-aware search for bulk fixtures.
+    /// Shallow lethal-aware search for bulk fixtures. `K = 1`.
     pub fn fast() -> Self {
         Self {
             depth: 2,
@@ -45,6 +53,10 @@ impl H0 {
             determinizations: 0,
             node_cap: 80,
         }
+    }
+
+    fn k(&self) -> u32 {
+        self.determinizations.max(1)
     }
 }
 
@@ -59,62 +71,83 @@ impl Policy for H0 {
         if legal.len() <= 1 {
             return 0;
         }
-        // Bonus PP is a toggle; picking it forever hits the action cap.
-        let cand: Vec<usize> = if legal.iter().any(|a| !matches!(a, Action::BonusPp)) {
-            legal
-                .iter()
-                .enumerate()
-                .filter(|(_, a)| !matches!(a, Action::BonusPp))
-                .map(|(i, _)| i)
-                .collect()
-        } else {
-            (0..legal.len()).collect()
-        };
-        if cand.len() <= 1 {
-            return cand.first().copied().unwrap_or(0);
-        }
-        let subset: Vec<Action> = cand.iter().map(|&i| legal[i].clone()).collect();
-        let me = acting_player(state);
-        let mut nodes = 0u32;
-
         if matches!(state.phase, Phase::Mulligan { .. }) {
+            return mulligan_index(state, legal);
+        }
+
+        let me = acting_player(state);
+        let cand: Vec<usize> = legal
+            .iter()
+            .enumerate()
+            .filter(|(_, a)| useful_action(state, me, a))
+            .map(|(i, _)| i)
+            .collect();
+        if cand.is_empty() {
             return 0;
         }
-
-        if self.determinizations == 0 && self.depth <= 2 {
-            return cand[greedy_play(db, state, &subset, me, &mut nodes, self.node_cap.min(80))
-                .min(cand.len() - 1)];
+        if cand.len() == 1 {
+            return cand[0];
+        }
+        let subset: Vec<Action> = cand.iter().map(|&i| legal[i].clone()).collect();
+        let mut nodes = 0u32;
+        let k = self.k();
+        let mut roots = Vec::with_capacity(k as usize);
+        for _ in 0..k {
+            roots.push(determinize(state, me, rng.next_u64()));
         }
 
-        if let Some(i) = find_lethal(db, state, &subset, me, 2, &mut nodes, self.node_cap) {
-            return cand[i];
+        if let Some(j) = consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, self.node_cap) {
+            return cand[j];
+        }
+
+        let mut acc = vec![0.0f32; subset.len()];
+        let mut n = vec![0u32; subset.len()];
+        for root in &roots {
+            let root_key = search_key(root);
+            for (j, a) in subset.iter().enumerate() {
+                if nodes >= self.node_cap {
+                    break;
+                }
+                let Some(s) = try_apply(db, root, a, &mut nodes, self.node_cap, &[root_key]) else {
+                    continue;
+                };
+                let v = if s.winner == Some(me) {
+                    FINITE_WIN
+                } else if self.depth <= 2 {
+                    greedy_after(
+                        db,
+                        &s,
+                        me,
+                        a,
+                        &mut nodes,
+                        self.node_cap.min(80),
+                        &[root_key],
+                    )
+                } else {
+                    let line = vec![root_key, search_key(&s)];
+                    search_own(
+                        db,
+                        &s,
+                        me,
+                        self.depth.saturating_sub(1),
+                        self.beam,
+                        &mut nodes,
+                        self.node_cap,
+                        &line,
+                    )
+                };
+                acc[j] += finite(v);
+                n[j] += 1;
+            }
         }
 
         let mut best_i = 0usize;
         let mut best_v = f32::NEG_INFINITY;
-        for (j, a) in subset.iter().enumerate() {
-            if nodes >= self.node_cap {
-                break;
-            }
-            let mut s = state.clone();
-            nodes += 1;
-            if apply(db, &mut s, a.clone()).is_err() {
+        for (j, &c) in n.iter().enumerate() {
+            if c == 0 {
                 continue;
             }
-            if s.winner == Some(me) {
-                return cand[j];
-            }
-            let v = search_own(
-                db,
-                &s,
-                me,
-                self.depth.saturating_sub(1),
-                self.beam,
-                self.determinizations,
-                &mut nodes,
-                self.node_cap,
-                rng,
-            );
+            let v = acc[j] / c as f32;
             if v > best_v {
                 best_v = v;
                 best_i = j;
@@ -124,91 +157,155 @@ impl Policy for H0 {
     }
 }
 
-fn find_lethal(
+fn mulligan_index(state: &State, legal: &[Action]) -> usize {
+    let me = acting_player(state);
+    let hand = &state.player(me).hand;
+    let mut want = [false; 4];
+    for (i, slot) in want.iter_mut().enumerate() {
+        if let Some(c) = hand.get(i) {
+            *slot = c.cost >= 4;
+        }
+    }
+    legal
+        .iter()
+        .position(|a| matches!(a, Action::MulliganConfirm { swap } if *swap == want))
+        .unwrap_or(0)
+}
+
+fn useful_action(state: &State, me: PlayerId, a: &Action) -> bool {
+    match a {
+        // Activate only — never cancel an unspent orb.
+        Action::BonusPp => !state.player(me).bonus_pp.active,
+        _ => true,
+    }
+}
+
+fn finite(v: f32) -> f32 {
+    if v.is_nan() {
+        0.0
+    } else {
+        v.clamp(-FINITE_WIN, FINITE_WIN)
+    }
+}
+
+fn try_apply(
     db: &CardDb,
     state: &State,
+    a: &Action,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+) -> Option<State> {
+    if *nodes >= cap {
+        return None;
+    }
+    let mut s = state.clone();
+    *nodes += 1;
+    if apply(db, &mut s, a.clone()).is_err() {
+        return None;
+    }
+    let k = search_key(&s);
+    if line.contains(&k) {
+        return None;
+    }
+    Some(s)
+}
+
+fn consensus_lethal(
+    db: &CardDb,
+    roots: &[State],
     legal: &[Action],
     me: PlayerId,
     depth: u32,
     nodes: &mut u32,
     cap: u32,
 ) -> Option<usize> {
-    for (i, a) in legal.iter().enumerate() {
-        if *nodes >= cap {
-            return None;
-        }
-        if matches!(a, Action::EndTurn | Action::BonusPp | Action::Confirm) {
-            continue;
-        }
-        let mut s = state.clone();
-        *nodes += 1;
-        if apply(db, &mut s, a.clone()).is_err() {
-            continue;
-        }
-        if s.winner == Some(me) {
-            return Some(i);
-        }
-        if depth == 0 || acting_player(&s) != me {
-            continue;
-        }
-        let next = legal_actions(db, &s);
-        if find_lethal(db, &s, &next, me, depth.saturating_sub(1), nodes, cap).is_some() {
-            return Some(i);
+    let mut ok = vec![true; legal.len()];
+    let mut any = false;
+    for root in roots {
+        let line = [search_key(root)];
+        for (j, a) in legal.iter().enumerate() {
+            if !ok[j] {
+                continue;
+            }
+            if !is_lethal(db, root, a, me, depth, nodes, cap, &line) {
+                ok[j] = false;
+            } else {
+                any = true;
+            }
         }
     }
-    None
+    if !any {
+        return None;
+    }
+    ok.iter().position(|&b| b)
 }
 
-fn greedy_play(
+#[allow(clippy::too_many_arguments)]
+fn is_lethal(
     db: &CardDb,
     state: &State,
-    legal: &[Action],
+    a: &Action,
     me: PlayerId,
+    depth: u32,
     nodes: &mut u32,
     cap: u32,
-) -> usize {
-    let can_spend = legal.iter().any(|a| {
-        matches!(
-            a,
-            Action::Play { .. } | Action::Attack { .. } | Action::Evolve { .. } | Action::Choose(_)
-        )
-    });
-    let mut best_i = 0usize;
-    let mut best_v = f32::NEG_INFINITY;
-    for (i, a) in legal.iter().enumerate() {
-        if *nodes >= cap {
-            break;
-        }
-        let mut s = state.clone();
-        *nodes += 1;
-        if apply(db, &mut s, a.clone()).is_err() {
-            continue;
-        }
-        if s.winner == Some(me) {
-            return i;
-        }
-        let mut v = value(&s, me);
-        if matches!(a, Action::EndTurn) && can_spend {
-            v -= 4.0;
-        }
-        if matches!(a, Action::BonusPp) {
-            v -= 20.0;
-        }
-        if matches!(
-            a,
-            Action::Attack {
-                target: crate::ids::AttackTarget::Leader,
-                ..
-            }
-        ) {
-            v += 3.0;
-        }
-        if v > best_v {
-            best_v = v;
-            best_i = i;
-        }
+    line: &[u64],
+) -> bool {
+    if matches!(a, Action::EndTurn | Action::Confirm) {
+        return false;
     }
-    best_i
+    let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+        return false;
+    };
+    if s.winner == Some(me) {
+        return true;
+    }
+    if depth == 0 || acting_player(&s) != me {
+        return false;
+    }
+    let next = legal_actions(db, &s);
+    let mut next_line = line.to_vec();
+    next_line.push(search_key(&s));
+    next.iter().any(|b| {
+        useful_action(&s, me, b)
+            && is_lethal(
+                db,
+                &s,
+                b,
+                me,
+                depth.saturating_sub(1),
+                nodes,
+                cap,
+                &next_line,
+            )
+    })
+}
+
+fn greedy_after(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    first: &Action,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+) -> f32 {
+    if state.winner == Some(me) {
+        return FINITE_WIN;
+    }
+    let mut v = value(state, me);
+    if matches!(
+        first,
+        Action::Attack {
+            target: crate::ids::AttackTarget::Leader,
+            ..
+        }
+    ) {
+        v += 3.0;
+    }
+    let _ = (db, nodes, cap, line);
+    v
 }
 
 fn greedy_index(
@@ -218,6 +315,7 @@ fn greedy_index(
     me: PlayerId,
     nodes: &mut u32,
     cap: u32,
+    line: &[u64],
 ) -> usize {
     let mut best_i = 0usize;
     let mut best_v = f32::NEG_INFINITY;
@@ -225,11 +323,12 @@ fn greedy_index(
         if *nodes >= cap {
             break;
         }
-        let mut s = state.clone();
-        *nodes += 1;
-        if apply(db, &mut s, a.clone()).is_err() {
+        if !useful_action(state, me, a) {
             continue;
         }
+        let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+            continue;
+        };
         let v = value(&s, me);
         if v > best_v {
             best_v = v;
@@ -246,10 +345,9 @@ fn search_own(
     me: PlayerId,
     depth: u32,
     beam: usize,
-    dets: u32,
     nodes: &mut u32,
     cap: u32,
-    rng: &mut Xoshiro256ss,
+    line: &[u64],
 ) -> f32 {
     if state.winner == Some(me) {
         return INF;
@@ -261,7 +359,7 @@ fn search_own(
         return value(state, me);
     }
     if acting_player(state) != me || matches!(state.phase, Phase::Terminal) {
-        return opponent_replies(db, state, me, dets, nodes, cap, rng);
+        return opponent_reply(db, state, me, nodes, cap, line);
     }
     if depth == 0 {
         return value(state, me);
@@ -271,40 +369,39 @@ fn search_own(
         return value(state, me);
     }
 
-    let mut scored: Vec<(f32, State)> = Vec::with_capacity(legal.len());
+    let mut scored: Vec<(f32, State, u64)> = Vec::with_capacity(legal.len());
     for a in &legal {
         if *nodes >= cap {
             break;
         }
-        let mut s = state.clone();
-        *nodes += 1;
-        if apply(db, &mut s, a.clone()).is_err() {
+        if !useful_action(state, me, a) {
             continue;
         }
+        let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+            continue;
+        };
         if s.winner == Some(me) {
             return INF;
         }
-        let mut v = value(&s, me);
-        if matches!(a, Action::BonusPp) {
-            v -= 20.0;
-        }
-        scored.push((v, s));
+        let k = search_key(&s);
+        scored.push((value(&s, me), s, k));
     }
     scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
     scored.truncate(beam.max(1));
 
     let mut best = f32::NEG_INFINITY;
-    for (_, s) in scored {
+    for (_, s, k) in scored {
+        let mut next_line = line.to_vec();
+        next_line.push(k);
         let v = search_own(
             db,
             &s,
             me,
             depth.saturating_sub(1),
             beam,
-            dets,
             nodes,
             cap,
-            rng,
+            &next_line,
         );
         if v > best {
             best = v;
@@ -313,14 +410,13 @@ fn search_own(
     best
 }
 
-fn opponent_replies(
+fn opponent_reply(
     db: &CardDb,
     state: &State,
     me: PlayerId,
-    dets: u32,
     nodes: &mut u32,
     cap: u32,
-    rng: &mut Xoshiro256ss,
+    line: &[u64],
 ) -> f32 {
     if state.winner == Some(me) {
         return INF;
@@ -328,31 +424,21 @@ fn opponent_replies(
     if state.winner == Some(me.opponent()) {
         return -INF;
     }
-    if dets == 0 {
-        return value(state, me);
-    }
-    let n = dets;
-    let mut acc = 0.0f32;
-    let mut used = 0u32;
-    for _ in 0..n {
-        if *nodes >= cap {
-            break;
-        }
-        let seed = rng.next_u64();
-        let mut s = determinize(state, me, seed);
-        greedy_until_end(db, &mut s, me.opponent(), nodes, cap);
-        acc += value(&s, me);
-        used += 1;
-    }
-    if used == 0 {
-        value(state, me)
-    } else {
-        acc / used as f32
-    }
+    let mut s = state.clone();
+    greedy_until_end(db, &mut s, me.opponent(), nodes, cap, line);
+    value(&s, me)
 }
 
-fn greedy_until_end(db: &CardDb, state: &mut State, who: PlayerId, nodes: &mut u32, cap: u32) {
+fn greedy_until_end(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+) {
     let mut steps = 0u32;
+    let mut line = line.to_vec();
     while state.winner.is_none()
         && !matches!(state.phase, Phase::Terminal)
         && acting_player(state) == who
@@ -366,16 +452,18 @@ fn greedy_until_end(db: &CardDb, state: &mut State, who: PlayerId, nodes: &mut u
         }
         if let Some(end) = legal.iter().position(|a| matches!(a, Action::EndTurn)) {
             if steps >= 3 {
-                *nodes += 1;
-                let _ = apply(db, state, legal[end].clone());
+                if let Some(next) = try_apply(db, state, &legal[end], nodes, cap, &line) {
+                    *state = next;
+                }
                 break;
             }
         }
-        let i = greedy_index(db, state, &legal, who, nodes, cap);
-        if apply(db, state, legal[i].clone()).is_err() {
+        let i = greedy_index(db, state, &legal, who, nodes, cap, &line);
+        let Some(next) = try_apply(db, state, &legal[i], nodes, cap, &line) else {
             break;
-        }
-        *nodes += 1;
+        };
+        line.push(search_key(&next));
+        *state = next;
         steps += 1;
     }
 }
