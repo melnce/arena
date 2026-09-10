@@ -48,37 +48,33 @@
     {
       "kind": "enhance",
       "cost": 4,
+      "replacesBase": true,
       "printed": "Enhance (4): Do it 2 times instead.",
       "effects": [
         {
           "printed": "Do it 2 times instead.",
           "op": "repeat",
-          "times": 1,
+          "times": 2,
           "effects": [
             {
-              "op": "seq",
-              "effects": [
-                {
-                  "op": "damage",
-                  "select": {
-                    "pick": "random",
-                    "side": "enemy",
-                    "zone": "field",
-                    "kind": "follower"
-                  },
-                  "amount": 3
-                },
-                {
-                  "op": "damage",
-                  "select": {
-                    "pick": "all",
-                    "side": "any",
-                    "zone": "leader",
-                    "kind": "leader"
-                  },
-                  "amount": 1
-                }
-              ]
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 3
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "any",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
             }
           ]
         }
