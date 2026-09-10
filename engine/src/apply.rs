@@ -491,7 +491,9 @@ fn playable(db: &CardDb, state: &State, me: PlayerId, hand_i: usize, inst: &Card
     };
     let _ = paid;
     if kind == CardKind::Follower || kind == CardKind::Amulet {
-        if state.player(me).field_free() == 0 && !is_earth_merge(db, state, me, card) {
+        // Earth Sigil merge still runs on a non-full field (2026-08-30). A play
+        // with no free slot is an owner question; match the old engine (no).
+        if state.player(me).field_free() == 0 {
             return false;
         }
         return true;
@@ -499,12 +501,6 @@ fn playable(db: &CardDb, state: &State, me: PlayerId, hand_i: usize, inst: &Card
     // spell / accelerate: mandatory Select must have targets
     // owner-rulings 2026-08-16 / official Q&A 2026-09-06
     spell_playable(db, state, me, hand_i, card, &effects)
-}
-
-fn is_earth_merge(db: &CardDb, state: &State, me: PlayerId, card: &Card) -> bool {
-    card.tribes().contains(&crate::card::Tribe::EarthSigil)
-        && state.player(me).earth_slot.is_some()
-        && db.card(card.id()).is_ok()
 }
 
 fn play_form(

@@ -122,7 +122,8 @@ fn oracle_traces() {
 #[test]
 fn known_divergence_classes_include_old_rule() {
     // Allowlist contract: docs/oracle.md. `old-rule` = the old engine
-    // disagrees with an owner ruling; arena is right.
+    // disagrees with an owner ruling or the rulebook; arena is right.
+    // Never used for an emitter representation defect (`old-emitter`).
     let text = fs::read_to_string(repo_root().join("oracle/known-divergences.json"))
         .expect("known-divergences.json");
     let rows = KnownDivergence::parse_list(&text).expect("allowlist json");

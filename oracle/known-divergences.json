@@ -3,16 +3,16 @@
     "trace": "abyss-p8rfn-mirror/trace-20260910-0.jsonl",
     "i": 115,
     "path": "error",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-23 / 2026-09-05: Void Colonel 10952110 Last Words 'Destroy a random enemy follower' picks after deaths settle and the board compact; the old engine still addressed pre-compact slot 1",
+    "class": "old-emitter",
+    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
     "since": "2026-09-10"
   },
   {
     "trace": "abyss-p8rfn-mirror/trace-20260910-1.jsonl",
     "i": 83,
     "path": "error",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random targeting after combat uses the compacted field; the old engine chose ally slot 4 which no longer existed",
+    "class": "old-emitter",
+    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
     "since": "2026-09-10"
   },
   {
@@ -27,8 +27,8 @@
     "trace": "abyss-p8rfn-mirror/trace-20260910-12.jsonl",
     "i": 43,
     "path": "players.a.cemetery.10752110",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-29: Hark to the Night Song 10753310 'Deal 6 damage split between all enemy followers' is oldest-first; the old engine rolled random_target and killed Highwire Feline 10752110",
+    "class": "old-data",
+    "reason": "old repo's Hark data resolves the split as random targets; the 2026-08-29 ruling (which names Hark) is oldest-first — arena follows the ruling",
     "since": "2026-09-10"
   },
   {
@@ -51,8 +51,8 @@
     "trace": "abyss-p8rfn-mirror/trace-20260910-17.jsonl",
     "i": 83,
     "path": "players.b.cemetery.10751120",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random destroy after combat selects on the compacted board; the old engine's ally random_target left a different Raz 10751120 cemetery count",
+    "class": "old-emitter",
+    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
     "since": "2026-09-10"
   },
   {
@@ -67,16 +67,16 @@
     "trace": "abyss-p8rfn-mirror/trace-20260910-19.jsonl",
     "i": 52,
     "path": "players.b.cemetery.10951120",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-29: Hark to the Night Song 10753310 split damage is oldest-first; the old engine recorded random_target / random_card and killed an extra Netherworld Lieutenant 10951120",
+    "class": "old-data",
+    "reason": "old repo's Hark data resolves the split as random targets; the 2026-08-29 ruling (which names Hark) is oldest-first — arena follows the ruling",
     "since": "2026-09-10"
   },
   {
     "trace": "abyss-p8rfn-mirror/trace-20260910-2.jsonl",
     "i": 70,
     "path": "error",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-23 / 2026-09-05: Void Colonel 10952110 Last Words random destroy picks after compact; the old engine chose ally slot 1 which was not a live candidate",
+    "class": "old-emitter",
+    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
     "since": "2026-09-10"
   },
   {
@@ -91,24 +91,24 @@
     "trace": "abyss-p8rfn-mirror/trace-20260910-21.jsonl",
     "i": 69,
     "path": "error",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random targeting after combat uses the compacted field; the old engine chose ally slot 1 with only slot 0 live",
+    "class": "old-emitter",
+    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
     "since": "2026-09-10"
   },
   {
     "trace": "abyss-p8rfn-mirror/trace-20260910-22.jsonl",
     "i": 80,
     "path": "players.b.cemetery.10052110",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random destroy after combat selects on the compacted board; the old engine's ally random_target left a different Lilith 10052110 cemetery count",
+    "class": "old-emitter",
+    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
     "since": "2026-09-10"
   },
   {
     "trace": "abyss-p8rfn-mirror/trace-20260910-24.jsonl",
     "i": 43,
     "path": "error",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random targeting after combat uses the compacted field; the old engine chose ally slot 4 which was not a live candidate",
+    "class": "old-emitter",
+    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
     "since": "2026-09-10"
   },
   {
@@ -116,7 +116,7 @@
     "i": 66,
     "path": "error",
     "class": "old-emitter",
-    "reason": "Void Colonel 10952110 Last Words 'Destroy a random enemy follower': the old emitter recorded random_card 90051110 (Skeleton); arena asks for random_target slots",
+    "reason": "old emitter records `random_card` 90051110 (Skeleton) for Void Colonel 10952110 Last Words 'Destroy a random enemy follower' instead of a `random_target` slot; same family as the pre-compaction slot indices (verified on games 21 and 24); emitter fix pending in the old repo",
     "since": "2026-09-10"
   },
   {
@@ -139,8 +139,8 @@
     "trace": "abyss-p8rfn-mirror/trace-20260910-5.jsonl",
     "i": 49,
     "path": "players.a.cemetery.10751120",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-23 / 2026-09-05: Last Words random destroy after combat selects on the compacted board; the old engine's ally random_target left a different Raz 10751120 cemetery count",
+    "class": "old-emitter",
+    "reason": "old emitter records `random_target` slots in its pre-compaction layout while Last Words resolve; the follower it destroyed is arena's candidate at the compacted index (verified on games 21 and 24); emitter fix pending in the old repo",
     "since": "2026-09-10"
   },
   {
@@ -165,30 +165,6 @@
     "path": "players.b.field[4].can_attack",
     "class": "old-data",
     "reason": "Adahime, Anathema of Death 10754110 prints 'Whenever another allied Abysscraft follower enters the field, give it Rush'; Highwire Feline 10752110 played from hand is an enter and should have Rush, but the old engine left it summoning-sick",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-16.jsonl",
-    "i": 120,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-30: playing Witch's New Brew 10031210 onto a full field is a legal Earth Sigil merge; the old engine omits that play from legal",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-17.jsonl",
-    "i": 97,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-30: playing Witch's New Brew 10031210 onto a full field is a legal Earth Sigil merge; the old engine omits that play from legal",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-19.jsonl",
-    "i": 51,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-08-30: playing Witch's New Brew 10031210 onto a full field is a legal Earth Sigil merge; the old engine omits that play from legal",
     "since": "2026-09-10"
   },
   {

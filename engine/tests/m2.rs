@@ -1,7 +1,7 @@
 //! M2 wave 1 constructs: crystallize, hand-zone endOfTurn, summon from deck,
 //! granted Last Words copy, split damage, necromancy evolve, Strike both leaders.
 
-use arena_engine::{apply, Action, AttackTarget, Phase, PlayerId, Slot};
+use arena_engine::{apply, legal_actions, Action, AttackTarget, Phase, PlayerId, Slot};
 
 mod common;
 use common::*;
@@ -398,6 +398,27 @@ fn adahime_does_not_give_herself_rush() {
             );
         }
     }
+}
+
+#[test]
+fn brew_on_full_field_is_not_playable_pending_owner() {
+    let db = load_db();
+    let mut st = started(&db, 18);
+    let me = PlayerId::A;
+    give_pp(&mut st, me, 1, 1);
+    put_field(&db, &mut st, me, "10031210");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, "88001110");
+    assert_eq!(field_count(&st, me), 5);
+    st.player_mut(me).hand.clear();
+    put_hand(&db, &mut st, me, "10031210");
+    let legal = legal_actions(&db, &st);
+    assert!(
+        !legal.iter().any(|a| matches!(a, Action::Play { .. })),
+        "full field: Brew is not playable pending owner"
+    );
 }
 
 #[test]

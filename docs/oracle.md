@@ -65,7 +65,7 @@ A valid entry:
 }
 ```
 
-`class` is one of `old-data` | `old-emitter` | `engine` | `convention` | `old-rule`. `old-rule` means the old engine disagrees with an owner ruling; arena is right. `reason` is one sentence a stranger can check and must name the card or rule. `path` is a JSON path, or `legal` / `illegal` / `error` (`error` is an `OraclePickNotLegal` failure at that `i`).
+`class` is one of `old-data` | `old-emitter` | `engine` | `convention` | `old-rule`. `old-rule` means the old engine disagrees with an owner ruling or the rulebook; arena is right — never used for an emitter representation defect, that is `old-emitter`. `reason` is one sentence a stranger can check and must name the card or rule. `path` is a JSON path, or `legal` / `illegal` / `error` (`error` is an `OraclePickNotLegal` failure at that `i`).
 
 `ARENA_ORACLE_STRICT=1` ignores the allowlist (the true red set). CI does not set it.
 
