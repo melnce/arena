@@ -1,0 +1,322 @@
+/**
+ * Design tokens — game-client dark theme (phase 1 foundation).
+ * Loaded first; all other stylesheets should reference these custom properties.
+ */
+
+:root {
+  /* ── Background layers (deepest → elevated) ─────────────────────────── */
+  /* Deepest canvas behind the app */
+  --color-bg-canvas: #0b0c0f;
+  /* Primary app surface */
+  --color-bg-base: #0e0f12;
+  /* Subtle radial highlight at top of viewport */
+  --color-bg-highlight: #1a1e26;
+  /* Raised surface (inputs, nested panels) */
+  --color-bg-surface: #141821;
+  /* Interactive control fill */
+  --color-bg-control: #1a1f27;
+  /* Control hover / pressed */
+  --color-bg-control-hover: #1f232a;
+  --color-bg-control-active: #262c36;
+  /* Inset wells (code blocks, mono fields) */
+  --color-bg-inset: #121820;
+
+  /* ── Glass panels (toolbar clusters, floating chrome) ───────────────── */
+  /* Semi-transparent panel fill with blur companion */
+  --color-glass-fill: rgba(24, 26, 32, 0.72);
+  --color-glass-fill-strong: rgba(30, 32, 38, 0.78);
+  --color-glass-fill-toolbar: rgba(22, 24, 30, 0.65);
+  /* Toolbar strip gradient endpoints */
+  --color-glass-toolbar-top: rgba(30, 32, 38, 0.75);
+  --color-glass-toolbar-bottom: rgba(30, 32, 38, 0.55);
+  /* Backdrop blur radii */
+  --blur-glass: 10px;
+  --blur-glass-strong: 12px;
+
+  /* ── Borders & strokes ─────────────────────────────────────────────── */
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-default: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.12);
+  --color-border-focus: rgba(97, 218, 251, 0.55);
+
+  /* ── Text hierarchy ──────────────────────────────────────────────────── */
+  --color-text-primary: #e9edf1;
+  --color-text-secondary: #c5cdd6;
+  --color-text-muted: #9aa3ad;
+  --color-text-disabled: #6b7280;
+  --color-text-inverse: #111318;
+  --color-text-link: #9ad7c8;
+  --color-text-link-hover: #b8e8dc;
+
+  /* ── Side accents (blue / red) ───────────────────────────────────────── */
+  --color-accent-blue: #4a8cff;
+  --color-accent-blue-bright: #61dafb;
+  --color-accent-blue-deep: #0040ff;
+  --color-accent-blue-glow: rgba(80, 140, 255, 0.35);
+  --color-accent-red: #ff5c5c;
+  --color-accent-red-bright: #ff4a4a;
+  --color-accent-red-deep: #b30000;
+  --color-accent-red-glow: rgba(255, 80, 80, 0.35);
+
+  /* ── Semantic states ─────────────────────────────────────────────────── */
+  --color-success: #39d98a;
+  --color-success-muted: #9ad7c8;
+  --color-danger: #ff5c5c;
+  --color-danger-surface: #5c1f1f;
+  --color-warn: #ffd400;
+  --color-warn-surface: rgba(255, 212, 0, 0.15);
+  --color-info: #61dafb;
+
+  /* ── Typography — font stacks ────────────────────────────────────────── */
+  --font-family-sans:
+    ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  --font-family-mono:
+    ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono",
+    monospace;
+
+  /* Type scale (rem) */
+  --font-size-2xs: 0.7rem;
+  --font-size-xs: 0.8rem;
+  --font-size-sm: 0.85rem;
+  --font-size-md: 0.92rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.15rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.4rem;
+  --font-size-3xl: 1.6rem;
+  --font-size-4xl: 1.9rem;
+  --font-size-5xl: 2.2rem;
+
+  /* Font weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+
+  /* Line heights */
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.3;
+  --line-height-normal: 1.45;
+  --line-height-relaxed: 1.6;
+
+  /* Letter spacing */
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.03em;
+  --letter-spacing-wider: 0.3px;
+
+  /* ── Spacing scale (4px base) ────────────────────────────────────────── */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 14px;
+  --space-8: 16px;
+  --space-9: 18px;
+  --space-10: 20px;
+  --space-12: 24px;
+  --space-14: 28px;
+  --space-16: 32px;
+
+  /* ── Border radii ────────────────────────────────────────────────────── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-pill: 999px;
+
+  /* ── Shadows (elevation, no glow) ────────────────────────────────────── */
+  --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 18px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.45);
+  --shadow-toolbar: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-inset-subtle: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --shadow-inset-well: inset 0 0 4px rgba(0, 0, 0, 0.8);
+
+  /* ── Glow accents (restrained — accent only, not floodlight) ─────────── */
+  --glow-blue-soft: 0 0 12px rgba(97, 218, 251, 0.3);
+  --glow-blue-medium: 0 0 12px rgba(120, 220, 255, 0.7);
+  --glow-red-soft: 0 0 12px rgba(255, 100, 100, 0.5);
+  --glow-success: 0 0 0 3px rgba(57, 217, 138, 0.65);
+  --glow-warn-select: 0 0 12px var(--color-warn);
+  --glow-warn-select-outer: 0 0 24px rgba(255, 212, 0, 0.3);
+  --glow-barrier: 0 0 24px rgba(50, 140, 255, 0.45);
+
+  /* ── Z-index ladder ──────────────────────────────────────────────────── */
+  --z-base: 0;
+  /* Above hand-card hover (20) and playable glow (10) */
+  --z-leader-controls: 50;
+  --z-board-stats: 100;
+  --z-turn-controls: 300;
+  --z-hamburger: 350;
+  --z-drawer: 340;
+  --z-scrim: 330;
+  --z-banner: 200;
+  --z-overlay-low: 1000;
+  --z-tooltip: 9999;
+  --z-burn-preview: 9999;
+  --z-game-over: 3500;
+  --z-coverage: 3600;
+  --z-puzzle-result: 3600;
+  --z-toast: 4000;
+  --z-toolbar: 5000;
+  --z-deck-import: 4000;
+
+  /* ── Transition timings ──────────────────────────────────────────────── */
+  --duration-instant: 80ms;
+  --duration-fast: 120ms;
+  --duration-normal: 150ms;
+  --duration-moderate: 180ms;
+  --duration-slow: 200ms;
+  --ease-default: ease;
+  --ease-out: ease-out;
+  --transition-color: color var(--duration-normal) var(--ease-default);
+  --transition-bg: background var(--duration-normal) var(--ease-default);
+  --transition-transform: transform var(--duration-fast) var(--ease-default);
+  --transition-opacity: opacity var(--duration-moderate) var(--ease-default);
+  --transition-shadow: box-shadow var(--duration-normal) var(--ease-default);
+  --transition-all-fast: all var(--duration-fast) var(--ease-default);
+
+  /* ── Toolbar layout (responsive height for floating-stats offset) ────── */
+  --toolbar-height: 253px;
+  --toolbar-control-height: 30px;
+  --toolbar-cluster-gap: var(--space-3);
+  --toolbar-cluster-padding-x: var(--space-4);
+  --toolbar-cluster-padding-y: var(--space-2);
+
+  /* ── Play area — card stat chips ─────────────────────────────────────── */
+  --color-stat-cost-bg: #1e5c32;
+  --color-stat-cost-border: rgba(57, 217, 138, 0.45);
+  --color-stat-atk-bg: #123a6e;
+  --color-stat-atk-border: rgba(97, 218, 251, 0.45);
+  --color-stat-def-bg: #6e1a24;
+  --color-stat-def-border: rgba(255, 92, 92, 0.45);
+  --color-stat-text: #f4f7fa;
+  --color-stat-buffed: var(--color-success);
+  --color-stat-damaged: #ffb366;
+
+  /* ── Play area — board zones (per-side tint) ───────────────────────── */
+  --color-board-surface: rgba(16, 18, 24, 0.55);
+  --color-board-empty-label: rgba(154, 163, 173, 0.35);
+  --color-board-blue-tint: rgba(74, 140, 255, 0.06);
+  --color-board-blue-border: rgba(74, 140, 255, 0.22);
+  --color-board-blue-active: rgba(74, 140, 255, 0.12);
+  --color-board-red-tint: rgba(255, 92, 92, 0.06);
+  --color-board-red-border: rgba(255, 92, 92, 0.22);
+  --color-board-red-active: rgba(255, 92, 92, 0.12);
+
+  /* ── Play area — card frame & evolved ring ─────────────────────────── */
+  --color-card-frame: rgba(255, 255, 255, 0.1);
+  --color-card-back-border: rgba(90, 110, 140, 0.45);
+  --color-evolved-ring: rgba(255, 212, 0, 0.85);
+  --glow-evolved: 0 0 14px rgba(255, 212, 0, 0.45);
+  --glow-playable:
+    0 0 18px rgba(57, 217, 138, 0.72), 0 0 6px rgba(57, 217, 138, 0.9);
+  --glow-enhance:
+    0 0 18px rgba(255, 212, 0, 0.72), 0 0 6px rgba(255, 212, 0, 0.9);
+  --glow-alternate:
+    0 0 18px rgba(255, 212, 0, 0.68), 0 0 6px rgba(255, 200, 80, 0.85);
+
+  /* ── Play area — card footprint (phase 2c: wider board, larger readable cards) */
+  --play-area-max-width: 1920px;
+  --side-rail-width: 132px;
+  --crest-slot-size: 26px;
+  --card-width: 108px;
+  --card-height: 162px;
+  --hand-zone-min-height: 148px;
+  --board-zone-min-height: 162px;
+  --play-side-gap: 6px;
+  --play-row-gap: 4px;
+
+  /* ── Play area — hand overlap (loose at small hands, tighter as count grows) */
+  --hand-card-overlap-loose: -8px;
+  --hand-card-overlap-medium: -16px;
+  --hand-card-overlap-tight: -24px;
+
+  /* ── Play area — leader portrait ─────────────────────────────────────── */
+  --leader-frame-size: 86px;
+  --leader-meta-gap: 10px;
+  --crest-slot-size: 30px;
+  --crest-row-gap: 3px;
+  --crest-slot-empty-ring: rgba(154, 163, 173, 0.22);
+  --crest-slot-empty-fill: rgba(12, 16, 22, 0.72);
+  --crest-slot-filled-glow: rgba(57, 217, 138, 0.45);
+  --leader-red-fill: rgba(92, 18, 28, 0.85);
+  --leader-blue-fill: rgba(14, 28, 92, 0.85);
+  --leader-red-ring: var(--color-accent-red);
+  --leader-blue-ring: var(--color-accent-blue);
+
+  /* ── Play area — PP / EP / bonus pips ──────────────────────────────── */
+  --color-pp-surface: var(--color-bg-surface);
+  --color-pp-border: var(--color-border-default);
+  --color-ep-available: var(--color-warn);
+  --color-ep-used: var(--color-text-disabled);
+  --color-sep-available: #b07cff;
+  --color-sep-used: var(--color-text-disabled);
+  --color-boost-pip-available: rgba(255, 180, 80, 0.95);
+  --color-boost-pip-used: var(--color-text-disabled);
+
+  /* ── Legacy aliases (consumed by existing stylesheets) ───────────────── */
+  --bg-1: var(--color-bg-base);
+  --panel: var(--color-glass-fill);
+  --stroke: var(--color-border-default);
+  --ink: var(--color-text-primary);
+  --muted: var(--color-text-muted);
+  --accent: var(--color-accent-blue-bright);
+  --good: var(--color-success);
+  --warn: var(--color-warn);
+  --danger: var(--color-danger);
+}
+
+/* Toolbar height tracks wrapped cluster rows at common breakpoints */
+@media (min-width: 1440px) {
+  :root {
+    --toolbar-height: 261px;
+    --card-width: 114px;
+    --card-height: 171px;
+    --hand-zone-min-height: 156px;
+    --board-zone-min-height: 168px;
+    --hand-card-overlap-loose: -10px;
+    --hand-card-overlap-medium: -18px;
+    --hand-card-overlap-tight: -26px;
+  }
+}
+
+@media (min-width: 1900px) {
+  :root {
+    --toolbar-height: 229px;
+    --card-width: 118px;
+    --card-height: 177px;
+    --hand-zone-min-height: 162px;
+    --board-zone-min-height: 174px;
+    --side-rail-width: 140px;
+    --crest-slot-size: 28px;
+    --hand-card-overlap-loose: -12px;
+    --hand-card-overlap-medium: -20px;
+    --hand-card-overlap-tight: -28px;
+  }
+}
+
+@media (min-width: 2560px) {
+  :root {
+    --toolbar-height: 198px;
+  }
+}
+
+/* Short viewports — tighten hand/board floors so the fixed shell can compress.
+ * Placed after width tiers so max-height wins when both match. */
+@media (max-height: 799px) {
+  :root {
+    --hand-zone-min-height: 128px;
+    --board-zone-min-height: 140px;
+  }
+}

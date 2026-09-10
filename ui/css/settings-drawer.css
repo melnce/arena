@@ -1,0 +1,161 @@
+/**
+ * Settings drawer — self-contained module (phase 3).
+ * Revert by removing this file, settingsDrawer boot import, and drawer markup.
+ */
+
+#settingsToggle {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: var(--z-hamburger);
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, #1a1f27, #141821);
+  color: #e9edf1;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+#settingsToggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: #e9edf1;
+  position: relative;
+}
+
+#settingsToggle span::before,
+#settingsToggle span::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background: #e9edf1;
+}
+
+#settingsToggle span::before {
+  top: -6px;
+}
+
+#settingsToggle span::after {
+  top: 6px;
+}
+
+#settingsDrawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(420px, 92vw);
+  z-index: var(--z-drawer);
+  transform: translateX(-100%);
+  transition: transform 0.18s ease;
+  background: rgba(24, 26, 32, 0.92);
+  backdrop-filter: blur(8px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.45);
+  padding: 14px 14px 18px;
+  overflow: auto;
+}
+
+#settingsDrawer.open {
+  transform: none;
+}
+
+#settingsScrim {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: var(--z-scrim);
+  display: none;
+}
+
+#settingsScrim.show {
+  display: block;
+}
+
+#settingsDrawer .drawer-title {
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  margin: 4px 0 12px;
+  font-size: 1.05rem;
+}
+
+.settings-drawer-section {
+  margin-bottom: 14px;
+}
+
+.settings-drawer-section h3 {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+#settingsDrawer #controlPanel {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+#settingsDrawer #deckSelection {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  width: 100%;
+}
+
+#settingsDrawer .toolbar-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  margin-bottom: 0;
+}
+
+/* Deck pickers — matched label-above-control pair, stable at 360px drawer width */
+#settingsDrawer .deck-picker-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  width: 100%;
+  flex: 1 1 100%;
+}
+
+#settingsDrawer .deck-picker-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+#settingsDrawer .deck-picker-field label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+#settingsDrawer .deck-picker-field select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}

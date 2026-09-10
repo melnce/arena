@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>arena</title>
+    <link rel="stylesheet" href="./css/design-tokens.css" />
+    <link rel="stylesheet" href="./css/base.css" />
+    <link rel="stylesheet" href="./css/buttons.css" />
+    <link rel="stylesheet" href="./css/cards.css" />
+    <link rel="stylesheet" href="./css/layout.css" />
+    <link rel="stylesheet" href="./css/utility.css" />
+    <link rel="stylesheet" href="./css/modern-theme.css" />
+    <link rel="stylesheet" href="./css/settings-drawer.css" />
+    <link rel="stylesheet" href="./css/phase3-layout.css" />
+    <link rel="stylesheet" href="./css/tooltip.css" />
+    <link rel="stylesheet" href="./css/floating-combat-text.css" />
+    <link rel="stylesheet" href="./css/client.css" />
+    <style>
+      .drawer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 360px;
+        z-index: 340;
+        transform: translateX(-100%);
+        transition: transform 0.18s ease;
+        background: rgba(24, 26, 32, 0.92);
+        backdrop-filter: blur(8px);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 18px 34px rgba(0, 0, 0, 0.45);
+        padding: 14px 14px 18px 14px;
+        overflow: auto;
+      }
+      .drawer.open {
+        transform: none;
+      }
+      .drawer h3 {
+        margin: 6px 0 4px;
+      }
+      .drawer hr {
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+      .scrim {
+        position: fixed;
+        inset: 0;
+        background: transparent;
+        z-index: 330;
+        display: none;
+      }
+      .scrim.show {
+        display: block;
+      }
+      .hist-list {
+        list-style: none;
+        padding-left: 0;
+        margin-left: 0;
+      }
+      .hist-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 6px 0;
+      }
+      .hist-label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 280px;
+      }
+    </style>
+  </head>
+  <body class="phase3-fixed-viewport">
+    <div id="targetingConfirmation"></div>
+    <button id="settingsToggle" type="button" title="Settings (Ctrl+Shift+M)" aria-label="Open settings">
+      <span></span>
+    </button>
+    <div id="settingsScrim" class="scrim"></div>
+    <aside id="settingsDrawer" class="drawer" aria-hidden="true">
+      <div class="drawer-title">Settings</div>
+      <header id="controlPanel">
+        <div id="deckSelection">
+          <div class="settings-drawer-section">
+            <h3>Game</h3>
+            <div class="toolbar-cluster toolbar-cluster--game">
+              <label for="modeSelect">Mode</label>
+              <select id="modeSelect">
+                <option value="hotseat">Hotseat</option>
+                <option value="vs-bot">Play vs bot</option>
+                <option value="watch">Watch bots</option>
+              </select>
+              <div class="deck-picker-row">
+                <div class="deck-picker-field">
+                  <label for="blueDeckSelect">Blue (A):</label>
+                  <select id="blueDeckSelect"></select>
+                </div>
+                <div class="deck-picker-field">
+                  <label for="redDeckSelect">Red (B):</label>
+                  <select id="redDeckSelect"></select>
+                </div>
+              </div>
+              <button type="button" id="importDeckBtn" title="Import a deck JSON file">Import Deck</button>
+              <input id="deckImportFileInput" type="file" accept="application/json,.json" hidden />
+              <label for="seedInput">Seed:</label>
+              <input
+                id="seedInput"
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                placeholder="1"
+                value="1"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <span id="gameSeedPanel" class="game-seed-panel" hidden>
+                <span class="game-seed-label">Game seed: <code id="gameSeedValue"></code></span>
+                <button type="button" id="copySeedBtn">Copy</button>
+              </span>
+              <label for="firstSelect">First player</label>
+              <select id="firstSelect">
+                <option value="coin">coin</option>
+                <option value="a">A</option>
+                <option value="b">B</option>
+              </select>
+              <div id="vsBotFields" hidden>
+                <label for="humanSideSelect">Human side</label>
+                <select id="humanSideSelect">
+                  <option value="a">A (blue)</option>
+                  <option value="b">B (red)</option>
+                  <option value="coin">coin</option>
+                </select>
+                <label for="vsBotPolicy">Bot policy</label>
+                <select id="vsBotPolicy"></select>
+                <label class="toolbar-check-label" for="hideBotHandToggle">
+                  <input type="checkbox" id="hideBotHandToggle" checked />
+                  Hide the bot's hand
+                </label>
+              </div>
+              <div id="watchFields" hidden>
+                <label for="policyASelect">Bot A</label>
+                <select id="policyASelect"></select>
+                <label for="policyBSelect">Bot B</label>
+                <select id="policyBSelect"></select>
+                <label class="toolbar-check-label" for="watchAutoStart">
+                  <input type="checkbox" id="watchAutoStart" checked />
+                  Auto-play on start
+                </label>
+              </div>
+              <button id="startGameBtn" type="button">Start Game</button>
+              <button id="undoBtn" type="button" title="Undo (Ctrl+Z / Cmd+Z)" disabled>Undo</button>
+              <button id="redoBtn" type="button" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled>Redo</button>
+            </div>
+          </div>
+          <div class="settings-drawer-section">
+            <h3>Practice &amp; Positions</h3>
+            <p class="checkpoint-status">
+              Positions are replayable action logs (seed + decks + NeutralAction list). The engine cannot restore
+              <code>Game.full()</code> today.
+            </p>
+            <div class="toolbar-cluster toolbar-cluster--practice">
+              <button id="savePositionBtn" type="button">Save Pos</button>
+              <select id="positionSelect" disabled>
+                <option value="">(no saved positions)</option>
+              </select>
+              <button id="loadPositionBtn" type="button">Load</button>
+              <button id="exportPositionBtn" type="button">Export</button>
+              <button id="importPositionBtn" type="button">Import</button>
+              <input id="importPositionInput" type="file" accept="application/json,.json" hidden />
+              <button id="setCheckpointBtn" type="button" title="Set checkpoint (F6)">Checkpoint</button>
+              <button id="restoreCheckpointBtn" type="button" title="Restore checkpoint (F7)">Restore CP</button>
+              <span id="checkpointStatus" class="checkpoint-status">Checkpoint: none</span>
+              <label class="toolbar-check-label" for="activeOnBottomToggle">
+                <input type="checkbox" id="activeOnBottomToggle" />
+                Active on bottom
+              </label>
+              <label class="toolbar-check-label" for="floatingCombatTextToggle">
+                <input type="checkbox" id="floatingCombatTextToggle" checked />
+                Floating combat text
+              </label>
+            </div>
+          </div>
+          <p id="bundleMeta" class="checkpoint-status"></p>
+          <p id="errBanner" class="checkpoint-status"></p>
+        </div>
+      </header>
+    </aside>
+
+    <div class="watch-bar" id="watchBar">
+      <button type="button" id="watchStepBtn">Step</button>
+      <button type="button" id="watchPlayBtn">Play</button>
+      <button type="button" id="watchPauseBtn">Pause</button>
+      <label>
+        Speed
+        <input id="watchSpeed" type="range" min="1" max="20" value="1" />
+      </label>
+    </div>
+
+    <button id="historyToggle" class="battle-log-btn" type="button" title="Battle log" aria-label="Open battle log">
+      <svg class="battle-log-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+        <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+      </svg>
+    </button>
+    <div id="historyScrim" class="scrim"></div>
+    <aside id="historyDrawer" class="drawer" aria-hidden="true">
+      <div class="title">History &amp; Graveyards</div>
+      <section>
+        <h3>Red — Played</h3>
+        <div id="redPlayedList"></div>
+      </section>
+      <section>
+        <h3>Red — Destroyed</h3>
+        <div id="redDestroyedList"></div>
+      </section>
+      <hr />
+      <section>
+        <h3>Blue — Played</h3>
+        <div id="bluePlayedList"></div>
+      </section>
+      <section>
+        <h3>Blue — Destroyed</h3>
+        <div id="blueDestroyedList"></div>
+      </section>
+    </aside>
+
+    <div id="gameShell">
+      <main id="appRoot">
+        <section class="side side-red">
+          <div id="redHand" class="zone hand-zone"></div>
+          <button id="redMulliganConfirm" class="play-area-btn mulligan-confirm-btn mulligan-confirm-btn--red" style="display: none">
+            Confirm Mulligan (Red)
+          </button>
+          <div class="board-stack">
+            <div id="redLeader" class="leader leader-attack-strip red-leader" role="button" aria-label="Red leader">
+              <button id="redNormalEvo" class="evo-btn normal-evo" type="button">Evo</button>
+              <div class="leader leader-hp-readout red-leader" id="redLeaderHp" aria-label="Red leader HP">
+                <span id="redHP" class="hp-value">20</span>
+              </div>
+              <button id="redSuperEvo" class="evo-btn super-evo" type="button">Super</button>
+            </div>
+            <div id="redBoard" class="zone board-zone"></div>
+          </div>
+        </section>
+        <section class="side side-blue">
+          <div class="board-stack">
+            <div id="blueBoard" class="zone board-zone"></div>
+            <div id="blueLeader" class="leader leader-attack-strip blue-leader" role="button" aria-label="Blue leader">
+              <button id="blueNormalEvo" class="evo-btn normal-evo" type="button">Evo</button>
+              <div class="leader leader-hp-readout blue-leader" id="blueLeaderHp" aria-label="Blue leader HP">
+                <span id="blueHP" class="hp-value">20</span>
+              </div>
+              <button id="blueSuperEvo" class="evo-btn super-evo" type="button">Super</button>
+            </div>
+          </div>
+          <div id="blueHand" class="zone hand-zone"></div>
+          <button id="blueMulliganConfirm" class="play-area-btn mulligan-confirm-btn mulligan-confirm-btn--blue" style="display: none">
+            Confirm Mulligan (Blue)
+          </button>
+        </section>
+      </main>
+      <aside id="turnControls">
+        <div class="side-rail-cluster side-rail-cluster--red">
+          <div class="floating-stats" id="redStatsContainer">
+            <div id="redStats">
+              <span>🃏 <span id="redHandCount">0</span></span>
+              <span>📦 <span id="redDeckCount">0</span></span>
+              <span>💀 <span id="redGraveCount">0</span></span>
+              <span>☠️ <span id="redShadows">0</span></span>
+            </div>
+            <div id="redCrests" class="crest-container">
+              <div class="crest-row">
+                <div class="crest-slot"></div>
+                <div class="crest-slot"></div>
+                <div class="crest-slot"></div>
+              </div>
+              <div class="crest-row">
+                <div class="crest-slot"></div>
+                <div class="crest-slot"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="turn-controls-core">
+          <div id="turnReadout">—</div>
+          <div id="turnCounter" data-testid="turn-counter">0</div>
+          <div class="red-pp-wrapper">
+            <div id="boostPips" class="boost-pips" aria-label="Second player Bonus PP charges">
+              <span id="boostPipEarly" class="boost-pip" data-tier="early" title="Early Bonus PP (rounds 1–5)">1–5</span>
+              <span id="boostPipLate" class="boost-pip" data-tier="late" title="Late Bonus PP (round 6+)">6+</span>
+            </div>
+            <button id="redBoost" type="button">+1 PP Boost</button>
+            <div class="pp-floating" id="redPPBox">PP: <span id="redPP">0</span></div>
+          </div>
+          <button id="endTurnRed" type="button" style="display: none">End Turn (Red)</button>
+          <button id="endTurnBlue" type="button" style="display: none">End Turn (Blue)</button>
+          <div class="pp-floating" id="bluePPBox">PP: <span id="bluePP">0</span></div>
+        </div>
+        <div class="side-rail-cluster side-rail-cluster--blue">
+          <div class="floating-stats" id="blueStatsContainer">
+            <div id="blueCrests" class="crest-container">
+              <div class="crest-row">
+                <div class="crest-slot"></div>
+                <div class="crest-slot"></div>
+              </div>
+              <div class="crest-row">
+                <div class="crest-slot"></div>
+                <div class="crest-slot"></div>
+                <div class="crest-slot"></div>
+              </div>
+            </div>
+            <div id="blueStats">
+              <span>🃏 <span id="blueHandCount">0</span></span>
+              <span>📦 <span id="blueDeckCount">0</span></span>
+              <span>💀 <span id="blueGraveCount">0</span></span>
+              <span>☠️ <span id="blueShadows">0</span></span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div id="cardTooltip"></div>
+    <div id="cardPreview" class="card-preview"></div>
+    <pre id="eventLog" data-testid="event-log"></pre>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

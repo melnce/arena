@@ -1,0 +1,328 @@
+#endTurnBlue,
+#endTurnRed {
+  font-size: 1.4rem;
+  padding: 20px 30px;
+  margin: 0;
+  border-radius: 999px; /* fully round pill shape */
+  cursor: pointer;
+  font-weight: bold;
+  border: none;
+  width: 180px;
+  min-height: 44px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s ease;
+}
+
+#endTurnBlue {
+  background-color: #00f;
+  color: white;
+}
+
+#endTurnRed {
+  background-color: #f00;
+  color: white;
+}
+
+#endTurnBlue:hover {
+  background-color: #339;
+  transform: scale(1.05);
+}
+
+#endTurnRed:hover {
+  background-color: #933;
+  transform: scale(1.05);
+}
+
+#redBoost {
+  margin-top: 6px;
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  min-height: 44px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#redBoost:hover {
+  background-color: darkred;
+}
+
+.leader-container {
+  display: inline-flex; /* shrink to fit content */
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.evo-btn {
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  min-height: 44px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-all-fast);
+}
+
+.normal-evo {
+  background: linear-gradient(
+    180deg,
+    var(--color-warn),
+    rgba(200, 150, 0, 0.9)
+  );
+  color: var(--color-text-inverse);
+  border-color: rgba(255, 212, 0, 0.45);
+}
+
+.super-evo {
+  background: linear-gradient(180deg, #9b4dff, #6a00ff);
+  color: var(--color-text-primary);
+  border-color: rgba(155, 77, 255, 0.55);
+}
+
+.evo-btn:disabled {
+  background: var(--color-bg-control);
+  color: var(--color-ep-used);
+  border-color: var(--color-border-subtle);
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Choice Modal Styles */
+.choice-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.choice-modal-content {
+  background: #2c3e50;
+  padding: 20px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 500px;
+  color: white;
+}
+
+.choice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.choice-option {
+  background: #3498db;
+  border: none;
+  color: white;
+  padding: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.choice-option:hover {
+  background: #2980b9;
+}
+
+.earth-rite-cost {
+  display: block;
+  font-size: 0.8em;
+  color: #f1c40f;
+  margin-top: 5px;
+}
+
+/* Add to buttons.css */
+
+/* Leader targeting styles — game-critical contrast */
+.leader.selectable {
+  position: relative;
+  cursor: pointer;
+  animation: pulse-glow 1s infinite;
+  transform: translateZ(0);
+}
+
+.leader.selectable::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border: 3px solid var(--color-accent-red-bright);
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+  z-index: 1;
+  box-shadow: var(--glow-red-soft);
+}
+
+/* Attack strip: rectangular highlight matching the thin band shape */
+.leader-attack-strip.selectable::after {
+  border-radius: 2px;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: var(--glow-red-soft);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 92, 92, 0.8);
+  }
+  100% {
+    box-shadow: var(--glow-red-soft);
+  }
+}
+
+/* Leader hover state */
+.leader.selectable:hover::after {
+  border-color: var(--color-accent-red);
+  animation: none;
+  box-shadow: 0 0 25px rgba(255, 92, 92, 0.9);
+}
+
+/* Leader active/click state */
+.leader.selectable:active::after {
+  border-color: white;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.confirm-targets-btn {
+  background: linear-gradient(45deg, #4caf50, #45a049);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  min-height: 44px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.confirm-targets-btn:hover {
+  background: linear-gradient(45deg, #45a049, #4caf50);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.confirm-targets-btn:active {
+  transform: translateY(0);
+}
+/* mulligan confirm — themed play-area controls */
+.mulligan-confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  max-width: min(420px, 100%);
+  min-height: 44px;
+  padding: var(--space-3) var(--space-8);
+  margin: var(--space-2) auto var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-default);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition:
+    var(--transition-bg),
+    var(--transition-transform),
+    border-color var(--duration-normal) var(--ease-default),
+    box-shadow var(--duration-normal) var(--ease-default);
+}
+
+.mulligan-confirm-btn--red {
+  background: linear-gradient(
+    180deg,
+    var(--color-accent-red-bright),
+    var(--color-accent-red-deep)
+  );
+  border-color: rgba(255, 92, 92, 0.45);
+  color: #fff;
+}
+
+.mulligan-confirm-btn--red:hover {
+  filter: brightness(1.08);
+  box-shadow: var(--shadow-md), var(--glow-red-soft);
+}
+
+.mulligan-confirm-btn--blue {
+  background: linear-gradient(
+    180deg,
+    var(--color-accent-blue),
+    var(--color-accent-blue-deep)
+  );
+  border-color: rgba(74, 140, 255, 0.45);
+  color: #fff;
+}
+
+.mulligan-confirm-btn--blue:hover {
+  filter: brightness(1.08);
+  box-shadow: var(--shadow-md), var(--glow-blue-soft);
+}
+
+.mulligan-confirm-btn:focus-visible {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.25);
+}
+
+/* Turn-control mini buttons (god mode) */
+#turnControls .mini-btn {
+  background: var(--color-bg-control-hover);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  min-height: 28px;
+  transition:
+    var(--transition-bg),
+    border-color var(--duration-normal) var(--ease-default);
+}
+
+#turnControls .mini-btn:hover:not(:disabled) {
+  background: var(--color-bg-control-active);
+  border-color: var(--color-border-strong);
+}
+
+#turnControls input[type="number"] {
+  background: var(--color-bg-inset);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+#turnControls input[type="number"]:focus-visible {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.2);
+}
+
+/* mulligan selectable glow */
+.card.selectable {
+  outline: 2px dashed rgba(46, 204, 113, 0.75);
+  outline-offset: -3px;
+}

@@ -1,0 +1,502 @@
+#controlPanel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+}
+
+#deckSelection {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: var(--toolbar-cluster-gap, 8px);
+  margin: var(--space-5) 0;
+}
+
+.practice-sep {
+  display: none;
+}
+
+#positionSelect {
+  max-width: 220px;
+  min-width: 140px;
+}
+
+.checkpoint-status {
+  font-size: var(--font-size-sm, 0.85rem);
+  opacity: 0.75;
+  white-space: nowrap;
+  color: var(--color-text-muted, #9aa3ad);
+  padding: var(--space-1, 2px) var(--space-3, 6px);
+  border-radius: var(--radius-sm, 6px);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.checkpoint-status.active {
+  opacity: 1;
+  font-weight: 600;
+  color: #f0d78c;
+}
+
+.checkpoint-status.diverged {
+  opacity: 1;
+  font-weight: 600;
+  color: #f0a0a0;
+}
+
+.checkpoint-status.solved {
+  opacity: 1;
+  font-weight: 600;
+  color: #9ad7c8;
+}
+
+#puzzleSelect {
+  max-width: 240px;
+  min-width: 140px;
+}
+
+#puzzleResultOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3600;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+#puzzleResultOverlay .puzzle-result-card {
+  pointer-events: auto;
+}
+
+#turnControls {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 100;
+}
+
+#turnControls button {
+  background-color: white;
+  color: black;
+  border: 1px solid #333;
+  padding: 4px 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#turnControls button:hover {
+  background-color: #ddd;
+}
+
+.zone {
+  margin: 5px auto;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 0;
+  max-width: 100%;
+}
+
+.hand-zone {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  padding: var(--space-3) var(--space-8);
+  min-height: var(--hand-zone-min-height, 158px);
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.hand-zone .card {
+  margin: 0;
+  transition:
+    var(--transition-transform),
+    var(--transition-shadow),
+    filter var(--duration-normal) var(--ease-default),
+    opacity var(--duration-normal) var(--ease-default);
+}
+
+.hand-zone .card:not(:first-child) {
+  margin-left: var(--hand-card-overlap-active, var(--hand-card-overlap-loose));
+}
+
+/*
+ * Hand fan stacking follows DOM order (left → right), never playability.
+ * Playable glow/outline stays as visual affordance only — elevating playable
+ * cards would bury later unplayable siblings (plan-the-turn / fuse Sephie).
+ * MAX_HAND is 9; hover (20) and drag preview (10000) still clear the fan.
+ */
+.hand-zone .card:nth-child(1) {
+  z-index: 1;
+}
+.hand-zone .card:nth-child(2) {
+  z-index: 2;
+}
+.hand-zone .card:nth-child(3) {
+  z-index: 3;
+}
+.hand-zone .card:nth-child(4) {
+  z-index: 4;
+}
+.hand-zone .card:nth-child(5) {
+  z-index: 5;
+}
+.hand-zone .card:nth-child(6) {
+  z-index: 6;
+}
+.hand-zone .card:nth-child(7) {
+  z-index: 7;
+}
+.hand-zone .card:nth-child(8) {
+  z-index: 8;
+}
+.hand-zone .card:nth-child(9) {
+  z-index: 9;
+}
+
+.hand-zone .card:hover {
+  z-index: 20;
+  transform: translateY(-6px) scale(1.03);
+}
+
+#redHand,
+#blueHand {
+  justify-content: center;
+}
+
+.leader-zone {
+  margin: var(--play-row-gap, 4px) 0;
+}
+
+.leader {
+  border: 2px solid #888;
+  padding: 8px;
+  border-radius: 8px;
+  display: inline-block;
+  min-width: 160px;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+#redLeader .leader {
+  border-color: red;
+}
+
+#blueLeader .leader {
+  border-color: blue;
+}
+
+.stats-bar {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 4px;
+}
+
+.pp-container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pp {
+  font-size: 1.4rem;
+  font-weight: bold;
+  background-color: #222;
+  border: 2px solid #888;
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: white;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+}
+
+.board-zone {
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: var(--space-3);
+  min-height: var(--board-zone-min-height, 168px);
+  min-width: 0;
+  padding: var(--space-5) var(--space-6);
+  border: 1px dashed var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-board-surface);
+  box-shadow: var(--shadow-inset-subtle), var(--shadow-inset-well);
+  position: relative;
+}
+
+.board-zone:empty::before {
+  content: "Play zone";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-board-empty-label);
+  pointer-events: none;
+}
+
+#redBoard {
+  flex-direction: row-reverse;
+  background: linear-gradient(
+    180deg,
+    var(--color-board-red-tint),
+    var(--color-board-surface)
+  );
+  border-color: var(--color-board-red-border);
+}
+
+#blueBoard {
+  flex-direction: row;
+  background: linear-gradient(
+    180deg,
+    var(--color-board-blue-tint),
+    var(--color-board-surface)
+  );
+  border-color: var(--color-board-blue-border);
+}
+
+.board-zone.drag-over {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-style: solid;
+}
+
+#turnControls {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  /* ✅ fixes centering */
+  z-index: 100;
+}
+
+.pp-floating {
+  font-size: 1.4rem;
+  font-weight: bold;
+  background-color: #222;
+  border: 2px solid #888;
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: white;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+  text-align: center;
+}
+
+/* floating-stats / crest rail layout: modern-theme.css (phase 2c) */
+
+#turnControls #redBoost {
+  background-color: orange;
+  color: black;
+  font-weight: bold;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#turnControls #redBoost.used {
+  background-color: #555 !important;
+  /* force override orange */
+  color: #aaa !important;
+  cursor: default;
+}
+
+.leader {
+  width: var(--leader-frame-size);
+  height: var(--leader-frame-size);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-5xl);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-md);
+  margin: auto;
+  margin-bottom: var(--space-5);
+}
+
+.red-leader {
+  background: radial-gradient(
+    80% 80% at 50% 25%,
+    rgba(255, 120, 120, 0.2),
+    var(--leader-red-fill)
+  );
+  border: 3px solid var(--leader-red-ring);
+}
+
+.blue-leader {
+  background: radial-gradient(
+    80% 80% at 50% 25%,
+    rgba(120, 170, 255, 0.2),
+    var(--leader-blue-fill)
+  );
+  border: 3px solid var(--leader-blue-ring);
+}
+
+.hp-value {
+  font-size: var(--font-size-5xl);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+.leader-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* center all 3 elements together */
+  gap: 8px;
+  /* spacing between evo, leader, super evo */
+  margin: auto;
+  /* keeps it centered in the layout */
+  width: fit-content;
+  /* shrink to the buttons + leader size */
+}
+
+/* In your CSS file */
+.floating-stats span {
+  margin-right: 8px;
+  font-size: 0.9rem;
+}
+
+.floating-stats span:last-child {
+  margin-right: 0;
+}
+
+#redStats,
+#blueStats {
+  background: var(--color-glass-fill);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  display: flex;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-sm);
+}
+
+/* --- Crest UI Styles --- */
+
+/* Re-apply styling to the inner stats bar */
+#redStats,
+#blueStats {
+  background: var(--color-glass-fill);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  display: flex;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-sm);
+}
+
+/* The main container now stacks the rows vertically and centers them */
+.crest-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Center the rows horizontally */
+  gap: 2px;
+  /* Small gap between the two rows */
+}
+
+/* New style for each row of crests */
+.crest-row {
+  display: flex;
+  justify-content: center;
+  /* Center the slots within the row */
+  gap: 4px;
+  /* Gap between individual crest slots */
+}
+
+/* Individual Crest Slot (now bigger) */
+.crest-slot {
+  width: 32px;
+  /* Increased from 24px */
+  height: 32px;
+  /* Increased from 24px */
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 2px solid #555;
+  border-radius: 50%;
+  transition: all 0.2s ease-in-out;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Style for an ACTIVE crest */
+.crest-slot.active {
+  background-color: #00ff99;
+  border-color: #99ffee;
+  box-shadow:
+    0 0 10px #00ff99,
+    inset 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+/* Add this to layout.css */
+
+.crest-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  /* Make the image circular */
+  object-fit: cover;
+  /* Ensure the image fills the space nicely */
+}
+
+/* allow absolute-positioned children like the badge */
+.crest-slot {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 2px solid #555;
+  border-radius: 50%;
+  transition: all 0.2s ease-in-out;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+/* small circular badge in bottom-right */
+.crest-countdown {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: #222;
+  border: 1px solid #aaa;
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  /* don’t block hover tooltip */
+}
+
+/* optional: pop a little when it changes (you can toggle this class in logic if you want) */
+.crest-countdown.pop {
+  transform: scale(1.1);
+}

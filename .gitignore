@@ -3,13 +3,20 @@
 debug
 target
 
-# wasm-pack output (dev harness and node tests)
+# wasm-pack output (dev harness, Vite client, and node tests)
 ui/dev/pkg/
+ui/pkg/
 wasm/pkg/
 wasm/pkg-node/
 
-# Node (tools/validate.mjs)
+# Node (tools/validate.mjs, ui client)
 node_modules/
+ui/test-results/
+ui/playwright-report/
+ui/dist/
+ui/public/catalog-images.json
+ui/public/crest-art.json
+ui/public/decks/
 
 # Coverage / schema generator
 **/__pycache__/
