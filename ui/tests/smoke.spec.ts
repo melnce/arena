@@ -20,6 +20,9 @@ async function startGame(page: Page, opts: {
   deckA?: string;
   deckB?: string;
   human?: string;
+  botPolicy?: string;
+  policyA?: string;
+  policyB?: string;
 }) {
   await openSettings(page);
   await page.locator("#modeSelect").selectOption(opts.mode);
@@ -28,6 +31,15 @@ async function startGame(page: Page, opts: {
   if (opts.deckA) await page.locator("#blueDeckSelect").selectOption(opts.deckA);
   if (opts.deckB) await page.locator("#redDeckSelect").selectOption(opts.deckB);
   if (opts.human) await page.locator("#humanSideSelect").selectOption(opts.human);
+  if (opts.botPolicy) {
+    await page.locator("#vsBotPolicy").selectOption(opts.botPolicy);
+    // Hidden per-side selects stay in sync with the vs-bot dropdown.
+    const human = opts.human ?? "a";
+    const other = human === "b" ? "#policyASelect" : "#policyBSelect";
+    await page.locator(other).selectOption(opts.botPolicy, { force: true });
+  }
+  if (opts.policyA) await page.locator("#policyASelect").selectOption(opts.policyA, { force: true });
+  if (opts.policyB) await page.locator("#policyBSelect").selectOption(opts.policyB, { force: true });
   await page.locator("#startGameBtn").click();
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
     timeout: 15_000,
@@ -127,7 +139,7 @@ test("hotseat: Ctrl+Z / Ctrl+Y restore Game.hash and button state", async ({ pag
   await expect(page.locator("#redoBtn")).toBeDisabled();
 });
 
-test("vs bot: human A vs random, bot turn resolves", async ({ page }) => {
+test("vs bot: human A vs h0, bot turn resolves", async ({ page }) => {
   await boot(page);
   await startGame(page, {
     mode: "vs-bot",
@@ -136,15 +148,23 @@ test("vs bot: human A vs random, bot turn resolves", async ({ page }) => {
     deckA: "basic-forest",
     deckB: "basic-rune",
     human: "a",
+    botPolicy: "h0",
   });
   await confirmMulligans(page);
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", {
-    timeout: 5000,
+    timeout: 15_000,
   });
-  await expect(page.locator("#eventLog")).not.toHaveText("", { timeout: 5000 });
+  await expect(page.locator("#eventLog")).not.toHaveText("", { timeout: 15_000 });
+  const ms = await page.evaluate(() => {
+    const t0 = performance.now();
+    window.__arena!.botAction("h0", "1");
+    return performance.now() - t0;
+  });
+  console.log(`h0 botAction ${ms.toFixed(1)} ms`);
 });
 
-test("watch: two random bots reach terminal", async ({ page }) => {
+test("watch: h0 vs random reach terminal", async ({ page }) => {
+  test.setTimeout(150_000);
   await boot(page);
   await openSettings(page);
   await page.locator("#modeSelect").selectOption("watch");
@@ -152,6 +172,8 @@ test("watch: two random bots reach terminal", async ({ page }) => {
   await page.locator("#firstSelect").selectOption("a");
   await page.locator("#blueDeckSelect").selectOption("basic-forest");
   await page.locator("#redDeckSelect").selectOption("basic-rune");
+  await page.locator("#policyASelect").selectOption("h0");
+  await page.locator("#policyBSelect").selectOption("random");
   await page.locator("#watchSpeed").evaluate((el) => {
     (el as HTMLInputElement).value = "20";
     el.dispatchEvent(new Event("input", { bubbles: true }));
@@ -163,5 +185,5 @@ test("watch: two random bots reach terminal", async ({ page }) => {
   });
   const play = page.locator("#watchPlayBtn");
   if (await play.isVisible()) await play.click();
-  await expect(page.locator("#gameOverOverlay")).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator("#gameOverOverlay")).toBeVisible({ timeout: 120_000 });
 });

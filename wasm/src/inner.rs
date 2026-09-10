@@ -1,19 +1,31 @@
 //! JSON-neutral game driver. Shared by the wasm-bindgen wrapper and native tests.
 
-use std::collections::BTreeMap;
+use std::cell::RefCell;
+use std::collections::{BTreeMap, HashMap};
 
 use arena_engine::action::acting_player;
 use arena_engine::{
-    apply_neutral, hash, legal_actions_neutral, new_game, policy_rng, snapshot_json, CardDb,
-    CardId, First, GameConfig, NeutralAction, State,
+    apply_neutral, by_name, hash, legal_actions, legal_actions_neutral, names, new_game,
+    policy_rng, snapshot_json, to_neutral, CardDb, CardId, First, GameConfig, NeutralAction,
+    Policy, State,
 };
 
 use crate::bundle::card_db;
 use crate::ser::{events_json, full_json, phase_str};
 
-#[derive(Clone)]
 pub struct GameInner {
     state: State,
+    /// Cached by policy name. Recreated empty on `clone` (H0 is stateless today).
+    policies: RefCell<HashMap<String, Box<dyn Policy>>>,
+}
+
+impl Clone for GameInner {
+    fn clone(&self) -> Self {
+        Self {
+            state: self.state.clone(),
+            policies: RefCell::new(HashMap::new()),
+        }
+    }
 }
 
 impl GameInner {
@@ -32,7 +44,10 @@ impl GameInner {
             },
         )
         .map_err(|e| e.to_string())?;
-        Ok(Self { state })
+        Ok(Self {
+            state,
+            policies: RefCell::new(HashMap::new()),
+        })
     }
 
     pub fn legal(&self) -> Result<String, String> {
@@ -86,14 +101,9 @@ impl GameInner {
         self.state.winner.map(|p| p.as_str().to_string())
     }
 
-    /// One NeutralAction for the acting player.
-    ///
-    /// Until `engine::policy` (M5a / RY) is on this tree, `"random"` and
-    /// `"first-legal"` pick from `legal()` with `policy_rng(seed)`. When that
-    /// module lands, route every name through it so `"h0"` works with no
-    /// client change.
+    /// One NeutralAction for the acting player via `engine::policy::by_name`.
     pub fn bot_action(&self, policy: &str, seed: u64) -> Result<String, String> {
-        let chosen = pick_bot_action(&self.state, policy, seed)?;
+        let chosen = pick_bot_action(self, policy, seed)?;
         serde_json::to_string(&chosen).map_err(|e| e.to_string())
     }
 
@@ -103,31 +113,34 @@ impl GameInner {
 }
 
 pub fn bot_policy_names() -> &'static [&'static str] {
-    // After RY: read this list from engine::policy so `"h0"` appears here.
-    &["random", "first-legal"]
+    names()
 }
 
 pub fn bot_policies_json() -> String {
     serde_json::to_string(bot_policy_names()).expect("botPolicies")
 }
 
-fn pick_bot_action(state: &State, policy: &str, seed: u64) -> Result<NeutralAction, String> {
-    let acts = legal_actions_neutral(db(), state);
-    if acts.is_empty() {
+fn pick_bot_action(game: &GameInner, policy: &str, seed: u64) -> Result<NeutralAction, String> {
+    let legal = legal_actions(db(), &game.state);
+    if legal.is_empty() {
         return Err("no legal actions".into());
     }
-    match policy {
-        "first-legal" => Ok(acts[0].clone()),
-        "random" => {
-            let mut rng = policy_rng(seed);
-            let i = rng.gen_range(acts.len() as u32) as usize;
-            Ok(acts[i].clone())
-        }
-        other => Err(format!(
-            "unknown policy {other}; available {}",
-            bot_policies_json()
-        )),
+    let mut policies = game.policies.borrow_mut();
+    if !policies.contains_key(policy) {
+        let boxed = by_name(policy, seed)
+            .ok_or_else(|| format!("unknown policy {policy}; available {}", bot_policies_json()))?;
+        policies.insert(policy.to_string(), boxed);
     }
+    let p = policies.get_mut(policy).expect("policy inserted");
+    let mut rng = policy_rng(seed);
+    let idx = p.choose(db(), &game.state, &legal, &mut rng);
+    if idx >= legal.len() {
+        return Err(format!(
+            "policy {policy} chose {idx} past legal_len={}",
+            legal.len()
+        ));
+    }
+    Ok(to_neutral(&game.state, &legal[idx]))
 }
 
 fn db() -> &'static CardDb {

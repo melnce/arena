@@ -41,7 +41,7 @@ Undo / redo is a ring of `Game.clone()` snapshots taken before each `NeutralActi
 
 ## Bindings added in this milestone
 
-`Game.acting`, `Game.active`, `Game.turn`, `Game.winner`, `Game.botAction(policy, seed)`, `botPolicies()`. `"random"` and `"first-legal"` pick from `legal()` with `policy_rng(seed)` until RY's `engine::policy` is on `main`; then every name (including `"h0"`) routes through that module and the client's selector grows the new name with no other change.
+`Game.acting`, `Game.active`, `Game.turn`, `Game.winner`, `Game.botAction(policy, seed)`, `botPolicies()`. Every name (including `"h0"`) is `engine::policy::by_name` / `names()`; the client's selector grows with that list. `botAction` uses `policy_rng(seed)` and keeps a `Box<dyn Policy>` per name on the `Game`.
 
 ## Ported / not ported
 

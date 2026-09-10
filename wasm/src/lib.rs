@@ -166,13 +166,17 @@ mod tests {
         assert_eq!(g.turn(), 0);
         assert!(g.winner().is_none());
         let names: Vec<String> = serde_json::from_str(&crate::inner::bot_policies_json()).unwrap();
-        assert_eq!(names, vec!["random", "first-legal"]);
+        assert_eq!(names, vec!["random", "first-legal", "h0"]);
         let first = g.bot_action("first-legal", 1).unwrap();
         let legal_arr = legal.as_array().unwrap();
         assert_eq!(first, serde_json::to_string(&legal_arr[0]).unwrap());
         let r1 = g.bot_action("random", 7).unwrap();
         let r2 = g.bot_action("random", 7).unwrap();
         assert_eq!(r1, r2);
-        assert!(g.bot_action("h0", 1).is_err());
+        let h1 = g.bot_action("h0", 1).unwrap();
+        let h2 = g.bot_action("h0", 1).unwrap();
+        assert_eq!(h1, h2);
+        let err = g.bot_action("no-such-policy", 1).unwrap_err();
+        assert!(err.contains("unknown policy no-such-policy"), "{err}");
     }
 }
