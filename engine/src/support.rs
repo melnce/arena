@@ -78,7 +78,6 @@ fn effect_unsupported(e: &Effect) -> Option<String> {
             key: crate::card::CounterKey::Named(crate::card::NamedCounter::SkyboundHand),
             ..
         } => Some("op:counter skyboundHand".into()),
-        Effect::AddToDeck { .. } => Some("op:addToDeck".into()),
         other => walk_nested(other),
     }
 }
@@ -173,7 +172,6 @@ pub fn m1_unsupported_list() -> Vec<&'static str> {
         "op:randomSplit",
         "op:sequence",
         "op:counter skyboundHand",
-        "op:addToDeck",
     ]
 }
 

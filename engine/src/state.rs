@@ -80,6 +80,8 @@ pub struct CardInstance {
     pub tribes: Vec<Tribe>,
     pub name: String,
     pub once_used: Vec<TriggerTag>,
+    /// Temporary trait grants with an expiry (`grantTraits.until`).
+    pub trait_until: Vec<(Traits, Option<crate::card::Until>)>,
 }
 
 impl CardInstance {
@@ -120,6 +122,7 @@ impl CardInstance {
             tribes: card.tribes().to_vec(),
             name: card.name().to_string(),
             once_used: Vec::new(),
+            trait_until: Vec::new(),
         }
     }
 
@@ -389,6 +392,8 @@ pub enum ChoiceNode {
     Modes {
         options: Vec<u8>,
         pending: PendingChoice,
+        /// Mode indices already chosen this `choose pick N` (listed-order resolve).
+        picked: Vec<u8>,
     },
     Cards {
         options: Vec<CardId>,
@@ -495,6 +500,10 @@ pub struct State {
     /// still between zones (`AllyCardPlayed` fires before enter).
     pub event_base_cost: Option<i32>,
     pub event_inst_id: Option<u32>,
+    /// True while an attack targeting a leader is resolving (Lu Woh crest).
+    pub attack_target_is_leader: bool,
+    /// Next `maybe_bind` appends to an existing name (Beelzebub 2-pick).
+    pub bind_append: bool,
 }
 
 #[derive(Debug, Clone)]

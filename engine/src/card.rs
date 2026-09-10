@@ -244,6 +244,7 @@ pub enum EventName {
     AllyFollowerEnter,
     EnemyFollowerEnter,
     AllyFollowerDestroyed,
+    EnemyFollowerDestroyed,
     AllyAmuletDestroyed,
     AllyCardPlayed,
     AllySpellPlayed,
@@ -914,6 +915,14 @@ pub enum Condition {
         #[serde(rename = "amountAtLeast")]
         amount_at_least: AmountAtLeast,
     },
+    DeckHasNoDuplicates {
+        #[serde(rename = "deckHasNoDuplicates")]
+        deck_has_no_duplicates: bool,
+    },
+    AttackingLeader {
+        #[serde(rename = "attackingLeader")]
+        attacking_leader: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1248,6 +1257,8 @@ pub enum Effect {
         when: Option<Condition>,
         select: Selector,
         traits: Traits,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        until: Option<Until>,
     },
     #[serde(rename = "removeTraits")]
     RemoveTraits {

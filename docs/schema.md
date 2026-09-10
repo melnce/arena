@@ -168,7 +168,8 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 |---|---|
 | `ally_follower_enter` | `10724110`, `crest:10724110`, `10754120` |
 | `enemy_follower_enter` | `10911210` Trap in the Woods (pool; supporting if referenced) |
-| `ally_follower_destroyed` | Lifestealer `10553110` "Whenever a Skeleton is destroyed" + card-id filter |
+| `ally_follower_destroyed` | Lifestealer `10553110` "Whenever a Skeleton is destroyed" + card-id filter (allied side) |
+| `enemy_follower_destroyed` | Lifestealer `10553110` — "a Skeleton" is any side; both destroy events |
 | `ally_amulet_destroyed` | `10664120` Lyanthoth Faith; `10964120` Omerio |
 | `ally_card_played` | `10914120` Hien; `crest:10554110` "play a follower" + filter |
 | `ally_spell_played` | `10822110`, `90021210` |
@@ -182,7 +183,7 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 | `leader_restored` | `10563110` Saint of Rehabilitation; `10963110` Executor of the Vow |
 | `self_buffed_up` | `10812110` Ruflet |
 
-Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`, `enemy_follower_destroyed`. Ghost's leave is `on: leave`, not an event. The schema lists exactly the 15 events in the table.
+Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`. Ghost's leave is `on: leave`, not an event. The schema lists the 16 events in the table. `enemy_follower_destroyed` is forced by Lifestealer `10553110` "Whenever a Skeleton is destroyed" (any side).
 
 ## Effects
 
@@ -210,7 +211,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `search` | omitted — measured 0 printed "search" in the pool. `10021310` is `draw` + filter |
 | `addToDeck` | `10901310` |
 | `evolve` | effect-granted `10724110` Fanfare; `super: true` `10464120` |
-| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane |
+| `grantTraits` / `removeTraits` | `10724110` Rush; `10624110` Bane; `until: endOfOpponentTurn` Friendly Blue Ogre `10552120` "Can't attack followers or leaders until the end of your opponent's turn" |
 | `grantAbility` | `10704110` quoted end-of-turn banish |
 | `removeAbilities` | `90051140` (optional `on: ["lastWords"]` removes only Last Words) |
 | `cost` | `delta` `10534120`; `set` `10923110`; `untilEndOfTurn` `10574110` |
@@ -265,7 +266,7 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Condition
 
-`all`/`any`/`not` · `countAtLeast` · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `attackedLeaderLastTurn` `10944110` · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120`. Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
+`all`/`any`/`not` · `countAtLeast` · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `attackedLeaderLastTurn` `10944110` · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120` · `deckHasNoDuplicates` Bluerust Underling `10971110` / Cutthroat `10974110` "If there are no duplicates in your deck" · `attackingLeader` Lu Woh crest `crest:10474110` "attacks a leader". Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
 
 ## Modes
 

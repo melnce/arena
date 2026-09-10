@@ -1132,6 +1132,30 @@
           "required": [
             "handSameCostAtLeast"
           ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "deckHasNoDuplicates": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "deckHasNoDuplicates"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "attackingLeader": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "attackingLeader"
+          ]
         }
       ]
     },
@@ -1642,6 +1666,12 @@
             },
             "traits": {
               "$ref": "#/$defs/Traits"
+            },
+            "until": {
+              "enum": [
+                "endOfTurn",
+                "endOfOpponentTurn"
+              ]
             }
           },
           "required": [
@@ -3346,6 +3376,7 @@
                 "ally_follower_enter",
                 "enemy_follower_enter",
                 "ally_follower_destroyed",
+                "enemy_follower_destroyed",
                 "ally_amulet_destroyed",
                 "ally_card_played",
                 "ally_spell_played",
