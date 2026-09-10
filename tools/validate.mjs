@@ -420,7 +420,58 @@ function checkAgainstCatalog(file, data, catalog) {
   }
 }
 
+function schemaOnly(dirArg) {
+  const schema = JSON.parse(fs.readFileSync(SCHEMA, "utf8"));
+  const ajv = new Ajv2020({
+    strict: true,
+    allErrors: true,
+    allowUnionTypes: true,
+  });
+  addFormats(ajv);
+  const validate = ajv.compile(schema);
+
+  const dir = path.isAbsolute(dirArg)
+    ? dirArg
+    : fs.existsSync(path.resolve(dirArg))
+      ? path.resolve(dirArg)
+      : path.join(ROOT, dirArg);
+  const files = walkJson(dir);
+  if (files.length === 0) {
+    fail(dir, "no card files found");
+  }
+  for (const file of files) {
+    let data;
+    try {
+      data = JSON.parse(fs.readFileSync(file, "utf8"));
+    } catch (e) {
+      fail(file, `invalid JSON: ${e.message}`);
+      continue;
+    }
+    if (!validate(data)) {
+      for (const err of validate.errors ?? []) {
+        fail(file, `schema ${err.instancePath || "/"} ${err.message}`);
+      }
+    }
+  }
+  if (errors.length) {
+    for (const e of errors) console.error(e);
+    console.error(`\n${errors.length} error(s), ${files.length} file(s)`);
+    process.exit(1);
+  }
+  console.log(`ok: ${files.length} files schema-only`);
+}
+
 function main() {
+  const argv = process.argv.slice(2);
+  if (argv[0] === "--schema-only") {
+    if (!argv[1]) {
+      console.error("usage: node validate.mjs --schema-only <dir>");
+      process.exit(1);
+    }
+    schemaOnly(argv[1]);
+    return;
+  }
+
   const schema = JSON.parse(fs.readFileSync(SCHEMA, "utf8"));
   const ajv = new Ajv2020({
     strict: true,
