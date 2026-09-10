@@ -100,7 +100,7 @@
     "i": 33,
     "path": "players.a.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: a \u22120/\u22124 lowers max_defense by 4; the old engine set it to the current defense",
+    "reason": "owner ruling 2026-09-10: a −0/−4 lowers max_defense by 4; the old engine set it to the current defense",
     "since": "2026-09-10"
   },
   {
@@ -241,178 +241,26 @@
   },
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-0.jsonl",
-    "i": 59,
-    "path": "players.b.faith",
+    "i": 65,
+    "path": "players.a.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-1.jsonl",
-    "i": 26,
-    "path": "players.b.faith",
+    "i": 39,
+    "path": "players.a.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-10.jsonl",
-    "i": 33,
-    "path": "players.a.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-11.jsonl",
-    "i": 42,
-    "path": "players.a.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-12.jsonl",
-    "i": 71,
-    "path": "players.b.field[0].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-13.jsonl",
-    "i": 34,
-    "path": "players.b.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-15.jsonl",
-    "i": 40,
-    "path": "players.b.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-16.jsonl",
-    "i": 41,
-    "path": "players.b.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-17.jsonl",
-    "i": 49,
-    "path": "players.a.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-18.jsonl",
-    "i": 66,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 'Whenever you play another card' waits until the played card's effects complete (including a choose); the old engine advances the countdown on the play snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-19.jsonl",
-    "i": 24,
-    "path": "players.b.field[1].countdown",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 'Whenever you play another card' waits until the played card's effects complete (including a choose); the old engine advances the countdown on the play snapshot",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-2.jsonl",
-    "i": 39,
-    "path": "players.a.faith",
+    "i": 80,
+    "path": "players.a.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-20.jsonl",
-    "i": 53,
-    "path": "players.a.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-21.jsonl",
-    "i": 77,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 'Whenever you play another card' waits until the played card's effects complete (including a choose); the old engine advances the countdown on the play snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-22.jsonl",
-    "i": 31,
-    "path": "players.b.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-23.jsonl",
-    "i": 23,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-09: World of Games 10503210 'a card on the field other than it with the same base cost' is either side and includes amulets; the old engine did not count the enemy same-cost card",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-24.jsonl",
-    "i": 41,
-    "path": "players.a.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-25.jsonl",
-    "i": 100,
-    "path": "players.b.field[0].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-26.jsonl",
-    "i": 67,
-    "path": "players.a.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-27.jsonl",
-    "i": 32,
-    "path": "players.b.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-28.jsonl",
-    "i": 42,
-    "path": "players.b.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-29.jsonl",
-    "i": 36,
-    "path": "players.a.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
@@ -420,23 +268,15 @@
     "i": 20,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-09: World of Games 10503210 'a card on the field other than it with the same base cost' is either side and includes amulets; the old engine did not count the enemy same-cost card",
+    "reason": "World of Games 10503210 prints 'a card on the field other than it' with no side; owner question pending (elf-23 i=23: a's WoG advances for b's Magachiyo); the old engine did not count the enemy same-cost card",
     "since": "2026-09-10"
   },
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-4.jsonl",
-    "i": 45,
-    "path": "players.b.faith",
+    "i": 46,
+    "path": "players.b.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-5.jsonl",
-    "i": 41,
-    "path": "players.a.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
@@ -444,116 +284,124 @@
     "i": 74,
     "path": "players.b.field[2].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-8.jsonl",
-    "i": 64,
-    "path": "players.b.faith",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-9.jsonl",
-    "i": 65,
-    "path": "players.a.faith",
+    "i": 112,
+    "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: reactions wait across a choice; Faith: Sathanid's 'Whenever an allied follower evolves, increase this faith's value by 1' is a when-trigger, so an evolve that pauses for a choose (Virid Lieutenant 10913110, Miroku 10514120 replicate Fanfare) still shows the pre-increment faith; the old engine increments before the choice snapshot",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-10.jsonl",
+    "i": 182,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-12.jsonl",
+    "i": 71,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-13.jsonl",
+    "i": 90,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-17.jsonl",
+    "i": 74,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-18.jsonl",
+    "i": 66,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-19.jsonl",
+    "i": 24,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-21.jsonl",
+    "i": 77,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-22.jsonl",
+    "i": 41,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "World of Games 10503210 prints 'a card on the field other than it' with no side; owner question pending (elf-23 i=23: a's WoG advances for b's Magachiyo); the old engine did not count the enemy same-cost card",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-23.jsonl",
+    "i": 23,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "World of Games 10503210 prints 'a card on the field other than it' with no side; owner question pending (elf-23 i=23: a's WoG advances for b's Magachiyo); the old engine did not count the enemy same-cost card",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-25.jsonl",
+    "i": 100,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-27.jsonl",
+    "i": 81,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-29.jsonl",
+    "i": 37,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
     "trace": "rune-mach15-mirror/trace-20260910-0.jsonl",
-    "i": 28,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 'Whenever you play another card' waits until the played card's effects complete (including a choose); the old engine advances the countdown on the play snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-1.jsonl",
-    "i": 19,
-    "path": "players.a.hand[2].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-10.jsonl",
-    "i": 12,
+    "i": 7,
     "path": "players.b.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
     "since": "2026-09-10"
   },
   {
-    "trace": "rune-mach15-mirror/trace-20260910-11.jsonl",
-    "i": 74,
-    "path": "error",
-    "class": "old-rule",
-    "reason": "Obsidian Raven 10933310 'Deal 7 damage to a random enemy follower' twice: the old engine recorded random_target slot:1 on an enemy field with no followers (only Aura Earth Sigil 10031210); arena fizzles the empty pool",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-12.jsonl",
-    "i": 78,
-    "path": "error",
-    "class": "old-rule",
-    "reason": "Obsidian Raven 10933310 'Deal 7 damage to a random enemy follower' twice: the old engine recorded random_target slot:1 on an enemy field with no followers (only Aura Earth Sigil 10031210); arena fizzles the empty pool",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-13.jsonl",
-    "i": 12,
-    "path": "players.a.banished.10031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-14.jsonl",
+    "trace": "rune-mach15-mirror/trace-20260910-1.jsonl",
     "i": 18,
-    "path": "players.a.hand[4].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-15.jsonl",
-    "i": 26,
-    "path": "players.a.hand[4].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-16.jsonl",
-    "i": 9,
-    "path": "players.b.hand[2].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-17.jsonl",
-    "i": 6,
-    "path": "players.b.hand[3].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-18.jsonl",
-    "i": 29,
-    "path": "players.a.hand[2].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-19.jsonl",
-    "i": 11,
     "path": "players.b.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
@@ -561,146 +409,162 @@
   },
   {
     "trace": "rune-mach15-mirror/trace-20260910-2.jsonl",
-    "i": 68,
-    "path": "players.a.field[4]",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: Enamored Researcher 10932110 Fanfare 'Summon 2 copies of Obsessed Test Subject' resolves before World of Games 10503210's play reaction; a full board therefore skips the second summon. The old engine advanced/destroyed World of Games during the play, freeing a slot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-20.jsonl",
-    "i": 100,
-    "path": "players.b.field[1].countdown",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 'Whenever you play another card' waits until the played card's effects complete (including a choose); the old engine advances the countdown on the play snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-21.jsonl",
-    "i": 23,
-    "path": "players.a.hand[3].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-22.jsonl",
-    "i": 7,
-    "path": "players.b.hand[1].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-23.jsonl",
-    "i": 42,
-    "path": "players.b.cemetery.10503210",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 Last Words fire when the fifth advance destroys it after the played card completes; the old engine advanced (and buried the amulet) during Alchemic Flare 10433310's targeting snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-24.jsonl",
-    "i": 13,
-    "path": "players.a.hand[4].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-25.jsonl",
-    "i": 50,
-    "path": "players.b.cemetery.10503210",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 Last Words fire when the fifth advance destroys it after the played card completes; the old engine advanced (and buried the amulet) during Alchemic Flare 10433310's targeting snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-26.jsonl",
-    "i": 59,
-    "path": "players.b.hand[3].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-27.jsonl",
-    "i": 10,
+    "i": 16,
     "path": "players.b.field[0].countdown",
     "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 'Whenever you play another card' waits until the played card's effects complete (including a choose); the old engine advances the countdown on the play snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-28.jsonl",
-    "i": 59,
-    "path": "players.b.field[2].countdown",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 'Whenever you play another card' waits until the played card's effects complete (including a choose); the old engine advances the countdown on the play snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-29.jsonl",
-    "i": 92,
-    "path": "players.b.field[1].countdown",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 'Whenever you play another card' waits until the played card's effects complete (including a choose); the old engine advances the countdown on the play snapshot",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
     "since": "2026-09-10"
   },
   {
     "trace": "rune-mach15-mirror/trace-20260910-3.jsonl",
-    "i": 24,
-    "path": "error",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 Last Words 'Draw 2 cards' wait until the played Mysteria spell (Mysterian Missile 90031310) completes; the old engine advanced, destroyed the amulet, and recorded those draws in the same rng list as the spell's random_target",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-4.jsonl",
-    "i": 21,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 'Whenever you play another card' waits until the played card's effects complete (including a choose); the old engine advances the countdown on the play snapshot",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-5.jsonl",
-    "i": 14,
+    "i": 6,
     "path": "players.b.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
     "since": "2026-09-10"
   },
   {
-    "trace": "rune-mach15-mirror/trace-20260910-6.jsonl",
-    "i": 6,
-    "path": "players.b.hand[3].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
+    "trace": "rune-mach15-mirror/trace-20260910-4.jsonl",
+    "i": 83,
+    "path": "players.b.cemetery.10503210",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 Last Words fire when the fifth advance destroys it after the played card completes; the old engine advanced and buried the amulet during the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
     "since": "2026-09-10"
   },
   {
     "trace": "rune-mach15-mirror/trace-20260910-7.jsonl",
-    "i": 26,
-    "path": "players.b.field[0].countdown",
+    "i": 66,
+    "path": "players.a.field[1].countdown",
     "class": "old-rule",
-    "reason": "owner 2026-09-10 / E34: World of Games 10503210 'Whenever you play another card' waits until the played card's effects complete (including a choose); the old engine advances the countdown on the play snapshot",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
     "since": "2026-09-10"
   },
   {
     "trace": "rune-mach15-mirror/trace-20260910-8.jsonl",
     "i": 13,
-    "path": "players.a.hand[1].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
     "since": "2026-09-10"
   },
   {
     "trace": "rune-mach15-mirror/trace-20260910-9.jsonl",
-    "i": 19,
-    "path": "players.b.hand[2].vars",
-    "class": "old-data",
-    "reason": "Tetra & Ladica, Forest BFFs 10834110 prints 'On Spellboost: Increase X by 1'; the old engine's card JSON omits the var so the hand snapshot has no vars (docs/trace-format.md records vars when nonzero)",
+    "i": 12,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-10.jsonl",
+    "i": 53,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-11.jsonl",
+    "i": 29,
+    "path": "players.a.cemetery.10503210",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 Last Words fire when the fifth advance destroys it after the played card completes; the old engine advanced and buried the amulet during the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-15.jsonl",
+    "i": 49,
+    "path": "players.a.cemetery.10503210",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 Last Words fire when the fifth advance destroys it after the played card completes; the old engine advanced and buried the amulet during the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-16.jsonl",
+    "i": 102,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-17.jsonl",
+    "i": 37,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-19.jsonl",
+    "i": 86,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-20.jsonl",
+    "i": 7,
+    "path": "players.b.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-21.jsonl",
+    "i": 49,
+    "path": "error",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 Last Words 'Draw 2 cards' wait until the played card completes; the old engine advanced, destroyed the amulet, and recorded those draws in the same rng list as the spell's random_target; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-22.jsonl",
+    "i": 60,
+    "path": "players.b.banished.90031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-23.jsonl",
+    "i": 28,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-24.jsonl",
+    "i": 33,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-26.jsonl",
+    "i": 38,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-28.jsonl",
+    "i": 22,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-29.jsonl",
+    "i": 94,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
     "since": "2026-09-10"
   }
 ]

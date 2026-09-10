@@ -667,6 +667,31 @@ fn world_of_games_advances_on_same_base_cost() {
 }
 
 #[test]
+fn world_of_games_does_not_advance_on_unmatched_base_cost() {
+    // elf-22: after a 1-cost tick, Magachiyo (3) with no other 3-cost card
+    // must not advance. The text is "other than it with the same base cost".
+    let db = load_db();
+    let mut st = started(&db, 111);
+    let me = PlayerId::A;
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, WORLD);
+    drain_choice(&db, &mut st);
+    play_id(&db, &mut st, me, "88001110");
+    drain_choice(&db, &mut st);
+    play_id(&db, &mut st, me, "10914110");
+    drain_choice(&db, &mut st);
+    let cd = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == WORLD)
+        .and_then(|c| c.countdown);
+    assert_eq!(cd, Some(4), "Magachiyo is 3; WoG and vanilla are 1");
+}
+
+#[test]
 fn world_of_games_fifth_advance_destroys_mid_resolution() {
     let db = load_db();
     let mut st = started(&db, 106);
