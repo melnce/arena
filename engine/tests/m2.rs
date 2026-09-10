@@ -650,9 +650,10 @@ fn last_words_raised_mid_wave_wait_behind_already_queued() {
 
 #[test]
 fn adahime_rush_waits_until_fanfare_choice_completes() {
-    // Rulebook Fanfare and Enter-Play Trigger Order: other cards' enter
-    // reactions drain after the played card's Fanfare, including across a
-    // Fanfare choice (owner 2026-09-10 A2).
+    // Rulebook Fanfare and Enter-Play Trigger Order: enter reactions
+    // ("whenever … enters the field") drain after the played card's Fanfare,
+    // including across a Fanfare choice (E34 / owner 2026-09-10 A2). Play
+    // reactions resolve at play time (E39) and do not wait.
     let db = load_db();
     let mut st = started(&db, 34);
     let me = PlayerId::A;

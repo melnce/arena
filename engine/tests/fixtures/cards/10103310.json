@@ -1,0 +1,42 @@
+{
+  "id": "10103310",
+  "name": "Divine Thunder",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 10001,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "text": "Destroy a random enemy follower with the highest attack. Deal 1 damage to all enemy followers.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Destroy a random enemy follower with the highest attack. Deal 1 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Destroy a random enemy follower with the highest attack.",
+          "op": "destroy",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "highest",
+            "orderBy": "attack"
+          }
+        },
+        {
+          "printed": "Deal 1 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

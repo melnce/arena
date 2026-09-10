@@ -23,15 +23,9 @@ use crate::trace::{NeutralAction, PickWhat};
 
 // Hand overflow: owner-rulings.md — Hand overflow destroys without Last Words — 2026-08-10
 
-/// Owner question pending (rune-2 i=68): rulebook **Fanfare and Enter-Play
-/// Trigger Order** steps 3–4 — crests and board that react to the play wait
-/// until the played card's Fanfare (including its choice) completes. Set
-/// `false` to drain those reactions on the play snapshot (old engine).
-const PLAY_REACTIONS_AFTER_FANFARE: bool = true;
-
-/// Owner question pending (elf-23 i=23): World of Games prints "a card on
-/// the field other than it" with no side. Set `false` to count allied
-/// field only (old engine).
+/// Official Q&A (World of Games `10503210` / Divine Thunder): "a card on
+/// the field other than it" includes the enemy field. Owner 2026-09-10:
+/// "yes any card". Set `false` to count allied field only (old engine).
 const WORLD_OF_GAMES_COUNTS_EITHER_SIDE: bool = true;
 
 // =========================================================================
@@ -970,9 +964,16 @@ fn apply_play(
         card: inst.card,
         form,
     });
+    // E39: play reactions (`ally_card_played` / `ally_spell_played` /
+    // "whenever you play …") enqueue now and resolve before Fanfare / spell
+    // text. Enter reactions stay on the queue until the play sequence ends
+    // (E34). Official Q&A World of Games / Divine Thunder; owner 2026-09-10.
     raise_when(db, state, me, EventName::AllyCardPlayed, Some(&inst), me);
     if kind == CardKind::Spell {
         raise_when(db, state, me, EventName::AllySpellPlayed, Some(&inst), me);
+    }
+    let play_rx = std::mem::take(&mut state.queue);
+    if kind == CardKind::Spell {
         let src = SourceRef::Spell {
             player: me,
             card: inst.card,
@@ -990,6 +991,7 @@ fn apply_play(
     } else {
         enter_from_play(db, state, me, inst, effects, events)?;
     }
+    flush_play_reactions_ahead(state, play_rx);
     Ok(())
 }
 
@@ -1049,8 +1051,9 @@ fn enter_from_play(
         }
     }
     // Rulebook Fanfare and Enter-Play Trigger Order: the played card's own
-    // enter ability (step 1) sits on pending_work above Fanfare; other cards'
-    // enter/play reactions stay on the queue until the play completes (E34).
+    // enter ability sits on pending_work above Fanfare. Play reactions are
+    // flushed above both (E39). Enter reactions stay on the queue until the
+    // play completes (E34).
     let gated = gated_fanfare(db, state, me, src, card_id, fanfare);
     push_effects(state, me, src, gated);
     push_own_enter(db, state, me, id);
@@ -1250,7 +1253,12 @@ fn apply_evolve_action(
     let Some(inst) = state.field_inst_mut(me, slot.0) else {
         return Err(Illegal::NotLegal);
     };
-    if inst.evolved && !granted {
+    // Glossary Evolution / owner 2026-09-10: an evolved follower can't be
+    // evolved again (including EP then SEP, and an effect-evolve).
+    if inst.evolved {
+        if granted {
+            return Ok(());
+        }
         return Err(Illegal::NotLegal);
     }
     if !granted {
@@ -2719,8 +2727,9 @@ fn drain_until_quiet(
         // bodies and freshly flushed trigger waves sit as index-0 frames;
         // leave the queue behind those so a later-raised Last Words cannot
         // jump a trigger already in the wave (E32 / Grimnir) and so other
-        // cards' enter/play reactions wait for Fanfare, including a Fanfare
-        // choice (E34 / A2).
+        // cards' enter reactions wait for Fanfare, including a Fanfare
+        // choice (E34 / A2). Play reactions are flushed onto pending_work
+        // before Fanfare (E39) and do not wait here.
         if !state.queue.is_empty()
             && !next_frame_is_choice_continuation(db, state)
             && next_frame_allows_queue_drain(state)
@@ -2807,6 +2816,7 @@ fn run_aftermath(
             }
         }
         Aftermath::DrainQueue => drain_queue(db, state, events)?,
+        Aftermath::FlushPlayLastWords => flush_play_last_words(db, state, events)?,
         Aftermath::RestoreBindings(map) => {
             state.bindings = map;
         }
@@ -2872,13 +2882,11 @@ fn next_frame_allows_queue_drain(state: &State) -> bool {
     if trigger_wave_in_flight(state) {
         return false;
     }
-    if !PLAY_REACTIONS_AFTER_FANFARE {
-        return true;
-    }
     match state.pending_work.last() {
         None => true,
         Some(WorkFrame::Effects { index, .. }) => *index > 0,
         Some(WorkFrame::Aftermath(Aftermath::RestoreBindings(_))) => false,
+        Some(WorkFrame::Aftermath(Aftermath::FlushPlayLastWords)) => false,
         Some(WorkFrame::Aftermath(Aftermath::AfterCombat { .. })) => true,
         Some(WorkFrame::Aftermath(_)) => true,
     }
@@ -2889,6 +2897,62 @@ fn trigger_wave_in_flight(state: &State) -> bool {
         .pending_work
         .iter()
         .any(|f| matches!(f, WorkFrame::Aftermath(Aftermath::RestoreBindings(_))))
+}
+
+/// E39: flush `whenever you play` reactions onto `pending_work` above the
+/// Fanfare / spell body (crest-then-board). Last Words those reactions
+/// cause (World of Games dying on play) then run via `FlushPlayLastWords`
+/// still before Fanfare; enter reactions stay queued (E34).
+fn flush_play_reactions_ahead(state: &mut State, mut play_rx: Vec<QueuedTrigger>) {
+    if play_rx.is_empty() {
+        return;
+    }
+    state
+        .pending_work
+        .push(WorkFrame::Aftermath(Aftermath::FlushPlayLastWords));
+    play_rx.sort_by_key(|t| (t.category, t.entry, t.printed_order));
+    let saved = std::mem::take(&mut state.bindings);
+    state
+        .pending_work
+        .push(WorkFrame::Aftermath(Aftermath::RestoreBindings(saved)));
+    for t in play_rx.into_iter().rev() {
+        if t.subject.is_some() {
+            state.event_subject = t.subject.clone();
+        }
+        push_work(state, t.controller, t.source, t.effects, 0, t.subject);
+    }
+}
+
+fn flush_play_last_words(
+    _db: &CardDb,
+    state: &mut State,
+    _events: &mut [Event],
+) -> Result<(), Illegal> {
+    let mut last_words = Vec::new();
+    let mut rest = Vec::new();
+    for t in std::mem::take(&mut state.queue) {
+        if t.tag == TriggerTag::LastWords {
+            last_words.push(t);
+        } else {
+            rest.push(t);
+        }
+    }
+    state.queue = rest;
+    if last_words.is_empty() {
+        return Ok(());
+    }
+    last_words.sort_by_key(|t| (t.category, t.entry, t.printed_order));
+    let saved = std::mem::take(&mut state.bindings);
+    state
+        .pending_work
+        .push(WorkFrame::Aftermath(Aftermath::RestoreBindings(saved)));
+    for t in last_words.into_iter().rev() {
+        if t.subject.is_some() {
+            state.event_subject = t.subject.clone();
+        }
+        push_work(state, t.controller, t.source, t.effects, 0, t.subject);
+    }
+    Ok(())
 }
 
 fn drain_queue(db: &CardDb, state: &mut State, _events: &mut [Event]) -> Result<(), Illegal> {

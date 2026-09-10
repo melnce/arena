@@ -1089,3 +1089,164 @@ fn obsidian_raven_with_no_enemy_follower_still_summons() {
         "summon still happens when the random damage has no target"
     );
 }
+
+#[test]
+fn world_of_games_dies_on_play_before_enamored_enhance_summons() {
+    // E39 / rune-2 i=68: WoG at 1 on a 3-card board (a 4-cost so the Enhance
+    // matches, plus a filler). Play Enamored Enhance (summon ×3): WoG dies
+    // on play, two Subjects land, Last Words draw before the summons.
+    let db = load_db();
+    let mut st = started(&db, 139);
+    let me = PlayerId::A;
+    give_pp(&mut st, me, 10, 10);
+    put_field(&db, &mut st, me, "10011130");
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, me, WORLD);
+    if let Some(f) = st
+        .player_mut(me)
+        .field
+        .iter_mut()
+        .flatten()
+        .find(|c| c.card.as_str() == WORLD)
+    {
+        f.countdown = Some(1);
+    }
+    st.player_mut(me).hand.clear();
+    let hand_before = st.player(me).hand.len();
+    play_id(&db, &mut st, me, "10932110");
+    drain_choice(&db, &mut st);
+    assert!(
+        !field_has(&st, me, WORLD),
+        "WoG dies at play time before the Enhance summons"
+    );
+    let subjects: Vec<_> = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == SUBJECT)
+        .collect();
+    assert_eq!(
+        subjects.len(),
+        2,
+        "two of three Enhance summons land after WoG frees the slot"
+    );
+    assert!(
+        subjects.iter().all(|c| c.traits.ward == Some(true)),
+        "Enhance grants Ward to the summons that land"
+    );
+    assert_eq!(
+        st.player(me).hand.len(),
+        hand_before + 2,
+        "Last Words Draw 2 resolve before the summons"
+    );
+    assert_eq!(field_count(&st, me), 5);
+}
+
+#[test]
+fn world_of_games_divine_thunder_qa_count_is_four() {
+    // Official Q&A 10503210: only card on my field is WoG at 5; only enemy
+    // card is Quake Goliath. Play Divine Thunder → count 4. The enemy
+    // 4-cost counts, and the play reaction resolves before the spell
+    // destroys Goliath.
+    let db = load_db();
+    let mut st = started(&db, 140);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    give_pp(&mut st, me, 4, 4);
+    put_field(&db, &mut st, opp, "10001130");
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, WORLD);
+    drain_choice(&db, &mut st);
+    let cd = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == WORLD)
+        .and_then(|c| c.countdown);
+    assert_eq!(cd, Some(5));
+    play_id(&db, &mut st, me, "10103310");
+    drain_choice(&db, &mut st);
+    let cd = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == WORLD)
+        .and_then(|c| c.countdown);
+    assert_eq!(cd, Some(4), "official Q&A: count will be 4");
+    assert!(
+        !field_has(&st, opp, "10001130"),
+        "Divine Thunder still destroys Goliath"
+    );
+}
+
+#[test]
+fn evolved_follower_is_not_offered_super_evolve() {
+    // Glossary Evolution / owner 2026-09-10: cannot EP-evolve then SEP later.
+    let db = load_db();
+    let mut st = started(&db, 141);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, me, "88001110");
+    grant_evolve(&db, &mut st, 0);
+    st.player_mut(me).evolved_this_turn = false;
+    set_round(&mut st, me, 7);
+    st.player_mut(me).sep = 1;
+    st.player_mut(me).ep = 1;
+    let legal = legal_actions(&db, &st);
+    assert!(
+        !legal
+            .iter()
+            .any(|a| matches!(a, Action::Evolve { slot: Slot(0), .. })),
+        "an evolved follower is offered neither evolve nor super-evolve"
+    );
+}
+
+#[test]
+fn effect_evolve_on_evolved_follower_is_noop() {
+    // Remi & Rami Super-Evolve: evolve a Golem, then +3/+3. An already
+    // evolved Golem is not evolved again; only the buff applies.
+    let db = load_db();
+    let mut st = started(&db, 142);
+    let me = PlayerId::A;
+    let golem = put_field(&db, &mut st, me, "90031120");
+    put_field(&db, &mut st, me, "10032110");
+    grant_evolve(&db, &mut st, golem);
+    let g = st.field_inst(me, golem).expect("golem");
+    assert_eq!(g.attack, 5);
+    assert_eq!(g.defense, 5);
+    assert!(g.evolved);
+    assert!(!g.super_evolved);
+    let used = st.player(me).evolves_used;
+    set_round(&mut st, me, 7);
+    st.player_mut(me).sep = 1;
+    st.player_mut(me).evolved_this_turn = false;
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: Slot(1),
+            super_evolve: true,
+        },
+    )
+    .expect("super-evolve Remi");
+    drain_choice(&db, &mut st);
+    let g = st.field_inst(me, golem).expect("golem after effect-evolve");
+    assert_eq!(
+        g.attack, 8,
+        "no-op evolve: +3/+3 only, not +2/+2 then +3/+3"
+    );
+    assert_eq!(g.defense, 8);
+    assert_eq!(g.max_defense, 8);
+    assert!(g.evolved);
+    assert!(
+        !g.super_evolved,
+        "effect-evolve does not super-evolve the Golem"
+    );
+    assert_eq!(
+        st.player(me).evolves_used,
+        used + 1,
+        "only Remi's SEP counts; the no-op does not increment evolves_used"
+    );
+}

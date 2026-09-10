@@ -525,6 +525,10 @@ pub enum Aftermath {
     },
     DrainQueue,
     RestoreBindings(BTreeMap<String, Vec<BoundRef>>),
+    /// After play reactions resolve, Last Words they caused (e.g. World of
+    /// Games dying on play) run before the played card's Fanfare / spell body.
+    /// Enter reactions stay on the queue (E34).
+    FlushPlayLastWords,
     ContinueTurnStart {
         step: u8,
     },

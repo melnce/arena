@@ -32,15 +32,15 @@ A card whose data uses an M1-unsupported construct fails at `require_supported` 
 
 ## When events
 
-`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, crests before board (active crest 3, active board 4, opponent crest 5, opponent board 6), entry order within a side. The played card's own `enter` ability sits on `pending_work` above Fanfare (rulebook step 1). Other cards' enter/play reactions stay on the queue until the play completes, including across a Fanfare choice (rulebook **Fanfare and Enter-Play Trigger Order**). `pick: entering` reads `State.event_subject`.
+`Ability::When` is dispatched from game events (`raise_when`). Matching `When` abilities on both players' field cards **and crests** (plus hand/deck when `zone` says so) enqueue into the trigger queue: subject `filter` and `when` conditions at enqueue, `oncePerTurn` honoured, crests before board (active crest 3, active board 4, opponent crest 5, opponent board 6), entry order within a side. Play reactions (`whenever you play`) are flushed onto `pending_work` above Fanfare / spell text (E39). The played card's own `enter` ability also sits above Fanfare. Other cards' enter reactions stay on the queue until the play completes, including across a Fanfare choice (E34). `pick: entering` reads `State.event_subject`.
 
 `CardDb` builds a static `when` index at load: for each `(EventName, AbilityZone)`, the card ids (and crest ids) that print at least one `When` for that pair. `enqueue_when_on` does not clone zones; it walks field instances whose card id is in the index for `(event, Field)` or whose `granted_whens` count is non-zero (grants are dynamic and rare), crests in the crest index, and hand/deck only when the index has any entry for that `(event, zone)` — today's cards have no deck `When` for most events, so those scans cost nothing. Categories, entry order, `oncePerTurn` marks, and `filter`/`when` evaluation are unchanged.
 
 All 15 `EventName`s are raised where the engine produces them (enter, destroy, play, attack, evolve, draw, earth-rite spend, engage, leader restore, self-buff). None are a silent no-op.
 
-## One evolve per turn
+## One evolve per follower, once per turn
 
-`PlayerState.evolved_this_turn` is set on a manual EP/SEP evolve and cleared at `begin_turn`. `can_evolve` rejects both `evolve` and `evolve {super}` for the rest of that player's turn. Effect-granted evolves (`granted: true`) do not set the flag.
+`can_evolve` rejects an already-evolved instance (glossary: "An evolved follower can't be evolved again"; owner 2026-09-10: cannot EP then SEP later). `legal_actions` therefore offers no super-evolve on a normally evolved follower even with SEP available and the turn unlocked. `PlayerState.evolved_this_turn` is set on a manual EP/SEP evolve and cleared at `begin_turn`; `can_evolve` also rejects both `evolve` and `evolve {super}` for the rest of that player's turn. Effect-granted evolves (`granted: true`) do not set the flag; targeting an already-evolved follower is a no-op (no stats, no `evolves_used`, no evolve abilities).
 
 ## Rally on play
 
@@ -56,7 +56,7 @@ A **played** follower's Rally increment is deferred until the play sequence is q
 
 Reactions to an op of an in-flight list that is *not* inside a flushed wave (`ally_draw` after `draw count: N`) still run before the next op of that list (E28). Countdown expiry captures doomed amulets/crests by instance id / `granted_order` before any destroy, so compact cannot retarget a neighbour. Fuse partner `legal` is `choose {card}` like every other hand choice.
 
-That order is what makes the played card's own enter precede Fanfare, other cards' enter/play reactions wait until the play completes (E34), Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
+That order is what makes play reactions (`whenever you play`) resolve before Fanfare (E39), the played card's own enter precede Fanfare, other cards' enter reactions wait until the play completes (E34), Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
 
 A super-evolved follower on its owner's turn is still a legal `destroy` candidate; `destroy_by_ability` fizzles via `cantBeDestroyedByAbilities` / own-turn SE protection (E31). Lethal 0-defense still settles. The candidate pool is unchanged so `random_target` picks still match.
 
@@ -78,11 +78,19 @@ The per-hand `skybound` counter is the number of allied evolves (player EP and e
 
 At `new_game`, after decks and opening hands are dealt, every player whose starting deck or opening hand contains a card that carries a Faith gains that Faith crest (`faith:<id>`, no countdown, `faith: 0`) — the Sham-Nacha / engine-api rule. The crest's `when ally_evolve` increments `PlayerState.faith`. `pay faith N` spends only if the value is ≥ N, else the wrapped body fizzles. `grantAbility` onto `zone: crests, kind: faith` appends to `CrestInstance.granted` (not visible in CanonicalState; it fires when the event hits). Faith counts toward the five-icon cap but not toward "the number of crests" (rulings 2026-09-05/06).
 
+## E39 — play reactions before Fanfare / spell text
+
+Play reactions (`ally_card_played` / `ally_follower_played` / `ally_spell_played`, "whenever you play …", crests included) resolve when the card is played, **before** its Fanfare or spell body, crest-then-board. Enter reactions ("whenever … enters the field") still wait until the play sequence finishes, including a Fanfare choice (E34).
+
+Official Cygames Q&A, World of Games (`10503210`): _"The only card on my field is a World of Games with a count of 5, and the only enemy card on the field is a Quake Goliath. If I play Divine Thunder, what will World of Games's count be?"_ → _"Its count will be 4."_ Divine Thunder (`10103310`) destroys the 4-cost Goliath; the count still advances, so the play reaction resolved before the spell. Owner 2026-09-10: _"WoG says 'whenever you play' so it should die on play and make space."_ Implementation: take the play-reaction queue items after `raise_when(ally_card_played)` (and `ally_spell_played`), place the card / push Fanfare or spell body, then flush those items onto `pending_work` above Fanfare; Last Words they cause (`FlushPlayLastWords`) still run before the summons. `next_frame_allows_queue_drain` keeps waiting while Fanfare is index-0 so leftover enter reactions wait.
+
+The same Q&A is why World of Games counts a same-base-cost card on either side (`WORLD_OF_GAMES_COUNTS_EITHER_SIDE`; owner _"yes any card"_). The old engine counted allied cards only.
+
 ## E37 — evolve reactions before the evolving follower's Evolve list
 
-Play has a special case (rulebook **Fanfare and Enter-Play Trigger Order**): the played card's Fanfare is step 2, and crests/board that react to the play wait until it finishes (steps 3–6). An evolve has no such exception, so the general same-timing rule applies: crests first, then board abilities (turn boundaries: start-of-turn crests are step 2, board abilities step 3; same-timing crests resolve in grant order).
+An evolve has no Fanfare-style exception, so the general same-timing rule applies: crests first, then board abilities (turn boundaries: start-of-turn crests are step 2, board abilities step 3; same-timing crests resolve in grant order).
 
-The Faith's "Whenever an allied follower evolves, increase this faith's value by 1" and the evolving follower's printed `Evolve:` / `Super-Evolve:` are both triggered by the evolve. The crest resolves first, so at the Evolve ability's choice node the faith already shows +1. Implementation: `raise_when(ally_evolve)` is flushed onto `pending_work` **above** the evolving follower's Evolve/Super-Evolve list; reactions raised *during* that list still wait (A2 / the play-sequence wait). Owner has been asked; this is the rulebook reading until he says otherwise.
+The Faith's "Whenever an allied follower evolves, increase this faith's value by 1" and the evolving follower's printed `Evolve:` / `Super-Evolve:` are both triggered by the evolve. The crest resolves first, so at the Evolve ability's choice node the faith already shows +1. Implementation: `raise_when(ally_evolve)` is flushed onto `pending_work` **above** the evolving follower's Evolve/Super-Evolve list; reactions raised *during* that list still wait (A2 / enter-play E34). **Owner 2026-09-10:** _"evolve comes first so the faith ticks up first."_ No official Cygames Q&A exists for this ordering.
 
 ## E36 — `random_target` among surviving board cards
 
@@ -90,14 +98,11 @@ Recorded `chose.slot` is the 0-based index among **surviving** cards on that pla
 
 ## Questions for the owner
 
-Asked; arena follows the rulebook/text until he says otherwise. World of Games items are each behind one switch in `apply.rs`.
+Asked; arena follows the rulebook/text until he says otherwise.
 
-1. **E37 — evolve reactions before the evolving follower's Evolve list.** Rulebook same-timing: crests before board. Play's Fanfare-before-reactions is the special case (Fanfare and Enter-Play Trigger Order); evolve has no such exception. Old engine agrees on Faith-before-choice (elf-0 i=59). Confirm or reject.
-2. **World of Games play-reaction wait** (`PLAY_REACTIONS_AFTER_FANFARE`, default true). Rulebook **Fanfare and Enter-Play Trigger Order** steps 3–4: crests and board that react to the play wait until Fanfare (including its choice) completes. Owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first). Set `false` to drain on the play snapshot (old engine).
-3. **World of Games either-side count** (`WORLD_OF_GAMES_COUNTS_EITHER_SIDE`, default true). The text says "a card on the field other than it", no side. Owner question pending (elf-23 i=23: a's WoG advances for b's Magachiyo). Set `false` to count allied field only (old engine).
-4. **World of Games counting itself.** A later 1-cost play sees World of Games (base 1) as "a card on the field other than it". The printed "other than it" excludes only the played card.
-5. **Granted `attacksPerTurn: 2` after attacks already made this turn.** Rulebook is silent. Implemented as `attacks_left = attacks_left.max(n)`.
-6. **Duplicate-id draw after `returnToDeck`.** A draw of an id that has both a modified copy and a just-returned printed copy takes the oldest (first in vec; return appends).
+1. **World of Games counting itself.** A later 1-cost play sees World of Games (base 1) as "a card on the field other than it". The printed "other than it" excludes only the played card.
+2. **Granted `attacksPerTurn: 2` after attacks already made this turn.** Rulebook is silent. Implemented as `attacks_left = attacks_left.max(n)`.
+3. **Duplicate-id draw after `returnToDeck`.** A draw of an id that has both a modified copy and a just-returned printed copy takes the oldest (first in vec; return appends).
 
 ## Defense debuff and `max_defense`
 

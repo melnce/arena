@@ -100,7 +100,7 @@
     "i": 33,
     "path": "players.a.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: a −0/−4 lowers max_defense by 4; the old engine set it to the current defense",
+    "reason": "owner ruling 2026-09-10: a \u22120/\u22124 lowers max_defense by 4; the old engine set it to the current defense",
     "since": "2026-09-10"
   },
   {
@@ -268,7 +268,7 @@
     "i": 20,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "World of Games 10503210 prints 'a card on the field other than it' with no side; owner question pending (elf-23 i=23: a's WoG advances for b's Magachiyo); the old engine did not count the enemy same-cost card",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
     "since": "2026-09-10"
   },
   {
@@ -285,14 +285,6 @@
     "path": "players.b.field[2].max_defense",
     "class": "old-rule",
     "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-9.jsonl",
-    "i": 112,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
     "since": "2026-09-10"
   },
   {
@@ -328,35 +320,11 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "elf-neanisu2-mirror/trace-20260910-18.jsonl",
-    "i": 66,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-19.jsonl",
-    "i": 24,
-    "path": "players.b.field[1].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-21.jsonl",
-    "i": 77,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
     "trace": "elf-neanisu2-mirror/trace-20260910-22.jsonl",
     "i": 41,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "World of Games 10503210 prints 'a card on the field other than it' with no side; owner question pending (elf-23 i=23: a's WoG advances for b's Magachiyo); the old engine did not count the enemy same-cost card",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
     "since": "2026-09-10"
   },
   {
@@ -364,7 +332,7 @@
     "i": 23,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "World of Games 10503210 prints 'a card on the field other than it' with no side; owner question pending (elf-23 i=23: a's WoG advances for b's Magachiyo); the old engine did not count the enemy same-cost card",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
     "since": "2026-09-10"
   },
   {
@@ -408,43 +376,11 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "rune-mach15-mirror/trace-20260910-2.jsonl",
-    "i": 16,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
     "trace": "rune-mach15-mirror/trace-20260910-3.jsonl",
     "i": 6,
     "path": "players.b.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-4.jsonl",
-    "i": 83,
-    "path": "players.b.cemetery.10503210",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 Last Words fire when the fifth advance destroys it after the played card completes; the old engine advanced and buried the amulet during the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-7.jsonl",
-    "i": 66,
-    "path": "players.a.field[1].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-8.jsonl",
-    "i": 13,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
     "since": "2026-09-10"
   },
   {
@@ -456,51 +392,11 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "rune-mach15-mirror/trace-20260910-10.jsonl",
-    "i": 53,
-    "path": "players.b.field[1].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-11.jsonl",
-    "i": 29,
-    "path": "players.a.cemetery.10503210",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 Last Words fire when the fifth advance destroys it after the played card completes; the old engine advanced and buried the amulet during the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-15.jsonl",
-    "i": 49,
-    "path": "players.a.cemetery.10503210",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 Last Words fire when the fifth advance destroys it after the played card completes; the old engine advanced and buried the amulet during the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
     "trace": "rune-mach15-mirror/trace-20260910-16.jsonl",
     "i": 102,
     "path": "players.a.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-17.jsonl",
-    "i": 37,
-    "path": "players.b.field[1].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-19.jsonl",
-    "i": 86,
-    "path": "players.b.field[1].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
     "since": "2026-09-10"
   },
   {
@@ -512,14 +408,6 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "rune-mach15-mirror/trace-20260910-21.jsonl",
-    "i": 49,
-    "path": "error",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 Last Words 'Draw 2 cards' wait until the played card completes; the old engine advanced, destroyed the amulet, and recorded those draws in the same rng list as the spell's random_target; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
     "trace": "rune-mach15-mirror/trace-20260910-22.jsonl",
     "i": 60,
     "path": "players.b.banished.90031210",
@@ -528,43 +416,11 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "rune-mach15-mirror/trace-20260910-23.jsonl",
-    "i": 28,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-24.jsonl",
-    "i": 33,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
     "trace": "rune-mach15-mirror/trace-20260910-26.jsonl",
     "i": 38,
     "path": "players.a.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-28.jsonl",
-    "i": 22,
-    "path": "players.b.field[1].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-29.jsonl",
-    "i": 94,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "rulebook Fanfare and Enter-Play Trigger Order steps 3–4: World of Games 10503210 'Whenever you play another card' waits until the played card's Fanfare (including a choose) completes; the old engine advances the countdown on the play snapshot; owner question pending (rune-2 i=68: Enamored Researcher's Enhance summons vs a WoG at 1 on a full board — old engine frees the slot first, arena summons first)",
     "since": "2026-09-10"
   }
 ]
