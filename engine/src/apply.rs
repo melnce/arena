@@ -4,8 +4,8 @@ use crate::action::{from_neutral, Action};
 use crate::card::{
     Ability, AbilityZone, Amount, Card, CardId, CardKind, CardSource, ChooseBy, Condition,
     Controller, CounterHow, CounterKey, CrestPlayer, Effect, EventName, Filter, FilterKind,
-    FuseResult, Mode, NamedCounter, PayResource, PoolPick, PoolSelector, PpAction, RefPick,
-    ReplicateKey, Selector, SelectorKind, Side, Traits, TriggerTag, Until, Whose, Zone,
+    FuseResult, Mode, NamedCounter, OrderBy, PayResource, PoolPick, PoolSelector, PpAction,
+    RefPick, ReplicateKey, Selector, SelectorKind, Side, Traits, TriggerTag, Until, Whose, Zone,
 };
 use crate::db::CardDb;
 use crate::error::{Illegal, LoadError, Unsupported};
@@ -427,7 +427,7 @@ fn attack_targets(
     _slot: u8,
     inst: &CardInstance,
 ) -> Vec<AttackTarget> {
-    if inst.kind != CardKind::Follower || inst.flags.attacks_left <= 0 {
+    if inst.kind != CardKind::Follower || inst.flags.attacks_left <= 0 || inst.defense <= 0 {
         return Vec::new();
     }
     let sick = inst.flags.summoning_sick && !inst.is_storm() && !inst.is_rush() && !inst.evolved;
@@ -450,7 +450,7 @@ fn attack_targets(
     let mut others = Vec::new();
     for (i, s) in enemy.field.iter().enumerate() {
         let Some(f) = s else { continue };
-        if f.kind != CardKind::Follower {
+        if f.kind != CardKind::Follower || f.defense <= 0 {
             continue;
         }
         if f.ambush_blocks() || f.is_intimidate() {
@@ -1142,9 +1142,10 @@ fn apply_evolve_action(
         } else {
             state.player_mut(me).ep -= 1;
         }
-        state.player_mut(me).evolves_used += 1;
         state.player_mut(me).evolved_this_turn = true;
     }
+    // EP, SEP or effect — `docs/trace-format.md` evolves_used.
+    state.player_mut(me).evolves_used += 1;
     let Some(inst) = state.field_inst_mut(me, slot.0) else {
         return Err(Illegal::NotLegal);
     };
@@ -1296,6 +1297,7 @@ impl State {
                 options: vec![],
                 pending: PendingChoice {
                     kind: PendingKind::ModeSelect,
+                    remaining: 1,
                 },
             },
         }
@@ -1541,7 +1543,7 @@ fn resume_target(
     state: &mut State,
     player: PlayerId,
     opt: TargetOpt,
-    _pending: PendingChoice,
+    pending: PendingChoice,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
     if let Some(WorkFrame::Effects {
@@ -1554,14 +1556,43 @@ fn resume_target(
         if index < effects.len() {
             let e = effects[index].clone();
             apply_effect_with_targets(db, state, controller, source, &e, &[opt], events)?;
-            let mut rest = effects;
-            rest.remove(index);
-            if !rest.is_empty() {
+            let left = pending.remaining.saturating_sub(1);
+            if left > 0 {
+                flush_reactions(db, state, events)?;
+                if let Some(ChoiceNode::Targets { options, .. }) =
+                    effect_choice_node(db, state, controller, source, &e)
+                {
+                    if !options.is_empty() {
+                        state.pending_work.push(WorkFrame::Effects {
+                            controller,
+                            source,
+                            effects,
+                            index,
+                        });
+                        state.phase = Phase::Choice {
+                            player,
+                            node: ChoiceNode::Targets {
+                                options: options.clone(),
+                                pending: PendingChoice {
+                                    kind: pending.kind,
+                                    remaining: left,
+                                },
+                            },
+                        };
+                        events.push(Event::ChoiceOffered {
+                            player,
+                            node: state.phase_node(),
+                        });
+                        return Ok(());
+                    }
+                }
+            }
+            if index + 1 < effects.len() {
                 state.pending_work.push(WorkFrame::Effects {
                     controller,
                     source,
-                    effects: rest,
-                    index: 0,
+                    effects,
+                    index: index + 1,
                 });
             }
         }
@@ -2294,6 +2325,43 @@ fn expire_until(state: &mut State, until: Until, whose_turn_ended: PlayerId) {
     }
 }
 
+/// Drain the reactive queue and any frames it pushes, leaving pre-existing
+/// `pending_work` untouched. Used before a player-choice pause.
+fn flush_reactions(db: &CardDb, state: &mut State, events: &mut Vec<Event>) -> Result<(), Illegal> {
+    let floor = state.pending_work.len();
+    loop {
+        if state.winner.is_some() {
+            return Ok(());
+        }
+        if matches!(state.phase, Phase::Choice { .. }) {
+            return Ok(());
+        }
+        state.bump_step()?;
+        if !state.queue.is_empty() {
+            drain_queue(db, state, events)?;
+            continue;
+        }
+        if state.pending_work.len() <= floor {
+            break;
+        }
+        match state.pending_work.pop() {
+            Some(WorkFrame::Effects {
+                controller,
+                source,
+                effects,
+                index,
+            }) => {
+                resolve_effect_list(db, state, controller, source, effects, index, events)?;
+            }
+            Some(WorkFrame::Aftermath(a)) => {
+                run_aftermath(db, state, a, events)?;
+            }
+            None => break,
+        }
+    }
+    Ok(())
+}
+
 fn drain_queue(db: &CardDb, state: &mut State, _events: &mut [Event]) -> Result<(), Illegal> {
     if state.queue.is_empty() {
         return Ok(());
@@ -2346,7 +2414,20 @@ fn resolve_effect_list(
             return Ok(());
         }
     }
-    // pause if this effect needs a player choose
+    // pause if this effect needs a player choose — drain reactions first
+    // so the choice-node snapshot shows them (`docs/engine-internals.md`).
+    if effect_choice_node(db, state, controller, source, &e).is_some() {
+        flush_reactions(db, state, events)?;
+        if matches!(state.phase, Phase::Choice { .. }) {
+            state.pending_work.push(WorkFrame::Effects {
+                controller,
+                source,
+                effects,
+                index,
+            });
+            return Ok(());
+        }
+    }
     if let Some(node) = effect_choice_node(db, state, controller, source, &e) {
         state.pending_work.push(WorkFrame::Effects {
             controller,
@@ -2392,6 +2473,7 @@ fn effect_choice_node(
             options: (0..opts.len() as u8).collect(),
             pending: PendingChoice {
                 kind: PendingKind::ModeSelect,
+                remaining: 1,
             },
         }),
         Effect::Damage { select, .. }
@@ -2412,10 +2494,17 @@ fn effect_choice_node(
                     if opts.is_empty() {
                         return None; // fizzle
                     }
+                    let n = p
+                        .count
+                        .as_ref()
+                        .map(|a| eval_amount(db, state, controller, Some(source), a).max(1) as u8)
+                        .unwrap_or(1);
+                    let remaining = n.max(1).min(opts.len() as u8);
                     return Some(ChoiceNode::Targets {
                         options: opts,
                         pending: PendingChoice {
                             kind: PendingKind::EffectSelect,
+                            remaining,
                         },
                     });
                 }
@@ -2438,33 +2527,30 @@ fn apply_effect_with_targets(
     match e {
         Effect::Damage { amount, .. } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
-            for t in targets {
-                deal_to_opt(db, state, controller, t, n, events)?;
-            }
+            apply_each_captured(state, targets, |st, t| {
+                deal_to_opt(db, st, controller, t, n, events)
+            })?;
         }
         Effect::Restore { amount, .. } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
-            for t in targets {
-                restore_opt(db, state, t, n, events);
-            }
+            apply_each_captured(state, targets, |st, t| {
+                restore_opt(db, st, t, n, events);
+                Ok(())
+            })?;
         }
         Effect::Destroy { .. } => {
-            let mut slots: Vec<(PlayerId, u8)> = targets
-                .iter()
-                .filter_map(|t| match t {
-                    TargetOpt::Slot { player, slot } => Some((*player, *slot)),
-                    _ => None,
-                })
-                .collect();
-            slots.sort_by_key(|a| std::cmp::Reverse(a.1));
-            for (player, slot) in slots {
-                destroy_slot(db, state, player, slot, false, events)?;
-            }
+            apply_each_captured(state, targets, |st, t| {
+                if let TargetOpt::Slot { player, slot } = t {
+                    destroy_slot(db, st, *player, *slot, false, events)?;
+                }
+                Ok(())
+            })?;
         }
         Effect::Banish { .. } => {
-            for t in targets {
-                banish_opt(state, t, events);
-            }
+            apply_each_captured(state, targets, |st, t| {
+                banish_opt(st, t, events);
+                Ok(())
+            })?;
         }
         Effect::Buff {
             attack,
@@ -2480,10 +2566,10 @@ fn apply_effect_with_targets(
                 .as_ref()
                 .map(|a| eval_amount(db, state, controller, Some(source), a))
                 .unwrap_or(0);
-            for t in targets {
-                buff_opt(db, state, t, da, dd, until_end_of_turn.unwrap_or(false));
-            }
-            settle_deaths(db, state, events)?;
+            apply_each_captured(state, targets, |st, t| {
+                buff_opt(db, st, t, da, dd, until_end_of_turn.unwrap_or(false));
+                Ok(())
+            })?;
         }
         Effect::ReturnToHand { .. } => {
             for t in targets {
@@ -2624,16 +2710,18 @@ fn apply_effect(
             if *split == Some(true) {
                 split_damage(db, state, controller, &ts, n, events)?;
             } else {
-                for t in ts {
-                    deal_to_opt(db, state, controller, &t, n, events)?;
-                }
+                apply_each_captured(state, &ts, |st, t| {
+                    deal_to_opt(db, st, controller, t, n, events)
+                })?;
             }
         }
         Effect::Restore { select, amount, .. } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
-            for t in resolve_select_rolling(db, state, controller, source, select)? {
-                restore_opt(db, state, &t, n, events);
-            }
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            apply_each_captured(state, &ts, |st, t| {
+                restore_opt(db, st, t, n, events);
+                Ok(())
+            })?;
         }
         Effect::Buff {
             select,
@@ -2650,39 +2738,40 @@ fn apply_effect(
                 .as_ref()
                 .map(|a| eval_amount(db, state, controller, Some(source), a))
                 .unwrap_or(0);
-            for t in resolve_select_rolling(db, state, controller, source, select)? {
-                buff_opt(db, state, &t, da, dd, until_end_of_turn.unwrap_or(false));
-            }
-            settle_deaths(db, state, events)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            apply_each_captured(state, &ts, |st, t| {
+                buff_opt(db, st, t, da, dd, until_end_of_turn.unwrap_or(false));
+                Ok(())
+            })?;
         }
         Effect::Destroy { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
-            let mut slots: Vec<(PlayerId, u8)> = ts
-                .iter()
-                .filter_map(|t| match t {
-                    TargetOpt::Slot { player, slot } => Some((*player, *slot)),
-                    _ => None,
-                })
-                .collect();
-            slots.sort_by_key(|a| std::cmp::Reverse(a.1));
-            for (player, slot) in slots {
-                destroy_slot(db, state, player, slot, false, events)?;
-            }
+            apply_each_captured(state, &ts, |st, t| {
+                if let TargetOpt::Slot { player, slot } = t {
+                    destroy_slot(db, st, *player, *slot, false, events)?;
+                }
+                Ok(())
+            })?;
         }
         Effect::Banish { select, .. } => {
-            for t in resolve_select_rolling(db, state, controller, source, select)? {
-                banish_opt(state, &t, events);
-            }
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            apply_each_captured(state, &ts, |st, t| {
+                banish_opt(st, t, events);
+                Ok(())
+            })?;
         }
         Effect::ReturnToHand { select, .. } => {
-            for t in resolve_select_rolling(db, state, controller, source, select)? {
-                bounce_opt(db, state, controller, &t, events)?;
-            }
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            apply_each_captured(state, &ts, |st, t| {
+                bounce_opt(db, st, controller, t, events)
+            })?;
         }
         Effect::ReturnToDeck { select, .. } => {
-            for t in resolve_select_rolling(db, state, controller, source, select)? {
-                return_deck_opt(db, state, &t);
-            }
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            apply_each_captured(state, &ts, |st, t| {
+                return_deck_opt(db, st, t);
+                Ok(())
+            })?;
         }
         Effect::Summon {
             card,
@@ -2723,21 +2812,23 @@ fn apply_effect(
             }
         }
         Effect::Discard { select, .. } => {
-            for t in resolve_select_rolling(db, state, controller, source, select)? {
-                discard_opt(db, state, &t, events)?;
-            }
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            apply_each_captured(state, &ts, |st, t| discard_opt(db, st, t, events))?;
         }
         Effect::Evolve {
             select,
             super_evolve,
             ..
         } => {
-            for t in resolve_select_rolling(db, state, controller, source, select)? {
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            apply_each_captured(state, &ts, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
-                    apply_evolve_action(db, state, Slot(slot), *super_evolve, true, events)?;
-                    let _ = player;
+                    if *player == controller {
+                        apply_evolve_action(db, st, Slot(*slot), *super_evolve, true, events)?;
+                    }
                 }
-            }
+                Ok(())
+            })?;
         }
         Effect::GrantTraits { select, traits, .. } => {
             let ts = resolve_select(db, state, controller, source, select);
@@ -2758,8 +2849,7 @@ fn apply_effect(
             let p = state.player_mut(controller);
             match action {
                 PpAction::GainMax => {
-                    p.pp_max += n;
-                    // gain max does not auto-fill
+                    p.pp_max = (p.pp_max + n).min(PP_CAP);
                 }
                 PpAction::Recover => p.recover_pp(n),
                 PpAction::Spend => p.spend_pp(n),
@@ -3071,7 +3161,7 @@ fn bane_blocked(state: &State, owner: PlayerId, inst: &CardInstance) -> bool {
 }
 
 fn deal_to_opt(
-    db: &CardDb,
+    _db: &CardDb,
     state: &mut State,
     _ctrl: PlayerId,
     t: &TargetOpt,
@@ -3085,7 +3175,6 @@ fn deal_to_opt(
         }
         _ => {}
     }
-    settle_deaths(db, state, events)?;
     Ok(())
 }
 
@@ -3098,7 +3187,7 @@ fn deal_leader(state: &mut State, who: PlayerId, raw: i32, events: &mut Vec<Even
     amt = amt.max(0);
     // Barrier on leader is modeled as a leader_mod? skip — no M1 card
     let p = state.player_mut(who);
-    p.leader_defense -= amt;
+    p.leader_defense = (p.leader_defense - amt).max(0);
     let lethal = p.leader_defense <= 0;
     events.push(Event::Damage {
         target: EventTarget::Leader(who),
@@ -3458,15 +3547,18 @@ fn discard_opt(
             if let Ok(card) = db.card(inst.card) {
                 for a in card.abilities() {
                     if matches!(a, Ability::Discarded { .. }) {
-                        push_effects(
-                            state,
-                            *player,
-                            SourceRef::Spell {
+                        state.queue.push(QueuedTrigger {
+                            category: if *player == state.active { 4 } else { 6 },
+                            entry: *pos as u32,
+                            printed_order: 0,
+                            controller: *player,
+                            source: SourceRef::Spell {
                                 player: *player,
                                 card: inst.card,
                             },
-                            a.effects().to_vec(),
-                        );
+                            tag: TriggerTag::Discarded,
+                            effects: a.effects().to_vec(),
+                        });
                     }
                 }
             }
@@ -3525,21 +3617,23 @@ fn split_damage(
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
     // oldest first — Barrier consumes allocation — 2026-08-29
-    for t in targets {
+    let caps = capture_targets(state, targets);
+    for cap in caps {
         if pool <= 0 {
             break;
         }
-        if let TargetOpt::Slot { player, slot } = t {
-            let def = state
-                .field_inst(*player, *slot)
-                .map(|c| c.defense.max(0))
-                .unwrap_or(0);
-            let take = pool.min(def.max(1));
-            deal_follower(state, *player, *slot, take, ctrl, events);
-            pool -= take;
-        }
+        let Some(TargetOpt::Slot { player, slot }) = live_captured(state, &cap) else {
+            continue;
+        };
+        let def = state
+            .field_inst(player, slot)
+            .map(|c| c.defense.max(0))
+            .unwrap_or(0);
+        let take = pool.min(def.max(1));
+        deal_follower(state, player, slot, take, ctrl, events);
+        pool -= take;
     }
-    settle_deaths(db, state, events)?;
+    let _ = db;
     Ok(())
 }
 
@@ -3863,6 +3957,10 @@ fn resolve_select_rolling(
                 .unwrap_or(1);
             random_pool_apply(state, cands, n, p.pick == PoolPick::RandomDistinct)
         }
+        Selector::Pool(p) if p.pick == PoolPick::Highest || p.pick == PoolPick::Lowest => {
+            let cands = pool_target_opts(db, state, controller, source, p);
+            pick_extremum(state, p, cands, p.pick == PoolPick::Highest)
+        }
         _ => Ok(resolve_select(db, state, controller, source, sel)),
     }
 }
@@ -3893,7 +3991,7 @@ fn resolve_select(
                     // non-choice resolution — apply_effect rolls below via helper
                     pick_random_targets(state, p, &mut c)
                 }
-                PoolPick::Highest | PoolPick::Lowest => c.into_iter().take(1).collect(),
+                PoolPick::Highest | PoolPick::Lowest => extremum_without_roll(state, p, c),
             }
         }
     }
@@ -3976,6 +4074,9 @@ fn pool_candidates(
                         }
                     }
                     if !kind_ok(c, p.kind) {
+                        continue;
+                    }
+                    if c.kind == CardKind::Follower && c.defense <= 0 {
                         continue;
                     }
                     if let Some(f) = &p.filter {
@@ -4300,6 +4401,107 @@ fn eval_cond(
         }
         _ => false,
     }
+}
+
+enum CapturedTarget {
+    Field { player: PlayerId, id: u32 },
+    Keep(TargetOpt),
+}
+
+fn capture_targets(state: &State, ts: &[TargetOpt]) -> Vec<CapturedTarget> {
+    ts.iter()
+        .map(|t| match t {
+            TargetOpt::Slot { player, slot } => {
+                if let Some(c) = state.field_inst(*player, *slot) {
+                    CapturedTarget::Field {
+                        player: *player,
+                        id: c.id,
+                    }
+                } else {
+                    CapturedTarget::Keep(t.clone())
+                }
+            }
+            other => CapturedTarget::Keep(other.clone()),
+        })
+        .collect()
+}
+
+fn live_captured(state: &State, cap: &CapturedTarget) -> Option<TargetOpt> {
+    match cap {
+        CapturedTarget::Field { player, id } => {
+            state.find_field(*player, *id).map(|slot| TargetOpt::Slot {
+                player: *player,
+                slot,
+            })
+        }
+        CapturedTarget::Keep(t) => Some(t.clone()),
+    }
+}
+
+fn apply_each_captured<F>(state: &mut State, ts: &[TargetOpt], mut f: F) -> Result<(), Illegal>
+where
+    F: FnMut(&mut State, &TargetOpt) -> Result<(), Illegal>,
+{
+    let caps = capture_targets(state, ts);
+    for cap in caps {
+        if let Some(t) = live_captured(state, &cap) {
+            f(state, &t)?;
+        }
+    }
+    Ok(())
+}
+
+fn order_key(state: &State, t: &TargetOpt, order: Option<OrderBy>) -> i32 {
+    let Some(c) = (match t {
+        TargetOpt::Slot { player, slot } => state.field_inst(*player, *slot),
+        TargetOpt::Hand { player, pos } => state.player(*player).hand.get(*pos as usize),
+        _ => None,
+    }) else {
+        return 0;
+    };
+    match order {
+        Some(OrderBy::Attack) => c.attack,
+        Some(OrderBy::Defense) => c.defense,
+        Some(OrderBy::Cost) => c.cost,
+        Some(OrderBy::BaseCost) => c.base_cost,
+        None => 0,
+    }
+}
+
+fn extremum_without_roll(state: &State, p: &PoolSelector, cands: Vec<TargetOpt>) -> Vec<TargetOpt> {
+    if cands.is_empty() {
+        return cands;
+    }
+    let high = p.pick == PoolPick::Highest;
+    let best = cands.iter().map(|t| order_key(state, t, p.order_by)).fold(
+        if high { i32::MIN } else { i32::MAX },
+        |acc, k| if high { acc.max(k) } else { acc.min(k) },
+    );
+    cands
+        .into_iter()
+        .filter(|t| order_key(state, t, p.order_by) == best)
+        .take(1)
+        .collect()
+}
+
+fn pick_extremum(
+    state: &mut State,
+    p: &PoolSelector,
+    cands: Vec<TargetOpt>,
+    highest: bool,
+) -> Result<Vec<TargetOpt>, Illegal> {
+    if cands.is_empty() {
+        return Ok(cands);
+    }
+    let best = cands.iter().map(|t| order_key(state, t, p.order_by)).fold(
+        if highest { i32::MIN } else { i32::MAX },
+        |acc, k| if highest { acc.max(k) } else { acc.min(k) },
+    );
+    let tied: Vec<TargetOpt> = cands
+        .into_iter()
+        .filter(|t| order_key(state, t, p.order_by) == best)
+        .collect();
+    random_pool_apply(state, tied, 1, false)
 }
 
 fn random_pool_apply(

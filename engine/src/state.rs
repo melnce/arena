@@ -381,6 +381,9 @@ pub enum TargetOpt {
 #[derive(Debug, Clone)]
 pub struct PendingChoice {
     pub kind: PendingKind,
+    /// Remaining sequential `pick: choose` selections including the current one.
+    /// Fuse Confirm is unrelated. `1` = single pick (default).
+    pub remaining: u8,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

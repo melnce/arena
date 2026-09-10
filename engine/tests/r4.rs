@@ -280,6 +280,11 @@ fn lumiore_fanfare_hits_enemy_leader_and_followers() {
     play(&db, &mut st, 2);
     assert!(matches!(st.phase, Phase::Choice { .. }));
     choose(&db, &mut st, 0);
+    assert!(
+        matches!(st.phase, Phase::Choice { .. }),
+        "count: 2 needs a second pick"
+    );
+    choose(&db, &mut st, 0);
     assert_eq!(st.player(PlayerId::B).leader_defense, 16);
     let tank = st
         .player(PlayerId::B)

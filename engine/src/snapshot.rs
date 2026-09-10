@@ -49,6 +49,7 @@ pub struct CanonicalPlayer {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CanonicalCrest {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub countdown: Option<i32>,
     pub id: String,
 }

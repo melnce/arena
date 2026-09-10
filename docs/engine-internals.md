@@ -55,6 +55,10 @@ A **played** follower's Rally increment is deferred until the play sequence is q
 
 That order is what makes enter-reactions precede Fanfare, Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
 
+Lethal **damage** marks a follower destroyed (`defense <= 0`) and it stays in its slot — not a candidate, not attackable — until pending work is quiet, when deaths settle together and Last Words queue (rulebook Meteor / simultaneous destruction). Explicit `destroy` / `banish` remove at once (Last Words still wait in the queue). Multi-target ops capture the set by instance id before the first application.
+
+When an effect list pauses for a player choice, the reactive queue drains first, so reactions to the clause just resolved (e.g. `on: discarded`) are visible in the choice-node snapshot.
+
 A completed old-engine `fuse { host_pos, partner_pos }` line is applied by `apply_neutral`: start the fuse, map each `partner_pos` (pre-action hand position) to the index in `options`, then Confirm. Confirm with no partners is not legal. `Choose` with an out-of-range index is `NotLegal`.
 
 ## Defense debuff and `max_defense`
