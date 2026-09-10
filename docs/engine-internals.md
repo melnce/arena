@@ -74,7 +74,7 @@ Reactions to an op of an in-flight list that is *not* inside a flushed wave (`al
 
 That order is what makes play reactions (`whenever you play`) resolve before Fanfare (E39), other cards' enter reactions wait until the play completes (E34), the entrant's own `on:enter` sort with those reactions by board age (E38), Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
 
-`apply_attack` writes `State.combat_opposing` (the attack target as a `TargetOpt`) before queuing Strike / Follower Strike / Clash, and clears it after combat damage. `pick: opposing` reads that slot (Okita's "the opposing follower").
+`apply_attack` writes `State.combat_opposing` (the attack target as a `TargetOpt`) before queuing Strike / Follower Strike / Clash, and clears it after combat damage. `pick: opposing` reads that slot (Okita's "the opposing follower"). If Strike or Clash has already reduced a combatant to 0 defense, `combat_damage` does not exchange hits.
 
 `grantTraits.until` (`endOfTurn` / `endOfOpponentTurn`) is caster-relative: `endOfOpponentTurn` expires when the caster's opponent's turn ends, even if the grant sits on an enemy follower (Measured Attunement / Shaili). Grants are stored on `CardInstance.temp_traits` and `merge_remove`'d at that boundary.
 
@@ -119,6 +119,10 @@ An evolve has no Fanfare-style exception, so the general same-timing rule applie
 The Faith's "Whenever an allied follower evolves, increase this faith's value by 1" and the evolving follower's printed `Evolve:` / `Super-Evolve:` are both triggered by the evolve. The crest resolves first, so at the Evolve ability's choice node the faith already shows +1. Implementation: `raise_when(ally_evolve)` is flushed onto `pending_work` **above** the evolving follower's Evolve/Super-Evolve list; reactions raised *during* that list still wait (A2 / enter-play E34). **Owner 2026-09-10:** _"evolve comes first so the faith ticks up first."_ No official Cygames Q&A exists for this ordering.
 
 ## E36 — `random_target` among surviving board cards
+
+A `side: any` random pool (Oluon) qualifies keys with the player (`a:slot:0`, `leader:b`) so two leaders or two `slot:0`s do not collapse on scripted replay. Single-side pools still emit `slot:N` / `leader`.
+
+A `side: any` random pool (Oluon) qualifies keys with the player (`a:slot:0`, `leader:b`) so two leaders or two `slot:0`s do not collapse on scripted replay. Single-side pools still emit `slot:N` / `leader`.
 
 Recorded `chose.slot` is the 0-based index among **surviving** cards on that player's field at roll time (followers at 0 defense / marked for destruction and amulets at countdown 0 are skipped; order preserved), not the raw field slot. In a `randomDistinct` wave the first chosen slot is also skipped at later rolls (the old engine applies that destroy before the next roll). A non-distinct `random` wave does not skip a follower that survived the first pick — it stays in the numbering. Live play still picks by index into the candidate list. Scripted replay matches the survivor-index label first; if that misses, a raw field slot is accepted as an alias when that label is not already a survivor key of another candidate (M1 ramp traces numbered by raw slot). Aliases are not added for live RNG.
 

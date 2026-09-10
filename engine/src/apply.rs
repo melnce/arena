@@ -4075,6 +4075,11 @@ fn combat_damage(
                 }
                 return Ok(());
             };
+            // Strike / Clash resolve first. A follower already at 0 defense
+            // (or an attacker killed by Clash) does not exchange combat damage.
+            if att.defense <= 0 || def.defense <= 0 {
+                return Ok(());
+            }
             let dealt = deal_follower(state, opp, def_slot, att.attack.max(0), me, events);
             let _ = deal_follower(state, me, slot, def.attack.max(0), opp, events);
             if att.is_drain() {
@@ -5791,9 +5796,12 @@ fn resolve_select_rolling(
             let n = p
                 .count
                 .as_ref()
-                .map(|a| eval_amount(db, state, controller, Some(source), a).max(1) as usize)
+                .map(|a| eval_amount(db, state, controller, Some(source), a))
                 .unwrap_or(1);
-            random_pool_apply(state, cands, n, p.pick == PoolPick::RandomDistinct)
+            if n <= 0 {
+                return Ok(Vec::new());
+            }
+            random_pool_apply(state, cands, n as usize, p.pick == PoolPick::RandomDistinct)
         }
         Selector::Pool(p) if p.pick == PoolPick::Highest || p.pick == PoolPick::Lowest => {
             let cands = pool_target_opts(db, state, controller, source, p);
@@ -6745,13 +6753,37 @@ fn random_pool_apply(
         if left.is_empty() {
             break;
         }
+        let multi_player = {
+            let mut seen = [false, false];
+            for t in &left {
+                let p = match t {
+                    TargetOpt::Slot { player, .. } | TargetOpt::Leader { player } => Some(*player),
+                    _ => None,
+                };
+                if let Some(p) = p {
+                    seen[p.idx()] = true;
+                }
+            }
+            seen[0] && seen[1]
+        };
         let mut keys: Vec<String> = left
             .iter()
             .map(|t| match t {
                 TargetOpt::Slot { player, slot } => {
-                    surviving_slot_key(state, *player, *slot, &skipped)
+                    let k = surviving_slot_key(state, *player, *slot, &skipped);
+                    if multi_player {
+                        format!("{}:{k}", player.as_str())
+                    } else {
+                        k
+                    }
                 }
-                TargetOpt::Leader { .. } => "leader".into(),
+                TargetOpt::Leader { player } => {
+                    if multi_player {
+                        format!("leader:{}", player.as_str())
+                    } else {
+                        "leader".into()
+                    }
+                }
                 TargetOpt::Card(c) => c.as_str(),
                 TargetOpt::Deck { player, id } => state
                     .player(*player)
