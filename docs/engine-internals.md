@@ -56,7 +56,7 @@ Reactions to an op of an in-flight list that is *not* inside a flushed wave (`al
 
 That order is what makes the played card's own enter precede Fanfare, other cards' enter/play reactions wait until the play completes (E34), Strike/Clash precede combat damage, and the start-of-turn draw happen at step 8 after the queued boundary abilities.
 
-A super-evolved follower on its owner's turn is still a legal `destroy` candidate; `destroy_slot` fizzles via `cantBeDestroyedByAbilities` / own-turn SE protection (E31). The candidate pool is unchanged so `random_target` picks still match.
+A super-evolved follower on its owner's turn is still a legal `destroy` candidate; `destroy_by_ability` fizzles via `cantBeDestroyedByAbilities` / own-turn SE protection (E31). Lethal 0-defense still settles. The candidate pool is unchanged so `random_target` picks still match.
 
 Lethal **damage** marks a follower destroyed (`defense <= 0`) and it stays in its slot — not a candidate, not attackable — until pending work is quiet, when deaths settle together and Last Words queue (rulebook Meteor / simultaneous destruction). Explicit `destroy` / `banish` remove at once (Last Words still wait in the queue). An op's targets are selected when that op is reached (after previous ops in the list), then captured by instance id for that op's applications only. A nested body (`repeat`, `if`/`else`, `seq`, `choose` options) is pushed on top of the enclosing remainder and resolves completely before the next enclosing op.
 

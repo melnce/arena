@@ -2706,7 +2706,7 @@ fn apply_effect_with_targets(
         Effect::Destroy { .. } => {
             apply_each_captured(state, targets, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
-                    destroy_slot(db, st, *player, *slot, false, events)?;
+                    destroy_by_ability(db, st, *player, *slot, events)?;
                 }
                 Ok(())
             })?;
@@ -2924,7 +2924,7 @@ fn apply_effect(
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
             apply_each_captured(state, &ts, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
-                    destroy_slot(db, st, *player, *slot, false, events)?;
+                    destroy_by_ability(db, st, *player, *slot, events)?;
                 }
                 Ok(())
             })?;
@@ -3741,6 +3741,24 @@ fn queue_last_words(db: &CardDb, state: &mut State, who: PlayerId, inst: &CardIn
     }
 }
 
+/// Super-evolve own-turn: legal candidate, destroy from an ability/effect
+/// fizzles (E31). Lethal 0-defense still goes through `destroy_slot`.
+fn destroy_by_ability(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    slot: u8,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let Some(peek) = state.player(who).field[slot as usize].as_ref() else {
+        return Ok(());
+    };
+    if bane_blocked(state, who, peek) {
+        return Ok(());
+    }
+    destroy_slot(db, state, who, slot, false, events)
+}
+
 fn destroy_slot(
     db: &CardDb,
     state: &mut State,
@@ -3749,13 +3767,6 @@ fn destroy_slot(
     no_lw: bool,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
-    let Some(peek) = state.player(who).field[slot as usize].as_ref() else {
-        return Ok(());
-    };
-    // Super-evolve own-turn: legal candidate, destroy fizzles (E31).
-    if bane_blocked(state, who, peek) {
-        return Ok(());
-    }
     let Some(inst) = state.player_mut(who).field[slot as usize].take() else {
         return Ok(());
     };
