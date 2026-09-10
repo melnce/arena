@@ -244,6 +244,7 @@ pub enum EventName {
     AllyFollowerEnter,
     EnemyFollowerEnter,
     AllyFollowerDestroyed,
+    EnemyFollowerDestroyed,
     AllyAmuletDestroyed,
     AllyCardPlayed,
     AllySpellPlayed,
@@ -946,6 +947,14 @@ pub enum Condition {
         #[serde(rename = "amountAtLeast")]
         amount_at_least: AmountAtLeast,
     },
+    DeckHasNoDuplicates {
+        #[serde(rename = "deckHasNoDuplicates")]
+        deck_has_no_duplicates: bool,
+    },
+    AttackingLeader {
+        #[serde(rename = "attackingLeader")]
+        attacking_leader: bool,
+    },
     BoundHas {
         #[serde(rename = "boundHas")]
         bound_has: BoundHas,
@@ -1169,6 +1178,16 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[serde(rename = "untilEndOfTurn")]
         until_end_of_turn: Option<bool>,
+    },
+    /// Selection with no effect on the chosen card (Cassius `10473110`).
+    Select {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        printed: Option<String>,
+        #[serde(default, rename = "as", skip_serializing_if = "Option::is_none")]
+        as_bind: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        when: Option<Condition>,
+        select: Selector,
     },
     Destroy {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1563,6 +1582,7 @@ impl Effect {
             Effect::Damage { printed, .. }
             | Effect::Restore { printed, .. }
             | Effect::Buff { printed, .. }
+            | Effect::Select { printed, .. }
             | Effect::Destroy { printed, .. }
             | Effect::Banish { printed, .. }
             | Effect::ReturnToHand { printed, .. }
@@ -1605,6 +1625,7 @@ impl Effect {
             Effect::Damage { when, .. }
             | Effect::Restore { when, .. }
             | Effect::Buff { when, .. }
+            | Effect::Select { when, .. }
             | Effect::Destroy { when, .. }
             | Effect::Banish { when, .. }
             | Effect::ReturnToHand { when, .. }
@@ -1647,6 +1668,7 @@ impl Effect {
             Effect::Damage { as_bind, .. }
             | Effect::Restore { as_bind, .. }
             | Effect::Buff { as_bind, .. }
+            | Effect::Select { as_bind, .. }
             | Effect::Destroy { as_bind, .. }
             | Effect::Banish { as_bind, .. }
             | Effect::ReturnToHand { as_bind, .. }
@@ -2591,6 +2613,7 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
             }
         }
         Effect::Destroy { select, .. }
+        | Effect::Select { select, .. }
         | Effect::Banish { select, .. }
         | Effect::ReturnToHand { select, .. }
         | Effect::ReturnToDeck { select, .. }

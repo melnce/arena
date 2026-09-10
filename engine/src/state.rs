@@ -83,7 +83,7 @@ pub struct CardInstance {
     /// Next `op:sequence` step (wraps after the last). Per-instance; survives
     /// the trigger queue so Omerio / City of Babelon keep their cursor.
     pub sequence_index: u32,
-    /// Trait grants with an `until` expiry (Measured Attunement / Shaili).
+    /// Trait grants with an `until` expiry (Measured Attunement / Shaili / Friendly Blue Ogre).
     pub temp_traits: Vec<TempTraitGrant>,
 }
 
@@ -404,6 +404,8 @@ pub enum ChoiceNode {
     Modes {
         options: Vec<u8>,
         pending: PendingChoice,
+        /// Mode indices already chosen this `choose pick N` (listed-order resolve).
+        picked: Vec<u8>,
     },
     Cards {
         options: Vec<CardId>,
@@ -523,6 +525,10 @@ pub struct State {
     /// still between zones (`AllyCardPlayed` fires before enter).
     pub event_base_cost: Option<i32>,
     pub event_inst_id: Option<u32>,
+    /// True while an attack targeting a leader is resolving (Lu Woh crest).
+    pub attack_target_is_leader: bool,
+    /// Next `maybe_bind` appends to an existing name (Beelzebub 2-pick).
+    pub bind_append: bool,
     /// Set while `AllyFollowerAttacks` is enqueued: the attack targets a follower.
     pub attacking_follower: bool,
     /// Attack target while Strike / Follower Strike / Clash resolve.

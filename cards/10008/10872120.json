@@ -1,0 +1,30 @@
+{
+  "id": "10872120",
+  "name": "Lazuli, Gateway Connector",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Add a Radiant Artifact to your hand.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Radiant Artifact to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Radiant Artifact to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90071160"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,67 @@
+{
+  "id": "10474110",
+  "name": "Lu Woh, Light Personified",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10004,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Do this 6 times: \"Deal 1 damage to a random enemy follower.\" Give all followers in your opponent's hand +1/+0. Skybound Art - Gain Crest: Lu Woh, Light Personified.",
+  "attack": 6,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Do this 6 times: \"Deal 1 damage to a random enemy follower.\" Give all followers in your opponent's hand +1/+0. Skybound Art - Gain Crest: Lu Woh, Light Personified.",
+      "effects": [
+        {
+          "printed": "Do this 6 times: \"Deal 1 damage to a random enemy follower.\"",
+          "op": "repeat",
+          "times": 6,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "printed": "Give all followers in your opponent's hand +1/+0.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "hand",
+            "kind": "follower"
+          },
+          "attack": 1,
+          "defense": 0
+        },
+        {
+          "printed": "Skybound Art - Gain Crest: Lu Woh, Light Personified.",
+          "op": "if",
+          "cond": {
+            "skyboundArt": {
+              "n": 10
+            }
+          },
+          "then": [
+            {
+              "op": "crest",
+              "gain": "crest:10474110",
+              "player": "self"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

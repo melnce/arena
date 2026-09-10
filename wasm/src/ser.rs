@@ -248,9 +248,14 @@ fn choice_node(node: &ChoiceNode) -> Value {
                 "remaining": pending.remaining,
             }
         }),
-        ChoiceNode::Modes { options, pending } => json!({
+        ChoiceNode::Modes {
+            options,
+            pending,
+            picked,
+        } => json!({
             "modes": {
                 "options": options,
+                "picked": picked,
                 "pending": pending_kind(pending.kind),
                 "remaining": pending.remaining,
             }

@@ -1,0 +1,33 @@
+{
+  "id": "10751110",
+  "name": "Lulumi, Vamp on the Keys",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10007,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Rush\nLast Words: Add a Bat to your hand.",
+  "attack": 2,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add a Bat to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Bat to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90051120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

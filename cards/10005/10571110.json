@@ -1,0 +1,79 @@
+{
+  "id": "10571110",
+  "name": "Marionette Master",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Summon an Enhanced Puppet and Puppet.\nEnhance (7): Give them Storm.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon an Enhanced Puppet and Puppet.",
+      "effects": [
+        {
+          "printed": "Summon an Enhanced Puppet and Puppet.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90071120"
+              },
+              "count": 1,
+              "as": "p0"
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "90071110"
+              },
+              "count": 1,
+              "as": "p1"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 7,
+      "printed": "Enhance (7): Give them Storm.",
+      "effects": [
+        {
+          "printed": "Give them Storm.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "p0"
+              },
+              "traits": {
+                "storm": true
+              }
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "p1"
+              },
+              "traits": {
+                "storm": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

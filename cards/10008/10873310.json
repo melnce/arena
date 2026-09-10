@@ -1,0 +1,56 @@
+{
+  "id": "10873310",
+  "name": "The Journey Ahead",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Select an enemy follower on the field and deal it 6 damage. If at least 3 differently named allied Artifact followers have entered the field this match, recover 1 evolution point.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 6 damage. If at least 3 differently named allied Artifact followers have entered the field this match, recover 1 evolution point.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 6 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 6
+        },
+        {
+          "printed": "If at least 3 differently named allied Artifact followers have entered the field this match, recover 1 evolution point.",
+          "op": "if",
+          "cond": {
+            "amountAtLeast": {
+              "of": {
+                "distinctNames": {
+                  "enteredThisMatch": {
+                    "tribe": "artifact",
+                    "kind": "follower"
+                  }
+                }
+              },
+              "n": 3
+            }
+          },
+          "then": [
+            {
+              "op": "ep",
+              "action": "gain",
+              "super": false,
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

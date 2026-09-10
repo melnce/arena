@@ -1,0 +1,55 @@
+{
+  "id": "10971310",
+  "name": "Dimensional Selection",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "text": "Select a Mode to activate.\n1. Deal 5 damage to all enemy followers.\n2. Summon 2 copies of Mystic Artifact.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate.\n1. Deal 5 damage to all enemy followers.\n2. Summon 2 copies of Mystic Artifact.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Deal 5 damage to all enemy followers.\n2. Summon 2 copies of Mystic Artifact.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Deal 5 damage to all enemy followers.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  },
+                  "amount": 5
+                }
+              ]
+            },
+            {
+              "printed": "2. Summon 2 copies of Mystic Artifact.",
+              "effects": [
+                {
+                  "op": "summon",
+                  "card": {
+                    "named": "90071150"
+                  },
+                  "count": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

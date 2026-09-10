@@ -1,0 +1,35 @@
+{
+  "id": "crest:10474110",
+  "name": "Crest: Lu Woh, Light Personified",
+  "grantedBy": [
+    "10474110"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nWhenever an enemy follower with Storm attacks a leader, give it -3/-0 until the end of the turn.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "enemy_follower_attacks",
+      "filter": {
+        "hasTrait": "storm"
+      },
+      "when": {
+        "attackingLeader": true
+      },
+      "printed": "Whenever an enemy follower with Storm attacks a leader, give it -3/-0 until the end of the turn.",
+      "effects": [
+        {
+          "printed": "give it -3/-0 until the end of the turn.",
+          "op": "buff",
+          "select": {
+            "pick": "entering"
+          },
+          "attack": -3,
+          "defense": 0,
+          "untilEndOfTurn": true
+        }
+      ]
+    }
+  ]
+}

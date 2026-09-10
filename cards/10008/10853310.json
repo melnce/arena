@@ -1,0 +1,54 @@
+{
+  "id": "10853310",
+  "name": "Ebb and Flow",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10008,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Select a card in your hand and return it to deck. Draw 2 cards. If you've unlocked super-evolution, reduce their costs by 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a card in your hand and return it to deck. Draw 2 cards. If you've unlocked super-evolution, reduce their costs by 1.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and return it to deck.",
+          "op": "returnToDeck",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "position": "random"
+        },
+        {
+          "printed": "Draw 2 cards.",
+          "op": "draw",
+          "count": 2,
+          "as": "d"
+        },
+        {
+          "printed": "If you've unlocked super-evolution, reduce their costs by 1.",
+          "op": "if",
+          "cond": {
+            "superEvolutionUnlocked": true
+          },
+          "then": [
+            {
+              "op": "cost",
+              "select": {
+                "pick": "bound",
+                "ref": "d"
+              },
+              "delta": -1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

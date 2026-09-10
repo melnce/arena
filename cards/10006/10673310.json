@@ -1,0 +1,74 @@
+{
+  "id": "10673310",
+  "name": "Unfeeling Eld Axe",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10006,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Activates in hand. Whenever an allied follower with a base cost of 5 or more enters the field, reduce the cost of this card by 1 until the end of the turn.\n\nEvolve a random unevolved allied follower on the field with a base cost of 5 or more. Deal 6 damage to a random enemy follower.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "zone": "hand",
+      "filter": {
+        "baseCostGte": 5
+      },
+      "printed": "Activates in hand. Whenever an allied follower with a base cost of 5 or more enters the field, reduce the cost of this card by 1 until the end of the turn.",
+      "effects": [
+        {
+          "printed": "reduce the cost of this card by 1 until the end of the turn.",
+          "op": "cost",
+          "select": {
+            "pick": "self"
+          },
+          "delta": -1,
+          "untilEndOfTurn": true
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Evolve a random unevolved allied follower on the field with a base cost of 5 or more. Deal 6 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Evolve a random unevolved allied follower on the field with a base cost of 5 or more.",
+          "op": "evolve",
+          "select": {
+            "pick": "random",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "all": [
+                {
+                  "unevolved": true
+                },
+                {
+                  "baseCostGte": 5
+                }
+              ]
+            }
+          },
+          "super": false
+        },
+        {
+          "printed": "Deal 6 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "pick": "random",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 6
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "encroacher"
+  ]
+}

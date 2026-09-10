@@ -1,0 +1,30 @@
+{
+  "id": "crest:10453310",
+  "name": "Crest: Corruption",
+  "grantedBy": [
+    "10453310"
+  ],
+  "faith": false,
+  "text": "Countdown (4)\nAt the end of your turn, deal 2 damage to your leader.",
+  "countdown": 4,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, deal 2 damage to your leader.",
+      "effects": [
+        {
+          "printed": "deal 2 damage to your leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

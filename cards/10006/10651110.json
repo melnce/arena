@@ -1,0 +1,38 @@
+{
+  "id": "10651110",
+  "name": "Reverent Demon",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10006,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Last Words: Draw a card. Deal 1 damage to your leader.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Draw a card. Deal 1 damage to your leader.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        },
+        {
+          "printed": "Deal 1 damage to your leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

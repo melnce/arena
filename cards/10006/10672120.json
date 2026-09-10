@@ -1,0 +1,38 @@
+{
+  "id": "10672120",
+  "name": "Timid Pioneer",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Select an enemy follower on the field with 3 defense or less and banish it.\n\nAmbush",
+  "attack": 1,
+  "defense": 1,
+  "traits": {
+    "ambush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field with 3 defense or less and banish it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field with 3 defense or less and banish it.",
+          "op": "banish",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "filter": {
+              "defenseLte": 3
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

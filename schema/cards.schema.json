@@ -1188,6 +1188,30 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "deckHasNoDuplicates": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "deckHasNoDuplicates"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "attackingLeader": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "attackingLeader"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
             "boundHas": {
               "type": "object",
               "additionalProperties": false,
@@ -1376,6 +1400,34 @@
           "required": [
             "op",
             "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "select"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "as"
           ]
         },
         {
@@ -3448,6 +3500,7 @@
                 "ally_follower_enter",
                 "enemy_follower_enter",
                 "ally_follower_destroyed",
+                "enemy_follower_destroyed",
                 "ally_amulet_destroyed",
                 "ally_card_played",
                 "ally_spell_played",

@@ -1,0 +1,37 @@
+{
+  "id": "10472310",
+  "name": "Stone Breaker",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Do this 6 times: \"Deal 1 damage to a random enemy follower.\"",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Do this 6 times: \"Deal 1 damage to a random enemy follower.\"",
+      "effects": [
+        {
+          "printed": "Do this 6 times: \"Deal 1 damage to a random enemy follower.\"",
+          "op": "repeat",
+          "times": 6,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

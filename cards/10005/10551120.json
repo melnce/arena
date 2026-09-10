@@ -1,0 +1,38 @@
+{
+  "id": "10551120",
+  "name": "Crimson Soulmancer",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Reanimate (2).\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 3,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Reanimate (2).",
+      "effects": [
+        {
+          "printed": "Reanimate (2).",
+          "op": "reanimate",
+          "maxCost": 2
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,40 @@
+{
+  "id": "10551310",
+  "name": "Valor of the Nightblossom",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10005,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Select an enemy follower on the field and deal it 5 damage. Add a Valor of the Nightblossom to your deck.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 5 damage. Add a Valor of the Nightblossom to your deck.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 5 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 5
+        },
+        {
+          "printed": "Add a Valor of the Nightblossom to your deck.",
+          "op": "addToDeck",
+          "card": {
+            "named": "10551310"
+          },
+          "count": 1,
+          "position": "random"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

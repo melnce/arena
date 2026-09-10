@@ -1,0 +1,50 @@
+{
+  "id": "10852110",
+  "name": "Fiole, Devilish Matriarch",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10008,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Summon 3 copies of Bat.\n\nWhenever an allied Bat enters the field, give it Rush.",
+  "attack": 3,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 3 copies of Bat.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies of Bat.",
+          "op": "summon",
+          "card": {
+            "named": "90051120"
+          },
+          "count": 3
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "card": "90051120"
+      },
+      "printed": "Whenever an allied Bat enters the field, give it Rush.",
+      "effects": [
+        {
+          "printed": "give it Rush.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "entering"
+          },
+          "traits": {
+            "rush": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

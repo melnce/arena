@@ -1,0 +1,31 @@
+{
+  "id": "10652110",
+  "name": "Yearnful Necromancer",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10006,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Enhance (8): Reanimate (9).\n\nWard",
+  "attack": 3,
+  "defense": 3,
+  "traits": {
+    "ward": true
+  },
+  "tribes": [],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 8,
+      "printed": "Enhance (8): Reanimate (9).",
+      "effects": [
+        {
+          "printed": "Reanimate (9).",
+          "op": "reanimate",
+          "maxCost": 9
+        }
+      ]
+    }
+  ]
+}

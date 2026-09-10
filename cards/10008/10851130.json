@@ -1,0 +1,77 @@
+{
+  "id": "10851130",
+  "name": "Limil, Devilish Bunny",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10008,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: If your leader's defense is higher than the enemy leader's defense, summon 2 copies of Bat.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 1,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If your leader's defense is higher than the enemy leader's defense, summon 2 copies of Bat.",
+      "effects": [
+        {
+          "printed": "If your leader's defense is higher than the enemy leader's defense, summon 2 copies of Bat.",
+          "op": "if",
+          "cond": {
+            "amountAtLeast": {
+              "of": {
+                "stat": {
+                  "of": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "which": "defense"
+                }
+              },
+              "n": {
+                "add": [
+                  {
+                    "stat": {
+                      "of": {
+                        "pick": "all",
+                        "side": "enemy",
+                        "zone": "leader",
+                        "kind": "leader"
+                      },
+                      "which": "defense"
+                    }
+                  },
+                  1
+                ]
+              }
+            }
+          },
+          "then": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90051120"
+              },
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

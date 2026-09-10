@@ -1,0 +1,52 @@
+{
+  "id": "10452110",
+  "name": "Nezha, Soaring War God",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Rush\nAt the end of your turn, deal 4 damage to a random enemy follower, then deal 2 damage to a random enemy follower.",
+  "attack": 8,
+  "defense": 6,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, deal 4 damage to a random enemy follower, then deal 2 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "deal 4 damage to a random enemy follower, then deal 2 damage to a random enemy follower.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 4
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

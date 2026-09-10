@@ -1,0 +1,54 @@
+{
+  "id": "10772310",
+  "name": "Blink Step",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10007,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Give all allied followers on the field +1/+0. If you've unlocked super-evolution, give all followers in your hand +1/+0.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Give all allied followers on the field +1/+0. If you've unlocked super-evolution, give all followers in your hand +1/+0.",
+      "effects": [
+        {
+          "printed": "Give all allied followers on the field +1/+0.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 1,
+          "defense": 0
+        },
+        {
+          "printed": "If you've unlocked super-evolution, give all followers in your hand +1/+0.",
+          "op": "if",
+          "cond": {
+            "superEvolutionUnlocked": true
+          },
+          "then": [
+            {
+              "op": "buff",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "follower"
+              },
+              "attack": 1,
+              "defense": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": [
+    "anathema"
+  ]
+}

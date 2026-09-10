@@ -1,0 +1,41 @@
+{
+  "id": "10971120",
+  "name": "Twindrone Engineer",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10009,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Fanfare: Summon an Analyzing Artifact.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon an Analyzing Artifact.",
+      "effects": [
+        {
+          "printed": "Summon an Analyzing Artifact.",
+          "op": "summon",
+          "card": {
+            "named": "90071130"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

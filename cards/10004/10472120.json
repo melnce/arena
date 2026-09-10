@@ -1,0 +1,66 @@
+{
+  "id": "10472120",
+  "name": "Ilsa, Brutal Drill Sergeant",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10004,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Select a Mode to activate.\n1. Do this 3 times: \"Deal 4 damage to a random enemy follower.\"\n2. Deal 4 damage to the enemy leader.",
+  "attack": 7,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Do this 3 times: \"Deal 4 damage to a random enemy follower.\"\n2. Deal 4 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Do this 3 times: \"Deal 4 damage to a random enemy follower.\"\n2. Deal 4 damage to the enemy leader.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Do this 3 times: \"Deal 4 damage to a random enemy follower.\"",
+              "effects": [
+                {
+                  "op": "repeat",
+                  "times": 3,
+                  "effects": [
+                    {
+                      "op": "damage",
+                      "select": {
+                        "pick": "random",
+                        "side": "enemy",
+                        "zone": "field",
+                        "kind": "follower"
+                      },
+                      "amount": 4
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "printed": "2. Deal 4 damage to the enemy leader.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 4
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
