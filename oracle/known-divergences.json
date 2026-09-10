@@ -614,5 +614,21 @@
     "class": "old-rule",
     "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not, and a card in hand is never evolved; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 7/7 (Asher & Lydia 10874110)",
     "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-1.jsonl",
+    "i": 84,
+    "path": "players.b.field[3].attack",
+    "class": "old-rule",
+    "reason": "Asher & Lydia 10874110 prints Fanfare (give Ward) then Enhance (9) evolve + Storm; owner 2026-08-15 Enhance never suppresses Fanfare; the play-line snapshot is still the 5/5 because Fanfare's choose pauses before Enhance; the old engine already shows the evolved 8/8",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-21.jsonl",
+    "i": 93,
+    "path": "players.a.field[3].attack",
+    "class": "old-rule",
+    "reason": "Asher & Lydia 10874110 prints Fanfare (give Ward) then Enhance (9) evolve + Storm; owner 2026-08-15 Enhance never suppresses Fanfare; the play-line snapshot is still the 5/5 because Fanfare's choose pauses before Enhance; the old engine already shows the evolved 7/7",
+    "since": "2026-09-10"
   }
 ]

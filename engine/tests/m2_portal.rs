@@ -287,6 +287,17 @@ fn asher_enhance_any_evolve_destroys_wards() {
     st.player_mut(me).hand.clear();
     play_id(&db, &mut st, me, "10874110");
     assert!(matches!(st.phase, Phase::Choice { .. }));
+    let asher_at_fanfare = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == "10874110")
+        .expect("Asher");
+    assert!(
+        !asher_at_fanfare.evolved,
+        "Fanfare choose pauses before Enhance evolve"
+    );
     choose(&db, &mut st, 0);
     let asher = st
         .player(me)
