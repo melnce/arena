@@ -1,0 +1,4 @@
+{
+  "name": "arena",
+  "install": "cargo build --workspace --all-targets --locked && (cd tools && npm ci)"
+}
