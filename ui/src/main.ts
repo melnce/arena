@@ -3,8 +3,15 @@ import { publicUrl } from "./base.ts";
 import { decks, loadCatalog, parseDeckJson } from "./catalog.ts";
 import { clearFloaters, spawnFloaters } from "./fct.ts";
 import { bindPointer } from "./input.ts";
+import { sessionBoardInfo, sessionHandInfo } from "./info.ts";
 import * as L from "./legal.ts";
-import { bindTooltips, render, resetZoneCache, type RenderHooks } from "./render.ts";
+import {
+  bindTooltips,
+  render,
+  resetZoneCache,
+  type Pending,
+  type RenderHooks,
+} from "./render.ts";
 import { byId } from "./render/ids.ts";
 import {
   applyAction,
@@ -27,9 +34,10 @@ import { readShareParams, writeShareParams } from "./share.ts";
 import type { First, Mode, NeutralAction, PlayerId, PositionLog, SessionConfig } from "./types.ts";
 
 let session: Session | null = null;
-let evoArmed: { player: PlayerId; superEvo: boolean } | null = null;
+let pending: Pending = null;
 let watchPlaying = false;
 let watchTimer = 0;
+let paintQueued = 0;
 const importedDecks = new Map<string, { label: string; cards: Record<string, number> }>();
 const savedPositions = new Map<string, PositionLog>();
 
@@ -70,7 +78,7 @@ const hooks: RenderHooks = {
         a.evolve.super === superEvo,
     );
     if (act) commit(act);
-    evoArmed = null;
+    pending = null;
   },
   onChooseOpt: (action) => commit(action),
   onConfirm: () => {
@@ -103,7 +111,11 @@ const hooks: RenderHooks = {
   },
   onNewGame: () => void startFromForm(),
   onRematchSwap: () => void rematchSwap(),
-  evoArmed: null,
+  pending: null,
+  setPending: (p) => {
+    pending = p;
+    requestPaint();
+  },
 };
 
 function exposeArena(): void {
@@ -115,17 +127,30 @@ function exposeArena(): void {
       if (!session) throw new Error("no session");
       return session.game.botAction(policy, seed);
     },
+    handInfo: (player) => (session ? sessionHandInfo(session, player as PlayerId) : []),
+    boardInfo: (player) => (session ? sessionBoardInfo(session, player as PlayerId) : []),
+    full: () => (session ? JSON.parse(session.game.full()) : null),
+    legal: () => (session ? JSON.parse(session.game.legal()) : []),
+    paintMs: window.__arena?.paintMs,
   };
 }
 
 function paint(): void {
   if (!session) return;
-  hooks.evoArmed = evoArmed;
+  hooks.pending = pending;
   const counter = byId("turnCounter");
   if (counter) counter.dataset.botSeq = String(session.botSeq);
   document.body.dataset.watch = watchPlaying ? "1" : "0";
   render(session, hooks);
   exposeArena();
+}
+
+function requestPaint(): void {
+  if (paintQueued) return;
+  paintQueued = requestAnimationFrame(() => {
+    paintQueued = 0;
+    paintSafe();
+  });
 }
 
 /** Undo / redo path — never calls maybeBots (replay uses stored snapshots). */
@@ -136,6 +161,7 @@ function applyHistory(fn: (s: Session) => boolean): void {
   if (!fn(session)) return;
   clearFloaters();
   resetZoneCache();
+  pending = null;
   paint();
 }
 
@@ -155,8 +181,8 @@ function commit(action: NeutralAction): void {
       spawnFloaters(events, floatingTextOn());
     }
     session.suppressFloater = false;
-    resetZoneCache();
-    paint();
+    pending = null;
+    requestPaint();
     void maybeBots();
   } catch (err) {
     console.error(err);
@@ -244,6 +270,7 @@ function startSession(cfg: SessionConfig): void {
     seedVal.textContent = cfg.seed.toString();
   }
   toast("");
+  pending = null;
   paint();
   void maybeBots();
   if (cfg.mode === "watch") startWatchIfAuto();
@@ -282,20 +309,16 @@ async function maybeBots(): Promise<void> {
     if (watchPlaying) scheduleWatch();
     return;
   }
-  // vs-bot
+  // vs-bot — one engine action per beat so the human can follow.
   let guard = 0;
   while (session && !isHumanActing(session) && session.game.phase() !== "terminal" && guard < 80) {
     const events = botStep(session);
     if (!session.suppressFloater) spawnFloaters(events, floatingTextOn());
     session.suppressFloater = false;
     guard += 1;
-    if (guard % 4 === 0) {
-      resetZoneCache();
-      paint();
-      await new Promise<void>((r) => requestAnimationFrame(() => r()));
-    }
+    paint();
+    await new Promise<void>((r) => window.setTimeout(r, 280));
   }
-  resetZoneCache();
   paint();
 }
 
@@ -637,14 +660,31 @@ async function boot(): Promise<void> {
   initWatch();
   bindTooltips();
   bindPointer({
-    legal: () => (session ? legalActions(session) : []),
     play: (p, i) => hooks.onPlay(p, i),
     attack: (p, s, t) => hooks.onAttack(p, s, t),
     evolve: (p, s, ev) => hooks.onEvolve(p, s, ev),
-    getEvoArmed: () => evoArmed,
-    clearEvoArmed: () => {
-      evoArmed = null;
+    engage: (p, s) => hooks.onEngage(p, s),
+    fuse: (p, i) => hooks.onFuse(p, i),
+    mulliganToggle: (i) => hooks.onMulliganToggle(i),
+    getPending: () => pending,
+    setPending: (p) => {
+      pending = p;
+      requestPaint();
     },
+    cancelPending: () => {
+      if (!pending) return;
+      pending = null;
+      requestPaint();
+    },
+  });
+  byId("bonusPpBtn")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!session) return;
+    const full = JSON.parse(session.game.full()) as { players: { a: { is_second: boolean } } };
+    const second: PlayerId = full.players.a.is_second ? "a" : "b";
+    const act = L.bonusPp(legalActions(session), second);
+    if (act) commit(act);
   });
 
   byId("startGameBtn")?.addEventListener("click", () => void startFromForm());

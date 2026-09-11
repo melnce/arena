@@ -1,143 +1,132 @@
-import * as L from "./legal.ts";
-import type { NeutralAction, PlayerId } from "./types.ts";
+import {
+  attachPointerDragSource,
+  shouldSuppressClickFromPointerDrag,
+} from "./drag.ts";
+import type { PlayerId } from "./types.ts";
+import { byId } from "./render/ids.ts";
 
-export type DragHooks = {
-  legal: () => NeutralAction[];
+export type InputHooks = {
   play: (player: PlayerId, handPos: number) => void;
   attack: (player: PlayerId, slot: number, target: { slot: number } | "leader") => void;
   evolve: (player: PlayerId, slot: number, superEvo: boolean) => void;
-  getEvoArmed: () => { player: PlayerId; superEvo: boolean } | null;
-  clearEvoArmed: () => void;
+  engage: (player: PlayerId, slot: number) => void;
+  fuse: (player: PlayerId, handPos: number) => void;
+  mulliganToggle: (index: number) => void;
+  getPending: () =>
+    | { kind: "attack"; player: PlayerId; slot: number }
+    | { kind: "evolve"; player: PlayerId; superEvo: boolean }
+    | { kind: "play"; player: PlayerId; handPos: number }
+    | null;
+  setPending: (
+    p:
+      | { kind: "attack"; player: PlayerId; slot: number }
+      | { kind: "evolve"; player: PlayerId; superEvo: boolean }
+      | { kind: "play"; player: PlayerId; handPos: number }
+      | null,
+  ) => void;
+  cancelPending: () => void;
 };
 
-type DragKind =
-  | { kind: "play"; player: PlayerId; handPos: number; x: number; y: number }
-  | { kind: "attack"; player: PlayerId; slot: number; x: number; y: number }
-  | { kind: "evo"; player: PlayerId; superEvo: boolean; x: number; y: number };
+export function bindPointer(hooks: InputHooks): void {
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      const t = e.target as HTMLElement;
+      const card = t.closest<HTMLElement>(".card");
+      if (card) card.classList.add("pressed");
+    },
+    true,
+  );
+  document.addEventListener(
+    "pointerup",
+    () => {
+      document.querySelectorAll(".card.pressed").forEach((n) => n.classList.remove("pressed"));
+    },
+    true,
+  );
 
-let drag: DragKind | null = null;
-let ghost: HTMLElement | null = null;
-
-export function bindPointer(hooks: DragHooks): void {
-  document.addEventListener("pointerdown", (e) => {
+  document.addEventListener("click", (e) => {
     const t = e.target as HTMLElement;
+    if (t.closest("#settingsDrawer") || t.closest("#settingsToggle")) return;
+    if (t.closest("button") && !t.closest(".evo-btn") && !t.closest(".card")) return;
+    const card = t.closest<HTMLElement>(".card");
+    if (card && shouldSuppressClickFromPointerDrag(card)) return;
+
+    const pending = hooks.getPending();
     const evoBtn = t.closest<HTMLButtonElement>(".evo-btn");
     if (evoBtn && !evoBtn.disabled) {
-      const id = evoBtn.id;
-      const player: PlayerId = id.startsWith("blue") ? "a" : "b";
-      const superEvo = id.toLowerCase().includes("super");
-      drag = { kind: "evo", player, superEvo, x: e.clientX, y: e.clientY };
-      startGhost(evoBtn, e);
+      const player: PlayerId = evoBtn.id.startsWith("blue") ? "a" : "b";
+      const superEvo = evoBtn.id.toLowerCase().includes("super");
+      hooks.setPending({ kind: "evolve", player, superEvo });
       return;
     }
-    const card = t.closest<HTMLElement>(".card");
-    if (!card) return;
+
+    if (!card) {
+      const leader = t.closest<HTMLElement>(".leader-attack-strip");
+      if (leader && pending?.kind === "attack") {
+        const target: PlayerId = leader.id.startsWith("blue") ? "a" : "b";
+        if (target !== pending.player) hooks.attack(pending.player, pending.slot, "leader");
+      }
+      return;
+    }
+
     const player = card.dataset.player as PlayerId | undefined;
     if (!player) return;
-    if (card.closest(".hand-zone") && card.classList.contains("legal-play")) {
-      drag = {
-        kind: "play",
-        player,
-        handPos: Number(card.dataset.handPos),
-        x: e.clientX,
-        y: e.clientY,
-      };
-      startGhost(card, e);
-      return;
-    }
-    if (card.closest(".board-zone") && card.classList.contains("can-attack")) {
-      drag = { kind: "attack", player, slot: Number(card.dataset.slot), x: e.clientX, y: e.clientY };
-      startGhost(card, e);
-    }
-  });
 
-  document.addEventListener("pointermove", (e) => {
-    if (!ghost) return;
-    ghost.style.left = `${e.clientX}px`;
-    ghost.style.top = `${e.clientY}px`;
-    highlightDrop(e.clientX, e.clientY, hooks.legal());
-  });
-
-  document.addEventListener("pointerup", (e) => {
-    if (!drag) {
-      const armed = hooks.getEvoArmed();
-      if (armed) {
-        const card = (e.target as HTMLElement).closest<HTMLElement>(".card");
-        if (card?.dataset.slot != null && card.dataset.player === armed.player) {
-          hooks.evolve(armed.player, Number(card.dataset.slot), armed.superEvo);
-        }
-        hooks.clearEvoArmed();
-      }
-      return;
-    }
-    const kind = drag;
-    const x = e.clientX;
-    const y = e.clientY;
-    clearGhost();
-    drag = null;
-    const el = document.elementFromPoint(x, y) as HTMLElement | null;
-    if (!el) return;
-    if (kind.kind === "play") {
-      const moved = Math.hypot(x - kind.x, y - kind.y);
-      const onBoard = !!(el.closest(".board-zone") || el.closest(".leader"));
-      if (moved < 10 || onBoard || el.closest(".hand-zone") || el.closest("#appRoot")) {
-        hooks.play(kind.player, kind.handPos);
-      }
-      return;
-    }
-    if (kind.kind === "attack") {
-      const leader = el.closest<HTMLElement>(".leader-attack-strip");
-      if (leader) {
-        const target: PlayerId = leader.id.startsWith("blue") ? "a" : "b";
-        if (target !== kind.player) hooks.attack(kind.player, kind.slot, "leader");
+    if (card.closest(".hand-zone")) {
+      const phase = byId("turnCounter")?.dataset.phase;
+      const pos = Number(card.dataset.handPos);
+      if (phase === "mulligan") {
+        hooks.mulliganToggle(pos);
         return;
       }
-      const card = el.closest<HTMLElement>(".card");
-      if (card?.dataset.slot != null && card.dataset.player && card.dataset.player !== kind.player) {
-        hooks.attack(kind.player, kind.slot, { slot: Number(card.dataset.slot) });
+      if (card.classList.contains("legal-play") || card.classList.contains("playable-glow")) {
+        hooks.play(player, pos);
       }
       return;
     }
-    if (kind.kind === "evo") {
-      const card = el.closest<HTMLElement>(".card");
-      if (card?.dataset.slot != null && card.dataset.player === kind.player) {
-        hooks.evolve(kind.player, Number(card.dataset.slot), kind.superEvo);
+
+    if (card.closest(".board-zone")) {
+      const slot = Number(card.dataset.slot);
+      if (pending?.kind === "evolve" && pending.player === player) {
+        hooks.evolve(player, slot, pending.superEvo);
+        return;
+      }
+      if (pending?.kind === "attack" && pending.player !== player) {
+        hooks.attack(pending.player, pending.slot, { slot });
+        return;
+      }
+      if (card.classList.contains("engage-ready")) {
+        hooks.engage(player, slot);
+        return;
+      }
+      if (card.classList.contains("can-attack") || card.classList.contains("legal-attack")) {
+        hooks.setPending({ kind: "attack", player, slot });
       }
     }
   });
-}
 
-function startGhost(from: HTMLElement, e: PointerEvent): void {
-  clearGhost();
-  ghost = from.cloneNode(true) as HTMLElement;
-  ghost.classList.add("drag-ghost");
-  ghost.style.left = `${e.clientX}px`;
-  ghost.style.top = `${e.clientY}px`;
-  document.body.appendChild(ghost);
-}
+  document.addEventListener("contextmenu", (e) => {
+    const card = (e.target as HTMLElement).closest<HTMLElement>(".card");
+    if (!card?.classList.contains("fuse-ready")) return;
+    e.preventDefault();
+    const player = card.dataset.player as PlayerId;
+    hooks.fuse(player, Number(card.dataset.handPos));
+  });
 
-function clearGhost(): void {
-  ghost?.remove();
-  ghost = null;
-  document.querySelectorAll(".drop-hover").forEach((n) => n.classList.remove("drop-hover"));
-}
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") hooks.cancelPending();
+  });
 
-function highlightDrop(x: number, y: number, legal: NeutralAction[]): void {
-  document.querySelectorAll(".drop-hover").forEach((n) => n.classList.remove("drop-hover"));
-  const el = document.elementFromPoint(x, y) as HTMLElement | null;
-  if (!el || !drag) return;
-  if (drag.kind === "attack") {
-    const acts = L.attacksFrom(legal, drag.player, drag.slot);
-    const leader = el.closest<HTMLElement>(".leader-attack-strip");
-    if (leader && acts.some((a) => "attack" in a && a.attack.target === "leader")) {
-      leader.classList.add("drop-hover", "legal-target");
-    }
-    const card = el.closest<HTMLElement>(".card");
-    if (card?.dataset.slot != null) {
-      const slot = Number(card.dataset.slot);
-      if (acts.some((a) => "attack" in a && typeof a.attack.target === "object" && a.attack.target.slot === slot)) {
-        card.classList.add("drop-hover", "legal-target");
-      }
-    }
+  for (const id of ["blueNormalEvo", "blueSuperEvo", "redNormalEvo", "redSuperEvo"]) {
+    const btn = byId<HTMLButtonElement>(id);
+    if (!btn) continue;
+    const player: PlayerId = id.startsWith("blue") ? "a" : "b";
+    const superEvo = id.toLowerCase().includes("super");
+    attachPointerDragSource(
+      btn,
+      { payload: JSON.stringify({ kind: "evo", player, superEvo }), kind: "evo" },
+      true,
+    );
   }
 }

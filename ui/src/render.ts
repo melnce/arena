@@ -1,17 +1,29 @@
 import { lookupText } from "./catalog.ts";
-import { cardImageUrl, escapeHtml } from "./images.ts";
+import { escapeHtml } from "./images.ts";
+import { badgeCost, sessionBoardInfo, sessionHandInfo, usablePp } from "./info.ts";
 import * as L from "./legal.ts";
 import type { Session } from "./session.ts";
 import { fullState, legalActions } from "./session.ts";
 import type {
+  BoardCardInfo,
   ChoiceNode,
   FullState,
+  GateInfo,
+  HandCardInfo,
   NeutralAction,
   PlayerId,
   TargetOpt,
 } from "./types.ts";
-import { cardSignature, renderCard, renderCrestSlot } from "./render/card.ts";
+import { attachPointerDragSource, setDropTarget } from "./drag.ts";
+import { glowFor, renderCard, renderCrestSlot } from "./render/card.ts";
 import { byId, setText, visual } from "./render/ids.ts";
+import { formatCardTooltip, formatCrestTooltip } from "./tooltip.ts";
+
+export type Pending =
+  | { kind: "attack"; player: PlayerId; slot: number }
+  | { kind: "evolve"; player: PlayerId; superEvo: boolean }
+  | { kind: "play"; player: PlayerId; handPos: number }
+  | null;
 
 export type RenderHooks = {
   onPlay: (player: PlayerId, handPos: number) => void;
@@ -27,29 +39,41 @@ export type RenderHooks = {
   onBonusPp: (player: PlayerId) => void;
   onNewGame: () => void;
   onRematchSwap: () => void;
-  evoArmed: { player: PlayerId; superEvo: boolean } | null;
+  pending: Pending;
+  setPending: (p: Pending) => void;
 };
 
 const zoneSig = new Map<string, string>();
+const gateByUid = new Map<number, GateInfo[]>();
+const handInfoByUid = new Map<number, HandCardInfo>();
 
 export function render(s: Session, hooks: RenderHooks): void {
+  const t0 = performance.now();
   const full = fullState(s);
   const legal = legalActions(s);
   const acting = s.game.acting() as PlayerId;
   const phase = s.game.phase();
+  const handA = sessionHandInfo(s, "a");
+  const handB = sessionHandInfo(s, "b");
+  const boardA = sessionBoardInfo(s, "a");
+  const boardB = sessionBoardInfo(s, "b");
+  cacheInfo(full, handA, handB, boardA, boardB);
 
   document.body.classList.toggle("active-first", full.active === "a");
   document.body.classList.toggle("active-second", full.active === "b");
   document.body.classList.toggle("gameover", phase === "terminal");
-  document.body.classList.toggle("select-mode", phase === "choice");
+  document.body.classList.toggle("select-mode", phase === "choice" || hooks.pending != null);
   document.body.classList.toggle("mode-watch", s.cfg.mode === "watch");
   document.body.classList.toggle("mode-vs-bot", s.cfg.mode === "vs-bot");
   document.body.classList.toggle("mode-hotseat", s.cfg.mode === "hotseat");
+  document.body.classList.toggle("awaiting-target", hooks.pending != null);
 
+  const aUse = usablePp(full.players.a.pp, full.players.a.bonus_pp.active);
+  const bUse = usablePp(full.players.b.pp, full.players.b.bonus_pp.active);
   setText("blueHP", full.players.a.leader_defense);
   setText("redHP", full.players.b.leader_defense);
-  setText("bluePP", `${full.players.a.pp}/${full.players.a.pp_max}`);
-  setText("redPP", `${full.players.b.pp}/${full.players.b.pp_max}`);
+  setText("bluePP", `${aUse}/${full.players.a.pp_max}`);
+  setText("redPP", `${bUse}/${full.players.b.pp_max}`);
   setText("blueShadows", full.players.a.shadows);
   setText("redShadows", full.players.b.shadows);
   setText("blueHandCount", full.players.a.hand.length);
@@ -77,21 +101,56 @@ export function render(s: Session, hooks: RenderHooks): void {
   const hideA = s.cfg.mode === "vs-bot" && s.cfg.hideBotHand && s.cfg.humanSide !== "a";
   const hideB = s.cfg.mode === "vs-bot" && s.cfg.hideBotHand && s.cfg.humanSide !== "b";
 
-  renderHand(s, full, legal, "a", hideA, hooks);
-  renderHand(s, full, legal, "b", hideB, hooks);
-  renderBoard(full, legal, "a", hooks);
-  renderBoard(full, legal, "b", hooks);
+  renderHand(s, full, legal, "a", hideA, handA, hooks);
+  renderHand(s, full, legal, "b", hideB, handB, hooks);
+  renderBoard(full, legal, "a", boardA, hooks);
+  renderBoard(full, legal, "b", boardB, hooks);
+  bindBoardDrops(hooks);
   renderLeaders(full, legal, hooks);
   renderEvo(full, legal, hooks);
   renderCrests(full);
   renderMulligan(phase, acting, hooks);
   renderEndTurn(full, legal, phase, hooks);
-  renderBonus(full, legal, hooks);
+  renderBonus(full, legal);
   renderHistory(s);
   renderChoice(full, legal, hooks);
   renderTerminal(full, hooks);
   renderEventLog(s);
   syncUndoButtons(s);
+  paintPending(hooks.pending, legal);
+  if (window.__arena) window.__arena.paintMs = performance.now() - t0;
+}
+
+function cacheInfo(
+  full: FullState,
+  handA: HandCardInfo[],
+  handB: HandCardInfo[],
+  boardA: BoardCardInfo[],
+  boardB: BoardCardInfo[],
+): void {
+  gateByUid.clear();
+  handInfoByUid.clear();
+  const putHand = (list: HandCardInfo[], player: PlayerId) => {
+    const hand = full.players[player].hand;
+    list.forEach((info, i) => {
+      const inst = hand[i];
+      if (!inst) return;
+      handInfoByUid.set(inst.id, info);
+      gateByUid.set(inst.id, info.gates);
+    });
+  };
+  const putBoard = (list: BoardCardInfo[], player: PlayerId) => {
+    const field = full.players[player].field;
+    for (const info of list) {
+      const inst = field[info.slot];
+      if (!inst) continue;
+      gateByUid.set(inst.id, info.gates);
+    }
+  };
+  putHand(handA, "a");
+  putHand(handB, "b");
+  putBoard(boardA, "a");
+  putBoard(boardB, "b");
 }
 
 function renderHand(
@@ -100,6 +159,7 @@ function renderHand(
   legal: NeutralAction[],
   player: PlayerId,
   hide: boolean,
+  infos: HandCardInfo[],
   hooks: RenderHooks,
 ): void {
   const id = `${visual(player)}Hand`;
@@ -107,114 +167,207 @@ function renderHand(
   if (!el) return;
   const hand = full.players[player].hand;
   const phase = s.game.phase();
-  const extras = hand
-    .map((_, i) => {
-      const playable = !!L.playAt(legal, player, i);
-      const fuse = !!L.fuseAt(legal, player, i);
-      return `${playable ? "p" : ""}${fuse ? "f" : ""}${s.mulliganSwap[i] ? "s" : ""}`;
-    })
-    .join(",");
-  const sig = `${hide}|${phase}|${hand.map((c, i) => cardSignature(c, extras.split(",")[i] ?? "")).join(";")}`;
-  if (zoneSig.get(id) === sig) return;
-  zoneSig.set(id, sig);
-  el.innerHTML = "";
-  hand.forEach((inst, i) => {
-    const playable = !!L.playAt(legal, player, i);
-    const fuse = !!L.fuseAt(legal, player, i);
-    const card = renderCard({
-      inst,
-      elementId: `${visual(player)}-hand-${i}`,
-      faceDown: hide,
-      glow: playable ? "legal-play" : undefined,
-      selected: phase === "mulligan" && s.mulliganSwap[i],
-      selectable: phase === "mulligan" || playable,
-    });
-    card.dataset.handPos = String(i);
-    card.dataset.player = player;
-    if (fuse) card.classList.add("fuse-ready");
-    if (!hide) {
-      if (phase === "mulligan") {
-        card.addEventListener("click", (e) => {
-          e.stopPropagation();
-          hooks.onMulliganToggle(i);
-        });
-      } else {
-        if (playable) {
-          card.addEventListener("dblclick", (e) => {
-            e.stopPropagation();
-            hooks.onPlay(player, i);
-          });
-        }
-        if (fuse) {
-          card.addEventListener("contextmenu", (e) => {
-            e.preventDefault();
-            hooks.onFuse(player, i);
-          });
-        }
+  const byPos = new Map(infos.map((i) => [i.pos, i]));
+  syncKeyed(
+    el,
+    hand.map((inst, i) => ({ key: String(inst.id), inst, i })),
+    (row) => {
+      const info = byPos.get(row.i);
+      const playable = !!info?.playable || !!L.playAt(legal, player, row.i);
+      const fuse = !!L.fuseAt(legal, player, row.i);
+      const gateMet = !!info?.gates.some((g) => g.met);
+      const pendingPlay =
+        hooks.pending?.kind === "play" &&
+        hooks.pending.player === player &&
+        hooks.pending.handPos === row.i;
+      const card = renderCard({
+        inst: row.inst,
+        elementId: `${visual(player)}-hand-${row.inst.id}`,
+        faceDown: hide,
+        glow: hide ? undefined : glowFor({ playable, gateMet, form: info?.form }),
+        selected: (phase === "mulligan" && s.mulliganSwap[row.i]) || pendingPlay,
+        selectable: !hide && phase === "mulligan",
+        displayCost: hide ? undefined : badgeCost(info, row.inst.cost),
+        form: hide ? undefined : info?.form,
+      });
+      card.dataset.handPos = String(row.i);
+      card.dataset.player = player;
+      card.classList.toggle("fuse-ready", fuse);
+      if (info) {
+        handInfoByUid.set(row.inst.id, info);
+        gateByUid.set(row.inst.id, info.gates);
       }
-    }
-    el.appendChild(card);
-  });
+      if (!hide) {
+        attachPointerDragSource(
+          card,
+          {
+            payload: JSON.stringify({ kind: "play", player, handPos: row.i }),
+            kind: "hand",
+          },
+          playable && phase !== "mulligan",
+        );
+      }
+      return card;
+    },
+  );
 }
 
 function renderBoard(
   full: FullState,
   legal: NeutralAction[],
   player: PlayerId,
+  infos: BoardCardInfo[],
   hooks: RenderHooks,
 ): void {
   const id = `${visual(player)}Board`;
   const el = byId(id);
   if (!el) return;
-  const field = full.players[player].field;
-  const sig = field
-    .map((c, i) => {
-      const atk = L.attacksFrom(legal, player, i).length;
-      const ev = L.evolveFor(legal, player, false).some((a) => "evolve" in a && a.evolve.slot === i);
-      const sev = L.evolveFor(legal, player, true).some((a) => "evolve" in a && a.evolve.slot === i);
-      const en = !!L.engageAt(legal, player, i);
-      return cardSignature(c, `${atk}:${ev}:${sev}:${en}`);
-    })
-    .join(";");
-  if (zoneSig.get(id) === sig) {
-    // still need live handlers if legal changed — rebuild when sig includes legal
-    return;
-  }
-  zoneSig.set(id, sig);
-  el.innerHTML = "";
-  field.forEach((inst, i) => {
-    if (!inst) {
-      const empty = document.createElement("div");
-      empty.className = "card empty-slot";
-      empty.dataset.slot = String(i);
-      empty.dataset.player = player;
-      el.appendChild(empty);
-      return;
-    }
-    const attacks = L.attacksFrom(legal, player, i);
-    const engage = L.engageAt(legal, player, i);
-    const card = renderCard({
-      inst,
-      elementId: `${visual(player)}-board-${i}`,
-      onBoard: true,
-      glow: attacks.length ? "can-attack legal-attack" : undefined,
-      selectable: !!engage,
-    });
-    card.dataset.slot = String(i);
-    card.dataset.player = player;
-    if (engage) {
-      card.classList.add("engage-ready");
-      card.addEventListener("click", (e) => {
-        e.stopPropagation();
-        hooks.onEngage(player, i);
+  el.classList.add("board-zone");
+  const occupied = full.players[player].field
+    .map((inst, i) => (inst ? { inst, i } : null))
+    .filter((x): x is { inst: NonNullable<typeof x>["inst"]; i: number } => !!x);
+  const bySlot = new Map(infos.map((i) => [i.slot, i]));
+  syncKeyed(
+    el,
+    occupied.map((row) => ({ key: String(row.inst.id), ...row })),
+    (row) => {
+      const info = bySlot.get(row.i);
+      const attacks = L.attacksFrom(legal, player, row.i);
+      const engage = L.engageAt(legal, player, row.i);
+      const canAttack = !!info?.can_attack || attacks.length > 0;
+      const gateMet = !!info?.gates.some((g) => g.met);
+      const pendingAtk =
+        hooks.pending?.kind === "attack" &&
+        hooks.pending.player === player &&
+        hooks.pending.slot === row.i;
+      const card = renderCard({
+        inst: row.inst,
+        elementId: `${visual(player)}-board-${row.inst.id}`,
+        onBoard: true,
+        glow: glowFor({ canAttack, gateMet }),
+        selected: pendingAtk,
+        selectable: !!engage || canAttack,
       });
+      card.dataset.slot = String(row.i);
+      card.dataset.player = player;
+      if (info) gateByUid.set(row.inst.id, info.gates);
+      if (engage) card.classList.add("engage-ready");
+      if (row.inst.traits?.includes("storm") || row.inst.traits?.includes("rush")) {
+        if (canAttack) card.classList.add("rush-glow");
+      }
+      attachPointerDragSource(
+        card,
+        {
+          payload: JSON.stringify({ kind: "attack", player, slot: row.i }),
+          kind: "attacker",
+        },
+        canAttack,
+      );
+      return card;
+    },
+  );
+}
+
+function bindBoardDrops(hooks: RenderHooks): void {
+  for (const p of ["a", "b"] as PlayerId[]) {
+    const board = byId(`${visual(p)}Board`);
+    if (!board) continue;
+    setDropTarget(
+      board,
+      (payload) => {
+        const data = parsePayload(payload);
+        return data?.kind === "play" && data.player === p;
+      },
+      (payload) => {
+        const data = parsePayload(payload);
+        if (data?.kind === "play") hooks.onPlay(data.player, data.handPos);
+      },
+    );
+    const leader = byId(`${visual(p)}Leader`);
+    if (leader) {
+      setDropTarget(
+        leader,
+        (payload) => {
+          const data = parsePayload(payload);
+          return data?.kind === "attack" && data.player !== p;
+        },
+        (payload) => {
+          const data = parsePayload(payload);
+          if (data?.kind === "attack") hooks.onAttack(data.player, data.slot, "leader");
+        },
+      );
     }
-    if (attacks.length) card.classList.add("can-attack");
-    if (inst.traits?.includes("storm") || inst.traits?.includes("rush")) {
-      if (attacks.length) card.classList.add("rush-glow");
-    }
-    el.appendChild(card);
+  }
+  document.querySelectorAll<HTMLElement>(".board-zone .card[data-slot]").forEach((card) => {
+    const slot = Number(card.dataset.slot);
+    const player = card.dataset.player as PlayerId;
+    setDropTarget(
+      card,
+      (payload) => {
+        const data = parsePayload(payload);
+        return (
+          (data?.kind === "attack" && data.player !== player) ||
+          (data?.kind === "evo" && data.player === player)
+        );
+      },
+      (payload) => {
+        const data = parsePayload(payload);
+        if (data?.kind === "attack") hooks.onAttack(data.player, data.slot, { slot });
+        if (data?.kind === "evo") hooks.onEvolve(data.player, slot, data.superEvo);
+      },
+    );
   });
+}
+
+function parsePayload(payload: string): {
+  kind: string;
+  player: PlayerId;
+  handPos: number;
+  slot: number;
+  superEvo: boolean;
+} | null {
+  try {
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
+}
+
+function syncKeyed<T extends { key: string }>(
+  host: HTMLElement,
+  rows: T[],
+  renderOne: (row: T) => HTMLElement,
+): void {
+  const prev = new Map<string, HTMLElement>();
+  for (const child of Array.from(host.children) as HTMLElement[]) {
+    const key = child.dataset.uid ?? child.id;
+    prev.set(key, child);
+  }
+  const keep = new Set(rows.map((r) => r.key));
+  for (const [key, node] of prev) {
+    if (!keep.has(key)) {
+      node.classList.add("card-leave");
+      node.remove();
+    }
+  }
+  const frag: HTMLElement[] = [];
+  for (const row of rows) {
+    const existed = prev.has(row.key);
+    const node = renderOne(row);
+    if (!existed) node.classList.add("card-enter");
+    frag.push(node);
+  }
+  let changed = frag.length !== host.childElementCount;
+  if (!changed) {
+    for (let i = 0; i < frag.length; i++) {
+      if (host.children[i] !== frag[i]) {
+        changed = true;
+        break;
+      }
+    }
+  }
+  if (!changed) return;
+  for (const node of frag) host.appendChild(node);
 }
 
 function renderLeaders(full: FullState, legal: NeutralAction[], hooks: RenderHooks): void {
@@ -224,27 +377,22 @@ function renderLeaders(full: FullState, legal: NeutralAction[], hooks: RenderHoo
     el.classList.remove("selectable", "legal-target");
     const enemy = p === "a" ? "b" : "a";
     const hit = legal.some(
-      (a) =>
-        "attack" in a &&
-        a.attack.player === enemy &&
-        a.attack.target === "leader",
+      (a) => "attack" in a && a.attack.player === enemy && a.attack.target === "leader",
     );
-    if (hit) {
+    const atk = hooks.pending?.kind === "attack" ? hooks.pending : null;
+    const pending =
+      !!atk &&
+      atk.player === enemy &&
+      legal.some(
+        (a) =>
+          "attack" in a &&
+          a.attack.player === enemy &&
+          a.attack.attacker_slot === atk.slot &&
+          a.attack.target === "leader",
+      );
+    if (hit || pending) {
       el.classList.add("legal-target");
-      el.onclick = (e) => {
-        e.stopPropagation();
-        const atk = legal.find(
-          (a) =>
-            "attack" in a &&
-            a.attack.player === enemy &&
-            a.attack.target === "leader",
-        );
-        if (atk && "attack" in atk) {
-          hooks.onAttack(atk.attack.player, atk.attack.attacker_slot, "leader");
-        }
-      };
-    } else {
-      el.onclick = null;
+      if (pending) el.classList.add("selectable");
     }
     const cap = full.players[p].leader_mods?.some((m) => m.damage_cap != null);
     el.classList.toggle("has-barrier", !!cap);
@@ -265,28 +413,24 @@ function renderEvo(full: FullState, legal: NeutralAction[], hooks: RenderHooks):
     const p = full.players[row.player];
     btn.textContent = row.superEvo ? `Super (${p.sep})` : `Evo (${p.ep})`;
     btn.disabled = acts.length === 0;
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      if (!acts.length) return;
-      if (acts.length === 1 && "evolve" in acts[0]) {
-        hooks.onEvolve(row.player, acts[0].evolve.slot, row.superEvo);
-      } else {
-        hooks.evoArmed = { player: row.player, superEvo: row.superEvo };
-        highlightEvolveSlots(legal, row.player, row.superEvo);
-      }
-    };
-  }
-}
-
-function highlightEvolveSlots(
-  legal: NeutralAction[],
-  player: PlayerId,
-  superEvo: boolean,
-): void {
-  for (const a of L.evolveFor(legal, player, superEvo)) {
-    if (!("evolve" in a)) continue;
-    const el = byId(`${visual(player)}-board-${a.evolve.slot}`);
-    el?.classList.add("selectable", "legal-target");
+    btn.classList.toggle(
+      "selected",
+      hooks.pending?.kind === "evolve" &&
+        hooks.pending.player === row.player &&
+        hooks.pending.superEvo === row.superEvo,
+    );
+    attachPointerDragSource(
+      btn,
+      {
+        payload: JSON.stringify({
+          kind: "evo",
+          player: row.player,
+          superEvo: row.superEvo,
+        }),
+        kind: "evo",
+      },
+      acts.length > 0,
+    );
   }
 }
 
@@ -311,12 +455,11 @@ function attachCrestTooltips(
   slots.forEach((slot, i) => {
     const crest = crests[i];
     if (!crest) return;
-    const info = lookupText(crest.id);
     slot.onmouseenter = () => {
-      tip.textContent = `${info.name}\n${info.text}`;
+      tip.innerHTML = formatCrestTooltip(crest);
       tip.style.display = "block";
     };
-    slot.onmousemove = (e) => {
+    slot.onpointermove = (e) => {
       const offsetY = player === "a" ? -tip.offsetHeight - 12 : 12;
       tip.style.left = `${Math.min(e.clientX + 12, window.innerWidth - tip.offsetWidth - 12)}px`;
       tip.style.top = `${Math.max(e.clientY + offsetY, 12)}px`;
@@ -327,11 +470,7 @@ function attachCrestTooltips(
   });
 }
 
-function renderMulligan(
-  phase: string,
-  acting: PlayerId,
-  hooks: RenderHooks,
-): void {
+function renderMulligan(phase: string, acting: PlayerId, hooks: RenderHooks): void {
   for (const p of ["a", "b"] as PlayerId[]) {
     const btn = byId<HTMLButtonElement>(`${visual(p)}MulliganConfirm`);
     if (!btn) continue;
@@ -360,25 +499,30 @@ function renderEndTurn(
   }
 }
 
-function renderBonus(full: FullState, legal: NeutralAction[], hooks: RenderHooks): void {
-  const btn = byId<HTMLButtonElement>("redBoost");
+function renderBonus(full: FullState, legal: NeutralAction[]): void {
+  const controls = byId("boostControls");
   const early = byId("boostPipEarly");
   const late = byId("boostPipLate");
+  const btn = byId<HTMLButtonElement>("bonusPpBtn");
   const second: PlayerId = full.players.a.is_second ? "a" : "b";
+  const host = byId(`${visual(second)}BoostHost`);
+  if (controls && host && controls.parentElement !== host) host.appendChild(controls);
+  if (controls) controls.hidden = false;
+  const other = second === "a" ? "b" : "a";
+  const otherHost = byId(`${visual(other)}BoostHost`);
+  if (otherHost) otherHost.replaceChildren();
   const bp = full.players[second].bonus_pp;
-  early?.classList.toggle("used", bp.early_charge <= 0);
-  late?.classList.toggle("used", bp.late_charge <= 0);
+  early?.classList.toggle("used", !bp.early_charge);
+  late?.classList.toggle("used", !bp.late_charge);
   const earlyTier = full.players[second].turns_taken < 5 || full.turn <= 5;
-  early?.classList.toggle("active-tier", earlyTier && bp.early_charge > 0);
-  late?.classList.toggle("active-tier", !earlyTier && bp.late_charge > 0);
+  early?.classList.toggle("active-tier", earlyTier && bp.early_charge);
+  late?.classList.toggle("active-tier", !earlyTier && bp.late_charge);
   if (!btn) return;
   const act = L.bonusPp(legal, second);
   btn.disabled = !act;
   btn.classList.toggle("used", bp.active);
   btn.classList.toggle("disabled", !act);
-  btn.onclick = () => {
-    if (act) hooks.onBonusPp(second);
-  };
+  btn.dataset.player = second;
 }
 
 function renderHistory(s: Session): void {
@@ -401,8 +545,7 @@ function fillHist(id: string, ids: string[]): void {
     const li = document.createElement("li");
     li.className = "hist-item";
     li.dataset.card = card;
-    const name = lookupText(card).name;
-    li.innerHTML = `<span class="hist-label">${escapeHtml(name)}</span>`;
+    li.innerHTML = `<span class="hist-label">${escapeHtml(lookupText(card).name)}</span>`;
     ul.appendChild(li);
   }
   el.appendChild(ul);
@@ -429,10 +572,7 @@ function renderChoice(full: FullState, legal: NeutralAction[], hooks: RenderHook
   modal.className = "choice-modal";
   const opts = choiceLabels(node);
   modal.innerHTML = `<div class="choice-modal-content"><h3>Choose</h3><div class="choice-options">${opts
-    .map(
-      (o, i) =>
-        `<button type="button" class="choice-option" data-index="${i}">${escapeHtml(o)}</button>`,
-    )
+    .map((o, i) => `<button type="button" class="choice-option" data-index="${i}">${o}</button>`)
     .join("")}</div></div>`;
   modal.querySelectorAll<HTMLButtonElement>(".choice-option").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -445,12 +585,8 @@ function renderChoice(full: FullState, legal: NeutralAction[], hooks: RenderHook
 }
 
 function isBoardChoice(node: ChoiceNode): boolean {
-  if ("targets" in node) {
-    return node.targets.options.some((o) => "slot" in o || "leader" in o);
-  }
-  if ("multi_pick" in node) {
-    return node.multi_pick.options.some((o) => "slot" in o || "leader" in o);
-  }
+  if ("targets" in node) return node.targets.options.some((o) => "slot" in o || "leader" in o);
+  if ("multi_pick" in node) return node.multi_pick.options.some((o) => "slot" in o || "leader" in o);
   return false;
 }
 
@@ -460,11 +596,7 @@ function highlightChoiceTargets(
   hooks: RenderHooks,
 ): void {
   const options =
-    "targets" in node
-      ? node.targets.options
-      : "multi_pick" in node
-        ? node.multi_pick.options
-        : [];
+    "targets" in node ? node.targets.options : "multi_pick" in node ? node.multi_pick.options : [];
   options.forEach((opt) => {
     const el = targetEl(opt);
     if (!el) return;
@@ -483,11 +615,17 @@ function highlightChoiceTargets(
 
 function targetEl(opt: TargetOpt): HTMLElement | null {
   if ("slot" in opt && "player" in opt && typeof opt.slot === "number") {
-    return byId(`${visual(opt.player)}-board-${opt.slot}`);
+    const board = byId(`${visual(opt.player)}Board`);
+    return (
+      board?.querySelector<HTMLElement>(`.card[data-slot="${opt.slot}"]`) ??
+      byId(`${visual(opt.player)}-board-${opt.slot}`)
+    );
   }
   if ("leader" in opt) return byId(`${visual(opt.leader)}Leader`);
   if ("hand" in opt) {
-    return byId(`${visual(opt.hand.player)}-hand-${opt.hand.pos}`);
+    return byId(`${visual(opt.hand.player)}Hand`)?.querySelector(
+      `.card[data-hand-pos="${opt.hand.pos}"]`,
+    ) as HTMLElement | null;
   }
   return null;
 }
@@ -511,7 +649,7 @@ function chooseForTarget(legal: NeutralAction[], opt: TargetOpt): NeutralAction 
 
 function choiceLabels(node: ChoiceNode): string[] {
   if ("modes" in node) return node.modes.options.map((m) => `Mode ${m}`);
-  if ("cards" in node) return node.cards.options.map((id) => lookupText(id).name);
+  if ("cards" in node) return node.cards.options.map((id) => escapeHtml(lookupText(id).name));
   if ("fuse_partners" in node) {
     return node.fuse_partners.options.map((pos) => `Partner #${pos + 1}`);
   }
@@ -536,7 +674,16 @@ function chooseByIndex(
 ): NeutralAction | null {
   if ("cards" in node) {
     const id = node.cards.options[index];
-    return legal.find((a) => "choose" in a && typeof a.choose.option === "object" && a.choose.option && "card" in a.choose.option && a.choose.option.card === id) ?? null;
+    return (
+      legal.find(
+        (a) =>
+          "choose" in a &&
+          typeof a.choose.option === "object" &&
+          a.choose.option &&
+          "card" in a.choose.option &&
+          a.choose.option.card === id,
+      ) ?? null
+    );
   }
   if ("modes" in node) {
     const mode = node.modes.options[index];
@@ -548,12 +695,12 @@ function chooseByIndex(
           a.choose.option &&
           "mode" in a.choose.option &&
           a.choose.option.mode === mode,
-      ) ?? legal.filter((a) => "choose" in a)[index] ?? null
+      ) ??
+      legal.filter((a) => "choose" in a)[index] ??
+      null
     );
   }
-  if ("fuse_partners" in node) {
-    return legal.filter((a) => "choose" in a)[index] ?? null;
-  }
+  if ("fuse_partners" in node) return legal.filter((a) => "choose" in a)[index] ?? null;
   return legal.filter((a) => "choose" in a)[index] ?? null;
 }
 
@@ -604,47 +751,65 @@ function syncUndoButtons(s: Session): void {
   if (redo) redo.disabled = s.future.length === 0;
 }
 
+function paintPending(pending: Pending, legal: NeutralAction[]): void {
+  if (!pending) return;
+  if (pending.kind === "attack") {
+    for (const a of L.attacksFrom(legal, pending.player, pending.slot)) {
+      if (!("attack" in a)) continue;
+      if (a.attack.target === "leader") {
+        const enemy = pending.player === "a" ? "b" : "a";
+        byId(`${visual(enemy)}Leader`)?.classList.add("selectable", "legal-target");
+      } else if (typeof a.attack.target === "object") {
+        const enemy = pending.player === "a" ? "b" : "a";
+        const el = byId(`${visual(enemy)}Board`)?.querySelector<HTMLElement>(
+          `.card[data-slot="${a.attack.target.slot}"]`,
+        );
+        el?.classList.add("selectable", "legal-target");
+      }
+    }
+  }
+  if (pending.kind === "evolve") {
+    for (const a of L.evolveFor(legal, pending.player, pending.superEvo)) {
+      if (!("evolve" in a)) continue;
+      const el = byId(`${visual(pending.player)}Board`)?.querySelector<HTMLElement>(
+        `.card[data-slot="${a.evolve.slot}"]`,
+      );
+      el?.classList.add("selectable", "legal-target");
+    }
+  }
+}
+
 export function resetZoneCache(): void {
   zoneSig.clear();
 }
 
 export function bindTooltips(): void {
   const tip = byId("cardTooltip");
-  const preview = byId("cardPreview");
   if (!tip) return;
   document.addEventListener("mouseover", (e) => {
     const card = (e.target as HTMLElement).closest<HTMLElement>(".card[data-card]");
     if (!card || card.dataset.faceDown === "1") return;
     const id = card.dataset.card;
     if (!id) return;
-    const info = lookupText(id);
-    tip.innerHTML = `<strong>${escapeHtml(info.name)}</strong>\n${escapeHtml(info.text)}`;
+    const uid = Number(card.dataset.uid);
+    const info = handInfoByUid.get(uid);
+    tip.innerHTML = formatCardTooltip({
+      cardId: id,
+      gates: gateByUid.get(uid),
+      displayCost: info?.cost ?? null,
+    });
     tip.style.display = "block";
-    if (preview) {
-      const url = cardImageUrl(id, card.classList.contains("evolved") || card.classList.contains("super-evo"));
-      preview.innerHTML = "";
-      if (url) {
-        const img = document.createElement("img");
-        img.referrerPolicy = "no-referrer";
-        img.src = url;
-        preview.appendChild(img);
-        preview.style.display = "block";
-      }
-    }
   });
   document.addEventListener("mousemove", (e) => {
     if (tip.style.display === "none") return;
     tip.style.left = `${Math.min(e.clientX + 16, window.innerWidth - tip.offsetWidth - 12)}px`;
     tip.style.top = `${Math.min(e.clientY + 16, window.innerHeight - tip.offsetHeight - 12)}px`;
-    if (preview) {
-      preview.style.left = `${Math.max(12, e.clientX - 240)}px`;
-      preview.style.top = `${Math.max(12, e.clientY - 20)}px`;
-    }
   });
   document.addEventListener("mouseout", (e) => {
     const card = (e.target as HTMLElement).closest(".card[data-card]");
     if (!card) return;
+    const next = (e.relatedTarget as HTMLElement | null)?.closest?.(".card[data-card]");
+    if (next === card) return;
     tip.style.display = "none";
-    if (preview) preview.style.display = "none";
   });
 }

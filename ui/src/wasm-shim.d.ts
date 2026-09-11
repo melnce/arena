@@ -20,6 +20,8 @@ declare module "../pkg/arena_wasm.js" {
     turn(): number;
     winner(): string | null;
     botAction(policy: string, seed: number | bigint | string): string;
+    handInfo(player: string): string;
+    boardInfo(player: string): string;
   }
   export function cardText(id: string): string;
   export function bundleInfo(): string;
