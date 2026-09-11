@@ -1,6 +1,6 @@
 import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
 import { publicUrl } from "./base.ts";
-import { decks, loadCatalog, parseDeckJson } from "./catalog.ts";
+import { decks, loadCatalog, lookupText, parseDeckJson } from "./catalog.ts";
 import { clearFloaters, reflashDamage, spawnFloaters } from "./fct.ts";
 import { bindPointer } from "./input.ts";
 import { sessionBoardInfo, sessionHandInfo, sessionPlayerInfo } from "./info.ts";
@@ -23,13 +23,17 @@ import {
   isHumanActing,
   legalActions,
   redo,
+  checkpointStatusText,
   replayPosition,
+  rerollCheckpoint,
   restoreCheckpoint,
   setCheckpoint,
   toPositionLog,
   undo,
   type Session,
 } from "./session.ts";
+import { namedCounterValue, renderCard } from "./render/card.ts";
+import { rerollSeed } from "./reroll.ts";
 import { readShareParams, writeShareParams } from "./share.ts";
 import type {
   EngineEvent,
@@ -48,6 +52,8 @@ let watchTimer = 0;
 let paintQueued = 0;
 const importedDecks = new Map<string, { label: string; cards: Record<string, number> }>();
 const savedPositions = new Map<string, PositionLog>();
+let positionSeq = 0;
+let toastTimer = 0;
 
 const hooks: RenderHooks = {
   onPlay: (player, handPos) => {
@@ -162,6 +168,85 @@ function exposeArena(): void {
     legal: () => (session ? JSON.parse(session.game.legal()) : []),
     actions: () => (session ? session.actions : []),
     paintMs: window.__arena?.paintMs,
+    reseed: (seed) => {
+      if (!session) throw new Error("no session");
+      session.game.reseed(seed);
+    },
+    exportLog: () => (session ? toPositionLog(session) : null),
+    loadLog: (log) => {
+      loadLogSafely(log as PositionLog);
+    },
+    setCheckpoint: () => {
+      if (!session) return;
+      setCheckpoint(session);
+      refreshCheckpointStatus();
+    },
+    restoreCheckpoint: () => {
+      if (!session) return false;
+      const ok = restoreCheckpoint(session);
+      if (ok) {
+        resetZoneCache();
+        paint();
+        refreshCheckpointStatus();
+      }
+      return ok;
+    },
+    reroll: () => {
+      if (!session) return false;
+      const ok = rerollCheckpoint(session);
+      if (ok) {
+        resetZoneCache();
+        paint();
+        refreshCheckpointStatus();
+      }
+      return ok;
+    },
+    rerollSeed: (seed, n) => rerollSeed(typeof seed === "bigint" ? seed : BigInt(seed), n).toString(),
+    namedCounterValue,
+    rematchSame: () => void rematch(true),
+    savedPosition: () => {
+      const id = byId<HTMLSelectElement>("positionSelect")?.value;
+      return id ? (savedPositions.get(id) ?? null) : null;
+    },
+    mountNamedCounter: (vars) => {
+      const host = document.getElementById("blueBoard") ?? document.body;
+      const inst = {
+        id: 9_900_001,
+        card: "10031210",
+        name: "Named counter",
+        kind: "amulet",
+        class: "runecraft",
+        cost: 1,
+        base_cost: 1,
+        attack: 0,
+        defense: 0,
+        max_defense: 0,
+        evolved: false,
+        super_evolved: false,
+        traits: [] as string[],
+        printed_tags: [] as string[],
+        granted: null,
+        flags: {
+          was_fused: false,
+          fused_kinds: [] as string[],
+          ambush_active: false,
+          summoning_sick: false,
+          attacked_this_turn: false,
+          attacks_left: 0,
+          engaged_this_turn: false,
+          fused_this_turn: false,
+          enhanced: false,
+        },
+        vars,
+        skybound: 0,
+        countdown: null,
+        spellboost_count: 0,
+        tribes: [] as string[],
+      };
+      const el = renderCard({ inst, elementId: "named-counter-demo", onBoard: true });
+      host.appendChild(el);
+      return el.id;
+    },
   };
 }
 
@@ -231,17 +316,22 @@ function showCombat(events: EngineEvent[]): void {
 }
 
 function toast(msg: string): void {
-  const err = byId("errBanner");
-  if (err) err.textContent = msg;
-  let host = byId("toastHost");
-  if (!host) {
-    host = document.createElement("div");
-    host.id = "toastHost";
-    document.body.appendChild(host);
+  let pill = byId("actionToast");
+  if (!pill) {
+    pill = document.createElement("div");
+    pill.id = "actionToast";
+    pill.setAttribute("aria-live", "polite");
+    document.body.appendChild(pill);
   }
-  host.textContent = msg;
-  host.classList.add("show");
-  window.setTimeout(() => host.classList.remove("show"), 4200);
+  window.clearTimeout(toastTimer);
+  if (!msg) {
+    pill.classList.remove("visible");
+    pill.textContent = "";
+    return;
+  }
+  pill.textContent = msg;
+  pill.classList.add("visible");
+  toastTimer = window.setTimeout(() => pill.classList.remove("visible"), 1800);
 }
 
 function humanSideFromForm(): PlayerId {
@@ -315,6 +405,7 @@ function startSession(cfg: SessionConfig): void {
   }
   toast("");
   pending = null;
+  refreshCheckpointStatus();
   paint();
   void maybeBots();
   if (cfg.mode === "watch") startWatchIfAuto();
@@ -572,7 +663,7 @@ function initHotkeys(): void {
       e.preventDefault();
       if (session) {
         setCheckpoint(session);
-        setText("checkpointStatus", "Checkpoint: set");
+        refreshCheckpointStatus();
       }
     }
     if (e.key === "F7") {
@@ -580,9 +671,22 @@ function initHotkeys(): void {
       if (session && restoreCheckpoint(session)) {
         resetZoneCache();
         paint();
+        refreshCheckpointStatus();
+      }
+    }
+    if (e.key === "F8") {
+      e.preventDefault();
+      if (session && rerollCheckpoint(session)) {
+        resetZoneCache();
+        paint();
+        refreshCheckpointStatus();
       }
     }
   });
+}
+
+function refreshCheckpointStatus(): void {
+  setText("checkpointStatus", checkpointStatusText(session));
 }
 
 function setText(id: string, text: string): void {
@@ -610,8 +714,9 @@ function initPositions(): void {
     if (!session) return;
     const name = window.prompt("Position name", `pos-${savedPositions.size + 1}`);
     if (!name) return;
-    savedPositions.set(name, toPositionLog(session));
-    refreshPositionSelect();
+    const id = `pos-${++positionSeq}`;
+    savedPositions.set(id, toPositionLog(session, { name, savedAt: new Date().toISOString() }));
+    refreshPositionSelect(id);
   });
   byId("loadPositionBtn")?.addEventListener("click", () => {
     const id = byId<HTMLSelectElement>("positionSelect")?.value;
@@ -627,7 +732,7 @@ function initPositions(): void {
     const blob = new Blob([JSON.stringify(log, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${id || "position"}.json`;
+    a.download = `${log.name || id || "position"}.json`;
     a.click();
   });
   byId("importPositionBtn")?.addEventListener("click", () => {
@@ -638,27 +743,62 @@ function initPositions(): void {
     if (!file) return;
     try {
       const log = JSON.parse(await file.text()) as PositionLog;
-      savedPositions.set(file.name.replace(/\.json$/i, ""), log);
-      refreshPositionSelect();
+      if (!log.name) log.name = file.name.replace(/\.json$/i, "");
+      const id = `pos-${++positionSeq}`;
+      savedPositions.set(id, log);
+      refreshPositionSelect(id);
       loadLogSafely(log);
     } catch (err) {
       toast(String(err));
     }
   });
+  byId("renamePositionBtn")?.addEventListener("click", () => {
+    const sel = byId<HTMLSelectElement>("positionSelect");
+    const id = sel?.value;
+    if (!id) return;
+    const log = savedPositions.get(id);
+    if (!log) return;
+    const name = window.prompt("Rename position", log.name || id);
+    if (!name) return;
+    log.name = name;
+    refreshPositionSelect(id);
+  });
+  byId("deletePositionBtn")?.addEventListener("click", () => {
+    const sel = byId<HTMLSelectElement>("positionSelect");
+    const id = sel?.value;
+    if (!id || !savedPositions.has(id)) return;
+    savedPositions.delete(id);
+    refreshPositionSelect();
+  });
   byId("setCheckpointBtn")?.addEventListener("click", () => {
     if (!session) return;
     setCheckpoint(session);
-    setText("checkpointStatus", "Checkpoint: set");
+    refreshCheckpointStatus();
   });
   byId("restoreCheckpointBtn")?.addEventListener("click", () => {
     if (!session) return;
     restoreCheckpoint(session);
     resetZoneCache();
     paint();
+    refreshCheckpointStatus();
+  });
+  byId("rerollBtn")?.addEventListener("click", () => {
+    if (!session) return;
+    rerollCheckpoint(session);
+    resetZoneCache();
+    paint();
+    refreshCheckpointStatus();
   });
 }
 
-function refreshPositionSelect(): void {
+function formatPositionOption(log: PositionLog): string {
+  const name = log.name || "position";
+  const turn = log.turn ?? "?";
+  const time = log.savedAt ? new Date(log.savedAt).toLocaleTimeString() : "";
+  return time ? `${name} · T${turn} · ${time}` : `${name} · T${turn}`;
+}
+
+function refreshPositionSelect(keep?: string): void {
   const sel = byId<HTMLSelectElement>("positionSelect");
   if (!sel) return;
   sel.innerHTML = "";
@@ -671,12 +811,40 @@ function refreshPositionSelect(): void {
     return;
   }
   sel.disabled = false;
-  for (const name of savedPositions.keys()) {
+  for (const [id, log] of savedPositions) {
     const o = document.createElement("option");
-    o.value = name;
-    o.textContent = name;
+    o.value = id;
+    o.textContent = formatPositionOption(log);
     sel.appendChild(o);
   }
+  if (keep && savedPositions.has(keep)) sel.value = keep;
+}
+
+function blueDeckListText(): string {
+  if (!session) return "";
+  const lines: string[] = [];
+  for (const [id, n] of Object.entries(session.cfg.deckA)) {
+    const name = lookupText(id).name || id;
+    lines.push(`${n}x ${name}`);
+  }
+  return lines.join("\n");
+}
+
+function initExportList(): void {
+  byId("exportListBtn")?.addEventListener("click", async () => {
+    const text = blueDeckListText();
+    const panel = byId("exportListPanel");
+    if (panel) {
+      panel.hidden = !text;
+      panel.textContent = text;
+    }
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      /* panel still shows the list */
+    }
+  });
 }
 
 function initImportDeck(): void {
@@ -738,6 +906,7 @@ async function boot(): Promise<void> {
   initHistory();
   initHotkeys();
   initPositions();
+  initExportList();
   initImportDeck();
   initWatch();
   bindTooltips();

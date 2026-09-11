@@ -65,7 +65,7 @@ pub fn legal_actions_neutral(db: &CardDb, state: &State) -> Vec<NeutralAction> {
 }
 
 pub fn reseed(state: &mut State, seed: u64) {
-    state.rng.reseed(seed);
+    state.reseed(seed);
 }
 
 const _: fn() = || {

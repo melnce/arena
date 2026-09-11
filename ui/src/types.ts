@@ -145,6 +145,8 @@ export type BoardCardInfo = {
   super_evolved: boolean;
   gates: GateInfo[];
   cannot_attack_reason?: string | null;
+  /** First of X, then Y, then Z when the amulet has no countdown. */
+  named_counter?: number | null;
 };
 
 export type PlayerInfo = {
@@ -224,6 +226,15 @@ export type DeckManifestEntry = {
   category: string;
 };
 
+/** Optional RNG branch recorded after F8 / Reroll. */
+export type ReseedStep = { reseed: string | number };
+
+export type LogStep = NeutralAction | ReseedStep;
+
+export function isReseedStep(step: LogStep): step is ReseedStep {
+  return typeof step === "object" && step !== null && "reseed" in step;
+}
+
 export type PositionLog = {
   v: 1;
   kind: "replay-log";
@@ -233,7 +244,10 @@ export type PositionLog = {
   deckAId: string;
   deckBId: string;
   first: First;
-  actions: NeutralAction[];
+  actions: LogStep[];
+  name?: string;
+  turn?: number;
+  savedAt?: string;
 };
 
 export type SessionConfig = {

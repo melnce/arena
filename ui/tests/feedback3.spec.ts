@@ -776,7 +776,7 @@ test("B14 save/load after 200+ actions and invalid file", async ({ page }) => {
   await openSettings(page);
   page.once("dialog", (d) => d.accept("ring-pos"));
   await page.locator("#savePositionBtn").click();
-  await page.locator("#positionSelect").selectOption({ label: "ring-pos" });
+  await expect(page.locator("#positionSelect option:checked")).toHaveText(/ring-pos · T/);
   await page.locator("#loadPositionBtn").click();
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /main|choice/, {
     timeout: 15_000,
@@ -786,7 +786,7 @@ test("B14 save/load after 200+ actions and invalid file", async ({ page }) => {
     mimeType: "application/json",
     buffer: Buffer.from("{not-a-position"),
   });
-  await expect(page.locator("#toastHost")).toBeVisible({ timeout: 5000 });
+  await expect(page.locator("#actionToast")).toHaveClass(/visible/, { timeout: 5000 });
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /main|choice|mulligan/);
 });
 

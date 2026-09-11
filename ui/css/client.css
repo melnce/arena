@@ -69,6 +69,20 @@ body.mode-watch .watch-bar {
   font-variant-numeric: tabular-nums;
 }
 
+.export-list-panel {
+  display: block;
+  margin: 8px 0 0;
+  max-height: 160px;
+  overflow: auto;
+  padding: 8px 10px;
+  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: var(--ink, #e8eaed);
+  white-space: pre-wrap;
+}
+
 .confirm-targets-btn,
 .mulligan-swap-mark {
   pointer-events: auto;

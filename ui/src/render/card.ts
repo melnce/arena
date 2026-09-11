@@ -1,6 +1,7 @@
 import { publicUrl } from "../base.ts";
 import { crestFile, getCatalog, lookupText } from "../catalog.ts";
 import { applyCardImage, escapeHtml } from "../images.ts";
+import { releaseImageLoads } from "../releaseImages.ts";
 import type { CardInstance, CrestInstance, HandCardInfo } from "../types.ts";
 
 const GLOW_CLASSES = [
@@ -19,6 +20,17 @@ const GLOW_CLASSES = [
   "legal-target",
 ];
 
+/** First numeric `vars` key in X → Y → Z order; only for countdown-less amulets. */
+export function namedCounterValue(inst: CardInstance): number | null {
+  if (inst.kind !== "amulet" || inst.countdown != null) return null;
+  const vars = inst.vars || {};
+  for (const key of ["X", "Y", "Z"] as const) {
+    const v = vars[key];
+    if (typeof v === "number") return v;
+  }
+  return null;
+}
+
 export function cardSignature(c: CardInstance | null, extras = ""): string {
   if (!c) return `empty|${extras}`;
   return [
@@ -33,6 +45,8 @@ export function cardSignature(c: CardInstance | null, extras = ""): string {
     (c.traits || []).join(","),
     (c.printed_tags || []).join(","),
     c.countdown ?? "",
+    namedCounterValue(c) ?? "",
+    JSON.stringify(c.vars ?? {}),
     c.spellboost_count ?? "",
     c.flags?.attacks_left ?? "",
     c.flags?.ambush_active ? 1 : 0,
@@ -92,6 +106,7 @@ export function renderCard(opts: CardPaintOpts): HTMLElement {
   }
   const el = buildCard(opts);
   if (opts.entering) el.classList.add("card-enter");
+  if (opts.onBoard && hasBarrier(opts.inst)) flashBarrier(el);
   return el;
 }
 
@@ -130,6 +145,7 @@ function buildCard(opts: CardPaintOpts): HTMLElement {
 export function updateCard(div: HTMLElement, opts: CardPaintOpts): void {
   const { inst } = opts;
   if (opts.faceDown) return;
+  const hadBarrier = traitList(div.dataset.traits).includes("barrier");
   paintIdentity(div, opts);
   applyChrome(div, opts);
   const wrap = div.querySelector<HTMLElement>(".card-image-wrapper");
@@ -149,6 +165,9 @@ export function updateCard(div: HTMLElement, opts: CardPaintOpts): void {
     if (atk && prevAtk != null && atk.textContent !== prevAtk) flash(atk);
     const def = wrap.querySelector<HTMLElement>(".card-stats.bottom-right:not(.countdown-badge)");
     if (def && prevDef != null && def.textContent !== prevDef) flash(def);
+    const hasNow = hasBarrier(inst);
+    if (opts.onBoard && !hadBarrier && hasNow) flashBarrier(div);
+    if (opts.onBoard && hadBarrier && !hasNow) popBarrier(wrap);
   }
 }
 
@@ -182,16 +201,21 @@ function paintIdentity(div: HTMLElement, opts: CardPaintOpts): void {
   div.id = elementId;
   div.dataset.uid = String(inst.id);
   div.dataset.card = inst.card;
+  div.dataset.traits = (inst.traits || []).join(",");
   delete div.dataset.faceDown;
   div.classList.toggle("spell", inst.kind === "spell");
   div.classList.toggle("super-evo", !!inst.super_evolved);
   div.classList.toggle("evolved", !!inst.evolved && !inst.super_evolved);
+  div.classList.toggle("has-barrier", !!opts.onBoard && hasBarrier(inst));
+  div.classList.toggle("has-cant-be-destroyed", !!opts.onBoard && hasCantBeDestroyed(inst));
 }
 
 function applyChrome(div: HTMLElement, opts: CardPaintOpts): void {
   const keepFlash = div.classList.contains("floating-combat-flash");
+  const keepBarrierFlash = div.classList.contains("barrier-flash");
   for (const cls of GLOW_CLASSES) div.classList.remove(cls);
   if (keepFlash) div.classList.add("floating-combat-flash");
+  if (keepBarrierFlash) div.classList.add("barrier-flash");
   if (opts.glow) {
     for (const cls of opts.glow.split(/\s+/).filter(Boolean)) div.classList.add(cls);
   }
@@ -249,6 +273,14 @@ function paintStats(wrap: HTMLElement, inst: CardInstance): void {
     cd.className = "card-stats bottom-right countdown-badge";
     cd.textContent = String(inst.countdown);
     wrap.appendChild(cd);
+  } else {
+    const named = namedCounterValue(inst);
+    if (named != null) {
+      const badge = document.createElement("div");
+      badge.className = "card-stats bottom-right countdown-badge named-counter";
+      badge.textContent = String(named);
+      wrap.appendChild(badge);
+    }
   }
 }
 
@@ -291,6 +323,12 @@ function applyOverlays(
     o.className = "cant_attack-overlay";
     wrap.appendChild(o);
   }
+  if (onBoard && hasCantBeDestroyed(inst)) {
+    wrap.appendChild(makeParticleOverlay("cant-be-destroyed-overlay", "cant-be-destroyed-particle"));
+  }
+  if (onBoard && hasBarrier(inst)) {
+    wrap.appendChild(makeParticleOverlay("barrier-overlay", "barrier-particle"));
+  }
   const stack = document.createElement("div");
   stack.className = "keyword-icon-stack";
   const add = (src: string, cls: string) => {
@@ -320,11 +358,53 @@ function applyOverlays(
   if (n) wrap.appendChild(stack);
 }
 
+function traitList(raw: string | undefined): string[] {
+  return (raw || "").split(",").filter(Boolean);
+}
+
+function hasBarrier(inst: CardInstance): boolean {
+  return (inst.traits || []).includes("barrier");
+}
+
+function hasCantBeDestroyed(inst: CardInstance): boolean {
+  const traits = inst.traits || [];
+  return (
+    traits.includes("cantBeDestroyedByAbilities") || traits.includes("cantBeDestroyed")
+  );
+}
+
+function makeParticleOverlay(overlayClass: string, particleClass: string): HTMLElement {
+  const o = document.createElement("div");
+  o.className = overlayClass;
+  for (let i = 0; i < 5; i++) {
+    const p = document.createElement("div");
+    p.className = particleClass;
+    o.appendChild(p);
+  }
+  return o;
+}
+
+function flashBarrier(div: HTMLElement): void {
+  div.classList.add("barrier-flash");
+  window.setTimeout(() => div.classList.remove("barrier-flash"), 250);
+}
+
+function popBarrier(wrap: HTMLElement): void {
+  const overlay = makeParticleOverlay("barrier-overlay", "barrier-particle");
+  wrap.appendChild(overlay);
+  wrap.classList.add("barrier-pop");
+  window.setTimeout(() => {
+    wrap.classList.remove("barrier-pop");
+    overlay.remove();
+  }, 350);
+}
+
 export function renderCrestSlot(
   slot: HTMLElement,
   crest: CrestInstance | undefined,
   faithValue?: number,
 ): void {
+  releaseImageLoads(slot);
   slot.innerHTML = "";
   slot.onmouseenter = null;
   slot.onmousemove = null;

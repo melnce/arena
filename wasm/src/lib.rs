@@ -107,6 +107,13 @@ impl Game {
     pub fn player_info(&self, player: String) -> Result<String, JsValue> {
         self.inner.player_info(&player).map_err(JsValue::from)
     }
+
+    /// Replace the live RNG. Canonical `hash` is unchanged.
+    pub fn reseed(&mut self, seed: JsValue) -> Result<(), JsValue> {
+        let seed = seed_from_js(&seed)?;
+        self.inner.reseed(seed);
+        Ok(())
+    }
 }
 
 /// JSON array of policy names the client can put in a selector.

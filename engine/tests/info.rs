@@ -354,6 +354,30 @@ fn board_info_cannot_attack_reason_ignores_sickness() {
 }
 
 #[test]
+fn board_info_named_counter_is_first_xyz_var_when_no_countdown() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    let slot = put_field(&db, &mut st, me, "10031210");
+    let inst = st.player_mut(me).field[slot as usize]
+        .as_mut()
+        .expect("field");
+    inst.countdown = None;
+    inst.vars.insert(arena_engine::card::VarKey::Y, 4);
+    inst.vars.insert(arena_engine::card::VarKey::X, 7);
+    let info = board_info(&db, &st, me);
+    assert_eq!(info[0].named_counter, Some(7), "X wins over Y");
+
+    let inst = st.player_mut(me).field[slot as usize]
+        .as_mut()
+        .expect("field");
+    inst.vars.remove(&arena_engine::card::VarKey::X);
+    inst.countdown = Some(2);
+    let info = board_info(&db, &st, me);
+    assert_eq!(info[0].named_counter, None, "countdown hides named counter");
+}
+
+#[test]
 fn player_info_has_leader_barrier_from_damage_cap() {
     let db = load_db();
     let mut st = started(&db, 1);

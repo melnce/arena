@@ -2,11 +2,14 @@ import { Game } from "../pkg/arena_wasm.js";
 import type {
   EngineEvent,
   FullState,
+  LogStep,
   NeutralAction,
   PlayerId,
   PositionLog,
   SessionConfig,
 } from "./types.ts";
+import { isReseedStep } from "./types.ts";
+import { rerollSeed } from "./reroll.ts";
 
 /** Ring limit — same as the old practice tool. */
 export const HISTORY_LIMIT = 200;
@@ -36,20 +39,22 @@ export type Session = {
   game: Game;
   past: HistStep[];
   future: FutureStep[];
-  actions: NeutralAction[];
+  actions: LogStep[];
   events: EngineEvent[];
   played: { a: string[]; b: string[] };
   destroyed: { a: string[]; b: string[] };
   ply: number;
   botSeq: number;
+  rerolls: number;
   checkpoint: {
     game: Game;
-    actions: NeutralAction[];
+    actions: LogStep[];
     events: EngineEvent[];
     played: { a: string[]; b: string[] };
     destroyed: { a: string[]; b: string[] };
     ply: number;
     botSeq: number;
+    turn: number;
   } | null;
   mulliganSwap: [boolean, boolean, boolean, boolean];
   suppressFloater: boolean;
@@ -78,6 +83,7 @@ export function createSession(cfg: SessionConfig): Session {
     destroyed: { a: [], b: [] },
     ply: 0,
     botSeq: 0,
+    rerolls: 0,
     checkpoint: null,
     mulliganSwap: [false, false, false, false],
     suppressFloater: false,
@@ -350,6 +356,7 @@ function redoToHumanDecision(s: Session): boolean {
 
 export function setCheckpoint(s: Session): void {
   if (s.checkpoint) s.checkpoint.game.free();
+  s.rerolls = 0;
   s.checkpoint = {
     game: s.game.clone(),
     actions: s.actions.slice(),
@@ -358,6 +365,7 @@ export function setCheckpoint(s: Session): void {
     destroyed: { a: s.destroyed.a.slice(), b: s.destroyed.b.slice() },
     ply: s.ply,
     botSeq: s.botSeq,
+    turn: s.game.turn(),
   };
 }
 
@@ -378,11 +386,30 @@ export function restoreCheckpoint(s: Session): boolean {
   };
   s.ply = s.checkpoint.ply;
   s.botSeq = s.checkpoint.botSeq;
+  s.rerolls = 0;
   s.suppressFloater = true;
   return true;
 }
 
-export function toPositionLog(s: Session): PositionLog {
+/** Restore the checkpoint on a new RNG branch. `n` is 1-based since last F6. */
+export function rerollCheckpoint(s: Session): boolean {
+  if (!s.checkpoint) return false;
+  const next = s.rerolls + 1;
+  if (!restoreCheckpoint(s)) return false;
+  s.rerolls = next;
+  const seed = rerollSeed(s.cfg.seed, next);
+  s.game.reseed(seed.toString());
+  s.actions.push({ reseed: seed.toString() });
+  s.suppressFloater = true;
+  return true;
+}
+
+export function checkpointStatusText(s: Session | null): string {
+  if (!s?.checkpoint) return "Checkpoint: none";
+  return `Checkpoint: T${s.checkpoint.turn} · rerolls ${s.rerolls}`;
+}
+
+export function toPositionLog(s: Session, meta?: { name?: string; savedAt?: string }): PositionLog {
   return {
     v: 1,
     kind: "replay-log",
@@ -393,6 +420,9 @@ export function toPositionLog(s: Session): PositionLog {
     deckBId: s.cfg.deckBId,
     first: s.cfg.first,
     actions: s.actions.slice(),
+    name: meta?.name,
+    turn: s.game.turn(),
+    savedAt: meta?.savedAt ?? new Date().toISOString(),
   };
 }
 
@@ -410,7 +440,14 @@ export function replayPosition(log: PositionLog): Session {
     policyA: "random",
     policyB: "random",
   });
-  for (const act of log.actions) applyAction(s, act);
+  for (const step of log.actions) {
+    if (isReseedStep(step)) {
+      s.game.reseed(String(step.reseed));
+      s.actions.push({ reseed: String(step.reseed) });
+    } else {
+      applyAction(s, step);
+    }
+  }
   s.suppressFloater = true;
   return s;
 }

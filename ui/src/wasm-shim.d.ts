@@ -23,6 +23,7 @@ declare module "../pkg/arena_wasm.js" {
     handInfo(player: string): string;
     boardInfo(player: string): string;
     playerInfo(player: string): string;
+    reseed(seed: number | bigint | string): void;
   }
   export function cardText(id: string): string;
   export function bundleInfo(): string;
