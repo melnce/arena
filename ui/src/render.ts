@@ -283,7 +283,8 @@ function renderBoard(
       const engage = L.engageAt(legal, player, row.i);
       const canAttack = attacks.length > 0;
       const hitsLeader = attacks.some((a) => "attack" in a && a.attack.target === "leader");
-      // Yellow only with a legal follower-only attack on the entry turn.
+      // Yellow only while a legal follower-only attack exists on the entry turn.
+      // No attacks left (already attacked, empty board, opponent's turn) → no glow.
       // `summoning_sick` stays true on the opponent's turn — do not paint from it alone.
       const rushOnly = canAttack && !hitsLeader && !!row.inst.flags?.summoning_sick;
       const pendingAtk =
