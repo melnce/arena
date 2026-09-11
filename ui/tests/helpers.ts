@@ -5,6 +5,40 @@ import { copyFile, mkdir as mkdirP } from "node:fs/promises";
 
 export const ART = "/opt/cursor/artifacts";
 
+/** Wait until a `.card-enter` animation has finished (class may remain). */
+export async function waitEnterAnimation(card: Locator): Promise<void> {
+  await card.evaluate(async (el) => {
+    if (!el.classList.contains("card-enter")) return;
+    await Promise.race([
+      new Promise<void>((resolve) => {
+        el.addEventListener("animationend", () => resolve(), { once: true });
+      }),
+      new Promise<void>((resolve) => {
+        window.setTimeout(resolve, 250);
+      }),
+    ]);
+  });
+}
+
+/** Hover a history row and wait for the preview `<img>` to load or error. */
+export async function waitHistoryPreview(
+  row: Locator,
+  preview: Locator,
+): Promise<"load" | "error"> {
+  await row.hover();
+  await expect(preview).toBeVisible();
+  const img = preview.locator("img");
+  await expect(img).toHaveCount(1);
+  return img.evaluate((el) => {
+    const node = el as HTMLImageElement;
+    if (node.complete) return node.naturalWidth > 0 ? "load" : "error";
+    return new Promise<"load" | "error">((resolve) => {
+      node.addEventListener("load", () => resolve("load"), { once: true });
+      node.addEventListener("error", () => resolve("error"), { once: true });
+    });
+  });
+}
+
 /** Write to /tmp first — /opt/cursor/artifacts close() can EIO and must not fail a test. */
 export async function artShot(
   target: { screenshot: (opts: { path: string; fullPage?: boolean }) => Promise<Buffer> },
