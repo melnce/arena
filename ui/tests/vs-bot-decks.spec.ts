@@ -77,6 +77,7 @@ test("vs-bot: blue/red deck mapping stays fixed; labels follow human side", asyn
   await expect(page.locator("#blueDeckLabel")).toHaveText("Your deck (Blue A)");
   await expect(page.locator("#redDeckLabel")).toHaveText("Bot deck (Red B)");
   await expect(page.locator("#vsBotPolicyLabel")).toHaveText("Bot policy (Red B)");
+  await artShot(page.locator(".deck-picker-row"), `${ART}/vs_bot_deck_labels.png`);
   expect(await page.evaluate(() => window.__arena!.humanSide())).toBe("a");
   const first = await playerCardIds(page);
   expectDeck(first.a, FOREST_ONLY, RUNE_ONLY);
