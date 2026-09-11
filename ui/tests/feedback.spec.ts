@@ -190,6 +190,7 @@ test("tooltips and gates: Hark necromancy + Depths enhance / E badge", async ({ 
   await expect(tip).toContainText("Depths of the Eld Sword");
   await expect(tip).toContainText("Enhance 1 (have");
   await expect(tip).toContainText("base 0");
+  await expect(tip).not.toContainText("0/0");
   await mkdir(ART, { recursive: true });
   await tip.screenshot({ path: `${ART}/tooltip_depths_gates.png` });
   await depthsCard.screenshot({ path: `${ART}/card_enhance_e_badge.png` });
@@ -295,18 +296,16 @@ test("board occupied slots are centred (1 / 2 / 3 followers)", async ({ page }) 
   await shot(3);
 });
 
-test("layouts at 1080p / 1440p / 768p — hands share one size, leader does not overlap", async ({
-  page,
-}) => {
+test("layouts fill the viewport at 720p / 1080p / 1440p", async ({ page }) => {
   await boot(page);
   await startGame(page, { seed: "1", first: "a", deckA: "basic-forest", deckB: "basic-rune" });
   await confirmMulligans(page);
   await mkdir(ART, { recursive: true });
 
   const viewports = [
+    { name: "720p", width: 1280, height: 720 },
     { name: "1080p", width: 1920, height: 1080 },
     { name: "1440p", width: 2560, height: 1440 },
-    { name: "768p", width: 1024, height: 768 },
   ] as const;
 
   for (const vp of viewports) {
@@ -317,26 +316,52 @@ test("layouts at 1080p / 1440p / 768p — hands share one size, leader does not 
     });
     await page.waitForTimeout(80);
     const metrics = await page.evaluate(() => {
+      const ids = ["redHand", "redLeader", "redBoard", "blueBoard", "blueLeader", "blueHand"];
+      const rects = ids.map((id) => {
+        const el = document.getElementById(id);
+        return el ? el.getBoundingClientRect() : null;
+      });
+      const present = rects.filter((r): r is DOMRect => !!r);
+      const top = Math.min(...present.map((r) => r.top));
+      const bottom = Math.max(...present.map((r) => r.bottom));
+      const fill = (bottom - top) / window.innerHeight;
+      const rowOverlap = present
+        .slice()
+        .sort((a, b) => a.top - b.top)
+        .some((r, i, arr) => i > 0 && r.top + 2 < arr[i - 1].bottom);
+      const redBoard = rects[2];
+      const blueBoard = rects[3];
+      const boardGap =
+        redBoard && blueBoard ? Math.max(0, blueBoard.top - redBoard.bottom) : 999;
       const red = document.querySelector<HTMLElement>("#redHand .card");
       const blue = document.querySelector<HTMLElement>("#blueHand .card");
-      const leader = document.getElementById("blueLeader");
+      const cardH = blue?.getBoundingClientRect().height ?? 0;
       const hand = document.getElementById("blueHand");
-      const rs = red?.getBoundingClientRect();
-      const bs = blue?.getBoundingClientRect();
-      const lr = leader?.getBoundingClientRect();
-      const hr = hand?.getBoundingClientRect();
-      const overlap =
-        lr && hr ? Math.max(0, Math.min(lr.bottom, hr.bottom) - Math.max(lr.top, hr.top)) : 0;
+      const cards = hand ? [...hand.querySelectorAll<HTMLElement>(".card")] : [];
+      let handOverlapFrac = 0;
+      if (cards.length >= 2) {
+        const a = cards[0].getBoundingClientRect();
+        const b = cards[1].getBoundingClientRect();
+        const gap = b.left - a.right;
+        handOverlapFrac = gap >= 0 ? 0 : Math.abs(gap) / a.width;
+      }
       return {
-        redH: rs?.height ?? 0,
-        blueH: bs?.height ?? 0,
-        overlap,
+        redH: red?.getBoundingClientRect().height ?? 0,
+        blueH: cardH,
+        fill,
+        rowOverlap,
+        boardGap,
+        cardH,
+        handOverlapFrac,
       };
     });
     expect(metrics.redH).toBeGreaterThan(0);
     expect(metrics.blueH).toBeGreaterThan(0);
     expect(Math.abs(metrics.redH - metrics.blueH)).toBeLessThan(2);
-    expect(metrics.overlap).toBeLessThan(4);
+    expect(metrics.fill).toBeGreaterThanOrEqual(0.85);
+    expect(metrics.rowOverlap).toBe(false);
+    expect(metrics.boardGap).toBeLessThanOrEqual(metrics.cardH + 1);
+    expect(metrics.handOverlapFrac).toBeLessThanOrEqual(0.36);
     await page.screenshot({ path: `${ART}/layout_${vp.name}.png`, fullPage: false });
   }
 });

@@ -495,16 +495,7 @@ body.active-second .side-red {
   --hand-scaled-card-outer-width: calc(
     var(--card-width) * var(--hand-local-scale, 1) + 2px
   );
-  --hand-card-overlap-active: var(--hand-card-overlap-loose);
-}
-
-/* Hand fan — overlap tightens as card count grows (MAX_HAND = 9) */
-.hand-zone:has(.card:nth-child(7)) {
-  --hand-card-overlap-active: var(--hand-card-overlap-medium);
-}
-
-.hand-zone:has(.card:nth-child(8)) {
-  --hand-card-overlap-active: var(--hand-card-overlap-tight);
+  --hand-card-overlap-active: 0px;
 }
 
 #redHand {

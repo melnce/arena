@@ -27,12 +27,15 @@ export function formatCardTooltip(opts: {
         ? `Cost ${baseCost}`
         : "";
   const cat = getCatalog(opts.cardId);
+  const kind = (inst?.kind || info.kind || cat?.kind || "").toLowerCase();
   const stats =
-    inst && inst.kind === "follower"
-      ? `${inst.attack}/${inst.defense}`
-      : cat?.attack != null && cat?.defense != null
-        ? `${cat.attack}/${cat.defense}`
-        : "";
+    kind === "follower"
+      ? inst
+        ? `${inst.attack}/${inst.defense}`
+        : cat?.attack != null && cat?.defense != null
+          ? `${cat.attack}/${cat.defense}`
+          : ""
+      : "";
   const meta = [costBit, stats, info.kind].filter(Boolean).join(" · ");
   const desc = formatTooltipDescription(info.text || "");
   const gates = formatGateBlock(opts.gates ?? []);

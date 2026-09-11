@@ -230,17 +230,24 @@
   --play-area-max-width: 1920px;
   --side-rail-width: 132px;
   --crest-slot-size: 26px;
-  --card-height: clamp(88px, 14vh, 148px);
+  /* Six rows (hand / leader / board / board / leader / hand) fill the viewport.
+     Cap 260 so 1440p cards grow; floor 110 so 720p stays readable. */
+  --card-height: clamp(110px, calc((100vh - 48px) / 6.4), 260px);
   --card-width: calc(var(--card-height) * 2 / 3);
+  --board-card-scale: 1.12;
   --hand-zone-min-height: calc(var(--card-height) + 16px);
-  --board-zone-min-height: calc(var(--card-height) + 20px);
+  --board-zone-min-height: calc(
+    var(--card-height) * var(--board-card-scale) + 20px
+  );
   --play-side-gap: 6px;
   --play-row-gap: 4px;
 
-  /* ── Play area — hand overlap (loose at small hands, tighter as count grows) */
-  --hand-card-overlap-loose: -8px;
-  --hand-card-overlap-medium: -16px;
-  --hand-card-overlap-tight: -24px;
+  /* Graded overlap tokens (old tool). Applied only when the hand does not
+     fit; the fit calc never exceeds 35 % of card width. */
+  --hand-card-overlap-loose: 0px;
+  --hand-card-overlap-medium: 0px;
+  --hand-card-overlap-tight: 0px;
+  --hand-overlap-max-frac: 0.35;
 
   /* ── Play area — leader portrait ─────────────────────────────────────── */
   --leader-frame-size: 86px;
@@ -281,9 +288,7 @@
 @media (min-width: 1440px) {
   :root {
     --toolbar-height: 261px;
-    --hand-card-overlap-loose: -10px;
-    --hand-card-overlap-medium: -18px;
-    --hand-card-overlap-tight: -26px;
+    --board-card-scale: 1.14;
   }
 }
 
@@ -292,15 +297,14 @@
     --toolbar-height: 229px;
     --side-rail-width: 140px;
     --crest-slot-size: 28px;
-    --hand-card-overlap-loose: -12px;
-    --hand-card-overlap-medium: -20px;
-    --hand-card-overlap-tight: -28px;
+    --board-card-scale: 1.16;
   }
 }
 
 @media (min-width: 2560px) {
   :root {
     --toolbar-height: 198px;
+    --board-card-scale: 1.18;
   }
 }
 
@@ -309,6 +313,8 @@
 @media (max-height: 799px) {
   :root {
     --hand-zone-min-height: calc(var(--card-height) + 12px);
-    --board-zone-min-height: calc(var(--card-height) + 16px);
+    --board-zone-min-height: calc(
+      var(--card-height) * var(--board-card-scale) + 16px
+    );
   }
 }
