@@ -122,6 +122,10 @@ impl GameInner {
         serde_json::to_string(&player_info(db(), &self.state, who)).map_err(|e| e.to_string())
     }
 
+    pub fn reseed(&mut self, seed: u64) {
+        self.state.reseed(seed);
+    }
+
     fn legal_len(&self) -> usize {
         legal_actions_neutral(db(), &self.state).len()
     }

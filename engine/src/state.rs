@@ -717,4 +717,10 @@ impl State {
     pub fn note_public_addition(&mut self, who: PlayerId, card: crate::card::CardId) {
         self.player_mut(who).public_hand_additions.push(card);
     }
+
+    /// Replace the live RNG with a fresh xoshiro from `seed`. Canonical
+    /// `hash` / `snapshot` are unchanged (RNG is outside that snapshot).
+    pub fn reseed(&mut self, seed: u64) {
+        self.rng.reseed(seed);
+    }
 }

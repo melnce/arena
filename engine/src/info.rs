@@ -8,7 +8,7 @@ use crate::apply::{eval_cond, legal_actions, resolve_select};
 use crate::card::{
     Ability, Amount, CardKind, Class, Condition, CounterKey, Effect, FieldHasKind, Filter,
     FilterKind, Mode, NamedCounter, PayResource, Selector, SelectorKind, Side, Tribe, TribeOrList,
-    Zone,
+    VarKey, Zone,
 };
 use crate::db::CardDb;
 use crate::ids::{AttackTarget, PlayerId};
@@ -49,6 +49,9 @@ pub struct BoardCardInfo {
     pub gates: Vec<GateInfo>,
     /// Printed cannot-attack lock (not summoning sickness).
     pub cannot_attack_reason: Option<String>,
+    /// First numeric `vars` key (X, then Y, then Z) when this is an amulet
+    /// with no countdown.
+    pub named_counter: Option<i32>,
 }
 
 /// Per-player evolve / super-evolve unlock presentation (A9 / A10).
@@ -186,6 +189,7 @@ pub fn board_info(db: &CardDb, state: &State, player: PlayerId) -> Vec<BoardCard
                 super_evolved: inst.super_evolved,
                 gates: collect_board_gates(db, state, player, inst),
                 cannot_attack_reason: cannot_attack_reason(inst),
+                named_counter: named_counter(inst),
             })
         })
         .collect()
@@ -224,6 +228,18 @@ fn blocked_reason(
         return "Not enough PP.".into();
     }
     "No legal target.".into()
+}
+
+fn named_counter(inst: &CardInstance) -> Option<i32> {
+    if inst.kind != CardKind::Amulet || inst.countdown.is_some() {
+        return None;
+    }
+    for key in [VarKey::X, VarKey::Y, VarKey::Z] {
+        if let Some(&v) = inst.vars.get(&key) {
+            return Some(v);
+        }
+    }
+    None
 }
 
 fn cannot_attack_reason(inst: &CardInstance) -> Option<String> {
