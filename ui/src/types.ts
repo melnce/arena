@@ -135,6 +135,7 @@ export type BoardCardInfo = {
   can_attack: boolean;
   can_attack_leader: boolean;
   rush_only: boolean;
+  followers_only_this_turn?: boolean;
   evolved: boolean;
   super_evolved: boolean;
   gates: GateInfo[];

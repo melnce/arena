@@ -47,6 +47,7 @@ export type RenderHooks = {
   onBonusPp: (player: PlayerId) => void;
   onNewGame: () => void;
   onRematchSwap: () => void;
+  onRestart: () => void;
   onUndo: () => void;
   pending: Pending;
   setPending: (p: Pending) => void;
@@ -281,7 +282,7 @@ function renderBoard(
       const attacks = L.attacksFrom(legal, player, row.i);
       const engage = L.engageAt(legal, player, row.i);
       const canAttack = attacks.length > 0;
-      const rushOnly = !!info?.rush_only && canAttack && !info.can_attack_leader;
+      const rushOnly = !!(info?.followers_only_this_turn ?? info?.rush_only);
       const pendingAtk =
         hooks.pending?.kind === "attack" &&
         hooks.pending.player === player &&
@@ -1033,11 +1034,13 @@ function renderTerminal(full: FullState, hooks: RenderHooks): void {
       <div class="gameover-reason" id="gameOverReason">Match over</div>
       <div class="gameover-actions">
         <button type="button" id="newGameFromOver">New Game</button>
+        <button type="button" id="rematchSameSeedBtn">Rematch (same seed)</button>
         <button type="button" id="rematchSwapBtn">Rematch (swap sides)</button>
       </div>
     </div>`;
     document.body.appendChild(overlay);
     overlay.querySelector("#newGameFromOver")?.addEventListener("click", () => hooks.onNewGame());
+    overlay.querySelector("#rematchSameSeedBtn")?.addEventListener("click", () => hooks.onRestart());
     overlay.querySelector("#rematchSwapBtn")?.addEventListener("click", () => hooks.onRematchSwap());
   }
   const title = document.getElementById("gameOverTitle");
@@ -1060,6 +1063,10 @@ function syncUndoButtons(s: Session): void {
   const redo = byId<HTMLButtonElement>("redoBtn");
   if (undo) undo.disabled = s.past.length === 0;
   if (redo) redo.disabled = s.future.length === 0;
+  for (const id of ["restartGameBtn", "restartRailBtn"]) {
+    const btn = byId<HTMLButtonElement>(id);
+    if (btn) btn.disabled = false;
+  }
 }
 
 function paintPending(pending: Pending, legal: NeutralAction[]): void {
