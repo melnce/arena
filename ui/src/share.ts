@@ -35,5 +35,7 @@ export function writeShareParams(params: {
   url.searchParams.set("deckA", params.deckA);
   url.searchParams.set("deckB", params.deckB);
   url.searchParams.set("mode", params.mode);
+  url.searchParams.set("a", params.deckA);
+  url.searchParams.set("b", params.deckB);
   history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
 }

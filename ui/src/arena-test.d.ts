@@ -20,6 +20,22 @@ declare global {
       full(): unknown;
       legal(): unknown[];
       paintMs?: number;
+      reseed(seed: string | number | bigint): void;
+      exportLog(): unknown;
+      loadLog(log: unknown): void;
+      setCheckpoint(): void;
+      restoreCheckpoint(): boolean;
+      reroll(): boolean;
+      rerollSeed(seed: string | number | bigint, n: number): string;
+      namedCounterValue(inst: { kind: string; countdown: number | null; vars: Record<string, number> }): number | null;
+      rematchSame(): void;
+      savedPosition(): {
+        name?: string;
+        turn?: number;
+        savedAt?: string;
+        actions: unknown[];
+      } | null;
+      mountNamedCounter(vars: Record<string, number>): string;
     };
   }
 }

@@ -31,17 +31,19 @@ Set in the settings drawer (hamburger / Ctrl+Shift+M):
 - **Play vs bot** — human A, B, or coin; bot policy from `botPolicies()`; "hide the bot's hand" defaults on.
 - **Watch bots** — policy per side; Step / Play / Pause and a speed slider (1 action/s … as fast as the tab will paint). Both hands visible. Max speed yields with `requestAnimationFrame`.
 
-Share URL: `?seed=&deckA=&deckB=&mode=`.
+Share URL: `?seed=&deckA=&deckB=&mode=` plus write-time aliases `a` / `b` (old bookmarks that only carry `a`/`b` still open the same match).
 
 ## Positions
 
-The engine cannot deserialize `Game.full()` today, so Save/Load/Export/Import store a **replayable action log**: `{ seed, decks, first, NeutralAction[] }`. Replay is `new Game` + `apply` in order. Checkpoints (F6 / F7) are live `Game.clone()` snapshots.
+The engine cannot deserialize `Game.full()` today, so Save/Load/Export/Import store a **replayable action log**: `{ seed, decks, first, name?, turn?, savedAt?, actions }`. `actions` is a list of `NeutralAction` objects plus optional `{"reseed": <u64>}` steps. Replay is `new Game` + apply each step in order, calling `Game.reseed(seed)` wherever a reseed step appears. Checkpoints: **F6** sets a live `Game.clone()` snapshot; **F7** restores it; **F8** / **Reroll** restores it and reseeds the RNG on a new branch.
+
+Reroll seed (deterministic, 1-based count `n` since the last F6): `splitmix64(gameSeed XOR (n * 0x9E3779B97F4A7C15))`. Status line: `Checkpoint: T{n} · rerolls N`. Hash is unchanged by `reseed` (RNG sits outside the canonical snapshot).
 
 Undo / redo is a ring of `Game.clone()` snapshots taken before each `NeutralAction` (limit 200). Keys match the old tool: Ctrl/Cmd+Z undo; Ctrl+Y, Ctrl/Cmd+Shift+Z redo. Mid-choice undo jumps to the state before the choice began. In Play vs bot, one undo returns to the human's previous decision (bot steps ride on the redo stack and replay identically). Watch steps one bot action at a time when paused.
 
 ## Bindings added in this milestone
 
-`Game.acting`, `Game.active`, `Game.turn`, `Game.winner`, `Game.botAction(policy, seed)`, `botPolicies()`. Every name (including `"h0"`) is `engine::policy::by_name` / `names()`; the client's selector grows with that list. `botAction` uses `policy_rng(seed)` and keeps a `Box<dyn Policy>` per name on the `Game`.
+`Game.acting`, `Game.active`, `Game.turn`, `Game.winner`, `Game.botAction(policy, seed)`, `Game.reseed(seed)`, `botPolicies()`. Every name (including `"h0"`) is `engine::policy::by_name` / `names()`; the client's selector grows with that list. `botAction` uses `policy_rng(seed)` and keeps a `Box<dyn Policy>` per name on the `Game`. `reseed` replaces only the live xoshiro.
 
 ## Ported / not ported
 

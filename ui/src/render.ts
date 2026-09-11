@@ -24,6 +24,7 @@ import type {
 import { attachPointerDragSource, setDropTarget } from "./drag.ts";
 import { glowFor, renderCard, renderCrestSlot } from "./render/card.ts";
 import { byId, setText, visual } from "./render/ids.ts";
+import { releaseImageLoads } from "./releaseImages.ts";
 import { formatCardTooltip, formatCrestTooltip } from "./tooltip.ts";
 
 export type Pending =
@@ -378,6 +379,37 @@ function bindBoardDrops(legal: NeutralAction[], hooks: RenderHooks): void {
   });
 }
 
+function teardownKeyedNode(node: HTMLElement): void {
+  if (node.classList.contains("spell")) {
+    spawnSpellCast(node);
+  } else {
+    node.classList.add("card-leave");
+  }
+  releaseImageLoads(node);
+  node.remove();
+}
+
+function spawnSpellCast(node: HTMLElement): void {
+  const rect = node.getBoundingClientRect();
+  const clone = node.cloneNode(true) as HTMLElement;
+  clone.removeAttribute("id");
+  clone.classList.remove("card-leave", "card-enter", "pressed");
+  clone.classList.add("spell-cast");
+  clone.style.position = "fixed";
+  clone.style.left = `${rect.left}px`;
+  clone.style.top = `${rect.top}px`;
+  clone.style.width = `${rect.width}px`;
+  clone.style.height = `${rect.height}px`;
+  clone.style.margin = "0";
+  clone.style.zIndex = "80";
+  clone.style.pointerEvents = "none";
+  document.body.appendChild(clone);
+  window.setTimeout(() => {
+    releaseImageLoads(clone);
+    clone.remove();
+  }, 500);
+}
+
 function parsePayload(payload: string): {
   kind: string;
   player: PlayerId;
@@ -405,8 +437,7 @@ function syncKeyed<T extends { key: string }>(
   const keep = new Set(rows.map((r) => r.key));
   for (const [key, node] of prev) {
     if (!keep.has(key)) {
-      node.classList.add("card-leave");
-      node.remove();
+      teardownKeyedNode(node);
     }
   }
   const frag: HTMLElement[] = [];

@@ -152,6 +152,10 @@
                 </div>
               </div>
               <button type="button" id="importDeckBtn" title="Import a deck JSON file">Import Deck</button>
+              <button type="button" id="exportListBtn" title="Copy the Blue deck as Nx Name lines">
+                Export List
+              </button>
+              <pre id="exportListPanel" class="export-list-panel" hidden></pre>
               <input id="deckImportFileInput" type="file" accept="application/json,.json" hidden />
               <div class="seed-row">
                 <label for="seedInput">Seed:</label>
@@ -216,11 +220,14 @@
                 <option value="">(no saved positions)</option>
               </select>
               <button id="loadPositionBtn" type="button">Load</button>
+              <button id="renamePositionBtn" type="button">Rename</button>
+              <button id="deletePositionBtn" type="button">Del</button>
               <button id="exportPositionBtn" type="button">Export</button>
               <button id="importPositionBtn" type="button">Import</button>
               <input id="importPositionInput" type="file" accept="application/json,.json" hidden />
               <button id="setCheckpointBtn" type="button" title="Set checkpoint (F6)">Checkpoint</button>
               <button id="restoreCheckpointBtn" type="button" title="Restore checkpoint (F7)">Restore CP</button>
+              <button id="rerollBtn" type="button" title="Reroll checkpoint (F8)">Reroll</button>
               <span id="checkpointStatus" class="checkpoint-status">Checkpoint: none</span>
               <label class="toolbar-check-label" for="activeOnBottomToggle">
                 <input type="checkbox" id="activeOnBottomToggle" />

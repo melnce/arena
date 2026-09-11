@@ -57,3 +57,22 @@
     filter: none;
   }
 }
+
+.card.spell-cast {
+  animation: spell-cast-kf 0.5s ease-out forwards;
+  pointer-events: none;
+  z-index: 80;
+}
+
+@keyframes spell-cast-kf {
+  0% {
+    filter: brightness(1.5);
+    box-shadow: 0 0 16px rgba(100, 200, 255, 0.8);
+    transform: scale(1.1);
+  }
+  100% {
+    filter: brightness(1);
+    box-shadow: none;
+    transform: scale(1);
+  }
+}
