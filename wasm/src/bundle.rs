@@ -111,15 +111,13 @@ fn tribe_str(t: Tribe) -> &'static str {
 
 fn text_tags(card: &Card) -> Vec<String> {
     let mut tags: Vec<String> = card.printed_trigger_tags().into_iter().collect();
-    if card
+    let has_ongoing = card
         .abilities()
         .iter()
         .any(|a| matches!(a, Ability::Static { .. }))
-        || card.text().to_ascii_lowercase().contains("ongoing")
-    {
-        if !tags.iter().any(|t| t == "ongoing") {
-            tags.push("ongoing".into());
-        }
+        || card.text().to_ascii_lowercase().contains("ongoing");
+    if has_ongoing && !tags.iter().any(|t| t == "ongoing") {
+        tags.push("ongoing".into());
     }
     tags
 }
