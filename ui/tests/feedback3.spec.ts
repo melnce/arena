@@ -254,86 +254,134 @@ test("A4 A5 Slice yellow 2/2 vs green 1/2; no E/A/C badge", async ({ page }) => 
     });
   }
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 24; i++) {
     const st = await sliceState();
-    if (st.slice && st.field >= 2) break;
+    const active = await page.evaluate(
+      () => (window.__arena!.full() as { active: string }).active,
+    );
+    if (st.slice && st.field >= 2 && st.slice.playable && active === "a") break;
     const legal = await page.evaluate(() => window.__arena!.legal() as Array<Record<string, unknown>>);
     const playSpawn = legal.find((a) => "play" in a && (a.play as { card: string }).card === "10631110");
-    if (playSpawn && st.field < 2) await applyAction(page, playSpawn);
+    if (playSpawn && st.field < 2 && active === "a") await applyAction(page, playSpawn);
     else await endTurnApply(page);
   }
 
   const afterTwo = await sliceState();
-  if (afterTwo.slice && afterTwo.field >= 2 && afterTwo.slice.playable) {
-    const gate = afterTwo.slice.gates.find((g) => g.kind === "countAtLeast");
-    expect(gate?.label).toContain("allied cards on the field");
-    expect(gate?.have).toBeGreaterThanOrEqual(2);
-    expect(gate?.met).toBeTruthy();
-    const card = page.locator("#blueHand .card[data-card='10823310']").first();
-    await expect(card).toHaveClass(/enhance-ready/);
-    await expect(card.locator(".alternate-form-badge")).toHaveCount(0);
-    await card.hover();
-    await expect(page.locator("#cardTooltip")).toContainText("Allied cards on the field");
-    await expect(page.locator("#cardTooltip")).toContainText("2/2");
-    await mkdir(ART, { recursive: true });
-    await page.locator("#cardTooltip").screenshot({ path: `${ART}/a5_slice_2_2.png` });
-    await card.screenshot({ path: `${ART}/a5_slice_yellow.png` });
-  }
+  expect(afterTwo.slice, "Slice of Domesticity in A's hand").toBeTruthy();
+  expect(afterTwo.field).toBeGreaterThanOrEqual(2);
+  expect(afterTwo.slice!.playable).toBeTruthy();
+  const gate = afterTwo.slice!.gates.find((g) => g.kind === "countAtLeast");
+  expect(gate?.label).toContain("allied cards on the field");
+  expect(gate?.have).toBeGreaterThanOrEqual(2);
+  expect(gate?.met).toBeTruthy();
+  const cardTwo = page.locator("#blueHand .card[data-card='10823310']").first();
+  await expect(cardTwo).toHaveClass(/enhance-ready/);
+  await expect(cardTwo.locator(".alternate-form-badge")).toHaveCount(0);
+  await cardTwo.hover();
+  await expect(page.locator("#cardTooltip")).toContainText("Allied cards on the field");
+  await expect(page.locator("#cardTooltip")).toContainText("2/2");
+  await mkdir(ART, { recursive: true });
+  await page.locator("#cardTooltip").screenshot({ path: `${ART}/a5_slice_2_2.png` });
+  await cardTwo.screenshot({ path: `${ART}/a5_slice_yellow.png` });
 
   // 1-ally path: new game, play one spawn only.
   await startGame(page, { seed: "1", first: "a", deckA: id, deckB: id });
   await confirmMulligans(page);
   await closeDrawer(page);
-  const onePlay = await page.evaluate(() => {
-    const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
-    return legal.find((a) => a.play?.card === "10631110") ?? null;
-  });
-  if (onePlay) await applyAction(page, onePlay);
-  const one = await sliceState();
-  if (one.slice && one.field === 1 && one.slice.playable) {
-    const gate = one.slice.gates.find((g) => g.kind === "countAtLeast");
-    expect(gate?.have).toBe(1);
-    expect(gate?.met).toBeFalsy();
-    const card = page.locator("#blueHand .card[data-card='10823310']").first();
-    await expect(card).toHaveClass(/playable-glow/);
-    await card.hover();
-    await expect(page.locator("#cardTooltip")).toContainText("1/2");
+  for (let i = 0; i < 16; i++) {
+    const st = await sliceState();
+    const active = await page.evaluate(
+      () => (window.__arena!.full() as { active: string }).active,
+    );
+    if (st.slice && st.field === 1 && st.slice.playable && active === "a") break;
+    const legal = await page.evaluate(() => window.__arena!.legal() as Array<Record<string, unknown>>);
+    const playSpawn = legal.find((a) => "play" in a && (a.play as { card: string }).card === "10631110");
+    if (playSpawn && (st.field ?? 0) < 1 && active === "a") await applyAction(page, playSpawn);
+    else await endTurnApply(page);
   }
+  const one = await sliceState();
+  expect(one.slice, "Slice in hand for 1-ally path").toBeTruthy();
+  expect(one.field).toBe(1);
+  expect(one.slice!.playable).toBeTruthy();
+  const gateOne = one.slice!.gates.find((g) => g.kind === "countAtLeast");
+  expect(gateOne?.have).toBe(1);
+  expect(gateOne?.met).toBeFalsy();
+  const cardOne = page.locator("#blueHand .card[data-card='10823310']").first();
+  await expect(cardOne).toHaveClass(/playable-glow/);
+  await cardOne.hover();
+  await expect(page.locator("#cardTooltip")).toContainText("1/2");
+  await cardOne.screenshot({ path: `${ART}/a5_slice_1_2.png` });
+});
+
+test("A6 evolved stats are green; damaged defense is orange", async ({ page }) => {
+  test.setTimeout(90_000);
+  await boot(page);
+  const id = await importDeck(page, "stat-colors.json", { "10631110": 40 });
+  await startGame(page, { seed: "1", first: "b", deckA: id, deckB: id });
+  await confirmMulligans(page);
+  await closeDrawer(page);
+  await playCard(page, "10631110");
+  await endTurnApply(page);
+  await playCard(page, "10631110");
+  for (let i = 0; i < 12; i++) {
+    const unlocked = await page.evaluate(
+      () => window.__arena!.playerInfo("a").evolve_unlocked,
+    );
+    if (unlocked) break;
+    await endTurnApply(page);
+  }
+  const evo = await page.evaluate(() => {
+    const legal = window.__arena!.legal() as Array<{ evolve?: { super: boolean } }>;
+    return legal.find((a) => a.evolve && !a.evolve.super) ?? null;
+  });
+  expect(evo).toBeTruthy();
+  await applyAction(page, evo);
+  const card = page.locator("#blueBoard .card[data-card='10631110']").first();
+  await expect(card.locator(".card-stats.bottom-left")).toHaveClass(/stat-buffed/);
+  await expect(card.locator(".card-stats.bottom-right")).toHaveClass(/stat-buffed/);
+  await mkdir(ART, { recursive: true });
+  await card.screenshot({ path: `${ART}/a6_evolved_green.png` });
+  const atk = await page.evaluate(() => {
+    const legal = window.__arena!.legal() as Array<{
+      attack?: { target: { slot?: number } | "leader" };
+    }>;
+    return legal.find((a) => a.attack && a.attack.target !== "leader") ?? null;
+  });
+  expect(atk).toBeTruthy();
+  await applyAction(page, atk);
+  await expect(card.locator(".card-stats.bottom-left")).toHaveClass(/stat-buffed/);
+  await expect(card.locator(".card-stats.bottom-right")).toHaveClass(/stat-damaged/);
+  await card.screenshot({ path: `${ART}/a6_damaged_orange.png` });
 });
 
 test("A7 faith badge increments after an Enhanced play", async ({ page }) => {
   test.setTimeout(90_000);
   await boot(page);
-  await startGame(page, {
-    seed: "1",
-    first: "a",
-    deckA: "royal-nattui",
-    deckB: "royal-nattui",
+  const id = await importDeck(page, "faith-depths.json", {
+    "10624120": 15,
+    "90024320": 15,
+    "10631110": 10,
   });
+  await startGame(page, { seed: "1", first: "b", deckA: id, deckB: id });
   await confirmMulligans(page);
   await closeDrawer(page);
   const crest = page.locator("#blueCrests .crest-slot .crest-faith").first();
   await expect(crest).toBeVisible({ timeout: 10_000 });
   const before = Number(await crest.innerText());
-  for (let i = 0; i < 18; i++) {
-    const played = await page.evaluate(() => {
-      const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
-      const depths = legal.find((a) => a.play?.card === "90024320");
-      if (depths) {
-        window.__arena!.apply(depths);
-        return "depths";
-      }
-      const yid = legal.find((a) => a.play?.card === "10624120");
-      if (yid) {
-        window.__arena!.apply(yid);
-        return "yid";
-      }
-      return "";
-    });
-    if (played === "depths") break;
-    if (!played) await endTurnApply(page);
+  expect(before).toBe(0);
+  await playCard(page, "10631110");
+  await endTurnApply(page);
+  await skipToPp(page, 8);
+  for (let i = 0; i < 4; i++) {
+    const active = await page.evaluate(
+      () => (window.__arena!.full() as { active: string }).active,
+    );
+    if (active === "a") break;
+    await endTurnApply(page);
   }
-  await expect(crest).not.toHaveText(String(before), { timeout: 5000 }).catch(() => undefined);
+  await playCard(page, "90024320");
+  await expect(crest).not.toHaveText(String(before), { timeout: 5000 });
+  expect(Number(await crest.innerText())).toBeGreaterThan(before);
   await mkdir(ART, { recursive: true });
   await page.locator("#blueCrests").screenshot({ path: `${ART}/a7_faith_badge.png` });
 });
