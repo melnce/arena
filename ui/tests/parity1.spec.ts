@@ -493,30 +493,75 @@ test("#23 keyword swap-2 on Bane+Drain; Ongoing asset present", async ({ page })
 test("#24 spellboost badge under the cost", async ({ page }) => {
   test.setTimeout(90_000);
   await boot(page);
-  const id = await importDeck(page, "boost.json", { "10032120": 20, "10031310": 20 });
+  const id = await importDeck(page, "boost.json", {
+    "10032120": 14,
+    "10031310": 13,
+    "10001110": 13,
+  });
   await startGame(page, { seed: "1", first: "a", deckA: id, deckB: id });
   await confirmMulligans(page);
   await closeDrawer(page);
   await skipToPp(page, 1);
-  const had = await page.evaluate(() => {
-    const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
-    const act = legal.find((a) => a.play?.card === "10031310");
-    if (!act) return false;
-    window.__arena!.apply(act);
-    return true;
-  });
-  if (!had) test.skip(true, "Foresight not legal in this seed");
-  const badge = page.locator(".spellboost-badge").first();
+  let played = false;
+  for (let i = 0; i < 16; i++) {
+    const snap = await page.evaluate(() => {
+      const full = window.__arena!.full() as {
+        active: "a" | "b";
+        players: { a: { hand: Array<{ card: string }> } };
+      };
+      const legal = window.__arena!.legal() as Array<{
+        play?: { card: string };
+        end_turn?: unknown;
+      }>;
+      const hand = full.players.a.hand.map((c) => c.card);
+      return {
+        active: full.active,
+        hasBoost: hand.includes("10032120"),
+        hasPlain: hand.includes("10001110"),
+        canSpell: legal.some((a) => a.play?.card === "10031310"),
+        canEnd: legal.some((a) => a.end_turn),
+      };
+    });
+    if (snap.active === "a" && snap.hasBoost && snap.hasPlain && snap.canSpell) {
+      const had = await page.evaluate(() => {
+        const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
+        const act = legal.find((a) => a.play?.card === "10031310");
+        if (!act) return false;
+        window.__arena!.apply(act);
+        return true;
+      });
+      played = had;
+      break;
+    }
+    if (snap.canEnd) {
+      await endTurnApply(page);
+      continue;
+    }
+    throw new Error(`stuck driving to spellboost (i=${i})`);
+  }
+  if (!played) test.skip(true, "Foresight not legal with both hand types");
+  const boost = page.locator("#blueHand .card[data-card='10032120']").first();
+  const plain = page.locator("#blueHand .card[data-card='10001110']").first();
+  await expect(boost).toBeVisible({ timeout: 8000 });
+  await expect(plain).toBeVisible();
+  const badge = boost.locator(".spellboost-badge");
   await expect(badge).toBeVisible({ timeout: 8000 });
-  const card = page.locator(".card").filter({ has: page.locator(".spellboost-badge") }).first();
-  await waitEnterAnimation(card);
+  await expect(badge).toHaveText(/^[1-9]\d*$/);
+  await expect(plain.locator(".spellboost-badge")).toHaveCount(0);
+  await waitEnterAnimation(boost);
+  await plain.hover();
+  const plainTip = page.locator("#cardTooltip");
+  await expect(plainTip).toBeVisible();
+  await expect(plainTip).not.toContainText(/Spellboost/);
+  await boost.hover();
+  await expect(plainTip).toContainText(/Spellboost \d+/);
   const style = await badge.evaluate((el) => {
     const s = getComputedStyle(el);
     return { color: s.color, radius: s.borderRadius, bg: s.backgroundColor };
   });
   expect(style.color).toBe("rgb(255, 255, 255)");
   expect(style.radius).toBe("50%");
-  const shot = await artShot(card, `${ART}/p1_spellboost.png`);
+  const shot = await artShot(boost, `${ART}/p1_spellboost.png`);
   expect(sampleColor(shot, (r, g, b, a) => a > 80 && b > 140 && b > r && b > g)).toBeGreaterThan(4);
 });
 

@@ -1,7 +1,7 @@
 import { catalogIds, crestFile, getCatalog, lookupText } from "./catalog.ts";
 import { publicUrl } from "./base.ts";
 import { escapeHtml } from "./images.ts";
-import { formatGateLine, isFormGate } from "./info.ts";
+import { cardHasSpellboost, formatGateLine, isFormGate } from "./info.ts";
 import type { CardInstance, CrestInstance, GateInfo } from "./types.ts";
 
 const KEYWORD_LINE_RE =
@@ -47,7 +47,7 @@ export function formatCardTooltip(opts: TooltipPaint): string {
   const metaParts = [escapeHtml(classLine), setLine].filter(Boolean).join("<br>");
   const cat = getCatalog(opts.cardId);
 
-  const gates = formatGateBlock(opts.gates ?? []);
+  const gates = formatGateBlock(opts.gates ?? [], opts);
   const desc = formatTooltipDescription(info.text || "");
   const crests = formatCrestPanels(info.text || "", cat?.specificEffects);
   const extras = extraLines(opts, info.text || "");
@@ -236,9 +236,11 @@ function crestPanel(name: string, text: string, id: string): string {
   );
 }
 
-function formatGateBlock(gates: GateInfo[]): string {
+function formatGateBlock(gates: GateInfo[], opts: TooltipPaint): string {
+  const allowSpellboost = cardHasSpellboost(opts.inst, lookupText(opts.cardId).tags);
   const lines = gates
     .filter((g) => !isFormGate(g.kind))
+    .filter((g) => g.kind !== "spellboost" || allowSpellboost)
     .map((g) => {
       const text = formatGateLine(g);
       if (!text) return "";

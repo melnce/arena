@@ -2,6 +2,7 @@ import { publicUrl } from "../base.ts";
 import { crestFile, getCatalog, lookupText } from "../catalog.ts";
 import { applyCardImage, escapeHtml } from "../images.ts";
 import { releaseImageLoads } from "../releaseImages.ts";
+import { cardHasSpellboost } from "../info.ts";
 import type { CardInstance, CrestInstance, HandCardInfo } from "../types.ts";
 
 const GLOW_CLASSES = [
@@ -186,7 +187,10 @@ function paintWrapper(wrap: HTMLElement, opts: CardPaintOpts): void {
   cost.className = "card-stats top-left cost-badge";
   cost.textContent = String(opts.displayCost ?? inst.cost);
   wrap.appendChild(cost);
-  if (inst.spellboost_count >= 1) {
+  if (
+    inst.spellboost_count >= 1 &&
+    cardHasSpellboost(inst, lookupText(inst.card).tags)
+  ) {
     const badge = document.createElement("div");
     badge.className = "spellboost-badge";
     badge.textContent = String(inst.spellboost_count);

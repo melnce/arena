@@ -1,5 +1,5 @@
 import type { Session } from "./session.ts";
-import type { BoardCardInfo, GateInfo, HandCardInfo, PlayerId, PlayerInfo } from "./types.ts";
+import type { BoardCardInfo, CardInstance, GateInfo, HandCardInfo, PlayerId, PlayerInfo } from "./types.ts";
 
 export function sessionHandInfo(s: Session, player: PlayerId): HandCardInfo[] {
   return JSON.parse(s.game.handInfo(player)) as HandCardInfo[];
@@ -21,6 +21,19 @@ const FORM_GATES = new Set(["enhance", "accelerate", "crystallize"]);
 
 export function isFormGate(kind: string): boolean {
   return FORM_GATES.has(kind);
+}
+
+/** True when the printed card actually has Spellboost — never from `spellboost_count` alone. */
+export function cardHasSpellboost(
+  inst?: CardInstance | null,
+  textTags?: string[] | null,
+  gates?: GateInfo[] | null,
+): boolean {
+  if (gates?.some((g) => g.kind === "spellboost")) return true;
+  if ((inst?.printed_tags ?? []).some((t) => String(t).toLowerCase() === "spellboost")) {
+    return true;
+  }
+  return (textTags ?? []).some((t) => String(t).toLowerCase() === "spellboost");
 }
 
 export function formatGateLine(gate: GateInfo): string {
