@@ -29,7 +29,6 @@
   --leader-attack-gap-outset: 3px;
   --hand-scale-top: 1;
   --hand-scale-bottom: 1;
-  --board-card-scale: 1;
 }
 
 @media (min-width: 1440px) {
@@ -245,10 +244,15 @@ body.active-on-bottom.active-second .side-blue {
   transform-origin: bottom center;
 }
 
-.hand-zone .card,
-.board-zone .card {
+.hand-zone .card {
   width: var(--card-width);
   height: var(--card-height);
+  transform-origin: bottom center;
+}
+
+.board-zone .card {
+  width: calc(var(--card-width) * var(--board-card-scale, 1.12));
+  height: calc(var(--card-height) * var(--board-card-scale, 1.12));
   transform-origin: bottom center;
 }
 
@@ -256,49 +260,78 @@ body.active-on-bottom.active-second .side-blue {
   transform: translateY(-6px) scale(1.03);
 }
 
-/* Fit full hands inside column — tighten overlap beyond token when needed.
-   Also: never stay tighter than a 60px exposed strip when the container
-   has room (max of the legacy min(...) and the 60px floor, both capped by
-   the fit calc). Realises the freed hand-row width as a readable tap strip
-   without changing --hand-local-scale. */
+/* Fit the hand to the zone: no overlap while N cards fit; otherwise the
+   smallest negative margin that fits, never more than 35 % of card width. */
+.hand-zone {
+  --hand-overlap-cap: calc(
+    -1 * var(--hand-overlap-max-frac, 0.35) * var(--hand-scaled-card-outer-width)
+  );
+}
+
+.hand-zone .card:not(:first-child) {
+  margin-left: 0;
+}
+
+.hand-zone:has(.card:nth-child(2)):not(:has(.card:nth-child(3)))
+  .card:not(:first-child) {
+  margin-left: max(
+    var(--hand-overlap-cap),
+    min(0px, calc((100cqw - 2 * var(--hand-scaled-card-outer-width)) / 1))
+  );
+}
+
+.hand-zone:has(.card:nth-child(3)):not(:has(.card:nth-child(4)))
+  .card:not(:first-child) {
+  margin-left: max(
+    var(--hand-overlap-cap),
+    min(0px, calc((100cqw - 3 * var(--hand-scaled-card-outer-width)) / 2))
+  );
+}
+
+.hand-zone:has(.card:nth-child(4)):not(:has(.card:nth-child(5)))
+  .card:not(:first-child) {
+  margin-left: max(
+    var(--hand-overlap-cap),
+    min(0px, calc((100cqw - 4 * var(--hand-scaled-card-outer-width)) / 3))
+  );
+}
+
+.hand-zone:has(.card:nth-child(5)):not(:has(.card:nth-child(6)))
+  .card:not(:first-child) {
+  margin-left: max(
+    var(--hand-overlap-cap),
+    min(0px, calc((100cqw - 5 * var(--hand-scaled-card-outer-width)) / 4))
+  );
+}
+
+.hand-zone:has(.card:nth-child(6)):not(:has(.card:nth-child(7)))
+  .card:not(:first-child) {
+  margin-left: max(
+    var(--hand-overlap-cap),
+    min(0px, calc((100cqw - 6 * var(--hand-scaled-card-outer-width)) / 5))
+  );
+}
+
 .hand-zone:has(.card:nth-child(7)):not(:has(.card:nth-child(8)))
   .card:not(:first-child) {
   margin-left: max(
-    min(
-      var(--hand-card-overlap-active),
-      calc((100cqw - 7 * var(--hand-scaled-card-outer-width)) / 6)
-    ),
-    min(
-      calc(60px - var(--hand-scaled-card-outer-width)),
-      calc((100cqw - 7 * var(--hand-scaled-card-outer-width)) / 6)
-    )
+    var(--hand-overlap-cap),
+    min(0px, calc((100cqw - 7 * var(--hand-scaled-card-outer-width)) / 6))
   );
 }
 
 .hand-zone:has(.card:nth-child(8)):not(:has(.card:nth-child(9)))
   .card:not(:first-child) {
   margin-left: max(
-    min(
-      var(--hand-card-overlap-active),
-      calc((100cqw - 8 * var(--hand-scaled-card-outer-width)) / 7)
-    ),
-    min(
-      calc(60px - var(--hand-scaled-card-outer-width)),
-      calc((100cqw - 8 * var(--hand-scaled-card-outer-width)) / 7)
-    )
+    var(--hand-overlap-cap),
+    min(0px, calc((100cqw - 8 * var(--hand-scaled-card-outer-width)) / 7))
   );
 }
 
 .hand-zone:has(.card:nth-child(9)) .card:not(:first-child) {
   margin-left: max(
-    min(
-      var(--hand-card-overlap-active),
-      calc((100cqw - 9 * var(--hand-scaled-card-outer-width)) / 8)
-    ),
-    min(
-      calc(60px - var(--hand-scaled-card-outer-width)),
-      calc((100cqw - 9 * var(--hand-scaled-card-outer-width)) / 8)
-    )
+    var(--hand-overlap-cap),
+    min(0px, calc((100cqw - 9 * var(--hand-scaled-card-outer-width)) / 8))
   );
 }
 
@@ -448,14 +481,14 @@ body.active-on-bottom.active-second .side-red .leader-attack-strip::before {
 }
 
 .board-zone .card {
-  width: var(--card-width) !important;
-  height: var(--card-height) !important;
+  width: calc(var(--card-width) * var(--board-card-scale, 1.12)) !important;
+  height: calc(var(--card-height) * var(--board-card-scale, 1.12)) !important;
 }
 
 .board-zone {
   min-height: var(--board-zone-min-height) !important;
-  height: var(--board-zone-min-height) !important;
-  max-height: var(--board-zone-min-height);
+  height: 100% !important;
+  max-height: none;
   overflow: visible;
   padding: var(--space-3) var(--space-4);
   justify-content: center;

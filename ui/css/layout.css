@@ -124,7 +124,7 @@
 }
 
 .hand-zone .card:not(:first-child) {
-  margin-left: var(--hand-card-overlap-active, var(--hand-card-overlap-loose));
+  margin-left: 0;
 }
 
 /*
@@ -223,7 +223,7 @@
   flex-wrap: nowrap;
   gap: var(--space-3);
   min-height: var(--board-zone-min-height, 168px);
-  height: var(--board-zone-min-height, 168px);
+  height: auto;
   min-width: 0;
   padding: var(--space-5) var(--space-6);
   border: 1px dashed var(--color-border-default);
