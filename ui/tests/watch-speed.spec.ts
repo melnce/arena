@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { ART, artShot } from "./helpers.ts";
 
 async function openSettings(page: Page) {
   const drawer = page.locator("#settingsDrawer");
@@ -61,6 +62,8 @@ test("watchDelayMs curve, readout, persist, and slow-end spacing", async ({ page
     timeout: 15_000,
   });
   expect(await page.evaluate(() => window.__arena!.watchDelayMs())).toBe(3000);
+  await expect(page.locator("#watchBar")).toBeVisible();
+  await artShot(page.locator("#watchBar"), `${ART}/watch_speed_readout.png`);
 
   const h0 = await page.evaluate(() => window.__arena!.hash());
   await page.locator("#watchPlayBtn").click();
