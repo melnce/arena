@@ -52,6 +52,18 @@ test("no rail/drawer Restart; Rematch (same seed) restores opening hash and mull
   const startHash = await page.evaluate(() => window.__arena!.hash());
   expect(startHash.length).toBeGreaterThan(0);
 
+  for (let i = 0; i < 2; i++) {
+    const btn = page.locator(".mulligan-confirm-btn").locator("visible=true");
+    if (await btn.count()) {
+      await btn.first().click();
+      await expect(btn).toBeHidden({ timeout: 5000 }).catch(() => undefined);
+    }
+  }
+  await page.evaluate(() => {
+    document.getElementById("settingsDrawer")?.classList.remove("open");
+    document.getElementById("settingsScrim")?.classList.remove("show");
+  });
+
   for (let i = 0; i < 40; i++) {
     const phase = await page.locator("#turnCounter").getAttribute("data-phase");
     if (phase === "terminal") break;
