@@ -511,8 +511,8 @@ test("B1 B2 B18 fuse confirm inside modal, labelled partners, fuse chip", async 
     return el?.className ?? "";
   }, { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 });
   expect(hit).toMatch(/confirm|choice-prompt/);
-  await mkdir(ART, { recursive: true });
-  await page.screenshot({ path: `${ART}/b1_fuse_confirm.png` });
+  await mkdir(ART, { recursive: true }).catch(() => undefined);
+  await page.screenshot({ path: `${ART}/b1_fuse_confirm.png` }).catch(() => undefined);
   await confirm.first().click();
 });
 
