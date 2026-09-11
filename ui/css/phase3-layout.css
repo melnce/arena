@@ -379,6 +379,7 @@ body.active-on-bottom.active-second .side-blue {
   cursor: default;
   display: flex;
   flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);

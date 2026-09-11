@@ -76,10 +76,12 @@
   box-shadow: var(--shadow-sm);
   transition: var(--transition-all-fast);
   overflow: visible;
+  white-space: nowrap;
 }
 
 .evo-btn-label {
   display: inline-block;
+  white-space: nowrap;
 }
 
 .evo-unlock-badge {

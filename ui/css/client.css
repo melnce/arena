@@ -211,6 +211,7 @@ body.pending-target .hand-zone .card {
   font-weight: 700;
   max-width: min(420px, 56vw);
   pointer-events: auto;
+  white-space: nowrap;
 }
 
 .undo-chip,

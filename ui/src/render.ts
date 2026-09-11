@@ -619,8 +619,11 @@ function fillHist(id: string, ids: string[]): void {
   el.appendChild(ul);
 }
 
+let promptPlaceCleanup: (() => void) | null = null;
+
 function renderChoice(full: FullState, legal: NeutralAction[], hooks: RenderHooks): void {
   document.querySelector(".choice-modal")?.remove();
+  promptPlaceCleanup?.();
   document.querySelector(".choice-prompt-bar")?.remove();
   const confirmHost = byId("targetingConfirmation");
   if (confirmHost) {
@@ -711,8 +714,9 @@ function highlightChoiceTargets(
   }
   if (handOpts.length) {
     for (const h of handOpts) {
+      if (h.player !== acting) continue;
       mark(
-        byId(`${visual(h.player)}Hand`)?.querySelector<HTMLElement>(
+        byId(`${visual(acting)}Hand`)?.querySelector<HTMLElement>(
           `.card[data-hand-pos="${h.pos}"]`,
         ) ?? null,
       );
@@ -738,6 +742,7 @@ function paintPromptBar(opts: {
   confirm?: () => void;
   cancel?: () => void;
 }): void {
+  promptPlaceCleanup?.();
   document.querySelector(".choice-prompt-bar")?.remove();
   document.querySelector(".pending-cancel-chip")?.remove();
   const bar = document.createElement("div");
@@ -775,7 +780,30 @@ function paintPromptBar(opts: {
     bar.appendChild(cancel);
   }
   document.body.appendChild(bar);
-  placePromptBar(bar);
+  watchPromptBar(bar);
+}
+
+function watchPromptBar(bar: HTMLElement): void {
+  promptPlaceCleanup?.();
+  const place = () => {
+    if (!bar.isConnected) {
+      promptPlaceCleanup?.();
+      return;
+    }
+    placePromptBar(bar);
+  };
+  place();
+  const ro = new ResizeObserver(place);
+  for (const id of ["redBoard", "blueBoard", "appRoot"]) {
+    const el = byId(id);
+    if (el) ro.observe(el);
+  }
+  window.addEventListener("resize", place);
+  promptPlaceCleanup = () => {
+    ro.disconnect();
+    window.removeEventListener("resize", place);
+    promptPlaceCleanup = null;
+  };
 }
 
 function placePromptBar(bar: HTMLElement): void {
