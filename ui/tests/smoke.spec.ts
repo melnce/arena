@@ -91,6 +91,29 @@ test("hotseat: seed 1, both mulligans, play, end turn", async ({ page }) => {
   await expect(page.locator("#turnCounter")).not.toHaveText(before, { timeout: 5000 });
   const log = await page.locator("#eventLog").innerText();
   expect(log.length).toBeGreaterThan(0);
+  for (let i = 0; i < 5; i++) {
+    await page.evaluate(() => {
+      const legal = window.__arena!.legal() as Array<Record<string, unknown>>;
+      const act =
+        legal.find((a) => "play" in a) ??
+        legal.find((a) => "end_turn" in a) ??
+        legal[0];
+      if (act) window.__arena!.apply(act);
+    });
+  }
+  const counts = await page.evaluate(() => {
+    const full = window.__arena!.full() as {
+      players: { a: { hand: unknown[] }; b: { hand: unknown[] } };
+    };
+    return {
+      aHand: full.players.a.hand.length,
+      bHand: full.players.b.hand.length,
+      aKids: document.getElementById("blueHand")?.childElementCount ?? -1,
+      bKids: document.getElementById("redHand")?.childElementCount ?? -1,
+    };
+  });
+  expect(counts.aKids).toBe(counts.aHand);
+  expect(counts.bKids).toBe(counts.bHand);
 });
 
 test("hotseat: Ctrl+Z / Ctrl+Y restore Game.hash and button state", async ({ page }) => {

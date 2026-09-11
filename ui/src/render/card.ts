@@ -96,14 +96,14 @@ export function glowFor(opts: {
 
 export function renderCard(opts: CardPaintOpts): HTMLElement {
   const existing = document.getElementById(opts.elementId);
-  if (
-    existing &&
-    existing.dataset.uid === String(opts.inst.id) &&
-    existing.dataset.faceDown === (opts.faceDown ? "1" : undefined) &&
-    !opts.faceDown
-  ) {
-    updateCard(existing, opts);
-    return existing;
+  if (existing && existing.dataset.uid === String(opts.inst.id)) {
+    const wasDown = existing.dataset.faceDown === "1";
+    const nowDown = !!opts.faceDown;
+    if (wasDown && nowDown) return existing;
+    if (!wasDown && !nowDown) {
+      updateCard(existing, opts);
+      return existing;
+    }
   }
   const el = buildCard(opts);
   if (opts.entering) el.classList.add("card-enter");

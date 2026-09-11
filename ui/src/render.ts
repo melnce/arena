@@ -470,7 +470,10 @@ function syncKeyed<T extends { key: string }>(
     }
   }
   if (!changed) return;
-  for (const node of frag) host.appendChild(node);
+  for (const child of Array.from(host.children) as HTMLElement[]) {
+    if (!frag.includes(child)) releaseImageLoads(child);
+  }
+  host.replaceChildren(...frag);
 }
 
 function renderLeaders(
