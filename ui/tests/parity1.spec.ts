@@ -187,24 +187,23 @@ test("#5 #10 tooltip order, extras, smart anchor, live refresh, drag-pin", async
   expect(typeof beforeHtml).toBe("string");
   expect(typeof afterHtml).toBe("string");
 
-  const playable = page.locator("#redHand .card.legal-play, #blueHand .card.legal-play").first();
-  if (await playable.count()) {
-    const pb = await playable.boundingBox();
-    if (pb) {
-      await page.mouse.move(pb.x + pb.width / 2, pb.y + pb.height / 2);
-      await page.mouse.down();
-      await page.mouse.move(pb.x + pb.width / 2 + 20, pb.y + pb.height / 2 - 20);
-      const pin = await tip.evaluate((el) => {
-        const s = getComputedStyle(el);
-        return { top: s.top, left: s.left, display: s.display };
-      });
-      expect(pin.display).not.toBe("none");
-      expect(pin.top).toBe("12px");
-      expect(pin.left).toBe("12px");
-      await artShot(page, `${ART}/p1_tooltip_drag_pin.png`);
-      await page.mouse.up();
-    }
-  }
+  await skipToPp(page, 5);
+  const playable = page.locator(".hand-zone .card.legal-play").first();
+  await expect(playable).toBeVisible();
+  const pb = await playable.boundingBox();
+  expect(pb).toBeTruthy();
+  await page.mouse.move(pb!.x + pb!.width / 2, pb!.y + pb!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(pb!.x + pb!.width / 2 + 30, pb!.y + pb!.height / 2 - 30, { steps: 8 });
+  const pin = await tip.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { top: s.top, left: s.left, display: s.display };
+  });
+  expect(pin.display).not.toBe("none");
+  expect(pin.top).toBe("12px");
+  expect(pin.left).toBe("12px");
+  await artShot(page, `${ART}/p1_tooltip_drag_pin.png`);
+  await page.mouse.up();
 });
 
 test("#6 #21 click map: fuse / play / drag-in-hand / engage / contextmenu", async ({ page }) => {
@@ -327,10 +326,9 @@ test("#11 FCT cap, stack, flash, persist", async ({ page }) => {
   const idx = await floater.evaluate((el) => getComputedStyle(el).getPropertyValue("--float-stack-index").trim());
   expect(idx === "0" || idx === "").toBeTruthy();
   const flash = page.locator(".card.floating-combat-flash").first();
-  if (await flash.count()) {
-    const anim = await flash.evaluate((el) => getComputedStyle(el).animationName);
-    expect(anim).toMatch(/floating-combat-card-flash|none/);
-  }
+  await expect(flash).toBeVisible({ timeout: 2000 });
+  const anim = await flash.evaluate((el) => getComputedStyle(el).animationName);
+  expect(anim).toMatch(/floating-combat-card-flash/);
   await artShot(page, `${ART}/p1_fct_flash.png`);
 
   await openSettings(page);
@@ -450,7 +448,10 @@ test("#22 can't-attack overlay on printed lock (Galleon)", async ({ page }) => {
   const op = await overlay.evaluate((el) => getComputedStyle(el).opacity);
   expect(Number(op)).toBeGreaterThan(0);
   const shot = await artShot(page.locator("#blueBoard .card").first(), `${ART}/p1_cant_attack.png`);
-  expect(sampleColor(shot, (r, g, b, a) => a > 40 && r > 80 && g > 70 && b < 80)).toBeGreaterThan(2);
+  expect(
+    sampleColor(shot, (r, g, b, a) => a > 80 && r > 200 && g > 200 && b > 200),
+    "crossed-chain overlay should paint light links",
+  ).toBeGreaterThan(40);
 });
 
 test("#23 keyword swap-2 on Bane+Drain; Ongoing asset present", async ({ page }) => {
