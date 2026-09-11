@@ -27,30 +27,25 @@
   --leader-attack-hit-pad: 0px;
   /* Expand hit into the side row-gap (measured 4px); stay strictly inside. */
   --leader-attack-gap-outset: 3px;
-  --hand-scale-top: 0.72;
+  --hand-scale-top: 1;
   --hand-scale-bottom: 1;
-  --board-card-scale: 1.12;
+  --board-card-scale: 1;
 }
 
 @media (min-width: 1440px) {
   :root {
-    --hand-scale-top: 0.8;
-    --board-card-scale: 1.14;
     --leader-bar-size: 56px;
   }
 }
 
 @media (min-width: 1900px) {
   :root {
-    --hand-scale-top: 0.82;
-    --board-card-scale: 1.16;
     --leader-bar-size: 58px;
   }
 }
 
 @media (min-width: 2560px) {
   :root {
-    --board-card-scale: 1.18;
     --leader-bar-size: 60px;
   }
 }
@@ -120,17 +115,28 @@ html {
 }
 
 .side-red {
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   grid-template-areas:
     "hand"
+    "leader"
     "board";
 }
 
 .side-blue {
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto auto;
   grid-template-areas:
     "board"
+    "leader"
     "hand";
+}
+
+.side-red #redHand,
+.side-blue #blueHand,
+.side-red #redBoard,
+.side-blue #blueBoard,
+.side-red #redLeader,
+.side-blue #blueLeader {
+  grid-column: 1;
 }
 
 .side-red #redHand {
@@ -149,45 +155,17 @@ html {
   overflow: hidden;
 }
 
-/* Board stack: attack strip at the outer/far edge of each board.
-   Default: red on top → strip above board; blue on bottom → strip below.
-   Flipped (active-on-bottom.active-second): column-reverse keeps the strip
-   on the outer edge when sides swap order. */
-.side-red .board-stack,
-.side-blue .board-stack {
+.side-red #redLeader,
+.side-blue #blueLeader {
+  grid-area: leader;
+  justify-self: stretch;
+  align-self: center;
+  margin: 0 !important;
+}
+
+.side-red #redBoard,
+.side-blue #blueBoard {
   grid-area: board;
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-  min-height: 0;
-  height: 100%;
-  width: 100%;
-}
-
-.side-red .board-stack {
-  flex-direction: column; /* DOM: strip, board → strip on top */
-  padding-top: var(--leader-attack-hit-pad);
-  padding-bottom: 0;
-  box-sizing: border-box;
-}
-
-.side-blue .board-stack {
-  flex-direction: column; /* DOM: board, strip → strip on bottom */
-  padding-top: 0;
-  padding-bottom: var(--leader-attack-hit-pad);
-  box-sizing: border-box;
-}
-
-body.active-on-bottom.active-second .side-blue .board-stack {
-  flex-direction: column-reverse; /* blue on top → strip on top */
-  padding-top: var(--leader-attack-hit-pad);
-  padding-bottom: 0;
-}
-
-body.active-on-bottom.active-second .side-red .board-stack {
-  flex-direction: column-reverse; /* red on bottom → strip on bottom */
-  padding-top: 0;
-  padding-bottom: var(--leader-attack-hit-pad);
 }
 
 /* Followers face the centre line: push cards toward the shared inner edge.
@@ -262,31 +240,15 @@ body.active-on-bottom.active-second .side-blue {
   order: 1;
 }
 
-/* Compact top hand vs larger bottom hand */
-body:not(.active-on-bottom.active-second) .side-red .hand-zone {
-  --hand-local-scale: var(--hand-scale-top);
-}
-
-body:not(.active-on-bottom.active-second) .side-blue .hand-zone {
-  --hand-local-scale: var(--hand-scale-bottom);
-}
-
-body.active-on-bottom.active-second .side-blue .hand-zone {
-  --hand-local-scale: var(--hand-scale-top);
-}
-
-body.active-on-bottom.active-second .side-red .hand-zone {
-  --hand-local-scale: var(--hand-scale-bottom);
-}
-
 .hand-zone {
+  --hand-local-scale: 1;
   transform-origin: bottom center;
 }
 
-/* Scale affects layout width, not just paint (no transform: scale on cards) */
-.hand-zone .card {
-  width: calc(var(--card-width) * var(--hand-local-scale, 1));
-  height: calc(var(--card-height) * var(--hand-local-scale, 1));
+.hand-zone .card,
+.board-zone .card {
+  width: var(--card-width);
+  height: var(--card-height);
   transform-origin: bottom center;
 }
 
@@ -421,22 +383,10 @@ body.active-on-bottom.active-second .side-red .hand-zone {
 }
 
 /* Default: red strip on top → hit extends up into padding-top; blue below → down */
-.side-red .leader-attack-strip::before {
-  bottom: 0;
-  top: auto;
-  height: calc(
-    var(--leader-attack-strip-height) + var(--leader-attack-hit-pad) +
-      var(--leader-attack-gap-outset)
-  );
-}
-
+.side-red .leader-attack-strip::before,
 .side-blue .leader-attack-strip::before {
-  top: 0;
-  bottom: auto;
-  height: calc(
-    var(--leader-attack-strip-height) + var(--leader-attack-hit-pad) +
-      var(--leader-attack-gap-outset)
-  );
+  inset: 0;
+  height: 100%;
 }
 
 /* Flipped: blue on top / red on bottom — hit still toward the hand. */
@@ -497,23 +447,23 @@ body.active-on-bottom.active-second .side-red .leader-attack-strip::before {
   min-height: 28px;
 }
 
-/* Larger board cards */
 .board-zone .card {
-  width: calc(var(--card-width) * var(--board-card-scale)) !important;
-  height: calc(var(--card-height) * var(--board-card-scale)) !important;
+  width: var(--card-width) !important;
+  height: var(--card-height) !important;
 }
 
 .board-zone {
-  min-height: 0 !important;
-  height: 100%;
-  max-height: 100%;
+  min-height: var(--board-zone-min-height) !important;
+  height: var(--board-zone-min-height) !important;
+  max-height: var(--board-zone-min-height);
   overflow: visible;
   padding: var(--space-3) var(--space-4);
+  justify-content: center;
 }
 
 .hand-zone {
-  min-height: 0;
-  max-height: calc(var(--card-height) * var(--hand-local-scale, 1) + 24px);
+  min-height: var(--hand-zone-min-height);
+  max-height: calc(var(--card-height) + 24px);
   padding: var(--space-2) var(--space-3);
   box-sizing: border-box;
 }
@@ -605,6 +555,13 @@ body.active-on-bottom.active-second .side-red .leader-attack-strip::before {
   /* God mode expands this; scroll inside core so clusters cannot cover PP/god. */
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+#gameShell #endTurnBlue,
+#gameShell #endTurnRed {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 2;
 }
 
 /* Script diverge banner — below settings hamburger, not sticky header */

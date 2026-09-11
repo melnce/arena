@@ -230,10 +230,10 @@
   --play-area-max-width: 1920px;
   --side-rail-width: 132px;
   --crest-slot-size: 26px;
-  --card-width: 108px;
-  --card-height: 162px;
-  --hand-zone-min-height: 148px;
-  --board-zone-min-height: 162px;
+  --card-height: clamp(88px, 14vh, 148px);
+  --card-width: calc(var(--card-height) * 2 / 3);
+  --hand-zone-min-height: calc(var(--card-height) + 16px);
+  --board-zone-min-height: calc(var(--card-height) + 20px);
   --play-side-gap: 6px;
   --play-row-gap: 4px;
 
@@ -281,10 +281,6 @@
 @media (min-width: 1440px) {
   :root {
     --toolbar-height: 261px;
-    --card-width: 114px;
-    --card-height: 171px;
-    --hand-zone-min-height: 156px;
-    --board-zone-min-height: 168px;
     --hand-card-overlap-loose: -10px;
     --hand-card-overlap-medium: -18px;
     --hand-card-overlap-tight: -26px;
@@ -294,10 +290,6 @@
 @media (min-width: 1900px) {
   :root {
     --toolbar-height: 229px;
-    --card-width: 118px;
-    --card-height: 177px;
-    --hand-zone-min-height: 162px;
-    --board-zone-min-height: 174px;
     --side-rail-width: 140px;
     --crest-slot-size: 28px;
     --hand-card-overlap-loose: -12px;
@@ -316,7 +308,7 @@
  * Placed after width tiers so max-height wins when both match. */
 @media (max-height: 799px) {
   :root {
-    --hand-zone-min-height: 128px;
-    --board-zone-min-height: 140px;
+    --hand-zone-min-height: calc(var(--card-height) + 12px);
+    --board-zone-min-height: calc(var(--card-height) + 16px);
   }
 }

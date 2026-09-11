@@ -91,10 +91,47 @@ export type CrestInstance = {
 };
 
 export type BonusPp = {
-  early_charge: number;
-  late_charge: number;
+  early_charge: boolean;
+  late_charge: boolean;
   active: boolean;
   locked: boolean;
+};
+
+export type GateKind =
+  | "enhance"
+  | "accelerate"
+  | "crystallize"
+  | "necromancy"
+  | "rally"
+  | "combo"
+  | "earth_rite"
+  | "overflow"
+  | "spellboost";
+
+export type GateInfo = {
+  kind: GateKind | string;
+  need: number;
+  have: number;
+  met: boolean;
+};
+
+export type HandCardInfo = {
+  pos: number;
+  id: string;
+  base_cost: number;
+  cost: number | null;
+  form: "normal" | "enhance" | "accelerate" | "crystallize" | null;
+  playable: boolean;
+  gates: GateInfo[];
+};
+
+export type BoardCardInfo = {
+  slot: number;
+  id: string;
+  can_attack: boolean;
+  evolved: boolean;
+  super_evolved: boolean;
+  gates: GateInfo[];
 };
 
 export type PlayerState = {

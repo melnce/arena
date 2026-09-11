@@ -7,6 +7,11 @@ declare global {
       canUndo(): boolean;
       canRedo(): boolean;
       botAction(policy: string, seed: string | number | bigint): string;
+      handInfo(player: string): unknown[];
+      boardInfo(player: string): unknown[];
+      full(): unknown;
+      legal(): unknown[];
+      paintMs?: number;
     };
   }
 }

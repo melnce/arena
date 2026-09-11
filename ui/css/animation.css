@@ -1,0 +1,59 @@
+/* Card enter / leave / press — ~120–160 ms, old-tool cadence. */
+
+.card-enter {
+  animation: card-enter 140ms var(--ease-default, ease) both;
+}
+
+.card-leave {
+  animation: card-leave 120ms var(--ease-default, ease) both;
+}
+
+.card.pressed,
+.card:active {
+  transform: translateY(2px) scale(0.97);
+  filter: brightness(0.92);
+}
+
+.pointer-drop-highlight,
+.board-zone.pointer-drop-highlight {
+  outline: 3px solid rgba(80, 200, 120, 0.95);
+  outline-offset: 2px;
+  box-shadow: 0 0 16px rgba(80, 200, 120, 0.45);
+}
+
+.stat-flash {
+  animation: stat-flash 150ms ease;
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes card-leave {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+}
+
+@keyframes stat-flash {
+  from {
+    transform: scale(1.25);
+    filter: brightness(1.4);
+  }
+  to {
+    transform: none;
+    filter: none;
+  }
+}

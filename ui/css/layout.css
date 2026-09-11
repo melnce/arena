@@ -18,14 +18,14 @@
 }
 
 #positionSelect {
-  max-width: 220px;
-  min-width: 140px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .checkpoint-status {
   font-size: var(--font-size-sm, 0.85rem);
   opacity: 0.75;
-  white-space: nowrap;
+  white-space: normal;
   color: var(--color-text-muted, #9aa3ad);
   padding: var(--space-1, 2px) var(--space-3, 6px);
   border-radius: var(--radius-sm, 6px);
@@ -219,9 +219,11 @@
 .board-zone {
   display: flex;
   justify-content: center;
+  align-items: center;
   flex-wrap: nowrap;
   gap: var(--space-3);
   min-height: var(--board-zone-min-height, 168px);
+  height: var(--board-zone-min-height, 168px);
   min-width: 0;
   padding: var(--space-5) var(--space-6);
   border: 1px dashed var(--color-border-default);
@@ -247,7 +249,7 @@
 }
 
 #redBoard {
-  flex-direction: row-reverse;
+  flex-direction: row;
   background: linear-gradient(
     180deg,
     var(--color-board-red-tint),

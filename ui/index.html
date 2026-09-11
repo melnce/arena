@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="./css/settings-drawer.css" />
     <link rel="stylesheet" href="./css/phase3-layout.css" />
     <link rel="stylesheet" href="./css/tooltip.css" />
+    <link rel="stylesheet" href="./css/animation.css" />
     <link rel="stylesheet" href="./css/floating-combat-text.css" />
     <link rel="stylesheet" href="./css/client.css" />
     <style>
@@ -34,7 +35,9 @@
         border-right: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 18px 34px rgba(0, 0, 0, 0.45);
         padding: 14px 14px 18px 14px;
-        overflow: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+        box-sizing: border-box;
       }
       .drawer.open {
         transform: none;
@@ -105,21 +108,23 @@
               </div>
               <button type="button" id="importDeckBtn" title="Import a deck JSON file">Import Deck</button>
               <input id="deckImportFileInput" type="file" accept="application/json,.json" hidden />
-              <label for="seedInput">Seed:</label>
-              <input
-                id="seedInput"
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                placeholder="1"
-                value="1"
-                autocomplete="off"
-                spellcheck="false"
-              />
-              <span id="gameSeedPanel" class="game-seed-panel" hidden>
-                <span class="game-seed-label">Game seed: <code id="gameSeedValue"></code></span>
-                <button type="button" id="copySeedBtn">Copy</button>
-              </span>
+              <div class="seed-row">
+                <label for="seedInput">Seed:</label>
+                <input
+                  id="seedInput"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="1"
+                  value="1"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <span id="gameSeedPanel" class="game-seed-panel" hidden>
+                  <span class="game-seed-label">Game seed: <code id="gameSeedValue"></code></span>
+                  <button type="button" id="copySeedBtn">Copy</button>
+                </span>
+              </div>
               <label for="firstSelect">First player</label>
               <select id="firstSelect">
                 <option value="coin">coin</option>
@@ -234,27 +239,23 @@
           <button id="redMulliganConfirm" class="play-area-btn mulligan-confirm-btn mulligan-confirm-btn--red" style="display: none">
             Confirm Mulligan (Red)
           </button>
-          <div class="board-stack">
-            <div id="redLeader" class="leader leader-attack-strip red-leader" role="button" aria-label="Red leader">
-              <button id="redNormalEvo" class="evo-btn normal-evo" type="button">Evo</button>
-              <div class="leader leader-hp-readout red-leader" id="redLeaderHp" aria-label="Red leader HP">
-                <span id="redHP" class="hp-value">20</span>
-              </div>
-              <button id="redSuperEvo" class="evo-btn super-evo" type="button">Super</button>
+          <div id="redLeader" class="leader leader-attack-strip red-leader" role="button" aria-label="Red leader">
+            <button id="redNormalEvo" class="evo-btn normal-evo" type="button">Evo</button>
+            <div class="leader leader-hp-readout red-leader" id="redLeaderHp" aria-label="Red leader HP">
+              <span id="redHP" class="hp-value">20</span>
             </div>
-            <div id="redBoard" class="zone board-zone"></div>
+            <button id="redSuperEvo" class="evo-btn super-evo" type="button">Super</button>
           </div>
+          <div id="redBoard" class="zone board-zone"></div>
         </section>
         <section class="side side-blue">
-          <div class="board-stack">
-            <div id="blueBoard" class="zone board-zone"></div>
-            <div id="blueLeader" class="leader leader-attack-strip blue-leader" role="button" aria-label="Blue leader">
-              <button id="blueNormalEvo" class="evo-btn normal-evo" type="button">Evo</button>
-              <div class="leader leader-hp-readout blue-leader" id="blueLeaderHp" aria-label="Blue leader HP">
-                <span id="blueHP" class="hp-value">20</span>
-              </div>
-              <button id="blueSuperEvo" class="evo-btn super-evo" type="button">Super</button>
+          <div id="blueBoard" class="zone board-zone"></div>
+          <div id="blueLeader" class="leader leader-attack-strip blue-leader" role="button" aria-label="Blue leader">
+            <button id="blueNormalEvo" class="evo-btn normal-evo" type="button">Evo</button>
+            <div class="leader leader-hp-readout blue-leader" id="blueLeaderHp" aria-label="Blue leader HP">
+              <span id="blueHP" class="hp-value">20</span>
             </div>
+            <button id="blueSuperEvo" class="evo-btn super-evo" type="button">Super</button>
           </div>
           <div id="blueHand" class="zone hand-zone"></div>
           <button id="blueMulliganConfirm" class="play-area-btn mulligan-confirm-btn mulligan-confirm-btn--blue" style="display: none">
@@ -287,17 +288,23 @@
         <div class="turn-controls-core">
           <div id="turnReadout">—</div>
           <div id="turnCounter" data-testid="turn-counter">0</div>
-          <div class="red-pp-wrapper">
-            <div id="boostPips" class="boost-pips" aria-label="Second player Bonus PP charges">
-              <span id="boostPipEarly" class="boost-pip" data-tier="early" title="Early Bonus PP (rounds 1–5)">1–5</span>
-              <span id="boostPipLate" class="boost-pip" data-tier="late" title="Late Bonus PP (round 6+)">6+</span>
-            </div>
-            <button id="redBoost" type="button">+1 PP Boost</button>
+          <div class="red-pp-wrapper pp-block" id="redPpBlock">
+            <div class="boost-host" id="redBoostHost"></div>
             <div class="pp-floating" id="redPPBox">PP: <span id="redPP">0</span></div>
           </div>
           <button id="endTurnRed" type="button" style="display: none">End Turn (Red)</button>
           <button id="endTurnBlue" type="button" style="display: none">End Turn (Blue)</button>
-          <div class="pp-floating" id="bluePPBox">PP: <span id="bluePP">0</span></div>
+          <div class="blue-pp-wrapper pp-block" id="bluePpBlock">
+            <div class="boost-host" id="blueBoostHost"></div>
+            <div class="pp-floating" id="bluePPBox">PP: <span id="bluePP">0</span></div>
+          </div>
+          <div id="boostControls" hidden>
+            <div id="boostPips" class="boost-pips" aria-label="Second player Bonus PP charges">
+              <span id="boostPipEarly" class="boost-pip" data-tier="early" title="Early Bonus PP (rounds 1–5)">1–5</span>
+              <span id="boostPipLate" class="boost-pip" data-tier="late" title="Late Bonus PP (round 6+)">6+</span>
+            </div>
+            <button id="bonusPpBtn" type="button">+1 PP Boost</button>
+          </div>
         </div>
         <div class="side-rail-cluster side-rail-cluster--blue">
           <div class="floating-stats" id="blueStatsContainer">
@@ -324,7 +331,6 @@
     </div>
 
     <div id="cardTooltip"></div>
-    <div id="cardPreview" class="card-preview"></div>
     <pre id="eventLog" data-testid="event-log"></pre>
     <script type="module" src="./src/main.ts"></script>
   </body>

@@ -89,6 +89,18 @@ impl Game {
         let seed = seed_from_js(&seed)?;
         self.inner.bot_action(&policy, seed).map_err(JsValue::from)
     }
+
+    /// `HandCardInfo[]` JSON for `player` (`"a"` / `"b"`).
+    #[wasm_bindgen(js_name = handInfo)]
+    pub fn hand_info(&self, player: String) -> Result<String, JsValue> {
+        self.inner.hand_info(&player).map_err(JsValue::from)
+    }
+
+    /// `BoardCardInfo[]` JSON for `player` (`"a"` / `"b"`). Occupied slots only.
+    #[wasm_bindgen(js_name = boardInfo)]
+    pub fn board_info(&self, player: String) -> Result<String, JsValue> {
+        self.inner.board_info(&player).map_err(JsValue::from)
+    }
 }
 
 /// JSON array of policy names the client can put in a selector.
