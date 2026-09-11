@@ -295,6 +295,55 @@ fn followers_only_this_turn_rush_on_entry() {
     assert!(info[0].can_attack);
     assert!(!info[0].can_attack_leader);
     assert!(info[0].followers_only_this_turn);
+
+    end_turn(&db, &mut st);
+    let sick = st.player(me).field[0]
+        .as_ref()
+        .expect("rush follower still on field")
+        .flags
+        .summoning_sick;
+    assert!(sick, "summoning_sick stays true during the opponent's turn");
+    let opp = board_info(&db, &st, me);
+    assert_eq!(opp.len(), 1);
+    assert!(!opp[0].can_attack);
+    assert!(!opp[0].followers_only_this_turn);
+    assert!(!opp[0].rush_only);
+}
+
+#[test]
+fn followers_only_this_turn_false_on_opponent_turn_after_evolve() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, PlayerId::B, "88001110");
+    st.player_mut(me).turns_taken = 5;
+    st.player_mut(me).ep = 1;
+    give_pp(&mut st, me, 2, 2);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10001110");
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: Slot(0),
+            super_evolve: false,
+        },
+    )
+    .expect("evolve");
+    assert!(board_info(&db, &st, me)[0].followers_only_this_turn);
+
+    end_turn(&db, &mut st);
+    let sick = st.player(me).field[0]
+        .as_ref()
+        .expect("evolved follower still on field")
+        .flags
+        .summoning_sick;
+    assert!(sick, "summoning_sick stays true during the opponent's turn");
+    let opp = board_info(&db, &st, me);
+    assert_eq!(opp.len(), 1);
+    assert!(!opp[0].can_attack);
+    assert!(!opp[0].followers_only_this_turn);
+    assert!(!opp[0].rush_only);
 }
 
 #[test]

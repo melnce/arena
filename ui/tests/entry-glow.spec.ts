@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ART, artShot, assertGlow, assertPngLeftEdge } from "./helpers.ts";
 
+const RUSH = "10631110";
+
 const FIGHTER = "10001110";
 
 async function openSettings(page: Page) {
@@ -136,10 +138,70 @@ test("evolved-this-turn follower glows yellow only, then green next turn", async
   assertPngLeftEdge(yellowPath, "yellow");
 
   await applyFirst(page, "end_turn");
+  await expect(card).not.toHaveClass(/rush-glow/);
+  await expect(card).not.toHaveClass(/can-attack/);
+  await assertGlow(card, "none");
+
   await applyFirst(page, "end_turn");
   await expect(card).toHaveClass(/can-attack/);
   await expect(card).not.toHaveClass(/rush-glow/);
   await assertGlow(card, "green");
   const greenPath = await artShot(card, `${ART}/entry_evo_green.png`);
   assertPngLeftEdge(greenPath, "green");
+});
+
+test("rush follower is yellow, then no glow on the opponent's turn, then green", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await boot(page);
+  const id = await importDeck(page, "rush.json", { [RUSH]: 40 });
+  await startGame(page, id);
+  await confirmMulligans(page);
+  await page.evaluate(() => {
+    document.getElementById("settingsDrawer")?.classList.remove("open");
+    document.getElementById("settingsScrim")?.classList.remove("show");
+  });
+
+  // Enemy follower first so the Rush card has a legal attack (not the leader).
+  for (let i = 0; i < 8; i++) {
+    const snap = await page.evaluate((cardId) => {
+      const full = window.__arena!.full() as { active: "a" | "b" };
+      const legal = window.__arena!.legal() as Array<{
+        play?: { card: string };
+        end_turn?: unknown;
+      }>;
+      return {
+        active: full.active,
+        canPlay: legal.some((a) => a.play?.card === cardId),
+        canEnd: legal.some((a) => a.end_turn),
+      };
+    }, RUSH);
+    if (snap.active === "b" && snap.canPlay) {
+      await playCard(page, RUSH);
+      await applyFirst(page, "end_turn");
+      break;
+    }
+    if (snap.canEnd) {
+      await applyFirst(page, "end_turn");
+      continue;
+    }
+    throw new Error(`stuck seeding enemy rush (i=${i})`);
+  }
+
+  await playCard(page, RUSH);
+  const card = page.locator("#blueBoard .card[data-card='10631110']").first();
+  await expect(card).toHaveClass(/rush-glow/);
+  await expect(card).not.toHaveClass(/can-attack/);
+  await assertGlow(card, "yellow");
+
+  await applyFirst(page, "end_turn");
+  await expect(card).not.toHaveClass(/rush-glow/);
+  await expect(card).not.toHaveClass(/can-attack/);
+  await assertGlow(card, "none");
+
+  await applyFirst(page, "end_turn");
+  await expect(card).toHaveClass(/can-attack/);
+  await expect(card).not.toHaveClass(/rush-glow/);
+  await assertGlow(card, "green");
 });

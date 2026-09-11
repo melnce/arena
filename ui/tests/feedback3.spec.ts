@@ -218,6 +218,9 @@ test("A3 rush is yellow the turn played, green next; storm is green", async ({ p
   const yellowPath = await artShot(spawn, `${ART}/a3_rush_yellow.png`);
   assertPngLeftEdge(yellowPath, "yellow");
   await endTurnApply(page);
+  await expect(spawn).not.toHaveClass(/rush-glow/);
+  await expect(spawn).not.toHaveClass(/can-attack/);
+  await assertGlow(spawn, "none");
   await endTurnApply(page);
   await expect(spawn).toHaveClass(/can-attack/);
   await expect(spawn).not.toHaveClass(/rush-glow/);

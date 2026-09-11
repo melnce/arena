@@ -548,10 +548,9 @@
   z-index: 10;
 }
 
-/* Evolved (normal EP) — gold ring distinct from super-evo purple */
+/* Evolved (normal EP) — E badge only. The idle gold ring was the same
+   yellow as rush-glow and looked like an attack outline on the opponent's turn. */
 .card.evolved .card-image-wrapper {
-  outline: 2px solid var(--color-evolved-ring);
-  box-shadow: var(--glow-evolved);
   border-radius: var(--radius-md);
 }
 
