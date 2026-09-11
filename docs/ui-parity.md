@@ -10,9 +10,15 @@ Audit of every user-visible feature of the old practice tool’s **client** (`$H
 
 **Round 3.** Items already being fixed on `cursor/m4-feedback-3` are `in progress (round 3)` with an empty gap spec — do not re-implement from this list.
 
+**Owner decisions 2026-09-11**
+
+1. **Click map — keep the old tool’s.** Left-click / tap a fuse-capable hand card opens Fuse and does not play. Right-click a playable hand card plays it. Drag to the own board plays. Releasing a hand-card drag inside the hand opens Fuse when the card can fuse. Engage by right-click on an `engage-ready` amulet (left-click may also engage). The OS context menu is suppressed on `.card`, `.zone`, `.leader`, `.evo-btn` and the play surface. The round-3 Fuse chip stays as the visible affordance; on a tablet the tap on the card is the primary path.
+2. **Terminal overlay.** Buttons: Rematch (same seed), Rematch (new seed), New Game (opens the drawer). Remove “Rematch (swap sides)”. The first player of a rematch follows the drawer’s first-player setting (A / B / coin). Reason line: `Deck-out` or `Lethal`, not “Match over”.
+3. **Dropped for good** (keep as `dropped (by design)`): blackbox, sparring-line scripts, puzzles, coverage banner, god-mode, Consistency Trainer, `?test=1` bridge, UNIMPL/unknown-op badges, burn-preview box, deck paste panel, smaller top-hand scale.
+
 **Status** ∈ `ported` | `partial` | `missing` | `dropped (by design)` | `in progress (round 3)`.
 
-Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line scripts, puzzles, coverage banner, god-mode. Adjacent drops I believe were intentional (confirm with owner): Consistency Trainer, `?test=1` QA bridge, UNIMPL/UNKNOWN OP face badges, burn-preview box, deck *paste* import panel (JSON file import was ported instead).
+Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, sparring-line scripts, puzzles, coverage banner, god-mode, Consistency Trainer, `?test=1` QA bridge, UNIMPL/UNKNOWN OP face badges, burn-preview box, deck *paste* import panel (JSON file import was ported instead), smaller top-hand scale.
 
 ---
 
@@ -30,7 +36,7 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | Empty board label “Play zone” | `css/layout.css:234-247` | `ui/css/layout.css:236-249` | ported | 
 | Per-side board tint (red/blue dashed zone) | `css/layout.css:249-267`; `--color-board-*-tint` | `ui/css/layout.css:219-269`; same tokens | ported | 
 | Occupied slots only, engine order, row centred | (old rendered occupied cards in a flex row) | `ui/src/render.ts:226-232` (R1) | ported | 
-| Active-on-bottom: `body.active-on-bottom` + `active-second` swaps side `order` (code-read) | `src/boot/perspectiveFlip.ts:4-14`; `src/ui/render.ts:31,44-66`; `css/phase3-layout.css:257-263` | `ui/index.html:181-184`; `ui/src/main.ts:695-699`; `ui/css/phase3-layout.css:234-240` | partial | After reload, the checkbox and the board match last time: if `localStorage.svwb.activeOnBottom` is `"1"`, the active side is already on the bottom (same `order` swap as during play). |
+| Active-on-bottom: `body.active-on-bottom` + `active-second` swaps side `order` (code-read) | `src/boot/perspectiveFlip.ts:4-14`; `src/ui/render.ts:31,44-66`; `css/phase3-layout.css:257-263` | `ui/index.html:80-88`; `ui/src/main.ts:712-723`; `ui/css/phase3-layout.css:234-240` | ported | Persisted as `svwb.activeOnBottom`; applied by an inline boot script before the first paint. |
 | Bottom hand full size, top hand `--hand-scale-top` 0.72–0.82 | `css/phase3-layout.css:30-45,266-289` | `ui/css/phase3-layout.css:30,243-249` (both hands `--hand-local-scale: 1`) | dropped (by design) | Equal hand sizes were an explicit R1/R2 ask (`--card-height` clamp for both hands). |
 | Card footprint 108×162 (114×171 @1440, 118×177 @1900) | `css/design-tokens.css:233-234,284-298` | `ui/css/design-tokens.css:235-237` (`clamp(110px, (100vh-48px)/6.4, 260px)`, width = 2/3 height) | ported | Viewport-scaled cards were R2; same tokens, different formula. |
 | Board cards × `--board-card-scale` 1.12 (1.18 @2560) | `css/phase3-layout.css:501-504`; `css/design-tokens.css` | `ui/css/design-tokens.css:237`; `ui/css/phase3-layout.css:253-257,484-485` | ported | 
@@ -74,22 +80,22 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | `.engage-ready` yellow `engagePulse` 1s on an amulet that can Engage (code-read) | `css/cards.css:687-705`; `src/ui/zones/viewModel.ts:187-206`; `src/ui/zones/dom.ts:60-63` | `ui/css/cards.css:723-741`; `ui/src/render.ts:254` | ported | 
 | `.fuse-ready` gold ring on a fuse-capable hand card (code-read) | — (no on-card fuse chrome; fuse is click/tooltip only) | `ui/css/client.css:96-98`; `ui/src/render.ts:195` | in progress (round 3) | Fuse *chip* (not just the ring) is the round-3 item. |
 | `.selectable` dashed green (mulligan) / yellow (targets); `.selected` solid green (code-read) | `css/buttons.css:325-328`; `css/cards.css:739-778`; `src/ui/zones/dom.ts:56-57` | `ui/css/buttons.css:325-328`; `ui/css/cards.css:797-815,1130-1133` | ported | 
-| Selected ✓ checkmark overlay (top-right, `#2ecc71`) (code-read) | `src/ui/zones/dom.ts:123-137` | — | missing | While a card is selected (mulligan or multi-target), a 24px extrabold `#2ecc71` ✓ sits top-right with the old green text-shadow (`0 0 4px` black, `0 0 8px` `#2ecc71`). |
+| Selected ✓ checkmark overlay (top-right, `#2ecc71`) (code-read) | `src/ui/zones/dom.ts:123-137` | `ui/src/render/card.ts:198-206`; `ui/css/cards.css` `.selected-check` | ported | 24px extrabold `#2ecc71` ✓, `0 0 4px` black + `0 0 8px` `#2ecc71`, plus the solid green selected ring. |
 | `body.select-mode`: non-targets 50% + greyscale 0.55 (code-read) | `css/cards.css:732-737`; `css/modern-theme.css:767-769`; `src/ui/render.ts:168-172` | `ui/css/cards.css:767-815`; `ui/css/modern-theme.css:758-778`; `ui/src/render.ts:65` | ported | 
 | Ward overlay (board): white shield SVG, `ward-pulse` 2s (code-read) | `src/ui/overlays.ts:27-31`; `css/cards.css` ward block | `ui/src/render/card.ts:219-223`; `ui/css/cards.css:230-271` | ported | 
 | Ambush overlay (board): smoke SVGs 4s/5s (code-read) | `src/ui/overlays.ts:32-36` | `ui/src/render/card.ts:224-228`; `ui/css/cards.css:817-904` | ported | 
 | Aura overlay (board): purple field + dashed ring 2.2s/6s (code-read) | `src/ui/overlays.ts:37-51` | `ui/src/render/card.ts:229-233`; `ui/css/cards.css:970-1042` | ported | 
 | Intimidate overlay (board): amber diamond, `intimidate-flicker` 1.2s (code-read) | `src/ui/overlays.ts:62-66` | `ui/src/render/card.ts:234-238`; `ui/css/cards.css:273-308` | ported | 
-| Can’t-attack overlay (board): crossed chains when the follower cannot attack (code-read) | `src/ui/overlays.ts:52-61` (`hasCantAttack` **or** `cantAttack` / `cantAttackUntilOpponentEOT`) | `ui/src/render/card.ts:239-243` (only if **both** `cantAttackFollowers` **and** `cantAttackLeader`) | partial | Crossed-chain overlay (`.cant_attack-overlay`) on any board follower that cannot attack, not only when both follower and leader locks are set. |
+| Can’t-attack overlay (board): crossed chains when the follower cannot attack (code-read) | `src/ui/overlays.ts:52-61` (`hasCantAttack` **or** `cantAttack` / `cantAttackUntilOpponentEOT`) | `ui/src/render/card.ts:282-290`; `engine/src/info.rs` `cannot_attack_reason` | ported | Chains on any printed lock (`cantAttack*` / engine reason). Not summoning sickness. |
 | Barrier overlay + 250ms flash / 350ms pop (code-read) | `src/ui/overlays.ts:118-138`; `css/cards.css:443-487` | `ui/css/cards.css:310-501` (CSS only) | missing | Barrier followers show a cyan ring + particles (`.barrier-overlay`, `--glow-barrier`). New charge: 250ms brightness flash (`.barrier-flash`). Break: 350ms pop (`.barrier-pop`). |
 | Can’t-be-destroyed overlay + 5 gold particles (code-read) | `src/ui/overlays.ts:88-109`; `css/cards.css` CBD block | `ui/css/cards.css:1135-1293` (CSS only) | missing | Can’t-be-destroyed followers show the gold field overlay plus five floating particles for as long as the keyword is on. |
 | Bane / Drain / Last Words PNG icons, bottom-centre 26×26 stack (code-read) | `src/ui/overlays.ts:67-83`; `images/icon_*.png` | `ui/src/render/card.ts:244-258`; `ui/public/images/icon_*.png` | ported | 
-| Ongoing icon `images/icon_ongoing.png` (code-read) | `src/ui/overlays.ts:84-86` | — (`.ongoing-icon` CSS only, `ui/css/cards.css:504`) | missing | Ongoing cards show `images/icon_ongoing.png` in the same 26×26 bottom-centre stack as Bane / Drain / Last Words. |
-| Icon stack swap animation `.swap-2/3/4` (2s/3s cycle) when 2+ icons (code-read) | `src/ui/overlays.ts:111-115`; `css/cards.css:1008-1090` | `ui/css/cards.css:1045-1126` (CSS only; JS never sets the class) | missing | When 2 / 3 / 4+ keyword icons share the stack, they cycle (old `.swap-2` 2s, `.swap-3`/`.swap-4` 3s keyframes). A single icon stays static. |
-| Spellboost badge (blue circle, white count) under the cost (code-read) | `src/ui/zones/dom.ts:207-216`; `css/cards.css:871-897` | `ui/css/cards.css:907-933` (CSS only); `inst.spellboost_count` unused | missing | When spellboost is at least 1, a blue circle with the white count sits under the cost chip (`.spellboost-badge`). |
+| Ongoing icon `images/icon_ongoing.png` (code-read) | `src/ui/overlays.ts:84-86` | `ui/src/render/card.ts:306-313`; `wasm/src/bundle.rs` `tags` | ported | Shown when `cardText.tags` includes `ongoing` (Static ability or printed “Ongoing”). |
+| Icon stack swap animation `.swap-2/3/4` (2s/3s cycle) when 2+ icons (code-read) | `src/ui/overlays.ts:111-115`; `css/cards.css:1008-1090` | `ui/src/render/card.ts:314-317`; `ui/css/cards.css:1045-1126` | ported | `.swap-2` 2s; `.swap-3`/`.swap-4` 3s. A single icon stays static. |
+| Spellboost badge (blue circle, white count) under the cost (code-read) | `src/ui/zones/dom.ts:207-216`; `css/cards.css:871-897` | `ui/src/render/card.ts:170-174`; `ui/css/cards.css` `.spellboost-badge` | ported | Blue circle, white count, under the cost when `spellboost_count ≥ 1`. |
 | Countdown number, large white + black stroke, bottom-right (amulets) (code-read) | `src/ui/zones/dom.ts:172-176`; `css/cards.css:708-724` | `ui/src/render/card.ts:197-202`; `ui/css/cards.css:744-760` | ported | Refresh on `updateCard` is round 3. |
 | Amulet named-counter fallback (first numeric `counters` entry as the same badge) (code-read) | `src/ui/zones/dom.ts:184-199` | — | missing | If the amulet has no countdown but has a numeric counter, the same bottom-right white/black-stroke number shows that value. |
-| Icarus `!` gold 18px badge (top-left of art) (code-read) | `src/ui/zones/dom.ts:83-104` | — | missing | While the instance is Icarus-buffed, an 18px gold circle `!` sits at `top:28px; left:6px`. |
+| Icarus `!` gold 18px badge (top-left of art) (code-read) | `src/ui/zones/dom.ts:83-104` | — | missing | Not representable: the engine has no Icarus buff. Left missing until that fact exists. |
 | Face-down hand: `.card.card-back`, striped back, no uid/name leak, `pointer-events: none` (code-read) | `src/ui/zones/dom.ts:28-39`; `css/cards.css:102-142` | `ui/src/render/card.ts:92-105`; `ui/css/cards.css:101-142` | ported | Used for vs-bot hide-hand (not sparring-line). |
 | Art fallback: name + cost/stats if the image 404s (code-read) | old uses CDN then `.webp` (`src/ui/render.ts:626-646` for crests) | `ui/src/images.ts:28-52`; `ui/css/client.css:49-70` | ported | 
 | UNIMPL / UNKNOWN OP outline + face badge (code-read) | `src/ui/zones/dom.ts:106-119`; `css/modern-theme.css:1028-1048` | `ui/css/modern-theme.css:1019-1039` (CSS only) | dropped (by design) | Coverage badges; same family as the coverage banner. |
@@ -115,7 +121,7 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | Faith value badge **top-left** on the Faith crest (same `.crest-countdown` class, repositioned) (code-read) | `src/ui/render.ts:663-673` | — | in progress (round 3) | 
 | 🃏 hand / 📦 deck / 💀 cemetery / ☠️ shadows, both sides, always public | `index.html:688-691,902-905`; `src/ui/counts.ts:25-33` | `ui/index.html:270-327`; `ui/src/render.ts:77-84` | ported | 
 | No combo / earth / rally / faith / banished on the rail (code-read) | (not shown) | (not shown) | ported | 
-| Leader Barrier cyan ring on the HP host (`.has-leader-barrier`) (code-read) | `src/ui/render.ts:704-721`; `css/modern-theme.css:911-929` | `ui/src/render.ts:397-398` toggles `has-barrier`; CSS expects `.has-leader-barrier` (`ui/css/modern-theme.css:896-920`) | partial | While the leader has Barrier / a damage cap, the HP pill wears the cyan `--glow-barrier` ring (old `.has-leader-barrier` look). Today the ring never appears. |
+| Leader Barrier cyan ring on the HP host (`.has-leader-barrier`) (code-read) | `src/ui/render.ts:704-721`; `css/modern-theme.css:911-929` | `ui/src/render.ts:456-462`; `engine/src/info.rs` `has_leader_barrier`; `ui/css/modern-theme.css:902-920` | ported | Cyan `--glow-barrier` ring on the HP pill while a damage cap is live. |
 | Enemy leader `.selectable` red pulse while it is a legal **pending** attack target (code-read) | `src/ui/render.ts:123-146`; `css/buttons.css:149-203` | `ui/src/render.ts:373-396` also outlines whenever *any* leader attack is legal | in progress (round 3) | 
 
 ---
@@ -125,26 +131,26 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | feature | old tool (file:line) | new client (file:line or "—") | status | gap spec |
 |---|---|---|---|---|
 | Single `#cardTooltip`, dark panel, `pointer-events: none`, z 9999, max ~360px | `index.html:940-957`; `css/tooltip.css:3-9` | `ui/index.html:333`; `ui/css/tooltip.css:3-8`; `ui/css/modern-theme.css:748-755` | ported | 
-| Order: **name** → class/tribes + set → **counter block** → description → crest panels → fused loot → Rally line → Skybound line → buff delta (code-read) | `src/ui/tooltips.ts:169-176` | `ui/src/tooltip.ts:42-47` (name → cost/ATK/DEF/kind → description → gates) | partial | Same stack the player already knows: name, then class/tribes + set, then the counter/progress block, then the description, then extras (crests / fused / Rally `#7af` / Skybound `#ebd04f` / `+A/+D` / `Cannot play:`). Keep the new Cost line (paid + grey base). Round-3 covers the progress lines themselves. |
+| Order: **name** → class/tribes + set → **counter block** → description → crest panels → fused loot → Rally line → Skybound line → buff delta (code-read) | `src/ui/tooltips.ts:169-176` | `ui/src/tooltip.ts:39-81` | ported | Name → class/tribes + set → Cost line → gates → description → crests / fused / Rally / Skybound / `+A/+D` / `Cannot play:`. |
 | Name `.tooltip-header-name` lg bold | `src/ui/tooltips.ts:170`; `css/tooltip.css` | `ui/src/tooltip.ts:43`; `ui/css/tooltip.css:11-15` | ported | 
-| Meta: `Class` or `Class/Tribe1, Tribe2`; set badge `#9aa3b2` in-rotation / `#7a8494` older (code-read) | `src/ui/tooltips.ts:98-99,34-47` | — (meta is `Cost N · A/D · kind`) | missing | After the name, a muted meta line `Class` or `Class/Tribes` plus an optional set label in those two greys. |
+| Meta: `Class` or `Class/Tribe1, Tribe2`; set badge `#9aa3b2` in-rotation / `#7a8494` older (code-read) | `src/ui/tooltips.ts:98-99,34-47` | `ui/src/tooltip.ts:43-48,84-88` | ported | `Class` or `Class/Tribes` plus `Set N` in `#9aa3b2` (set ≥ 8) / `#7a8494`. |
 | Cost line with strikethrough / grey base when paid ≠ printed | (cost lives on the card, not in the tooltip) | `ui/src/tooltip.ts:21-28` | ported | New-only extra from R1; keep it. |
 | Spell/amulet tooltips omit `0/0` | n/a (no ATK/DEF in old tooltip) | `ui/src/tooltip.ts:31-38` (R2) | ported | 
 | Keyword lines bold `--color-warn` (`Fanfare:`, `Enhance (N):`, `Accelerate (N):`, …) | `src/ui/tooltipFormat.ts:11-12,86-93` | `ui/src/tooltip.ts:6-10,83-91` | ported | 
-| Card-name highlights italic blue inside description (code-read) | `src/ui/tooltipFormat.ts:69-79` | — | missing | Known card names in the description are italic, semibold, `--color-accent-blue-bright`. |
-| “Gain crest:” muted lead + crest icon/name/text panels after the description (code-read) | `src/ui/tooltipFormat.ts:96-97,117-147`; `src/ui/tooltips.ts:104-107` | — | missing | After the description: a muted “Gain crest:” lead (`--color-text-muted`), then one panel per crest — 44×44 icon, bold name, secondary text — on `--color-bg-surface` with `--color-border-default`. |
+| Card-name highlights italic blue inside description (code-read) | `src/ui/tooltipFormat.ts:69-79` | `ui/src/tooltip.ts:204-211`; `ui/css/tooltip.css:70-74` | ported | Catalog names in the description are italic semibold `--color-accent-blue-bright`. |
+| “Gain crest:” muted lead + crest icon/name/text panels after the description (code-read) | `src/ui/tooltipFormat.ts:96-97,117-147`; `src/ui/tooltips.ts:104-107` | `ui/src/tooltip.ts:198-256`; `ui/css/tooltip.css:76-114` | ported | Muted “Gain crest:” lead, then 44×44 icon / name / text panels. |
 | Dynamic counter block **before** the description: `(Label: value/threshold)` (code-read) | `src/ui/tooltips.ts:101-102,172`; `src/ui/tooltipCounters.ts:407-411` | `ui/src/tooltip.ts:100-111` (gates **after** description) | in progress (round 3) | 
 | Enhance / Necromancy / Combo / Rally / Earth Rite / Overflow / Spellboost / Accelerate / Crystallize progress lines (code-read) | `src/ui/tooltipCounters.ts:72-98`; `src/ui/info`-equivalent in counters | `ui/src/info.ts:22-43` | in progress (round 3) | 
-| Dedicated blue `Rally: current / req` line (code-read) | `src/ui/tooltips.ts:125-141` | Rally only if a `rally` gate exists (`ui/src/info.ts:33-34`) | partial | If the printed text has Rally, the player still sees `Rally: have / need` in `#7af` after the description — even when the engine sent no Rally gate. |
-| Dedicated gold `Skybound Art: current / req` (code-read) | `src/ui/tooltips.ts:143-162` | — | missing | When the card has Skybound Art, a gold `#ebd04f` line after the extras: `Skybound Art: (turn + witnessed) / req`. |
-| Orange `Fused Loot (unique): N` + names, or grey `Fused: N cards` (code-read) | `src/ui/tooltips.ts:109-123` | — | missing | If the instance is fused: orange `Fused Loot (unique): N` plus names, or else grey `#aaa` `Fused: N cards` (0.8em). |
-| Buff delta `+A/+D` green if non-negative, `#ff6666` if any negative (code-read) | `src/ui/tooltips.ts:19-31,164-176` | `ui/css/tooltip.css:116-126` (`.buff-delta` unused) | missing | Followers with a non-zero buff pair end the tooltip with bold `+A/+D` in `#66ff66` (both ≥ 0) or `#ff6666` (any negative). |
-| Red `Cannot play: {reason}` when the hand card is blocked (code-read) | `src/ui/tooltips.ts:265-269`; `src/ui/zones/dom.ts:48-52` | — | missing | On the active turn, an unplayable hand card appends `#ff8888` bold `Cannot play: {reason}` (e.g. “Not enough PP.”), 0.5em below the last line. |
+| Dedicated blue `Rally: current / req` line (code-read) | `src/ui/tooltips.ts:125-141` | `ui/src/tooltip.ts:117-124` | ported | `Rally: have / need` in `#7af` whenever the printed text has Rally (gate optional). |
+| Dedicated gold `Skybound Art: current / req` (code-read) | `src/ui/tooltips.ts:143-162` | `ui/src/tooltip.ts:127-133` | ported | Gold `#ebd04f` `Skybound Art: have / need` when the text or a gate has Skybound Art. |
+| Orange `Fused Loot (unique): N` + names, or grey `Fused: N cards` (code-read) | `src/ui/tooltips.ts:109-123` | `ui/src/tooltip.ts:104-114` | ported | Orange unique loot list, or grey `#aaa` `Fused: N cards` at 0.8em. |
+| Buff delta `+A/+D` green if non-negative, `#ff6666` if any negative (code-read) | `src/ui/tooltips.ts:19-31,164-176` | `ui/src/tooltip.ts:136-148` | ported | Bold `+A/+D` in `#66ff66` or `#ff6666`. |
+| Red `Cannot play: {reason}` when the hand card is blocked (code-read) | `src/ui/tooltips.ts:265-269`; `src/ui/zones/dom.ts:48-52` | `ui/src/tooltip.ts:97-99`; `engine/src/info.rs` `blocked_reason`; `ui/css/tooltip.css` `.tooltip-play-blocked` | ported | Active-turn unplayable cards append `#ff8888` bold `Cannot play: {reason}` (engine reason). |
 | Hover shows; mousemove repositions; mouseleave hides | `src/ui/tooltips.ts:330-361` | `ui/src/render.ts:789-814` | ported | 
-| Smart vertical anchor: bottom half of the viewport grows **up**; top half grows **down**; 12px from cursor, clamped (code-read) | `src/ui/tooltips.ts:337-356` | `ui/src/render.ts:803-807` (always `+16px` down-right) | missing | Cursor in the bottom half: tooltip sits above it (bottom edge 12px above the cursor) so it does not cover a bottom-hand card. Top half: sits below (top edge 12px under the cursor). Left = cursor + 12px, clamped 12px from the viewport edges. |
+| Smart vertical anchor: bottom half of the viewport grows **up**; top half grows **down**; 12px from cursor, clamped (code-read) | `src/ui/tooltips.ts:337-356` | `ui/src/render.ts:1179-1190` | ported | Bottom half grows up; top half grows down; 12px from the cursor, clamped 12px from the edges. |
 | No large art in the tooltip (text only) | `src/ui/tooltips.ts` (no preview node) | R1 removed `#cardPreview` | ported | 
-| Drag: pin the same tooltip at `(12px, 12px)` for the gesture (code-read) | `src/ui/tooltips.ts:199-215` | — | missing | While a card is being dragged, the same text panel stays parked at `top:12px; left:12px` (away from the finger). It hides on release unless the pointer is still hovering a card. |
-| Live refresh on every `render()` (counters / gates stay current) (code-read) | `src/ui/render.ts:230`; `src/ui/tooltips.ts:278-318` | — (HTML built once on `mouseover`) | missing | An open tooltip updates on every board paint (counters, gates, play-blocked). A drag-pinned panel wins over hover for the gesture. |
+| Drag: pin the same tooltip at `(12px, 12px)` for the gesture (code-read) | `src/ui/tooltips.ts:199-215` | `ui/src/render.ts:1193-1218` | ported | Drag-pinned at `top:12px; left:12px`; hides on release unless still hovering a card. |
+| Live refresh on every `render()` (counters / gates stay current) (code-read) | `src/ui/render.ts:230`; `src/ui/tooltips.ts:278-318` | `ui/src/render.ts:139,1220-1228` | ported | Open tooltip rebuilds on every paint; drag-pin wins over hover during the gesture. |
 | Face-down cards never show a tooltip (code-read) | `src/ui/zones/index.ts:71-77` | `ui/src/render.ts:791` | ported | 
 | Crest hover: name + description; Faith `Faith — {count}`; blue crests above cursor, red below (code-read) | `src/ui/render.ts:676-698` | `ui/src/tooltip.ts:50-58`; `ui/src/render.ts:458-469` | partial | Prefixed Faith line is round 3. Placement already matches. |
 | Long-press (touch) opens the same tooltip (code-read) | — (hover + drag only) | — | in progress (round 3) | 
@@ -156,14 +162,14 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | feature | old tool (file:line) | new client (file:line or "—") | status | gap spec |
 |---|---|---|---|---|
 | Mulligan: dashed green selectable hand cards; click toggles mark | `src/ui/zones/viewModel.ts:260-261`; `src/ui/zones/handlers.ts:27-35` | `ui/src/render.ts:188-189`; `ui/src/input.ts:77-81` | ported | 
-| Mulligan selected: green ✓ + `.selected` (code-read) | `src/ui/zones/dom.ts:123-137` | `.selected` only (`ui/src/render.ts:188`) | partial | Same 24px `#2ecc71` ✓ as §2, plus the solid green selected ring. |
+| Mulligan selected: green ✓ + `.selected` (code-read) | `src/ui/zones/dom.ts:123-137` | `ui/src/render/card.ts:198-206`; `ui/src/render.ts:203` | ported | Same 24px `#2ecc71` ✓ plus the solid green selected ring. |
 | Mulligan marks + confirm on **both** hands (sequential acting player) (code-read) | per-side confirm `index.html:619-625,673-679`; each side’s cards marked independently | `ui/src/session.ts:50` one `mulliganSwap[4]`; confirm only for `acting` (`ui/src/render.ts:473-480`) | in progress (round 3) | 
 | Confirm Mulligan (Red/Blue) in that side’s hand row | `index.html:619-625,673-679` | `ui/index.html:239-263`; `ui/src/render.ts:473-480` | ported | 
 | No hand drag / no End Turn during mulligan (code-read) | `src/ui/zones/handlers.ts:104-105`; `src/ui/render.ts:200` | `ui/src/render.ts:208,489-494` | ported | 
 | **Drag** a hand card onto the matching board zone to play (code-read) | `src/ui/drag.ts:115-143` | `ui/src/render.ts:201-208,271-285` | ported | 
-| **Right-click** an active-turn hand card to play (code-read) | `src/ui/zones/handlers.ts:52-56` | — (right-click is fuse) | missing | Right-click a playable hand card on your turn plays it. No OS menu. (Year-long habit — confirm with owner before treating as optional.) |
-| **Left-click / tap** a fuse-capable hand card to open Fuse (does not play) (code-read) | `src/ui/zones/handlers.ts:59-101`; `src/ui/zones/dragClickGuard.ts:50-56` | left-click **plays** (`ui/src/input.ts:83-85`); fuse is right-click (`109-115`) | missing | Left-click / tap a fuse-capable hand card opens Fuse and does not play. Play stays drag (and right-click, if that row ships). |
-| Fuse via releasing a drag **inside the hand** (no valid drop) (code-read) | `src/ui/pointerDragSession.ts:324-334` | — | missing | Drop a hand-card drag back inside the same hand (no board target): if the card can fuse, Fuse opens. |
+| **Right-click** an active-turn hand card to play (code-read) | `src/ui/zones/handlers.ts:52-56` | `ui/src/input.ts:192-210` | ported | Right-click a playable hand card plays it. No OS menu. |
+| **Left-click / tap** a fuse-capable hand card to open Fuse (does not play) (code-read) | `src/ui/zones/handlers.ts:59-101`; `src/ui/zones/dragClickGuard.ts:50-56` | `ui/src/input.ts:170-172` | ported | Left-click / tap a fuse-capable hand card opens Fuse and does not play. |
+| Fuse via releasing a drag **inside the hand** (no valid drop) (code-read) | `src/ui/pointerDragSession.ts:324-334` | `ui/src/drag.ts:228-236`; `ui/src/render.ts:239-240` | ported | Release a fuse-capable hand card inside the same hand → Fuse opens. |
 | Off-turn hand: not draggable, no play (silent) (code-read) | `src/ui/zones/handlers.ts:104-105` | `ui/src/render.ts:208` (`playable && phase !== "mulligan"`) | ported | 
 | 8px drag threshold; source opacity 0.45; preview clone scale 1.05 (code-read) | `src/ui/pointerDragSession.ts:38`; `css/cards.css:184-193` | `ui/src/drag.ts:14,89-105`; `ui/css/cards.css:193-202` | ported | 
 | Drop highlight green `.pointer-drop-highlight` on **legal** targets only (code-read) | `src/ui/pointerDragSession.ts:148-157`; `css/cards.css:195-199` | `ui/src/drag.ts:78-86`; `ui/src/render.ts:306-312` (any enemy card / any allied evo drop) | in progress (round 3) | 
@@ -172,15 +178,15 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | Attack: click attacker then click target (new two-step) (code-read) | — | `ui/src/input.ts:95-97,103-105`; `ui/src/render.ts:754-769` | ported | New-only extra; keep. Pending look/cancel is round 3. |
 | Pending attack / evolve: highlight legal targets; Cancel chip; tap elsewhere cancels (code-read) | old targeting is engine-driven select-mode; no pending-attack chip | `ui/src/input.ts:64-70` (empty click does **not** cancel); Escape does (`117-119`) | in progress (round 3) | 
 | Evolve: click Evo/Super then click an allied follower (code-read) | click is a no-op (drag only) (`src/ui/evo.ts:61-66`) | `ui/src/input.ts:56-61,91-93` | ported | New-only extra. |
-| Engage: **right-click** an `.engage-ready` amulet (code-read) | `src/ui/zones/handlers.ts:137-148` | **left-click** (`ui/src/input.ts:99-101`) | partial | Right-click a yellow `engagePulse` amulet engages it; the OS menu does not appear. Left-click may also engage (new extra). |
+| Engage: **right-click** an `.engage-ready` amulet (code-read) | `src/ui/zones/handlers.ts:137-148` | `ui/src/input.ts:182-184,212-214` | ported | Right-click engages; left-click may also engage. No OS menu. |
 | End Turn (Blue/Red) visible only for the active player; hidden in mulligan / game over | `src/ui/counts.ts:46-49`; `src/ui/render.ts:393-418` | `ui/src/render.ts:489-498` | ported | 
 | Bonus PP click toggles / commits on the second player | `index.html:708-728` | `ui/src/main.ts:680-688` | ported | 
-| Choice / mode modal: dim overlay, title **“Choose an effect:”**, buttons `label` or `name`, yellow Earth Rite sub-line (code-read) | `src/ui/choiceModal.ts:2-38`; `css/buttons.css:96-145` | `ui/src/render.ts:571-584` title **“Choose”**; `Mode ${m}` 0-based; no Earth Rite line | in progress (round 3) | 
+| Choice / mode modal: dim overlay, title **“Choose an effect:”**, buttons `label` or `name`, yellow Earth Rite sub-line (code-read) | `src/ui/choiceModal.ts:2-38`; `css/buttons.css:96-145` | `ui/src/render.ts:732-740`; `ui/css/buttons.css:176-181` | ported | Title “Choose an effect:” for modes; `#f1c40f` Earth Rite sub-line when the option costs sigils. Round-3 prompt bar kept. | 
 | Choice buttons: card names, 1-based mode text, no dead buttons (code-read) | `src/ui/choiceModal.ts:16-18` | `ui/src/render.ts:650-668` | in progress (round 3) | 
 | Stale choice click listeners on reused cards (code-read) | n/a (modal torn down) | `ui/src/render.ts:604-612` `{ once: true }` on highlighted cards | in progress (round 3) | 
 | Fuse Confirm sits under the modal (code-read) | fuse UI is engine-driven | confirm is `#targetingConfirmation` “Confirm” (`ui/src/render.ts:562-566`) | in progress (round 3) | 
-| Multi-target confirm bar: `{text} ({count})` bottom-centre green (code-read) | `src/ui/targeting.ts:16-28`; `index.html:152-163` | `ui/src/render.ts:562-566` label **“Confirm”** only | partial | Bottom-centre green `#4caf50`→`#45a049` button, 12×24 pad, 16px bold white, label `{prompt} ({selectedCount})` — not the bare word “Confirm”. |
-| Modal `.processing` then remove on click (code-read) | `src/ui/choiceModal.ts:29-33` | — | missing | Clicking an option dismisses the dim overlay immediately, before the next board paint. No leftover buttons. |
+| Multi-target confirm bar: `{text} ({count})` bottom-centre green (code-read) | `src/ui/targeting.ts:16-28`; `index.html:152-163` | `ui/src/render.ts:850-856,924-926`; `ui/css/buttons.css:240-252` | ported | Prompt-bar confirm is `{prompt} ({count})` in the old green (`#4caf50`→`#45a049`, 12×24, 16px bold white). |
+| Modal `.processing` then remove on click (code-read) | `src/ui/choiceModal.ts:29-33` | `ui/src/render.ts:752-759` | ported | Option click adds `.processing` and removes the dim overlay immediately. |
 | Choice-phase prompt + Undo chip (code-read) | — | — | in progress (round 3) | 
 | Undo symmetry inside a choice (one undo = one pick, not the whole choice) (code-read) | engine history (not in UI files) | `ui/src/session.ts:206-212` undoes the entire choice | in progress (round 3) | 
 | Vs-bot hide opponent hand (face-down) (code-read) | sparring “Hide line hand” (`src/ui/scriptPanel.ts:74-86`) — dropped | `ui/index.html:143-146`; `ui/src/render.ts:101-102,186-189` | dropped (by design) | Hide-hand survives as vs-bot only; sparring-line hide is out of scope. |
@@ -191,12 +197,12 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 
 | feature | old tool (file:line) | new client (file:line or "—") | status | gap spec |
 |---|---|---|---|---|
-| FCT toggle in settings, default on, persist `svwb.floatingCombatText` (code-read) | `index.html:366-371`; `src/ui/floatingCombatText.ts:13-56`; `src/boot/floatingCombatText.ts` | `ui/index.html:185-188`; `ui/src/main.ts:193-196` (checkbox only, not persisted) | partial | After reload, the checkbox and the floaters match last time (`localStorage.svwb.floatingCombatText` `"1"` / `"0"`). Default on. |
+| FCT toggle in settings, default on, persist `svwb.floatingCombatText` (code-read) | `index.html:366-371`; `src/ui/floatingCombatText.ts:13-56`; `src/boot/floatingCombatText.ts` | `ui/index.html:228-231`; `ui/src/main.ts:712-719,778-781` | ported | Persisted as `svwb.floatingCombatText` (`"1"` / `"0"`). Default on. |
 | FCT `−N` red `--color-danger`, `+N` green `--color-success`, 1.35s rise, 130ms stagger (code-read) | `css/floating-combat-text.css:5-61`; `src/ui/floatingCombatText.ts:16-17,136-139` | `ui/css/floating-combat-text.css:10-38`; `ui/src/fct.ts:4,13-35` | ported | 
-| Max 4 floaters per target; stack `--float-stack-index` (code-read) | `src/ui/floatingCombatText.ts:17,130` | stack index always 0; no cap | missing | At most 4 numbers on one host; each extra sits 18px higher (`--float-stack-index`). |
+| Max 4 floaters per target; stack `--float-stack-index` (code-read) | `src/ui/floatingCombatText.ts:17,130` | `ui/src/fct.ts:5,75-85` | ported | Cap 4 per host; `--float-stack-index` × 18px. |
 | Leader FCT from the leader strip centre (code-read) | `src/ui/floatingCombatText.ts:62-66,203-245` | `ui/src/fct.ts:43-45` (`#blueLeader` / `#redLeader`) | ported | 
 | Follower FCT on the card (code-read) | `src/ui/floatingCombatText.ts:68-70,147-151` | `ui/src/fct.ts:46-48` looks up `#blue-board-{slot}` but cards are `#blue-board-{id}` | in progress (round 3) | 
-| Follower brightness flash on damage (`.floating-combat-flash`) (code-read) | `src/ui/floatingCombatText.ts:147-151`; `css/floating-combat-text.css:89-103` | CSS only (`ui/css/floating-combat-text.css:89-103`) | missing | On follower damage the card flashes brightness 1.35 / saturate 1.1 for 0.45s (old `floating-combat-card-flash`). |
+| Follower brightness flash on damage (`.floating-combat-flash`) (code-read) | `src/ui/floatingCombatText.ts:147-151`; `css/floating-combat-text.css:89-103` | `ui/src/fct.ts:58-63`; `ui/css/floating-combat-text.css:89-103` | ported | 0.45s brightness 1.35 / saturate 1.1 on follower damage. |
 | Suppress FCT on undo/redo / position load (code-read) | `src/ui/floatingCombatText.ts:304-314` | `ui/src/session.ts:175,193`; `ui/src/main.ts:180-183` | ported | 
 | No enter/leave/destroy CSS on old zone reconcile (code-read) | `src/ui/zones/index.ts:83-147` | `.card-enter` 140ms / `.card-leave` 120ms (`ui/css/animation.css:3-48`; `ui/src/render.ts:349-357`) | ported | New-only extra; keep. |
 | `.dying` 0.6s fade/scale (class rarely applied) (code-read) | `css/cards.css:150-156` | `ui/css/cards.css:159-165` (unused; leave uses `card-leave`) | ported | Same unused CSS. |
@@ -205,7 +211,7 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | Stat-change flash 150–160ms scale/brightness (code-read) | — (colour change only) | `ui/css/animation.css:24-58`; `ui/src/render/card.ts:142-159` | ported | New-only extra; keep. |
 | Pressed card `translateY(2px) scale(0.97)` (code-read) | — | `ui/css/animation.css:11-15`; `ui/src/input.ts:31-45` | ported | New-only extra; keep. |
 | No “Turn N” banner; turn change is the hand/leader glow + End Turn swap (code-read) | (none) | (none) | ported | 
-| Terminal overlay: “First wins” / “Second wins” / “Draw”; reason “Deck-out” or “Lethal”; Rematch same seed / new seed (code-read) | `src/ui/render.ts:289-342` | `ui/src/render.ts:707-738` “Blue (A) wins” / “Red (B) wins” / “Draw”; reason **“Match over”**; **New Game** + **Rematch (swap sides)** | partial | Under the title, the reason reads `Deck-out` or `Lethal` (not “Match over”). Title may stay Blue/Red. Keep New Game + swap-sides if wanted; also offer Rematch (same seed) next to them. |
+| Terminal overlay: “First wins” / “Second wins” / “Draw”; reason “Deck-out” or “Lethal”; Rematch same seed / new seed (code-read) | `src/ui/render.ts:289-342` | `ui/src/render.ts:1054-1093`; `ui/src/main.ts:335-345` | ported | Reason `Deck-out` or `Lethal`. Buttons: Rematch (same seed), Rematch (new seed), New Game. First player of a rematch follows the drawer A/B/coin setting. |
 | Rail terminal readout label (code-read) | — | `ui/src/render.ts:94-98` (`Winner a` or `Winner b`) | in progress (round 3) | 
 | Action toast bottom-centre, 0.18s fade, default 1800ms (code-read) | `src/ui/toast.ts:19-27`; `css/modern-theme.css:976-998` | CSS `#actionToast` unused; errors go to `#errBanner` inside the settings drawer (`ui/src/main.ts:198-201`) | in progress (round 3) | Engine-error toast is round 3. Visible result: bottom-centre dark pill (`rgba(20, 22, 28, 0.92)`, 1px white 12% border, `--ink`, 8×14 pad, 8px radius), fades 0.18s from 8px below, holds 1800ms — not a line inside the settings drawer. |
 | Board/leaders 72% opacity, no pointer events on game over (code-read) | `css/modern-theme.css:1050-1104` | `ui/css/modern-theme.css:961-965` | ported | 
@@ -218,11 +224,11 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 |---|---|---|---|---|
 | Left battle-log button; drawer 360px, `transform 0.18s`; scrim click closes | `index.html:557-611,968-1002` | `ui/index.html:207-233`; `ui/src/main.ts:463-484` | ported | 
 | Opening history closes settings (and vice versa) (code-read) | `index.html:969`; `src/boot/settingsDrawer.ts:41` | `ui/src/main.ts:443,471` | ported | 
-| Escape closes the history drawer (code-read) | `index.html:988-990` | — (Escape only closes settings / cancels pending) | missing | Escape closes an open history drawer the same way it closes settings (0.18s slide + scrim gone). |
+| Escape closes the history drawer (code-read) | `index.html:988-990` | `ui/src/main.ts:497-504,530-533`; `ui/index.html:24-32` | ported | Escape closes the open 360px drawer (0.18s slide + scrim). |
 | Sections: Red — Played, Red — Destroyed, Blue — Played, Blue — Destroyed | `index.html:590-611` | `ui/index.html:216-232` | ported | 
-| Each row: cost badge + `Name ×count`, grouped by name+cost, sorted cost then name (code-read) | `src/ui/render.ts:451-507` | `ui/src/render.ts:535-551` (flat name list, no cost, no count) | missing | Rows group by name+cost, sort cost then name. Each row: 22px dark cost square (`#262c36`→`#1a1f27`, `#e9edf1` number) then `Name ×N`. |
-| Optional set badge on the row (muted `#7a8494` if out of rotation) (code-read) | `src/ui/render.ts:494-503` | — | missing | After the name, an 11px set label `#9aa3b2` (in rotation) or `#7a8494` (older). |
-| Hover a row: 198px card-art preview follows the cursor (+18px, clamped) (code-read) | `src/ui/render.ts:534-580`; `index.html:144-147` | — | missing | Hovering a row shows a 198px card-art preview that follows the cursor (+18px, clamped 12px from the viewport). Dark `#0c0e12` panel, 10px radius, `0 8px 18px` shadow. |
+| Each row: cost badge + `Name ×count`, grouped by name+cost, sorted cost then name (code-read) | `src/ui/render.ts:451-507` | `ui/src/render.ts:616-668` | ported | Grouped by name+cost, sorted cost then name. 22px `#262c36`→`#1a1f27` cost square + `Name ×N`. |
+| Optional set badge on the row (muted `#7a8494` if out of rotation) (code-read) | `src/ui/render.ts:494-503` | `ui/src/render.ts:655-661`; `ui/index.html` `.hist-set` | ported | 11px `Set N` in `#9aa3b2` / `#7a8494` (older). |
+| Hover a row: 198px card-art preview follows the cursor (+18px, clamped) (code-read) | `src/ui/render.ts:534-580`; `index.html:144-147` | `ui/src/render.ts:671-705`; `#historyImgPreview` | ported | 198px art follows the cursor (+18px, clamped 12px). `#0c0e12`, 10px radius, `0 8px 18px`. |
 | Rows are not clickable (hover only) (code-read) | (hover only) | (not clickable) | ported | 
 | Destroyed list is **that side’s lost cards**, not “destroyed by” (code-read) | `src/ui/render.ts:205-211` (`players.*.destroyedHistory`) | `ui/src/session.ts:144-147` attributes destroy to `game.active()` | in progress (round 3) | 
 
@@ -235,10 +241,10 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | Hamburger; title “Settings (Ctrl+Shift+M)” | `index.html:166-173` | `ui/index.html:82` | ported | 
 | Drawer 360px left slide 0.18s; scrim click / Escape / Ctrl+Shift+M | `src/boot/settingsDrawer.ts:70-88`; `css/settings-drawer.css` | `ui/src/main.ts:438-460`; `ui/css/settings-drawer.css:50-68` | ported | 
 | Blue / Red deck `<select>` | `index.html:196-207` | `ui/index.html:99-107` | ported | 
-| Import Deck | `index.html:210-216` (paste community list) | `ui/index.html:109-110`; `ui/src/main.ts:611-624` (JSON `{id:count}` file) | partial | Keep JSON import. If you also want old paste (`Nx Name`), that is a separate panel — treat as dropped unless the owner wants it. |
+| Import Deck | `index.html:210-216` (paste community list) | `ui/index.html:109-110`; `ui/src/main.ts:611-624` (JSON `{id:count}` file) | dropped (by design) | JSON file import stays. Community-list paste is dropped (owner 2026-09-11). |
 | Export List (Blue deck as `Nx Name` + clipboard) (code-read) | `index.html:217-223`; `src/ui/deckImportPanel.ts:363-365` | — | missing | An “Export List” control copies the Blue deck as `Nx Name` lines and shows that text in a small panel. |
-| Seed input, “random if empty” | `index.html:231-240` | `ui/index.html:112-122` placeholder/value **`1`** | partial | Empty seed = roll a random u64 (old placeholder). Defaulting to `1` every boot is a habit break. |
-| Game seed panel + Copy; button flashes “Copied” 1200ms | `src/ui/seedDisplay.ts:13-61` | `ui/index.html:123-126`; `ui/src/main.ts:701-707` (copy, no flash) | partial | After a successful copy, the button reads `Copied` for 1200ms, then returns to `Copy`. |
+| Seed input, “random if empty” | `index.html:231-240` | `ui/index.html:157-164`; `ui/src/main.ts:244-245,320-323` | ported | Placeholder “random if empty”; empty field rolls a u64. |
+| Game seed panel + Copy; button flashes “Copied” 1200ms | `src/ui/seedDisplay.ts:13-61` | `ui/index.html:166-170`; `ui/src/main.ts:782-796` | ported | Button reads `Copied` for 1200ms, then `Copy`. |
 | First-player control | (implicit / start options, not a drawer select) | `ui/index.html:128-133` coin/A/B | ported | New-only extra. |
 | Mode: hotseat / vs-bot / watch | — | `ui/index.html:93-98` | ported | New-only extra. |
 | Vs-bot: human side, bot policy, hide bot hand (code-read) | — | `ui/index.html:134-146` | ported | New-only extra. |
@@ -258,8 +264,8 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | Reroll + **F8** (new RNG branch from the checkpoint) (code-read) | `index.html:344-350`; `src/boot/hotkeysBoot.ts:7-9` | — | missing | “Reroll” and F8 restore the checkpoint on a new RNG branch. Status line: `Checkpoint: T{n} · rerolls N`. |
 | Checkpoint status `Checkpoint: none` or `T{n} · rerolls N` (code-read) | `index.html:351-356` | `ui/index.html:180` `Checkpoint: none/set` | partial | Status shows turn and reroll depth (`T{n} · rerolls N`), not just “set”. |
 | Save/load still correct after the 200-step undo ring drops old actions (code-read) | old position store is a full board snapshot | `ui/src/session.ts:11-12,106-111`; `ui/README.md:38` (log of `NeutralAction[]`) | in progress (round 3) | 
-| Active on bottom checkbox | `index.html:357-364` | `ui/index.html:181-184` | partial | Persistence — see §1. |
-| Floating combat text checkbox (default on) | `index.html:366-371` | `ui/index.html:185-188` | partial | Persistence — see §6. |
+| Active on bottom checkbox | `index.html:357-364` | `ui/index.html:224-227`; `ui/src/main.ts:712-723,773-777` | ported | Persistence — see §1. |
+| Floating combat text checkbox (default on) | `index.html:366-371` | `ui/index.html:228-231`; `ui/src/main.ts:712-719,778-781` | ported | Persistence — see §6. |
 | Diagnostics / blackbox (Copy Trace, Export Trace, heap warning) (code-read) | `index.html:375-411`; `src/ui/blackbox.ts` | — | dropped (by design) | 
 | Line / sparring script (Rec, Export/Import, Hide line hand, diverge banner) (code-read) | `index.html:413-465`; `src/ui/scriptPanel.ts` | CSS `#scriptDivergeBanner` only | dropped (by design) | 
 | Puzzle section (save/play/retry, result overlay) (code-read) | `index.html:466-535`; `src/ui/puzzlePanel.ts` | CSS leftovers only | dropped (by design) | 
@@ -275,7 +281,7 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 |---|---|---|---|---|
 | Ctrl+Shift+M toggles settings (code-read) | `src/boot/settingsDrawer.ts:86-88` | `ui/src/main.ts:456-459` | ported | 
 | Escape closes settings (code-read) | `src/boot/settingsDrawer.ts:81-83` | `ui/src/main.ts:455` | ported | 
-| Escape closes history (code-read) | `index.html:988` | — | missing | Same result as §7: Escape closes the open history drawer. |
+| Escape closes history (code-read) | `index.html:988` | `ui/src/main.ts:497-504` | ported | Same result as §7. |
 | Escape / click-outside does **not** cancel old targeting (no UI cancel) (code-read) | (none in UI files) | Escape cancels pending (`ui/src/input.ts:117-119`) | ported | New-only extra; tap-elsewhere + Cancel chip is round 3. |
 | Ctrl/Cmd+Z undo; Ctrl+Y / Ctrl+Shift+Z redo (ignore when focus is an input) (code-read) | `index.html:266-275`; `src/boot/hotkeysBoot.ts:4-5` | `ui/src/main.ts:486-511` | ported | 
 | F6 set checkpoint (code-read) | `src/boot/hotkeysBoot.ts:7-9` | `ui/src/main.ts:513-518` | ported | 
@@ -283,7 +289,7 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | F8 reroll checkpoint (code-read) | `src/boot/hotkeysBoot.ts:7-9` | — | missing | Same result as §8: F8 restores the checkpoint on a new RNG branch. |
 | Unified pointer drag (mouse + touch), pointer capture (code-read) | `src/ui/pointerDragSession.ts` | `ui/src/drag.ts` | ported | 
 | `touch-action: none` on draggables (code-read) | `css/cards.css` drag block | `ui/css/cards.css:175-184` | in progress (round 3) | 
-| Browser context menu blocked on `.card`, `.zone`, `.leader`, `.evo-btn` (code-read) | `src/boot/contextMenu.ts:3-17` | only `fuse-ready` cards (`ui/src/input.ts:109-115`) | missing | Right-click on a card, board zone, leader strip, or Evo/Super button never shows the OS menu — so play / engage / fuse can use that click. |
+| Browser context menu blocked on `.card`, `.zone`, `.leader`, `.evo-btn` (code-read) | `src/boot/contextMenu.ts:3-17` | `ui/src/input.ts:192-197` | ported | Right-click on a card, zone, leader, or Evo/Super never shows the OS menu. |
 | Long-press tooltip (code-read) | — | — | in progress (round 3) | 
 | Cancel drag on `pointercancel`, tab blur, `visibilitychange` (code-read) | `src/ui/pointerDragSession.ts:341-367` | `ui/src/drag.ts:284-287` | ported | 
 
@@ -313,49 +319,49 @@ Partial and missing rows only, **every-turn first**. Round-3 items stay here so 
 2. **Yellow vs green glow + no E/A/C badges** — in progress (round 3).
 3. **Stat colours buffed / damaged / debuffed** — in progress (round 3).
 4. **`updateCard` countdown / overlays / evolved art** — in progress (round 3).
-5. **Tooltip order + class/tribes/set + extras** — After the name: muted class/tribes + set (`#9aa3b2` / `#7a8494`); then gate/progress lines; then `--color-warn` keyword description; then crest panels, orange/grey fused loot, Rally `#7af`, Skybound `#ebd04f`, `+A/+D` `#66ff66`/`#ff6666`, `Cannot play:` `#ff8888`. Keep the Cost line. Bottom-half cursor: tooltip grows up (12px above); top-half grows down.
-6. **Play / fuse click map** — Left-click/tap a fuse-capable hand card → Fuse (does not play). Right-click a playable hand card → play, no OS menu. Drag to own board → play. (Today the new client is the inverse.)
+5. **Tooltip order + class/tribes/set + extras** — **`ported` 2026-09-11** (`ui/src/tooltip.ts:39-148`, smart anchor `ui/src/render.ts:1179-1190`). Name → class/tribes + set → Cost → gates → description → crests / fused / Rally / Skybound / `+A/+D` / `Cannot play:`.
+6. **Play / fuse click map** — **`ported` 2026-09-11** (`ui/src/input.ts:170-214`; owner: keep the old mapping). Left-click/tap fuse-capable → Fuse (does not play). Right-click playable → play. Drag to own board → play.
 7. **Rush-turn yellow vs green attack glow** — in progress (round 3).
 8. **Pending attack/evolve cancel + Cancel chip** — in progress (round 3).
 9. **Long-press tooltip + `touch-action: none`** — in progress (round 3).
-10. **Tooltip live refresh + drag-pinned panel** — An open tooltip updates on every board paint. While a card is dragged, the same panel stays at `top:12px; left:12px`.
+10. **Tooltip live refresh + drag-pinned panel** — **`ported` 2026-09-11** as part of #5 (`ui/src/render.ts:1193-1228`). Open tooltip rebuilds on every paint; drag-pin at `top:12px; left:12px`.
 
 ### Common (most games)
 
-11. **Follower floating combat text** — in progress (round 3). Also: at most 4 numbers per host, each extra 18px higher; 0.45s brightness flash on follower damage; FCT checkbox survives reload (`svwb.floatingCombatText`).
-12. **Mulligan marks on both hands + ✓** — in progress (round 3). Selected cards still need the 24px `#2ecc71` ✓ (see §2).
-13. **History rows** — 22px dark cost square + `Name ×N`, grouped by name+cost, 11px set label `#9aa3b2`/`#7a8494`, 198px hover art that follows the cursor.
+11. **Follower floating combat text** — in progress (round 3) for follower host lookup. Extras **`ported` 2026-09-11** (`ui/src/fct.ts:5,58-85`): cap 4, `--float-stack-index` × 18px, 0.45s flash, persist `svwb.floatingCombatText`.
+12. **Mulligan marks on both hands + ✓** — in progress (round 3) for both-hands marks. Selected ✓ **`ported` 2026-09-11** (`ui/src/render/card.ts:198-206`): 24px `#2ecc71` ✓ + solid green ring.
+13. **History rows** — **`ported` 2026-09-11** (`ui/src/render.ts:616-705`): 22px cost square + `Name ×N`, grouped by name+cost, set badge, 198px hover art.
 14. **History destroyed-owner attribution** — in progress (round 3).
-15. **Choice modal labels + Fuse Confirm + stale listeners + prompt/Undo** — in progress (round 3). Also: title “Choose an effect:”; yellow `#f1c40f` Earth Rite sub-line; bottom-centre confirm `{prompt} ({count})`.
+15. **Choice modal labels + Fuse Confirm + stale listeners + prompt/Undo** — in progress (round 3) for labels / Confirm / listeners / Undo. Extras **`ported` 2026-09-11** (`ui/src/render.ts:732-759,850-856`): title “Choose an effect:”; `#f1c40f` Earth Rite sub-line; confirm `{prompt} ({count})`; `.processing` dismisses immediately.
 16. **Engine-error toast** — in progress (round 3). Bottom-centre dark pill, 1800ms, 0.18s fade — not a line in the settings drawer.
 17. **Undo symmetry inside a choice** — in progress (round 3).
 18. **Enemy leader outline only while pending** — in progress (round 3).
 19. **Drag highlights ignore legality** — in progress (round 3).
 20. **Fuse chip** — in progress (round 3).
-21. **Engage right-click** — Right-click a yellow `engagePulse` amulet engages it; no OS menu on cards, zones, leaders, or Evo/Super.
-22. **Can’t-attack overlay** — Crossed chains on any board follower that cannot attack, not only when both follower and leader locks are set.
-23. **Keyword icon swap + Ongoing icon** — 2+ icons cycle (2s for two, 3s for three/four); Ongoing uses `images/icon_ongoing.png` in the same 26×26 bottom-centre stack.
-24. **Spellboost badge** — Blue circle, white count, under the cost whenever spellboost is at least 1.
-25. **Leader barrier ring** — While the leader has Barrier / a damage cap, the HP pill wears the cyan `--glow-barrier` ring (inset −6px, 3px `rgba(120, 220, 255, 0.75)`).
-26. **Escape closes history** — Escape closes the open 360px history drawer (0.18s), same as settings.
-27. **Copy seed “Copied”** — Button reads `Copied` for 1200ms after a successful copy.
-28. **Active-on-bottom persist** — After reload, the checkbox and board match last time (`svwb.activeOnBottom`).
+21. **Engage right-click** — **`ported` 2026-09-11** as part of #6 (`ui/src/input.ts:182-214`).
+22. **Can’t-attack overlay** — **`ported` 2026-09-11** (`ui/src/render/card.ts:282-290`; `engine/src/info.rs` `cannot_attack_reason`). Crossed chains on any printed lock, not sickness.
+23. **Keyword icon swap + Ongoing icon** — **`ported` 2026-09-11** (`ui/src/render/card.ts:306-317`). `.swap-2` 2s; `.swap-3`/`.swap-4` 3s; Ongoing via `cardText.tags`.
+24. **Spellboost badge** — **`ported` 2026-09-11** (`ui/src/render/card.ts:170-174`). Blue circle, white count, under the cost when `spellboost_count ≥ 1`.
+25. **Leader barrier ring** — **`ported` 2026-09-11** (`ui/src/render.ts:456-462`; `engine/src/info.rs` `has_leader_barrier`).
+26. **Escape closes history** — **`ported` 2026-09-11** (`ui/src/main.ts:497-533`).
+27. **Copy seed “Copied”** — **`ported` 2026-09-11** (`ui/src/main.ts:782-796`). Button reads `Copied` for 1200ms.
+28. **Active-on-bottom persist** — **`ported` 2026-09-11** (`ui/index.html` inline boot; `ui/src/main.ts:712-777`). `svwb.activeOnBottom` applied before first paint.
 
 ### Occasional
 
 29. **Faith crest badge** — in progress (round 3).
 30. **Barrier overlay + flash/pop** — Cyan ring + particles (`--glow-barrier`) while Barrier is on; 250ms brightness flash on a new charge; 350ms pop when it breaks.
 31. **Can’t-be-destroyed overlay** — Gold field plus five floating particles for as long as the keyword is on.
-32. **Card-name highlights + crest panels + fused loot + Skybound + buff delta + play-blocked** in the tooltip — see §4 (italic `--color-accent-blue-bright` names, 44px crest panels, `#ebd04f` Skybound, `#66ff66`/`#ff6666` delta, `#ff8888` Cannot play).
+32. **Card-name highlights + crest panels + fused loot + Skybound + buff delta + play-blocked** in the tooltip — **`ported` 2026-09-11** as part of #5 (see §4).
 33. **Amulet named-counter badge** — Same bottom-right white/black-stroke number as countdown, showing the first numeric counter when countdown is absent.
 34. **Spell-cast flash** — Played spell brightens 1.5, cyan drop-shadow, scale 1.1 → 1, 0.5s ease-out.
-35. **Terminal overlay reason + rematch-same-seed** — Reason `Deck-out` or `Lethal`; offer Rematch (same seed) next to swap-sides.
+35. **Terminal overlay reason + rematch-same-seed** — **`ported` 2026-09-11** (`ui/src/render.ts:1054-1093`). Reason `Deck-out` or `Lethal`; Rematch (same seed) / (new seed) / New Game. Swap-sides dropped (owner 2026-09-11).
 36. **Terminal readout label** — in progress (round 3).
-37. **Empty seed = random** — Empty seed field rolls a random u64 (placeholder “random if empty”), not a baked-in `1`.
+37. **Empty seed = random** — **`ported` 2026-09-11** (`ui/src/main.ts:244-245,320-323`). Placeholder “random if empty”; empty field rolls a u64.
 38. **Share URL `a`/`b` aliases on write** — Keep `deckA`/`deckB`/`mode`; the written URL also carries `a`/`b` so old bookmarks open the same match.
-39. **No OS menu on the play surface** — Right-click a card, zone, leader, or Evo/Super never shows the browser menu.
-40. **Fuse via drag-release in hand** — Releasing a hand-card drag inside the same hand (no drop target) opens Fuse when the card can fuse.
-41. **Choice dismisses on click** — The dim overlay is gone before the next board paint; no leftover option buttons.
+39. **No OS menu on the play surface** — **`ported` 2026-09-11** as part of #6 (`ui/src/input.ts:192-197`).
+40. **Fuse via drag-release in hand** — **`ported` 2026-09-11** as part of #6 (`ui/src/drag.ts:228-236`).
+41. **Choice dismisses on click** — **`ported` 2026-09-11** as part of #15 (`ui/src/render.ts:752-759`).
 42. **No hitch on card/crest teardown** — Removing a card or crest does not stall the next paint on leftover image decodes.
 
 ### Rare (practice drawer)
@@ -364,7 +370,7 @@ Partial and missing rows only, **every-turn first**. Round-3 items stay here so 
 44. **Position option `Name · T{n} · time`; Rename; Del** — Each saved position shows name, turn, and locale time; Rename (prompt) and Del act on the selected one.
 45. **Reroll + F8** — Restore the checkpoint on a new RNG branch; status `Checkpoint: T{n} · rerolls N`.
 46. **Export List** — Copies the Blue deck as `Nx Name` lines and shows that text in a small panel.
-47. **Icarus `!` badge** — Gold 18px circle `!` at `top:28px; left:6px` while the instance is Icarus-buffed.
+47. **Icarus `!` badge** — **not representable** (no Icarus buff in `engine/`). Left `missing` until the engine exposes the fact.
 
 ---
 
@@ -372,22 +378,20 @@ Partial and missing rows only, **every-turn first**. Round-3 items stay here so 
 
 | status | rows |
 |---|---|
-| ported | 121 |
-| partial | 18 |
-| missing | 37 |
-| dropped (by design) | 10 |
-| in progress (round 3) | 31 |
+| ported | 162 |
+| partial | 3 |
+| missing | 11 |
+| dropped (by design) | 11 |
+| in progress (round 3) | 30 |
 | **total** | **217** |
 
-Counts are feature rows in §§1–10 (the gap list is a reordering, not extra rows). The 31 round-3 rows are the brief’s list split across the tables (e.g. yellow/green glow appears as several glow-class rows).
+Counts are feature rows in §§1–10 (the gap list is a reordering, not extra rows). The 30 round-3 rows are the brief’s list split across the tables (e.g. yellow/green glow appears as several glow-class rows). Round-1 parity (2026-09-11) flipped the every-turn / common gaps to `ported`.
 
-## Please confirm with the owner
+## Owner decided 2026-09-11
 
-These look dropped on purpose (brief RZ or replaced by a new control). I will not put them on the next fix brief unless you say they are still wanted:
+See the top-of-doc block. Confirmed and implemented this round:
 
-- blackbox, sparring-line scripts, puzzles, coverage banner, god-mode (RZ)
-- Consistency Trainer, `?test=1` QA bridge, UNIMPL/UNKNOWN OP badges, burn-preview box
-- Deck *paste* import panel (JSON file import is what shipped)
-- Smaller top-hand scale (R1/R2 asked for equal hands)
-- Rematch (same seed) / (new seed) vs today’s New Game + Rematch (swap sides)
-- Right-click-to-play / left-click-to-fuse (year of muscle memory — I listed it as a gap; confirm before the next brief treats it as optional)
+- Click map: keep the old mapping (left-click fuse-capable → Fuse; right-click playable → play; drag-release in hand → Fuse; engage by right-click).
+- Rematch: Rematch (same seed), Rematch (new seed), New Game. No swap-sides; first player follows the drawer A/B/coin setting.
+- Import Deck paste, burn-preview, god-mode, `?test=1`, UNIMPL badges, smaller top-hand scale, and the other listed extras stay `dropped (by design)`.
+- Icarus badge is not representable (engine has no Icarus buff).

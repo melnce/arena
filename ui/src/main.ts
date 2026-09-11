@@ -1,7 +1,7 @@
 import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
 import { publicUrl } from "./base.ts";
 import { decks, loadCatalog, parseDeckJson } from "./catalog.ts";
-import { clearFloaters, spawnFloaters } from "./fct.ts";
+import { clearFloaters, reflashDamage, spawnFloaters } from "./fct.ts";
 import { bindPointer } from "./input.ts";
 import { sessionBoardInfo, sessionHandInfo, sessionPlayerInfo } from "./info.ts";
 import * as L from "./legal.ts";
@@ -31,7 +31,15 @@ import {
   type Session,
 } from "./session.ts";
 import { readShareParams, writeShareParams } from "./share.ts";
-import type { First, Mode, NeutralAction, PlayerId, PositionLog, SessionConfig } from "./types.ts";
+import type {
+  EngineEvent,
+  First,
+  Mode,
+  NeutralAction,
+  PlayerId,
+  PositionLog,
+  SessionConfig,
+} from "./types.ts";
 
 let session: Session | null = null;
 let pending: Pending = null;
@@ -109,8 +117,9 @@ const hooks: RenderHooks = {
     const act = L.bonusPp(legalActions(session), player);
     if (act) commit(act);
   },
-  onNewGame: () => void startFromForm(),
-  onRematchSwap: () => void rematchSwap(),
+  onNewGame: () => openSettingsForNewGame(),
+  onRematchSame: () => void rematch(true),
+  onRematchNew: () => void rematch(false),
   onUndo: () => applyHistory(undo),
   pending: null,
   setPending: (p) => {
@@ -134,10 +143,7 @@ function exposeArena(): void {
         typeof actionJson === "string" ? JSON.parse(actionJson) : actionJson
       ) as NeutralAction;
       const events = applyAction(session, action);
-      if (!session.suppressFloater) spawnFloaters(events, floatingTextOn());
-      session.suppressFloater = false;
-      pending = null;
-      paint();
+      showCombat(events);
       return events;
     },
     handInfo: (player) => (session ? sessionHandInfo(session, player as PlayerId) : []),
@@ -150,6 +156,7 @@ function exposeArena(): void {
             super_evolve_unlocked: false,
             evolve_unlock_in: 0,
             super_evolve_unlock_in: 0,
+            has_leader_barrier: false,
           },
     full: () => (session ? JSON.parse(session.game.full()) : null),
     legal: () => (session ? JSON.parse(session.game.legal()) : []),
@@ -199,12 +206,7 @@ function commit(action: NeutralAction): void {
   if (!session) return;
   try {
     const events = applyAction(session, action);
-    if (!session.suppressFloater) {
-      spawnFloaters(events, floatingTextOn());
-    }
-    session.suppressFloater = false;
-    pending = null;
-    requestPaint();
+    showCombat(events);
     void maybeBots();
   } catch (err) {
     console.error(err);
@@ -215,6 +217,16 @@ function commit(action: NeutralAction): void {
 function floatingTextOn(): boolean {
   const box = byId<HTMLInputElement>("floatingCombatTextToggle");
   return box ? box.checked : true;
+}
+
+function showCombat(events: EngineEvent[]): void {
+  if (!session) return;
+  const show = !session.suppressFloater && floatingTextOn();
+  session.suppressFloater = false;
+  pending = null;
+  if (show) spawnFloaters(events, true);
+  paint();
+  if (show) reflashDamage(events);
 }
 
 function toast(msg: string): void {
@@ -239,8 +251,8 @@ function humanSideFromForm(): PlayerId {
 }
 
 function formConfig(): SessionConfig {
-  const seedRaw = byId<HTMLInputElement>("seedInput")?.value.trim() || "1";
-  const seed = BigInt(seedRaw);
+  const seedRaw = byId<HTMLInputElement>("seedInput")?.value.trim() ?? "";
+  const seed = seedRaw ? BigInt(seedRaw) : randomSeed();
   const deckAId = byId<HTMLSelectElement>("blueDeckSelect")!.value;
   const deckBId = byId<HTMLSelectElement>("redDeckSelect")!.value;
   const mode = (byId<HTMLSelectElement>("modeSelect")?.value ?? "hotseat") as Mode;
@@ -315,20 +327,30 @@ function startWatchIfAuto(): void {
   }
 }
 
-async function rematchSwap(): Promise<void> {
+function randomSeed(): bigint {
+  const buf = new Uint32Array(2);
+  crypto.getRandomValues(buf);
+  return (BigInt(buf[0]) << 32n) | BigInt(buf[1]);
+}
+
+function openSettingsForNewGame(): void {
+  closeHistory();
+  const drawer = byId("settingsDrawer");
+  const scrim = byId("settingsScrim");
+  drawer?.classList.add("open");
+  drawer?.setAttribute("aria-hidden", "false");
+  scrim?.classList.add("show");
+}
+
+async function rematch(keepSeed: boolean): Promise<void> {
   if (!session) return;
   const cfg = { ...session.cfg };
-  const da = cfg.deckA;
-  cfg.deckA = cfg.deckB;
-  cfg.deckB = da;
-  const ida = cfg.deckAId;
-  cfg.deckAId = cfg.deckBId;
-  cfg.deckBId = ida;
-  if (cfg.mode === "vs-bot") cfg.humanSide = cfg.humanSide === "a" ? "b" : "a";
-  const aSel = byId<HTMLSelectElement>("blueDeckSelect");
-  const bSel = byId<HTMLSelectElement>("redDeckSelect");
-  if (aSel) aSel.value = cfg.deckAId;
-  if (bSel) bSel.value = cfg.deckBId;
+  cfg.first = (byId<HTMLSelectElement>("firstSelect")?.value ?? cfg.first) as First;
+  if (!keepSeed) {
+    cfg.seed = randomSeed();
+    const seedInput = byId<HTMLInputElement>("seedInput");
+    if (seedInput) seedInput.value = cfg.seed.toString();
+  }
   startSession(cfg);
 }
 
@@ -344,10 +366,8 @@ async function maybeBots(): Promise<void> {
   let guard = 0;
   while (session && !isHumanActing(session) && session.game.phase() !== "terminal" && guard < 80) {
     const events = botStep(session);
-    if (!session.suppressFloater) spawnFloaters(events, floatingTextOn());
-    session.suppressFloater = false;
     guard += 1;
-    paint();
+    showCombat(events);
     await new Promise<void>((r) => window.setTimeout(r, 280));
   }
   paint();
@@ -372,10 +392,8 @@ function scheduleWatch(): void {
     }
     try {
       const events = botStep(session);
-      if (!session.suppressFloater) spawnFloaters(events, floatingTextOn());
-      session.suppressFloater = false;
       resetZoneCache();
-      paint();
+      showCombat(events);
     } catch (err) {
       watchPlaying = false;
       toast(String(err));
@@ -483,7 +501,14 @@ function initSettings(): void {
   });
   scrim?.addEventListener("click", close);
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") close();
+    if (e.key === "Escape") {
+      const hist = byId("historyDrawer");
+      if (hist?.classList.contains("open")) {
+        closeHistory();
+        return;
+      }
+      close();
+    }
     if (e.key === "m" && e.ctrlKey && e.shiftKey) {
       e.preventDefault();
       drawer?.classList.contains("open") ? close() : open();
@@ -674,12 +699,12 @@ function initWatch(): void {
     watchPlaying = false;
     try {
       const events = botStep(session);
-      spawnFloaters(events, floatingTextOn());
+      resetZoneCache();
+      showCombat(events);
     } catch (err) {
       toast(String(err));
+      paint();
     }
-    resetZoneCache();
-    paint();
   });
   byId("watchPlayBtn")?.addEventListener("click", () => {
     watchPlaying = true;
@@ -690,7 +715,18 @@ function initWatch(): void {
   });
 }
 
+function restorePersistedToggles(): void {
+  const bottom = localStorage.getItem("svwb.activeOnBottom") === "1";
+  const fct = localStorage.getItem("svwb.floatingCombatText");
+  const bottomBox = byId<HTMLInputElement>("activeOnBottomToggle");
+  const fctBox = byId<HTMLInputElement>("floatingCombatTextToggle");
+  if (bottomBox) bottomBox.checked = bottom;
+  document.body.classList.toggle("active-on-bottom", bottom);
+  if (fctBox) fctBox.checked = fct == null ? true : fct !== "0";
+}
+
 async function boot(): Promise<void> {
+  restorePersistedToggles();
   await init();
   await loadCatalog();
   populatePolicies();
@@ -741,17 +777,28 @@ async function boot(): Promise<void> {
   exposeArena();
   byId("modeSelect")?.addEventListener("change", syncModeChrome);
   byId("activeOnBottomToggle")?.addEventListener("change", (e) => {
-    document.body.classList.toggle(
-      "active-on-bottom",
-      (e.target as HTMLInputElement).checked,
-    );
+    const on = (e.target as HTMLInputElement).checked;
+    document.body.classList.toggle("active-on-bottom", on);
+    localStorage.setItem("svwb.activeOnBottom", on ? "1" : "0");
+  });
+  byId("floatingCombatTextToggle")?.addEventListener("change", (e) => {
+    const on = (e.target as HTMLInputElement).checked;
+    localStorage.setItem("svwb.floatingCombatText", on ? "1" : "0");
   });
   byId("copySeedBtn")?.addEventListener("click", async () => {
+    const btn = byId<HTMLButtonElement>("copySeedBtn");
     const v = byId("gameSeedValue")?.textContent ?? "";
     try {
       await navigator.clipboard.writeText(v);
     } catch {
       toast(v);
+    }
+    if (btn) {
+      const prev = btn.textContent;
+      btn.textContent = "Copied";
+      window.setTimeout(() => {
+        btn.textContent = prev || "Copy";
+      }, 1200);
     }
   });
   byId("vsBotPolicy")?.addEventListener("change", () => {

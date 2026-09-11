@@ -33,6 +33,7 @@ export function cardSignature(c: CardInstance | null, extras = ""): string {
     (c.traits || []).join(","),
     (c.printed_tags || []).join(","),
     c.countdown ?? "",
+    c.spellboost_count ?? "",
     c.flags?.attacks_left ?? "",
     c.flags?.ambush_active ? 1 : 0,
     extras,
@@ -50,6 +51,7 @@ export type CardPaintOpts = {
   displayCost?: number | null;
   form?: HandCardInfo["form"];
   entering?: boolean;
+  cannotAttack?: boolean;
 };
 
 export function glowFor(opts: {
@@ -165,8 +167,14 @@ function paintWrapper(wrap: HTMLElement, opts: CardPaintOpts): void {
   cost.className = "card-stats top-left cost-badge";
   cost.textContent = String(opts.displayCost ?? inst.cost);
   wrap.appendChild(cost);
+  if (inst.spellboost_count >= 1) {
+    const badge = document.createElement("div");
+    badge.className = "spellboost-badge";
+    badge.textContent = String(inst.spellboost_count);
+    wrap.appendChild(badge);
+  }
   paintStats(wrap, inst);
-  applyOverlays(wrap, inst, !!opts.onBoard);
+  applyOverlays(wrap, inst, !!opts.onBoard, !!opts.cannotAttack);
 }
 
 function paintIdentity(div: HTMLElement, opts: CardPaintOpts): void {
@@ -181,12 +189,26 @@ function paintIdentity(div: HTMLElement, opts: CardPaintOpts): void {
 }
 
 function applyChrome(div: HTMLElement, opts: CardPaintOpts): void {
+  const keepFlash = div.classList.contains("floating-combat-flash");
   for (const cls of GLOW_CLASSES) div.classList.remove(cls);
+  if (keepFlash) div.classList.add("floating-combat-flash");
   if (opts.glow) {
     for (const cls of opts.glow.split(/\s+/).filter(Boolean)) div.classList.add(cls);
   }
   if (opts.selectable) div.classList.add("selectable");
   if (opts.selected) div.classList.add("selected");
+  let check = div.querySelector<HTMLElement>(".selected-check");
+  if (opts.selected) {
+    if (!check) {
+      check = document.createElement("span");
+      check.className = "selected-check";
+      check.textContent = "✓";
+      check.setAttribute("aria-hidden", "true");
+      div.appendChild(check);
+    }
+  } else {
+    check?.remove();
+  }
 }
 
 function printedStats(inst: CardInstance): { attack: number; defense: number } {
@@ -230,9 +252,15 @@ function paintStats(wrap: HTMLElement, inst: CardInstance): void {
   }
 }
 
-function applyOverlays(wrap: HTMLElement, inst: CardInstance, onBoard: boolean): void {
+function applyOverlays(
+  wrap: HTMLElement,
+  inst: CardInstance,
+  onBoard: boolean,
+  cannotAttack: boolean,
+): void {
   const traits = new Set(inst.traits || []);
   const tags = new Set((inst.printed_tags || []).map((t) => String(t).toLowerCase()));
+  const textTags = new Set((lookupText(inst.card).tags || []).map((t) => String(t).toLowerCase()));
   if (onBoard && traits.has("ward")) {
     const o = document.createElement("div");
     o.className = "ward-overlay";
@@ -253,7 +281,12 @@ function applyOverlays(wrap: HTMLElement, inst: CardInstance, onBoard: boolean):
     o.className = "intimidate-overlay";
     wrap.appendChild(o);
   }
-  if (onBoard && traits.has("cantAttackFollowers") && traits.has("cantAttackLeader")) {
+  const locked =
+    cannotAttack ||
+    traits.has("cantAttackFollowers") ||
+    traits.has("cantAttackLeader") ||
+    traits.has("cantAttack");
+  if (onBoard && locked) {
     const o = document.createElement("div");
     o.className = "cant_attack-overlay";
     wrap.appendChild(o);
@@ -272,7 +305,19 @@ function applyOverlays(wrap: HTMLElement, inst: CardInstance, onBoard: boolean):
   if (tags.has("lastwords") || tags.has("last_words") || tags.has("lastWords")) {
     add(publicUrl("images/icon_last-words.png"), "lastwords-icon");
   }
-  if (stack.childElementCount) wrap.appendChild(stack);
+  if (
+    textTags.has("ongoing") ||
+    tags.has("ongoing") ||
+    tags.has("static") ||
+    /ongoing/i.test(lookupText(inst.card).text || "")
+  ) {
+    add(publicUrl("images/icon_ongoing.png"), "ongoing-icon");
+  }
+  const n = stack.childElementCount;
+  if (n >= 4) stack.classList.add("swap-4");
+  else if (n === 3) stack.classList.add("swap-3");
+  else if (n === 2) stack.classList.add("swap-2");
+  if (n) wrap.appendChild(stack);
 }
 
 export function renderCrestSlot(

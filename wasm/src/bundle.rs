@@ -2,7 +2,7 @@
 
 use std::sync::OnceLock;
 
-use arena_engine::card::{Ability, Effect, Mode};
+use arena_engine::card::{Ability, Class, Effect, Mode, Tribe};
 use arena_engine::{Card, CardDb, CardId};
 use serde_json::json;
 
@@ -44,6 +44,10 @@ pub fn card_text(id: &str) -> Result<String, String> {
                 "name": card.name(),
                 "text": card.text(),
                 "kind": kind_str(card.kind()),
+                "class": class_str(card.class()),
+                "tribes": card.tribes().iter().map(|t| tribe_str(*t)).collect::<Vec<_>>(),
+                "set": card.set(),
+                "tags": text_tags(card),
                 "cost": card.cost(),
                 "attack": card.attack(),
                 "defense": card.defense(),
@@ -73,6 +77,49 @@ pub fn bundle_info() -> String {
         "bytes": bundle_bytes(),
     }))
     .expect("bundleInfo")
+}
+
+fn class_str(class: Class) -> &'static str {
+    match class {
+        Class::Neutral => "Neutral",
+        Class::Forestcraft => "Forestcraft",
+        Class::Swordcraft => "Swordcraft",
+        Class::Runecraft => "Runecraft",
+        Class::Dragoncraft => "Dragoncraft",
+        Class::Abysscraft => "Abysscraft",
+        Class::Havencraft => "Havencraft",
+        Class::Portalcraft => "Portalcraft",
+    }
+}
+
+fn tribe_str(t: Tribe) -> &'static str {
+    match t {
+        Tribe::Anathema => "Anathema",
+        Tribe::Artifact => "Artifact",
+        Tribe::Departed => "Departed",
+        Tribe::EarthSigil => "Earth Sigil",
+        Tribe::Encroacher => "Encroacher",
+        Tribe::Golem => "Golem",
+        Tribe::Loot => "Loot",
+        Tribe::Marine => "Marine",
+        Tribe::Mysteria => "Mysteria",
+        Tribe::Officer => "Officer",
+        Tribe::Pixie => "Pixie",
+        Tribe::Puppetry => "Puppetry",
+    }
+}
+
+fn text_tags(card: &Card) -> Vec<String> {
+    let mut tags: Vec<String> = card.printed_trigger_tags().into_iter().collect();
+    let has_ongoing = card
+        .abilities()
+        .iter()
+        .any(|a| matches!(a, Ability::Static { .. }))
+        || card.text().to_ascii_lowercase().contains("ongoing");
+    if has_ongoing && !tags.iter().any(|t| t == "ongoing") {
+        tags.push("ongoing".into());
+    }
+    tags
 }
 
 fn kind_str(kind: arena_engine::card::CardKind) -> &'static str {
