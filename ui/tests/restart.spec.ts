@@ -13,49 +13,79 @@ async function boot(page: Page) {
   await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
 }
 
-async function startGame(page: Page) {
+async function importDeck(page: Page, name: string, cards: Record<string, number>) {
+  await openSettings(page);
+  await page.locator("#deckImportFileInput").setInputFiles({
+    name,
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(cards)),
+  });
+  const id = `import-${name.replace(/\.json$/i, "")}`;
+  await expect(page.locator("#blueDeckSelect")).toHaveValue(id, { timeout: 10_000 });
+  return id;
+}
+
+async function startGame(page: Page, deckId: string) {
   await openSettings(page);
   await page.locator("#modeSelect").selectOption("hotseat");
   await page.locator("#seedInput").fill("1");
   await page.locator("#firstSelect").selectOption("a");
-  await page.locator("#blueDeckSelect").selectOption("basic-forest");
-  await page.locator("#redDeckSelect").selectOption("basic-rune");
+  await page.locator("#blueDeckSelect").selectOption(deckId);
+  await page.locator("#redDeckSelect").selectOption(deckId);
   await page.locator("#startGameBtn").click();
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
     timeout: 15_000,
   });
 }
 
-test("Restart after 5 actions restores the opening hash and mulligan", async ({ page }) => {
+test("no rail/drawer Restart; Rematch (same seed) restores opening hash and mulligan", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
   await boot(page);
-  await startGame(page);
+  const tiny = await importDeck(page, "tiny.json", { "10001110": 8 });
+  await startGame(page, tiny);
+  await expect(page.locator("#restartRailBtn")).toHaveCount(0);
+  await expect(page.locator("#restartGameBtn")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Restart" })).toHaveCount(0);
+
   const startHash = await page.evaluate(() => window.__arena!.hash());
   expect(startHash.length).toBeGreaterThan(0);
 
-  for (let i = 0; i < 5; i++) {
-    const ok = await page.evaluate(() => {
+  for (let i = 0; i < 2; i++) {
+    const btn = page.locator(".mulligan-confirm-btn").locator("visible=true");
+    if (await btn.count()) {
+      await btn.first().click();
+      await expect(btn).toBeHidden({ timeout: 5000 }).catch(() => undefined);
+    }
+  }
+  await page.evaluate(() => {
+    document.getElementById("settingsDrawer")?.classList.remove("open");
+    document.getElementById("settingsScrim")?.classList.remove("show");
+  });
+
+  for (let i = 0; i < 40; i++) {
+    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
+    if (phase === "terminal") break;
+    const ended = await page.evaluate(() => {
       const legal = window.__arena!.legal() as Array<Record<string, unknown>>;
-      const order = ["mulligan", "play", "end_turn", "choose", "confirm"];
-      const act = order.map((k) => legal.find((a) => k in a)).find(Boolean);
+      const act = legal.find((a) => "end_turn" in a);
       if (!act) return false;
       window.__arena!.apply(act);
       return true;
     });
-    expect(ok, `action ${i + 1}`).toBeTruthy();
+    if (!ended) break;
   }
-  expect(await page.evaluate(() => window.__arena!.hash())).not.toBe(startHash);
-  expect(await page.evaluate(() => window.__arena!.canUndo())).toBe(true);
+  await expect(page.locator("#gameOverOverlay")).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("#rematchSameSeedBtn")).toHaveText("Rematch (same seed)");
+  await expect(page.locator("#rematchNewSeedBtn")).toHaveText("Rematch (new seed)");
+  await expect(page.locator("#newGameFromOver")).toHaveText("New Game");
 
-  await page.locator("#restartRailBtn").click();
+  await page.locator("#rematchSameSeedBtn").click();
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", "mulligan", {
     timeout: 10_000,
   });
   expect(await page.evaluate(() => window.__arena!.hash())).toBe(startHash);
-  expect(await page.evaluate(() => window.__arena!.canUndo())).toBe(false);
-
-  await openSettings(page);
-  await expect(page.locator("#restartGameBtn")).toBeEnabled();
-  await page.locator("#restartGameBtn").click();
-  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", "mulligan");
-  expect(await page.evaluate(() => window.__arena!.hash())).toBe(startHash);
+  await expect(page.locator("#gameOverOverlay")).toBeHidden();
+  await expect(page.locator("#restartRailBtn")).toHaveCount(0);
 });

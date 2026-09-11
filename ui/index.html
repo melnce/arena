@@ -6,6 +6,12 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
+    <meta name="theme-color" content="#0b0c0f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Arena" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png" />
     <title>arena</title>
     <link rel="stylesheet" href="./css/design-tokens.css" />
     <link rel="stylesheet" href="./css/base.css" />
@@ -205,7 +211,6 @@
                 </label>
               </div>
               <button id="startGameBtn" type="button">Start Game</button>
-              <button id="restartGameBtn" type="button" disabled>Restart</button>
               <button id="undoBtn" type="button" title="Undo (Ctrl+Z / Cmd+Z)" disabled>Undo</button>
               <button id="redoBtn" type="button" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled>Redo</button>
             </div>
@@ -341,9 +346,6 @@
         <div class="turn-controls-core">
           <div id="turnReadout">—</div>
           <div id="turnCounter" data-testid="turn-counter">0</div>
-          <div class="rail-history">
-            <button id="restartRailBtn" type="button" disabled>Restart</button>
-          </div>
           <div class="red-pp-wrapper pp-block" id="redPpBlock">
             <div class="boost-host" id="redBoostHost"></div>
             <div class="pp-floating" id="redPPBox">PP: <span id="redPP">0</span></div>

@@ -282,7 +282,11 @@ function renderBoard(
       const attacks = L.attacksFrom(legal, player, row.i);
       const engage = L.engageAt(legal, player, row.i);
       const canAttack = attacks.length > 0;
-      const rushOnly = !!(info?.followers_only_this_turn ?? info?.rush_only);
+      const hitsLeader = attacks.some((a) => "attack" in a && a.attack.target === "leader");
+      // Yellow only while a legal follower-only attack exists on the entry turn.
+      // No attacks left (already attacked, empty board, opponent's turn) → no glow.
+      // `summoning_sick` stays true on the opponent's turn — do not paint from it alone.
+      const rushOnly = canAttack && !hitsLeader && !!row.inst.flags?.summoning_sick;
       const pendingAtk =
         hooks.pending?.kind === "attack" &&
         hooks.pending.player === player &&
@@ -1196,10 +1200,6 @@ function syncUndoButtons(s: Session): void {
   const redo = byId<HTMLButtonElement>("redoBtn");
   if (undo) undo.disabled = s.past.length === 0;
   if (redo) redo.disabled = s.future.length === 0;
-  for (const id of ["restartGameBtn", "restartRailBtn"]) {
-    const btn = byId<HTMLButtonElement>(id);
-    if (btn) btn.disabled = false;
-  }
 }
 
 function paintPending(pending: Pending, legal: NeutralAction[]): void {
