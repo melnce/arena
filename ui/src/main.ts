@@ -169,6 +169,7 @@ function exposeArena(): void {
     actions: () => (session ? session.actions : []),
     paintMs: window.__arena?.paintMs,
     watchDelayMs,
+    humanSide: () => session?.cfg.humanSide ?? null,
     reseed: (seed) => {
       if (!session) throw new Error("no session");
       session.game.reseed(seed);
@@ -335,11 +336,27 @@ function toast(msg: string): void {
   toastTimer = window.setTimeout(() => pill.classList.remove("visible"), 1800);
 }
 
-function humanSideFromForm(): PlayerId {
-  const v = (byId<HTMLSelectElement>("humanSideSelect")?.value ?? "a") as string;
+function humanSideSelectValue(): "a" | "b" | "coin" {
+  const v = byId<HTMLSelectElement>("humanSideSelect")?.value ?? "a";
+  if (v === "b" || v === "coin") return v;
+  return "a";
+}
+
+/** Roll coin only here — never from label or policy-sync listeners. */
+function rollHumanSide(): PlayerId {
+  const v = humanSideSelectValue();
   if (v === "b") return "b";
   if (v === "coin") return Math.random() < 0.5 ? "a" : "b";
   return "a";
+}
+
+/** Side used for vs-bot labels and bot-policy sync. Coin does not re-roll. */
+function uiHumanSide(): { side: PlayerId; coinPending: boolean } {
+  const v = humanSideSelectValue();
+  if (v === "a") return { side: "a", coinPending: false };
+  if (v === "b") return { side: "b", coinPending: false };
+  if (session) return { side: session.cfg.humanSide, coinPending: false };
+  return { side: "a", coinPending: true };
 }
 
 function formConfig(): SessionConfig {
@@ -357,7 +374,7 @@ function formConfig(): SessionConfig {
     deckBId,
     first,
     mode,
-    humanSide: humanSideFromForm(),
+    humanSide: rollHumanSide(),
     hideBotHand: byId<HTMLInputElement>("hideBotHandToggle")?.checked ?? true,
     policyA: byId<HTMLSelectElement>("policyASelect")?.value ?? "random",
     policyB: byId<HTMLSelectElement>("policyBSelect")?.value ?? "random",
@@ -408,6 +425,7 @@ function startSession(cfg: SessionConfig): void {
   pending = null;
   refreshCheckpointStatus();
   paint();
+  syncVsBotRoleLabels();
   void maybeBots();
   if (cfg.mode === "watch") startWatchIfAuto();
 }
@@ -537,16 +555,17 @@ function populatePolicies(): void {
       sel.appendChild(o);
     }
   }
+  byId("vsBotPolicy")?.addEventListener("change", applyVsBotPolicy);
+}
+
+function applyVsBotPolicy(): void {
   const vs = byId<HTMLSelectElement>("vsBotPolicy");
   const a = byId<HTMLSelectElement>("policyASelect");
   const b = byId<HTMLSelectElement>("policyBSelect");
-  vs?.addEventListener("change", () => {
-    if (!a || !b || !vs) return;
-    // Human is one side; bot policy applies to the other. Both selectors
-    // stay in sync so Watch can still pick per-side.
-    if (humanSideFromForm() === "a") b.value = vs.value;
-    else a.value = vs.value;
-  });
+  if (!vs || !a || !b) return;
+  // Human is one side; bot policy applies to the other. Coin does not re-roll.
+  if (uiHumanSide().side === "a") b.value = vs.value;
+  else a.value = vs.value;
 }
 
 function populateDecks(): void {
@@ -588,6 +607,37 @@ function syncModeChrome(): void {
   document.body.classList.toggle("mode-vs-bot", mode === "vs-bot");
   byId("vsBotFields")?.toggleAttribute("hidden", mode !== "vs-bot");
   byId("watchFields")?.toggleAttribute("hidden", mode !== "watch");
+  syncVsBotRoleLabels();
+}
+
+function syncVsBotRoleLabels(): void {
+  const blue = byId("blueDeckLabel");
+  const red = byId("redDeckLabel");
+  const policy = byId("vsBotPolicyLabel");
+  const mode = (byId<HTMLSelectElement>("modeSelect")?.value ?? "hotseat") as Mode;
+  if (!blue || !red) return;
+  if (mode !== "vs-bot") {
+    blue.textContent = "Blue (A):";
+    red.textContent = "Red (B):";
+    if (policy) policy.textContent = "Bot policy";
+    return;
+  }
+  const { side, coinPending } = uiHumanSide();
+  if (coinPending) {
+    blue.textContent = "Your deck (coin — decided at start)";
+    red.textContent = "Bot deck (Red B)";
+    if (policy) policy.textContent = "Bot policy (Red B)";
+    return;
+  }
+  if (side === "a") {
+    blue.textContent = "Your deck (Blue A)";
+    red.textContent = "Bot deck (Red B)";
+    if (policy) policy.textContent = "Bot policy (Red B)";
+  } else {
+    blue.textContent = "Bot deck (Blue A)";
+    red.textContent = "Your deck (Red B)";
+    if (policy) policy.textContent = "Bot policy (Blue A)";
+  }
 }
 
 function closeSettings(): void {
@@ -984,6 +1034,10 @@ async function boot(): Promise<void> {
   byId("redoBtn")?.addEventListener("click", () => applyHistory(redo));
   exposeArena();
   byId("modeSelect")?.addEventListener("change", syncModeChrome);
+  byId("humanSideSelect")?.addEventListener("change", () => {
+    syncVsBotRoleLabels();
+    applyVsBotPolicy();
+  });
   byId("activeOnBottomToggle")?.addEventListener("change", (e) => {
     const on = (e.target as HTMLInputElement).checked;
     document.body.classList.toggle("active-on-bottom", on);
@@ -1009,14 +1063,7 @@ async function boot(): Promise<void> {
       }, 1200);
     }
   });
-  byId("vsBotPolicy")?.addEventListener("change", () => {
-    const vs = byId<HTMLSelectElement>("vsBotPolicy");
-    const a = byId<HTMLSelectElement>("policyASelect");
-    const b = byId<HTMLSelectElement>("policyBSelect");
-    if (!vs || !a || !b) return;
-    if (humanSideFromForm() === "a") b.value = vs.value;
-    else a.value = vs.value;
-  });
+  byId("vsBotPolicy")?.addEventListener("change", applyVsBotPolicy);
 
   const info = JSON.parse(bundleInfo()) as {
     cards: number;
