@@ -111,6 +111,7 @@ const hooks: RenderHooks = {
   },
   onNewGame: () => void startFromForm(),
   onRematchSwap: () => void rematchSwap(),
+  onRestart: () => rematchSame(),
   onUndo: () => applyHistory(undo),
   pending: null,
   setPending: (p) => {
@@ -314,6 +315,12 @@ function startWatchIfAuto(): void {
     watchPlaying = true;
     scheduleWatch();
   }
+}
+
+/** Restart / rematch-same-seed: identical seed, decks, and first player. */
+function rematchSame(): void {
+  if (!session) return;
+  startSession({ ...session.cfg });
 }
 
 async function rematchSwap(): Promise<void> {
@@ -737,6 +744,8 @@ async function boot(): Promise<void> {
   });
 
   byId("startGameBtn")?.addEventListener("click", () => void startFromForm());
+  byId("restartGameBtn")?.addEventListener("click", () => rematchSame());
+  byId("restartRailBtn")?.addEventListener("click", () => rematchSame());
   byId("undoBtn")?.addEventListener("click", () => applyHistory(undo));
   byId("redoBtn")?.addEventListener("click", () => applyHistory(redo));
   exposeArena();

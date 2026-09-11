@@ -157,6 +157,7 @@
                 </label>
               </div>
               <button id="startGameBtn" type="button">Start Game</button>
+              <button id="restartGameBtn" type="button" disabled>Restart</button>
               <button id="undoBtn" type="button" title="Undo (Ctrl+Z / Cmd+Z)" disabled>Undo</button>
               <button id="redoBtn" type="button" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled>Redo</button>
             </div>
@@ -289,6 +290,9 @@
         <div class="turn-controls-core">
           <div id="turnReadout">—</div>
           <div id="turnCounter" data-testid="turn-counter">0</div>
+          <div class="rail-history">
+            <button id="restartRailBtn" type="button" disabled>Restart</button>
+          </div>
           <div class="red-pp-wrapper pp-block" id="redPpBlock">
             <div class="boost-host" id="redBoostHost"></div>
             <div class="pp-floating" id="redPPBox">PP: <span id="redPP">0</span></div>
