@@ -3,7 +3,7 @@ import { publicUrl } from "./base.ts";
 import { decks, loadCatalog, parseDeckJson } from "./catalog.ts";
 import { clearFloaters, spawnFloaters } from "./fct.ts";
 import { bindPointer } from "./input.ts";
-import { sessionBoardInfo, sessionHandInfo } from "./info.ts";
+import { sessionBoardInfo, sessionHandInfo, sessionPlayerInfo } from "./info.ts";
 import * as L from "./legal.ts";
 import {
   bindTooltips,
@@ -111,6 +111,7 @@ const hooks: RenderHooks = {
   },
   onNewGame: () => void startFromForm(),
   onRematchSwap: () => void rematchSwap(),
+  onUndo: () => applyHistory(undo),
   pending: null,
   setPending: (p) => {
     pending = p;
@@ -127,8 +128,29 @@ function exposeArena(): void {
       if (!session) throw new Error("no session");
       return session.game.botAction(policy, seed);
     },
+    apply: (actionJson) => {
+      if (!session) throw new Error("no session");
+      const action = (
+        typeof actionJson === "string" ? JSON.parse(actionJson) : actionJson
+      ) as NeutralAction;
+      const events = applyAction(session, action);
+      if (!session.suppressFloater) spawnFloaters(events, floatingTextOn());
+      session.suppressFloater = false;
+      pending = null;
+      paint();
+      return events;
+    },
     handInfo: (player) => (session ? sessionHandInfo(session, player as PlayerId) : []),
     boardInfo: (player) => (session ? sessionBoardInfo(session, player as PlayerId) : []),
+    playerInfo: (player) =>
+      session
+        ? sessionPlayerInfo(session, player as PlayerId)
+        : {
+            evolve_unlocked: false,
+            super_evolve_unlocked: false,
+            evolve_unlock_in: 0,
+            super_evolve_unlock_in: 0,
+          },
     full: () => (session ? JSON.parse(session.game.full()) : null),
     legal: () => (session ? JSON.parse(session.game.legal()) : []),
     paintMs: window.__arena?.paintMs,
@@ -198,6 +220,15 @@ function floatingTextOn(): boolean {
 function toast(msg: string): void {
   const err = byId("errBanner");
   if (err) err.textContent = msg;
+  let host = byId("toastHost");
+  if (!host) {
+    host = document.createElement("div");
+    host.id = "toastHost";
+    document.body.appendChild(host);
+  }
+  host.textContent = msg;
+  host.classList.add("show");
+  window.setTimeout(() => host.classList.remove("show"), 4200);
 }
 
 function humanSideFromForm(): PlayerId {
@@ -532,6 +563,21 @@ function setText(id: string, text: string): void {
   if (el) el.textContent = text;
 }
 
+function loadLogSafely(log: PositionLog): void {
+  let next: Session | null = null;
+  try {
+    next = replayPosition(log);
+  } catch (err) {
+    toast(String(err));
+    return;
+  }
+  disposeSession(session);
+  session = next;
+  pending = null;
+  resetZoneCache();
+  paint();
+}
+
 function initPositions(): void {
   byId("savePositionBtn")?.addEventListener("click", () => {
     if (!session) return;
@@ -545,10 +591,7 @@ function initPositions(): void {
     if (!id) return;
     const log = savedPositions.get(id);
     if (!log) return;
-    disposeSession(session);
-    session = replayPosition(log);
-    resetZoneCache();
-    paint();
+    loadLogSafely(log);
   });
   byId("exportPositionBtn")?.addEventListener("click", () => {
     const id = byId<HTMLSelectElement>("positionSelect")?.value;
@@ -566,13 +609,14 @@ function initPositions(): void {
   byId<HTMLInputElement>("importPositionInput")?.addEventListener("change", async (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
-    const log = JSON.parse(await file.text()) as PositionLog;
-    savedPositions.set(file.name.replace(/\.json$/i, ""), log);
-    refreshPositionSelect();
-    disposeSession(session);
-    session = replayPosition(log);
-    resetZoneCache();
-    paint();
+    try {
+      const log = JSON.parse(await file.text()) as PositionLog;
+      savedPositions.set(file.name.replace(/\.json$/i, ""), log);
+      refreshPositionSelect();
+      loadLogSafely(log);
+    } catch (err) {
+      toast(String(err));
+    }
   });
   byId("setCheckpointBtn")?.addEventListener("click", () => {
     if (!session) return;
@@ -666,6 +710,10 @@ async function boot(): Promise<void> {
     engage: (p, s) => hooks.onEngage(p, s),
     fuse: (p, i) => hooks.onFuse(p, i),
     mulliganToggle: (i) => hooks.onMulliganToggle(i),
+    choose: (a) => hooks.onChooseOpt(a),
+    getLegal: () => (session ? legalActions(session) : []),
+    getPhase: () => session?.game.phase() ?? "",
+    getActing: () => (session ? (session.game.acting() as PlayerId) : null),
     getPending: () => pending,
     setPending: (p) => {
       pending = p;

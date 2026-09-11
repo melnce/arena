@@ -141,11 +141,8 @@
   border-radius: 4px;
 }
 
-.can-attack,
 .card.can-attack .card-image-wrapper,
-.card.playable-glow .card-image-wrapper,
-.card.legal-play .card-image-wrapper,
-.card.legal-attack .card-image-wrapper {
+.card.playable-glow .card-image-wrapper {
   outline: 4px solid var(--color-success);
   outline-offset: 0;
   box-shadow:
@@ -207,10 +204,15 @@
   box-shadow: 0 0 12px rgba(80, 200, 120, 0.45);
 }
 
-.rush-glow {
-  outline: 3px solid var(--color-warn);
-  outline-offset: -3px;
-  box-shadow: var(--glow-warn-select);
+.card.rush-glow .card-image-wrapper {
+  outline: 4px solid var(--color-warn);
+  outline-offset: 0;
+  box-shadow:
+    var(--glow-enhance),
+    0 0 22px rgba(255, 212, 0, 0.85),
+    inset 0 0 12px var(--color-warn-surface);
+  border-radius: var(--radius-lg);
+  animation: enhPulse 1s ease-in-out infinite alternate;
 }
 
 #cardTooltip {
@@ -598,10 +600,9 @@
 
 /* YELLOW: gate met (Enhance / Necromancy / Combo / Rally / Overflow…) */
 .card.enhance-ready .card-image-wrapper,
-.card.condition-ready .card-image-wrapper,
-.card.enhance-ready.legal-play .card-image-wrapper,
-.card.condition-ready.legal-play .card-image-wrapper {
+.card.condition-ready .card-image-wrapper {
   outline: 4px solid var(--color-warn);
+  outline-offset: 0;
   box-shadow:
     var(--glow-enhance),
     0 0 24px rgba(255, 212, 0, 0.9),

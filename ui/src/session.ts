@@ -11,10 +11,13 @@ import type {
 /** Ring limit — same as the old practice tool. */
 export const HISTORY_LIMIT = 200;
 
+export type DestroyedEntry = { card: string; owner: PlayerId };
+
 export type HistStep = {
   before: Game;
   action: NeutralAction;
   events: EngineEvent[];
+  destroyed: DestroyedEntry[];
   human: boolean;
   botSeqBefore: number;
 };
@@ -23,6 +26,7 @@ export type FutureStep = {
   after: Game;
   action: NeutralAction;
   events: EngineEvent[];
+  destroyed: DestroyedEntry[];
   human: boolean;
   botSeqBefore: number;
 };
@@ -49,6 +53,12 @@ export type Session = {
   } | null;
   mulliganSwap: [boolean, boolean, boolean, boolean];
   suppressFloater: boolean;
+  frozen: {
+    events: EngineEvent[];
+    played: { a: string[]; b: string[] };
+    destroyed: { a: string[]; b: string[] };
+    ply: number;
+  };
 };
 
 function deckJson(deck: Record<string, number>): string {
@@ -71,6 +81,7 @@ export function createSession(cfg: SessionConfig): Session {
     checkpoint: null,
     mulliganSwap: [false, false, false, false],
     suppressFloater: false,
+    frozen: { events: [], played: { a: [], b: [] }, destroyed: { a: [], b: [] }, ply: 0 },
   };
 }
 
@@ -106,8 +117,9 @@ function clearFuture(s: Session): void {
 function trimPast(s: Session): void {
   while (s.past.length > HISTORY_LIMIT) {
     const dropped = s.past.shift();
-    dropped?.before.free();
-    s.actions.shift();
+    if (!dropped) continue;
+    ingestEvents(s.frozen, dropped.events, dropped.destroyed);
+    dropped.before.free();
   }
 }
 
@@ -122,7 +134,8 @@ export function applyAction(
   try {
     const raw = s.game.apply(JSON.stringify(action));
     const events = JSON.parse(raw) as EngineEvent[];
-    s.past.push({ before, action, events, human, botSeqBefore });
+    const destroyed = ownersOfDestroyed(before, events);
+    s.past.push({ before, action, events, destroyed, human, botSeqBefore });
     clearFuture(s);
     s.actions.push(action);
     trimPast(s);
@@ -134,29 +147,72 @@ export function applyAction(
   }
 }
 
-function ingestEvents(into: Session, events: EngineEvent[]): void {
+type Derived = {
+  events: EngineEvent[];
+  played: { a: string[]; b: string[] };
+  destroyed: { a: string[]; b: string[] };
+  ply: number;
+};
+
+function ownersOfDestroyed(before: Game, events: EngineEvent[]): DestroyedEntry[] {
+  let full: FullState | null = null;
+  try {
+    full = JSON.parse(before.full()) as FullState;
+  } catch {
+    full = null;
+  }
+  const used = new Set<string>();
+  const out: DestroyedEntry[] = [];
+  for (const ev of events) {
+    if (!("destroy" in ev)) continue;
+    const d = ev.destroy as { card: string; slot?: number };
+    let owner: PlayerId | null = null;
+    if (full && typeof d.slot === "number") {
+      for (const p of ["a", "b"] as PlayerId[]) {
+        const key = `${p}:${d.slot}:${d.card}`;
+        if (used.has(key)) continue;
+        const inst = full.players[p].field[d.slot];
+        if (inst && inst.card === d.card) {
+          owner = p;
+          used.add(key);
+          break;
+        }
+      }
+    }
+    if (!owner && full) {
+      for (const p of ["a", "b"] as PlayerId[]) {
+        if (full.players[p].field.some((c) => c && c.card === d.card)) {
+          owner = p;
+          break;
+        }
+      }
+    }
+    out.push({ card: d.card, owner: owner ?? "a" });
+  }
+  return out;
+}
+
+function ingestEvents(into: Derived, events: EngineEvent[], destroyed: DestroyedEntry[]): void {
   for (const ev of events) {
     into.events.push(ev);
     if ("play" in ev) {
       const p = ev.play as { player: PlayerId; card: string };
       into.played[p.player].push(p.card);
     }
-    if ("destroy" in ev) {
-      const d = ev.destroy as { card: string };
-      const who = (into.game.active() as PlayerId) ?? "a";
-      into.destroyed[who].push(d.card);
-    }
     if ("turn_start" in ev) into.ply += 1;
+  }
+  for (const d of destroyed) {
+    into.destroyed[d.owner].push(d.card);
   }
 }
 
-/** Rebuild played / destroyed / ply / event log from the applied action list. */
+/** Rebuild played / destroyed / ply / event log from the frozen prefix + remaining past. */
 function rebuildDerived(s: Session): void {
-  s.played = { a: [], b: [] };
-  s.destroyed = { a: [], b: [] };
-  s.events = [];
-  s.ply = 0;
-  for (const step of s.past) ingestEvents(s, step.events);
+  s.played = { a: s.frozen.played.a.slice(), b: s.frozen.played.b.slice() };
+  s.destroyed = { a: s.frozen.destroyed.a.slice(), b: s.frozen.destroyed.b.slice() };
+  s.events = s.frozen.events.slice();
+  s.ply = s.frozen.ply;
+  for (const step of s.past) ingestEvents(s, step.events, step.destroyed);
 }
 
 function undoOne(s: Session): boolean {
@@ -166,6 +222,7 @@ function undoOne(s: Session): boolean {
     after: s.game,
     action: step.action,
     events: step.events,
+    destroyed: step.destroyed,
     human: step.human,
     botSeqBefore: step.botSeqBefore,
   });
@@ -184,6 +241,7 @@ function redoOne(s: Session): boolean {
     before: s.game,
     action: item.action,
     events: item.events,
+    destroyed: item.destroyed,
     human: item.human,
     botSeqBefore: item.botSeqBefore,
   });
@@ -200,17 +258,44 @@ function redoOne(s: Session): boolean {
  * the state before the choice began. Vs-bot: one jump to the human's previous
  * decision (bot actions in between ride along on the redo stack).
  */
+function isChoiceAction(a: NeutralAction): boolean {
+  return "choose" in a || "confirm" in a;
+}
+
+function lastCompletedChoice(s: Session): boolean {
+  const last = s.past[s.past.length - 1];
+  if (!last) return false;
+  if (s.game.phase() === "choice") return false;
+  return isChoiceAction(last.action);
+}
+
+function undoChoiceUnit(s: Session): boolean {
+  let moved = false;
+  do {
+    const step = s.past[s.past.length - 1];
+    if (!step) break;
+    if (!undoOne(s)) break;
+    moved = true;
+    if ("play" in step.action || "fuse" in step.action) break;
+  } while (s.past.length);
+  return moved;
+}
+
+function redoChoiceUnit(s: Session): boolean {
+  if (!redoOne(s)) return false;
+  while (s.future.length && s.game.phase() === "choice") {
+    if (!redoOne(s)) break;
+  }
+  return true;
+}
+
 export function undo(s: Session): boolean {
   if (!s.past.length) return false;
   if (s.cfg.mode === "watch") return undoOne(s);
   if (s.game.phase() === "choice") {
-    let moved = false;
-    do {
-      if (!undoOne(s)) break;
-      moved = true;
-    } while (s.game.phase() === "choice" && s.past.length);
-    return moved;
+    return undoChoiceUnit(s);
   }
+  if (lastCompletedChoice(s)) return undoChoiceUnit(s);
   if (s.cfg.mode === "vs-bot") return undoToHumanDecision(s);
   return undoOne(s);
 }
@@ -243,6 +328,15 @@ export function redo(s: Session): boolean {
   if (!s.future.length) return false;
   if (s.cfg.mode === "watch") return redoOne(s);
   if (s.cfg.mode === "vs-bot") return redoToHumanDecision(s);
+  const next = s.future[s.future.length - 1];
+  const followups = s.future.slice(0, -1);
+  if (
+    next &&
+    ("play" in next.action || "fuse" in next.action) &&
+    followups.some((f) => isChoiceAction(f.action))
+  ) {
+    return redoChoiceUnit(s);
+  }
   return redoOne(s);
 }
 

@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
-
-const ART = "/opt/cursor/artifacts";
+import { ART, artShot, assertGlow, waitCardSizeStable } from "./helpers.ts";
 
 async function openSettings(page: Page) {
   const drawer = page.locator("#settingsDrawer");
@@ -127,10 +126,10 @@ test("bonus PP: first B, button on blue never on first player", async ({ page })
   await btn.click();
   await expect(page.locator("#bluePP")).toHaveText(`${pp0 + 1}/${max0}`, { timeout: 5000 });
   await mkdir(ART, { recursive: true });
-  await page.locator("#turnControls").screenshot({ path: `${ART}/boost_on_blue_second.png` });
+  await artShot(page.locator("#turnControls"), `${ART}/boost_on_blue_second.png`);
 });
 
-test("tooltips and gates: Hark necromancy + Depths enhance / E badge", async ({ page }) => {
+test("tooltips and gates: Hark necromancy + Depths enhance (no E badge)", async ({ page }) => {
   await boot(page);
   const harkId = await importDeck(page, "hark.json", { "10753310": 40 });
   await page.locator("#redDeckSelect").selectOption(harkId);
@@ -176,24 +175,32 @@ test("tooltips and gates: Hark necromancy + Depths enhance / E badge", async ({ 
   expect(depthsInfo.id).toBe("90024320");
   expect(depthsInfo.form).toBe("enhance");
   expect(depthsInfo.cost).toBe(1);
-  const enh = depthsInfo.gates.find((g) => g.kind === "enhance");
-  expect(enh).toBeTruthy();
-  expect(enh!.need).toBe(1);
-  expect(enh!.have).toBeGreaterThanOrEqual(1);
-  expect(enh!.met).toBe(true);
+  expect(depthsInfo.gates.find((g) => g.kind === "enhance")).toBeFalsy();
 
   const depthsCard = page.locator("#blueHand .card[data-card='90024320']").first();
-  await expect(depthsCard.locator(".alternate-form-badge")).toHaveText("E");
+  await expect(depthsCard.locator(".alternate-form-badge")).toHaveCount(0);
   await expect(depthsCard.locator(".cost-badge, .card-stats.top-left")).toHaveText("1");
-  await expect(depthsCard).toHaveClass(/enhance-ready/);
+  const depthsLegal = await page.evaluate(() =>
+    (window.__arena!.legal() as Array<{ play?: { card: string } }>).some(
+      (a) => a.play?.card === "90024320",
+    ),
+  );
+  if (depthsLegal) {
+    await expect(depthsCard).toHaveClass(/enhance-ready/);
+    await assertGlow(depthsCard, "yellow");
+  } else {
+    await expect(depthsCard).not.toHaveClass(/playable-glow|enhance-ready|legal-play/);
+    await assertGlow(depthsCard, "none");
+  }
   await depthsCard.hover();
   await expect(tip).toContainText("Depths of the Eld Sword");
-  await expect(tip).toContainText("Enhance 1 (have");
+  await expect(tip).toContainText("Cost 1");
   await expect(tip).toContainText("base 0");
+  await expect(tip).not.toContainText("Enhance 1 (have");
   await expect(tip).not.toContainText("0/0");
   await mkdir(ART, { recursive: true });
-  await tip.screenshot({ path: `${ART}/tooltip_depths_gates.png` });
-  await depthsCard.screenshot({ path: `${ART}/card_enhance_e_badge.png` });
+  await artShot(tip, `${ART}/tooltip_depths_gates.png`);
+  await artShot(depthsCard, `${ART}/card_enhance_no_badge.png`);
 });
 
 test("settings drawer does not scroll horizontally at 360 and 768", async ({ page }) => {
@@ -219,7 +226,7 @@ test("settings drawer does not scroll horizontally at 360 and 768", async ({ pag
   expect(overflow360.overflowX).toBe("hidden");
   expect(overflow360.spill).toBeLessThanOrEqual(2);
   await mkdir(ART, { recursive: true });
-  await drawer.screenshot({ path: `${ART}/drawer_360.png` });
+  await artShot(drawer, `${ART}/drawer_360.png`);
 
   await page.setViewportSize({ width: 768, height: 1024 });
   await openSettings(page);
@@ -238,7 +245,7 @@ test("settings drawer does not scroll horizontally at 360 and 768", async ({ pag
   expect(overflow768.width).toBeGreaterThanOrEqual(767);
   expect(overflow768.overflowX).toBe("hidden");
   expect(overflow768.spill).toBeLessThanOrEqual(2);
-  await drawer.screenshot({ path: `${ART}/drawer_768.png` });
+  await artShot(drawer, `${ART}/drawer_768.png`);
 });
 
 test("board occupied slots are centred (1 / 2 / 3 followers)", async ({ page }) => {
@@ -280,8 +287,7 @@ test("board occupied slots are centred (1 / 2 / 3 followers)", async ({ page }) 
       const tip = document.getElementById("cardTooltip");
       if (tip) tip.style.display = "none";
     });
-    await mkdir(ART, { recursive: true });
-    await page.locator("#appRoot").screenshot({ path: `${ART}/board_${n}_followers.png` });
+    await artShot(page.locator("#appRoot"), `${ART}/board_${n}_followers.png`);
   }
 
   await playBlueOne();
@@ -314,7 +320,7 @@ test("layouts fill the viewport at 720p / 1080p / 1440p", async ({ page }) => {
       const tip = document.getElementById("cardTooltip");
       if (tip) tip.style.display = "none";
     });
-    await page.waitForTimeout(80);
+    await waitCardSizeStable(page);
     const metrics = await page.evaluate(() => {
       const ids = ["redHand", "redLeader", "redBoard", "blueBoard", "blueLeader", "blueHand"];
       const rects = ids.map((id) => {
@@ -362,7 +368,7 @@ test("layouts fill the viewport at 720p / 1080p / 1440p", async ({ page }) => {
     expect(metrics.rowOverlap).toBe(false);
     expect(metrics.boardGap).toBeLessThanOrEqual(metrics.cardH + 1);
     expect(metrics.handOverlapFrac).toBeLessThanOrEqual(0.36);
-    await page.screenshot({ path: `${ART}/layout_${vp.name}.png`, fullPage: false });
+    await artShot(page, `${ART}/layout_${vp.name}.png`);
   }
 });
 
@@ -373,7 +379,7 @@ test("boost button side screenshot + paintMs for a turn", async ({ page }) => {
   await page.locator("#endTurnBlue:visible").click();
   await expect(page.locator("#redBoostHost #bonusPpBtn")).toBeEnabled();
   await mkdir(ART, { recursive: true });
-  await page.locator("#turnControls").screenshot({ path: `${ART}/boost_on_red_second.png` });
+  await artShot(page.locator("#turnControls"), `${ART}/boost_on_red_second.png`);
 
   const paints: number[] = [];
   const playable = page.locator("#redHand .card.legal-play");

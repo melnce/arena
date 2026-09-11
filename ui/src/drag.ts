@@ -223,6 +223,8 @@ function onUp(ev: PointerEvent) {
     endSession(false);
     return;
   }
+  s.source.classList.add("drop-reject");
+  window.setTimeout(() => s.source.classList.remove("drop-reject"), 280);
   endSession(false);
 }
 

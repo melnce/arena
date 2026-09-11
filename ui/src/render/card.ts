@@ -1,7 +1,6 @@
 import { publicUrl } from "../base.ts";
-import { crestFile, lookupText } from "../catalog.ts";
+import { crestFile, getCatalog, lookupText } from "../catalog.ts";
 import { applyCardImage, escapeHtml } from "../images.ts";
-import { formLetter } from "../info.ts";
 import type { CardInstance, CrestInstance, HandCardInfo } from "../types.ts";
 
 const GLOW_CLASSES = [
@@ -56,18 +55,25 @@ export type CardPaintOpts = {
 export function glowFor(opts: {
   playable?: boolean;
   canAttack?: boolean;
-  gateMet?: boolean;
+  rushOnly?: boolean;
+  yellow?: boolean;
   form?: HandCardInfo["form"] | null;
 }): string {
-  const yellow = !!opts.gateMet;
-  const green = !!opts.playable || !!opts.canAttack;
   const bits: string[] = [];
-  if (yellow) bits.push("enhance-ready", "condition-ready");
-  else if (green) bits.push("playable-glow");
-  // Keep legal-* even under yellow so existing smokes / click handlers still match.
-  if (opts.playable) bits.push("legal-play");
-  if (opts.canAttack) bits.push("can-attack", "legal-attack");
-  if (opts.form === "accelerate" || opts.form === "crystallize") bits.push("alternate-ready");
+  if (opts.playable) {
+    bits.push("legal-play");
+    if (opts.yellow || (opts.form && opts.form !== "normal")) {
+      bits.push("enhance-ready");
+      if (opts.form === "accelerate" || opts.form === "crystallize") bits.push("alternate-ready");
+    } else {
+      bits.push("playable-glow");
+    }
+  }
+  if (opts.canAttack) {
+    bits.push("legal-attack");
+    if (opts.rushOnly) bits.push("rush-glow");
+    else bits.push("can-attack");
+  }
   return bits.join(" ");
 }
 
@@ -111,18 +117,10 @@ function buildCard(opts: CardPaintOpts): HTMLElement {
   paintIdentity(div, opts);
   const wrap = document.createElement("div");
   wrap.className = "card-image-wrapper";
-  const img = document.createElement("img");
-  applyCardImage(img, inst.card, inst.evolved || inst.super_evolved, wrap);
-  wrap.appendChild(img);
-  const cost = document.createElement("div");
-  cost.className = "card-stats top-left cost-badge";
-  cost.textContent = String(opts.displayCost ?? inst.cost);
-  wrap.appendChild(cost);
-  paintStats(wrap, inst);
-  applyOverlays(wrap, inst, !!opts.onBoard);
-  paintFormBadge(wrap, opts.form);
+  paintWrapper(wrap, opts);
   div.appendChild(wrap);
   div.dataset.name = lookupText(inst.card).name;
+  div.dataset.sig = cardSignature(inst, String(opts.displayCost ?? ""));
   applyChrome(div, opts);
   return div;
 }
@@ -134,33 +132,41 @@ export function updateCard(div: HTMLElement, opts: CardPaintOpts): void {
   applyChrome(div, opts);
   const wrap = div.querySelector<HTMLElement>(".card-image-wrapper");
   if (!wrap) return;
-  const cost = wrap.querySelector<HTMLElement>(".cost-badge, .card-stats.top-left");
-  if (cost) {
-    const next = String(opts.displayCost ?? inst.cost);
-    if (cost.textContent !== next) {
-      cost.textContent = next;
-      cost.classList.add("stat-flash");
-      window.setTimeout(() => cost.classList.remove("stat-flash"), 160);
-    }
+  const nextSig = cardSignature(inst, String(opts.displayCost ?? ""));
+  const prevAtk = wrap.querySelector<HTMLElement>(".card-stats.bottom-left")?.textContent;
+  const prevDef = wrap.querySelector<HTMLElement>(
+    ".card-stats.bottom-right:not(.countdown-badge)",
+  )?.textContent;
+  const prevCost = wrap.querySelector<HTMLElement>(".cost-badge, .card-stats.top-left")?.textContent;
+  if (div.dataset.sig !== nextSig) {
+    paintWrapper(wrap, opts);
+    div.dataset.sig = nextSig;
+    const cost = wrap.querySelector<HTMLElement>(".cost-badge, .card-stats.top-left");
+    if (cost && prevCost != null && cost.textContent !== prevCost) flash(cost);
+    const atk = wrap.querySelector<HTMLElement>(".card-stats.bottom-left");
+    if (atk && prevAtk != null && atk.textContent !== prevAtk) flash(atk);
+    const def = wrap.querySelector<HTMLElement>(".card-stats.bottom-right:not(.countdown-badge)");
+    if (def && prevDef != null && def.textContent !== prevDef) flash(def);
   }
-  const atk = wrap.querySelector<HTMLElement>(".card-stats.bottom-left");
-  if (atk && inst.kind === "follower") {
-    if (atk.textContent !== String(inst.attack)) {
-      atk.textContent = String(inst.attack);
-      atk.classList.add("stat-flash");
-      window.setTimeout(() => atk.classList.remove("stat-flash"), 160);
-    }
-  }
-  const def = wrap.querySelector<HTMLElement>(".card-stats.bottom-right:not(.countdown-badge)");
-  if (def && inst.kind === "follower") {
-    if (def.textContent !== String(inst.defense)) {
-      def.textContent = String(inst.defense);
-      def.classList.add("stat-flash");
-      window.setTimeout(() => def.classList.remove("stat-flash"), 160);
-    }
-    def.classList.toggle("stat-damaged", inst.defense < inst.max_defense);
-  }
-  paintFormBadge(wrap, opts.form);
+}
+
+function flash(el: HTMLElement): void {
+  el.classList.add("stat-flash");
+  window.setTimeout(() => el.classList.remove("stat-flash"), 160);
+}
+
+function paintWrapper(wrap: HTMLElement, opts: CardPaintOpts): void {
+  const { inst } = opts;
+  wrap.replaceChildren();
+  const img = document.createElement("img");
+  applyCardImage(img, inst.card, inst.evolved || inst.super_evolved, wrap);
+  wrap.appendChild(img);
+  const cost = document.createElement("div");
+  cost.className = "card-stats top-left cost-badge";
+  cost.textContent = String(opts.displayCost ?? inst.cost);
+  wrap.appendChild(cost);
+  paintStats(wrap, inst);
+  applyOverlays(wrap, inst, !!opts.onBoard);
 }
 
 function paintIdentity(div: HTMLElement, opts: CardPaintOpts): void {
@@ -183,16 +189,38 @@ function applyChrome(div: HTMLElement, opts: CardPaintOpts): void {
   if (opts.selected) div.classList.add("selected");
 }
 
+function printedStats(inst: CardInstance): { attack: number; defense: number } {
+  const cat = getCatalog(inst.card);
+  const text = lookupText(inst.card);
+  return {
+    attack: cat?.attack ?? text.attack ?? inst.attack,
+    defense: cat?.defense ?? text.defense ?? inst.defense,
+  };
+}
+
+export function applyStatColors(el: HTMLElement, inst: CardInstance, which: "atk" | "def"): void {
+  const printed = printedStats(inst);
+  el.classList.remove("stat-buffed", "stat-damaged");
+  if (which === "atk") {
+    if (inst.attack > printed.attack) el.classList.add("stat-buffed");
+    else if (inst.attack < printed.attack) el.classList.add("stat-damaged");
+    return;
+  }
+  if (inst.defense < inst.max_defense) el.classList.add("stat-damaged");
+  else if (inst.defense > printed.defense) el.classList.add("stat-buffed");
+}
+
 function paintStats(wrap: HTMLElement, inst: CardInstance): void {
   if (inst.kind === "follower") {
     const atk = document.createElement("div");
     atk.className = "card-stats bottom-left";
     atk.textContent = String(inst.attack);
+    applyStatColors(atk, inst, "atk");
     wrap.appendChild(atk);
     const def = document.createElement("div");
     def.className = "card-stats bottom-right";
     def.textContent = String(inst.defense);
-    if (inst.defense < inst.max_defense) def.classList.add("stat-damaged");
+    applyStatColors(def, inst, "def");
     wrap.appendChild(def);
   } else if (inst.countdown != null) {
     const cd = document.createElement("div");
@@ -200,17 +228,6 @@ function paintStats(wrap: HTMLElement, inst: CardInstance): void {
     cd.textContent = String(inst.countdown);
     wrap.appendChild(cd);
   }
-}
-
-function paintFormBadge(wrap: HTMLElement, form: HandCardInfo["form"] | undefined): void {
-  wrap.querySelector(".alternate-form-badge")?.remove();
-  const letter = formLetter(form ?? null);
-  if (!letter) return;
-  const badge = document.createElement("div");
-  badge.className = "alternate-form-badge";
-  badge.textContent = letter;
-  badge.dataset.form = form ?? "";
-  wrap.appendChild(badge);
 }
 
 function applyOverlays(wrap: HTMLElement, inst: CardInstance, onBoard: boolean): void {
@@ -258,7 +275,11 @@ function applyOverlays(wrap: HTMLElement, inst: CardInstance, onBoard: boolean):
   if (stack.childElementCount) wrap.appendChild(stack);
 }
 
-export function renderCrestSlot(slot: HTMLElement, crest: CrestInstance | undefined): void {
+export function renderCrestSlot(
+  slot: HTMLElement,
+  crest: CrestInstance | undefined,
+  faithValue?: number,
+): void {
   slot.innerHTML = "";
   slot.onmouseenter = null;
   slot.onmousemove = null;
@@ -277,6 +298,12 @@ export function renderCrestSlot(slot: HTMLElement, crest: CrestInstance | undefi
     const fb = document.createElement("div");
     fb.className = "card-fallback";
     fb.innerHTML = `<div class="fb-name">${escapeHtml(info.name)}</div>`;
+    slot.appendChild(fb);
+  }
+  if (crest.faith) {
+    const fb = document.createElement("div");
+    fb.className = "crest-faith";
+    fb.textContent = String(Math.max(0, faithValue ?? 0));
     slot.appendChild(fb);
   }
   if (crest.countdown != null) {

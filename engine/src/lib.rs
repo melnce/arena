@@ -32,7 +32,9 @@ pub use determinize::determinize;
 pub use encode::{encode, Observation};
 pub use error::{Illegal, LoadError, OraclePickNotLegal, ReplayError, Unsupported};
 pub use ids::{AttackTarget, First, PlayerId, Slot};
-pub use info::{board_info, hand_info, BoardCardInfo, GateInfo, HandCardInfo};
+pub use info::{
+    board_info, hand_info, player_info, BoardCardInfo, GateInfo, HandCardInfo, PlayerInfo,
+};
 pub use limits::{MAX_ACTIONS, MAX_TURNS};
 pub use policy::{by_name, names, AnyPolicy, FirstLegal, Policy, Random, H0};
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};

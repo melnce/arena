@@ -2,7 +2,7 @@
 
 mod common;
 
-use arena_engine::{board_info, hand_info, PlayerId};
+use arena_engine::{board_info, hand_info, legal_actions, player_info, Action, PlayerId};
 use common::{give_pp, load_db, put_field, put_hand, started};
 
 #[test]
@@ -19,14 +19,9 @@ fn depths_of_the_eld_sword_enhance_at_8_pp() {
     assert_eq!(info[0].id, "90024320");
     assert_eq!(info[0].cost, Some(1));
     assert_eq!(info[0].form.as_deref(), Some("enhance"));
-    let enh = info[0]
-        .gates
-        .iter()
-        .find(|g| g.kind == "enhance")
-        .expect("enhance gate");
-    assert_eq!(enh.need, 1);
-    assert_eq!(enh.have, 8);
-    assert!(enh.met);
+    // Enhance/Accelerate/Crystallize are no longer gates — the paid cost +
+    // `form` are enough (A4/A5). The client hides any leftover form lines.
+    assert!(info[0].gates.iter().all(|g| g.kind != "enhance"));
 }
 
 #[test]
@@ -93,4 +88,153 @@ fn board_info_occupied_slots_only() {
     assert_eq!(info[0].slot, 0);
     assert_eq!(info[1].slot, 1);
     assert_eq!(info[0].id, "88001110");
+}
+
+#[test]
+fn non_acting_player_playable_and_can_attack_are_false() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    st.player_mut(me).hand.clear();
+    st.player_mut(opp).hand.clear();
+    give_pp(&mut st, me, 5, 5);
+    give_pp(&mut st, opp, 5, 5);
+    let _ = put_hand(&db, &mut st, me, "88001110");
+    let _ = put_hand(&db, &mut st, opp, "88001110");
+    let _ = put_hand(&db, &mut st, opp, "88001120");
+    put_field(&db, &mut st, opp, "88001110");
+    put_field(&db, &mut st, me, "88001120");
+
+    let legal = legal_actions(&db, &st);
+    let info_a = hand_info(&db, &st, me);
+    for (i, card) in info_a.iter().enumerate() {
+        let expect = legal
+            .iter()
+            .any(|a| matches!(a, Action::Play { hand } if *hand == i as u8));
+        assert_eq!(card.playable, expect, "hand_info(A)[{i}] vs legal_actions");
+    }
+
+    let info_b = hand_info(&db, &st, opp);
+    assert!(!info_b.is_empty());
+    assert!(
+        info_b.iter().all(|c| !c.playable),
+        "non-acting hand_info must have playable=false: {info_b:?}"
+    );
+    let board_b = board_info(&db, &st, opp);
+    assert!(!board_b.is_empty());
+    assert!(
+        board_b.iter().all(|c| !c.can_attack),
+        "non-acting board_info must have can_attack=false: {board_b:?}"
+    );
+}
+
+#[test]
+fn slice_of_domesticity_count_at_least_gate() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    give_pp(&mut st, me, 2, 2);
+    let _ = put_hand(&db, &mut st, me, "10823310");
+
+    put_field(&db, &mut st, me, "88001110");
+    let one = hand_info(&db, &st, me);
+    let gate = one[0]
+        .gates
+        .iter()
+        .find(|g| g.kind == "countAtLeast")
+        .expect("countAtLeast gate");
+    assert_eq!(gate.label, "allied cards on the field");
+    assert_eq!(gate.need, 2);
+    assert_eq!(gate.have, 1);
+    assert!(!gate.met);
+    assert!(
+        one[0]
+            .gates
+            .iter()
+            .filter(|g| g.kind == "countAtLeast")
+            .count()
+            == 1,
+        "Not-branch must not emit an inverse gate: {:?}",
+        one[0].gates
+    );
+
+    put_field(&db, &mut st, me, "88001120");
+    let two = hand_info(&db, &st, me);
+    let gate = two[0]
+        .gates
+        .iter()
+        .find(|g| g.kind == "countAtLeast")
+        .expect("countAtLeast gate");
+    assert_eq!(gate.label, "allied cards on the field");
+    assert_eq!(gate.need, 2);
+    assert_eq!(gate.have, 2);
+    assert!(gate.met);
+    assert_eq!(
+        two[0]
+            .gates
+            .iter()
+            .filter(|g| g.kind == "countAtLeast")
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn player_info_evolve_unlock_and_countdown() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    assert!(!st.player(PlayerId::A).is_second, "A is first");
+    assert!(st.player(PlayerId::B).is_second, "B is second");
+
+    st.player_mut(PlayerId::A).turns_taken = 1;
+    let a = player_info(&db, &st, PlayerId::A);
+    assert!(!a.evolve_unlocked);
+    assert!(!a.super_evolve_unlocked);
+    assert_eq!(a.evolve_unlock_in, 4);
+    assert_eq!(a.super_evolve_unlock_in, 6);
+
+    st.player_mut(PlayerId::A).turns_taken = 4;
+    let a = player_info(&db, &st, PlayerId::A);
+    assert!(!a.evolve_unlocked);
+    assert_eq!(a.evolve_unlock_in, 1);
+
+    st.player_mut(PlayerId::A).turns_taken = 5;
+    let a = player_info(&db, &st, PlayerId::A);
+    assert!(a.evolve_unlocked);
+    assert_eq!(a.evolve_unlock_in, 0);
+    assert!(!a.super_evolve_unlocked);
+    assert_eq!(a.super_evolve_unlock_in, 2);
+
+    st.player_mut(PlayerId::A).turns_taken = 6;
+    assert!(!player_info(&db, &st, PlayerId::A).super_evolve_unlocked);
+    st.player_mut(PlayerId::A).turns_taken = 7;
+    let a = player_info(&db, &st, PlayerId::A);
+    assert!(a.super_evolve_unlocked);
+    assert_eq!(a.super_evolve_unlock_in, 0);
+
+    st.player_mut(PlayerId::B).turns_taken = 1;
+    let b = player_info(&db, &st, PlayerId::B);
+    assert!(!b.evolve_unlocked);
+    assert!(!b.super_evolve_unlocked);
+    assert_eq!(b.evolve_unlock_in, 3);
+    assert_eq!(b.super_evolve_unlock_in, 5);
+
+    st.player_mut(PlayerId::B).turns_taken = 3;
+    assert!(!player_info(&db, &st, PlayerId::B).evolve_unlocked);
+    assert_eq!(player_info(&db, &st, PlayerId::B).evolve_unlock_in, 1);
+
+    st.player_mut(PlayerId::B).turns_taken = 4;
+    let b = player_info(&db, &st, PlayerId::B);
+    assert!(b.evolve_unlocked);
+    assert_eq!(b.evolve_unlock_in, 0);
+    assert!(!b.super_evolve_unlocked);
+
+    st.player_mut(PlayerId::B).turns_taken = 5;
+    assert!(!player_info(&db, &st, PlayerId::B).super_evolve_unlocked);
+    st.player_mut(PlayerId::B).turns_taken = 6;
+    let b = player_info(&db, &st, PlayerId::B);
+    assert!(b.super_evolve_unlocked);
+    assert_eq!(b.super_evolve_unlock_in, 0);
 }

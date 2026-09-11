@@ -24,12 +24,20 @@
   color: white;
 }
 
-#endTurnBlue:hover {
+#endTurnBlue:disabled,
+#endTurnRed:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+  transform: none;
+}
+
+#endTurnBlue:hover:not(:disabled) {
   background-color: #339;
   transform: scale(1.05);
 }
 
-#endTurnRed:hover {
+#endTurnRed:hover:not(:disabled) {
   background-color: #933;
   transform: scale(1.05);
 }
@@ -57,6 +65,7 @@
 }
 
 .evo-btn {
+  position: relative;
   padding: var(--space-3) var(--space-5);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-md);
@@ -66,6 +75,33 @@
   min-height: 44px;
   box-shadow: var(--shadow-sm);
   transition: var(--transition-all-fast);
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.evo-btn-label {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.evo-unlock-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #222;
+  border: 1px solid #aaa;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 3;
 }
 
 .normal-evo {
