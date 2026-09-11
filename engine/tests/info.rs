@@ -2,8 +2,10 @@
 
 mod common;
 
-use arena_engine::{board_info, hand_info, legal_actions, player_info, Action, PlayerId};
-use common::{give_pp, load_db, put_field, put_hand, started};
+use arena_engine::{
+    apply, board_info, hand_info, legal_actions, player_info, Action, PlayerId, Slot,
+};
+use common::{end_turn, give_pp, load_db, play_id, put_field, put_hand, started};
 
 #[test]
 fn depths_of_the_eld_sword_enhance_at_8_pp() {
@@ -237,6 +239,79 @@ fn player_info_evolve_unlock_and_countdown() {
     let b = player_info(&db, &st, PlayerId::B);
     assert!(b.super_evolve_unlocked);
     assert_eq!(b.super_evolve_unlock_in, 0);
+}
+
+/// Evolved-this-turn (no Rush) can only hit followers on entry; next turn it can
+/// hit the leader too, so the yellow flag clears.
+#[test]
+fn followers_only_this_turn_evolved_no_rush() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, PlayerId::B, "88001110");
+    st.player_mut(me).turns_taken = 5;
+    st.player_mut(me).ep = 1;
+    give_pp(&mut st, me, 2, 2);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10001110");
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: Slot(0),
+            super_evolve: false,
+        },
+    )
+    .expect("evolve");
+    let info = board_info(&db, &st, me);
+    assert_eq!(info.len(), 1);
+    assert!(info[0].can_attack);
+    assert!(!info[0].can_attack_leader);
+    assert!(info[0].followers_only_this_turn);
+    assert!(info[0].rush_only);
+    assert!(info[0].evolved);
+
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
+    let next = board_info(&db, &st, me);
+    assert_eq!(next.len(), 1);
+    assert!(next[0].can_attack);
+    assert!(next[0].can_attack_leader);
+    assert!(!next[0].followers_only_this_turn);
+    assert!(!next[0].rush_only);
+}
+
+#[test]
+fn followers_only_this_turn_rush_on_entry() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, PlayerId::B, "88001110");
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10631110");
+    let info = board_info(&db, &st, me);
+    assert_eq!(info.len(), 1);
+    assert!(info[0].can_attack);
+    assert!(!info[0].can_attack_leader);
+    assert!(info[0].followers_only_this_turn);
+}
+
+#[test]
+fn followers_only_this_turn_storm_on_entry_is_false() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, PlayerId::B, "88001110");
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10021110");
+    let info = board_info(&db, &st, me);
+    assert_eq!(info.len(), 1);
+    assert!(info[0].can_attack);
+    assert!(info[0].can_attack_leader);
+    assert!(!info[0].followers_only_this_turn);
+    assert!(!info[0].rush_only);
 }
 
 #[test]

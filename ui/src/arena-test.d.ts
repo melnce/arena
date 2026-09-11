@@ -19,6 +19,7 @@ declare global {
       };
       full(): unknown;
       legal(): unknown[];
+      actions(): unknown[];
       paintMs?: number;
     };
   }
