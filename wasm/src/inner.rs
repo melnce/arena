@@ -5,9 +5,9 @@ use std::collections::{BTreeMap, HashMap};
 
 use arena_engine::action::acting_player;
 use arena_engine::{
-    apply_neutral, by_name, hash, legal_actions, legal_actions_neutral, names, new_game,
-    policy_rng, snapshot_json, to_neutral, CardDb, CardId, First, GameConfig, NeutralAction,
-    Policy, State,
+    apply_neutral, board_info, by_name, hand_info, hash, legal_actions, legal_actions_neutral,
+    names, new_game, policy_rng, snapshot_json, to_neutral, CardDb, CardId, First, GameConfig,
+    NeutralAction, PlayerId, Policy, State,
 };
 
 use crate::bundle::card_db;
@@ -107,8 +107,26 @@ impl GameInner {
         serde_json::to_string(&chosen).map_err(|e| e.to_string())
     }
 
+    pub fn hand_info(&self, player: &str) -> Result<String, String> {
+        let who = parse_player(player)?;
+        serde_json::to_string(&hand_info(db(), &self.state, who)).map_err(|e| e.to_string())
+    }
+
+    pub fn board_info(&self, player: &str) -> Result<String, String> {
+        let who = parse_player(player)?;
+        serde_json::to_string(&board_info(db(), &self.state, who)).map_err(|e| e.to_string())
+    }
+
     fn legal_len(&self) -> usize {
         legal_actions_neutral(db(), &self.state).len()
+    }
+}
+
+fn parse_player(s: &str) -> Result<PlayerId, String> {
+    match s {
+        "a" => Ok(PlayerId::A),
+        "b" => Ok(PlayerId::B),
+        other => Err(format!("player must be a|b, got {other}")),
     }
 }
 
