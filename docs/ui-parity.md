@@ -16,7 +16,7 @@ Audit of every user-visible feature of the old practice tool’s **client** (`$H
 2. **Terminal overlay.** Buttons: Rematch (same seed), Rematch (new seed), New Game (opens the drawer). Remove “Rematch (swap sides)”. The first player of a rematch follows the drawer’s first-player setting (A / B / coin). Reason line: `Deck-out` or `Lethal`, not “Match over”.
 3. **Dropped for good** (keep as `dropped (by design)`): blackbox, sparring-line scripts, puzzles, coverage banner, god-mode, Consistency Trainer, `?test=1` bridge, UNIMPL/unknown-op badges, burn-preview box, deck paste panel, smaller top-hand scale.
 
-**Status** ∈ `ported` | `partial` | `missing` | `dropped (by design)` | `in progress (round 3)`.
+**Status** ∈ `ported` | `partial` | `missing` | `dropped (by design)` | `dropped (not representable)` | `in progress (round 3)`.
 
 Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, sparring-line scripts, puzzles, coverage banner, god-mode, Consistency Trainer, `?test=1` QA bridge, UNIMPL/UNKNOWN OP face badges, burn-preview box, deck *paste* import panel (JSON file import was ported instead), smaller top-hand scale.
 
@@ -87,15 +87,15 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | Aura overlay (board): purple field + dashed ring 2.2s/6s (code-read) | `src/ui/overlays.ts:37-51` | `ui/src/render/card.ts:229-233`; `ui/css/cards.css:970-1042` | ported | 
 | Intimidate overlay (board): amber diamond, `intimidate-flicker` 1.2s (code-read) | `src/ui/overlays.ts:62-66` | `ui/src/render/card.ts:234-238`; `ui/css/cards.css:273-308` | ported | 
 | Can’t-attack overlay (board): crossed chains when the follower cannot attack (code-read) | `src/ui/overlays.ts:52-61` (`hasCantAttack` **or** `cantAttack` / `cantAttackUntilOpponentEOT`) | `ui/src/render/card.ts:282-290`; `engine/src/info.rs` `cannot_attack_reason` | ported | Chains on any printed lock (`cantAttack*` / engine reason). Not summoning sickness. |
-| Barrier overlay + 250ms flash / 350ms pop (code-read) | `src/ui/overlays.ts:118-138`; `css/cards.css:443-487` | `ui/css/cards.css:310-501` (CSS only) | missing | Barrier followers show a cyan ring + particles (`.barrier-overlay`, `--glow-barrier`). New charge: 250ms brightness flash (`.barrier-flash`). Break: 350ms pop (`.barrier-pop`). |
-| Can’t-be-destroyed overlay + 5 gold particles (code-read) | `src/ui/overlays.ts:88-109`; `css/cards.css` CBD block | `ui/css/cards.css:1135-1293` (CSS only) | missing | Can’t-be-destroyed followers show the gold field overlay plus five floating particles for as long as the keyword is on. |
+| Barrier overlay + 250ms flash / 350ms pop (code-read) | `src/ui/overlays.ts:118-138`; `css/cards.css:443-487` | `ui/src/render/card.ts:209,327-330,387-398`; `ui/css/cards.css:313-535` | ported | Cyan ring + 5 particles (`.barrier-overlay`, `--glow-barrier`). Gain/loss is a `traits` signature diff in `updateCard`: `.barrier-flash` 250ms, `.barrier-pop` 350ms. |
+| Can’t-be-destroyed overlay + 5 gold particles (code-read) | `src/ui/overlays.ts:88-109`; `css/cards.css` CBD block | `ui/src/render/card.ts:327`; `ui/css/cards.css:1196-1354` | ported | Gold field + five particles while `cantBeDestroyedByAbilities` is in `traits` (Earth Sigil / `Game.full()`). |
 | Bane / Drain / Last Words PNG icons, bottom-centre 26×26 stack (code-read) | `src/ui/overlays.ts:67-83`; `images/icon_*.png` | `ui/src/render/card.ts:244-258`; `ui/public/images/icon_*.png` | ported | 
 | Ongoing icon `images/icon_ongoing.png` (code-read) | `src/ui/overlays.ts:84-86` | `ui/src/render/card.ts:306-313`; `wasm/src/bundle.rs` `tags` | ported | Shown when `cardText.tags` includes `ongoing` (Static ability or printed “Ongoing”). |
 | Icon stack swap animation `.swap-2/3/4` (2s/3s cycle) when 2+ icons (code-read) | `src/ui/overlays.ts:111-115`; `css/cards.css:1008-1090` | `ui/src/render/card.ts:314-317`; `ui/css/cards.css:1045-1126` | ported | `.swap-2` 2s; `.swap-3`/`.swap-4` 3s. A single icon stays static. |
 | Spellboost badge (blue circle, white count) under the cost (code-read) | `src/ui/zones/dom.ts:207-216`; `css/cards.css:871-897` | `ui/src/render/card.ts:170-174`; `ui/css/cards.css` `.spellboost-badge` | ported | Blue circle, white count, under the cost when `spellboost_count ≥ 1`. |
 | Countdown number, large white + black stroke, bottom-right (amulets) (code-read) | `src/ui/zones/dom.ts:172-176`; `css/cards.css:708-724` | `ui/src/render/card.ts:197-202`; `ui/css/cards.css:744-760` | ported | Refresh on `updateCard` is round 3. |
-| Amulet named-counter fallback (first numeric `counters` entry as the same badge) (code-read) | `src/ui/zones/dom.ts:184-199` | — | missing | If the amulet has no countdown but has a numeric counter, the same bottom-right white/black-stroke number shows that value. |
-| Icarus `!` gold 18px badge (top-left of art) (code-read) | `src/ui/zones/dom.ts:83-104` | — | missing | Not representable: the engine has no Icarus buff. Left missing until that fact exists. |
+| Amulet named-counter fallback (first numeric `counters` entry as the same badge) (code-read) | `src/ui/zones/dom.ts:184-199` | `ui/src/render/card.ts:22-31,274-283`; `engine/src/info.rs` `named_counter` | ported | No countdown + numeric `vars`: same bottom-right white/black-stroke number. Order is **X, then Y, then Z**. |
+| Icarus `!` gold 18px badge (top-left of art) (code-read) | `src/ui/zones/dom.ts:83-104` | — | dropped (not representable) | The engine has no Icarus buff / trait, so the badge cannot be driven from `full()` or `traits`. |
 | Face-down hand: `.card.card-back`, striped back, no uid/name leak, `pointer-events: none` (code-read) | `src/ui/zones/dom.ts:28-39`; `css/cards.css:102-142` | `ui/src/render/card.ts:92-105`; `ui/css/cards.css:101-142` | ported | Used for vs-bot hide-hand (not sparring-line). |
 | Art fallback: name + cost/stats if the image 404s (code-read) | old uses CDN then `.webp` (`src/ui/render.ts:626-646` for crests) | `ui/src/images.ts:28-52`; `ui/css/client.css:49-70` | ported | 
 | UNIMPL / UNKNOWN OP outline + face badge (code-read) | `src/ui/zones/dom.ts:106-119`; `css/modern-theme.css:1028-1048` | `ui/css/modern-theme.css:1019-1039` (CSS only) | dropped (by design) | Coverage badges; same family as the coverage banner. |
@@ -207,7 +207,7 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | No enter/leave/destroy CSS on old zone reconcile (code-read) | `src/ui/zones/index.ts:83-147` | `.card-enter` 140ms / `.card-leave` 120ms (`ui/css/animation.css:3-48`; `ui/src/render.ts:349-357`) | ported | New-only extra; keep. |
 | `.dying` 0.6s fade/scale (class rarely applied) (code-read) | `css/cards.css:150-156` | `ui/css/cards.css:159-165` (unused; leave uses `card-leave`) | ported | Same unused CSS. |
 | No attack lunge / slash (code-read) | — | — | ported | 
-| `.spell-cast` 0.5s brightness/scale (code-read) | `css/animation.css:1-14` | `ui/css/animation.css` has enter/leave/press, no `.spell-cast` | missing | Playing a spell: the card brightens 1.5 with a cyan `rgba(100, 200, 255, 0.8)` drop-shadow, scales to 1.1, then settles — 0.5s ease-out. |
+| `.spell-cast` 0.5s brightness/scale (code-read) | `css/animation.css:1-14` | `ui/src/render.ts:382-410`; `ui/css/animation.css:61-78` | ported | Leaving hand spell: brightness 1.5, cyan `rgba(100, 200, 255, 0.8)` drop-shadow, scale 1.1 → 1, 0.5s ease-out. Detached clone at the same rect when the card is removed the same paint. |
 | Stat-change flash 150–160ms scale/brightness (code-read) | — (colour change only) | `ui/css/animation.css:24-58`; `ui/src/render/card.ts:142-159` | ported | New-only extra; keep. |
 | Pressed card `translateY(2px) scale(0.97)` (code-read) | — | `ui/css/animation.css:11-15`; `ui/src/input.ts:31-45` | ported | New-only extra; keep. |
 | No “Turn N” banner; turn change is the hand/leader glow + End Turn swap (code-read) | (none) | (none) | ported | 
@@ -242,7 +242,7 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | Drawer 360px left slide 0.18s; scrim click / Escape / Ctrl+Shift+M | `src/boot/settingsDrawer.ts:70-88`; `css/settings-drawer.css` | `ui/src/main.ts:438-460`; `ui/css/settings-drawer.css:50-68` | ported | 
 | Blue / Red deck `<select>` | `index.html:196-207` | `ui/index.html:99-107` | ported | 
 | Import Deck | `index.html:210-216` (paste community list) | `ui/index.html:109-110`; `ui/src/main.ts:611-624` (JSON `{id:count}` file) | dropped (by design) | JSON file import stays. Community-list paste is dropped (owner 2026-09-11). |
-| Export List (Blue deck as `Nx Name` + clipboard) (code-read) | `index.html:217-223`; `src/ui/deckImportPanel.ts:363-365` | — | missing | An “Export List” control copies the Blue deck as `Nx Name` lines and shows that text in a small panel. |
+| Export List (Blue deck as `Nx Name` + clipboard) (code-read) | `index.html:217-223`; `src/ui/deckImportPanel.ts:363-365` | `ui/index.html:155-158`; `ui/src/main.ts:813-833` | ported | Copies the started Blue deck as `Nx Name` (catalog names) and shows the text in `#exportListPanel`. |
 | Seed input, “random if empty” | `index.html:231-240` | `ui/index.html:157-164`; `ui/src/main.ts:244-245,320-323` | ported | Placeholder “random if empty”; empty field rolls a u64. |
 | Game seed panel + Copy; button flashes “Copied” 1200ms | `src/ui/seedDisplay.ts:13-61` | `ui/index.html:166-170`; `ui/src/main.ts:782-796` | ported | Button reads `Copied` for 1200ms, then `Copy`. |
 | First-player control | (implicit / start options, not a drawer select) | `ui/index.html:128-133` coin/A/B | ported | New-only extra. |
@@ -251,18 +251,18 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | Watch: Bot A/B policies, auto-play, Step/Play/Pause, speed 1–20 (code-read) | — | `ui/index.html:148-156,197-205`; `ui/src/main.ts:325-361,627-647` | ported | New-only extra. |
 | Start Game | `index.html:259` | `ui/index.html:158` | ported | 
 | Undo / Redo buttons; disabled from stack; titles Ctrl+Z / Ctrl+Y | `index.html:266-275` | `ui/index.html:159-160`; `ui/src/render.ts:747-751` | ported | 
-| Share URL write on start: `?seed=&a=&b=` (code-read) | `src/boot/shareUrl.ts:4-57` | `ui/src/share.ts:26-38` `?seed=&deckA=&deckB=&mode=`; **reads** `a`/`b` aliases | partial | Keep `deckA`/`deckB`/`mode`. The written URL also carries `a`/`b` (or both aliases stay accepted forever) so old bookmarks still open the same match. Auto-start when seed+decks are present already matches. |
+| Share URL write on start: `?seed=&a=&b=` (code-read) | `src/boot/shareUrl.ts:4-57` | `ui/src/share.ts:26-40` writes `deckA`/`deckB`/`mode` **and** `a`/`b` | ported | Both alias pairs are written; `a`/`b` still accepted on read so old bookmarks open the same match. |
 | Consistency Trainer link (code-read) | `index.html:260-265` | — | dropped (by design) | Separate tool, not the M4 client. |
 | God Mode checkbox + PP/EP/combo/shadows cheats (code-read) | `index.html:250-257,747-886`; `src/boot/godMode.ts` | CSS leftovers only | dropped (by design) | 
 | Save Pos (prompt name) | `src/ui/positionPanel.ts:106-134` | `ui/src/main.ts:536-541` | ported | Snapshot format differs (action log vs board); see save/load row. |
-| Position `<select>` `Name · T{n} · time` (code-read) | `src/ui/positionPanel.ts:49-51` | `ui/src/main.ts:603-607` (name only) | missing | Each option reads `{name} · T{turn} · {locale time}`, not the name alone. |
+| Position `<select>` `Name · T{n} · time` (code-read) | `src/ui/positionPanel.ts:49-51` | `ui/src/main.ts:786-809` | ported | Each option is `{name} · T{turn} · {locale time}`. Export JSON keeps `name`, `turn`, `savedAt`. |
 | Load / Export / Import JSON (code-read) | `src/ui/positionPanel.ts:137-245` | `ui/src/main.ts:543-576` | ported | 
-| Rename + Del (code-read) | `index.html:305-317` | — | missing | Rename (prompt) and Del act on the selected in-memory position. |
+| Rename + Del (code-read) | `index.html:305-317` | `ui/src/main.ts:747-765`; `ui/index.html:223-224` | ported | Rename (prompt) and Del act on the selected in-memory position. |
 | Checkpoint button + F6 | `index.html:334`; `src/boot/hotkeysBoot.ts:7-9` | `ui/index.html:178`; `ui/src/main.ts:513-518,577-581` | ported | 
 | Restore CP | `index.html:338-343` | `ui/index.html:179`; `ui/src/main.ts:520-525,582-587` | ported | 
 | Restore CP key **F7** | — (button only) | `ui/src/main.ts:520-525` | ported | New-only extra. |
-| Reroll + **F8** (new RNG branch from the checkpoint) (code-read) | `index.html:344-350`; `src/boot/hotkeysBoot.ts:7-9` | — | missing | “Reroll” and F8 restore the checkpoint on a new RNG branch. Status line: `Checkpoint: T{n} · rerolls N`. |
-| Checkpoint status `Checkpoint: none` or `T{n} · rerolls N` (code-read) | `index.html:351-356` | `ui/index.html:180` `Checkpoint: none/set` | partial | Status shows turn and reroll depth (`T{n} · rerolls N`), not just “set”. |
+| Reroll + **F8** (new RNG branch from the checkpoint) (code-read) | `index.html:344-350`; `src/boot/hotkeysBoot.ts:7-9` | `ui/src/session.ts:395-410`; `ui/src/main.ts:669-675,777-781`; `engine/src/state.rs` `State::reseed` | ported | F8 / Reroll restores the checkpoint and `reseed(splitmix64(gameSeed XOR (n * GOLDEN)))`. Status `Checkpoint: T{n} · rerolls N`. Log step `{"reseed": <u64>}`. |
+| Checkpoint status `Checkpoint: none` or `T{n} · rerolls N` (code-read) | `index.html:351-356` | `ui/src/session.ts:412-415`; `ui/index.html:228` | ported | `Checkpoint: none` or `Checkpoint: T{n} · rerolls N`. |
 | Save/load still correct after the 200-step undo ring drops old actions (code-read) | old position store is a full board snapshot | `ui/src/session.ts:11-12,106-111`; `ui/README.md:38` (log of `NeutralAction[]`) | in progress (round 3) | 
 | Active on bottom checkbox | `index.html:357-364` | `ui/index.html:224-227`; `ui/src/main.ts:712-723,773-777` | ported | Persistence — see §1. |
 | Floating combat text checkbox (default on) | `index.html:366-371` | `ui/index.html:228-231`; `ui/src/main.ts:712-719,778-781` | ported | Persistence — see §6. |
@@ -286,7 +286,7 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | Ctrl/Cmd+Z undo; Ctrl+Y / Ctrl+Shift+Z redo (ignore when focus is an input) (code-read) | `index.html:266-275`; `src/boot/hotkeysBoot.ts:4-5` | `ui/src/main.ts:486-511` | ported | 
 | F6 set checkpoint (code-read) | `src/boot/hotkeysBoot.ts:7-9` | `ui/src/main.ts:513-518` | ported | 
 | F7 restore checkpoint (code-read) | — | `ui/src/main.ts:520-525` | ported | New-only extra. |
-| F8 reroll checkpoint (code-read) | `src/boot/hotkeysBoot.ts:7-9` | — | missing | Same result as §8: F8 restores the checkpoint on a new RNG branch. |
+| F8 reroll checkpoint (code-read) | `src/boot/hotkeysBoot.ts:7-9` | `ui/src/main.ts:669-675` | ported | Same result as §8. |
 | Unified pointer drag (mouse + touch), pointer capture (code-read) | `src/ui/pointerDragSession.ts` | `ui/src/drag.ts` | ported | 
 | `touch-action: none` on draggables (code-read) | `css/cards.css` drag block | `ui/css/cards.css:175-184` | in progress (round 3) | 
 | Browser context menu blocked on `.card`, `.zone`, `.leader`, `.evo-btn` (code-read) | `src/boot/contextMenu.ts:3-17` | `ui/src/input.ts:192-197` | ported | Right-click on a card, zone, leader, or Evo/Super never shows the OS menu. |
@@ -303,7 +303,7 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | No full-page re-render of unrelated chrome (code-read) | `src/ui/render.ts` updates lists/crests in place | `ui/src/render.ts:535-540` history signature cache | ported | 
 | rAF paint coalescing (code-read) | — (sync `render()` on every change, `src/ui/render.ts:70`) | `ui/src/main.ts:148-154` | ported | New-only extra; keep. `window.__arena.paintMs` budget is tested (`ui/tests/feedback.spec.ts:378-387`). |
 | CSS-driven FCT (no JS animation loop) (code-read) | `css/floating-combat-text.css:2-3` | `ui/css/floating-combat-text.css:1-2` | ported | 
-| Cancel in-flight image loads before tearing down a node (code-read) | `src/ui/releaseImageLoads.ts:13-35` | — | missing | Removing a card or crest does not hitch the next paint on leftover image decodes (old tool cancelled in-flight `<img>` loads on teardown). |
+| Cancel in-flight image loads before tearing down a node (code-read) | `src/ui/releaseImageLoads.ts:13-35` | `ui/src/releaseImages.ts:2-15`; `ui/src/render.ts:382-388`; `ui/src/render/card.ts` crest teardown | ported | Card/crest teardown sets `img.src = ""` / removes the attribute so leftover decodes do not stall the next paint. |
 | Catalog / deck JSON cached at boot; images use the browser cache (`referrerPolicy: no-referrer`) (code-read) | CDN + `.webp` fallback | `ui/src/catalog.ts:6-27`; `ui/src/images.ts:25-52` | ported | 
 | No explicit image preload queue (code-read) | (none) | (none) | ported | 
 
@@ -350,27 +350,27 @@ Partial and missing rows only, **every-turn first**. Round-3 items stay here so 
 ### Occasional
 
 29. **Faith crest badge** — in progress (round 3).
-30. **Barrier overlay + flash/pop** — Cyan ring + particles (`--glow-barrier`) while Barrier is on; 250ms brightness flash on a new charge; 350ms pop when it breaks.
-31. **Can’t-be-destroyed overlay** — Gold field plus five floating particles for as long as the keyword is on.
+30. **Barrier overlay + flash/pop** — **`ported` 2026-09-11** (`ui/src/render/card.ts:209,327-398`). Cyan ring + particles; 250ms flash on gain; 350ms pop on loss; driven from the `traits` signature diff.
+31. **Can’t-be-destroyed overlay** — **`ported` 2026-09-11** (`ui/src/render/card.ts:327`). Gold field + five particles while `cantBeDestroyedByAbilities` is on.
 32. **Card-name highlights + crest panels + fused loot + Skybound + buff delta + play-blocked** in the tooltip — **`ported` 2026-09-11** as part of #5 (see §4).
-33. **Amulet named-counter badge** — Same bottom-right white/black-stroke number as countdown, showing the first numeric counter when countdown is absent.
-34. **Spell-cast flash** — Played spell brightens 1.5, cyan drop-shadow, scale 1.1 → 1, 0.5s ease-out.
+33. **Amulet named-counter badge** — **`ported` 2026-09-11** (`ui/src/render/card.ts:22-31,274-283`; `engine/src/info.rs` `named_counter`). First of **X, then Y, then Z**.
+34. **Spell-cast flash** — **`ported` 2026-09-11** (`ui/src/render.ts:382-410`). Brightness 1.5, cyan drop-shadow, scale 1.1 → 1, 0.5s ease-out; detached clone if the hand card is removed the same paint.
 35. **Terminal overlay reason + rematch-same-seed** — **`ported` 2026-09-11** (`ui/src/render.ts:1054-1093`). Reason `Deck-out` or `Lethal`; Rematch (same seed) / (new seed) / New Game. Swap-sides dropped (owner 2026-09-11).
 36. **Terminal readout label** — in progress (round 3).
 37. **Empty seed = random** — **`ported` 2026-09-11** (`ui/src/main.ts:244-245,320-323`). Placeholder “random if empty”; empty field rolls a u64.
-38. **Share URL `a`/`b` aliases on write** — Keep `deckA`/`deckB`/`mode`; the written URL also carries `a`/`b` so old bookmarks open the same match.
+38. **Share URL `a`/`b` aliases on write** — **`ported` 2026-09-11** (`ui/src/share.ts:26-40`). Writes `deckA`/`deckB`/`mode` and `a`/`b`.
 39. **No OS menu on the play surface** — **`ported` 2026-09-11** as part of #6 (`ui/src/input.ts:192-197`).
 40. **Fuse via drag-release in hand** — **`ported` 2026-09-11** as part of #6 (`ui/src/drag.ts:228-236`).
 41. **Choice dismisses on click** — **`ported` 2026-09-11** as part of #15 (`ui/src/render.ts:752-759`).
-42. **No hitch on card/crest teardown** — Removing a card or crest does not stall the next paint on leftover image decodes.
+42. **No hitch on card/crest teardown** — **`ported` 2026-09-11** (`ui/src/releaseImages.ts:2-15`). In-flight `<img>` loads are cancelled on card/crest teardown.
 
 ### Rare (practice drawer)
 
 43. **Save/load after the 200-step ring** — in progress (round 3).
-44. **Position option `Name · T{n} · time`; Rename; Del** — Each saved position shows name, turn, and locale time; Rename (prompt) and Del act on the selected one.
-45. **Reroll + F8** — Restore the checkpoint on a new RNG branch; status `Checkpoint: T{n} · rerolls N`.
-46. **Export List** — Copies the Blue deck as `Nx Name` lines and shows that text in a small panel.
-47. **Icarus `!` badge** — **not representable** (no Icarus buff in `engine/`). Left `missing` until the engine exposes the fact.
+44. **Position option `Name · T{n} · time`; Rename; Del** — **`ported` 2026-09-11** (`ui/src/main.ts:747-809`). Option `{name} · T{turn} · {locale time}`; Rename / Del; JSON keeps name, turn, timestamp.
+45. **Reroll + F8** — **`ported` 2026-09-11** (`ui/src/session.ts:395-415`; `State::reseed`). New RNG branch from the checkpoint; status `Checkpoint: T{n} · rerolls N`; log step `{"reseed": <u64>}`.
+46. **Export List** — **`ported` 2026-09-11** (`ui/src/main.ts:813-833`). Blue deck as `Nx Name` lines, clipboard + `#exportListPanel`.
+47. **Icarus `!` badge** — **`dropped (not representable)`**. The engine has no Icarus buff, so there is no `traits` / `full()` fact to paint.
 
 ---
 
@@ -378,14 +378,15 @@ Partial and missing rows only, **every-turn first**. Round-3 items stay here so 
 
 | status | rows |
 |---|---|
-| ported | 162 |
-| partial | 3 |
-| missing | 11 |
+| ported | 174 |
+| partial | 1 |
+| missing | 0 |
 | dropped (by design) | 11 |
+| dropped (not representable) | 1 |
 | in progress (round 3) | 30 |
 | **total** | **217** |
 
-Counts are feature rows in §§1–10 (the gap list is a reordering, not extra rows). The 30 round-3 rows are the brief’s list split across the tables (e.g. yellow/green glow appears as several glow-class rows). Round-1 parity (2026-09-11) flipped the every-turn / common gaps to `ported`.
+Counts are feature rows in §§1–10 (the gap list is a reordering, not extra rows). The 30 round-3 rows plus the leftover §4 Faith-crest tooltip `partial` stay for round 3. Round-2 parity (2026-09-11) flipped the occasional / rare gaps (#30–#46) to `ported` and #47 to `dropped (not representable)`.
 
 ## Owner decided 2026-09-11
 
