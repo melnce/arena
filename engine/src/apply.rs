@@ -6837,7 +6837,7 @@ fn resolve_select_rolling(
     }
 }
 
-fn resolve_select(
+pub(crate) fn resolve_select(
     db: &CardDb,
     state: &State,
     controller: PlayerId,
@@ -7742,7 +7742,7 @@ fn vars_of(state: &State, source: Option<SourceRef>, key: crate::card::VarKey) -
     }
 }
 
-fn eval_cond(
+pub(crate) fn eval_cond(
     db: &CardDb,
     state: &State,
     who: PlayerId,
