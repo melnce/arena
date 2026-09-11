@@ -6,12 +6,14 @@ use serde::Serialize;
 use crate::action::{acting_player, Action};
 use crate::apply::{eval_cond, legal_actions, resolve_select};
 use crate::card::{
-    Ability, Amount, Class, Condition, CounterKey, Effect, FieldHasKind, Filter, FilterKind, Mode,
-    NamedCounter, PayResource, Selector, SelectorKind, Side, Tribe, TribeOrList, Zone,
+    Ability, Amount, CardKind, Class, Condition, CounterKey, Effect, FieldHasKind, Filter,
+    FilterKind, Mode, NamedCounter, PayResource, Selector, SelectorKind, Side, Tribe, TribeOrList,
+    Zone,
 };
 use crate::db::CardDb;
 use crate::ids::{AttackTarget, PlayerId};
-use crate::state::{CardInstance, PlayForm, SourceRef, State, TargetOpt};
+use crate::state::{CardInstance, Phase, PlayForm, SourceRef, State, TargetOpt};
+use crate::support;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct GateInfo {
@@ -31,6 +33,8 @@ pub struct HandCardInfo {
     pub form: Option<String>,
     pub playable: bool,
     pub gates: Vec<GateInfo>,
+    /// Why this card cannot be played right now; `None` when `playable`.
+    pub blocked_reason: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -43,6 +47,8 @@ pub struct BoardCardInfo {
     pub evolved: bool,
     pub super_evolved: bool,
     pub gates: Vec<GateInfo>,
+    /// Printed cannot-attack lock (not summoning sickness).
+    pub cannot_attack_reason: Option<String>,
 }
 
 /// Per-player evolve / super-evolve unlock presentation (A9 / A10).
@@ -55,6 +61,8 @@ pub struct PlayerInfo {
     /// Own turns still to start before the unlock; `0` once unlocked.
     pub evolve_unlock_in: u32,
     pub super_evolve_unlock_in: u32,
+    /// Leader Barrier / damage cap is live.
+    pub has_leader_barrier: bool,
 }
 
 /// Same turn-count gate `legal_actions` / `can_evolve` use. Not EP, not
@@ -91,6 +99,7 @@ pub fn player_info(_db: &CardDb, state: &State, player: PlayerId) -> PlayerInfo 
         super_evolve_unlocked,
         evolve_unlock_in: unlock_in(p.turns_taken, evo_at),
         super_evolve_unlock_in: unlock_in(p.turns_taken, super_at),
+        has_leader_barrier: p.damage_cap().is_some(),
     }
 }
 
@@ -121,6 +130,18 @@ pub fn hand_info(db: &CardDb, state: &State, player: PlayerId) -> Vec<HandCardIn
                 form: form_label,
                 playable,
                 gates: collect_hand_gates(db, state, player, inst, pp),
+                blocked_reason: if playable {
+                    None
+                } else {
+                    Some(blocked_reason(
+                        db,
+                        state,
+                        player,
+                        actor,
+                        inst,
+                        form.as_ref(),
+                    ))
+                },
             }
         })
         .collect()
@@ -164,9 +185,59 @@ pub fn board_info(db: &CardDb, state: &State, player: PlayerId) -> Vec<BoardCard
                 evolved: inst.evolved,
                 super_evolved: inst.super_evolved,
                 gates: collect_board_gates(db, state, player, inst),
+                cannot_attack_reason: cannot_attack_reason(inst),
             })
         })
         .collect()
+}
+
+fn blocked_reason(
+    db: &CardDb,
+    state: &State,
+    player: PlayerId,
+    actor: PlayerId,
+    inst: &CardInstance,
+    form: Option<&(i32, PlayForm)>,
+) -> String {
+    if player != actor {
+        return "Not your turn.".into();
+    }
+    if !matches!(state.phase, Phase::Main) {
+        return "Wrong phase.".into();
+    }
+    if inst.cant_be_played() {
+        return "Cannot be played.".into();
+    }
+    if let Ok(card) = db.card(inst.card) {
+        if support::card_unsupported(card).is_some() {
+            return "Cannot be played.".into();
+        }
+        if form.is_none() {
+            return "Not enough PP.".into();
+        }
+        let as_spell = matches!(form, Some((_, PlayForm::Accelerate { .. })))
+            || card.kind() == CardKind::Spell;
+        if !as_spell && state.player(player).field_free() == 0 {
+            return "Board is full.".into();
+        }
+    } else if form.is_none() {
+        return "Not enough PP.".into();
+    }
+    "No legal target.".into()
+}
+
+fn cannot_attack_reason(inst: &CardInstance) -> Option<String> {
+    let no_fol = inst.traits.cant_attack_followers == Some(true);
+    let no_lead = inst.traits.cant_attack_leader == Some(true);
+    if no_fol && no_lead {
+        Some("Cannot attack.".into())
+    } else if no_fol {
+        Some("Cannot attack followers.".into())
+    } else if no_lead {
+        Some("Cannot attack the leader.".into())
+    } else {
+        None
+    }
 }
 
 fn form_label(form: PlayForm) -> &'static str {
