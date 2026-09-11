@@ -168,6 +168,7 @@ function exposeArena(): void {
     legal: () => (session ? JSON.parse(session.game.legal()) : []),
     actions: () => (session ? session.actions : []),
     paintMs: window.__arena?.paintMs,
+    watchDelayMs,
     reseed: (seed) => {
       if (!session) throw new Error("no session");
       session.game.reseed(seed);
@@ -466,11 +467,31 @@ async function maybeBots(): Promise<void> {
   paint();
 }
 
+/** Geometric watch delay: v1 = 3000 ms … v19 = 16 ms, v20 = 0 (unthrottled). */
+const WATCH_DELAY_R = (16 / 3000) ** (1 / 18);
+
+function watchDelayMsFromValue(v: number): number {
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n) || n >= 20) return 0;
+  if (n <= 1) return 3000;
+  return Math.round(3000 * WATCH_DELAY_R ** (n - 1));
+}
+
 function watchDelayMs(): number {
   const sl = byId<HTMLInputElement>("watchSpeed");
-  const v = sl ? Number(sl.value) : 1;
-  if (v >= 20) return 0;
-  return Math.max(0, Math.round(1000 / v));
+  return watchDelayMsFromValue(sl ? Number(sl.value) : 5);
+}
+
+function formatWatchSpeedLabel(delay: number): string {
+  if (delay <= 0) return "max";
+  const sec = delay / 1000;
+  if (delay >= 1000) return `${sec.toFixed(1)} s / action`;
+  return `${sec.toFixed(2)} s / action`;
+}
+
+function syncWatchSpeedReadout(): void {
+  const out = byId("watchSpeedReadout");
+  if (out) out.textContent = formatWatchSpeedLabel(watchDelayMs());
 }
 
 function scheduleWatch(): void {
@@ -864,6 +885,15 @@ function initImportDeck(): void {
 }
 
 function initWatch(): void {
+  const sl = byId<HTMLInputElement>("watchSpeed");
+  sl?.addEventListener("input", () => {
+    localStorage.setItem("svwb.watchSpeed", sl.value);
+    syncWatchSpeedReadout();
+  });
+  sl?.addEventListener("change", () => {
+    localStorage.setItem("svwb.watchSpeed", sl.value);
+    syncWatchSpeedReadout();
+  });
   byId("watchStepBtn")?.addEventListener("click", () => {
     if (!session || session.cfg.mode !== "watch") return;
     watchPlaying = false;
@@ -893,6 +923,13 @@ function restorePersistedToggles(): void {
   if (bottomBox) bottomBox.checked = bottom;
   document.body.classList.toggle("active-on-bottom", bottom);
   if (fctBox) fctBox.checked = fct == null ? true : fct !== "0";
+  const speedRaw = localStorage.getItem("svwb.watchSpeed");
+  const sl = byId<HTMLInputElement>("watchSpeed");
+  if (sl && speedRaw != null) {
+    const n = Math.round(Number(speedRaw));
+    if (Number.isFinite(n) && n >= 1 && n <= 20) sl.value = String(n);
+  }
+  syncWatchSpeedReadout();
 }
 
 async function boot(): Promise<void> {
