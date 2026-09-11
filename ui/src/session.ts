@@ -260,48 +260,13 @@ function redoOne(s: Session): boolean {
 }
 
 /**
- * Undo. Hotseat / watch: one NeutralAction, except mid-Choice which jumps to
- * the state before the choice began. Vs-bot: one jump to the human's previous
- * decision (bot actions in between ride along on the redo stack).
+ * Undo. Hotseat / watch: one NeutralAction (one choose pick is one step).
+ * Vs-bot: one jump to the human's previous decision (bot actions in between
+ * ride along on the redo stack).
  */
-function isChoiceAction(a: NeutralAction): boolean {
-  return "choose" in a || "confirm" in a;
-}
-
-function lastCompletedChoice(s: Session): boolean {
-  const last = s.past[s.past.length - 1];
-  if (!last) return false;
-  if (s.game.phase() === "choice") return false;
-  return isChoiceAction(last.action);
-}
-
-function undoChoiceUnit(s: Session): boolean {
-  let moved = false;
-  do {
-    const step = s.past[s.past.length - 1];
-    if (!step) break;
-    if (!undoOne(s)) break;
-    moved = true;
-    if ("play" in step.action || "fuse" in step.action) break;
-  } while (s.past.length);
-  return moved;
-}
-
-function redoChoiceUnit(s: Session): boolean {
-  if (!redoOne(s)) return false;
-  while (s.future.length && s.game.phase() === "choice") {
-    if (!redoOne(s)) break;
-  }
-  return true;
-}
-
 export function undo(s: Session): boolean {
   if (!s.past.length) return false;
   if (s.cfg.mode === "watch") return undoOne(s);
-  if (s.game.phase() === "choice") {
-    return undoChoiceUnit(s);
-  }
-  if (lastCompletedChoice(s)) return undoChoiceUnit(s);
   if (s.cfg.mode === "vs-bot") return undoToHumanDecision(s);
   return undoOne(s);
 }
@@ -326,23 +291,14 @@ function undoToHumanDecision(s: Session): boolean {
 }
 
 /**
- * Redo. Hotseat / watch: one snapshot. Vs-bot: the human action plus the
- * bot replies that rode with the matching undo, replayed from stored
- * snapshots (no new `botAction` roll).
+ * Redo. Hotseat / watch: one NeutralAction (one choose pick is one step).
+ * Vs-bot: the human action plus the bot replies that rode with the matching
+ * undo, replayed from stored snapshots (no new `botAction` roll).
  */
 export function redo(s: Session): boolean {
   if (!s.future.length) return false;
   if (s.cfg.mode === "watch") return redoOne(s);
   if (s.cfg.mode === "vs-bot") return redoToHumanDecision(s);
-  const next = s.future[s.future.length - 1];
-  const followups = s.future.slice(0, -1);
-  if (
-    next &&
-    ("play" in next.action || "fuse" in next.action) &&
-    followups.some((f) => isChoiceAction(f.action))
-  ) {
-    return redoChoiceUnit(s);
-  }
   return redoOne(s);
 }
 
