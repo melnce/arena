@@ -1,12 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import {
+  ART,
+  artShot,
   assertGlow,
   assertPngLeftEdge,
   assertPromptClearsCards,
+  waitCardSizeStable,
 } from "./helpers.ts";
-
-const ART = "/opt/cursor/artifacts";
 
 async function openSettings(page: Page) {
   const drawer = page.locator("#settingsDrawer");
@@ -145,11 +146,7 @@ test("A1 non-acting side has no glow (first A and first B)", async ({ page }) =>
     const acting = await page.locator("#turnCounter").getAttribute("data-acting");
     const idle = acting === "a" ? "red" : "blue";
     await expect(page.locator(idleGlow(idle))).toHaveCount(0);
-    await mkdir(ART, { recursive: true }).catch(() => undefined);
-    await page
-      .locator("#appRoot")
-      .screenshot({ path: `${ART}/a1_no_glow_first_${first}.png` })
-      .catch(() => undefined);
+    await artShot(page.locator("#appRoot"), `${ART}/a1_no_glow_first_${first}.png`);
   }
 });
 
@@ -168,7 +165,7 @@ test("A2 countdown badge updates and evolved art swaps", async ({ page }) => {
   const before = await flag.locator(".countdown-badge").innerText();
   expect(Number(before)).toBeGreaterThan(0);
   await mkdir(ART, { recursive: true });
-  await flag.screenshot({ path: `${ART}/a2_countdown_before.png` });
+  await artShot(flag, `${ART}/a2_countdown_before.png`);
   await endTurnApply(page);
   await endTurnApply(page);
   const goblet = await page.evaluate(() => {
@@ -178,7 +175,7 @@ test("A2 countdown badge updates and evolved art swaps", async ({ page }) => {
   if (goblet) {
     await playCard(page, "90021320");
     await expect(flag.locator(".countdown-badge")).not.toHaveText(before);
-    await flag.screenshot({ path: `${ART}/a2_countdown_after.png` });
+    await artShot(flag, `${ART}/a2_countdown_after.png`);
   }
 
   const evoActs = await page.evaluate(() => {
@@ -195,7 +192,7 @@ test("A2 countdown badge updates and evolved art swaps", async ({ page }) => {
     expect(afterSrc).not.toBe(beforeSrc);
     await expect(card.locator(".card-stats.bottom-left")).toHaveClass(/stat-buffed/);
     await expect(card.locator(".card-stats.bottom-right")).toHaveClass(/stat-buffed/);
-    await card.screenshot({ path: `${ART}/a6_evolved_green.png` });
+    await artShot(card, `${ART}/a6_evolved_green.png`);
   }
 });
 
@@ -218,16 +215,15 @@ test("A3 rush is yellow the turn played, green next; storm is green", async ({ p
   const rushTip = await page.locator("#cardTooltip").innerText();
   expect(rushTip).toMatch(/\bRush\b/);
   expect(rushTip).not.toMatch(/Rush:/);
-  await mkdir(ART, { recursive: true });
-  await spawn.screenshot({ path: `${ART}/a3_rush_yellow.png` });
-  assertPngLeftEdge(`${ART}/a3_rush_yellow.png`, "yellow");
+  const yellowPath = await artShot(spawn, `${ART}/a3_rush_yellow.png`);
+  assertPngLeftEdge(yellowPath, "yellow");
   await endTurnApply(page);
   await endTurnApply(page);
   await expect(spawn).toHaveClass(/can-attack/);
   await expect(spawn).not.toHaveClass(/rush-glow/);
   await assertGlow(spawn, "green");
-  await spawn.screenshot({ path: `${ART}/a3_rush_green.png` });
-  assertPngLeftEdge(`${ART}/a3_rush_green.png`, "green");
+  const greenPath = await artShot(spawn, `${ART}/a3_rush_green.png`);
+  assertPngLeftEdge(greenPath, "green");
 
   const storm = await importDeck(page, "barbaros.json", { "10924110": 40 });
   await page.locator("#redDeckSelect").selectOption(storm);
@@ -240,8 +236,8 @@ test("A3 rush is yellow the turn played, green next; storm is green", async ({ p
   await expect(barb).toHaveClass(/can-attack/);
   await expect(barb).not.toHaveClass(/rush-glow/);
   await assertGlow(barb, "green");
-  await barb.screenshot({ path: `${ART}/a3_storm_green.png` });
-  assertPngLeftEdge(`${ART}/a3_storm_green.png`, "green");
+  const stormPath = await artShot(barb, `${ART}/a3_storm_green.png`);
+  assertPngLeftEdge(stormPath, "green");
 });
 
 test("A4 A5 Slice yellow 2/2 vs green 1/2; no E/A/C badge", async ({ page }) => {
@@ -297,8 +293,8 @@ test("A4 A5 Slice yellow 2/2 vs green 1/2; no E/A/C badge", async ({ page }) => 
   await expect(page.locator("#cardTooltip")).toContainText("Allied cards on the field");
   await expect(page.locator("#cardTooltip")).toContainText("2/2");
   await mkdir(ART, { recursive: true });
-  await page.locator("#cardTooltip").screenshot({ path: `${ART}/a5_slice_2_2.png` });
-  await cardTwo.screenshot({ path: `${ART}/a5_slice_yellow.png` });
+  await artShot(page.locator("#cardTooltip"), `${ART}/a5_slice_2_2.png`);
+  await artShot(cardTwo, `${ART}/a5_slice_yellow.png`);
 
   // 1-ally path: new game, play one spawn only.
   await startGame(page, { seed: "1", first: "a", deckA: id, deckB: id });
@@ -327,7 +323,7 @@ test("A4 A5 Slice yellow 2/2 vs green 1/2; no E/A/C badge", async ({ page }) => 
   await assertGlow(cardOne, "green");
   await cardOne.hover();
   await expect(page.locator("#cardTooltip")).toContainText("1/2");
-  await cardOne.screenshot({ path: `${ART}/a5_slice_1_2.png` });
+  await artShot(cardOne, `${ART}/a5_slice_1_2.png`);
 });
 
 test("A6 evolved stats are green; damaged defense is orange", async ({ page }) => {
@@ -357,7 +353,7 @@ test("A6 evolved stats are green; damaged defense is orange", async ({ page }) =
   await expect(card.locator(".card-stats.bottom-left")).toHaveClass(/stat-buffed/);
   await expect(card.locator(".card-stats.bottom-right")).toHaveClass(/stat-buffed/);
   await mkdir(ART, { recursive: true });
-  await card.screenshot({ path: `${ART}/a6_evolved_green.png` });
+  await artShot(card, `${ART}/a6_evolved_green.png`);
   const atk = await page.evaluate(() => {
     const legal = window.__arena!.legal() as Array<{
       attack?: { target: { slot?: number } | "leader" };
@@ -368,7 +364,7 @@ test("A6 evolved stats are green; damaged defense is orange", async ({ page }) =
   await applyAction(page, atk);
   await expect(card.locator(".card-stats.bottom-left")).toHaveClass(/stat-buffed/);
   await expect(card.locator(".card-stats.bottom-right")).toHaveClass(/stat-damaged/);
-  await card.screenshot({ path: `${ART}/a6_damaged_orange.png` });
+  await artShot(card, `${ART}/a6_damaged_orange.png`);
 });
 
 test("A7 faith badge increments after an Enhanced play", async ({ page }) => {
@@ -400,7 +396,7 @@ test("A7 faith badge increments after an Enhanced play", async ({ page }) => {
   await expect(crest).not.toHaveText(String(before), { timeout: 5000 });
   expect(Number(await crest.innerText())).toBeGreaterThan(before);
   await mkdir(ART, { recursive: true });
-  await page.locator("#blueCrests").screenshot({ path: `${ART}/a7_faith_badge.png` });
+  await artShot(page.locator("#blueCrests"), `${ART}/a7_faith_badge.png`);
 });
 
 test("B1 B2 B18 fuse confirm inside modal, labelled partners, fuse chip", async ({ page }) => {
@@ -445,7 +441,7 @@ test("B1 B2 B18 fuse confirm inside modal, labelled partners, fuse chip", async 
   const chip = page.locator(".fuse-chip").first();
   if (await chip.count()) {
     await mkdir(ART, { recursive: true });
-    await chip.screenshot({ path: `${ART}/b18_fuse_chip.png` });
+    await artShot(chip, `${ART}/b18_fuse_chip.png`);
   }
 
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", "choice");
@@ -487,7 +483,7 @@ test("B1 B2 B18 fuse confirm inside modal, labelled partners, fuse chip", async 
     { width: 1920, height: 1080 },
   ]) {
     await page.setViewportSize(vp);
-    await page.waitForTimeout(260);
+    await waitCardSizeStable(page);
     await assertPromptClearsCards(page);
   }
   const options = page.locator(".choice-option, .hand-zone .card.legal-target");
@@ -511,8 +507,7 @@ test("B1 B2 B18 fuse confirm inside modal, labelled partners, fuse chip", async 
     return el?.className ?? "";
   }, { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 });
   expect(hit).toMatch(/confirm|choice-prompt/);
-  await mkdir(ART, { recursive: true }).catch(() => undefined);
-  await page.screenshot({ path: `${ART}/b1_fuse_confirm.png` }).catch(() => undefined);
+  await artShot(page, `${ART}/b1_fuse_confirm.png`);
   await confirm.first().click();
 });
 
@@ -631,8 +626,7 @@ test("B7 follower floating combat text", async ({ page }) => {
   });
   expect(events.some((e) => e && typeof e === "object" && "damage" in e)).toBeTruthy();
   await expect(page.locator(".floating-combat-text")).toHaveCount(1, { timeout: 4000 });
-  await mkdir(ART, { recursive: true }).catch(() => undefined);
-  await page.screenshot({ path: `${ART}/b7_follower_fct.png` }).catch(() => undefined);
+  await artShot(page, `${ART}/b7_follower_fct.png`);
 });
 
 test("B8 destroyed history stays with the owner across End Turn", async ({ page }) => {
@@ -692,11 +686,10 @@ test("B9 tap-anywhere cancels pending attack; Cancel chip visible", async ({ pag
     { width: 1920, height: 1080 },
   ]) {
     await page.setViewportSize(vp);
-    await page.waitForTimeout(260);
+    await waitCardSizeStable(page);
     await assertPromptClearsCards(page);
   }
-  await mkdir(ART, { recursive: true });
-  await page.screenshot({ path: `${ART}/b9_cancel_chip.png` });
+  await artShot(page, `${ART}/b9_cancel_chip.png`);
   await page.locator("#blueHand").click({ position: { x: 8, y: 8 } });
   await expect(page.locator(".pending-cancel-chip")).toHaveCount(0);
 });
@@ -750,11 +743,10 @@ test("B12 mode buttons carry printed 1-based text", async ({ page }) => {
     { width: 1920, height: 1080 },
   ]) {
     await page.setViewportSize(vp);
-    await page.waitForTimeout(260);
+    await waitCardSizeStable(page);
     await assertPromptClearsCards(page);
   }
-  await mkdir(ART, { recursive: true });
-  await page.locator(".choice-modal").screenshot({ path: `${ART}/b12_mode_text.png` });
+  await artShot(page.locator(".choice-modal"), `${ART}/b12_mode_text.png`);
 });
 
 test("B14 save/load after 200+ actions and invalid file", async ({ page }) => {
@@ -852,8 +844,25 @@ test("A9 A10 evo buttons stay enabled after unlock; countdown while locked", asy
   expect(t1.blueEvo.label).toMatch(/Evo \(\d\) · 4/);
   expect(t1.blueSuper.label).toMatch(/Super \(\d\) · 6/);
   expect(t1.blueEvo.title).toBe("unlocks in 4 turns");
-  await mkdir(ART, { recursive: true });
-  await page.locator("#blueLeader").screenshot({ path: `${ART}/a10_evo_countdown_locked.png` });
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await waitCardSizeStable(page);
+  const wrap = await page.evaluate(() => {
+    const bar = document.getElementById("blueLeader");
+    if (!bar) return { wrapBar: true, labelWrap: true };
+    const kids = [...bar.children] as HTMLElement[];
+    const tops = kids.map((k) => k.getBoundingClientRect().top);
+    const wrapBar = Math.max(...tops) - Math.min(...tops) > 8;
+    const labelWrap = [...bar.querySelectorAll(".evo-btn-label")].some((el) => {
+      const r = el.getBoundingClientRect();
+      const lh = parseFloat(getComputedStyle(el).lineHeight) || 16;
+      return r.height > lh * 1.6;
+    });
+    return { wrapBar, labelWrap };
+  });
+  expect(wrap.wrapBar, "leader bar must not wrap at 1024").toBe(false);
+  expect(wrap.labelWrap, "evo labels must stay one line at 1024").toBe(false);
+  await artShot(page.locator("#blueLeader"), `${ART}/a10_evo_countdown_locked.png`);
+  await page.setViewportSize({ width: 1280, height: 720 });
 
   let aUnlockedAt: number | null = null;
   for (let ply = 0; ply < 16; ply++) {
@@ -894,7 +903,7 @@ test("A9 A10 evo buttons stay enabled after unlock; countdown while locked", asy
   expect(aUnlockedAt).not.toBeNull();
   const unlockedShot = await snap();
   expect(unlockedShot.blueEvo.disabled).toBeFalsy();
-  await page.locator("#blueLeader").screenshot({ path: `${ART}/a9_evo_unlocked.png` });
+  await artShot(page.locator("#blueLeader"), `${ART}/a9_evo_unlocked.png`);
 
   for (let i = 0; i < 6; i++) {
     const evo = await page.evaluate(() => {
@@ -907,7 +916,7 @@ test("A9 A10 evo buttons stay enabled after unlock; countdown while locked", asy
       expect(mid.blueEvo.disabled).toBeFalsy();
       if (mid.a.super_evolve_unlocked) expect(mid.blueSuper.disabled).toBeFalsy();
       expect(mid.blueEvo.label).toMatch(/Evo \(\d\)/);
-      await page.locator("#blueLeader").screenshot({ path: `${ART}/a9_evo_after_use.png` });
+      await artShot(page.locator("#blueLeader"), `${ART}/a9_evo_after_use.png`);
     }
     await endTurnApply(page);
     const later = await snap();

@@ -1,6 +1,26 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { inflateSync } from "node:zlib";
 import { readFileSync } from "node:fs";
+import { copyFile, mkdir as mkdirP } from "node:fs/promises";
+
+export const ART = "/opt/cursor/artifacts";
+
+/** Write to /tmp first — /opt/cursor/artifacts close() can EIO and must not fail a test. */
+export async function artShot(
+  target: { screenshot: (opts: { path: string; fullPage?: boolean }) => Promise<Buffer> },
+  path: string,
+  opts: { fullPage?: boolean } = {},
+): Promise<string> {
+  const fallback = `/tmp/${path.split("/").pop()}`;
+  await target.screenshot({ path: fallback, ...opts });
+  try {
+    await mkdirP(ART, { recursive: true });
+    await copyFile(fallback, path);
+    return path;
+  } catch {
+    return fallback;
+  }
+}
 
 export const YELLOW = "rgb(255, 212, 0)";
 export const GREEN = "rgb(57, 217, 138)";
