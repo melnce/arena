@@ -2,13 +2,13 @@
 
 Audit of every user-visible feature of the old practice tool’s **client** (`$HOME/practice-tool`, `origin/main` `bf8a9123`) against the new client (`ui/` at `8dfcb15`, plus this doc). Rules, card facts, and engine computation are out of scope.
 
-**Visible result, not a code copy** (owner, 2026-09-11): *“make sure you don't copy it blindly. you can improve the code but make sure the result is the same. same glows, counters, colors etc.”* A row is `ported` only when the player sees the same thing (what, where, colour/token, when, how long). `partial` means it looks or behaves differently, even if the new code is “equivalent.” Gap specs name the result to reproduce — old CSS tokens, timings, corners — never a function to paste. File:line cites are evidence of the old result, not an implementation.
+**Visible result, not a code copy** (owner, 2026-09-11): *“make sure you don't copy it blindly. you can improve the code but make sure the result is the same. same glows, counters, colors etc.”* A row is `ported` only when the player sees the same thing (what, where, colour/token, when, how long). Gap specs name the result to reproduce — old CSS tokens, timings, corners — never a function to paste. File:line cites are evidence of the old result, not an implementation.
 
 **Old paths** are relative to `$HOME/practice-tool`. **New paths** are relative to this repo.
 
 **Verification.** Every row was read in both trees. Rows tagged `(code-read)` had no matching on-screen state in this pass (Barrier, Skybound, fuse/choice, game-over, F8, etc.). Untagged rows were also confirmed on a running preview (`wasm-pack` + `ui` production build + Chromium at `http://127.0.0.1:4173`). Screenshots: `/opt/cursor/artifacts/parity_*.png`.
 
-**Round 3.** Rows that landed on `main` since `c69801c` (m4-feedback-3) were verified against this client (post-hotfix merge). Each is `ported` with a current file:line, or `partial` with a one-line gap. Do not re-implement a `ported` row.
+**Round 3 / SF.** Rows that landed on `main` since `c69801c` were verified against this client. Owner 2026-09-11 dropped the form-letter badge and form-gate tooltip lines. Undo-inside-choice is one pick per press (owner 2026-09-05). Do not re-implement a `ported` or owner-dropped row.
 
 **Owner decisions 2026-09-11**
 
@@ -16,7 +16,7 @@ Audit of every user-visible feature of the old practice tool’s **client** (`$H
 2. **Terminal overlay.** Buttons: Rematch (same seed), Rematch (new seed), New Game (opens the drawer). Remove “Rematch (swap sides)”. The first player of a rematch follows the drawer’s first-player setting (A / B / coin). Reason line: `Deck-out` or `Lethal`, not “Match over”.
 3. **Dropped for good** (keep as `dropped (by design)`): blackbox, sparring-line scripts, puzzles, coverage banner, god-mode, Consistency Trainer, `?test=1` bridge, UNIMPL/unknown-op badges, burn-preview box, deck paste panel, smaller top-hand scale.
 
-**Status** ∈ `ported` | `partial` | `missing` | `dropped (by design)` | `dropped (not representable)`.
+**Status** ∈ `ported` | `missing` | `dropped (by design)` | `dropped (not representable)` | `dropped (owner decision 2026-09-11)`.
 
 Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, sparring-line scripts, puzzles, coverage banner, god-mode, Consistency Trainer, `?test=1` QA bridge, UNIMPL/UNKNOWN OP face badges, burn-preview box, deck *paste* import panel (JSON file import was ported instead), smaller top-hand scale.
 
@@ -69,7 +69,7 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | Super-evolved: purple pulse `pulseSuper` 1.4s + **SE** (code-read) | `css/cards.css:536-574`; `src/ui/zones/dom.ts:66` | `ui/css/cards.css:545-583`; `ui/src/render/card.ts:173` | ported | 
 | Evolved / super art (evo hash / evo image) (code-read) | `src/ui/zones/dom.ts:76-80` (`card.base_image` or `card.image`) | `ui/src/images.ts:5-9,115`; `ui/src/render/card.ts:115` (`evoCard` when evolved/super) | ported | 
 | `updateCard` on reused DOM must refresh countdown, overlays, evo art — not just cost/ATK/DEF (code-read) | old replaces the node when the VM changes (`src/ui/zones/index.ts:115-137`) | `ui/src/render/card.ts:34-49,145-171` | ported | Signature includes countdown, named counter, traits, evo flags; `paintWrapper` rebuilds art + overlays on change. |
-| Alternate-form badge cyan `{formLabel} {cost}` (e.g. `Accelerate 1`) at top of art (code-read) | `css/cards.css:623-637`; `src/ui/zones/dom.ts:145-151` | `ui/css/cards.css:685-699` (CSS only; no JS node) | partial | `.alternate-form-badge` is never created; form is yellow/amber glow + paid cost only. |
+| Alternate-form badge cyan `{formLabel} {cost}` (e.g. `Accelerate 1`) at top of art (code-read) | `css/cards.css:623-637`; `src/ui/zones/dom.ts:145-151` | `ui/css/cards.css:685-699` (CSS only; no JS node) | dropped (owner decision 2026-09-11) | “you don't need to mark them as A C E, just the cost dynamically adapting is enough.” |
 | No E/A/C trinity badges on the cost chip; yellow = enhance/alternate or a met gate, green = playable, none = unplayable (code-read) | `src/ui/helpers/glow.ts:237-260`; `css/cards.css:590-662` | `ui/src/render/card.ts:71-94`; tests assert `.alternate-form-badge` count 0 | ported | Cost chip is the paid PP only. Yellow = enhance / alternate / met gate; green = base playable; none = unplayable. |
 | `.playable-glow` green `playPulse` 1s — base-cost playable, no special form | `css/cards.css:654-662`; `src/ui/helpers/glow.ts:260` | `ui/css/cards.css:144-157,667-692`; `ui/src/render/card.ts:85` | ported | Same tokens; acting-player-only via `handInfo`. |
 | `.enhance-ready` yellow `enhPulse` 1s — Enhance or a met special gate (code-read) | `css/cards.css:590-598`; `src/ui/helpers/glow.ts:241-257` | `ui/css/cards.css:649-660`; `ui/src/render/card.ts:81-83`; `ui/src/render.ts:208` | ported | Yellow `enhPulse` when a non-form gate is met or the form is not `normal`. |
@@ -140,7 +140,7 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | Card-name highlights italic blue inside description (code-read) | `src/ui/tooltipFormat.ts:69-79` | `ui/src/tooltip.ts:204-211`; `ui/css/tooltip.css:70-74` | ported | Catalog names in the description are italic semibold `--color-accent-blue-bright`. |
 | “Gain crest:” muted lead + crest icon/name/text panels after the description (code-read) | `src/ui/tooltipFormat.ts:96-97,117-147`; `src/ui/tooltips.ts:104-107` | `ui/src/tooltip.ts:198-256`; `ui/css/tooltip.css:76-114` | ported | Muted “Gain crest:” lead, then 44×44 icon / name / text panels. |
 | Dynamic counter block **before** the description: `(Label: value/threshold)` (code-read) | `src/ui/tooltips.ts:101-102,172`; `src/ui/tooltipCounters.ts:407-411` | `ui/src/tooltip.ts:50-58,239-254` | ported | `.tooltip-counter-block` sits above the description. Lines are `{Label} {have}/{need}`. |
-| Enhance / Necromancy / Combo / Rally / Earth Rite / Overflow / Spellboost / Accelerate / Crystallize progress lines (code-read) | `src/ui/tooltipCounters.ts:72-98`; `src/ui/info`-equivalent in counters | `ui/src/info.ts:26-49`; `ui/src/tooltip.ts:239-241` | partial | Necromancy / Combo / Rally / Earth Rite / Overflow / Spellboost lines paint; Enhance / Accelerate / Crystallize form gates are filtered out of the tooltip block. | 
+| Enhance / Necromancy / Combo / Rally / Earth Rite / Overflow / Spellboost / Accelerate / Crystallize progress lines (code-read) | `src/ui/tooltipCounters.ts:72-98`; `src/ui/info`-equivalent in counters | `ui/src/info.ts:26-49`; `ui/src/tooltip.ts:239-241` | dropped (owner decision 2026-09-11) | Necromancy / Combo / Rally / Earth Rite / Overflow / Spellboost lines paint. Form gates omitted: “enhance doesn't need the tooltip with have1. it's not progress.” | 
 | Dedicated blue `Rally: current / req` line (code-read) | `src/ui/tooltips.ts:125-141` | `ui/src/tooltip.ts:117-124` | ported | `Rally: have / need` in `#7af` whenever the printed text has Rally (gate optional). |
 | Dedicated gold `Skybound Art: current / req` (code-read) | `src/ui/tooltips.ts:143-162` | `ui/src/tooltip.ts:127-133` | ported | Gold `#ebd04f` `Skybound Art: have / need` when the text or a gate has Skybound Art. |
 | Orange `Fused Loot (unique): N` + names, or grey `Fused: N cards` (code-read) | `src/ui/tooltips.ts:109-123` | `ui/src/tooltip.ts:104-114` | ported | Orange unique loot list, or grey `#aaa` `Fused: N cards` at 0.8em. |
@@ -188,7 +188,7 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | Multi-target confirm bar: `{text} ({count})` bottom-centre green (code-read) | `src/ui/targeting.ts:16-28`; `index.html:152-163` | `ui/src/render.ts:850-856,924-926`; `ui/css/buttons.css:240-252` | ported | Prompt-bar confirm is `{prompt} ({count})` in the old green (`#4caf50`→`#45a049`, 12×24, 16px bold white). |
 | Modal `.processing` then remove on click (code-read) | `src/ui/choiceModal.ts:29-33` | `ui/src/render.ts:752-759` | ported | Option click adds `.processing` and removes the dim overlay immediately. |
 | Choice-phase prompt + Undo chip (code-read) | — | `ui/src/render.ts:864-907,949-960` | ported | Mid-board prompt bar with the choice text and an **Undo** chip. |
-| Undo symmetry inside a choice (one undo = one pick, not the whole choice) (code-read) | engine history (not in UI files) | `ui/src/session.ts:278-307` | partial | Undo during/after a choice rewinds every pick plus the play/fuse that opened it, not one pick. | 
+| Undo symmetry inside a choice (one undo = one pick, not the whole choice) (code-read) | engine history (not in UI files) | `ui/src/session.ts:262-272,297-302` | ported | Each applied action is one history step. Ctrl+Z after a completed choice reopens the prompt with the last pick removed; another press drops the previous pick or the play/fuse. Ctrl+Y replays the same pick. | 
 | Vs-bot hide opponent hand (face-down) (code-read) | sparring “Hide line hand” (`src/ui/scriptPanel.ts:74-86`) — dropped | `ui/index.html:143-146`; `ui/src/render.ts:101-102,186-189` | dropped (by design) | Hide-hand survives as vs-bot only; sparring-line hide is out of scope. |
 
 ---
@@ -311,21 +311,15 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 
 ## Gap list
 
-Partial rows first, then the verified ported map. Each leftover is the visible result (what, where, colour, when, how long) — class/token names are the old look, not a paste target.
-
-**Still partial**
-
-- **Cyan `{formLabel} {cost}` badge** — `.alternate-form-badge` CSS exists; no JS creates the node. Form is yellow/amber glow + paid cost only.
-- **Form-gate tooltip lines** — Enhance / Accelerate / Crystallize are filtered out of the tooltip counter block.
-- **Undo inside a choice** — one Undo rewinds every pick plus the play/fuse that opened the choice, not one pick.
+Every former gap is `ported` or owner-dropped. Owner-dropped form chrome stays listed so it is not re-opened.
 
 ### Every turn
 
 1. **Hand/board glow only for the acting player** — **`ported` 2026-09-11** (`ui/src/render.ts:208-218,282-294`).
-2. **Yellow vs green glow + no E/A/C badges** — **`ported` 2026-09-11** (`ui/src/render/card.ts:71-94`). Cyan `{formLabel} {cost}` badge stays **`partial`** (CSS only).
+2. **Yellow vs green glow + no E/A/C badges** — **`ported` 2026-09-11** (`ui/src/render/card.ts:71-94`). Cyan `{formLabel} {cost}` badge is **`dropped (owner decision 2026-09-11)`**.
 3. **Stat colours buffed / damaged / debuffed** — **`ported` 2026-09-11** (`ui/src/render/card.ts:247-256`; `ui/css/cards.css:636-647`).
 4. **`updateCard` countdown / overlays / evolved art** — **`ported` 2026-09-11** (`ui/src/render/card.ts:34-49,145-171`).
-5. **Tooltip order + class/tribes/set + extras** — **`ported` 2026-09-11** (`ui/src/tooltip.ts:39-61`, smart anchor `ui/src/render.ts:1274`). Name → class/tribes + set → gates → description → crests / fused / Rally / Skybound / `+A/+D` / `Cannot play:`. Cost/stats line omitted (hotfix). Form-gate tooltip lines stay **`partial`**.
+5. **Tooltip order + class/tribes/set + extras** — **`ported` 2026-09-11** (`ui/src/tooltip.ts:39-61`, smart anchor `ui/src/render.ts:1274`). Name → class/tribes + set → gates → description → crests / fused / Rally / Skybound / `+A/+D` / `Cannot play:`. Cost/stats line omitted (hotfix). Form-gate tooltip lines are **`dropped (owner decision 2026-09-11)`**.
 6. **Play / fuse click map** — **`ported` 2026-09-11** (`ui/src/input.ts:170-214`; owner: keep the old mapping). Left-click/tap fuse-capable → Fuse (does not play). Right-click playable → play. Drag to own board → play.
 7. **Rush-turn yellow vs green attack glow** — **`ported` 2026-09-11** (`ui/src/render.ts:285`; `engine/src/info.rs` `rush_only` / `followers_only_this_turn`).
 8. **Pending attack/evolve cancel + Cancel chip** — **`ported` 2026-09-11** (`ui/src/render.ts:1205-1234`; `ui/src/input.ts:137-154`).
@@ -340,7 +334,7 @@ Partial rows first, then the verified ported map. Each leftover is the visible r
 14. **History destroyed-owner attribution** — **`ported` 2026-09-11** (`ui/src/session.ts:163-189`). Owner is the side that held the card.
 15. **Choice modal labels + Fuse Confirm + stale listeners + prompt/Undo** — **`ported` 2026-09-11** (`ui/src/render.ts:749-807,864-960,990-1007`; `ui/src/input.ts:119-125`). Title “Choose an effect:”; card names / 1-based modes; prompt-bar Confirm + Undo; document-level choose (no leftover card listeners).
 16. **Engine-error toast** — **`ported` 2026-09-11** (`ui/src/main.ts:318-335`; `ui/css/modern-theme.css:986-1008`). Bottom-centre `#actionToast` dark pill, 1800ms, 0.18s fade.
-17. **Undo symmetry inside a choice** — **`partial`**. Undo rewinds every pick plus the play/fuse that opened the choice (`ui/src/session.ts:278-307`).
+17. **Undo symmetry inside a choice** — **`ported` 2026-09-11** (`ui/src/session.ts:262-272,297-302`). One Ctrl+Z = one applied action (one pick).
 18. **Enemy leader outline only while pending** — **`ported` 2026-09-11** (`ui/src/render.ts:472-496`).
 19. **Drag highlights ignore legality** — **`ported` 2026-09-11** (`ui/src/drag.ts:80-88`). Highlight only when `accepts(payload)`.
 20. **Fuse chip** — **`ported` 2026-09-11** (`ui/src/render.ts:226-237`; `ui/css/client.css:234-252`). Gold ring + bottom-centre **Fuse** chip.
@@ -384,14 +378,14 @@ Partial rows first, then the verified ported map. Each leftover is the visible r
 
 | status | rows |
 |---|---|
-| ported | 202 |
-| partial | 3 |
+| ported | 203 |
 | missing | 0 |
 | dropped (by design) | 11 |
 | dropped (not representable) | 1 |
+| dropped (owner decision 2026-09-11) | 2 |
 | **total** | **217** |
 
-Counts are feature rows in §§1–10 (the gap list is a reordering, not extra rows). Round-3 verification (2026-09-11, post-hotfix merge) flipped the 30 `in progress (round 3)` rows: 27 `ported`, 3 `partial` (cyan form-cost badge; form-gate tooltip lines; undo-inside-choice). The leftover §4 Faith-crest tooltip `partial` is now `ported` (`Faith — {count}`).
+Counts are feature rows in §§1–10 (the gap list is a reordering, not extra rows). SF (2026-09-11): undo-inside-choice is `ported` (one pick per press); the cyan form-cost badge and form-gate tooltip lines are `dropped (owner decision 2026-09-11)`.
 
 ## Owner decided 2026-09-11
 
