@@ -652,7 +652,6 @@ function fillHist(id: string, ids: string[]): void {
     const li = document.createElement("li");
     li.className = "hist-item";
     li.dataset.card = g.card;
-    const cat = getCatalog(g.card);
     const art = cardImageUrl(g.card, false);
     if (art) li.dataset.img = art;
     const set =
@@ -669,7 +668,6 @@ function fillHist(id: string, ids: string[]): void {
 }
 
 let histPreviewWired = false;
-let histPreview: HTMLElement | null = null;
 
 function wireHistoryPreview(): void {
   if (histPreviewWired) return;
@@ -677,7 +675,6 @@ function wireHistoryPreview(): void {
   const preview = document.createElement("div");
   preview.id = "historyImgPreview";
   document.body.appendChild(preview);
-  histPreview = preview;
   document.addEventListener("mousemove", (e) => {
     if (preview.style.display !== "block") return;
     let x = e.clientX + 18;

@@ -128,7 +128,7 @@ function skyboundLine(opts: TooltipPaint, text: string): string {
   const gate = opts.gates?.find((g) => /skybound/i.test(g.kind));
   const hasText = SKYBOUND_RE.test(text);
   if (!gate && !hasText) return "";
-  const need = gate?.need ?? Number(text.match(SKYBOUND_RE)?.[1] ?? 10) || 10;
+  const need = gate?.need ?? (Number(text.match(SKYBOUND_RE)?.[1] ?? 10) || 10);
   const have = gate?.have ?? (opts.turn ?? 1) + (opts.inst?.skybound ?? 0);
   return `<br><br><span class="skybound-line" style="color:#ebd04f;">Skybound Art: <span class="skybound-value">${have} / ${need}</span></span>`;
 }
