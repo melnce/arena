@@ -1,6 +1,6 @@
 import { getCatalog, lookupText } from "./catalog.ts";
 import { escapeHtml } from "./images.ts";
-import { formatGateLine } from "./info.ts";
+import { formatGateLine, isFormGate } from "./info.ts";
 import type { CardInstance, CrestInstance, GateInfo } from "./types.ts";
 
 const KEYWORD_LINE_RE =
@@ -47,13 +47,15 @@ export function formatCardTooltip(opts: {
   );
 }
 
-export function formatCrestTooltip(crest: CrestInstance): string {
+export function formatCrestTooltip(crest: CrestInstance, faithValue?: number): string {
   const info = lookupText(crest.id);
-  const cd =
-    crest.countdown != null ? `Countdown ${crest.countdown}` : crest.faith ? "Faith" : "Crest";
+  const faith =
+    crest.faith && faithValue != null ? `Faith: ${faithValue}` : crest.faith ? "Faith" : "";
+  const cd = crest.countdown != null ? `Countdown ${crest.countdown}` : "";
+  const meta = [faith, cd].filter(Boolean).join(" · ") || "Crest";
   return (
     `<div class="tooltip-header-name">${escapeHtml(info.name)}</div>` +
-    `<div class="tooltip-header-meta">${cd}</div>` +
+    `<div class="tooltip-header-meta">${meta}</div>` +
     formatTooltipDescription(info.text || "")
   );
 }
@@ -98,14 +100,19 @@ function boldKeywords(htmlEscaped: string): string {
 }
 
 function formatGateBlock(gates: GateInfo[]): string {
-  if (!gates.length) return "";
   const lines = gates
-    .map(
-      (g) =>
+    .filter((g) => !isFormGate(g.kind))
+    .map((g) => {
+      const text = formatGateLine(g);
+      if (!text) return "";
+      return (
         `<div class="dynamic-counter-line${g.met ? " gate-met" : ""}">` +
-        `<span class="dynamic-counter-label">${escapeHtml(formatGateLine(g))}</span>` +
-        `</div>`,
-    )
+        `<span class="dynamic-counter-label">${escapeHtml(text)}</span>` +
+        `</div>`
+      );
+    })
+    .filter(Boolean)
     .join("");
+  if (!lines) return "";
   return `<div class="tooltip-counter-block">${lines}</div>`;
 }

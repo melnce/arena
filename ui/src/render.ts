@@ -1,6 +1,6 @@
 import { lookupText } from "./catalog.ts";
 import { escapeHtml } from "./images.ts";
-import { badgeCost, sessionBoardInfo, sessionHandInfo, usablePp } from "./info.ts";
+import { badgeCost, conditionGateMet, sessionBoardInfo, sessionHandInfo, usablePp } from "./info.ts";
 import * as L from "./legal.ts";
 import type { Session } from "./session.ts";
 import { fullState, legalActions } from "./session.ts";
@@ -12,7 +12,6 @@ import type {
   HandCardInfo,
   NeutralAction,
   PlayerId,
-  TargetOpt,
 } from "./types.ts";
 import { attachPointerDragSource, setDropTarget } from "./drag.ts";
 import { glowFor, renderCard, renderCrestSlot } from "./render/card.ts";
@@ -39,6 +38,7 @@ export type RenderHooks = {
   onBonusPp: (player: PlayerId) => void;
   onNewGame: () => void;
   onRematchSwap: () => void;
+  onUndo: () => void;
   pending: Pending;
   setPending: (p: Pending) => void;
 };
@@ -62,7 +62,8 @@ export function render(s: Session, hooks: RenderHooks): void {
   document.body.classList.toggle("active-first", full.active === "a");
   document.body.classList.toggle("active-second", full.active === "b");
   document.body.classList.toggle("gameover", phase === "terminal");
-  document.body.classList.toggle("select-mode", phase === "choice" || hooks.pending != null);
+  document.body.classList.toggle("select-mode", phase === "choice");
+  document.body.classList.toggle("pending-target", hooks.pending != null);
   document.body.classList.toggle("mode-watch", s.cfg.mode === "watch");
   document.body.classList.toggle("mode-vs-bot", s.cfg.mode === "vs-bot");
   document.body.classList.toggle("mode-hotseat", s.cfg.mode === "hotseat");
@@ -94,7 +95,11 @@ export function render(s: Session, hooks: RenderHooks): void {
   setText(
     "turnReadout",
     phase === "terminal"
-      ? `Winner ${full.winner ?? "?"}`
+      ? full.winner === "a"
+        ? "Blue (A) wins"
+        : full.winner === "b"
+          ? "Red (B) wins"
+          : "Draw"
       : `Turn ${full.turn || 0} · ${acting.toUpperCase()}`,
   );
 
@@ -105,7 +110,7 @@ export function render(s: Session, hooks: RenderHooks): void {
   renderHand(s, full, legal, "b", hideB, handB, hooks);
   renderBoard(full, legal, "a", boardA, hooks);
   renderBoard(full, legal, "b", boardB, hooks);
-  bindBoardDrops(hooks);
+  bindBoardDrops(legal, hooks);
   renderLeaders(full, legal, hooks);
   renderEvo(full, legal, hooks);
   renderCrests(full);
@@ -168,31 +173,45 @@ function renderHand(
   const hand = full.players[player].hand;
   const phase = s.game.phase();
   const byPos = new Map(infos.map((i) => [i.pos, i]));
+  const acting = s.game.acting() as PlayerId;
   syncKeyed(
     el,
     hand.map((inst, i) => ({ key: String(inst.id), inst, i })),
     (row) => {
       const info = byPos.get(row.i);
-      const playable = !!info?.playable || !!L.playAt(legal, player, row.i);
+      const playable = !!L.playAt(legal, player, row.i);
       const fuse = !!L.fuseAt(legal, player, row.i);
-      const gateMet = !!info?.gates.some((g) => g.met);
+      const yellow = conditionGateMet(info?.gates) || (!!info?.form && info.form !== "normal");
       const pendingPlay =
         hooks.pending?.kind === "play" &&
         hooks.pending.player === player &&
         hooks.pending.handPos === row.i;
+      const mullSelected = phase === "mulligan" && acting === player && s.mulliganSwap[row.i];
       const card = renderCard({
         inst: row.inst,
         elementId: `${visual(player)}-hand-${row.inst.id}`,
         faceDown: hide,
-        glow: hide ? undefined : glowFor({ playable, gateMet, form: info?.form }),
-        selected: (phase === "mulligan" && s.mulliganSwap[row.i]) || pendingPlay,
-        selectable: !hide && phase === "mulligan",
+        glow: hide ? undefined : glowFor({ playable, yellow, form: info?.form }),
+        selected: mullSelected || pendingPlay,
+        selectable: !hide && phase === "mulligan" && acting === player,
         displayCost: hide ? undefined : badgeCost(info, row.inst.cost),
         form: hide ? undefined : info?.form,
       });
       card.dataset.handPos = String(row.i);
       card.dataset.player = player;
       card.classList.toggle("fuse-ready", fuse);
+      card.querySelector(".fuse-chip")?.remove();
+      if (fuse && !hide) {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "fuse-chip";
+        chip.textContent = "Fuse";
+        chip.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          hooks.onFuse(player, row.i);
+        });
+        card.appendChild(chip);
+      }
       if (info) {
         handInfoByUid.set(row.inst.id, info);
         gateByUid.set(row.inst.id, info.gates);
@@ -234,8 +253,8 @@ function renderBoard(
       const info = bySlot.get(row.i);
       const attacks = L.attacksFrom(legal, player, row.i);
       const engage = L.engageAt(legal, player, row.i);
-      const canAttack = !!info?.can_attack || attacks.length > 0;
-      const gateMet = !!info?.gates.some((g) => g.met);
+      const canAttack = attacks.length > 0;
+      const rushOnly = !!info?.rush_only && canAttack && !info.can_attack_leader;
       const pendingAtk =
         hooks.pending?.kind === "attack" &&
         hooks.pending.player === player &&
@@ -244,7 +263,7 @@ function renderBoard(
         inst: row.inst,
         elementId: `${visual(player)}-board-${row.inst.id}`,
         onBoard: true,
-        glow: glowFor({ canAttack, gateMet }),
+        glow: glowFor({ canAttack, rushOnly }),
         selected: pendingAtk,
         selectable: !!engage || canAttack,
       });
@@ -252,9 +271,6 @@ function renderBoard(
       card.dataset.player = player;
       if (info) gateByUid.set(row.inst.id, info.gates);
       if (engage) card.classList.add("engage-ready");
-      if (row.inst.traits?.includes("storm") || row.inst.traits?.includes("rush")) {
-        if (canAttack) card.classList.add("rush-glow");
-      }
       attachPointerDragSource(
         card,
         {
@@ -268,7 +284,7 @@ function renderBoard(
   );
 }
 
-function bindBoardDrops(hooks: RenderHooks): void {
+function bindBoardDrops(legal: NeutralAction[], hooks: RenderHooks): void {
   for (const p of ["a", "b"] as PlayerId[]) {
     const board = byId(`${visual(p)}Board`);
     if (!board) continue;
@@ -276,7 +292,7 @@ function bindBoardDrops(hooks: RenderHooks): void {
       board,
       (payload) => {
         const data = parsePayload(payload);
-        return data?.kind === "play" && data.player === p;
+        return !!data && data.kind === "play" && !!L.playAt(legal, data.player, data.handPos);
       },
       (payload) => {
         const data = parsePayload(payload);
@@ -289,7 +305,14 @@ function bindBoardDrops(hooks: RenderHooks): void {
         leader,
         (payload) => {
           const data = parsePayload(payload);
-          return data?.kind === "attack" && data.player !== p;
+          if (!data || data.kind !== "attack" || data.player === p) return false;
+          return legal.some(
+            (a) =>
+              "attack" in a &&
+              a.attack.player === data.player &&
+              a.attack.attacker_slot === data.slot &&
+              a.attack.target === "leader",
+          );
         },
         (payload) => {
           const data = parsePayload(payload);
@@ -305,10 +328,27 @@ function bindBoardDrops(hooks: RenderHooks): void {
       card,
       (payload) => {
         const data = parsePayload(payload);
-        return (
-          (data?.kind === "attack" && data.player !== player) ||
-          (data?.kind === "evo" && data.player === player)
-        );
+        if (!data) return false;
+        if (data.kind === "attack" && data.player !== player) {
+          return legal.some(
+            (a) =>
+              "attack" in a &&
+              a.attack.player === data.player &&
+              a.attack.attacker_slot === data.slot &&
+              typeof a.attack.target === "object" &&
+              a.attack.target.slot === slot,
+          );
+        }
+        if (data.kind === "evo" && data.player === player) {
+          return legal.some(
+            (a) =>
+              "evolve" in a &&
+              a.evolve.player === data.player &&
+              a.evolve.slot === slot &&
+              a.evolve.super === data.superEvo,
+          );
+        }
+        return false;
       },
       (payload) => {
         const data = parsePayload(payload);
@@ -376,9 +416,6 @@ function renderLeaders(full: FullState, legal: NeutralAction[], hooks: RenderHoo
     if (!el) continue;
     el.classList.remove("selectable", "legal-target");
     const enemy = p === "a" ? "b" : "a";
-    const hit = legal.some(
-      (a) => "attack" in a && a.attack.player === enemy && a.attack.target === "leader",
-    );
     const atk = hooks.pending?.kind === "attack" ? hooks.pending : null;
     const pending =
       !!atk &&
@@ -390,9 +427,8 @@ function renderLeaders(full: FullState, legal: NeutralAction[], hooks: RenderHoo
           a.attack.attacker_slot === atk.slot &&
           a.attack.target === "leader",
       );
-    if (hit || pending) {
-      el.classList.add("legal-target");
-      if (pending) el.classList.add("selectable");
+    if (pending) {
+      el.classList.add("legal-target", "selectable");
     }
     const cap = full.players[p].leader_mods?.some((m) => m.damage_cap != null);
     el.classList.toggle("has-barrier", !!cap);
@@ -440,8 +476,9 @@ function renderCrests(full: FullState): void {
     if (!box) continue;
     const slots = Array.from(box.querySelectorAll<HTMLElement>(".crest-slot"));
     const crests = full.players[p].crests || [];
-    slots.forEach((slot, i) => renderCrestSlot(slot, crests[i]));
-    attachCrestTooltips(slots, crests, p);
+    const faith = full.players[p].faith ?? 0;
+    slots.forEach((slot, i) => renderCrestSlot(slot, crests[i], faith));
+    attachCrestTooltips(slots, crests, p, faith);
   }
 }
 
@@ -449,6 +486,7 @@ function attachCrestTooltips(
   slots: HTMLElement[],
   crests: FullState["players"]["a"]["crests"],
   player: PlayerId,
+  faith: number,
 ): void {
   const tip = byId("cardTooltip");
   if (!tip) return;
@@ -456,7 +494,7 @@ function attachCrestTooltips(
     const crest = crests[i];
     if (!crest) return;
     slot.onmouseenter = () => {
-      tip.innerHTML = formatCrestTooltip(crest);
+      tip.innerHTML = formatCrestTooltip(crest, faith);
       tip.style.display = "block";
     };
     slot.onpointermove = (e) => {
@@ -493,6 +531,7 @@ function renderEndTurn(
     const show = phase !== "mulligan" && phase !== "terminal" && full.active === p;
     btn.style.display = show ? "inline-block" : "none";
     btn.disabled = !act;
+    btn.classList.toggle("disabled", !act);
     btn.onclick = () => {
       if (act) hooks.onEndTurn(p);
     };
@@ -553,155 +592,230 @@ function fillHist(id: string, ids: string[]): void {
 
 function renderChoice(full: FullState, legal: NeutralAction[], hooks: RenderHooks): void {
   document.querySelector(".choice-modal")?.remove();
+  document.querySelector(".choice-prompt-bar")?.remove();
   const confirmHost = byId("targetingConfirmation");
-  if (confirmHost) confirmHost.style.display = "none";
+  if (confirmHost) {
+    confirmHost.style.display = "none";
+    confirmHost.replaceChildren();
+  }
   const phase = full.phase;
   if (typeof phase !== "object" || !("choice" in phase)) return;
   const node = phase.choice.node;
+  const acting = phase.choice.player;
   const confirmAct = L.confirm(legal);
-  if (confirmAct && confirmHost) {
-    confirmHost.style.display = "block";
-    confirmHost.innerHTML = `<button type="button" class="confirm-targets-btn">Confirm</button>`;
-    confirmHost.querySelector("button")?.addEventListener("click", () => hooks.onConfirm());
-  }
-  if (isBoardChoice(node)) {
-    highlightChoiceTargets(node, legal, hooks);
+  const chooses = legal.filter((a) => "choose" in a);
+  const inPlace = isInPlaceChoice(node);
+  paintChoicePrompt(choicePrompt(node), hooks, confirmAct ? () => hooks.onConfirm() : null);
+
+  if (inPlace) {
+    highlightChoiceTargets(legal);
+    if (confirmAct && confirmHost) {
+      confirmHost.style.display = "flex";
+      confirmHost.innerHTML = `<button type="button" class="confirm-targets-btn">Confirm</button>`;
+      confirmHost.querySelector("button")?.addEventListener("click", () => hooks.onConfirm());
+    }
     return;
   }
+
   const modal = document.createElement("div");
   modal.className = "choice-modal";
-  const opts = choiceLabels(node);
-  modal.innerHTML = `<div class="choice-modal-content"><h3>Choose</h3><div class="choice-options">${opts
-    .map((o, i) => `<button type="button" class="choice-option" data-index="${i}">${o}</button>`)
-    .join("")}</div></div>`;
+  const buttons = chooses.map((act, i) => {
+    const label = labelChooseAction(act, node, full, acting);
+    return `<button type="button" class="choice-option" data-index="${i}">${escapeHtml(label)}</button>`;
+  });
+  modal.innerHTML = `<div class="choice-modal-content"><h3>${escapeHtml(choicePrompt(node))}</h3><div class="choice-options">${buttons.join("")}</div><div class="choice-modal-actions"></div></div>`;
+  const actions = modal.querySelector(".choice-modal-actions");
+  if (confirmAct && actions) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "confirm-targets-btn";
+    btn.textContent = "Confirm";
+    btn.addEventListener("click", () => hooks.onConfirm());
+    actions.appendChild(btn);
+  }
   modal.querySelectorAll<HTMLButtonElement>(".choice-option").forEach((btn) => {
     btn.addEventListener("click", () => {
       const i = Number(btn.dataset.index);
-      const act = chooseByIndex(legal, node, i);
+      const act = chooses[i];
       if (act) hooks.onChooseOpt(act);
     });
   });
   document.body.appendChild(modal);
 }
 
-function isBoardChoice(node: ChoiceNode): boolean {
-  if ("targets" in node) return node.targets.options.some((o) => "slot" in o || "leader" in o);
-  if ("multi_pick" in node) return node.multi_pick.options.some((o) => "slot" in o || "leader" in o);
+function isInPlaceChoice(node: ChoiceNode): boolean {
+  if ("fuse_partners" in node) return true;
+  if ("targets" in node) {
+    return node.targets.options.some((o) => "slot" in o || "leader" in o || "hand" in o);
+  }
+  if ("multi_pick" in node) {
+    return node.multi_pick.options.some((o) => "slot" in o || "leader" in o || "hand" in o);
+  }
   return false;
 }
 
-function highlightChoiceTargets(
-  node: ChoiceNode,
-  legal: NeutralAction[],
-  hooks: RenderHooks,
-): void {
-  const options =
-    "targets" in node ? node.targets.options : "multi_pick" in node ? node.multi_pick.options : [];
-  options.forEach((opt) => {
-    const el = targetEl(opt);
-    if (!el) return;
+function highlightChoiceTargets(legal: NeutralAction[]): void {
+  for (const act of legal) {
+    if (!("choose" in act)) continue;
+    const o = act.choose.option;
+    if (o === "leader") {
+      document.querySelectorAll<HTMLElement>(".leader-attack-strip").forEach((el) => {
+        el.classList.add("selectable", "legal-target");
+      });
+      continue;
+    }
+    if (o && typeof o === "object" && "card" in o && o.card) {
+      document
+        .querySelectorAll<HTMLElement>(`.hand-zone .card[data-card="${o.card}"]`)
+        .forEach((el) => el.classList.add("selectable", "legal-target"));
+      continue;
+    }
+    const el = elForChooseOption(o);
+    if (!el) continue;
     el.classList.add("selectable", "legal-target");
-    el.addEventListener(
-      "click",
-      (e) => {
-        e.stopPropagation();
-        const act = chooseForTarget(legal, opt);
-        if (act) hooks.onChooseOpt(act);
-      },
-      { once: true },
-    );
-  });
+  }
 }
 
-function targetEl(opt: TargetOpt): HTMLElement | null {
-  if ("slot" in opt && "player" in opt && typeof opt.slot === "number") {
-    const board = byId(`${visual(opt.player)}Board`);
-    return (
-      board?.querySelector<HTMLElement>(`.card[data-slot="${opt.slot}"]`) ??
-      byId(`${visual(opt.player)}-board-${opt.slot}`)
-    );
+function paintChoicePrompt(
+  text: string,
+  hooks: RenderHooks,
+  onConfirm: (() => void) | null,
+): void {
+  document.querySelector(".choice-prompt-bar")?.remove();
+  const bar = document.createElement("div");
+  bar.className = "choice-prompt-bar";
+  const label = document.createElement("span");
+  label.className = "choice-prompt-text";
+  label.textContent = text;
+  const undo = document.createElement("button");
+  undo.type = "button";
+  undo.className = "undo-chip";
+  undo.textContent = "Undo";
+  undo.addEventListener("click", () => hooks.onUndo());
+  bar.append(label, undo);
+  if (onConfirm) {
+    const confirm = document.createElement("button");
+    confirm.type = "button";
+    confirm.className = "confirm-targets-btn";
+    confirm.textContent = "Confirm";
+    confirm.addEventListener("click", onConfirm);
+    bar.appendChild(confirm);
   }
-  if ("leader" in opt) return byId(`${visual(opt.leader)}Leader`);
-  if ("hand" in opt) {
-    return byId(`${visual(opt.hand.player)}Hand`)?.querySelector(
-      `.card[data-hand-pos="${opt.hand.pos}"]`,
+  document.body.appendChild(bar);
+}
+
+function choicePrompt(node: ChoiceNode): string {
+  if ("fuse_partners" in node) return "Select a fuse partner";
+  if ("modes" in node) return "Select a mode";
+  if ("cards" in node) return "Select a card";
+  if ("targets" in node) {
+    const opts = node.targets.options;
+    if (opts.some((o) => "hand" in o)) return "Select a card in your hand";
+    if (opts.some((o) => "slot" in o && "player" in o)) return "Select a follower";
+    if (opts.some((o) => "leader" in o)) return "Select a leader";
+  }
+  if ("multi_pick" in node) return "Select targets";
+  return "Select a target";
+}
+
+function labelChooseAction(
+  act: NeutralAction,
+  node: ChoiceNode,
+  full: FullState,
+  acting: PlayerId,
+): string {
+  if (!("choose" in act)) return "Option";
+  const o = act.choose.option;
+  if (typeof o === "object" && o && "card" in o) return lookupText(o.card).name;
+  if (typeof o === "object" && o && "mode" in o) {
+    const last = full.players[acting].played_this_turn?.slice(-1)[0];
+    const printed = last ? lookupText(last).modes?.[o.mode] : undefined;
+    return printed || `Mode ${o.mode + 1}`;
+  }
+  if (o === "leader") return "Leader";
+  if (typeof o === "object" && o && "slot" in o) return `Slot ${o.slot}`;
+  void node;
+  return "Option";
+}
+
+export function elForChooseOption(opt: unknown): HTMLElement | null {
+  if (opt === "leader") {
+    return document.querySelector<HTMLElement>(".leader-attack-strip.legal-target");
+  }
+  if (!opt || typeof opt !== "object") return null;
+  const o = opt as {
+    slot?: number;
+    player?: PlayerId;
+    card?: string;
+    hand?: { player: PlayerId; pos: number };
+  };
+  if (typeof o.slot === "number") {
+    const player = o.player;
+    if (player) {
+      return (
+        byId(`${visual(player)}Board`)?.querySelector<HTMLElement>(`.card[data-slot="${o.slot}"]`) ??
+        null
+      );
+    }
+    return document.querySelector<HTMLElement>(`.board-zone .card[data-slot="${o.slot}"]`);
+  }
+  if (o.hand) {
+    return byId(`${visual(o.hand.player)}Hand`)?.querySelector(
+      `.card[data-hand-pos="${o.hand.pos}"]`,
     ) as HTMLElement | null;
+  }
+  if (o.card) {
+    return document.querySelector<HTMLElement>(`.hand-zone .card[data-card="${o.card}"]`);
+  }
+  if ("leader" in o && typeof (o as { leader?: PlayerId }).leader === "string") {
+    return byId(`${visual((o as { leader: PlayerId }).leader)}Leader`);
   }
   return null;
 }
 
-function chooseForTarget(legal: NeutralAction[], opt: TargetOpt): NeutralAction | null {
+export function chooseActionForElement(
+  legal: NeutralAction[],
+  el: HTMLElement,
+): NeutralAction | null {
+  const player = el.dataset.player as PlayerId | undefined;
+  const slot = el.dataset.slot != null ? Number(el.dataset.slot) : undefined;
+  const handPos = el.dataset.handPos != null ? Number(el.dataset.handPos) : undefined;
+  const cardId = el.dataset.card;
+  const isLeader = el.classList.contains("leader-attack-strip") || el.id.endsWith("Leader");
+  const leaderPlayer: PlayerId | undefined = isLeader
+    ? el.id.startsWith("blue")
+      ? "a"
+      : "b"
+    : undefined;
   return (
     legal.find((a) => {
       if (!("choose" in a)) return false;
-      const o = a.choose.option;
-      if (opt && "slot" in opt && typeof o === "object" && o && "slot" in o) {
-        const sameSlot = o.slot === opt.slot;
-        const samePlayer = !("player" in o) || !o.player || o.player === opt.player;
-        return sameSlot && samePlayer;
+      const o = a.choose.option as
+        | { card?: string; slot?: number; player?: PlayerId; hand?: { player: PlayerId; pos: number }; mode?: number }
+        | "leader";
+      if (o === "leader") return !!isLeader;
+      if (!o || typeof o !== "object") return false;
+      if (typeof o.slot === "number") {
+        if (slot !== o.slot) return false;
+        if (o.player && player && o.player !== player) return false;
+        return true;
       }
-      if ("leader" in opt && o === "leader") return true;
-      if ("card" in opt && typeof o === "object" && o && "card" in o) return o.card === opt.card;
+      if (o.hand) {
+        return player === o.hand.player && handPos === o.hand.pos;
+      }
+      if (o.card) {
+        if (cardId && o.card === cardId) return true;
+        if (player && handPos != null) {
+          const handEl = byId(`${visual(player)}Hand`)?.querySelector(
+            `.card[data-hand-pos="${handPos}"]`,
+          );
+          return handEl === el;
+        }
+      }
+      if ("leader" in o) return leaderPlayer === (o as { leader: PlayerId }).leader;
       return false;
     }) ?? null
   );
-}
-
-function choiceLabels(node: ChoiceNode): string[] {
-  if ("modes" in node) return node.modes.options.map((m) => `Mode ${m}`);
-  if ("cards" in node) return node.cards.options.map((id) => escapeHtml(lookupText(id).name));
-  if ("fuse_partners" in node) {
-    return node.fuse_partners.options.map((pos) => `Partner #${pos + 1}`);
-  }
-  if ("targets" in node) return node.targets.options.map(labelOpt);
-  if ("multi_pick" in node) return node.multi_pick.options.map(labelOpt);
-  return [];
-}
-
-function labelOpt(opt: TargetOpt): string {
-  if ("card" in opt) return lookupText(opt.card).name;
-  if ("mode" in opt) return `Mode ${opt.mode}`;
-  if ("leader" in opt) return `Leader ${opt.leader.toUpperCase()}`;
-  if ("slot" in opt) return `Slot ${opt.slot} (${opt.player})`;
-  if ("hand" in opt) return `Hand ${opt.hand.pos}`;
-  return "Option";
-}
-
-function chooseByIndex(
-  legal: NeutralAction[],
-  node: ChoiceNode,
-  index: number,
-): NeutralAction | null {
-  if ("cards" in node) {
-    const id = node.cards.options[index];
-    return (
-      legal.find(
-        (a) =>
-          "choose" in a &&
-          typeof a.choose.option === "object" &&
-          a.choose.option &&
-          "card" in a.choose.option &&
-          a.choose.option.card === id,
-      ) ?? null
-    );
-  }
-  if ("modes" in node) {
-    const mode = node.modes.options[index];
-    return (
-      legal.find(
-        (a) =>
-          "choose" in a &&
-          typeof a.choose.option === "object" &&
-          a.choose.option &&
-          "mode" in a.choose.option &&
-          a.choose.option.mode === mode,
-      ) ??
-      legal.filter((a) => "choose" in a)[index] ??
-      null
-    );
-  }
-  if ("fuse_partners" in node) return legal.filter((a) => "choose" in a)[index] ?? null;
-  return legal.filter((a) => "choose" in a)[index] ?? null;
 }
 
 function renderTerminal(full: FullState, hooks: RenderHooks): void {
@@ -752,7 +866,17 @@ function syncUndoButtons(s: Session): void {
 }
 
 function paintPending(pending: Pending, legal: NeutralAction[]): void {
+  document.querySelector(".pending-cancel-chip")?.remove();
   if (!pending) return;
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "pending-cancel-chip";
+  chip.textContent = "Cancel";
+  chip.addEventListener("click", (e) => {
+    e.stopPropagation();
+    document.dispatchEvent(new CustomEvent("arena-cancel-pending"));
+  });
+  document.body.appendChild(chip);
   if (pending.kind === "attack") {
     for (const a of L.attacksFrom(legal, pending.player, pending.slot)) {
       if (!("attack" in a)) continue;
@@ -786,9 +910,13 @@ export function resetZoneCache(): void {
 export function bindTooltips(): void {
   const tip = byId("cardTooltip");
   if (!tip) return;
-  document.addEventListener("mouseover", (e) => {
-    const card = (e.target as HTMLElement).closest<HTMLElement>(".card[data-card]");
-    if (!card || card.dataset.faceDown === "1") return;
+  let pinned = false;
+  let pressTimer = 0;
+  let pressCard: HTMLElement | null = null;
+  let pressX = 0;
+  let pressY = 0;
+
+  const fill = (card: HTMLElement) => {
     const id = card.dataset.card;
     if (!id) return;
     const uid = Number(card.dataset.uid);
@@ -799,17 +927,78 @@ export function bindTooltips(): void {
       displayCost: info?.cost ?? null,
     });
     tip.style.display = "block";
+  };
+  const place = (clientX: number, clientY: number) => {
+    tip.style.left = `${Math.min(clientX + 16, window.innerWidth - tip.offsetWidth - 12)}px`;
+    tip.style.top = `${Math.min(clientY + 16, window.innerHeight - tip.offsetHeight - 12)}px`;
+  };
+  const hide = () => {
+    if (pinned) return;
+    tip.style.display = "none";
+  };
+
+  document.addEventListener("mouseover", (e) => {
+    const card = (e.target as HTMLElement).closest<HTMLElement>(".card[data-card]");
+    if (!card || card.dataset.faceDown === "1") return;
+    fill(card);
   });
   document.addEventListener("mousemove", (e) => {
     if (tip.style.display === "none") return;
-    tip.style.left = `${Math.min(e.clientX + 16, window.innerWidth - tip.offsetWidth - 12)}px`;
-    tip.style.top = `${Math.min(e.clientY + 16, window.innerHeight - tip.offsetHeight - 12)}px`;
+    place(e.clientX, e.clientY);
   });
   document.addEventListener("mouseout", (e) => {
     const card = (e.target as HTMLElement).closest(".card[data-card]");
     if (!card) return;
     const next = (e.relatedTarget as HTMLElement | null)?.closest?.(".card[data-card]");
     if (next === card) return;
-    tip.style.display = "none";
+    hide();
   });
+
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (e.pointerType !== "touch") return;
+      const card = (e.target as HTMLElement).closest<HTMLElement>(".card[data-card]");
+      window.clearTimeout(pressTimer);
+      pressCard = card;
+      pressX = e.clientX;
+      pressY = e.clientY;
+      if (!card || card.dataset.faceDown === "1") return;
+      pressTimer = window.setTimeout(() => {
+        if (!pressCard) return;
+        pinned = true;
+        fill(pressCard);
+        place(pressX, pressY);
+      }, 400);
+    },
+    true,
+  );
+  document.addEventListener(
+    "pointermove",
+    (e) => {
+      if (e.pointerType !== "touch" || !pressCard) return;
+      const dx = e.clientX - pressX;
+      const dy = e.clientY - pressY;
+      if (dx * dx + dy * dy > 64) {
+        window.clearTimeout(pressTimer);
+        pressCard = null;
+      }
+    },
+    true,
+  );
+  document.addEventListener(
+    "pointerup",
+    (e) => {
+      window.clearTimeout(pressTimer);
+      if (e.pointerType === "touch") {
+        const card = (e.target as HTMLElement).closest<HTMLElement>(".card[data-card]");
+        if (pinned && (!card || card !== pressCard)) {
+          pinned = false;
+          tip.style.display = "none";
+        }
+      }
+      pressCard = null;
+    },
+    true,
+  );
 }

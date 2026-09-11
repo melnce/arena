@@ -130,7 +130,7 @@ test("bonus PP: first B, button on blue never on first player", async ({ page })
   await page.locator("#turnControls").screenshot({ path: `${ART}/boost_on_blue_second.png` });
 });
 
-test("tooltips and gates: Hark necromancy + Depths enhance / E badge", async ({ page }) => {
+test("tooltips and gates: Hark necromancy + Depths enhance (no E badge)", async ({ page }) => {
   await boot(page);
   const harkId = await importDeck(page, "hark.json", { "10753310": 40 });
   await page.locator("#redDeckSelect").selectOption(harkId);
@@ -176,24 +176,21 @@ test("tooltips and gates: Hark necromancy + Depths enhance / E badge", async ({ 
   expect(depthsInfo.id).toBe("90024320");
   expect(depthsInfo.form).toBe("enhance");
   expect(depthsInfo.cost).toBe(1);
-  const enh = depthsInfo.gates.find((g) => g.kind === "enhance");
-  expect(enh).toBeTruthy();
-  expect(enh!.need).toBe(1);
-  expect(enh!.have).toBeGreaterThanOrEqual(1);
-  expect(enh!.met).toBe(true);
+  expect(depthsInfo.gates.find((g) => g.kind === "enhance")).toBeFalsy();
 
   const depthsCard = page.locator("#blueHand .card[data-card='90024320']").first();
-  await expect(depthsCard.locator(".alternate-form-badge")).toHaveText("E");
+  await expect(depthsCard.locator(".alternate-form-badge")).toHaveCount(0);
   await expect(depthsCard.locator(".cost-badge, .card-stats.top-left")).toHaveText("1");
   await expect(depthsCard).toHaveClass(/enhance-ready/);
   await depthsCard.hover();
   await expect(tip).toContainText("Depths of the Eld Sword");
-  await expect(tip).toContainText("Enhance 1 (have");
+  await expect(tip).toContainText("Cost 1");
   await expect(tip).toContainText("base 0");
+  await expect(tip).not.toContainText("Enhance 1 (have");
   await expect(tip).not.toContainText("0/0");
   await mkdir(ART, { recursive: true });
   await tip.screenshot({ path: `${ART}/tooltip_depths_gates.png` });
-  await depthsCard.screenshot({ path: `${ART}/card_enhance_e_badge.png` });
+  await depthsCard.screenshot({ path: `${ART}/card_enhance_no_badge.png` });
 });
 
 test("settings drawer does not scroll horizontally at 360 and 768", async ({ page }) => {

@@ -24,12 +24,20 @@
   color: white;
 }
 
-#endTurnBlue:hover {
+#endTurnBlue:disabled,
+#endTurnRed:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+  transform: none;
+}
+
+#endTurnBlue:hover:not(:disabled) {
   background-color: #339;
   transform: scale(1.05);
 }
 
-#endTurnRed:hover {
+#endTurnRed:hover:not(:disabled) {
   background-color: #933;
   transform: scale(1.05);
 }

@@ -47,6 +47,9 @@ export type CardText = {
   text: string;
   kind: string;
   cost: number | null;
+  attack?: number | null;
+  defense?: number | null;
+  modes?: string[];
 };
 
 export type CardInstance = {
@@ -110,6 +113,7 @@ export type GateKind =
 
 export type GateInfo = {
   kind: GateKind | string;
+  label?: string;
   need: number;
   have: number;
   met: boolean;
@@ -129,6 +133,8 @@ export type BoardCardInfo = {
   slot: number;
   id: string;
   can_attack: boolean;
+  can_attack_leader: boolean;
+  rush_only: boolean;
   evolved: boolean;
   super_evolved: boolean;
   gates: GateInfo[];

@@ -44,7 +44,8 @@ function hostFor(target: {
     return document.getElementById(`${visual(target.leader)}Leader`);
   }
   if (typeof target.slot === "number" && target.player) {
-    return document.getElementById(`${visual(target.player)}-board-${target.slot}`);
+    const board = document.getElementById(`${visual(target.player)}Board`);
+    return board?.querySelector(`.card[data-slot="${target.slot}"]`) ?? null;
   }
   return null;
 }
@@ -55,6 +56,7 @@ function queueFloater(
   amount: number,
   delay: number,
 ): void {
+  const rect = host.getBoundingClientRect();
   const show = window.setTimeout(() => {
     const el = document.createElement("div");
     el.className =
@@ -62,7 +64,12 @@ function queueFloater(
         ? "floating-combat-text floating-combat-text--damage"
         : "floating-combat-text floating-combat-text--heal";
     el.textContent = kind === "damage" ? `-${amount}` : `+${amount}`;
-    host.appendChild(el);
+    el.style.position = "fixed";
+    el.style.left = `${rect.left + rect.width / 2}px`;
+    el.style.top = `${rect.top + rect.height / 3}px`;
+    el.style.transform = "translateX(-50%)";
+    el.style.zIndex = "80";
+    document.body.appendChild(el);
     const hide = window.setTimeout(() => el.remove(), 1800);
     floaterTimers.push(hide);
   }, delay);
