@@ -2,7 +2,7 @@
 
 mod common;
 
-use arena_engine::{board_info, hand_info, legal_actions, Action, PlayerId};
+use arena_engine::{board_info, hand_info, legal_actions, player_info, Action, PlayerId};
 use common::{give_pp, load_db, put_field, put_hand, started};
 
 #[test]
@@ -179,4 +179,62 @@ fn slice_of_domesticity_count_at_least_gate() {
             .count(),
         1
     );
+}
+
+#[test]
+fn player_info_evolve_unlock_and_countdown() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    assert!(!st.player(PlayerId::A).is_second, "A is first");
+    assert!(st.player(PlayerId::B).is_second, "B is second");
+
+    st.player_mut(PlayerId::A).turns_taken = 1;
+    let a = player_info(&db, &st, PlayerId::A);
+    assert!(!a.evolve_unlocked);
+    assert!(!a.super_evolve_unlocked);
+    assert_eq!(a.evolve_unlock_in, 4);
+    assert_eq!(a.super_evolve_unlock_in, 6);
+
+    st.player_mut(PlayerId::A).turns_taken = 4;
+    let a = player_info(&db, &st, PlayerId::A);
+    assert!(!a.evolve_unlocked);
+    assert_eq!(a.evolve_unlock_in, 1);
+
+    st.player_mut(PlayerId::A).turns_taken = 5;
+    let a = player_info(&db, &st, PlayerId::A);
+    assert!(a.evolve_unlocked);
+    assert_eq!(a.evolve_unlock_in, 0);
+    assert!(!a.super_evolve_unlocked);
+    assert_eq!(a.super_evolve_unlock_in, 2);
+
+    st.player_mut(PlayerId::A).turns_taken = 6;
+    assert!(!player_info(&db, &st, PlayerId::A).super_evolve_unlocked);
+    st.player_mut(PlayerId::A).turns_taken = 7;
+    let a = player_info(&db, &st, PlayerId::A);
+    assert!(a.super_evolve_unlocked);
+    assert_eq!(a.super_evolve_unlock_in, 0);
+
+    st.player_mut(PlayerId::B).turns_taken = 1;
+    let b = player_info(&db, &st, PlayerId::B);
+    assert!(!b.evolve_unlocked);
+    assert!(!b.super_evolve_unlocked);
+    assert_eq!(b.evolve_unlock_in, 3);
+    assert_eq!(b.super_evolve_unlock_in, 5);
+
+    st.player_mut(PlayerId::B).turns_taken = 3;
+    assert!(!player_info(&db, &st, PlayerId::B).evolve_unlocked);
+    assert_eq!(player_info(&db, &st, PlayerId::B).evolve_unlock_in, 1);
+
+    st.player_mut(PlayerId::B).turns_taken = 4;
+    let b = player_info(&db, &st, PlayerId::B);
+    assert!(b.evolve_unlocked);
+    assert_eq!(b.evolve_unlock_in, 0);
+    assert!(!b.super_evolve_unlocked);
+
+    st.player_mut(PlayerId::B).turns_taken = 5;
+    assert!(!player_info(&db, &st, PlayerId::B).super_evolve_unlocked);
+    st.player_mut(PlayerId::B).turns_taken = 6;
+    let b = player_info(&db, &st, PlayerId::B);
+    assert!(b.super_evolve_unlocked);
+    assert_eq!(b.super_evolve_unlock_in, 0);
 }

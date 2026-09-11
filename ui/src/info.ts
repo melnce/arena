@@ -1,5 +1,5 @@
 import type { Session } from "./session.ts";
-import type { BoardCardInfo, GateInfo, HandCardInfo, PlayerId } from "./types.ts";
+import type { BoardCardInfo, GateInfo, HandCardInfo, PlayerId, PlayerInfo } from "./types.ts";
 
 export function sessionHandInfo(s: Session, player: PlayerId): HandCardInfo[] {
   return JSON.parse(s.game.handInfo(player)) as HandCardInfo[];
@@ -7,6 +7,10 @@ export function sessionHandInfo(s: Session, player: PlayerId): HandCardInfo[] {
 
 export function sessionBoardInfo(s: Session, player: PlayerId): BoardCardInfo[] {
   return JSON.parse(s.game.boardInfo(player)) as BoardCardInfo[];
+}
+
+export function sessionPlayerInfo(s: Session, player: PlayerId): PlayerInfo {
+  return JSON.parse(s.game.playerInfo(player)) as PlayerInfo;
 }
 
 export function usablePp(pp: number, active: boolean): number {

@@ -622,15 +622,18 @@ test("B12 mode buttons carry printed 1-based text", async ({ page }) => {
     });
     if (!anyPlay) await endTurnApply(page);
   }
-  if ((await page.locator("#turnCounter").getAttribute("data-phase")) === "choice") {
-    const texts = await page.locator(".choice-option").allTextContents();
-    expect(texts.length).toBeGreaterThan(0);
-    for (const t of texts) {
-      expect(t).not.toMatch(/^Mode 0$/);
-    }
-    await mkdir(ART, { recursive: true });
-    await page.locator(".choice-modal").screenshot({ path: `${ART}/b12_mode_text.png` });
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", "choice", {
+    timeout: 15_000,
+  });
+  const texts = await page.locator(".choice-option").allTextContents();
+  expect(texts.length).toBeGreaterThan(0);
+  for (const t of texts) {
+    expect(t).not.toMatch(/^Mode \d+$/);
+    expect(t.length).toBeGreaterThan(8);
   }
+  expect(texts.some((t) => /Give the leftmost|Barrier|Recover|Restore/i.test(t))).toBeTruthy();
+  await mkdir(ART, { recursive: true });
+  await page.locator(".choice-modal").screenshot({ path: `${ART}/b12_mode_text.png` });
 });
 
 test("B14 save/load after 200+ actions and invalid file", async ({ page }) => {
@@ -672,6 +675,122 @@ test("B14 save/load after 200+ actions and invalid file", async ({ page }) => {
   });
   await expect(page.locator("#toastHost")).toBeVisible({ timeout: 5000 });
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /main|choice|mulligan/);
+});
+
+test("A9 A10 evo buttons stay enabled after unlock; countdown while locked", async ({ page }) => {
+  test.setTimeout(120_000);
+  await boot(page);
+  const id = await importDeck(page, "evo-cd.json", { "10631110": 40 });
+  await startGame(page, { seed: "1", first: "a", deckA: id, deckB: id });
+  await confirmMulligans(page);
+  await closeDrawer(page);
+
+  type Info = {
+    evolve_unlocked: boolean;
+    super_evolve_unlocked: boolean;
+    evolve_unlock_in: number;
+    super_evolve_unlock_in: number;
+  };
+
+  async function snap() {
+    return page.evaluate(() => {
+      const btn = (id: string) => {
+        const el = document.getElementById(id) as HTMLButtonElement;
+        return {
+          disabled: el.disabled,
+          badge: el.querySelector(".evo-unlock-badge")?.textContent ?? null,
+          title: el.title,
+          label: el.querySelector(".evo-btn-label")?.textContent ?? el.textContent ?? "",
+        };
+      };
+      return {
+        active: (window.__arena!.full() as { active: string }).active,
+        a: window.__arena!.playerInfo("a"),
+        b: window.__arena!.playerInfo("b"),
+        blueEvo: btn("blueNormalEvo"),
+        blueSuper: btn("blueSuperEvo"),
+        redEvo: btn("redNormalEvo"),
+        redSuper: btn("redSuperEvo"),
+      };
+    });
+  }
+
+  const t1 = await snap();
+  expect(t1.a.evolve_unlocked).toBeFalsy();
+  expect(t1.a.super_evolve_unlocked).toBeFalsy();
+  expect(t1.a.evolve_unlock_in).toBe(4);
+  expect(t1.a.super_evolve_unlock_in).toBe(6);
+  expect(t1.b.evolve_unlock_in).toBe(4);
+  expect(t1.b.super_evolve_unlock_in).toBe(6);
+  expect(t1.blueEvo.disabled).toBeTruthy();
+  expect(t1.blueSuper.disabled).toBeTruthy();
+  expect(t1.redEvo.disabled).toBeTruthy();
+  expect(t1.redSuper.disabled).toBeTruthy();
+  expect(t1.blueEvo.badge).toBe("4");
+  expect(t1.blueSuper.badge).toBe("6");
+  expect(t1.blueEvo.title).toBe("unlocks in 4 turns");
+  await mkdir(ART, { recursive: true });
+  await page.locator("#blueLeader").screenshot({ path: `${ART}/a10_evo_countdown_locked.png` });
+
+  let aUnlockedAt: number | null = null;
+  for (let ply = 0; ply < 16; ply++) {
+    const before = await snap();
+    await endTurnApply(page);
+    const after = await snap();
+    const started = after.active as "a" | "b";
+    const idle = started === "a" ? "b" : "a";
+    if (before[started].evolve_unlock_in > 0) {
+      expect(after[started].evolve_unlock_in).toBe(before[started].evolve_unlock_in - 1);
+    } else {
+      expect(after[started].evolve_unlock_in).toBe(0);
+    }
+    expect(after[idle].evolve_unlock_in).toBe(before[idle].evolve_unlock_in);
+    expect(after[idle].super_evolve_unlock_in).toBe(before[idle].super_evolve_unlock_in);
+
+    const firstBtn = started === "a" ? after.blueEvo : after.redEvo;
+    const firstSuper = started === "a" ? after.blueSuper : after.redSuper;
+    const info = after[started] as Info;
+    if (info.evolve_unlocked) {
+      expect(firstBtn.disabled).toBeFalsy();
+      expect(firstBtn.badge).toBeNull();
+      if (aUnlockedAt == null && started === "a") aUnlockedAt = ply;
+    } else {
+      expect(firstBtn.disabled).toBeTruthy();
+      expect(firstBtn.badge).toBe(String(info.evolve_unlock_in));
+    }
+    if (info.super_evolve_unlocked) {
+      expect(firstSuper.disabled).toBeFalsy();
+      expect(firstSuper.badge).toBeNull();
+    } else {
+      expect(firstSuper.disabled).toBeTruthy();
+      expect(firstSuper.badge).toBe(String(info.super_evolve_unlock_in));
+    }
+    if (after.a.evolve_unlocked && after.b.evolve_unlocked) break;
+  }
+
+  expect(aUnlockedAt).not.toBeNull();
+  const unlockedShot = await snap();
+  expect(unlockedShot.blueEvo.disabled).toBeFalsy();
+  await page.locator("#blueLeader").screenshot({ path: `${ART}/a9_evo_unlocked.png` });
+
+  for (let i = 0; i < 6; i++) {
+    const evo = await page.evaluate(() => {
+      const legal = window.__arena!.legal() as Array<{ evolve?: { super: boolean } }>;
+      return legal.find((a) => a.evolve && !a.evolve.super) ?? null;
+    });
+    if (evo) {
+      await applyAction(page, evo);
+      const mid = await snap();
+      expect(mid.blueEvo.disabled).toBeFalsy();
+      if (mid.a.super_evolve_unlocked) expect(mid.blueSuper.disabled).toBeFalsy();
+      expect(mid.blueEvo.label).toMatch(/Evo \(\d\)/);
+      await page.locator("#blueLeader").screenshot({ path: `${ART}/a9_evo_after_use.png` });
+    }
+    await endTurnApply(page);
+    const later = await snap();
+    expect(later.blueEvo.disabled).toBeFalsy();
+    expect(later.redEvo.disabled).toBeFalsy();
+  }
 });
 
 test.describe("touch", () => {

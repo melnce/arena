@@ -101,6 +101,12 @@ impl Game {
     pub fn board_info(&self, player: String) -> Result<String, JsValue> {
         self.inner.board_info(&player).map_err(JsValue::from)
     }
+
+    /// `PlayerInfo` JSON for `player` (`"a"` / `"b"`): evolve / super unlock.
+    #[wasm_bindgen(js_name = playerInfo)]
+    pub fn player_info(&self, player: String) -> Result<String, JsValue> {
+        self.inner.player_info(&player).map_err(JsValue::from)
+    }
 }
 
 /// JSON array of policy names the client can put in a selector.

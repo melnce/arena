@@ -45,6 +45,55 @@ pub struct BoardCardInfo {
     pub gates: Vec<GateInfo>,
 }
 
+/// Per-player evolve / super-evolve unlock presentation (A9 / A10).
+/// Thresholds match `can_evolve` and `Condition::SuperEvolutionUnlocked`:
+/// second player 4 / 6, first player 5 / 7 (`turns_taken` vs those values).
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct PlayerInfo {
+    pub evolve_unlocked: bool,
+    pub super_evolve_unlocked: bool,
+    /// Own turns still to start before the unlock; `0` once unlocked.
+    pub evolve_unlock_in: u32,
+    pub super_evolve_unlock_in: u32,
+}
+
+/// Same turn-count gate `legal_actions` / `can_evolve` use. Not EP, not
+/// `evolved_this_turn`, not whether a follower is currently eligible.
+fn evolve_unlock_at(is_second: bool) -> u32 {
+    if is_second {
+        4
+    } else {
+        5
+    }
+}
+
+fn super_evolve_unlock_at(is_second: bool) -> u32 {
+    if is_second {
+        6
+    } else {
+        7
+    }
+}
+
+fn unlock_in(turns_taken: u32, at: u32) -> u32 {
+    at.saturating_sub(turns_taken)
+}
+
+/// Unlock flags and remaining-turn countdowns for `player`.
+pub fn player_info(_db: &CardDb, state: &State, player: PlayerId) -> PlayerInfo {
+    let p = state.player(player);
+    let evo_at = evolve_unlock_at(p.is_second);
+    let super_at = super_evolve_unlock_at(p.is_second);
+    let evolve_unlocked = p.turns_taken >= evo_at;
+    let super_evolve_unlocked = p.turns_taken >= super_at;
+    PlayerInfo {
+        evolve_unlocked,
+        super_evolve_unlocked,
+        evolve_unlock_in: unlock_in(p.turns_taken, evo_at),
+        super_evolve_unlock_in: unlock_in(p.turns_taken, super_at),
+    }
+}
+
 /// Per-card presentation for `player`'s hand (draw order).
 pub fn hand_info(db: &CardDb, state: &State, player: PlayerId) -> Vec<HandCardInfo> {
     let actor = acting_player(state);

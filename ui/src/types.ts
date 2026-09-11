@@ -140,6 +140,13 @@ export type BoardCardInfo = {
   gates: GateInfo[];
 };
 
+export type PlayerInfo = {
+  evolve_unlocked: boolean;
+  super_evolve_unlocked: boolean;
+  evolve_unlock_in: number;
+  super_evolve_unlock_in: number;
+};
+
 export type PlayerState = {
   leader_defense: number;
   leader_max: number;

@@ -2,6 +2,7 @@ import {
   attachPointerDragSource,
   shouldSuppressClickFromPointerDrag,
 } from "./drag.ts";
+import * as L from "./legal.ts";
 import { chooseActionForElement } from "./render.ts";
 import type { NeutralAction, PlayerId } from "./types.ts";
 import { byId } from "./render/ids.ts";
@@ -125,10 +126,11 @@ export function bindPointer(hooks: InputHooks): void {
     }
 
     const evoBtn = t.closest<HTMLButtonElement>(".evo-btn");
-    if (evoBtn && !evoBtn.disabled) {
+    if (evoBtn) {
       const player: PlayerId = evoBtn.id.startsWith("blue") ? "a" : "b";
       const superEvo = evoBtn.id.toLowerCase().includes("super");
-      hooks.setPending({ kind: "evolve", player, superEvo });
+      const hasAct = L.evolveFor(legal, player, superEvo).length > 0;
+      if (hasAct) hooks.setPending({ kind: "evolve", player, superEvo });
       return;
     }
 

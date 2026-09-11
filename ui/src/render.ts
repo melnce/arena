@@ -1,6 +1,13 @@
 import { lookupText } from "./catalog.ts";
 import { escapeHtml } from "./images.ts";
-import { badgeCost, conditionGateMet, sessionBoardInfo, sessionHandInfo, usablePp } from "./info.ts";
+import {
+  badgeCost,
+  conditionGateMet,
+  sessionBoardInfo,
+  sessionHandInfo,
+  sessionPlayerInfo,
+  usablePp,
+} from "./info.ts";
 import * as L from "./legal.ts";
 import type { Session } from "./session.ts";
 import { fullState, legalActions } from "./session.ts";
@@ -112,7 +119,7 @@ export function render(s: Session, hooks: RenderHooks): void {
   renderBoard(full, legal, "b", boardB, hooks);
   bindBoardDrops(legal, hooks);
   renderLeaders(full, legal, hooks);
-  renderEvo(full, legal, hooks);
+  renderEvo(s, full, legal, hooks);
   renderCrests(full);
   renderMulligan(phase, acting, hooks);
   renderEndTurn(full, legal, phase, hooks);
@@ -435,20 +442,45 @@ function renderLeaders(full: FullState, legal: NeutralAction[], hooks: RenderHoo
   }
 }
 
-function renderEvo(full: FullState, legal: NeutralAction[], hooks: RenderHooks): void {
+function renderEvo(
+  s: Session,
+  full: FullState,
+  legal: NeutralAction[],
+  hooks: RenderHooks,
+): void {
   const map: Array<{ id: string; player: PlayerId; superEvo: boolean }> = [
     { id: "blueNormalEvo", player: "a", superEvo: false },
     { id: "blueSuperEvo", player: "a", superEvo: true },
     { id: "redNormalEvo", player: "b", superEvo: false },
     { id: "redSuperEvo", player: "b", superEvo: true },
   ];
+  const infoByPlayer: Record<PlayerId, ReturnType<typeof sessionPlayerInfo>> = {
+    a: sessionPlayerInfo(s, "a"),
+    b: sessionPlayerInfo(s, "b"),
+  };
   for (const row of map) {
     const btn = byId<HTMLButtonElement>(row.id);
     if (!btn) continue;
     const acts = L.evolveFor(legal, row.player, row.superEvo);
     const p = full.players[row.player];
-    btn.textContent = row.superEvo ? `Super (${p.sep})` : `Evo (${p.ep})`;
-    btn.disabled = acts.length === 0;
+    const info = infoByPlayer[row.player];
+    const unlocked = row.superEvo ? info.super_evolve_unlocked : info.evolve_unlocked;
+    const remain = row.superEvo ? info.super_evolve_unlock_in : info.evolve_unlock_in;
+    const label = document.createElement("span");
+    label.className = "evo-btn-label";
+    label.textContent = row.superEvo ? `Super (${p.sep})` : `Evo (${p.ep})`;
+    btn.replaceChildren(label);
+    btn.disabled = !unlocked;
+    btn.classList.toggle("evo-locked", !unlocked);
+    if (!unlocked && remain > 0) {
+      const badge = document.createElement("span");
+      badge.className = "evo-unlock-badge";
+      badge.textContent = String(remain);
+      btn.appendChild(badge);
+      btn.title = remain === 1 ? "unlocks in 1 turn" : `unlocks in ${remain} turns`;
+    } else {
+      btn.removeAttribute("title");
+    }
     btn.classList.toggle(
       "selected",
       hooks.pending?.kind === "evolve" &&

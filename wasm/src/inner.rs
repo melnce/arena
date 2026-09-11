@@ -6,8 +6,8 @@ use std::collections::{BTreeMap, HashMap};
 use arena_engine::action::acting_player;
 use arena_engine::{
     apply_neutral, board_info, by_name, hand_info, hash, legal_actions, legal_actions_neutral,
-    names, new_game, policy_rng, snapshot_json, to_neutral, CardDb, CardId, First, GameConfig,
-    NeutralAction, PlayerId, Policy, State,
+    names, new_game, player_info, policy_rng, snapshot_json, to_neutral, CardDb, CardId, First,
+    GameConfig, NeutralAction, PlayerId, Policy, State,
 };
 
 use crate::bundle::card_db;
@@ -115,6 +115,11 @@ impl GameInner {
     pub fn board_info(&self, player: &str) -> Result<String, String> {
         let who = parse_player(player)?;
         serde_json::to_string(&board_info(db(), &self.state, who)).map_err(|e| e.to_string())
+    }
+
+    pub fn player_info(&self, player: &str) -> Result<String, String> {
+        let who = parse_player(player)?;
+        serde_json::to_string(&player_info(db(), &self.state, who)).map_err(|e| e.to_string())
     }
 
     fn legal_len(&self) -> usize {

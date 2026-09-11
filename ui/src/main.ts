@@ -3,7 +3,7 @@ import { publicUrl } from "./base.ts";
 import { decks, loadCatalog, parseDeckJson } from "./catalog.ts";
 import { clearFloaters, spawnFloaters } from "./fct.ts";
 import { bindPointer } from "./input.ts";
-import { sessionBoardInfo, sessionHandInfo } from "./info.ts";
+import { sessionBoardInfo, sessionHandInfo, sessionPlayerInfo } from "./info.ts";
 import * as L from "./legal.ts";
 import {
   bindTooltips,
@@ -142,6 +142,15 @@ function exposeArena(): void {
     },
     handInfo: (player) => (session ? sessionHandInfo(session, player as PlayerId) : []),
     boardInfo: (player) => (session ? sessionBoardInfo(session, player as PlayerId) : []),
+    playerInfo: (player) =>
+      session
+        ? sessionPlayerInfo(session, player as PlayerId)
+        : {
+            evolve_unlocked: false,
+            super_evolve_unlocked: false,
+            evolve_unlock_in: 0,
+            super_evolve_unlock_in: 0,
+          },
     full: () => (session ? JSON.parse(session.game.full()) : null),
     legal: () => (session ? JSON.parse(session.game.legal()) : []),
     paintMs: window.__arena?.paintMs,
