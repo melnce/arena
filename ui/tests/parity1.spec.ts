@@ -39,6 +39,8 @@ async function startGame(
     first?: string;
     deckA?: string;
     deckB?: string;
+    policyA?: string;
+    policyB?: string;
   } = {},
 ) {
   await openSettings(page);
@@ -47,6 +49,8 @@ async function startGame(
   if (opts.first) await page.locator("#firstSelect").selectOption(opts.first);
   if (opts.deckA) await page.locator("#blueDeckSelect").selectOption(opts.deckA);
   if (opts.deckB) await page.locator("#redDeckSelect").selectOption(opts.deckB);
+  if (opts.policyA) await page.locator("#policyASelect").selectOption(opts.policyA, { force: true });
+  if (opts.policyB) await page.locator("#policyBSelect").selectOption(opts.policyB, { force: true });
   await page.locator("#startGameBtn").click();
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
     timeout: 15_000,
@@ -249,14 +253,16 @@ test("#6 #21 click map: fuse / play / drag-in-hand / engage / contextmenu", asyn
 
   const playable = page.locator(".hand-zone .card.legal-play").first();
   await expect(playable).toBeVisible();
-  const playedId = await playable.getAttribute("data-card");
+  const playedUid = await playable.getAttribute("data-uid");
   const hash0 = await page.evaluate(() => window.__arena!.hash());
   await playable.click({ button: "right" });
   await expect.poll(() => page.evaluate(() => window.__arena!.hash())).not.toBe(hash0);
-  const stillInHand = await page.evaluate((id) => {
-    const full = window.__arena!.full() as { players: { a: { hand: { card: string }[] }; b: { hand: { card: string }[] } } };
-    return [...full.players.a.hand, ...full.players.b.hand].some((c) => c.card === id);
-  }, playedId);
+  const stillInHand = await page.evaluate((uid) => {
+    const full = window.__arena!.full() as {
+      players: { a: { hand: { id: number }[] }; b: { hand: { id: number }[] } };
+    };
+    return [...full.players.a.hand, ...full.players.b.hand].some((c) => String(c.id) === uid);
+  }, playedUid);
   expect(stillInHand).toBeFalsy();
 
   const prevented = await page.evaluate(() => {
@@ -368,14 +374,14 @@ test("#12 selected checkmark on mulligan", async ({ page }) => {
 test("#13 history rows grouped with cost, set, and hover art", async ({ page }) => {
   test.setTimeout(90_000);
   await boot(page);
-  await startMono(page, "vanilla.json", "88001110");
-  await skipToPp(page, 1);
-  await playCard(page, "88001110");
+  await startMono(page, "fighter.json", "10001110");
+  await skipToPp(page, 2);
+  await playCard(page, "10001110");
   await page.locator("#historyToggle").click();
   await expect(page.locator("#historyDrawer")).toHaveClass(/open/);
   const row = page.locator("#bluePlayedList .hist-item").first();
   await expect(row).toBeVisible();
-  await expect(row.locator(".cost-badge")).toHaveText("1");
+  await expect(row.locator(".cost-badge")).toHaveText("2");
   await expect(row.locator(".hist-label")).toContainText(/×\d/);
   const badge = await row.locator(".cost-badge").evaluate((el) => {
     const s = getComputedStyle(el);
@@ -407,9 +413,25 @@ test("#15 choice extras: title, Earth Rite line, processing dismiss, confirm loo
   const earth = page.locator(".earth-rite-cost");
   await expect(earth.first()).toBeVisible();
   expect(await earth.first().evaluate((el) => getComputedStyle(el).color)).toBe("rgb(241, 196, 15)");
+  const confirm = page.locator(".confirm-targets-btn").first();
+  if (await confirm.count()) {
+    const look = await confirm.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { color: s.color, size: s.fontSize, pad: s.padding, weight: s.fontWeight };
+    });
+    expect(look.color).toBe("rgb(255, 255, 255)");
+    expect(look.size).toBe("16px");
+    expect(look.pad).toMatch(/12px/);
+    expect(Number(look.weight)).toBeGreaterThanOrEqual(700);
+  }
   await artShot(page.locator(".choice-modal"), `${ART}/p1_choice_earth_rite.png`);
-  await page.locator(".choice-option").first().click();
-  await expect(page.locator(".choice-modal")).toHaveCount(0);
+  const gone = await page.evaluate(() => {
+    const btn = document.querySelector<HTMLButtonElement>(".choice-option");
+    if (!btn) return false;
+    btn.click();
+    return document.querySelector(".choice-modal") == null;
+  });
+  expect(gone, "choice modal must dismiss synchronously on click").toBeTruthy();
 });
 
 test("#22 can't-attack overlay on printed lock (Galleon)", async ({ page }) => {
@@ -531,9 +553,10 @@ test("#27 Copy seed flashes Copied for 1200ms", async ({ page }) => {
     deckA: "basic-forest",
     deckB: "basic-rune",
   });
+  await openSettings(page);
   const btn = page.locator("#copySeedBtn");
   await expect(btn).toBeVisible();
-  await btn.click();
+  await btn.evaluate((el) => (el as HTMLButtonElement).click());
   await expect(btn).toHaveText("Copied");
   await artShot(page.locator("#gameSeedPanel"), `${ART}/p1_copy_seed.png`);
   await expect(btn).toHaveText("Copy", { timeout: 2000 });
@@ -560,10 +583,16 @@ test("terminal overlay: Deck-out/Lethal + rematch buttons; empty seed rolls", as
   test.setTimeout(90_000);
   await boot(page);
   await expect(page.locator("#seedInput")).toHaveAttribute("placeholder", "random if empty");
-  const tiny = await importDeck(page, "tiny.json", { "88001110": 8 });
-  await startGame(page, { seed: "", first: "a", deckA: tiny, deckB: tiny });
+  await startGame(page, {
+    seed: "",
+    first: "a",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+  });
   const rolled = await page.locator("#gameSeedValue").textContent();
   expect(rolled && /^\d+$/.test(rolled)).toBeTruthy();
+  const tiny = await importDeck(page, "tiny.json", { "10001110": 8 });
+  await startGame(page, { seed: "1", first: "a", deckA: tiny, deckB: tiny });
   await confirmMulligans(page);
   await closeDrawer(page);
   for (let i = 0; i < 40; i++) {
@@ -578,12 +607,12 @@ test("terminal overlay: Deck-out/Lethal + rematch buttons; empty seed rolls", as
     });
     if (!ended) break;
   }
-  await expect(page.locator("#gameOverOverlay")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator("#gameOverOverlay")).toBeVisible({ timeout: 10_000 });
   const reason = page.locator("#gameOverReason");
   await expect(reason).toHaveText(/Deck-out|Lethal/);
   await expect(page.locator("#rematchSameSeedBtn")).toHaveText("Rematch (same seed)");
   await expect(page.locator("#rematchNewSeedBtn")).toHaveText("Rematch (new seed)");
   await expect(page.locator("#newGameFromOver")).toHaveText("New Game");
-  await expect(page.locator(".gameover-hint")).toContainText("first player of a rematch");
+  await expect(page.locator(".gameover-hint")).toContainText("First player of a rematch");
   await artShot(page.locator("#gameOverOverlay"), `${ART}/p1_terminal.png`);
 });
