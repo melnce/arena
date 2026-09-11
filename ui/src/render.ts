@@ -609,11 +609,6 @@ function renderChoice(full: FullState, legal: NeutralAction[], hooks: RenderHook
 
   if (inPlace) {
     highlightChoiceTargets(legal);
-    if (confirmAct && confirmHost) {
-      confirmHost.style.display = "flex";
-      confirmHost.innerHTML = `<button type="button" class="confirm-targets-btn">Confirm</button>`;
-      confirmHost.querySelector("button")?.addEventListener("click", () => hooks.onConfirm());
-    }
     return;
   }
 

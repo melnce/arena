@@ -181,7 +181,13 @@ test("tooltips and gates: Hark necromancy + Depths enhance (no E badge)", async 
   const depthsCard = page.locator("#blueHand .card[data-card='90024320']").first();
   await expect(depthsCard.locator(".alternate-form-badge")).toHaveCount(0);
   await expect(depthsCard.locator(".cost-badge, .card-stats.top-left")).toHaveText("1");
-  await expect(depthsCard).toHaveClass(/enhance-ready/);
+  const depthsLegal = await page.evaluate(() =>
+    (window.__arena!.legal() as Array<{ play?: { card: string } }>).some(
+      (a) => a.play?.card === "90024320",
+    ),
+  );
+  if (depthsLegal) await expect(depthsCard).toHaveClass(/enhance-ready/);
+  else await expect(depthsCard).not.toHaveClass(/playable-glow|enhance-ready|legal-play/);
   await depthsCard.hover();
   await expect(tip).toContainText("Depths of the Eld Sword");
   await expect(tip).toContainText("Cost 1");

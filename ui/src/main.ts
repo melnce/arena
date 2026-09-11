@@ -134,6 +134,8 @@ function exposeArena(): void {
         typeof actionJson === "string" ? JSON.parse(actionJson) : actionJson
       ) as NeutralAction;
       const events = applyAction(session, action);
+      if (!session.suppressFloater) spawnFloaters(events, floatingTextOn());
+      session.suppressFloater = false;
       pending = null;
       paint();
       return events;
