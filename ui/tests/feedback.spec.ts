@@ -212,10 +212,11 @@ test("tooltips and gates: Hark necromancy + Depths enhance (no E badge)", async 
   await feline.hover();
   await expect(tip).toContainText("Highwire Feline");
   await expect(tip).toContainText("Abysscraft");
-  await expect(tip).toContainText("Anathema's Gambit");
+  await expect(tip.locator(".card-set-line")).toContainText(/Set \d+/);
   await expect(tip).not.toContainText("Cost ");
   await expect(tip).not.toContainText("4/5");
   await expect(tip.locator(".tooltip-header-meta")).not.toContainText("follower");
+  await expect(tip.locator(".tooltip-cost-line")).toHaveCount(0);
   await artShot(tip, `${ART}/tooltip_class_tribe_set.png`);
 });
 

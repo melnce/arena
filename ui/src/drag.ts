@@ -9,6 +9,8 @@ export interface DragSourceOptions {
   onDragBegan?: () => void;
   onDragEnded?: () => void;
   onThresholdCrossed?: () => void;
+  handZoneId?: string;
+  onReleasedInHand?: () => void;
 }
 
 export const DRAG_THRESHOLD_PX = 8;
@@ -223,9 +225,36 @@ function onUp(ev: PointerEvent) {
     endSession(false);
     return;
   }
+  if (
+    s.options.kind === "hand" &&
+    s.options.handZoneId &&
+    s.options.onReleasedInHand &&
+    pointerOverHand(s.options.handZoneId, ev.clientX, ev.clientY, s.source, s.preview)
+  ) {
+    s.options.onReleasedInHand();
+    endSession(false);
+    return;
+  }
   s.source.classList.add("drop-reject");
   window.setTimeout(() => s.source.classList.remove("drop-reject"), 280);
   endSession(false);
+}
+
+function pointerOverHand(
+  zoneId: string,
+  clientX: number,
+  clientY: number,
+  source: HTMLElement,
+  preview: HTMLElement | null,
+): boolean {
+  const prevVis = preview?.style.visibility;
+  const prevPe = source.style.pointerEvents;
+  if (preview) preview.style.visibility = "hidden";
+  source.style.pointerEvents = "none";
+  const hit = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+  source.style.pointerEvents = prevPe;
+  if (preview) preview.style.visibility = prevVis ?? "";
+  return !!hit?.closest(`#${zoneId}`);
 }
 
 function onCancel(ev: PointerEvent) {

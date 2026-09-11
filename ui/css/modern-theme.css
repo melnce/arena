@@ -1092,6 +1092,12 @@ body.gameover .leader {
   margin-bottom: 16px;
 }
 
+.gameover-hint {
+  font-size: 0.8em;
+  color: var(--muted, #9aa3b2);
+  margin: 0 0 14px;
+}
+
 .gameover-actions {
   display: flex;
   flex-wrap: wrap;

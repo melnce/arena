@@ -34,6 +34,10 @@ export function getCatalog(id: string): CatalogEntry | undefined {
   return catalog.get(id);
 }
 
+export function catalogIds(): string[] {
+  return [...catalog.keys()];
+}
+
 export function lookupText(id: string): CardText {
   const hit = textCache.get(id);
   if (hit) return hit;

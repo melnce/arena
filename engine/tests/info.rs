@@ -313,3 +313,59 @@ fn followers_only_this_turn_storm_on_entry_is_false() {
     assert!(!info[0].followers_only_this_turn);
     assert!(!info[0].rush_only);
 }
+
+#[test]
+fn hand_info_blocked_reason_pp_and_not_your_turn() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    st.player_mut(me).hand.clear();
+    st.player_mut(opp).hand.clear();
+    give_pp(&mut st, me, 0, 0);
+    give_pp(&mut st, opp, 5, 5);
+    let _ = put_hand(&db, &mut st, me, "88001110");
+    let _ = put_hand(&db, &mut st, opp, "88001110");
+    let mine = hand_info(&db, &st, me);
+    assert!(!mine[0].playable);
+    assert_eq!(mine[0].blocked_reason.as_deref(), Some("Not enough PP."));
+    let theirs = hand_info(&db, &st, opp);
+    assert!(!theirs[0].playable);
+    assert_eq!(theirs[0].blocked_reason.as_deref(), Some("Not your turn."));
+}
+
+#[test]
+fn board_info_cannot_attack_reason_ignores_sickness() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    let slot = put_field(&db, &mut st, me, "88001110");
+    let inst = st.player_mut(me).field[slot as usize]
+        .as_mut()
+        .expect("field");
+    inst.flags.summoning_sick = true;
+    inst.traits.cant_attack_followers = Some(true);
+    inst.traits.cant_attack_leader = Some(true);
+    let info = board_info(&db, &st, me);
+    assert_eq!(
+        info[0].cannot_attack_reason.as_deref(),
+        Some("Cannot attack.")
+    );
+}
+
+#[test]
+fn player_info_has_leader_barrier_from_damage_cap() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    assert!(!player_info(&db, &st, me).has_leader_barrier);
+    st.player_mut(me)
+        .leader_mods
+        .push(arena_engine::state::LeaderMod {
+            max_defense: None,
+            damage_cap: Some(1),
+            damage_taken_bonus: 0,
+            until: None,
+        });
+    assert!(player_info(&db, &st, me).has_leader_barrier);
+}

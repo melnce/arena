@@ -15,6 +15,7 @@ declare global {
         super_evolve_unlocked: boolean;
         evolve_unlock_in: number;
         super_evolve_unlock_in: number;
+        has_leader_barrier?: boolean;
       };
       full(): unknown;
       legal(): unknown[];

@@ -75,9 +75,53 @@
         text-overflow: ellipsis;
         max-width: 280px;
       }
+      .hist-item .cost-badge {
+        width: 22px;
+        height: 22px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(#262c36, #1a1f27);
+        color: #e9edf1;
+        font-size: 12px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .hist-set {
+        font-size: 11px;
+        color: #9aa3b2;
+        margin-left: 6px;
+      }
+      .hist-set[data-older="1"] {
+        color: #7a8494;
+      }
+      #historyImgPreview {
+        display: none;
+        position: fixed;
+        z-index: 5000;
+        width: 198px;
+        background: #0c0e12;
+        border-radius: 10px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.55);
+        pointer-events: none;
+        overflow: hidden;
+      }
+      #historyImgPreview img {
+        display: block;
+        width: 198px;
+        height: auto;
+      }
     </style>
   </head>
   <body class="phase3-fixed-viewport">
+    <script>
+      try {
+        if (localStorage.getItem("svwb.activeOnBottom") === "1") {
+          document.body.classList.add("active-on-bottom");
+        }
+      } catch (e) {}
+    </script>
     <div id="targetingConfirmation"></div>
     <div id="toastHost" aria-live="polite"></div>
     <button id="settingsToggle" type="button" title="Settings (Ctrl+Shift+M)" aria-label="Open settings">
@@ -116,8 +160,7 @@
                   type="text"
                   inputmode="numeric"
                   pattern="[0-9]*"
-                  placeholder="1"
-                  value="1"
+                  placeholder="random if empty"
                   autocomplete="off"
                   spellcheck="false"
                 />

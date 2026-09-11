@@ -937,6 +937,10 @@
 }
 
 .spellboost-badge {
+  position: absolute;
+  top: 35px;
+  left: 8px;
+  z-index: 10;
   width: 18px;
   height: 18px;
   background: rgba(0, 100, 200, 0.9);
@@ -1149,6 +1153,31 @@
 .card.selectable {
   outline: 2px dashed rgba(57, 217, 138, 0.85);
   outline-offset: -3px;
+}
+
+.card .selected-check {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 14;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  color: #2ecc71;
+  text-shadow:
+    0 0 4px #000,
+    0 0 8px #2ecc71;
+  pointer-events: none;
+}
+
+/* Selected ring must win over a later .selectable dashed outline. */
+.card.selected,
+.select-mode .card.selected {
+  outline: 3px solid var(--color-success);
+  outline-offset: 0;
+  box-shadow:
+    var(--glow-success),
+    0 0 20px rgba(57, 217, 138, 0.45);
 }
 
 /* ===== Cannot Be Destroyed Overlay ===== */

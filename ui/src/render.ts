@@ -1,5 +1,5 @@
-import { lookupText } from "./catalog.ts";
-import { escapeHtml } from "./images.ts";
+import { getCatalog, lookupText } from "./catalog.ts";
+import { cardImageUrl, escapeHtml } from "./images.ts";
 import {
   badgeCost,
   conditionGateMet,
@@ -46,8 +46,8 @@ export type RenderHooks = {
   onEndTurn: (player: PlayerId) => void;
   onBonusPp: (player: PlayerId) => void;
   onNewGame: () => void;
-  onRematchSwap: () => void;
-  onRestart: () => void;
+  onRematchSame: () => void;
+  onRematchNew: () => void;
   onUndo: () => void;
   pending: Pending;
   setPending: (p: Pending) => void;
@@ -56,11 +56,13 @@ export type RenderHooks = {
 const zoneSig = new Map<string, string>();
 const gateByUid = new Map<number, GateInfo[]>();
 const handInfoByUid = new Map<number, HandCardInfo>();
-const instByUid = new Map<number, CardInstance>();
 
 /** Current in-place choice — used to resolve slot owners when legal omits `player`. */
 let currentChoiceNode: ChoiceNode | null = null;
 let currentChoicePlayer: PlayerId | null = null;
+let lastFull: FullState | null = null;
+let tipEl: HTMLElement | null = null;
+let tipSession: { card: HTMLElement; drag: boolean } | null = null;
 
 export function render(s: Session, hooks: RenderHooks): void {
   const t0 = performance.now();
@@ -72,6 +74,7 @@ export function render(s: Session, hooks: RenderHooks): void {
   const handB = sessionHandInfo(s, "b");
   const boardA = sessionBoardInfo(s, "a");
   const boardB = sessionBoardInfo(s, "b");
+  lastFull = full;
   cacheInfo(full, handA, handB, boardA, boardB);
   if (typeof full.phase !== "object" || !("choice" in full.phase)) {
     currentChoiceNode = null;
@@ -130,7 +133,7 @@ export function render(s: Session, hooks: RenderHooks): void {
   renderBoard(full, legal, "a", boardA, hooks);
   renderBoard(full, legal, "b", boardB, hooks);
   bindBoardDrops(legal, hooks);
-  renderLeaders(full, legal, hooks);
+  renderLeaders(full, legal, hooks, s);
   renderEvo(s, full, legal, hooks);
   renderCrests(full);
   renderMulligan(phase, acting, hooks);
@@ -142,6 +145,7 @@ export function render(s: Session, hooks: RenderHooks): void {
   renderEventLog(s);
   syncUndoButtons(s);
   paintPending(hooks.pending, legal);
+  refreshOpenTooltip(full);
   if (window.__arena) window.__arena.paintMs = performance.now() - t0;
 }
 
@@ -154,7 +158,6 @@ function cacheInfo(
 ): void {
   gateByUid.clear();
   handInfoByUid.clear();
-  instByUid.clear();
   const putHand = (list: HandCardInfo[], player: PlayerId) => {
     const hand = full.players[player].hand;
     list.forEach((info, i) => {
@@ -162,7 +165,6 @@ function cacheInfo(
       if (!inst) return;
       handInfoByUid.set(inst.id, info);
       gateByUid.set(inst.id, info.gates);
-      instByUid.set(inst.id, inst);
     });
   };
   const putBoard = (list: BoardCardInfo[], player: PlayerId) => {
@@ -171,19 +173,12 @@ function cacheInfo(
       const inst = field[info.slot];
       if (!inst) continue;
       gateByUid.set(inst.id, info.gates);
-      instByUid.set(inst.id, inst);
     }
   };
   putHand(handA, "a");
   putHand(handB, "b");
   putBoard(boardA, "a");
   putBoard(boardB, "b");
-  for (const p of ["a", "b"] as PlayerId[]) {
-    for (const inst of full.players[p].hand) instByUid.set(inst.id, inst);
-    for (const inst of full.players[p].field) {
-      if (inst) instByUid.set(inst.id, inst);
-    }
-  }
 }
 
 function renderHand(
@@ -250,8 +245,12 @@ function renderHand(
           {
             payload: JSON.stringify({ kind: "play", player, handPos: row.i }),
             kind: "hand",
+            handZoneId: id,
+            onReleasedInHand: fuse ? () => hooks.onFuse(player, row.i) : undefined,
+            onDragBegan: () => beginDragTooltip(card),
+            onDragEnded: () => endDragTooltip(),
           },
-          playable && phase !== "mulligan",
+          (playable || fuse) && phase !== "mulligan",
         );
       }
       return card;
@@ -294,6 +293,7 @@ function renderBoard(
         glow: glowFor({ canAttack, rushOnly }),
         selected: pendingAtk,
         selectable: !!engage || canAttack,
+        cannotAttack: !!info?.cannot_attack_reason,
       });
       card.dataset.slot = String(row.i);
       card.dataset.player = player;
@@ -438,7 +438,12 @@ function syncKeyed<T extends { key: string }>(
   for (const node of frag) host.appendChild(node);
 }
 
-function renderLeaders(full: FullState, legal: NeutralAction[], hooks: RenderHooks): void {
+function renderLeaders(
+  full: FullState,
+  legal: NeutralAction[],
+  hooks: RenderHooks,
+  s: Session,
+): void {
   for (const p of ["a", "b"] as PlayerId[]) {
     const el = byId(`${visual(p)}Leader`);
     if (!el) continue;
@@ -458,8 +463,12 @@ function renderLeaders(full: FullState, legal: NeutralAction[], hooks: RenderHoo
     if (pending) {
       el.classList.add("legal-target", "selectable");
     }
-    const cap = full.players[p].leader_mods?.some((m) => m.damage_cap != null);
-    el.classList.toggle("has-barrier", !!cap);
+    const info = sessionPlayerInfo(s, p);
+    const cap =
+      !!info.has_leader_barrier ||
+      !!full.players[p].leader_mods?.some((m) => m.damage_cap != null);
+    el.classList.toggle("has-barrier", cap);
+    el.classList.toggle("has-leader-barrier", cap);
   }
 }
 
@@ -628,16 +637,80 @@ function fillHist(id: string, ids: string[]): void {
   if (zoneSig.get(id) === sig) return;
   zoneSig.set(id, sig);
   el.innerHTML = "";
+  const groups = new Map<
+    string,
+    { name: string; cost: number; count: number; card: string; set?: number | null }
+  >();
+  for (const card of ids) {
+    const info = lookupText(card);
+    const cat = getCatalog(card);
+    const cost = info.cost ?? cat?.cost ?? 0;
+    const name = info.name || card;
+    const key = `${name}||${cost}`;
+    const g = groups.get(key) || { name, cost, count: 0, card, set: info.set };
+    g.count += 1;
+    if (g.set == null && info.set != null) g.set = info.set;
+    groups.set(key, g);
+  }
+  const sorted = [...groups.values()].sort(
+    (a, b) => a.cost - b.cost || a.name.localeCompare(b.name),
+  );
   const ul = document.createElement("ul");
   ul.className = "hist-list";
-  for (const card of ids) {
+  for (const g of sorted) {
     const li = document.createElement("li");
     li.className = "hist-item";
-    li.dataset.card = card;
-    li.innerHTML = `<span class="hist-label">${escapeHtml(lookupText(card).name)}</span>`;
+    li.dataset.card = g.card;
+    const art = cardImageUrl(g.card, false);
+    if (art) li.dataset.img = art;
+    const set =
+      g.set != null
+        ? `<span class="hist-set"${g.set < 8 ? ' data-older="1"' : ""}>Set ${g.set}</span>`
+        : "";
+    li.innerHTML =
+      `<span class="cost-badge">${g.cost}</span>` +
+      `<span class="hist-label">${escapeHtml(g.name)} ×${g.count} ${set}</span>`;
     ul.appendChild(li);
   }
   el.appendChild(ul);
+  wireHistoryPreview();
+}
+
+let histPreviewWired = false;
+
+function wireHistoryPreview(): void {
+  if (histPreviewWired) return;
+  histPreviewWired = true;
+  const preview = document.createElement("div");
+  preview.id = "historyImgPreview";
+  document.body.appendChild(preview);
+  document.addEventListener("mousemove", (e) => {
+    if (preview.style.display !== "block") return;
+    let x = e.clientX + 18;
+    let y = e.clientY + 18;
+    if (x + 210 > window.innerWidth) x = window.innerWidth - 210 - 12;
+    if (y + 300 > window.innerHeight) y = window.innerHeight - 300 - 12;
+    preview.style.left = `${Math.max(12, x)}px`;
+    preview.style.top = `${Math.max(12, y)}px`;
+  });
+  document.addEventListener("mouseover", (e) => {
+    const li = (e.target as HTMLElement).closest<HTMLElement>(".hist-item");
+    if (!li?.dataset.img) return;
+    preview.innerHTML = "";
+    const img = document.createElement("img");
+    img.width = 198;
+    img.alt = "";
+    img.src = li.dataset.img;
+    img.referrerPolicy = "no-referrer";
+    preview.appendChild(img);
+    preview.style.display = "block";
+  });
+  document.addEventListener("mouseout", (e) => {
+    const li = (e.target as HTMLElement).closest(".hist-item");
+    if (!li) return;
+    preview.innerHTML = "";
+    preview.style.display = "none";
+  });
 }
 
 let promptPlaceCleanup: (() => void) | null = null;
@@ -660,7 +733,7 @@ function renderChoice(full: FullState, legal: NeutralAction[], hooks: RenderHook
   const confirmAct = L.confirm(legal);
   const chooses = legal.filter((a) => "choose" in a);
   const inPlace = isInPlaceChoice(node);
-  paintChoicePrompt(choicePrompt(node), hooks, confirmAct ? () => hooks.onConfirm() : null);
+  paintChoicePrompt(choicePrompt(node), hooks, confirmAct ? () => hooks.onConfirm() : null, node);
 
   if (inPlace) {
     highlightChoiceTargets(legal, acting, node);
@@ -669,22 +742,28 @@ function renderChoice(full: FullState, legal: NeutralAction[], hooks: RenderHook
 
   const modal = document.createElement("div");
   modal.className = "choice-modal";
+  const title = "modes" in node ? "Choose an effect:" : choicePrompt(node);
   const buttons = chooses.map((act, i) => {
     const label = labelChooseAction(act, node, full, acting);
-    return `<button type="button" class="choice-option" data-index="${i}">${escapeHtml(label)}</button>`;
+    const earth = /earth rite|sigil/i.test(label)
+      ? `<span class="earth-rite-cost">(Consume Earth Sigil)</span>`
+      : "";
+    return `<button type="button" class="choice-option" data-index="${i}">${escapeHtml(label)}${earth}</button>`;
   });
-  modal.innerHTML = `<div class="choice-modal-content"><h3>${escapeHtml(choicePrompt(node))}</h3><div class="choice-options">${buttons.join("")}</div><div class="choice-modal-actions"></div></div>`;
+  modal.innerHTML = `<div class="choice-modal-content"><h3>${escapeHtml(title)}</h3><div class="choice-options">${buttons.join("")}</div><div class="choice-modal-actions"></div></div>`;
   const actions = modal.querySelector(".choice-modal-actions");
   if (confirmAct && actions) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "confirm-targets-btn";
-    btn.textContent = "Confirm";
+    btn.textContent = confirmLabel(node);
     btn.addEventListener("click", () => hooks.onConfirm());
     actions.appendChild(btn);
   }
   modal.querySelectorAll<HTMLButtonElement>(".choice-option").forEach((btn) => {
     btn.addEventListener("click", () => {
+      btn.classList.add("processing");
+      modal.remove();
       const i = Number(btn.dataset.index);
       const act = chooses[i];
       if (act) hooks.onChooseOpt(act);
@@ -755,6 +834,7 @@ function paintPromptBar(opts: {
   text: string;
   undo?: () => void;
   confirm?: () => void;
+  confirmLabel?: string;
   cancel?: () => void;
 }): void {
   promptPlaceCleanup?.();
@@ -779,7 +859,7 @@ function paintPromptBar(opts: {
     const confirm = document.createElement("button");
     confirm.type = "button";
     confirm.className = "confirm-targets-btn";
-    confirm.textContent = "Confirm";
+    confirm.textContent = opts.confirmLabel || "Confirm";
     confirm.addEventListener("click", () => opts.confirm?.());
     bar.appendChild(confirm);
   }
@@ -839,12 +919,27 @@ function paintChoicePrompt(
   text: string,
   hooks: RenderHooks,
   onConfirm: (() => void) | null,
+  node: ChoiceNode,
 ): void {
   paintPromptBar({
     text,
     undo: () => hooks.onUndo(),
     confirm: onConfirm ?? undefined,
+    confirmLabel: onConfirm ? confirmLabel(node) : undefined,
   });
+}
+
+function confirmLabel(node: ChoiceNode): string {
+  return `${choicePrompt(node)} (${choiceSelectedCount(node)})`;
+}
+
+function choiceSelectedCount(node: ChoiceNode): number {
+  if ("fuse_partners" in node) return node.fuse_partners.picked.length;
+  if ("multi_pick" in node) return node.multi_pick.picked.length;
+  if ("modes" in node) return node.modes.picked.length;
+  if ("targets" in node) return Math.max(0, node.targets.options.length - node.targets.remaining);
+  if ("cards" in node) return Math.max(0, node.cards.options.length - node.cards.remaining);
+  return 0;
 }
 
 function choicePrompt(node: ChoiceNode): string {
@@ -1031,22 +1126,29 @@ function renderTerminal(full: FullState, hooks: RenderHooks): void {
     overlay.id = "gameOverOverlay";
     overlay.innerHTML = `<div class="gameover-card">
       <div class="gameover-title" id="gameOverTitle"></div>
-      <div class="gameover-reason" id="gameOverReason">Match over</div>
+      <div class="gameover-reason" id="gameOverReason"></div>
+      <p class="gameover-hint">First player of a rematch follows the drawer’s A / B / coin setting.</p>
       <div class="gameover-actions">
-        <button type="button" id="newGameFromOver">New Game</button>
         <button type="button" id="rematchSameSeedBtn">Rematch (same seed)</button>
-        <button type="button" id="rematchSwapBtn">Rematch (swap sides)</button>
+        <button type="button" id="rematchNewSeedBtn">Rematch (new seed)</button>
+        <button type="button" id="newGameFromOver">New Game</button>
       </div>
     </div>`;
     document.body.appendChild(overlay);
     overlay.querySelector("#newGameFromOver")?.addEventListener("click", () => hooks.onNewGame());
-    overlay.querySelector("#rematchSameSeedBtn")?.addEventListener("click", () => hooks.onRestart());
-    overlay.querySelector("#rematchSwapBtn")?.addEventListener("click", () => hooks.onRematchSwap());
+    overlay.querySelector("#rematchSameSeedBtn")?.addEventListener("click", () => hooks.onRematchSame());
+    overlay.querySelector("#rematchNewSeedBtn")?.addEventListener("click", () => hooks.onRematchNew());
   }
   const title = document.getElementById("gameOverTitle");
   if (title) {
     title.textContent =
       full.winner === "a" ? "Blue (A) wins" : full.winner === "b" ? "Red (B) wins" : "Draw";
+  }
+  const reason = document.getElementById("gameOverReason");
+  if (reason) {
+    const loser = full.winner === "a" ? "b" : full.winner === "b" ? "a" : null;
+    const deckout = loser != null && full.players[loser].deck.length === 0;
+    reason.textContent = deckout ? "Deck-out" : "Lethal";
   }
   overlay.style.display = "flex";
 }
@@ -1105,52 +1207,124 @@ export function resetZoneCache(): void {
   zoneSig.clear();
 }
 
+function instForCard(card: HTMLElement, full: FullState | null): CardInstance | null {
+  if (!full) return null;
+  const uid = Number(card.dataset.uid);
+  const player = card.dataset.player as PlayerId | undefined;
+  if (!player || !uid) return null;
+  const p = full.players[player];
+  return p.hand.find((c) => c.id === uid) ?? p.field.find((c) => c?.id === uid) ?? null;
+}
+
+function paintTooltipHtml(card: HTMLElement, full: FullState | null): void {
+  const tip = tipEl;
+  if (!tip) return;
+  const id = card.dataset.card;
+  if (!id) return;
+  const uid = Number(card.dataset.uid);
+  const info = handInfoByUid.get(uid);
+  const inst = instForCard(card, full);
+  const player = card.dataset.player as PlayerId | undefined;
+  const acting = full?.active;
+  const blocked =
+    player && acting === player && info && !info.playable ? info.blocked_reason : null;
+  tip.innerHTML = formatCardTooltip({
+    inst,
+    cardId: id,
+    gates: gateByUid.get(uid),
+    displayCost: info?.cost ?? null,
+    blockedReason: blocked ?? null,
+    turn: full?.turn,
+    rallyHave: player && full ? full.players[player].rally : undefined,
+  });
+  tip.style.display = "block";
+}
+
+function placeTooltip(clientX: number, clientY: number): void {
+  const tip = tipEl;
+  if (!tip) return;
+  const left = Math.min(clientX + 12, window.innerWidth - tip.offsetWidth - 12);
+  tip.style.left = `${Math.max(12, left)}px`;
+  if (clientY > window.innerHeight / 2) {
+    tip.style.bottom = `${window.innerHeight - clientY + 12}px`;
+    tip.style.top = "auto";
+  } else {
+    tip.style.top = `${clientY + 12}px`;
+    tip.style.bottom = "auto";
+  }
+}
+
+function pinDragTooltip(): void {
+  const tip = tipEl;
+  if (!tip) return;
+  tip.style.top = "12px";
+  tip.style.bottom = "auto";
+  tip.style.left = "12px";
+}
+
+export function beginDragTooltip(card: HTMLElement): void {
+  if (card.dataset.faceDown === "1") return;
+  tipSession = { card, drag: true };
+  paintTooltipHtml(card, lastFull);
+  pinDragTooltip();
+}
+
+export function endDragTooltip(): void {
+  if (!tipSession?.drag) return;
+  const hovered = document.querySelector<HTMLElement>(".card[data-card]:hover");
+  if (hovered && hovered.dataset.faceDown !== "1") {
+    tipSession = { card: hovered, drag: false };
+    paintTooltipHtml(hovered, lastFull);
+    return;
+  }
+  tipSession = null;
+  if (tipEl) tipEl.style.display = "none";
+}
+
+function refreshOpenTooltip(full: FullState): void {
+  if (!tipSession || !tipEl) return;
+  if (!tipSession.card.isConnected) {
+    tipSession = null;
+    tipEl.style.display = "none";
+    return;
+  }
+  paintTooltipHtml(tipSession.card, full);
+  if (tipSession.drag) pinDragTooltip();
+}
+
 export function bindTooltips(): void {
   const tip = byId("cardTooltip");
   if (!tip) return;
-  let pinned = false;
+  tipEl = tip;
   let pressTimer = 0;
   let pressCard: HTMLElement | null = null;
   let pressX = 0;
   let pressY = 0;
-
-  const fill = (card: HTMLElement) => {
-    const id = card.dataset.card;
-    if (!id) return;
-    const uid = Number(card.dataset.uid);
-    const info = handInfoByUid.get(uid);
-    tip.innerHTML = formatCardTooltip({
-      cardId: id,
-      inst: instByUid.get(uid),
-      gates: gateByUid.get(uid),
-      displayCost: info?.cost ?? null,
-    });
-    tip.style.display = "block";
-  };
-  const place = (clientX: number, clientY: number) => {
-    tip.style.left = `${Math.min(clientX + 16, window.innerWidth - tip.offsetWidth - 12)}px`;
-    tip.style.top = `${Math.min(clientY + 16, window.innerHeight - tip.offsetHeight - 12)}px`;
-  };
-  const hide = () => {
-    if (pinned) return;
-    tip.style.display = "none";
-  };
+  let longPinned = false;
 
   document.addEventListener("mouseover", (e) => {
+    if (tipSession?.drag) return;
     const card = (e.target as HTMLElement).closest<HTMLElement>(".card[data-card]");
     if (!card || card.dataset.faceDown === "1") return;
-    fill(card);
+    tipSession = { card, drag: false };
+    paintTooltipHtml(card, lastFull);
   });
   document.addEventListener("mousemove", (e) => {
-    if (tip.style.display === "none") return;
-    place(e.clientX, e.clientY);
+    if (!tipEl || tipEl.style.display === "none") return;
+    if (tipSession?.drag) {
+      pinDragTooltip();
+      return;
+    }
+    placeTooltip(e.clientX, e.clientY);
   });
   document.addEventListener("mouseout", (e) => {
+    if (tipSession?.drag) return;
     const card = (e.target as HTMLElement).closest(".card[data-card]");
     if (!card) return;
     const next = (e.relatedTarget as HTMLElement | null)?.closest?.(".card[data-card]");
     if (next === card) return;
-    hide();
+    if (tipSession?.card === card) tipSession = null;
+    if (tipEl) tipEl.style.display = "none";
   });
 
   document.addEventListener(
@@ -1165,9 +1339,10 @@ export function bindTooltips(): void {
       if (!card || card.dataset.faceDown === "1") return;
       pressTimer = window.setTimeout(() => {
         if (!pressCard) return;
-        pinned = true;
-        fill(pressCard);
-        place(pressX, pressY);
+        longPinned = true;
+        tipSession = { card: pressCard, drag: false };
+        paintTooltipHtml(pressCard, lastFull);
+        placeTooltip(pressX, pressY);
       }, 400);
     },
     true,
@@ -1191,9 +1366,10 @@ export function bindTooltips(): void {
       window.clearTimeout(pressTimer);
       if (e.pointerType === "touch") {
         const card = (e.target as HTMLElement).closest<HTMLElement>(".card[data-card]");
-        if (pinned && (!card || card !== pressCard)) {
-          pinned = false;
-          tip.style.display = "none";
+        if (longPinned && (!card || card !== pressCard)) {
+          longPinned = false;
+          tipSession = null;
+          if (tipEl) tipEl.style.display = "none";
         }
       }
       pressCard = null;
