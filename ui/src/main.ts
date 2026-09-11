@@ -109,8 +109,9 @@ const hooks: RenderHooks = {
     const act = L.bonusPp(legalActions(session), player);
     if (act) commit(act);
   },
-  onNewGame: () => void startFromForm(),
-  onRematchSwap: () => void rematchSwap(),
+  onNewGame: () => openSettingsForNewGame(),
+  onRematchSame: () => void rematch(true),
+  onRematchNew: () => void rematch(false),
   onUndo: () => applyHistory(undo),
   pending: null,
   setPending: (p) => {
@@ -150,6 +151,7 @@ function exposeArena(): void {
             super_evolve_unlocked: false,
             evolve_unlock_in: 0,
             super_evolve_unlock_in: 0,
+            has_leader_barrier: false,
           },
     full: () => (session ? JSON.parse(session.game.full()) : null),
     legal: () => (session ? JSON.parse(session.game.legal()) : []),
@@ -239,8 +241,8 @@ function humanSideFromForm(): PlayerId {
 }
 
 function formConfig(): SessionConfig {
-  const seedRaw = byId<HTMLInputElement>("seedInput")?.value.trim() || "1";
-  const seed = BigInt(seedRaw);
+  const seedRaw = byId<HTMLInputElement>("seedInput")?.value.trim() ?? "";
+  const seed = seedRaw ? BigInt(seedRaw) : randomSeed();
   const deckAId = byId<HTMLSelectElement>("blueDeckSelect")!.value;
   const deckBId = byId<HTMLSelectElement>("redDeckSelect")!.value;
   const mode = (byId<HTMLSelectElement>("modeSelect")?.value ?? "hotseat") as Mode;
@@ -315,20 +317,30 @@ function startWatchIfAuto(): void {
   }
 }
 
-async function rematchSwap(): Promise<void> {
+function randomSeed(): bigint {
+  const buf = new Uint32Array(2);
+  crypto.getRandomValues(buf);
+  return (BigInt(buf[0]) << 32n) | BigInt(buf[1]);
+}
+
+function openSettingsForNewGame(): void {
+  closeHistory();
+  const drawer = byId("settingsDrawer");
+  const scrim = byId("settingsScrim");
+  drawer?.classList.add("open");
+  drawer?.setAttribute("aria-hidden", "false");
+  scrim?.classList.add("show");
+}
+
+async function rematch(keepSeed: boolean): Promise<void> {
   if (!session) return;
   const cfg = { ...session.cfg };
-  const da = cfg.deckA;
-  cfg.deckA = cfg.deckB;
-  cfg.deckB = da;
-  const ida = cfg.deckAId;
-  cfg.deckAId = cfg.deckBId;
-  cfg.deckBId = ida;
-  if (cfg.mode === "vs-bot") cfg.humanSide = cfg.humanSide === "a" ? "b" : "a";
-  const aSel = byId<HTMLSelectElement>("blueDeckSelect");
-  const bSel = byId<HTMLSelectElement>("redDeckSelect");
-  if (aSel) aSel.value = cfg.deckAId;
-  if (bSel) bSel.value = cfg.deckBId;
+  cfg.first = (byId<HTMLSelectElement>("firstSelect")?.value ?? cfg.first) as First;
+  if (!keepSeed) {
+    cfg.seed = randomSeed();
+    const seedInput = byId<HTMLInputElement>("seedInput");
+    if (seedInput) seedInput.value = cfg.seed.toString();
+  }
   startSession(cfg);
 }
 
@@ -483,7 +495,14 @@ function initSettings(): void {
   });
   scrim?.addEventListener("click", close);
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") close();
+    if (e.key === "Escape") {
+      const hist = byId("historyDrawer");
+      if (hist?.classList.contains("open")) {
+        closeHistory();
+        return;
+      }
+      close();
+    }
     if (e.key === "m" && e.ctrlKey && e.shiftKey) {
       e.preventDefault();
       drawer?.classList.contains("open") ? close() : open();
@@ -690,7 +709,18 @@ function initWatch(): void {
   });
 }
 
+function restorePersistedToggles(): void {
+  const bottom = localStorage.getItem("svwb.activeOnBottom") === "1";
+  const fct = localStorage.getItem("svwb.floatingCombatText");
+  const bottomBox = byId<HTMLInputElement>("activeOnBottomToggle");
+  const fctBox = byId<HTMLInputElement>("floatingCombatTextToggle");
+  if (bottomBox) bottomBox.checked = bottom;
+  document.body.classList.toggle("active-on-bottom", bottom);
+  if (fctBox) fctBox.checked = fct == null ? true : fct !== "0";
+}
+
 async function boot(): Promise<void> {
+  restorePersistedToggles();
   await init();
   await loadCatalog();
   populatePolicies();
@@ -741,17 +771,28 @@ async function boot(): Promise<void> {
   exposeArena();
   byId("modeSelect")?.addEventListener("change", syncModeChrome);
   byId("activeOnBottomToggle")?.addEventListener("change", (e) => {
-    document.body.classList.toggle(
-      "active-on-bottom",
-      (e.target as HTMLInputElement).checked,
-    );
+    const on = (e.target as HTMLInputElement).checked;
+    document.body.classList.toggle("active-on-bottom", on);
+    localStorage.setItem("svwb.activeOnBottom", on ? "1" : "0");
+  });
+  byId("floatingCombatTextToggle")?.addEventListener("change", (e) => {
+    const on = (e.target as HTMLInputElement).checked;
+    localStorage.setItem("svwb.floatingCombatText", on ? "1" : "0");
   });
   byId("copySeedBtn")?.addEventListener("click", async () => {
+    const btn = byId<HTMLButtonElement>("copySeedBtn");
     const v = byId("gameSeedValue")?.textContent ?? "";
     try {
       await navigator.clipboard.writeText(v);
     } catch {
       toast(v);
+    }
+    if (btn) {
+      const prev = btn.textContent;
+      btn.textContent = "Copied";
+      window.setTimeout(() => {
+        btn.textContent = prev || "Copy";
+      }, 1200);
     }
   });
   byId("vsBotPolicy")?.addEventListener("change", () => {

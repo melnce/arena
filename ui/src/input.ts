@@ -167,6 +167,10 @@ export function bindPointer(hooks: InputHooks): void {
         if (hooks.getActing() === player) hooks.mulliganToggle(pos);
         return;
       }
+      if (card.classList.contains("fuse-ready")) {
+        hooks.fuse(player, pos);
+        return;
+      }
       if (card.classList.contains("legal-play") || card.classList.contains("playable-glow") || card.classList.contains("enhance-ready")) {
         hooks.play(player, pos);
       }
@@ -185,13 +189,32 @@ export function bindPointer(hooks: InputHooks): void {
     }
   });
 
-  document.addEventListener("contextmenu", (e) => {
-    const card = (e.target as HTMLElement).closest<HTMLElement>(".card");
-    if (!card?.classList.contains("fuse-ready")) return;
-    e.preventDefault();
-    const player = card.dataset.player as PlayerId;
-    hooks.fuse(player, Number(card.dataset.handPos));
-  });
+  document.addEventListener(
+    "contextmenu",
+    (e) => {
+      const t = e.target as HTMLElement;
+      const surface = t.closest(".card, .zone, .leader, .evo-btn, .leader-attack-strip, .board-zone, .hand-zone");
+      if (surface) e.preventDefault();
+      const card = t.closest<HTMLElement>(".card");
+      if (!card) return;
+      const player = card.dataset.player as PlayerId | undefined;
+      if (!player) return;
+      if (card.closest(".hand-zone") && hooks.getPhase() !== "mulligan") {
+        const pos = Number(card.dataset.handPos);
+        const playable =
+          card.classList.contains("legal-play") ||
+          card.classList.contains("playable-glow") ||
+          card.classList.contains("enhance-ready") ||
+          card.classList.contains("alternate-ready");
+        if (playable) hooks.play(player, pos);
+        return;
+      }
+      if (card.closest(".board-zone") && card.classList.contains("engage-ready")) {
+        hooks.engage(player, Number(card.dataset.slot));
+      }
+    },
+    true,
+  );
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") hooks.cancelPending();

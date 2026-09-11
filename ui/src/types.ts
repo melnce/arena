@@ -46,6 +46,10 @@ export type CardText = {
   name: string;
   text: string;
   kind: string;
+  class?: string | null;
+  tribes?: string[];
+  set?: number | null;
+  tags?: string[];
   cost: number | null;
   attack?: number | null;
   defense?: number | null;
@@ -127,6 +131,7 @@ export type HandCardInfo = {
   form: "normal" | "enhance" | "accelerate" | "crystallize" | null;
   playable: boolean;
   gates: GateInfo[];
+  blocked_reason?: string | null;
 };
 
 export type BoardCardInfo = {
@@ -138,6 +143,7 @@ export type BoardCardInfo = {
   evolved: boolean;
   super_evolved: boolean;
   gates: GateInfo[];
+  cannot_attack_reason?: string | null;
 };
 
 export type PlayerInfo = {
@@ -145,6 +151,7 @@ export type PlayerInfo = {
   super_evolve_unlocked: boolean;
   evolve_unlock_in: number;
   super_evolve_unlock_in: number;
+  has_leader_barrier?: boolean;
 };
 
 export type PlayerState = {

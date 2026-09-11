@@ -124,3 +124,9 @@
   display: inline-block;
   margin-top: var(--space-4);
 }
+
+#cardTooltip .tooltip-play-blocked {
+  margin-top: 0.5em;
+  color: #ff8888;
+  font-weight: 700;
+}
