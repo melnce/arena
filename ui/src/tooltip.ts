@@ -131,7 +131,7 @@ function buffDelta(inst?: CardInstance | null): string {
 export function formatCrestTooltip(crest: CrestInstance, faithValue?: number): string {
   const info = lookupText(crest.id);
   const faith =
-    crest.faith && faithValue != null ? `Faith: ${faithValue}` : crest.faith ? "Faith" : "";
+    crest.faith && faithValue != null ? `Faith — ${faithValue}` : crest.faith ? "Faith" : "";
   const cd = crest.countdown != null ? `Countdown ${crest.countdown}` : "";
   const meta = [faith, cd].filter(Boolean).join(" · ") || "Crest";
   return (

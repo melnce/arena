@@ -53,6 +53,7 @@ let paintQueued = 0;
 const importedDecks = new Map<string, { label: string; cards: Record<string, number> }>();
 const savedPositions = new Map<string, PositionLog>();
 let positionSeq = 0;
+let toastTimer = 0;
 
 const hooks: RenderHooks = {
   onPlay: (player, handPos) => {
@@ -315,17 +316,22 @@ function showCombat(events: EngineEvent[]): void {
 }
 
 function toast(msg: string): void {
-  const err = byId("errBanner");
-  if (err) err.textContent = msg;
-  let host = byId("toastHost");
-  if (!host) {
-    host = document.createElement("div");
-    host.id = "toastHost";
-    document.body.appendChild(host);
+  let pill = byId("actionToast");
+  if (!pill) {
+    pill = document.createElement("div");
+    pill.id = "actionToast";
+    pill.setAttribute("aria-live", "polite");
+    document.body.appendChild(pill);
   }
-  host.textContent = msg;
-  host.classList.add("show");
-  window.setTimeout(() => host.classList.remove("show"), 4200);
+  window.clearTimeout(toastTimer);
+  if (!msg) {
+    pill.classList.remove("visible");
+    pill.textContent = "";
+    return;
+  }
+  pill.textContent = msg;
+  pill.classList.add("visible");
+  toastTimer = window.setTimeout(() => pill.classList.remove("visible"), 1800);
 }
 
 function humanSideFromForm(): PlayerId {

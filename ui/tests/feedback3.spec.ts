@@ -786,7 +786,7 @@ test("B14 save/load after 200+ actions and invalid file", async ({ page }) => {
     mimeType: "application/json",
     buffer: Buffer.from("{not-a-position"),
   });
-  await expect(page.locator("#toastHost")).toBeVisible({ timeout: 5000 });
+  await expect(page.locator("#actionToast")).toHaveClass(/visible/, { timeout: 5000 });
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /main|choice|mulligan/);
 });
 
