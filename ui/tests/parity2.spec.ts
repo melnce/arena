@@ -82,6 +82,20 @@ async function playCard(page: Page, card: string) {
   expect(ok, `expected play ${card}`).toBeTruthy();
 }
 
+async function skipToPp(page: Page, pp: number) {
+  for (let i = 0; i < 20; i++) {
+    const cur = await page.evaluate(() => {
+      const full = window.__arena!.full() as {
+        players: { a: { pp: number }; b: { pp: number } };
+        active: string;
+      };
+      return full.players[full.active as "a" | "b"].pp;
+    });
+    if (cur >= pp) return;
+    await endTurnApply(page);
+  }
+}
+
 async function playWhenLegal(page: Page, card: string, max = 24) {
   for (let i = 0; i < max; i++) {
     const ok = await page.evaluate((id) => {
@@ -98,6 +112,7 @@ async function playWhenLegal(page: Page, card: string, max = 24) {
 }
 
 async function startMono(page: Page, file: string, card: string, seed = "1") {
+  await boot(page);
   const id = await importDeck(page, file, { [card]: 40 });
   await startGame(page, { seed, first: "a", deckA: id, deckB: id });
   await confirmMulligans(page);
@@ -128,6 +143,7 @@ function uniqueDeck(): Record<string, number> {
 }
 
 test("#30 Barrier overlay + flash on gain + pop on loss", async ({ page }) => {
+  await boot(page);
   const a = await importDeck(page, "p2-barrier-a.json", {
     "10001110": 20,
     "10412120": 20,
@@ -136,7 +152,9 @@ test("#30 Barrier overlay + flash on gain + pop on loss", async ({ page }) => {
   await startGame(page, { seed: "3", first: "a", deckA: a, deckB: b });
   await confirmMulligans(page);
   await closeDrawer(page);
+  await skipToPp(page, 1);
   await playWhenLegal(page, "10001110");
+  await skipToPp(page, 5);
   await playWhenLegal(page, "10412120");
   const card = page.locator("#blueBoard .card.has-barrier").first();
   await expect(card).toBeVisible({ timeout: 10_000 });
@@ -183,6 +201,7 @@ test("#30 Barrier overlay + flash on gain + pop on loss", async ({ page }) => {
 
 test("#31 Can't-be-destroyed overlay + 5 gold particles", async ({ page }) => {
   await startMono(page, "p2-cbd.json", "10031210");
+  await skipToPp(page, 2);
   await playWhenLegal(page, "10031210");
   const card = page.locator("#blueBoard .card").first();
   await expect(card).toBeVisible();
@@ -209,6 +228,7 @@ test("#31 Can't-be-destroyed overlay + 5 gold particles", async ({ page }) => {
 
 test("#33 Amulet named-counter badge is first of X, then Y, then Z", async ({ page }) => {
   await startMono(page, "p2-named.json", "10031210");
+  await skipToPp(page, 2);
   await playWhenLegal(page, "10031210");
   const live = await page.evaluate(() => {
     const info = window.__arena!.boardInfo("a") as Array<{ named_counter?: number | null }>;
@@ -242,6 +262,7 @@ test("#33 Amulet named-counter badge is first of X, then Y, then Z", async ({ pa
 
 test("#34 .spell-cast on the leaving hand card", async ({ page }) => {
   await startMono(page, "p2-spell.json", "10031310");
+  await skipToPp(page, 1);
   const playing = page.evaluate(() => {
     const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
     const act = legal.find((a) => a.play?.card === "10031310");
@@ -307,6 +328,8 @@ test("#38 Share URL writes a/b aliases and old bookmarks still open", async ({ p
 
 test("#42 Rematch cancels in-flight image loads on removed nodes", async ({ page }) => {
   await startMono(page, "p2-img.json", "10001110");
+  await skipToPp(page, 1);
+  await playWhenLegal(page, "10001110");
   const before = await page.evaluate(() => {
     const imgs = Array.from(document.querySelectorAll<HTMLImageElement>(".card img, img.crest-image"));
     const loads = { n: 0 };
@@ -333,12 +356,13 @@ test("#42 Rematch cancels in-flight image loads on removed nodes", async ({ page
     };
     return {
       loads: w.__oldImgLoads.n,
-      liveSrc: w.__oldImgs.filter((img) => img.getAttribute("src")).length,
+      liveSrc: w.__oldImgs.filter((img) => !img.isConnected && img.getAttribute("src")).length,
       connected: w.__oldImgs.filter((img) => img.isConnected).length,
     };
   });
   expect(after.loads, "removed nodes must not fire load after Rematch").toBe(0);
-  expect(after.liveSrc).toBe(0);
+  expect(after.connected, "played board cards must leave the document").toBeLessThan(before);
+  expect(after.liveSrc, "detached imgs must have src cancelled").toBe(0);
   await artShot(page, `${ART}/p2_image_release.png`);
 });
 
@@ -368,6 +392,7 @@ test("#44 Position option Name · T{n} · time; Rename; Del; JSON keeps meta", a
 });
 
 test("#45 F6 / F7 / F8 reroll + reseed log round-trip", async ({ page }) => {
+  await boot(page);
   const deck = uniqueDeck();
   const id = await importDeck(page, "p2-reroll.json", deck);
   await startGame(page, { seed: "11", first: "a", deckA: id, deckB: id });
@@ -435,7 +460,7 @@ test("#46 Export List copies Blue deck as Nx Name and shows the panel", async ({
   await expect(panel).toBeVisible();
   const text = await panel.innerText();
   expect(text).toMatch(/^\d+x .+/m);
-  expect(text).toMatch(/Water Fairy|Fairy|10001110/);
+  expect(text).toMatch(/Indomitable Fighter|10001110/);
   const style = await panel.evaluate((el) => {
     const s = getComputedStyle(el);
     return { display: s.display, whiteSpace: s.whiteSpace };
