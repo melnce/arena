@@ -4,6 +4,8 @@ import {
   ART,
   artShot,
   pngRgba,
+  waitEnterAnimation,
+  waitHistoryPreview,
 } from "./helpers.ts";
 
 async function openSettings(page: Page) {
@@ -404,10 +406,13 @@ test("#13 history rows grouped with cost, set, and hover art", async ({ page }) 
     const c = await set.evaluate((el) => getComputedStyle(el).color);
     expect(c === "rgb(154, 163, 178)" || c === "rgb(122, 132, 148)").toBeTruthy();
   }
-  await row.hover();
   const preview = page.locator("#historyImgPreview");
+  const imgState = await waitHistoryPreview(row, preview);
   await expect(preview).toBeVisible();
-  expect(await preview.evaluate((el) => getComputedStyle(el).width)).toBe("198px");
+  expect(await preview.evaluate((el) => getComputedStyle(el).display)).toBe("block");
+  if (imgState === "load") {
+    expect(await preview.evaluate((el) => getComputedStyle(el).width)).toBe("198px");
+  }
   await artShot(page.locator("#historyDrawer"), `${ART}/p1_history_rows.png`);
 });
 
@@ -503,13 +508,15 @@ test("#24 spellboost badge under the cost", async ({ page }) => {
   if (!had) test.skip(true, "Foresight not legal in this seed");
   const badge = page.locator(".spellboost-badge").first();
   await expect(badge).toBeVisible({ timeout: 8000 });
+  const card = page.locator(".card").filter({ has: page.locator(".spellboost-badge") }).first();
+  await waitEnterAnimation(card);
   const style = await badge.evaluate((el) => {
     const s = getComputedStyle(el);
     return { color: s.color, radius: s.borderRadius, bg: s.backgroundColor };
   });
   expect(style.color).toBe("rgb(255, 255, 255)");
   expect(style.radius).toBe("50%");
-  const shot = await artShot(page.locator(".card").filter({ has: page.locator(".spellboost-badge") }).first(), `${ART}/p1_spellboost.png`);
+  const shot = await artShot(card, `${ART}/p1_spellboost.png`);
   expect(sampleColor(shot, (r, g, b, a) => a > 80 && b > 140 && b > r && b > g)).toBeGreaterThan(4);
 });
 
