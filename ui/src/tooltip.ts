@@ -150,43 +150,6 @@ export function formatTooltipDescription(raw: string): string {
     .join("")}</div>`;
 }
 
-function formatClassTribeSet(cardId: string, inst?: CardInstance | null): string {
-  const cat = getCatalog(cardId);
-  const clazz = titleCase(inst?.class || cat?.class || "");
-  const tribes = (inst?.tribes ?? []).map((t) => titleCase(String(t))).filter(Boolean);
-  const classLine = clazz ? (tribes.length ? `${clazz}/${tribes.join(", ")}` : clazz) : "";
-  const setLine = formatSetLine(cardId);
-  return [classLine, setLine].filter(Boolean).join("<br>");
-}
-
-function formatSetLine(cardId: string): string {
-  const setId = setIdFromCardId(cardId);
-  if (!setId) return "";
-  const name = SET_LABELS[setId];
-  if (!name) return "";
-  const inRotation = ROTATION_SET_IDS.has(setId);
-  const text = inRotation ? name : `${name} · older set`;
-  const cls = inRotation ? "card-set-line" : "card-set-line older";
-  return `<span class="${cls}">${escapeHtml(text)}</span>`;
-}
-
-/** Collectible ids `1XX…` encode set `100XX`. Tokens (`9…`) have no set label. */
-function setIdFromCardId(cardId: string): string | null {
-  if (!/^\d{8}$/.test(cardId) || cardId.startsWith("9")) return null;
-  const n = Number(cardId.slice(1, 3));
-  if (!Number.isFinite(n)) return null;
-  return String(10000 + n);
-}
-
-function titleCase(raw: string): string {
-  return raw
-    .trim()
-    .split(/[\s_]+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ");
-}
-
 function splitAbilityLines(text: string): string[] {
   const chunks = text
     .split(/\n+/)
