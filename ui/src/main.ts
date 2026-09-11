@@ -135,10 +135,11 @@ function exposeArena(): void {
         typeof actionJson === "string" ? JSON.parse(actionJson) : actionJson
       ) as NeutralAction;
       const events = applyAction(session, action);
-      if (!session.suppressFloater) spawnFloaters(events, floatingTextOn());
+      const show = !session.suppressFloater;
       session.suppressFloater = false;
       pending = null;
       paint();
+      if (show) spawnFloaters(events, floatingTextOn());
       return events;
     },
     handInfo: (player) => (session ? sessionHandInfo(session, player as PlayerId) : []),
@@ -201,12 +202,11 @@ function commit(action: NeutralAction): void {
   if (!session) return;
   try {
     const events = applyAction(session, action);
-    if (!session.suppressFloater) {
-      spawnFloaters(events, floatingTextOn());
-    }
+    const show = !session.suppressFloater;
     session.suppressFloater = false;
     pending = null;
-    requestPaint();
+    paint();
+    if (show) spawnFloaters(events, floatingTextOn());
     void maybeBots();
   } catch (err) {
     console.error(err);
@@ -356,10 +356,11 @@ async function maybeBots(): Promise<void> {
   let guard = 0;
   while (session && !isHumanActing(session) && session.game.phase() !== "terminal" && guard < 80) {
     const events = botStep(session);
-    if (!session.suppressFloater) spawnFloaters(events, floatingTextOn());
+    const show = !session.suppressFloater;
     session.suppressFloater = false;
     guard += 1;
     paint();
+    if (show) spawnFloaters(events, floatingTextOn());
     await new Promise<void>((r) => window.setTimeout(r, 280));
   }
   paint();
@@ -384,10 +385,11 @@ function scheduleWatch(): void {
     }
     try {
       const events = botStep(session);
-      if (!session.suppressFloater) spawnFloaters(events, floatingTextOn());
+      const show = !session.suppressFloater;
       session.suppressFloater = false;
       resetZoneCache();
       paint();
+      if (show) spawnFloaters(events, floatingTextOn());
     } catch (err) {
       watchPlaying = false;
       toast(String(err));
@@ -693,12 +695,14 @@ function initWatch(): void {
     watchPlaying = false;
     try {
       const events = botStep(session);
-      spawnFloaters(events, floatingTextOn());
+      const show = floatingTextOn();
+      resetZoneCache();
+      paint();
+      if (show) spawnFloaters(events, true);
     } catch (err) {
       toast(String(err));
+      paint();
     }
-    resetZoneCache();
-    paint();
   });
   byId("watchPlayBtn")?.addEventListener("click", () => {
     watchPlaying = true;
