@@ -45,26 +45,7 @@ export function formatCardTooltip(opts: TooltipPaint): string {
   const classLine = tribes.length ? `${clazz}/${tribes.join(", ")}` : clazz;
   const setLine = formatSetLine(info.set);
   const metaParts = [escapeHtml(classLine), setLine].filter(Boolean).join("<br>");
-
-  const baseCost = inst?.base_cost ?? info.cost;
-  const paid = opts.displayCost;
-  const costBit =
-    paid != null && baseCost != null && paid !== baseCost
-      ? `Cost ${paid} <span class="tooltip-base-cost">(base ${escapeHtml(String(baseCost))})</span>`
-      : baseCost != null
-        ? `Cost ${baseCost}`
-        : "";
   const cat = getCatalog(opts.cardId);
-  const kind = (inst?.kind || info.kind || cat?.kind || "").toLowerCase();
-  const stats =
-    kind === "follower"
-      ? inst
-        ? `${inst.attack}/${inst.defense}`
-        : cat?.attack != null && cat?.defense != null
-          ? `${cat.attack}/${cat.defense}`
-          : ""
-      : "";
-  const costLine = [costBit, stats, info.kind].filter(Boolean).join(" · ");
 
   const gates = formatGateBlock(opts.gates ?? []);
   const desc = formatTooltipDescription(info.text || "");
@@ -73,7 +54,6 @@ export function formatCardTooltip(opts: TooltipPaint): string {
   return (
     `<div class="tooltip-header-name">${name}</div>` +
     (metaParts ? `<div class="tooltip-header-meta">${metaParts}</div>` : "") +
-    (costLine ? `<div class="tooltip-header-meta tooltip-cost-line">${costLine}</div>` : "") +
     gates +
     desc +
     crests +

@@ -165,6 +165,7 @@ function exposeArena(): void {
           },
     full: () => (session ? JSON.parse(session.game.full()) : null),
     legal: () => (session ? JSON.parse(session.game.legal()) : []),
+    actions: () => (session ? session.actions : []),
     paintMs: window.__arena?.paintMs,
     reseed: (seed) => {
       if (!session) throw new Error("no session");
@@ -427,6 +428,7 @@ function openSettingsForNewGame(): void {
   scrim?.classList.add("show");
 }
 
+/** Restart and terminal "Rematch (same seed)" share this path. */
 async function rematch(keepSeed: boolean): Promise<void> {
   if (!session) return;
   const cfg = { ...session.cfg };
@@ -935,6 +937,8 @@ async function boot(): Promise<void> {
   });
 
   byId("startGameBtn")?.addEventListener("click", () => void startFromForm());
+  byId("restartGameBtn")?.addEventListener("click", () => void rematch(true));
+  byId("restartRailBtn")?.addEventListener("click", () => void rematch(true));
   byId("undoBtn")?.addEventListener("click", () => applyHistory(undo));
   byId("redoBtn")?.addEventListener("click", () => applyHistory(redo));
   exposeArena();

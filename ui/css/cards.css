@@ -555,6 +555,24 @@
   border-radius: var(--radius-md);
 }
 
+/* Attack glow wins over the idle evolved ring; the E badge stays. */
+.card.evolved.rush-glow .card-image-wrapper {
+  outline: 4px solid var(--color-warn);
+  box-shadow:
+    var(--glow-enhance),
+    0 0 22px rgba(255, 212, 0, 0.85),
+    inset 0 0 12px var(--color-warn-surface);
+}
+
+.card.evolved.can-attack .card-image-wrapper,
+.card.evolved.playable-glow .card-image-wrapper {
+  outline: 4px solid var(--color-success);
+  box-shadow:
+    var(--glow-playable),
+    0 0 22px rgba(57, 217, 138, 0.85),
+    inset 0 0 12px rgba(57, 217, 138, 0.35);
+}
+
 .card.evolved .card-image-wrapper::after {
   content: "E";
   position: absolute;

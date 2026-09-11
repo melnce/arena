@@ -43,7 +43,12 @@ pub struct BoardCardInfo {
     pub id: String,
     pub can_attack: bool,
     pub can_attack_leader: bool,
+    /// Same value as `followers_only_this_turn` — kept so older clients still
+    /// paint the yellow entry-turn ring.
     pub rush_only: bool,
+    /// Entered this turn (`summoning_sick`), has a legal attack, and none of
+    /// those attacks is the enemy leader. Client: yellow `rush-glow` only.
+    pub followers_only_this_turn: bool,
     pub evolved: bool,
     pub super_evolved: bool,
     pub gates: Vec<GateInfo>,
@@ -178,13 +183,15 @@ pub fn board_info(db: &CardDb, state: &State, player: PlayerId) -> Vec<BoardCard
                         } if attacker.0 == i as u8
                     )
                 });
-            let rush_only = inst.flags.summoning_sick && inst.is_rush() && !inst.is_storm();
+            let followers_only_this_turn =
+                inst.flags.summoning_sick && can_attack && !can_attack_leader;
             Some(BoardCardInfo {
                 slot: i as u8,
                 id: inst.card.as_str(),
                 can_attack,
                 can_attack_leader,
-                rush_only,
+                rush_only: followers_only_this_turn,
+                followers_only_this_turn,
                 evolved: inst.evolved,
                 super_evolved: inst.super_evolved,
                 gates: collect_board_gates(db, state, player, inst),
