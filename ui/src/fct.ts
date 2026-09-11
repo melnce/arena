@@ -55,6 +55,17 @@ function hostFor(target: {
   return null;
 }
 
+/** Re-apply the 0.45s flash after paint so reconcile cannot strip it. */
+export function reflashDamage(events: EngineEvent[]): void {
+  for (const ev of events) {
+    if (!("damage" in ev)) continue;
+    const d = ev.damage as { target: { slot?: number; player?: PlayerId } };
+    if (typeof d.target.slot !== "number") continue;
+    const host = hostFor(d.target);
+    if (host) flashCard(host);
+  }
+}
+
 function flashCard(host: HTMLElement): void {
   if (!host.classList.contains("card")) return;
   host.classList.remove("floating-combat-flash");

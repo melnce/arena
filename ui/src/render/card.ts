@@ -189,7 +189,9 @@ function paintIdentity(div: HTMLElement, opts: CardPaintOpts): void {
 }
 
 function applyChrome(div: HTMLElement, opts: CardPaintOpts): void {
+  const keepFlash = div.classList.contains("floating-combat-flash");
   for (const cls of GLOW_CLASSES) div.classList.remove(cls);
+  if (keepFlash) div.classList.add("floating-combat-flash");
   if (opts.glow) {
     for (const cls of opts.glow.split(/\s+/).filter(Boolean)) div.classList.add(cls);
   }

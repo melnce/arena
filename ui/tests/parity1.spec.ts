@@ -307,11 +307,22 @@ test("#6 engage right-click on Witch's New Brew", async ({ page }) => {
 test("#11 FCT cap, stack, flash, persist", async ({ page }) => {
   test.setTimeout(90_000);
   await boot(page);
-  const id = await importDeck(page, "fct-rush.json", { "10631110": 40 });
-  await startGame(page, { seed: "1", first: "b", deckA: id, deckB: id });
+  const tank = await importDeck(page, "fct-tank.json", { "10464110": 40 });
+  const rush = await importDeck(page, "fct-rush.json", { "10631110": 40 });
+  await startGame(page, { seed: "1", first: "a", deckA: tank, deckB: rush });
   await confirmMulligans(page);
   await closeDrawer(page);
-  await playCard(page, "10631110");
+  for (let i = 0; i < 12; i++) {
+    const ready = await page.evaluate(() => {
+      const full = window.__arena!.full() as { active: string };
+      if (full.active !== "a") return false;
+      const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
+      return legal.some((a) => a.play?.card === "10464110");
+    });
+    if (ready) break;
+    await endTurnApply(page);
+  }
+  await playCard(page, "10464110");
   await endTurnApply(page);
   await playCard(page, "10631110");
   await page.evaluate(() => {

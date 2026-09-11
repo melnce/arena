@@ -1,7 +1,7 @@
 import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
 import { publicUrl } from "./base.ts";
 import { decks, loadCatalog, parseDeckJson } from "./catalog.ts";
-import { clearFloaters, spawnFloaters } from "./fct.ts";
+import { clearFloaters, reflashDamage, spawnFloaters } from "./fct.ts";
 import { bindPointer } from "./input.ts";
 import { sessionBoardInfo, sessionHandInfo, sessionPlayerInfo } from "./info.ts";
 import * as L from "./legal.ts";
@@ -31,7 +31,15 @@ import {
   type Session,
 } from "./session.ts";
 import { readShareParams, writeShareParams } from "./share.ts";
-import type { First, Mode, NeutralAction, PlayerId, PositionLog, SessionConfig } from "./types.ts";
+import type {
+  EngineEvent,
+  First,
+  Mode,
+  NeutralAction,
+  PlayerId,
+  PositionLog,
+  SessionConfig,
+} from "./types.ts";
 
 let session: Session | null = null;
 let pending: Pending = null;
@@ -135,11 +143,7 @@ function exposeArena(): void {
         typeof actionJson === "string" ? JSON.parse(actionJson) : actionJson
       ) as NeutralAction;
       const events = applyAction(session, action);
-      const show = !session.suppressFloater;
-      session.suppressFloater = false;
-      pending = null;
-      paint();
-      if (show) spawnFloaters(events, floatingTextOn());
+      showCombat(events);
       return events;
     },
     handInfo: (player) => (session ? sessionHandInfo(session, player as PlayerId) : []),
@@ -202,11 +206,7 @@ function commit(action: NeutralAction): void {
   if (!session) return;
   try {
     const events = applyAction(session, action);
-    const show = !session.suppressFloater;
-    session.suppressFloater = false;
-    pending = null;
-    paint();
-    if (show) spawnFloaters(events, floatingTextOn());
+    showCombat(events);
     void maybeBots();
   } catch (err) {
     console.error(err);
@@ -217,6 +217,16 @@ function commit(action: NeutralAction): void {
 function floatingTextOn(): boolean {
   const box = byId<HTMLInputElement>("floatingCombatTextToggle");
   return box ? box.checked : true;
+}
+
+function showCombat(events: EngineEvent[]): void {
+  if (!session) return;
+  const show = !session.suppressFloater && floatingTextOn();
+  session.suppressFloater = false;
+  pending = null;
+  if (show) spawnFloaters(events, true);
+  paint();
+  if (show) reflashDamage(events);
 }
 
 function toast(msg: string): void {
@@ -356,11 +366,8 @@ async function maybeBots(): Promise<void> {
   let guard = 0;
   while (session && !isHumanActing(session) && session.game.phase() !== "terminal" && guard < 80) {
     const events = botStep(session);
-    const show = !session.suppressFloater;
-    session.suppressFloater = false;
     guard += 1;
-    paint();
-    if (show) spawnFloaters(events, floatingTextOn());
+    showCombat(events);
     await new Promise<void>((r) => window.setTimeout(r, 280));
   }
   paint();
@@ -385,11 +392,8 @@ function scheduleWatch(): void {
     }
     try {
       const events = botStep(session);
-      const show = !session.suppressFloater;
-      session.suppressFloater = false;
       resetZoneCache();
-      paint();
-      if (show) spawnFloaters(events, floatingTextOn());
+      showCombat(events);
     } catch (err) {
       watchPlaying = false;
       toast(String(err));
@@ -695,10 +699,8 @@ function initWatch(): void {
     watchPlaying = false;
     try {
       const events = botStep(session);
-      const show = floatingTextOn();
       resetZoneCache();
-      paint();
-      if (show) spawnFloaters(events, true);
+      showCombat(events);
     } catch (err) {
       toast(String(err));
       paint();
