@@ -1,6 +1,8 @@
 # UI parity audit — old Practice-Tool client vs arena `ui/`
 
-Audit of every user-visible feature of the old practice tool’s **client** (`$HOME/practice-tool`, `origin/main` `bf8a9123`) against the new client (`ui/` at `8dfcb15`, plus this doc). Rules, card facts, and engine computation are out of scope: where the old UI derived a colour or badge from its own engine, this file records **what was shown**, not how it was computed.
+Audit of every user-visible feature of the old practice tool’s **client** (`$HOME/practice-tool`, `origin/main` `bf8a9123`) against the new client (`ui/` at `8dfcb15`, plus this doc). Rules, card facts, and engine computation are out of scope.
+
+**Visible result, not a code copy** (owner, 2026-09-11): *“make sure you don't copy it blindly. you can improve the code but make sure the result is the same. same glows, counters, colors etc.”* A row is `ported` only when the player sees the same thing (what, where, colour/token, when, how long). `partial` means it looks or behaves differently, even if the new code is “equivalent.” Gap specs describe that result — old CSS token names, timings, and corners — so the next agent can write its own code. File:line cites are evidence, not a paste target.
 
 **Old paths** are relative to `$HOME/practice-tool`. **New paths** are relative to this repo.
 
@@ -28,7 +30,7 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | Empty board label “Play zone” | `css/layout.css:234-247` | `ui/css/layout.css:236-249` | ported | 
 | Per-side board tint (red/blue dashed zone) | `css/layout.css:249-267`; `--color-board-*-tint` | `ui/css/layout.css:219-269`; same tokens | ported | 
 | Occupied slots only, engine order, row centred | (old rendered occupied cards in a flex row) | `ui/src/render.ts:226-232` (R1) | ported | 
-| Active-on-bottom: `body.active-on-bottom` + `active-second` swaps side `order` (code-read) | `src/boot/perspectiveFlip.ts:4-14`; `src/ui/render.ts:31,44-66`; `css/phase3-layout.css:257-263` | `ui/index.html:181-184`; `ui/src/main.ts:695-699`; `ui/css/phase3-layout.css:234-240` | partial | Persist the checkbox to `localStorage` key `svwb.activeOnBottom` (`"1"`/`"0"`) and apply the class on boot the way `src/ui/render.ts:44-66` does. |
+| Active-on-bottom: `body.active-on-bottom` + `active-second` swaps side `order` (code-read) | `src/boot/perspectiveFlip.ts:4-14`; `src/ui/render.ts:31,44-66`; `css/phase3-layout.css:257-263` | `ui/index.html:181-184`; `ui/src/main.ts:695-699`; `ui/css/phase3-layout.css:234-240` | partial | After reload, the checkbox and the board match last time: if `localStorage.svwb.activeOnBottom` is `"1"`, the active side is already on the bottom (same `order` swap as during play). |
 | Bottom hand full size, top hand `--hand-scale-top` 0.72–0.82 | `css/phase3-layout.css:30-45,266-289` | `ui/css/phase3-layout.css:30,243-249` (both hands `--hand-local-scale: 1`) | dropped (by design) | Equal hand sizes were an explicit R1/R2 ask (`--card-height` clamp for both hands). |
 | Card footprint 108×162 (114×171 @1440, 118×177 @1900) | `css/design-tokens.css:233-234,284-298` | `ui/css/design-tokens.css:235-237` (`clamp(110px, (100vh-48px)/6.4, 260px)`, width = 2/3 height) | ported | Viewport-scaled cards were R2; same tokens, different formula. |
 | Board cards × `--board-card-scale` 1.12 (1.18 @2560) | `css/phase3-layout.css:501-504`; `css/design-tokens.css` | `ui/css/design-tokens.css:237`; `ui/css/phase3-layout.css:253-257,484-485` | ported | 
@@ -83,7 +85,7 @@ Dropped-by-design (brief RZ / `ui/README.md:50`): blackbox, sparring-line script
 | Can’t-be-destroyed overlay + 5 gold particles (code-read) | `src/ui/overlays.ts:88-109`; `css/cards.css` CBD block | `ui/css/cards.css:1135-1293` (CSS only) | missing | When the follower can’t be destroyed, mount `.cant-be-destroyed-overlay` and five `.cant-be-destroyed-particle` children. |
 | Bane / Drain / Last Words PNG icons, bottom-centre 26×26 stack (code-read) | `src/ui/overlays.ts:67-83`; `images/icon_*.png` | `ui/src/render/card.ts:244-258`; `ui/public/images/icon_*.png` | ported | 
 | Ongoing icon `images/icon_ongoing.png` (code-read) | `src/ui/overlays.ts:84-86` | — (`.ongoing-icon` CSS only, `ui/css/cards.css:504`) | missing | If the card shows an Ongoing effect, push `images/icon_ongoing.png` with class `ongoing-icon` into `.keyword-icon-stack`. |
-| Icon stack swap animation `.swap-2/3/4` (2s/3s cycle) when 2+ icons (code-read) | `src/ui/overlays.ts:111-115`; `css/cards.css:1008-1090` | `ui/css/cards.css:1045-1126` (CSS only; JS never sets the class) | missing | After building the stack, toggle `swap-2` / `swap-3` / `swap-4` from `childElementCount` exactly as `overlays.ts:111-115`. |
+| Icon stack swap animation `.swap-2/3/4` (2s/3s cycle) when 2+ icons (code-read) | `src/ui/overlays.ts:111-115`; `css/cards.css:1008-1090` | `ui/css/cards.css:1045-1126` (CSS only; JS never sets the class) | missing | When 2 / 3 / 4+ keyword icons share the stack, they cycle (old `.swap-2` 2s, `.swap-3`/`.swap-4` 3s keyframes). A single icon stays static. |
 | Spellboost badge (blue circle, white count) under the cost (code-read) | `src/ui/zones/dom.ts:207-216`; `css/cards.css:871-897` | `ui/css/cards.css:907-933` (CSS only); `inst.spellboost_count` unused | missing | When `spellboost_count > 0`, render `.spellboost-badge` with the integer under the cost chip. |
 | Countdown number, large white + black stroke, bottom-right (amulets) (code-read) | `src/ui/zones/dom.ts:172-176`; `css/cards.css:708-724` | `ui/src/render/card.ts:197-202`; `ui/css/cards.css:744-760` | ported | Refresh on `updateCard` is round 3. |
 | Amulet named-counter fallback (first numeric `counters` entry as the same badge) (code-read) | `src/ui/zones/dom.ts:184-199` | — | missing | If there is no countdown but `counters` has a numeric entry, show that value in `.countdown-badge`. |
@@ -332,7 +334,7 @@ Partial and missing rows only, **every-turn first**. Round-3 items stay here so 
 20. **Fuse chip** — in progress (round 3).
 21. **Engage right-click** — `contextmenu` on `.engage-ready` calls `engage` (and suppress the OS menu on `.card`/`.zone`/`.leader`/`.evo-btn`).
 22. **Can’t-attack overlay** — Show chains when the follower cannot attack, not only when both `cantAttackFollowers` and `cantAttackLeader` are set.
-23. **Keyword icon swap + Ongoing icon** — `swap-N` from icon count; `images/icon_ongoing.png` when Ongoing is present.
+23. **Keyword icon swap + Ongoing icon** — 2+ icons cycle (`.swap-2` 2s / `.swap-3`/`.swap-4` 3s); Ongoing shows `images/icon_ongoing.png` in the same bottom-centre stack.
 24. **Spellboost badge** — Blue `.spellboost-badge` with `spellboost_count` under the cost when `> 0`.
 25. **Leader barrier class** — Toggle `has-leader-barrier` so the cyan ring CSS applies.
 26. **Escape closes history** — Same as the old drawer (`index.html:988`).
