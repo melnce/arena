@@ -153,6 +153,7 @@ function exposeArena(): void {
           },
     full: () => (session ? JSON.parse(session.game.full()) : null),
     legal: () => (session ? JSON.parse(session.game.legal()) : []),
+    actions: () => (session ? session.actions : []),
     paintMs: window.__arena?.paintMs,
   };
 }
