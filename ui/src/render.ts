@@ -1196,10 +1196,6 @@ function syncUndoButtons(s: Session): void {
   const redo = byId<HTMLButtonElement>("redoBtn");
   if (undo) undo.disabled = s.past.length === 0;
   if (redo) redo.disabled = s.future.length === 0;
-  for (const id of ["restartGameBtn", "restartRailBtn"]) {
-    const btn = byId<HTMLButtonElement>(id);
-    if (btn) btn.disabled = false;
-  }
 }
 
 function paintPending(pending: Pending, legal: NeutralAction[]): void {
