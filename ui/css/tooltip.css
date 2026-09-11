@@ -31,6 +31,15 @@
   margin-bottom: var(--space-4);
 }
 
+#cardTooltip .card-set-line {
+  color: #9aa3b2;
+  font-size: 0.9em;
+}
+
+#cardTooltip .card-set-line.older {
+  color: #7a8494;
+}
+
 #cardTooltip .tooltip-counter-block {
   margin-bottom: var(--space-6);
   padding: var(--space-4) var(--space-5);

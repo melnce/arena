@@ -155,6 +155,8 @@ test("tooltips and gates: Hark necromancy + Depths enhance (no E badge)", async 
   const tip = page.locator("#cardTooltip");
   await expect(tip).toBeVisible();
   await expect(tip).toContainText("Hark to the Night Song");
+  await expect(tip).toContainText("Abysscraft/Anathema");
+  await expect(tip).not.toContainText("Cost ");
   await expect(tip).toContainText("Necromancy 0/6");
   await expect(tip.locator(".tooltip-keyword").first()).toBeVisible();
 
@@ -194,13 +196,27 @@ test("tooltips and gates: Hark necromancy + Depths enhance (no E badge)", async 
   }
   await depthsCard.hover();
   await expect(tip).toContainText("Depths of the Eld Sword");
-  await expect(tip).toContainText("Cost 1");
-  await expect(tip).toContainText("base 0");
+  await expect(tip).toContainText("Swordcraft/Encroacher");
+  await expect(tip).not.toContainText("Cost ");
+  await expect(tip).not.toContainText("base 0");
   await expect(tip).not.toContainText("Enhance 1 (have");
   await expect(tip).not.toContainText("0/0");
   await mkdir(ART, { recursive: true });
   await artShot(tip, `${ART}/tooltip_depths_gates.png`);
   await artShot(depthsCard, `${ART}/card_enhance_no_badge.png`);
+
+  const felineId = await importDeck(page, "feline.json", { "10752110": 40 });
+  await startGame(page, { seed: "1", first: "a", deckA: felineId, deckB: felineId });
+  await confirmMulligans(page);
+  const feline = page.locator("#blueHand .card[data-card='10752110']").first();
+  await feline.hover();
+  await expect(tip).toContainText("Highwire Feline");
+  await expect(tip).toContainText("Abysscraft");
+  await expect(tip).toContainText("Anathema's Gambit");
+  await expect(tip).not.toContainText("Cost ");
+  await expect(tip).not.toContainText("4/5");
+  await expect(tip.locator(".tooltip-header-meta")).not.toContainText("follower");
+  await artShot(tip, `${ART}/tooltip_class_tribe_set.png`);
 });
 
 test("settings drawer does not scroll horizontally at 360 and 768", async ({ page }) => {
