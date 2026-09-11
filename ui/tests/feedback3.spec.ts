@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
+import {
+  assertGlow,
+  assertPngLeftEdge,
+  assertPromptClearsCards,
+} from "./helpers.ts";
 
 const ART = "/opt/cursor/artifacts";
 
@@ -208,13 +213,21 @@ test("A3 rush is yellow the turn played, green next; storm is green", async ({ p
   const spawn = page.locator("#blueBoard .card[data-card='10631110']").first();
   await expect(spawn).toHaveClass(/rush-glow/);
   await expect(spawn).not.toHaveClass(/can-attack/);
+  await assertGlow(spawn, "yellow");
+  await spawn.hover();
+  const rushTip = await page.locator("#cardTooltip").innerText();
+  expect(rushTip).toMatch(/\bRush\b/);
+  expect(rushTip).not.toMatch(/Rush:/);
   await mkdir(ART, { recursive: true });
   await spawn.screenshot({ path: `${ART}/a3_rush_yellow.png` });
+  assertPngLeftEdge(`${ART}/a3_rush_yellow.png`, "yellow");
   await endTurnApply(page);
   await endTurnApply(page);
   await expect(spawn).toHaveClass(/can-attack/);
   await expect(spawn).not.toHaveClass(/rush-glow/);
+  await assertGlow(spawn, "green");
   await spawn.screenshot({ path: `${ART}/a3_rush_green.png` });
+  assertPngLeftEdge(`${ART}/a3_rush_green.png`, "green");
 
   const storm = await importDeck(page, "barbaros.json", { "10924110": 40 });
   await page.locator("#redDeckSelect").selectOption(storm);
@@ -226,7 +239,9 @@ test("A3 rush is yellow the turn played, green next; storm is green", async ({ p
   const barb = page.locator("#blueBoard .card[data-card='10924110']").first();
   await expect(barb).toHaveClass(/can-attack/);
   await expect(barb).not.toHaveClass(/rush-glow/);
+  await assertGlow(barb, "green");
   await barb.screenshot({ path: `${ART}/a3_storm_green.png` });
+  assertPngLeftEdge(`${ART}/a3_storm_green.png`, "green");
 });
 
 test("A4 A5 Slice yellow 2/2 vs green 1/2; no E/A/C badge", async ({ page }) => {
@@ -276,6 +291,7 @@ test("A4 A5 Slice yellow 2/2 vs green 1/2; no E/A/C badge", async ({ page }) => 
   expect(gate?.met).toBeTruthy();
   const cardTwo = page.locator("#blueHand .card[data-card='10823310']").first();
   await expect(cardTwo).toHaveClass(/enhance-ready/);
+  await assertGlow(cardTwo, "yellow");
   await expect(cardTwo.locator(".alternate-form-badge")).toHaveCount(0);
   await cardTwo.hover();
   await expect(page.locator("#cardTooltip")).toContainText("Allied cards on the field");
@@ -308,6 +324,7 @@ test("A4 A5 Slice yellow 2/2 vs green 1/2; no E/A/C badge", async ({ page }) => 
   expect(gateOne?.met).toBeFalsy();
   const cardOne = page.locator("#blueHand .card[data-card='10823310']").first();
   await expect(cardOne).toHaveClass(/playable-glow/);
+  await assertGlow(cardOne, "green");
   await cardOne.hover();
   await expect(page.locator("#cardTooltip")).toContainText("1/2");
   await cardOne.screenshot({ path: `${ART}/a5_slice_1_2.png` });
@@ -431,33 +448,72 @@ test("B1 B2 B18 fuse confirm inside modal, labelled partners, fuse chip", async 
     await chip.screenshot({ path: `${ART}/b18_fuse_chip.png` });
   }
 
-  const phase = await page.locator("#turnCounter").getAttribute("data-phase");
-  if (phase === "choice") {
-    const options = page.locator(".choice-option, .hand-zone .card.legal-target");
-    await expect(options.first()).toBeVisible();
-    const labels = await page.locator(".choice-option").allTextContents();
-    for (const t of labels) {
-      expect(t).not.toMatch(/^Partner #/);
-      expect(t).not.toMatch(/^Hand \d/);
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", "choice");
+  const acting = await page.locator("#turnCounter").getAttribute("data-acting");
+  const idleHand = acting === "a" ? "#redHand" : "#blueHand";
+  const actingHand = acting === "a" ? "#blueHand" : "#redHand";
+  await expect(
+    page.locator(`${idleHand} .card.legal-target, ${idleHand} .card.selectable`),
+  ).toHaveCount(0);
+  const highlighted = await page.locator(`${actingHand} .card.legal-target`).evaluateAll((els) =>
+    els.map((el) => Number((el as HTMLElement).dataset.handPos)),
+  );
+  const optionPos = await page.evaluate(() => {
+    const full = window.__arena!.full() as {
+      phase:
+        | string
+        | {
+            choice?: {
+              node?: {
+                fuse_partners?: { options: number[]; picked: number[] };
+                targets?: { options: Array<{ hand?: { pos: number } }> };
+              };
+            };
+          };
+    };
+    const node = typeof full.phase === "object" ? full.phase.choice?.node : undefined;
+    if (node?.fuse_partners) {
+      const picked = new Set(node.fuse_partners.picked);
+      return node.fuse_partners.options.filter((p) => !picked.has(p));
     }
-    if (await page.locator(".hand-zone .card.legal-target").count()) {
-      await page.locator(".hand-zone .card.legal-target").first().click();
-    } else if (await page.locator(".choice-option").count()) {
-      await page.locator(".choice-option").first().click();
-    }
-    const confirm = page.locator(".choice-modal .confirm-targets-btn, .choice-prompt-bar .confirm-targets-btn, #targetingConfirmation .confirm-targets-btn");
-    await expect(confirm.first()).toBeVisible();
-    const box = await confirm.first().boundingBox();
-    expect(box).toBeTruthy();
-    const hit = await page.evaluate(({ x, y }) => {
-      const el = document.elementFromPoint(x, y);
-      return el?.className ?? "";
-    }, { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 });
-    expect(hit).toMatch(/confirm|choice-prompt/);
-    await mkdir(ART, { recursive: true });
-    await page.screenshot({ path: `${ART}/b1_fuse_confirm.png` });
-    await confirm.first().click();
+    return (node?.targets?.options ?? [])
+      .map((o) => o.hand?.pos)
+      .filter((n): n is number => n != null);
+  });
+  expect(highlighted.sort((a, b) => a - b)).toEqual([...optionPos].sort((a, b) => a - b));
+  expect(highlighted.length).toBeGreaterThan(0);
+  for (const vp of [
+    { width: 1280, height: 720 },
+    { width: 1920, height: 1080 },
+  ]) {
+    await page.setViewportSize(vp);
+    await page.waitForTimeout(260);
+    await assertPromptClearsCards(page);
   }
+  const options = page.locator(".choice-option, .hand-zone .card.legal-target");
+  await expect(options.first()).toBeVisible();
+  const labels = await page.locator(".choice-option").allTextContents();
+  for (const t of labels) {
+    expect(t).not.toMatch(/^Partner #/);
+    expect(t).not.toMatch(/^Hand \d/);
+  }
+  if (await page.locator(`${actingHand} .card.legal-target`).count()) {
+    await page.locator(`${actingHand} .card.legal-target`).first().click();
+  } else if (await page.locator(".choice-option").count()) {
+    await page.locator(".choice-option").first().click();
+  }
+  const confirm = page.locator(".choice-modal .confirm-targets-btn, .choice-prompt-bar .confirm-targets-btn");
+  await expect(confirm.first()).toBeVisible();
+  const box = await confirm.first().boundingBox();
+  expect(box).toBeTruthy();
+  const hit = await page.evaluate(({ x, y }) => {
+    const el = document.elementFromPoint(x, y);
+    return el?.className ?? "";
+  }, { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 });
+  expect(hit).toMatch(/confirm|choice-prompt/);
+  await mkdir(ART, { recursive: true });
+  await page.screenshot({ path: `${ART}/b1_fuse_confirm.png` });
+  await confirm.first().click();
 });
 
 test("B3 choice click does not swallow the next click", async ({ page }) => {
@@ -629,7 +685,16 @@ test("B9 tap-anywhere cancels pending attack; Cancel chip visible", async ({ pag
   await endTurnApply(page);
   const atk = page.locator("#blueBoard .card.can-attack, #blueBoard .card.legal-attack").first();
   await atk.click();
-  await expect(page.locator(".pending-cancel-chip")).toBeVisible();
+  await expect(page.locator(".choice-prompt-bar .pending-cancel-chip")).toBeVisible();
+  await expect(page.locator(".choice-prompt-bar")).toContainText("Select a target");
+  for (const vp of [
+    { width: 1280, height: 720 },
+    { width: 1920, height: 1080 },
+  ]) {
+    await page.setViewportSize(vp);
+    await page.waitForTimeout(260);
+    await assertPromptClearsCards(page);
+  }
   await mkdir(ART, { recursive: true });
   await page.screenshot({ path: `${ART}/b9_cancel_chip.png` });
   await page.locator("#blueHand").click({ position: { x: 8, y: 8 } });
@@ -680,6 +745,14 @@ test("B12 mode buttons carry printed 1-based text", async ({ page }) => {
     expect(t.length).toBeGreaterThan(8);
   }
   expect(texts.some((t) => /Give the leftmost|Barrier|Recover|Restore/i.test(t))).toBeTruthy();
+  for (const vp of [
+    { width: 1280, height: 720 },
+    { width: 1920, height: 1080 },
+  ]) {
+    await page.setViewportSize(vp);
+    await page.waitForTimeout(260);
+    await assertPromptClearsCards(page);
+  }
   await mkdir(ART, { recursive: true });
   await page.locator(".choice-modal").screenshot({ path: `${ART}/b12_mode_text.png` });
 });
@@ -774,8 +847,10 @@ test("A9 A10 evo buttons stay enabled after unlock; countdown while locked", asy
   expect(t1.blueSuper.disabled).toBeTruthy();
   expect(t1.redEvo.disabled).toBeTruthy();
   expect(t1.redSuper.disabled).toBeTruthy();
-  expect(t1.blueEvo.badge).toBe("4");
-  expect(t1.blueSuper.badge).toBe("6");
+  expect(t1.blueEvo.badge).toBeNull();
+  expect(t1.blueSuper.badge).toBeNull();
+  expect(t1.blueEvo.label).toMatch(/Evo \(\d\) · 4/);
+  expect(t1.blueSuper.label).toMatch(/Super \(\d\) · 6/);
   expect(t1.blueEvo.title).toBe("unlocks in 4 turns");
   await mkdir(ART, { recursive: true });
   await page.locator("#blueLeader").screenshot({ path: `${ART}/a10_evo_countdown_locked.png` });
@@ -804,14 +879,14 @@ test("A9 A10 evo buttons stay enabled after unlock; countdown while locked", asy
       if (aUnlockedAt == null && started === "a") aUnlockedAt = ply;
     } else {
       expect(firstBtn.disabled).toBeTruthy();
-      expect(firstBtn.badge).toBe(String(info.evolve_unlock_in));
+      expect(firstBtn.label).toContain(`· ${info.evolve_unlock_in}`);
     }
     if (info.super_evolve_unlocked) {
       expect(firstSuper.disabled).toBeFalsy();
       expect(firstSuper.badge).toBeNull();
     } else {
       expect(firstSuper.disabled).toBeTruthy();
-      expect(firstSuper.badge).toBe(String(info.super_evolve_unlock_in));
+      expect(firstSuper.label).toContain(`· ${info.super_evolve_unlock_in}`);
     }
     if (after.a.evolve_unlocked && after.b.evolve_unlocked) break;
   }

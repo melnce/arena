@@ -98,8 +98,8 @@ body.mode-watch .watch-bar {
   transform: translate(-50%, -50%) scale(0.85);
 }
 
-.card.legal-target,
-.leader.legal-target {
+body.pending-target .card.selectable,
+body.pending-target .leader.selectable {
   outline: 3px solid rgba(97, 218, 251, 0.95);
   outline-offset: 2px;
 }
@@ -162,8 +162,8 @@ body.awaiting-target {
   cursor: crosshair;
 }
 
-body.awaiting-target .card.legal-target,
-body.awaiting-target .leader.legal-target {
+body.awaiting-target .card.selectable,
+body.awaiting-target .leader.selectable {
   cursor: pointer;
 }
 
@@ -196,8 +196,7 @@ body.pending-target .hand-zone .card {
   transform: translateX(-50%) translateY(0);
 }
 
-.choice-prompt-bar,
-.pending-cancel-chip {
+.choice-prompt-bar {
   position: fixed;
   z-index: 1300;
   display: flex;
@@ -210,19 +209,8 @@ body.pending-target .hand-zone .card {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
   color: #f2f4f7;
   font-weight: 700;
-}
-
-.choice-prompt-bar {
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.pending-cancel-chip {
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  cursor: pointer;
+  max-width: min(420px, 56vw);
+  pointer-events: auto;
 }
 
 .undo-chip,

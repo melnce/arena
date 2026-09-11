@@ -466,17 +466,14 @@ function renderEvo(
     const info = infoByPlayer[row.player];
     const unlocked = row.superEvo ? info.super_evolve_unlocked : info.evolve_unlocked;
     const remain = row.superEvo ? info.super_evolve_unlock_in : info.evolve_unlock_in;
+    const base = row.superEvo ? `Super (${p.sep})` : `Evo (${p.ep})`;
     const label = document.createElement("span");
     label.className = "evo-btn-label";
-    label.textContent = row.superEvo ? `Super (${p.sep})` : `Evo (${p.ep})`;
+    label.textContent = !unlocked && remain > 0 ? `${base} · ${remain}` : base;
     btn.replaceChildren(label);
     btn.disabled = !unlocked;
     btn.classList.toggle("evo-locked", !unlocked);
     if (!unlocked && remain > 0) {
-      const badge = document.createElement("span");
-      badge.className = "evo-unlock-badge";
-      badge.textContent = String(remain);
-      btn.appendChild(badge);
       btn.title = remain === 1 ? "unlocks in 1 turn" : `unlocks in ${remain} turns`;
     } else {
       btn.removeAttribute("title");
@@ -640,7 +637,7 @@ function renderChoice(full: FullState, legal: NeutralAction[], hooks: RenderHook
   paintChoicePrompt(choicePrompt(node), hooks, confirmAct ? () => hooks.onConfirm() : null);
 
   if (inPlace) {
-    highlightChoiceTargets(legal);
+    highlightChoiceTargets(legal, acting, node);
     return;
   }
 
@@ -681,26 +678,118 @@ function isInPlaceChoice(node: ChoiceNode): boolean {
   return false;
 }
 
-function highlightChoiceTargets(legal: NeutralAction[]): void {
+function highlightChoiceTargets(
+  legal: NeutralAction[],
+  acting: PlayerId,
+  node: ChoiceNode,
+): void {
+  const mark = (el: HTMLElement | null) => {
+    el?.classList.add("selectable", "legal-target");
+  };
+  if ("fuse_partners" in node) {
+    const picked = new Set(node.fuse_partners.picked);
+    for (const pos of node.fuse_partners.options) {
+      if (picked.has(pos)) continue;
+      mark(
+        byId(`${visual(acting)}Hand`)?.querySelector<HTMLElement>(
+          `.card[data-hand-pos="${pos}"]`,
+        ) ?? null,
+      );
+    }
+    return;
+  }
+  const handOpts: Array<{ player: PlayerId; pos: number }> = [];
+  if ("targets" in node) {
+    for (const o of node.targets.options) {
+      if (o && typeof o === "object" && "hand" in o && o.hand) handOpts.push(o.hand);
+    }
+  }
+  if ("multi_pick" in node) {
+    for (const o of node.multi_pick.options) {
+      if (o && typeof o === "object" && "hand" in o && o.hand) handOpts.push(o.hand);
+    }
+  }
+  if (handOpts.length) {
+    for (const h of handOpts) {
+      mark(
+        byId(`${visual(h.player)}Hand`)?.querySelector<HTMLElement>(
+          `.card[data-hand-pos="${h.pos}"]`,
+        ) ?? null,
+      );
+    }
+  }
   for (const act of legal) {
     if (!("choose" in act)) continue;
     const o = act.choose.option;
+    if (o && typeof o === "object" && "card" in o && o.card) continue;
+    if (o && typeof o === "object" && "hand" in o) continue;
     if (o === "leader") {
-      document.querySelectorAll<HTMLElement>(".leader-attack-strip").forEach((el) => {
-        el.classList.add("selectable", "legal-target");
-      });
+      const enemy = acting === "a" ? "b" : "a";
+      mark(byId(`${visual(enemy)}Leader`));
       continue;
     }
-    if (o && typeof o === "object" && "card" in o && o.card) {
-      document
-        .querySelectorAll<HTMLElement>(`.hand-zone .card[data-card="${o.card}"]`)
-        .forEach((el) => el.classList.add("selectable", "legal-target"));
-      continue;
-    }
-    const el = elForChooseOption(o);
-    if (!el) continue;
-    el.classList.add("selectable", "legal-target");
+    mark(elForChooseOption(o));
   }
+}
+
+function paintPromptBar(opts: {
+  text: string;
+  undo?: () => void;
+  confirm?: () => void;
+  cancel?: () => void;
+}): void {
+  document.querySelector(".choice-prompt-bar")?.remove();
+  document.querySelector(".pending-cancel-chip")?.remove();
+  const bar = document.createElement("div");
+  bar.className = "choice-prompt-bar";
+  bar.id = "promptBar";
+  const label = document.createElement("span");
+  label.className = "choice-prompt-text";
+  label.textContent = opts.text;
+  bar.appendChild(label);
+  if (opts.undo) {
+    const undo = document.createElement("button");
+    undo.type = "button";
+    undo.className = "undo-chip";
+    undo.textContent = "Undo";
+    undo.addEventListener("click", () => opts.undo?.());
+    bar.appendChild(undo);
+  }
+  if (opts.confirm) {
+    const confirm = document.createElement("button");
+    confirm.type = "button";
+    confirm.className = "confirm-targets-btn";
+    confirm.textContent = "Confirm";
+    confirm.addEventListener("click", () => opts.confirm?.());
+    bar.appendChild(confirm);
+  }
+  if (opts.cancel) {
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "pending-cancel-chip";
+    cancel.textContent = "Cancel";
+    cancel.addEventListener("click", (e) => {
+      e.stopPropagation();
+      opts.cancel?.();
+    });
+    bar.appendChild(cancel);
+  }
+  document.body.appendChild(bar);
+  placePromptBar(bar);
+}
+
+function placePromptBar(bar: HTMLElement): void {
+  const red = byId("redBoard")?.getBoundingClientRect();
+  const blue = byId("blueBoard")?.getBoundingClientRect();
+  const play = byId("appRoot")?.getBoundingClientRect();
+  if (!red || !blue || !play) return;
+  const midY = (red.bottom + blue.top) / 2;
+  const midX = (play.left + play.right) / 2;
+  bar.style.top = `${midY}px`;
+  bar.style.left = `${midX}px`;
+  bar.style.bottom = "auto";
+  bar.style.right = "auto";
+  bar.style.transform = "translate(-50%, -50%)";
 }
 
 function paintChoicePrompt(
@@ -708,27 +797,11 @@ function paintChoicePrompt(
   hooks: RenderHooks,
   onConfirm: (() => void) | null,
 ): void {
-  document.querySelector(".choice-prompt-bar")?.remove();
-  const bar = document.createElement("div");
-  bar.className = "choice-prompt-bar";
-  const label = document.createElement("span");
-  label.className = "choice-prompt-text";
-  label.textContent = text;
-  const undo = document.createElement("button");
-  undo.type = "button";
-  undo.className = "undo-chip";
-  undo.textContent = "Undo";
-  undo.addEventListener("click", () => hooks.onUndo());
-  bar.append(label, undo);
-  if (onConfirm) {
-    const confirm = document.createElement("button");
-    confirm.type = "button";
-    confirm.className = "confirm-targets-btn";
-    confirm.textContent = "Confirm";
-    confirm.addEventListener("click", onConfirm);
-    bar.appendChild(confirm);
-  }
-  document.body.appendChild(bar);
+  paintPromptBar({
+    text,
+    undo: () => hooks.onUndo(),
+    confirm: onConfirm ?? undefined,
+  });
 }
 
 function choicePrompt(node: ChoiceNode): string {
@@ -792,7 +865,7 @@ export function elForChooseOption(opt: unknown): HTMLElement | null {
     ) as HTMLElement | null;
   }
   if (o.card) {
-    return document.querySelector<HTMLElement>(`.hand-zone .card[data-card="${o.card}"]`);
+    return null;
   }
   if ("leader" in o && typeof (o as { leader?: PlayerId }).leader === "string") {
     return byId(`${visual((o as { leader: PlayerId }).leader)}Leader`);
@@ -807,7 +880,6 @@ export function chooseActionForElement(
   const player = el.dataset.player as PlayerId | undefined;
   const slot = el.dataset.slot != null ? Number(el.dataset.slot) : undefined;
   const handPos = el.dataset.handPos != null ? Number(el.dataset.handPos) : undefined;
-  const cardId = el.dataset.card;
   const isLeader = el.classList.contains("leader-attack-strip") || el.id.endsWith("Leader");
   const leaderPlayer: PlayerId | undefined = isLeader
     ? el.id.startsWith("blue")
@@ -831,13 +903,12 @@ export function chooseActionForElement(
         return player === o.hand.player && handPos === o.hand.pos;
       }
       if (o.card) {
-        if (cardId && o.card === cardId) return true;
-        if (player && handPos != null) {
-          const handEl = byId(`${visual(player)}Hand`)?.querySelector(
-            `.card[data-hand-pos="${handPos}"]`,
-          );
-          return handEl === el;
-        }
+        return (
+          !!player &&
+          a.choose.player === player &&
+          el.closest(".hand-zone") != null &&
+          el.dataset.card === o.card
+        );
       }
       if ("leader" in o) return leaderPlayer === (o as { leader: PlayerId }).leader;
       return false;
@@ -893,17 +964,11 @@ function syncUndoButtons(s: Session): void {
 }
 
 function paintPending(pending: Pending, legal: NeutralAction[]): void {
-  document.querySelector(".pending-cancel-chip")?.remove();
   if (!pending) return;
-  const chip = document.createElement("button");
-  chip.type = "button";
-  chip.className = "pending-cancel-chip";
-  chip.textContent = "Cancel";
-  chip.addEventListener("click", (e) => {
-    e.stopPropagation();
-    document.dispatchEvent(new CustomEvent("arena-cancel-pending"));
+  paintPromptBar({
+    text: pending.kind === "evolve" ? "Select a follower" : "Select a target",
+    cancel: () => document.dispatchEvent(new CustomEvent("arena-cancel-pending")),
   });
-  document.body.appendChild(chip);
   if (pending.kind === "attack") {
     for (const a of L.attacksFrom(legal, pending.player, pending.slot)) {
       if (!("attack" in a)) continue;

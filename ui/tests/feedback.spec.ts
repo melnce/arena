@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
+import { assertGlow, waitCardSizeStable } from "./helpers.ts";
 
 const ART = "/opt/cursor/artifacts";
 
@@ -186,8 +187,13 @@ test("tooltips and gates: Hark necromancy + Depths enhance (no E badge)", async 
       (a) => a.play?.card === "90024320",
     ),
   );
-  if (depthsLegal) await expect(depthsCard).toHaveClass(/enhance-ready/);
-  else await expect(depthsCard).not.toHaveClass(/playable-glow|enhance-ready|legal-play/);
+  if (depthsLegal) {
+    await expect(depthsCard).toHaveClass(/enhance-ready/);
+    await assertGlow(depthsCard, "yellow");
+  } else {
+    await expect(depthsCard).not.toHaveClass(/playable-glow|enhance-ready|legal-play/);
+    await assertGlow(depthsCard, "none");
+  }
   await depthsCard.hover();
   await expect(tip).toContainText("Depths of the Eld Sword");
   await expect(tip).toContainText("Cost 1");
@@ -317,7 +323,7 @@ test("layouts fill the viewport at 720p / 1080p / 1440p", async ({ page }) => {
       const tip = document.getElementById("cardTooltip");
       if (tip) tip.style.display = "none";
     });
-    await page.waitForTimeout(80);
+    await waitCardSizeStable(page);
     const metrics = await page.evaluate(() => {
       const ids = ["redHand", "redLeader", "redBoard", "blueBoard", "blueLeader", "blueHand"];
       const rects = ids.map((id) => {

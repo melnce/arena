@@ -90,7 +90,8 @@ function formatDescriptionLine(line: string): string {
     const keyword = kwMatch[1] ?? "";
     const rest = kwMatch[2] ?? "";
     const restHtml = rest ? ` ${boldKeywords(escapeHtml(rest))}` : "";
-    return `<div class="tooltip-desc-line"><span class="tooltip-keyword">${escapeHtml(keyword)}:</span>${restHtml}</div>`;
+    const colon = rest ? ":" : "";
+    return `<div class="tooltip-desc-line"><span class="tooltip-keyword">${escapeHtml(keyword)}${colon}</span>${restHtml}</div>`;
   }
   return `<div class="tooltip-desc-line">${boldKeywords(escapeHtml(trimmed))}</div>`;
 }
