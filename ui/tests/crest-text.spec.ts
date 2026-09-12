@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { ART, artShot } from "./helpers.ts";
 
 const MAJESTIC = "10622310";
-const ARIA = "10114110";
+const CRESCENT = "10441310";
 const ACCELERATE = "10844120";
 const CRYSTALLIZE = "10661110";
 
@@ -170,13 +170,13 @@ test("crest icon: art loads; missing art uses frame, never an empty box", async 
   await closeDrawer(page);
 
   const tip = page.locator("#cardTooltip");
-  await paintCardTooltip(page, ARIA);
+  await paintCardTooltip(page, CRESCENT);
   const art = tip.locator("img.tooltip-crest-icon");
   await expect(art).toHaveCount(1);
   await expect
     .poll(async () => art.evaluate((el) => (el as HTMLImageElement).naturalWidth))
     .toBeGreaterThan(0);
-  await expect(art).toHaveAttribute("src", /aria_lady_of_the_woods\.png/);
+  await expect(art).toHaveAttribute("src", /crescent_tube_ride\.png/);
 
   await paintCardTooltip(page, MAJESTIC);
   const frame = tip.locator("img.tooltip-crest-icon");
