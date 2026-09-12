@@ -57,6 +57,14 @@ pub fn search_key(state: &State) -> u64 {
     w.bool(state.bind_append);
     w.bool(state.attacking_follower);
     hash_opt_target(&mut w, state.combat_opposing.as_ref());
+    hash_opt_target(&mut w, state.combat_attacker.as_ref());
+    match state.combat_defender_id {
+        Some(n) => {
+            w.u8(1);
+            w.u32(n);
+        }
+        None => w.u8(0),
+    }
     for p in &state.players {
         hash_player(&mut w, p);
     }

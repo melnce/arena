@@ -69,6 +69,8 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         bind_append: false,
         attacking_follower: false,
         combat_opposing: None,
+        combat_attacker: None,
+        combat_defender_id: None,
     };
     fill_deck(db, &mut state, PlayerId::A, &cfg.deck_a)?;
     fill_deck(db, &mut state, PlayerId::B, &cfg.deck_b)?;
@@ -1315,6 +1317,10 @@ fn apply_attack(
     // Strike `if {attackingFollower}` (Giada / Verdilia) and
     // Follower Strike `pick: opposing` (Okita) read this while those
     // triggers resolve, before combat damage.
+    state.combat_attacker = Some(TargetOpt::Slot {
+        player: me,
+        slot: attacker.0,
+    });
     state.combat_opposing = Some(match target {
         AttackTarget::Slot(ds) => TargetOpt::Slot {
             player: me.opponent(),
@@ -1324,6 +1330,10 @@ fn apply_attack(
             player: me.opponent(),
         },
     });
+    state.combat_defender_id = match target {
+        AttackTarget::Slot(ds) => state.field_inst(me.opponent(), ds.0).map(|c| c.id),
+        AttackTarget::Leader => None,
+    };
     raise_when(
         db,
         state,
@@ -3137,6 +3147,8 @@ fn run_aftermath(
             state.attacking_follower = false;
             state.attack_target_is_leader = false;
             state.combat_opposing = None;
+            state.combat_attacker = None;
+            state.combat_defender_id = None;
         }
         Aftermath::ContinueTurnEnd { step: 7 } => {
             // until EOT wears off — rulebook end step 7
@@ -6852,7 +6864,7 @@ pub(crate) fn resolve_select(
                     .into_iter()
                     .collect()
             }
-            RefPick::Opposing => state.combat_opposing.clone().into_iter().collect(),
+            RefPick::Opposing => resolve_opposing(state, source),
             RefPick::Selected | RefPick::Attacker | RefPick::Defender => Vec::new(),
         },
         Selector::Bound(b) => resolve_bound(state, &b.ref_name),
@@ -6875,6 +6887,20 @@ pub(crate) fn resolve_select(
                 PoolPick::Highest | PoolPick::Lowest => extremum_without_roll(state, p, c),
             }
         }
+    }
+}
+
+/// `opposing` is the other combatant relative to the trigger source.
+/// Match on instance id: slots compact when a follower leaves mid-combat.
+fn resolve_opposing(state: &State, source: SourceRef) -> Vec<TargetOpt> {
+    let source_id = match source {
+        SourceRef::Field { id, .. } => Some(id),
+        _ => None,
+    };
+    if source_id.is_some() && source_id == state.combat_defender_id {
+        state.combat_attacker.clone().into_iter().collect()
+    } else {
+        state.combat_opposing.clone().into_iter().collect()
     }
 }
 
