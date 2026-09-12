@@ -3,7 +3,7 @@
 use std::collections::HashSet;
 use std::sync::OnceLock;
 
-use arena_engine::card::{Ability, Class, Effect, Mode, Tribe};
+use arena_engine::card::{Ability, Class, Crest, Effect, Mode, Tribe};
 use arena_engine::{Card, CardDb, CardId};
 use serde_json::json;
 
@@ -66,6 +66,8 @@ pub fn card_text(id: &str) -> Result<String, String> {
             "text": crest.text,
             "kind": if crest.faith { "faith" } else { "crest" },
             "cost": serde_json::Value::Null,
+            "faith": crest.faith,
+            "grantedBy": crest_granted_by(crest),
         }))
         .map_err(|e| e.to_string());
     }
@@ -222,9 +224,18 @@ fn card_crest_entries(db: &CardDb, card: &Card) -> Vec<serde_json::Value> {
                 "name": crest.name,
                 "text": crest.text,
                 "faith": crest.faith,
+                "grantedBy": crest_granted_by(crest),
             })
         })
         .collect()
+}
+
+fn crest_granted_by(crest: &Crest) -> String {
+    crest
+        .granted_by
+        .first()
+        .map(|id| id.as_str())
+        .unwrap_or_default()
 }
 
 fn collect_crest_gains(abilities: &[Ability], ids: &mut Vec<String>, seen: &mut HashSet<String>) {
@@ -396,6 +407,7 @@ mod tests {
         let maj_crests = maj["crests"].as_array().expect("10622310 crests");
         assert_eq!(maj_crests.len(), 1);
         assert_eq!(maj_crests[0]["id"], "crest:10622310");
+        assert_eq!(maj_crests[0]["grantedBy"], "10622310");
         assert_eq!(maj_crests[0]["name"], "Crest: Majestic Conquest");
         assert!(maj_crests[0]["text"]
             .as_str()
