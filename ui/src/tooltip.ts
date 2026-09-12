@@ -161,16 +161,10 @@ export function formatTooltipDescription(raw: string): string {
 }
 
 function splitAbilityLines(text: string): string[] {
-  const chunks = text
+  return text
     .split(/\n+/)
-    .flatMap((line) =>
-      line.split(
-        /(?=(?:Fanfare|Evolve|Super-Evolve|Super Evolve|Enhance(?: \(\d+\))?|Accelerate(?: \(\d+\))?|Crystallize(?: \(\d+\))?|Last Words|Engage|Necromancy(?: \(\d+\))?|Rally(?: \(\d+\))?|Combo(?: \(\d+\))?|Overflow|Earth Rite|Spellboost|Ongoing|Skybound Art):)/i,
-      ),
-    )
     .map((s) => s.trim())
     .filter(Boolean);
-  return chunks;
 }
 
 function formatDescriptionLine(line: string): string {
