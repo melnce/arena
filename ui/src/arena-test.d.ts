@@ -45,7 +45,14 @@ declare global {
         id: string;
         name: string;
         text: string;
-        crests?: Array<{ id: string; name: string; text: string; faith: boolean }>;
+        crests?: Array<{
+          id: string;
+          name: string;
+          text: string;
+          faith: boolean;
+          grantedBy?: string;
+        }>;
+        grantedBy?: string;
         forms?: Array<{ kind: string; cost: number; printed: string }>;
       };
     };

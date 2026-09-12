@@ -692,6 +692,21 @@ body.active-second .side-red {
   display: none;
 }
 
+.crest-slot:has(.crest-icon) {
+  height: calc(var(--crest-slot-size) * 256 / 218);
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.crest-slot .crest-icon {
+  --icon-w: var(--crest-slot-size);
+  width: var(--icon-w);
+  height: calc(var(--icon-w) * 256 / 218);
+  display: block;
+}
+
 .crest-countdown {
   background: var(--color-bg-inset);
   border: 1px solid var(--color-border-strong);

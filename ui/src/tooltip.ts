@@ -1,5 +1,5 @@
-import { catalogIds, crestFile, getCatalog, lookupText } from "./catalog.ts";
-import { publicUrl } from "./base.ts";
+import { catalogIds, getCatalog, lookupText } from "./catalog.ts";
+import { crestIconHtml } from "./crest-icon.ts";
 import { escapeHtml } from "./images.ts";
 import { cardHasSpellboost, formatGateLine, isFormGate } from "./info.ts";
 import type { CardForm, CardInstance, CrestInstance, CrestText, GateInfo } from "./types.ts";
@@ -227,22 +227,16 @@ function formatFormLines(forms: CardForm[], cardText: string): string {
 
 function formatCrestPanels(crests: CrestText[]): string {
   if (!crests.length) return "";
-  const panels = crests.map((crest) =>
-    crestPanel(crest.name, crest.text || "", crest.id, crest.faith),
-  );
+  const panels = crests.map((crest) => crestPanel(crest));
   return `<div class="tooltip-crest-block">${panels.join("")}</div>`;
 }
 
-function crestPanel(name: string, text: string, id: string, faith: boolean): string {
-  const file = crestFile(id, name) ?? (faith ? "faith.png" : "crest_frame.png");
-  const src = file ? publicUrl(`crests/${file}`) : "";
-  const img = src
-    ? `<img class="tooltip-crest-icon" src="${escapeHtml(src)}" alt="">`
-    : "";
-  const body = text ? formatTooltipDescription(text) : "";
+function crestPanel(crest: CrestText): string {
+  const icon = crestIconHtml(crest.id, crest.grantedBy, crest.name);
+  const body = crest.text ? formatTooltipDescription(crest.text) : "";
   return (
-    `<div class="tooltip-crest-panel">${img}<div class="tooltip-crest-body">` +
-    `<div class="tooltip-crest-name">${escapeHtml(name)}</div>` +
+    `<div class="tooltip-crest-panel">${icon}<div class="tooltip-crest-body">` +
+    `<div class="tooltip-crest-name">${escapeHtml(crest.name)}</div>` +
     `<div class="tooltip-crest-text">${body}</div></div></div>`
   );
 }

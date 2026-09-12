@@ -44,6 +44,7 @@ export type CrestText = {
   name: string;
   text: string;
   faith: boolean;
+  grantedBy?: string;
 };
 
 export type CardForm = {
@@ -67,6 +68,8 @@ export type CardText = {
   modes?: string[];
   crests?: CrestText[];
   forms?: CardForm[];
+  grantedBy?: string;
+  faith?: boolean;
 };
 
 export type CardInstance = {

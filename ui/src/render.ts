@@ -26,6 +26,7 @@ import { attachPointerDragSource, setDropTarget } from "./drag.ts";
 import { glowFor, renderCard, renderCrestSlot } from "./render/card.ts";
 import { byId, setText, visual } from "./render/ids.ts";
 import { releaseImageLoads } from "./releaseImages.ts";
+import { bindCrestIconFallbacks } from "./crest-icon.ts";
 import { formatCardTooltip, formatCrestTooltip } from "./tooltip.ts";
 
 export type Pending =
@@ -1355,6 +1356,7 @@ function paintTooltipHtml(card: HTMLElement, full: FullState | null): void {
     turn: full?.turn,
     rallyHave: player && full ? full.players[player].rally : undefined,
   });
+  bindCrestIconFallbacks(tip);
   tip.style.display = "block";
 }
 
