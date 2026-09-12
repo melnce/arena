@@ -134,7 +134,8 @@
   margin-top: var(--space-4);
 }
 
-#cardTooltip .tooltip-play-blocked {
+#cardTooltip .tooltip-play-blocked,
+#cardTooltip .tooltip-leader-blocked {
   margin-top: 0.5em;
   color: #ff8888;
   font-weight: 700;

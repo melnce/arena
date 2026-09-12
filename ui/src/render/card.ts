@@ -317,11 +317,7 @@ function applyOverlays(
     o.className = "intimidate-overlay";
     wrap.appendChild(o);
   }
-  const locked =
-    cannotAttack ||
-    traits.has("cantAttackFollowers") ||
-    traits.has("cantAttackLeader") ||
-    traits.has("cantAttack");
+  const locked = cannotAttack || traits.has("cantAttack");
   if (onBoard && locked) {
     const o = document.createElement("div");
     o.className = "cant_attack-overlay";

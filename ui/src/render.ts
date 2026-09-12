@@ -57,6 +57,7 @@ export type RenderHooks = {
 const zoneSig = new Map<string, string>();
 const gateByUid = new Map<number, GateInfo[]>();
 const handInfoByUid = new Map<number, HandCardInfo>();
+const boardInfoByUid = new Map<number, BoardCardInfo>();
 
 /** Current in-place choice — used to resolve slot owners when legal omits `player`. */
 let currentChoiceNode: ChoiceNode | null = null;
@@ -159,6 +160,7 @@ function cacheInfo(
 ): void {
   gateByUid.clear();
   handInfoByUid.clear();
+  boardInfoByUid.clear();
   const putHand = (list: HandCardInfo[], player: PlayerId) => {
     const hand = full.players[player].hand;
     list.forEach((info, i) => {
@@ -173,6 +175,7 @@ function cacheInfo(
     for (const info of list) {
       const inst = field[info.slot];
       if (!inst) continue;
+      boardInfoByUid.set(inst.id, info);
       gateByUid.set(inst.id, info.gates);
     }
   };
@@ -283,10 +286,10 @@ function renderBoard(
       const engage = L.engageAt(legal, player, row.i);
       const canAttack = attacks.length > 0;
       const hitsLeader = attacks.some((a) => "attack" in a && a.attack.target === "leader");
-      // Yellow only while a legal follower-only attack exists on the entry turn.
-      // No attacks left (already attacked, empty board, opponent's turn) → no glow.
-      // `summoning_sick` stays true on the opponent's turn — do not paint from it alone.
-      const rushOnly = canAttack && !hitsLeader && !!row.inst.flags?.summoning_sick;
+      // Yellow = has a legal attack and none of them is the enemy leader.
+      // Green = some legal attack targets the leader. No attacks → no glow.
+      // Do not paint from `followers_only_this_turn` / `summoning_sick`.
+      const rushOnly = canAttack && !hitsLeader;
       const pendingAtk =
         hooks.pending?.kind === "attack" &&
         hooks.pending.player === player &&
@@ -298,7 +301,7 @@ function renderBoard(
         glow: glowFor({ canAttack, rushOnly }),
         selected: pendingAtk,
         selectable: !!engage || canAttack,
-        cannotAttack: !!info?.cannot_attack_reason,
+        cannotAttack: info?.cannot_attack_reason === "Cannot attack.",
       });
       card.dataset.slot = String(row.i);
       card.dataset.player = player;
@@ -1262,12 +1265,16 @@ function paintTooltipHtml(card: HTMLElement, full: FullState | null): void {
   const acting = full?.active;
   const blocked =
     player && acting === player && info && !info.playable ? info.blocked_reason : null;
+  const board = boardInfoByUid.get(uid);
+  const leaderReason =
+    board?.can_attack && !board.can_attack_leader ? board.cannot_attack_reason ?? null : null;
   tip.innerHTML = formatCardTooltip({
     inst,
     cardId: id,
     gates: gateByUid.get(uid),
     displayCost: info?.cost ?? null,
     blockedReason: blocked ?? null,
+    cannotAttackReason: leaderReason,
     turn: full?.turn,
     rallyHave: player && full ? full.players[player].rally : undefined,
   });
