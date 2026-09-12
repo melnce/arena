@@ -79,6 +79,19 @@ async function playCard(page: Page, card: string) {
   expect(ok, `expected play ${card}`).toBeTruthy();
 }
 
+async function attackLeader(page: Page) {
+  const ok = await page.evaluate(() => {
+    const legal = window.__arena!.legal() as Array<{
+      attack?: { player: string; target: unknown };
+    }>;
+    const act = legal.find((a) => a.attack?.player === "a" && a.attack.target === "leader");
+    if (!act) return false;
+    window.__arena!.apply(act);
+    return true;
+  });
+  expect(ok, "expected a leader attack").toBeTruthy();
+}
+
 async function wrapperGlow(page: Page, card: ReturnType<Page["locator"]>) {
   return card.locator(".card-image-wrapper").evaluate((el) => {
     const s = getComputedStyle(el);
@@ -99,6 +112,8 @@ test("glow matrix: plain / evolved / super-evolved × green / yellow / none", as
   await confirmMulligans(page);
   await closeDrawer(page);
 
+  await applyFirst(page, "end_turn");
+  await applyFirst(page, "end_turn");
   await applyFirst(page, "end_turn");
   await playCard(page, LEAH);
   await applyFirst(page, "end_turn");
@@ -126,14 +141,7 @@ test("glow matrix: plain / evolved / super-evolved × green / yellow / none", as
   const plainPath = await artShot(plain, `${ART}/glow_matrix_plain_green.png`);
   assertPngLeftEdge(plainPath, "green");
 
-  const hit = await page.evaluate(() => {
-    const legal = window.__arena!.legal() as Array<{ attack?: { player: string } }>;
-    const act = legal.find((a) => a.attack?.player === "a");
-    if (!act) return false;
-    window.__arena!.apply(act);
-    return true;
-  });
-  expect(hit).toBeTruthy();
+  await attackLeader(page);
   await expect(plain).not.toHaveClass(/can-attack/);
   await assertGlow(plain, "none");
 
@@ -171,14 +179,7 @@ test("glow matrix: plain / evolved / super-evolved × green / yellow / none", as
   const evoPath = await artShot(evolved, `${ART}/glow_matrix_evolved_green.png`);
   assertPngLeftEdge(evoPath, "green");
 
-  const hitEvo = await page.evaluate(() => {
-    const legal = window.__arena!.legal() as Array<{ attack?: { player: string } }>;
-    const act = legal.find((a) => a.attack?.player === "a");
-    if (!act) return false;
-    window.__arena!.apply(act);
-    return true;
-  });
-  expect(hitEvo).toBeTruthy();
+  await attackLeader(page);
   await assertGlow(evolved, "none");
 
   for (let i = 0; i < 24; i++) {
@@ -191,8 +192,10 @@ test("glow matrix: plain / evolved / super-evolved × green / yellow / none", as
     if (snap.active === "a" && snap.se && snap.field === 0) break;
     if (snap.active === "a" && snap.field > 0) {
       const attacked = await page.evaluate(() => {
-        const legal = window.__arena!.legal() as Array<{ attack?: { player: string } }>;
-        const act = legal.find((a) => a.attack?.player === "a");
+        const legal = window.__arena!.legal() as Array<{
+          attack?: { player: string; target: unknown };
+        }>;
+        const act = legal.find((a) => a.attack?.player === "a" && a.attack.target === "leader");
         if (!act) return false;
         window.__arena!.apply(act);
         return true;
@@ -235,13 +238,6 @@ test("glow matrix: plain / evolved / super-evolved × green / yellow / none", as
   const sePath = await artShot(se, `${ART}/glow_matrix_super_green.png`);
   assertPngLeftEdge(sePath, "green");
 
-  const hitSe = await page.evaluate(() => {
-    const legal = window.__arena!.legal() as Array<{ attack?: { player: string } }>;
-    const act = legal.find((a) => a.attack?.player === "a");
-    if (!act) return false;
-    window.__arena!.apply(act);
-    return true;
-  });
-  expect(hitSe).toBeTruthy();
+  await attackLeader(page);
   await assertGlow(se, "none");
 });
