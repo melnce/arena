@@ -37,15 +37,12 @@ pub fn names() -> &'static [&'static str] {
 ///
 /// `seed` is accepted so a host can pass the game seed at construction;
 /// `Random` / `FirstLegal` / `H0` do not store it — `choose` uses the
-/// caller-supplied rng (typically `policy_rng(seed)`).
+/// caller-supplied rng (typically `policy_rng(seed)`). Unknown names and
+/// malformed specs return `None` (the WASM client still lists only
+/// [`names`]).
 pub fn by_name(name: &str, seed: u64) -> Option<Box<dyn Policy>> {
     let _ = seed;
-    match name {
-        "random" => Some(Box::new(Random)),
-        "first-legal" => Some(Box::new(FirstLegal)),
-        "h0" => Some(Box::new(H0::default())),
-        _ => None,
-    }
+    Some(Box::new(AnyPolicy::parse_spec(name).ok()?))
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -91,13 +88,97 @@ pub enum AnyPolicy {
 
 impl AnyPolicy {
     pub fn parse(s: &str) -> Self {
+        Self::parse_spec(s).unwrap_or_else(|e| panic!("{e}"))
+    }
+
+    /// `"random"` | `"first-legal"` | `"h0"` ([`H0::default`]) | `"h0-fast"`
+    /// ([`H0::fast`]) | `"h0:depth=6,beam=4,k=4,nodes=2000"` — any subset of
+    /// keys, the rest default; `k` = `determinizations`, `nodes` = `node_cap`.
+    ///
+    /// `Err` names the offending token: unknown policy, unknown key, or bad
+    /// number.
+    pub fn parse_spec(s: &str) -> Result<AnyPolicy, String> {
+        let s = s.trim();
         match s {
-            "first-legal" => AnyPolicy::FirstLegal(FirstLegal),
-            "h0" => AnyPolicy::H0(H0::default()),
-            _ => AnyPolicy::Random(Random),
+            "random" => Ok(AnyPolicy::Random(Random)),
+            "first-legal" => Ok(AnyPolicy::FirstLegal(FirstLegal)),
+            "h0" => Ok(AnyPolicy::H0(H0::default())),
+            "h0-fast" => Ok(AnyPolicy::H0(H0::fast())),
+            other if other.starts_with("h0:") => parse_h0_params(&other[3..]).map(AnyPolicy::H0),
+            other => Err(format!("unknown policy '{other}'")),
+        }
+    }
+
+    /// Canonical form: `"random"`, `"first-legal"`, `"h0"`, `"h0-fast"`, or
+    /// `"h0:depth=…,beam=…,k=…,nodes=…"`.
+    pub fn spec(&self) -> String {
+        match self {
+            AnyPolicy::Random(_) => "random".to_string(),
+            AnyPolicy::FirstLegal(_) => "first-legal".to_string(),
+            AnyPolicy::H0(h) => {
+                if h0_fields_eq(h, &H0::default()) {
+                    "h0".to_string()
+                } else if h0_fields_eq(h, &H0::fast()) {
+                    "h0-fast".to_string()
+                } else {
+                    format!(
+                        "h0:depth={},beam={},k={},nodes={}",
+                        h.depth, h.beam, h.determinizations, h.node_cap
+                    )
+                }
+            }
         }
     }
 }
+
+fn h0_fields_eq(a: &H0, b: &H0) -> bool {
+    a.depth == b.depth
+        && a.beam == b.beam
+        && a.determinizations == b.determinizations
+        && a.node_cap == b.node_cap
+}
+
+fn parse_h0_params(body: &str) -> Result<H0, String> {
+    let mut h = H0::default();
+    if body.is_empty() {
+        return Ok(h);
+    }
+    for token in body.split(',') {
+        let token = token.trim();
+        if token.is_empty() {
+            return Err("unknown key ''".to_string());
+        }
+        let Some((key, val)) = token.split_once('=') else {
+            return Err(format!("unknown key '{token}'"));
+        };
+        let key = key.trim();
+        let val = val.trim();
+        match key {
+            "depth" => h.depth = parse_num(val)?,
+            "beam" => h.beam = parse_num(val)?,
+            "k" => h.determinizations = parse_num(val)?,
+            "nodes" => h.node_cap = parse_num(val)?,
+            other => return Err(format!("unknown key '{other}'")),
+        }
+    }
+    Ok(h)
+}
+
+fn parse_num<T: std::str::FromStr>(val: &str) -> Result<T, String> {
+    val.parse().map_err(|_| format!("bad number '{val}'"))
+}
+
+impl PartialEq for AnyPolicy {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Random(_), Self::Random(_)) | (Self::FirstLegal(_), Self::FirstLegal(_)) => true,
+            (Self::H0(a), Self::H0(b)) => h0_fields_eq(a, b),
+            _ => false,
+        }
+    }
+}
+
+impl Eq for AnyPolicy {}
 
 impl Policy for AnyPolicy {
     fn choose(
