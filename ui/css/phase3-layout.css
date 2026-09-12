@@ -468,6 +468,30 @@ body.active-on-bottom.active-second .side-red .leader-attack-strip::before {
   opacity: 1;
 }
 
+/* Generous attack hit-pad — ::before only, no layout height. Live while a
+   legal leader attack is pending or being dragged. Specificity must beat
+   the flipped-board height calc on `.side-* .leader-attack-strip::before`. */
+.leader.attack-drop-hot.leader-attack-strip::before,
+.side-red .leader-attack-strip.attack-drop-hot::before,
+.side-blue .leader-attack-strip.attack-drop-hot::before,
+body.active-on-bottom.active-second .side-blue .leader-attack-strip.attack-drop-hot::before,
+body.active-on-bottom.active-second .side-red .leader-attack-strip.attack-drop-hot::before {
+  top: -24px;
+  bottom: -24px;
+  left: 0;
+  right: 0;
+  height: auto;
+  z-index: 3;
+  pointer-events: auto;
+  background: rgba(255, 92, 92, 0.08);
+}
+
+.leader-attack-strip.attack-drop-hot {
+  opacity: 1;
+  outline: 2px solid rgba(255, 92, 92, 0.75);
+  outline-offset: 1px;
+}
+
 #turnControls .hp-value,
 .side .hp-value {
   font-size: var(--font-size-lg) !important;

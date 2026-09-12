@@ -34,6 +34,7 @@ export type TooltipPaint = {
   blockedReason?: string | null;
   /** Last line: has attacks but cannot reach the enemy leader. */
   cannotAttackReason?: string | null;
+  earthSigils?: number | null;
   turn?: number;
   rallyHave?: number;
 };
@@ -79,6 +80,9 @@ function extraLines(opts: TooltipPaint, text: string): string {
   if (opts.blockedReason) {
     extra +=
       `<div class="tooltip-play-blocked">Cannot play: ${escapeHtml(opts.blockedReason)}</div>`;
+  }
+  if (opts.earthSigils != null) {
+    extra += `<div class="tooltip-earth-sigils">Earth Sigils: ${opts.earthSigils}</div>`;
   }
   if (opts.cannotAttackReason) {
     extra +=

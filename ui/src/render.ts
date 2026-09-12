@@ -63,6 +63,7 @@ const boardInfoByUid = new Map<number, BoardCardInfo>();
 let currentChoiceNode: ChoiceNode | null = null;
 let currentChoicePlayer: PlayerId | null = null;
 let lastFull: FullState | null = null;
+let attackDragHot: { player: PlayerId; slot: number } | null = null;
 let tipEl: HTMLElement | null = null;
 let tipSession: { card: HTMLElement; drag: boolean } | null = null;
 
@@ -285,11 +286,11 @@ function renderBoard(
       const attacks = L.attacksFrom(legal, player, row.i);
       const engage = L.engageAt(legal, player, row.i);
       const canAttack = attacks.length > 0;
-      const hitsLeader = attacks.some((a) => "attack" in a && a.attack.target === "leader");
-      // Yellow = has a legal attack and none of them is the enemy leader.
-      // Green = some legal attack targets the leader. No attacks → no glow.
-      // Do not paint from `followers_only_this_turn` / `summoning_sick`.
-      const rushOnly = canAttack && !hitsLeader;
+      // Yellow = this follower's own permission denies the leader (entry
+      // without Storm, or printed lock). Ward is board state → stays green.
+      const rushOnly = canAttack && !!(info?.rush_only || info?.followers_only_this_turn);
+      const earthStack =
+        full.players[player].earth_slot === row.i ? full.players[player].earth : null;
       const pendingAtk =
         hooks.pending?.kind === "attack" &&
         hooks.pending.player === player &&
@@ -302,6 +303,7 @@ function renderBoard(
         selected: pendingAtk,
         selectable: !!engage || canAttack,
         cannotAttack: info?.cannot_attack_reason === "Cannot attack.",
+        earthStack,
       });
       card.dataset.slot = String(row.i);
       card.dataset.player = player;
@@ -312,12 +314,37 @@ function renderBoard(
         {
           payload: JSON.stringify({ kind: "attack", player, slot: row.i }),
           kind: "attacker",
+          onDragBegan: () => setLeaderAttackHot(legal, player, row.i, true),
+          onDragEnded: () => {
+            if (hooks.pending?.kind !== "attack") setLeaderAttackHot(legal, player, row.i, false);
+          },
         },
         canAttack,
       );
       return card;
     },
   );
+}
+
+function setLeaderAttackHot(
+  legal: NeutralAction[],
+  player: PlayerId,
+  slot: number,
+  on: boolean,
+): void {
+  attackDragHot = on ? { player, slot } : null;
+  const enemy = player === "a" ? "b" : "a";
+  const el = byId(`${visual(enemy)}Leader`);
+  if (!el) return;
+  const legalLeader = legal.some(
+    (a) =>
+      "attack" in a &&
+      a.attack.player === player &&
+      a.attack.attacker_slot === slot &&
+      a.attack.target === "leader",
+  );
+  el.classList.toggle("attack-drop-hot", on && legalLeader);
+  if (on && legalLeader) el.classList.add("selectable", "legal-target");
 }
 
 function bindBoardDrops(legal: NeutralAction[], hooks: RenderHooks): void {
@@ -501,9 +528,20 @@ function renderLeaders(
           a.attack.attacker_slot === atk.slot &&
           a.attack.target === "leader",
       );
+    const dragHot =
+      !!attackDragHot &&
+      attackDragHot.player === enemy &&
+      legal.some(
+        (a) =>
+          "attack" in a &&
+          a.attack.player === enemy &&
+          a.attack.attacker_slot === attackDragHot.slot &&
+          a.attack.target === "leader",
+      );
     if (pending) {
       el.classList.add("legal-target", "selectable");
     }
+    el.classList.toggle("attack-drop-hot", pending || dragHot);
     const info = sessionPlayerInfo(s, p);
     const cap =
       !!info.has_leader_barrier ||
@@ -1219,7 +1257,11 @@ function paintPending(pending: Pending, legal: NeutralAction[]): void {
       if (!("attack" in a)) continue;
       if (a.attack.target === "leader") {
         const enemy = pending.player === "a" ? "b" : "a";
-        byId(`${visual(enemy)}Leader`)?.classList.add("selectable", "legal-target");
+        byId(`${visual(enemy)}Leader`)?.classList.add(
+          "selectable",
+          "legal-target",
+          "attack-drop-hot",
+        );
       } else if (typeof a.attack.target === "object") {
         const enemy = pending.player === "a" ? "b" : "a";
         const el = byId(`${visual(enemy)}Board`)?.querySelector<HTMLElement>(
@@ -1268,6 +1310,11 @@ function paintTooltipHtml(card: HTMLElement, full: FullState | null): void {
   const board = boardInfoByUid.get(uid);
   const leaderReason =
     board?.can_attack && !board.can_attack_leader ? board.cannot_attack_reason ?? null : null;
+  const slot = card.dataset.slot != null ? Number(card.dataset.slot) : null;
+  const earthSigils =
+    player && full && slot != null && full.players[player].earth_slot === slot
+      ? full.players[player].earth
+      : null;
   tip.innerHTML = formatCardTooltip({
     inst,
     cardId: id,
@@ -1275,6 +1322,7 @@ function paintTooltipHtml(card: HTMLElement, full: FullState | null): void {
     displayCost: info?.cost ?? null,
     blockedReason: blocked ?? null,
     cannotAttackReason: leaderReason,
+    earthSigils,
     turn: full?.turn,
     rallyHave: player && full ? full.players[player].rally : undefined,
   });

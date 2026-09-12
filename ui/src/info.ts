@@ -44,7 +44,7 @@ export function formatGateLine(gate: GateInfo): string {
     case "necromancy":
       return `Necromancy ${gate.have}/${gate.need}`;
     case "combo":
-      return `Combo ${gate.have}/${gate.need}`;
+      return `Combo ${gate.have}`;
     case "rally":
       return `Rally ${gate.have}/${gate.need}`;
     case "earth_rite":
