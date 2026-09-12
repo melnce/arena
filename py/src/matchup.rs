@@ -36,7 +36,7 @@ impl FirstMode {
     fn for_game(self, g: u32) -> First {
         match self {
             Self::Alternate => {
-                if g % 2 == 0 {
+                if g.is_multiple_of(2) {
                     First::A
                 } else {
                     First::B
