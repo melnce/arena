@@ -143,6 +143,67 @@ export function pngRgba(buf: Buffer): { width: number; height: number; data: Buf
   return { width, height, data: out };
 }
 
+const SUCCESS_GREEN = { r: 57, g: 217, b: 138 };
+const WARN_YELLOW = { r: 255, g: 212, b: 0 };
+
+function nearRgb(
+  r: number,
+  g: number,
+  b: number,
+  ref: { r: number; g: number; b: number },
+  tol = 35,
+): boolean {
+  return Math.abs(r - ref.r) <= tol && Math.abs(g - ref.g) <= tol && Math.abs(b - ref.b) <= tol;
+}
+
+/** Mid-side edge band only — skips cost / ATK / DEF / E·SE badge corners. */
+export function assertPngExclusiveRing(path: string, kind: "yellow" | "green"): void {
+  const img = pngRgba(readFileSync(path));
+  const band = Math.max(6, Math.min(12, Math.floor(img.width * 0.08)));
+  const skipX = Math.floor(img.width * 0.22);
+  const skipY = Math.floor(img.height * 0.22);
+  let foreign = 0;
+  let expected = 0;
+  const visit = (x: number, y: number) => {
+    const i = (y * img.width + x) * 4;
+    if (img.data[i + 3] < 80) return;
+    const r = img.data[i];
+    const g = img.data[i + 1];
+    const b = img.data[i + 2];
+    const isGreen = nearRgb(r, g, b, SUCCESS_GREEN);
+    const isYellow = nearRgb(r, g, b, WARN_YELLOW);
+    if (kind === "yellow") {
+      if (isGreen) foreign += 1;
+      if (isYellow) expected += 1;
+    } else {
+      if (isYellow) foreign += 1;
+      if (isGreen) expected += 1;
+    }
+  };
+  for (let y = skipY; y < img.height - skipY; y++) {
+    for (let x = 0; x < band; x++) visit(x, y);
+    for (let x = img.width - band; x < img.width; x++) visit(x, y);
+  }
+  for (let x = skipX; x < img.width - skipX; x++) {
+    for (let y = 0; y < band; y++) visit(x, y);
+    for (let y = img.height - band; y < img.height; y++) visit(x, y);
+  }
+  expect(expected, `${path} edge should contain ${kind}`).toBeGreaterThan(4);
+  expect(foreign, `${path} edge must not mix the other ring colour`).toBe(0);
+}
+
+export async function assertOuterCardNotDashedGreen(card: Locator): Promise<void> {
+  const outer = await card.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { style: s.outlineStyle, color: s.outlineColor, width: s.outlineWidth };
+  });
+  const dashedGreen =
+    outer.style === "dashed" &&
+    /57,\s*217,\s*138/.test(outer.color) &&
+    outer.width !== "0px";
+  expect(dashedGreen, "outer .card must not carry the idle dashed green ring").toBe(false);
+}
+
 export function assertPngLeftEdge(path: string, kind: "yellow" | "green"): void {
   const img = pngRgba(readFileSync(path));
   const y0 = Math.floor(img.height * 0.35);

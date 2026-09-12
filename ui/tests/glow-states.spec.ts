@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ART, artShot, assertGlow, assertPngLeftEdge } from "./helpers.ts";
+import {
+  ART,
+  artShot,
+  assertGlow,
+  assertOuterCardNotDashedGreen,
+  assertPngExclusiveRing,
+  assertPngLeftEdge,
+} from "./helpers.ts";
 
 const FIGHTER = "10001110";
 const LEAH = "10001120";
@@ -132,8 +139,10 @@ test("plain follower: green when it can hit the leader, yellow with a printed lo
   expect(g.width).toBe("4px");
   expect(g.animation.toLowerCase()).toContain("playpulse");
   await assertGlow(card, "green");
+  await assertOuterCardNotDashedGreen(card);
   const greenPath = await artShot(card, `${ART}/glow_matrix_plain_green.png`);
   assertPngLeftEdge(greenPath, "green");
+  assertPngExclusiveRing(greenPath, "green");
 
   const slot = await page.evaluate(() => {
     const info = window.__arena!.boardInfo("a") as Array<{ slot: number }>;
@@ -146,7 +155,9 @@ test("plain follower: green when it can hit the leader, yellow with a printed lo
   expect(g.width).toBe("4px");
   expect(g.animation.toLowerCase()).toContain("enhpulse");
   await assertGlow(card, "yellow");
-  await artShot(card, `${ART}/glow_matrix_plain_yellow.png`);
+  await assertOuterCardNotDashedGreen(card);
+  const yellowPath = await artShot(card, `${ART}/glow_matrix_plain_yellow.png`);
+  assertPngExclusiveRing(yellowPath, "yellow");
 
   await applyFirst(page, "end_turn");
   await expect(card).not.toHaveClass(/can-attack/);
@@ -213,6 +224,9 @@ test("evolved follower keeps the attack ring over the E badge", async ({ page })
   expect(g.width).toBe("4px");
   expect(g.animation.toLowerCase()).toContain("enhpulse");
   await assertGlow(card, "yellow");
+  await assertOuterCardNotDashedGreen(card);
+  const evoYellow = await artShot(card, `${ART}/glow_matrix_evolved_yellow.png`);
+  assertPngExclusiveRing(evoYellow, "yellow");
 
   await applyFirst(page, "end_turn");
   await applyFirst(page, "end_turn");
@@ -222,8 +236,10 @@ test("evolved follower keeps the attack ring over the E badge", async ({ page })
   expect(g.width).toBe("4px");
   expect(g.animation.toLowerCase()).toContain("playpulse");
   await assertGlow(card, "green");
+  await assertOuterCardNotDashedGreen(card);
   const path = await artShot(card, `${ART}/glow_matrix_evolved_green.png`);
   assertPngLeftEdge(path, "green");
+  assertPngExclusiveRing(path, "green");
 
   await attackOnce(page);
   await assertGlow(card, "none");
@@ -289,7 +305,9 @@ test("super-evolved follower keeps the attack ring over the purple SE chrome", a
   expect(g.width).toBe("4px");
   expect(g.animation.toLowerCase()).toContain("enhpulse");
   await assertGlow(card, "yellow");
-  await artShot(card, `${ART}/glow_matrix_super_yellow.png`);
+  await assertOuterCardNotDashedGreen(card);
+  const seYellow = await artShot(card, `${ART}/glow_matrix_super_yellow.png`);
+  assertPngExclusiveRing(seYellow, "yellow");
 
   await applyFirst(page, "end_turn");
   await expect(card).not.toHaveClass(/can-attack/);
@@ -303,8 +321,10 @@ test("super-evolved follower keeps the attack ring over the purple SE chrome", a
   expect(g.width).toBe("4px");
   expect(g.animation.toLowerCase()).toContain("playpulse");
   await assertGlow(card, "green");
+  await assertOuterCardNotDashedGreen(card);
   const path = await artShot(card, `${ART}/glow_matrix_super_green.png`);
   assertPngLeftEdge(path, "green");
+  assertPngExclusiveRing(path, "green");
 
   await attackOnce(page);
   await assertGlow(card, "none");

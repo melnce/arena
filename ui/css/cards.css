@@ -1212,7 +1212,11 @@
 
 /* if 4+, the 4th will also use a 2s delay; extend if you plan to show >3 distinct icons */
 
-.card.selectable {
+/* Idle dashed ring is only for selectables that have no attack/play glow.
+   The glow is the affordance; a green dash on a yellow rush card is the
+   "green + yellow on the same card" the owner rejected. Choice targeting
+   uses `.select-mode .card.selectable` (yellow solid) instead. */
+.card.selectable:not(.can-attack):not(.rush-glow):not(.playable-glow):not(.legal-play):not(.legal-attack):not(.enhance-ready):not(.engage-ready):not(.alternate-ready) {
   outline: 2px dashed rgba(57, 217, 138, 0.85);
   outline-offset: -3px;
 }

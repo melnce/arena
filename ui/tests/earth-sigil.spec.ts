@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ART, artShot } from "./helpers.ts";
+import { ART, artShot, assertOuterCardNotDashedGreen } from "./helpers.ts";
 
 const BREW = "10031210";
 const WIZARD = "10531110";
@@ -159,6 +159,13 @@ test("Earth Sigil stack badge on Witch's New Brew follows full().earth", async (
 
   await skipToPp(page, 1);
   await expect(brew).toHaveClass(/engage-ready/);
+  const engageOutline = await brew.locator(".card-image-wrapper").evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { color: s.outlineColor, width: s.outlineWidth };
+  });
+  expect(engageOutline.color).toBe("rgb(255, 212, 0)");
+  expect(engageOutline.width).not.toBe("0px");
+  await assertOuterCardNotDashedGreen(brew);
   const engaged = await page.evaluate(() => {
     const legal = window.__arena!.legal() as Array<{ engage?: { player: string } }>;
     const act = legal.find((a) => a.engage?.player === "a");
