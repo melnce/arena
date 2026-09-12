@@ -5,29 +5,19 @@ import type { CardText, CatalogEntry, DeckManifestEntry } from "./types.ts";
 const catalog = new Map<string, CatalogEntry>();
 const textCache = new Map<string, CardText>();
 let deckEntries: DeckManifestEntry[] = [];
-let crestBySlug: Record<string, string> = {};
-let crestById: Record<string, string> = {};
 
 export async function loadCatalog(): Promise<void> {
-  const [images, manifest, crests] = await Promise.all([
+  const [images, manifest] = await Promise.all([
     fetch(publicUrl("catalog-images.json")).then((r) => r.json()) as Promise<
       Record<string, CatalogEntry>
     >,
     fetch(publicUrl("decks/manifest.json")).then((r) => r.json()) as Promise<{
       entries: DeckManifestEntry[];
     }>,
-    fetch(publicUrl("crest-art.json"))
-      .then((r) => r.json())
-      .catch(() => ({ bySlug: {}, byId: {} })) as Promise<{
-      bySlug?: Record<string, string>;
-      byId?: Record<string, string>;
-    }>,
   ]);
   catalog.clear();
   for (const [id, rec] of Object.entries(images)) catalog.set(id, rec);
   deckEntries = manifest.entries ?? [];
-  crestBySlug = crests.bySlug ?? {};
-  crestById = crests.byId ?? {};
 }
 
 export function getCatalog(id: string): CatalogEntry | undefined {
@@ -61,20 +51,6 @@ export function lookupText(id: string): CardText {
 
 export function decks(): DeckManifestEntry[] {
   return deckEntries;
-}
-
-export function crestFile(id: string, name?: string): string | null {
-  if (crestById[id]) return crestById[id];
-  const slug = String(name || id)
-    .toLowerCase()
-    .replace(/^crest:\s*/i, "")
-    .replace(/['’]/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_|_$/g, "");
-  if (crestBySlug[slug]) return crestBySlug[slug];
-  const first = slug.split("_")[0];
-  if (first && crestBySlug[first]) return crestBySlug[first];
-  return null;
 }
 
 export function parseDeckJson(raw: string): Record<string, number> {

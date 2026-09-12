@@ -13,26 +13,11 @@ const outPublic = path.join(repo, "ui/public");
 const outCatalog = path.join(outPublic, "catalog-images.json");
 const outDecks = path.join(outPublic, "decks");
 
-function slug(name) {
-  return String(name || "")
-    .toLowerCase()
-    .replace(/^crest:\s*/i, "")
-    .replace(/['’]/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_|_$/g, "");
-}
-
 const raw = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
 const images = {};
 for (const [id, rec] of Object.entries(raw)) {
   if (!rec || typeof rec !== "object" || id.startsWith("_")) continue;
   if (!rec.id && !rec.card_image_hash && !rec.name) continue;
-  const specific = Array.isArray(rec.specific_effect_card_ids)
-    ? rec.specific_effect_card_ids
-    : [];
-  const effects = Array.isArray(rec.specific_effects)
-    ? rec.specific_effects.map((e) => e?.type).filter(Boolean)
-    : [];
   images[id] = {
     name: rec.name ?? id,
     cost: rec.cost ?? null,
@@ -44,8 +29,6 @@ for (const [id, rec] of Object.entries(raw)) {
     banner: rec.card_banner_image_hash ?? "",
     evoCard: rec.evo_card_image_hash ?? "",
     evoBanner: rec.evo_card_banner_image_hash ?? "",
-    specificEffects: specific,
-    specificEffectTypes: effects,
   };
 }
 
@@ -73,23 +56,4 @@ fs.writeFileSync(
   JSON.stringify({ entries }, null, 2) + "\n",
 );
 
-const crestDir = path.join(outPublic, "crests");
-const crestFiles = fs.existsSync(crestDir)
-  ? fs.readdirSync(crestDir).filter((f) => f.endsWith(".png"))
-  : [];
-const bySlug = {};
-for (const f of crestFiles) bySlug[slug(f.replace(/\.png$/i, ""))] = f;
-const crestMap = {};
-for (const [id, rec] of Object.entries(images)) {
-  const s = slug(rec.name);
-  if (bySlug[s]) crestMap[id] = bySlug[s];
-}
-
-fs.writeFileSync(
-  path.join(outPublic, "crest-art.json"),
-  JSON.stringify({ bySlug, byId: crestMap }, null, 2) + "\n",
-);
-
-console.log(
-  `catalog-images ${Object.keys(images).length} cards; decks ${files.length}; crests ${crestFiles.length}`,
-);
+console.log(`catalog-images ${Object.keys(images).length} cards; decks ${files.length}`);

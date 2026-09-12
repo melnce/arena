@@ -1,6 +1,6 @@
 import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
 import { publicUrl } from "./base.ts";
-import { decks, loadCatalog, lookupText, parseDeckJson } from "./catalog.ts";
+import { catalogIds, decks, loadCatalog, lookupText, parseDeckJson } from "./catalog.ts";
 import { clearFloaters, reflashDamage, spawnFloaters } from "./fct.ts";
 import { bindPointer } from "./input.ts";
 import { sessionBoardInfo, sessionHandInfo, sessionPlayerInfo } from "./info.ts";
@@ -215,6 +215,8 @@ function exposeArena(): void {
       session.game.debugGrantCantAttackLeader(player, slot);
       requestPaint();
     },
+    catalogIds,
+    cardText: (id) => lookupText(id),
     mountNamedCounter: (vars) => {
       const host = document.getElementById("blueBoard") ?? document.body;
       const inst = {

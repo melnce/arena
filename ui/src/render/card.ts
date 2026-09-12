@@ -1,6 +1,7 @@
 import { publicUrl } from "../base.ts";
-import { crestFile, getCatalog, lookupText } from "../catalog.ts";
-import { applyCardImage, escapeHtml } from "../images.ts";
+import { getCatalog, lookupText } from "../catalog.ts";
+import { mountCrestIcon } from "../crest-icon.ts";
+import { applyCardImage } from "../images.ts";
 import { releaseImageLoads } from "../releaseImages.ts";
 import { cardHasSpellboost } from "../info.ts";
 import type { CardInstance, CrestInstance, HandCardInfo } from "../types.ts";
@@ -417,25 +418,14 @@ export function renderCrestSlot(
 ): void {
   releaseImageLoads(slot);
   slot.innerHTML = "";
+  slot.classList.remove("active");
   slot.onmouseenter = null;
   slot.onmousemove = null;
   slot.onmouseleave = null;
   if (!crest) return;
   const info = lookupText(crest.id);
-  const file = crestFile(crest.id, info.name);
-  if (file) {
-    const img = document.createElement("img");
-    img.className = "crest-image";
-    img.src = publicUrl(`crests/${file}`);
-    img.alt = info.name;
-    img.referrerPolicy = "no-referrer";
-    slot.appendChild(img);
-  } else {
-    const fb = document.createElement("div");
-    fb.className = "card-fallback";
-    fb.innerHTML = `<div class="fb-name">${escapeHtml(info.name)}</div>`;
-    slot.appendChild(fb);
-  }
+  mountCrestIcon(slot, crest.id, info.grantedBy, info.name);
+  slot.classList.add("active");
   if (crest.faith) {
     const fb = document.createElement("div");
     fb.className = "crest-faith";

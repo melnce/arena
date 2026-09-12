@@ -102,13 +102,67 @@
   border: 1px solid var(--color-border-default);
 }
 
-#cardTooltip .tooltip-crest-icon {
-  width: 44px;
-  height: 44px;
+.crest-icon {
+  --crest-fx: 0.478;
+  --crest-fy: 0.338;
+  --crest-zoom: 0.185;
+  --icon-w: 56px;
+  --aperture-left: 0.1055;
+  --aperture-top: 0.1016;
+  --aperture-w: 0.7798;
+  --aperture-h: 0.7891;
+  --card-w: 368;
+  --card-h: 473;
+  --frame-w: 218;
+  --frame-h: 256;
+  position: relative;
+  display: inline-block;
+  width: var(--icon-w);
+  height: calc(var(--icon-w) * var(--frame-h) / var(--frame-w));
   flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  object-fit: cover;
-  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+}
+
+.crest-icon-aperture {
+  position: absolute;
+  left: calc(100% * var(--aperture-left));
+  top: calc(100% * var(--aperture-top));
+  width: calc(100% * var(--aperture-w));
+  height: calc(100% * var(--aperture-h));
+  border-radius: 50%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.crest-icon-portrait.crest-image,
+.crest-icon-portrait {
+  position: absolute;
+  width: calc(100% / var(--crest-zoom));
+  height: calc(
+    var(--icon-w) * var(--aperture-w) / var(--crest-zoom) * var(--card-h) / var(--card-w)
+  );
+  left: calc(50% - (100% / var(--crest-zoom) * var(--crest-fx)));
+  top: calc(
+    50% -
+      (
+        var(--icon-w) * var(--aperture-w) / var(--crest-zoom) * var(--card-h) / var(--card-w) *
+          var(--crest-fy)
+      )
+  );
+  max-width: none;
+  object-fit: fill;
+  z-index: 0;
+}
+
+.crest-icon-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 1;
+  pointer-events: none;
+  border: none;
 }
 
 #cardTooltip .tooltip-crest-name {

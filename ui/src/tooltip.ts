@@ -1,8 +1,8 @@
-import { catalogIds, crestFile, getCatalog, lookupText } from "./catalog.ts";
-import { publicUrl } from "./base.ts";
+import { catalogIds, getCatalog, lookupText } from "./catalog.ts";
+import { crestIconHtml } from "./crest-icon.ts";
 import { escapeHtml } from "./images.ts";
 import { cardHasSpellboost, formatGateLine, isFormGate } from "./info.ts";
-import type { CardInstance, CrestInstance, GateInfo } from "./types.ts";
+import type { CardForm, CardInstance, CrestInstance, CrestText, GateInfo } from "./types.ts";
 
 const KEYWORD_LINE_RE =
   /^(Fanfare|Ward|Rush|Storm|Bane|Drain|Barrier|Aura|Ambush|Intimidate|Last Words|Super-Evolve|Super Evolve|Enhance(?: \(\d+\))?|Accelerate(?: \(\d+\))?|Crystallize(?: \(\d+\))?|Engage|Evolve|Countdown(?: \(\d+\))?|Necromancy(?: \(\d+\))?|Rally(?: \(\d+\))?|Combo(?: \(\d+\))?|Overflow|Earth Rite|Spellboost|Fusion|Fuse|Ongoing|Skybound Art)\s*:?\s*(.*)$/i;
@@ -48,17 +48,17 @@ export function formatCardTooltip(opts: TooltipPaint): string {
   const classLine = tribes.length ? `${clazz}/${tribes.join(", ")}` : clazz;
   const setLine = formatSetLine(info.set);
   const metaParts = [escapeHtml(classLine), setLine].filter(Boolean).join("<br>");
-  const cat = getCatalog(opts.cardId);
-
   const gates = formatGateBlock(opts.gates ?? [], opts);
   const desc = formatTooltipDescription(info.text || "");
-  const crests = formatCrestPanels(info.text || "", cat?.specificEffects);
+  const forms = formatFormLines(info.forms ?? [], info.text || "");
+  const crests = formatCrestPanels(info.crests ?? []);
   const extras = extraLines(opts, info.text || "");
   return (
     `<div class="tooltip-header-name">${name}</div>` +
     (metaParts ? `<div class="tooltip-header-meta">${metaParts}</div>` : "") +
     gates +
     desc +
+    forms +
     crests +
     extras
   );
@@ -205,43 +205,38 @@ function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function formatCrestPanels(text: string, specific?: string[]): string {
-  const names: string[] = [];
-  for (const line of text.split(/\n+/)) {
-    const m = line.match(/^gain crest:\s*(.+)$/i);
-    if (m?.[1]) names.push(m[1].trim());
+function normWs(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function formatFormLines(forms: CardForm[], cardText: string): string {
+  const body = normWs(cardText);
+  const lines: string[] = [];
+  for (const form of forms) {
+    const printed = form.printed ?? "";
+    if (!printed) continue;
+    if (body.includes(normWs(printed))) continue;
+    for (const line of printed.split(/\n+/)) {
+      const html = formatDescriptionLine(line);
+      if (html) lines.push(html);
+    }
   }
-  const ids = specific ?? [];
-  if (!names.length && !ids.length) return "";
-  const panels: string[] = [];
-  const seen = new Set<string>();
-  for (const id of ids) {
-    const info = lookupText(id);
-    if (!info.name || seen.has(info.name)) continue;
-    seen.add(info.name);
-    panels.push(crestPanel(info.name, info.text || "", id));
-  }
-  for (const n of names) {
-    if (seen.has(n)) continue;
-    seen.add(n);
-    panels.push(crestPanel(n, "", n));
-  }
-  if (!panels.length) return "";
+  if (!lines.length) return "";
+  return `<div class="tooltip-desc-block">${lines.join("")}</div>`;
+}
+
+function formatCrestPanels(crests: CrestText[]): string {
+  if (!crests.length) return "";
+  const panels = crests.map((crest) => crestPanel(crest));
   return `<div class="tooltip-crest-block">${panels.join("")}</div>`;
 }
 
-function crestPanel(name: string, text: string, id: string): string {
-  const file = crestFile(id, name);
-  const src = file ? publicUrl(`crests/${file}`) : "";
-  const img = src
-    ? `<img class="tooltip-crest-icon" src="${escapeHtml(src)}" alt="">`
-    : `<div class="tooltip-crest-icon"></div>`;
-  const body = text
-    ? formatTooltipDescription(text)
-    : "";
+function crestPanel(crest: CrestText): string {
+  const icon = crestIconHtml(crest.id, crest.grantedBy, crest.name);
+  const body = crest.text ? formatTooltipDescription(crest.text) : "";
   return (
-    `<div class="tooltip-crest-panel">${img}<div class="tooltip-crest-body">` +
-    `<div class="tooltip-crest-name">${escapeHtml(name)}</div>` +
+    `<div class="tooltip-crest-panel">${icon}<div class="tooltip-crest-body">` +
+    `<div class="tooltip-crest-name">${escapeHtml(crest.name)}</div>` +
     `<div class="tooltip-crest-text">${body}</div></div></div>`
   );
 }
