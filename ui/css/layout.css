@@ -447,7 +447,7 @@
 }
 
 /* Style for an ACTIVE crest */
-.crest-slot.active {
+.crest-slot.active:not(:has(.crest-icon)) {
   background-color: #00ff99;
   border-color: #99ffee;
   box-shadow:

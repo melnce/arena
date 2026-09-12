@@ -676,7 +676,7 @@ body.active-second .side-red {
   pointer-events: none;
 }
 
-.crest-slot.active {
+.crest-slot.active:not(:has(.crest-icon)) {
   background: radial-gradient(
     55% 55% at 50% 38%,
     rgba(57, 217, 138, 0.55),
@@ -692,19 +692,17 @@ body.active-second .side-red {
   display: none;
 }
 
-.crest-slot:has(.crest-icon) {
-  height: calc(var(--crest-slot-size) * 256 / 218);
-  border-radius: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
+.crest-slot .crest-icon {
+  --icon-w: calc(var(--crest-slot-size) * 218 / 256);
+  width: calc(100% * 218 / 256);
+  height: 100%;
+  display: block;
+  margin: 0 auto;
+  overflow: visible;
 }
 
-.crest-slot .crest-icon {
-  --icon-w: var(--crest-slot-size);
-  width: var(--icon-w);
-  height: calc(var(--icon-w) * 256 / 218);
-  display: block;
+.crest-slot.active .crest-icon-frame {
+  filter: drop-shadow(0 0 6px rgba(57, 217, 138, 0.55));
 }
 
 .crest-countdown {
