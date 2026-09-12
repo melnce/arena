@@ -716,13 +716,8 @@ body.active-second .side-red {
 }
 
 .card.card-back {
-  background: linear-gradient(
-    145deg,
-    var(--color-bg-surface) 0%,
-    var(--color-bg-canvas) 55%,
-    var(--color-bg-inset) 100%
-  ) !important;
-  border-color: var(--color-card-back-border) !important;
+  background: linear-gradient(145deg, #3a4558 0%, #252c3a 52%, #1a202c 100%) !important;
+  border: 2px solid var(--color-card-back-border) !important;
 }
 
 .card-stats {

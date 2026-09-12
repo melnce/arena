@@ -21,6 +21,8 @@ declare global {
       legal(): unknown[];
       actions(): unknown[];
       paintMs?: number;
+      watchDelayMs(): number;
+      humanSide(): "a" | "b" | null;
       reseed(seed: string | number | bigint): void;
       exportLog(): unknown;
       loadLog(log: unknown): void;

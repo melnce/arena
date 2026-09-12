@@ -46,6 +46,20 @@ body.mode-watch .watch-bar {
   display: flex;
 }
 
+.watch-speed-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.watch-speed-readout {
+  min-width: 7.5em;
+  color: #c5cdd8;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .card-fallback {
   position: absolute;
   inset: 0;

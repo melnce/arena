@@ -216,7 +216,7 @@
 
   /* ── Play area — card frame & evolved ring ─────────────────────────── */
   --color-card-frame: rgba(255, 255, 255, 0.1);
-  --color-card-back-border: rgba(90, 110, 140, 0.45);
+  --color-card-back-border: #8ea0bc;
   --color-evolved-ring: rgba(255, 212, 0, 0.85);
   --glow-evolved: 0 0 14px rgba(255, 212, 0, 0.45);
   --glow-playable:
