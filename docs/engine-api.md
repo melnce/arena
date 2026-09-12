@@ -361,11 +361,15 @@ loser's `leader_defense <= 0`; otherwise a decided game is `Deckout`. No
 | "h0:depth=6,beam=4,k=4,nodes=2000"
 ```
 
-Any subset of the four H0 keys; omitted keys take [`H0::default`].
+Any subset of the H0 keys; omitted keys take [`H0::default`].
 `k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
-`H0::default()`; `"h0-fast"` is `H0::fast()`. `Err` names the offending
-token. `AnyPolicy::spec` is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"`
-or the short names). `by_name` is `parse_spec(name).ok()`; `names()` stays
+`H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1`
+(default `v0`) and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
+`w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
+`0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
+is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`
+and any non-default weight, or the short names). `"h0"` still round-trips
+to `"h0"`. `by_name` is `parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
 change.
 
@@ -384,6 +388,14 @@ streams and output as before). `H0` is a determinized search bot:
 | `beam` | 4 | top-k by value each ply |
 | `determinizations` | 4 | opponent-reply samples |
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
+| `value` | `v0` | leaf evaluator; `v1` adds economy terms |
+| `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
+| `w_earth` | 0.35 | v1: saturated earth sigils (cap 6) |
+| `w_faith` | 0.15 | v1: saturated faith (cap 10) |
+| `w_rally` | 0.05 | v1: saturated rally (cap 15) |
+| `w_boost` | 0.10 | v1: spellboost counters on Spellboost cards in hand |
+| `w_need` | 0.60 | v1: “is this card live yet” over hand thresholds |
+| `w_lw` | 0.80 | v1: Last Words followers on the field |
 
 H0 builds `K = max(1, determinizations)` search roots via
 `determinize(state, me, seed)` (which reseeds the game RNG) from the
@@ -401,7 +413,14 @@ dropped. Mulligan: swap every card whose cost is ≥ 4 (both seats).
 
 Value: leader-defense difference, board (atk+def with Ward/Storm/evolved
 weights), hand size, next-turn PP / EP / SEP, crest / countdown presence;
-terminal = ±∞ on a single root, finite-clamped when averaging.
+terminal = ±∞ on a single root, finite-clamped when averaging. That
+arithmetic is `value=v0` and remains the default. `value=v1` adds
+saturated shadows / earth / faith / rally, spellboost counters on cards
+that print Spellboost, a threshold-shaped “live” bonus for hand cards
+that pay those resources or check Rally, and a count of Last Words
+followers on the field — all from a state-free `NeedsTable` built next
+to `when_cards`. Weights are the `w_*` keys; this PR does not flip the
+default.
 
 `arena-bench` accepts `--policy` / `--vs` as `parse_spec` strings (unknown
 names exit with the parser message) and drives games through `play_game`.
