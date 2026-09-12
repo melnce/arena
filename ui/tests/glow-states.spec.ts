@@ -113,6 +113,7 @@ async function readyFighter(page: Page, deckA: string, deckB: string) {
   await applyFirst(page, "end_turn");
   await playCard(page, FIGHTER);
   await applyFirst(page, "end_turn");
+  await playCard(page, FIGHTER);
   await applyFirst(page, "end_turn");
   return page.locator("#blueBoard .card[data-card='10001110']").first();
 }
@@ -178,16 +179,16 @@ test("evolved follower keeps the attack ring over the E badge", async ({ page })
         evo: window.__arena!.playerInfo("a").evolve_unlocked,
         enemy: full.players.b.field.filter(Boolean).length,
         own: full.players.a.field.filter(Boolean).length,
-        canPlay: legal.some((a) => a.play?.card === cardId),
-        canEvo: legal.some((a) => a.evolve && !a.evolve.super),
+        canPlayA: legal.some((a) => a.play?.card === cardId),
+        canPlayB: legal.some((a) => a.play?.card === "10001120"),
         canEnd: legal.some((a) => a.end_turn),
       };
     }, FIGHTER);
-    if (snap.active === "a" && snap.evo && snap.enemy >= 1 && snap.own === 0 && snap.canPlay) {
+    if (snap.active === "a" && snap.evo && snap.enemy >= 1 && snap.own === 0 && snap.canPlayA) {
       await playCard(page, FIGHTER);
       break;
     }
-    if (snap.active === "b" && snap.enemy < 1 && snap.canPlay) {
+    if (snap.active === "b" && snap.enemy < 1 && snap.canPlayB) {
       await playCard(page, LEAH);
       continue;
     }
@@ -253,16 +254,16 @@ test("super-evolved follower keeps the attack ring over the purple SE chrome", a
         se: window.__arena!.playerInfo("a").super_evolve_unlocked,
         enemy: full.players.b.field.filter(Boolean).length,
         own: full.players.a.field.filter(Boolean).length,
-        canPlay: legal.some((a) => a.play?.card === cardId),
-        canSe: legal.some((a) => a.evolve && a.evolve.super),
+        canPlayA: legal.some((a) => a.play?.card === cardId),
+        canPlayB: legal.some((a) => a.play?.card === "10001120"),
         canEnd: legal.some((a) => a.end_turn),
       };
     }, FIGHTER);
-    if (snap.active === "a" && snap.se && snap.enemy >= 1 && snap.own === 0 && snap.canPlay) {
+    if (snap.active === "a" && snap.se && snap.enemy >= 1 && snap.own === 0 && snap.canPlayA) {
       await playCard(page, FIGHTER);
       break;
     }
-    if (snap.active === "b" && snap.enemy < 1 && snap.canPlay) {
+    if (snap.active === "b" && snap.enemy < 1 && snap.canPlayB) {
       await playCard(page, LEAH);
       continue;
     }
