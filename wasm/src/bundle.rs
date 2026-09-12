@@ -215,17 +215,18 @@ fn card_crest_ids(db: &CardDb, card: &Card) -> Vec<String> {
 fn card_crest_entries(db: &CardDb, card: &Card) -> Vec<serde_json::Value> {
     card_crest_ids(db, card)
         .into_iter()
-        .map(|id| {
-            let crest = db
-                .crest(&id)
-                .unwrap_or_else(|e| panic!("crest {id} must resolve: {e}"));
-            json!({
+        .filter_map(|id| match db.crest(&id) {
+            Ok(crest) => Some(json!({
                 "id": crest.id,
                 "name": crest.name,
                 "text": crest.text,
                 "faith": crest.faith,
                 "grantedBy": crest_granted_by(crest),
-            })
+            })),
+            Err(e) => {
+                debug_assert!(false, "crest {id} must resolve: {e}");
+                None
+            }
         })
         .collect()
 }
@@ -356,7 +357,7 @@ mod tests {
             assert_eq!(
                 crests.len(),
                 card_crest_ids(db, card).len(),
-                "{id} crest count"
+                "{id}: resolved cardText.crests must equal walked+granted_by ids (dangling crest id)"
             );
             for crest in crests {
                 let crest_id = crest["id"]
