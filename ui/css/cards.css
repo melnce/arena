@@ -1216,7 +1216,7 @@
    The glow is the affordance; a green dash on a yellow rush card is the
    "green + yellow on the same card" the owner rejected. Choice targeting
    uses `.select-mode .card.selectable` (yellow solid) instead. */
-.card.selectable:not(.can-attack):not(.rush-glow):not(.playable-glow):not(.legal-play):not(.legal-attack):not(.enhance-ready):not(.engage-ready):not(.alternate-ready) {
+.card.selectable:not(.selected):not(.can-attack):not(.rush-glow):not(.playable-glow):not(.legal-play):not(.legal-attack):not(.enhance-ready):not(.engage-ready):not(.alternate-ready) {
   outline: 2px dashed rgba(57, 217, 138, 0.85);
   outline-offset: -3px;
 }
@@ -1238,6 +1238,7 @@
 
 /* Selected ring must win over a later .selectable dashed outline. */
 .card.selected,
+.card.selectable.selected,
 .select-mode .card.selected {
   outline: 3px solid var(--color-success);
   outline-offset: 0;
