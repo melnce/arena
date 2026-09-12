@@ -9,6 +9,7 @@ use crate::card::{
     Ability, AbilityZone, Card, CardId, CardOrCrest, CatalogRecord, Crest, EventName,
 };
 use crate::error::LoadError;
+use crate::policy::NeedsTable;
 use crate::support;
 
 #[derive(Debug, Clone)]
@@ -29,6 +30,8 @@ pub struct CardDb {
     /// this set is complete for the board walk.
     static_cards: HashSet<CardId>,
     static_crests: HashSet<String>,
+    /// State-free resource needs (Pay / Rally / Spellboost / Last Words).
+    needs: NeedsTable,
 }
 
 impl CardDb {
@@ -43,6 +46,7 @@ impl CardDb {
             boundary_cards: HashMap::new(),
             static_cards: HashSet::new(),
             static_crests: HashSet::new(),
+            needs: NeedsTable::default(),
         }
     }
 
@@ -84,6 +88,7 @@ impl CardDb {
         db.rebuild_when_index();
         db.rebuild_boundary_index();
         db.rebuild_static_index();
+        db.rebuild_needs_index();
         Ok(db)
     }
 
@@ -99,6 +104,7 @@ impl CardDb {
         self.rebuild_when_index();
         self.rebuild_boundary_index();
         self.rebuild_static_index();
+        self.rebuild_needs_index();
         Ok(())
     }
 
@@ -250,6 +256,12 @@ impl CardDb {
         !self.static_cards.is_empty() || !self.static_crests.is_empty()
     }
 
+    /// Per-card economy needs (Pay / Rally / Spellboost / Last Words).
+    #[inline]
+    pub fn needs(&self) -> &NeedsTable {
+        &self.needs
+    }
+
     fn rebuild_when_index(&mut self) {
         let mut when_cards: HashMap<(EventName, AbilityZone), HashSet<CardId>> = HashMap::new();
         let mut when_crests: HashMap<(EventName, AbilityZone), HashSet<String>> = HashMap::new();
@@ -305,6 +317,10 @@ impl CardDb {
         }
         self.static_cards = static_cards;
         self.static_crests = static_crests;
+    }
+
+    fn rebuild_needs_index(&mut self) {
+        self.needs = NeedsTable::build(self);
     }
 }
 
