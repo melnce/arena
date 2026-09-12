@@ -16,7 +16,7 @@ use crate::convert::{
     phase_str, player_str, py_err_illegal, py_err_load, py_err_msg, py_to_value,
     resolve_cards_root, value_to_py,
 };
-use crate::play::{play_one, Policy};
+use crate::play::play_one;
 
 #[pyclass(module = "arena", name = "CardDb")]
 #[derive(Clone)]
@@ -195,7 +195,8 @@ pub fn play_random<'py>(
         &da,
         &dbk,
         parse_first(first)?,
-        Policy::Random,
+        "random",
+        "random",
     )
     .map_err(py_err_msg)?;
     let winner = result
