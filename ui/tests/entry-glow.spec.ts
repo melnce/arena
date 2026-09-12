@@ -313,7 +313,7 @@ async function fieldFollower(
   );
 }
 
-test("enemy Ward is yellow, leader drop is refused, killing Ward turns green", async ({ page }) => {
+test("enemy Ward stays green; leader drop is refused; tooltip explains", async ({ page }) => {
   test.setTimeout(90_000);
   await boot(page);
   const me = await importDeck(page, "ward-atk.json", { [RUSH_2_2]: 40 });
@@ -330,13 +330,13 @@ test("enemy Ward is yellow, leader drop is refused, killing Ward turns green", a
   await applyFirst(page, "end_turn");
 
   const card = page.locator("#blueBoard .card[data-card='10621110']").first();
-  await expect(card).toHaveClass(/rush-glow/);
-  await expect(card).not.toHaveClass(/can-attack/);
-  await assertGlow(card, "yellow");
+  await expect(card).toHaveClass(/can-attack/);
+  await expect(card).not.toHaveClass(/rush-glow/);
+  await assertGlow(card, "green");
   const outline = await card.locator(".card-image-wrapper").evaluate((el) => getComputedStyle(el).outlineColor);
-  expect(outline).toBe("rgb(255, 212, 0)");
-  const yellowPath = await artShot(card, `${ART}/leader_glow_ward_yellow.png`);
-  assertPngLeftEdge(yellowPath, "yellow");
+  expect(outline).toBe("rgb(57, 217, 138)");
+  const greenPath = await artShot(card, `${ART}/leader_glow_ward_green.png`);
+  assertPngLeftEdge(greenPath, "green");
 
   const wardReason = await page.evaluate(() => {
     const info = window.__arena!.boardInfo("a") as Array<{ cannot_attack_reason?: string | null }>;
@@ -356,27 +356,29 @@ test("enemy Ward is yellow, leader drop is refused, killing Ward turns green", a
   await page.mouse.up();
   const afterRefuse = await fieldFollower(page, "a", RUSH_2_2);
   expect(afterRefuse.attacksLeft).toBe(before.attacksLeft);
-  await expect(card).toHaveClass(/rush-glow/);
-
-  await playCard(page, RUSH_2_2);
-  const killed = await page.evaluate((keepSlot) => {
-    const legal = window.__arena!.legal() as Array<{
-      attack?: { player: string; attacker_slot: number; target: unknown };
-    }>;
-    const act = legal.find(
-      (a) => a.attack?.player === "a" && a.attack.attacker_slot !== keepSlot && a.attack.target !== "leader",
-    );
-    if (!act) return false;
-    window.__arena!.apply(act);
-    return true;
-  }, before.slot);
-  expect(killed, "expected the new Rush follower to kill Ward").toBeTruthy();
-
   await expect(card).toHaveClass(/can-attack/);
-  await expect(card).not.toHaveClass(/rush-glow/);
-  await assertGlow(card, "green");
-  const greenPath = await artShot(card, `${ART}/leader_glow_ward_cleared_green.png`);
-  assertPngLeftEdge(greenPath, "green");
+});
+
+test("rush follower is yellow on entry with or without a Ward", async ({ page }) => {
+  test.setTimeout(90_000);
+  await boot(page);
+  const me = await importDeck(page, "rush-ward-atk.json", { [RUSH]: 40 });
+  const them = await importDeck(page, "rush-ward-leah.json", { [LEAH]: 40 });
+  await startGame(page, me, them);
+  await confirmMulligans(page);
+  await closeDrawer(page);
+
+  await applyFirst(page, "end_turn");
+  await applyFirst(page, "end_turn");
+  await applyFirst(page, "end_turn");
+  await playCard(page, LEAH);
+  await applyFirst(page, "end_turn");
+  await playCard(page, RUSH);
+  const withWard = page.locator("#blueBoard .card[data-card='10631110']").first();
+  await expect(withWard).toHaveClass(/rush-glow/);
+  await expect(withWard).not.toHaveClass(/can-attack/);
+  await assertGlow(withWard, "yellow");
+  await artShot(withWard, `${ART}/rush_glow_entry_with_ward_yellow.png`);
 });
 
 test("printed can't-attack-leader follower is yellow every turn", async ({ page }) => {
@@ -487,4 +489,100 @@ test("0-attack follower is green and a leader drop applies", async ({ page }) =>
   await expect(card).not.toHaveClass(/rush-glow/);
   await assertGlow(card, "none");
   await artShot(card, `${ART}/leader_glow_zero_atk_after.png`);
+});
+
+const TREANT = "10011130";
+
+test("Gentle Treant is yellow at Combo 2 in hand; tooltip shows Combo 2", async ({ page }) => {
+  test.setTimeout(90_000);
+  await boot(page);
+  const id = await importDeck(page, "treant-combo.json", { [TREANT]: 16, [RUSH]: 16, [FIGHTER]: 8 });
+  await startGame(page, id);
+  await confirmMulligans(page);
+  await closeDrawer(page);
+
+  let armed = false;
+  for (let i = 0; i < 24; i++) {
+    const snap = await page.evaluate(() => {
+      const full = window.__arena!.full() as {
+        active: string;
+        players: { a: { pp: number; combo: number; hand: Array<{ card: string }> } };
+      };
+      const hand = full.players.a.hand;
+      return {
+        active: full.active,
+        pp: full.players.a.pp,
+        combo: full.players.a.combo,
+        spawn: hand.filter((c) => c.card === "10631110").length,
+        treant: hand.filter((c) => c.card === "10011130").length,
+      };
+    });
+    if (snap.active === "a" && snap.pp >= 6 && snap.spawn >= 2 && snap.treant >= 1) {
+      armed = true;
+      break;
+    }
+    await applyFirst(page, "end_turn");
+  }
+  expect(armed, "a turn with 6 PP, two Rush, and Treant").toBeTruthy();
+
+  await playCard(page, RUSH);
+  await playCard(page, RUSH);
+  const treant = page.locator("#blueHand .card[data-card='10011130']").first();
+  await expect(treant).toHaveClass(/enhance-ready/);
+  const outline = await treant.locator(".card-image-wrapper").evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { color: s.outlineColor, width: s.outlineWidth };
+  });
+  expect(outline.color).toBe("rgb(255, 212, 0)");
+  expect(outline.width).toBe("4px");
+  await treant.hover();
+  await expect(page.locator("#cardTooltip")).toContainText("Combo 2");
+  await expect(page.locator("#cardTooltip")).not.toContainText("Combo 2/3");
+  await artShot(treant, `${ART}/combo_treant_hand_yellow.png`);
+});
+
+test("Gentle Treant is not yellow from Combo at 1 played; tooltip shows Combo 1", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await boot(page);
+  const id = await importDeck(page, "treant-combo-short.json", {
+    [TREANT]: 16,
+    [RUSH]: 16,
+    [FIGHTER]: 8,
+  });
+  await startGame(page, id);
+  await confirmMulligans(page);
+  await closeDrawer(page);
+
+  let armed = false;
+  for (let i = 0; i < 24; i++) {
+    const snap = await page.evaluate(() => {
+      const full = window.__arena!.full() as {
+        active: string;
+        players: { a: { pp: number; hand: Array<{ card: string }> } };
+      };
+      const hand = full.players.a.hand;
+      return {
+        active: full.active,
+        pp: full.players.a.pp,
+        spawn: hand.filter((c) => c.card === "10631110").length,
+        treant: hand.filter((c) => c.card === "10011130").length,
+      };
+    });
+    if (snap.active === "a" && snap.pp >= 5 && snap.spawn >= 1 && snap.treant >= 1) {
+      armed = true;
+      break;
+    }
+    await applyFirst(page, "end_turn");
+  }
+  expect(armed, "a turn with 5 PP, one Rush, and Treant").toBeTruthy();
+
+  await playCard(page, RUSH);
+  const treant = page.locator("#blueHand .card[data-card='10011130']").first();
+  await expect(treant).toBeVisible();
+  await expect(treant).not.toHaveClass(/enhance-ready/);
+  await treant.hover();
+  await expect(page.locator("#cardTooltip")).toContainText("Combo 1");
+  await expect(page.locator("#cardTooltip")).not.toContainText("Combo 1/3");
 });
