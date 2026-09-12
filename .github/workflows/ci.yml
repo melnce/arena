@@ -11,6 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: paths are portable (no Windows-illegal characters)
+        run: |
+          bad=$(git ls-files -z | tr '\0' '\n' | grep -E '[:<>"|?*\\]' || true)
+          if [ -n "$bad" ]; then echo "tracked paths with characters illegal on Windows:"; echo "$bad"; exit 1; fi
+
       - name: Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
