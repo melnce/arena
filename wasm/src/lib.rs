@@ -114,6 +114,17 @@ impl Game {
         self.inner.reseed(seed);
         Ok(())
     }
+
+    #[wasm_bindgen(js_name = debugGrantCantAttackLeader)]
+    pub fn debug_grant_cant_attack_leader(
+        &mut self,
+        player: String,
+        slot: u8,
+    ) -> Result<(), JsValue> {
+        self.inner
+            .debug_grant_cant_attack_leader(&player, slot)
+            .map_err(JsValue::from)
+    }
 }
 
 /// JSON array of policy names the client can put in a selector.

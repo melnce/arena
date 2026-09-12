@@ -126,6 +126,21 @@ impl GameInner {
         self.state.reseed(seed);
     }
 
+    /// Test helper: grant a printed `cant_attack_leader` lock on a field follower.
+    /// No catalog card has that trait without also locking followers.
+    pub fn debug_grant_cant_attack_leader(&mut self, player: &str, slot: u8) -> Result<(), String> {
+        let who = parse_player(player)?;
+        let inst = self
+            .state
+            .player_mut(who)
+            .field
+            .get_mut(slot as usize)
+            .and_then(|s| s.as_mut())
+            .ok_or_else(|| format!("no follower at {player} slot {slot}"))?;
+        inst.traits.cant_attack_leader = Some(true);
+        Ok(())
+    }
+
     fn legal_len(&self) -> usize {
         legal_actions_neutral(db(), &self.state).len()
     }
