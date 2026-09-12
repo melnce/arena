@@ -416,6 +416,11 @@ fn board_info_cannot_attack_reason_enemy_ward() {
         info[0].cannot_attack_reason.as_deref(),
         Some("Cannot attack the leader: an enemy Ward is in play")
     );
+    assert!(
+        !info[0].followers_only_this_turn,
+        "Ward is board state, not the follower's own permission"
+    );
+    assert!(!info[0].rush_only);
 }
 
 #[test]
@@ -454,6 +459,38 @@ fn board_info_cannot_attack_reason_printed_leader_lock() {
         info[0].cannot_attack_reason.as_deref(),
         Some("Cannot attack the leader: printed restriction")
     );
+    assert!(info[0].rush_only);
+    assert!(!info[0].followers_only_this_turn);
+}
+
+#[test]
+fn followers_only_this_turn_ignores_enemy_ward() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, PlayerId::B, "10001120");
+    let info = board_info(&db, &st, me);
+    assert!(info[0].can_attack);
+    assert!(!info[0].can_attack_leader);
+    assert!(!info[0].followers_only_this_turn);
+    assert!(!info[0].rush_only);
+}
+
+#[test]
+fn storm_plus_ward_is_not_followers_only() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, PlayerId::B, "10001120");
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10021110");
+    let info = board_info(&db, &st, me);
+    assert!(info[0].can_attack);
+    assert!(!info[0].can_attack_leader);
+    assert!(!info[0].followers_only_this_turn);
+    assert!(!info[0].rush_only);
 }
 
 #[test]
@@ -495,4 +532,64 @@ fn player_info_has_leader_barrier_from_damage_cap() {
             until: None,
         });
     assert!(player_info(&db, &st, me).has_leader_barrier);
+}
+
+#[test]
+fn combo_hand_gate_counts_the_card_being_played() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    give_pp(&mut st, me, 4, 4);
+    let _ = put_hand(&db, &mut st, me, "10011130");
+
+    st.player_mut(me).combo = 2;
+    let ready = hand_info(&db, &st, me);
+    let combo = ready[0]
+        .gates
+        .iter()
+        .find(|g| g.kind == "combo")
+        .expect("combo gate");
+    assert_eq!(combo.need, 3);
+    assert_eq!(combo.have, 2, "have is the raw cards-already-played count");
+    assert!(combo.met, "playing Treant as the 3rd card meets Combo (3)");
+
+    st.player_mut(me).combo = 1;
+    let short = hand_info(&db, &st, me);
+    let combo = short[0]
+        .gates
+        .iter()
+        .find(|g| g.kind == "combo")
+        .expect("combo gate");
+    assert_eq!(combo.have, 1);
+    assert!(!combo.met);
+}
+
+#[test]
+fn combo_board_gate_does_not_double_count() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    give_pp(&mut st, me, 10, 10);
+    play_id(&db, &mut st, me, "10631110");
+    play_id(&db, &mut st, me, "10631110");
+    play_id(&db, &mut st, me, "10011130");
+    assert_eq!(st.player(me).combo, 3);
+    let info = board_info(&db, &st, me);
+    let treant = info
+        .iter()
+        .find(|i| i.id == "10011130")
+        .expect("treant on field");
+    let combo = treant
+        .gates
+        .iter()
+        .find(|g| g.kind == "combo")
+        .expect("combo gate");
+    assert_eq!(combo.need, 3);
+    assert_eq!(
+        combo.have, 3,
+        "board have is combo after the play, not +1 again"
+    );
+    assert!(combo.met);
 }

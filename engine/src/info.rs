@@ -43,11 +43,11 @@ pub struct BoardCardInfo {
     pub id: String,
     pub can_attack: bool,
     pub can_attack_leader: bool,
-    /// Same value as `followers_only_this_turn` — kept so older clients still
-    /// paint the yellow entry-turn ring.
+    /// Yellow ring: this follower's *own* permission denies the leader
+    /// (entry-turn without Storm, or printed `cant_attack_leader`). Not Ward.
     pub rush_only: bool,
-    /// Entered this turn (`summoning_sick`), has a legal attack, and none of
-    /// those attacks is the enemy leader. Client: yellow `rush-glow` only.
+    /// Entered this turn without Storm and has a legal attack. Subset of
+    /// `rush_only`. An enemy Ward does not set this.
     pub followers_only_this_turn: bool,
     pub evolved: bool,
     pub super_evolved: bool,
@@ -186,13 +186,14 @@ pub fn board_info(db: &CardDb, state: &State, player: PlayerId) -> Vec<BoardCard
                     )
                 });
             let followers_only_this_turn =
-                inst.flags.summoning_sick && can_attack && !can_attack_leader;
+                can_attack && inst.flags.summoning_sick && !inst.is_storm();
+            let printed_leader_lock = can_attack && inst.traits.cant_attack_leader == Some(true);
             Some(BoardCardInfo {
                 slot: i as u8,
                 id: inst.card.as_str(),
                 can_attack,
                 can_attack_leader,
-                rush_only: followers_only_this_turn,
+                rush_only: followers_only_this_turn || printed_leader_lock,
                 followers_only_this_turn,
                 evolved: inst.evolved,
                 super_evolved: inst.super_evolved,
@@ -373,16 +374,43 @@ fn collect_hand_gates(
     for mode in card.modes() {
         match mode {
             Mode::Enhance { effects, .. } => {
-                walk_effects(db, effects, state, player, inst, source, &mut gates);
+                walk_effects(
+                    db,
+                    effects,
+                    state,
+                    player,
+                    inst,
+                    source,
+                    Zone::Hand,
+                    &mut gates,
+                );
             }
             Mode::Accelerate { effects, .. } => {
-                walk_effects(db, effects, state, player, inst, source, &mut gates);
+                walk_effects(
+                    db,
+                    effects,
+                    state,
+                    player,
+                    inst,
+                    source,
+                    Zone::Hand,
+                    &mut gates,
+                );
             }
             Mode::Crystallize { abilities, .. } => {
                 if let Some(abs) = abilities {
                     for a in abs {
                         if matches!(a, Ability::Fanfare { .. }) {
-                            walk_ability(db, a, state, player, inst, source, &mut gates);
+                            walk_ability(
+                                db,
+                                a,
+                                state,
+                                player,
+                                inst,
+                                source,
+                                Zone::Hand,
+                                &mut gates,
+                            );
                         }
                     }
                 }
@@ -391,7 +419,7 @@ fn collect_hand_gates(
     }
     for a in card.abilities() {
         if matches!(a, Ability::Fanfare { .. }) {
-            walk_ability(db, a, state, player, inst, source, &mut gates);
+            walk_ability(db, a, state, player, inst, source, Zone::Hand, &mut gates);
         }
     }
     if inst.printed_tags.contains("spellboost")
@@ -427,10 +455,10 @@ fn collect_board_gates(
         id: inst.id,
     };
     for a in card.abilities() {
-        walk_ability(db, a, state, player, inst, source, &mut gates);
+        walk_ability(db, a, state, player, inst, source, Zone::Field, &mut gates);
     }
     for a in &inst.granted {
-        walk_ability(db, a, state, player, inst, source, &mut gates);
+        walk_ability(db, a, state, player, inst, source, Zone::Field, &mut gates);
     }
     gates.retain(|g| matches!(g.kind.as_str(), "rally" | "combo" | "overflow"));
     gates
@@ -443,12 +471,22 @@ fn walk_ability(
     player: PlayerId,
     inst: &CardInstance,
     source: SourceRef,
+    zone: Zone,
     gates: &mut Vec<GateInfo>,
 ) {
     if let Some(c) = ability.when_cond() {
-        walk_condition(db, c, state, player, inst, source, gates);
+        walk_condition(db, c, state, player, inst, source, zone, gates);
     }
-    walk_effects(db, ability.effects(), state, player, inst, source, gates);
+    walk_effects(
+        db,
+        ability.effects(),
+        state,
+        player,
+        inst,
+        source,
+        zone,
+        gates,
+    );
 }
 
 fn walk_effects(
@@ -458,10 +496,11 @@ fn walk_effects(
     player: PlayerId,
     inst: &CardInstance,
     source: SourceRef,
+    zone: Zone,
     gates: &mut Vec<GateInfo>,
 ) {
     for e in effects {
-        walk_effect(db, e, state, player, inst, source, gates);
+        walk_effect(db, e, state, player, inst, source, zone, gates);
     }
 }
 
@@ -472,10 +511,11 @@ fn walk_effect(
     player: PlayerId,
     inst: &CardInstance,
     source: SourceRef,
+    zone: Zone,
     gates: &mut Vec<GateInfo>,
 ) {
     if let Some(c) = effect.when_cond() {
-        walk_condition(db, c, state, player, inst, source, gates);
+        walk_condition(db, c, state, player, inst, source, zone, gates);
     }
     match effect {
         Effect::Pay {
@@ -497,7 +537,7 @@ fn walk_effect(
                     PayResource::Pp | PayResource::Faith => {}
                 }
             }
-            walk_effects(db, effects, state, player, inst, source, gates);
+            walk_effects(db, effects, state, player, inst, source, zone, gates);
         }
         Effect::If {
             cond,
@@ -505,26 +545,26 @@ fn walk_effect(
             else_effects,
             ..
         } => {
-            walk_condition(db, cond, state, player, inst, source, gates);
-            walk_effects(db, then, state, player, inst, source, gates);
+            walk_condition(db, cond, state, player, inst, source, zone, gates);
+            walk_effects(db, then, state, player, inst, source, zone, gates);
             if let Some(els) = else_effects {
-                walk_effects(db, els, state, player, inst, source, gates);
+                walk_effects(db, els, state, player, inst, source, zone, gates);
             }
         }
         Effect::Seq { effects, .. } | Effect::Repeat { effects, .. } => {
-            walk_effects(db, effects, state, player, inst, source, gates);
+            walk_effects(db, effects, state, player, inst, source, zone, gates);
         }
         Effect::Choose {
             options: Some(opts),
             ..
         } => {
             for o in opts {
-                walk_effects(db, &o.effects, state, player, inst, source, gates);
+                walk_effects(db, &o.effects, state, player, inst, source, zone, gates);
             }
         }
         Effect::Sequence { steps, .. } => {
             for s in steps {
-                walk_effects(db, &s.effects, state, player, inst, source, gates);
+                walk_effects(db, &s.effects, state, player, inst, source, zone, gates);
             }
         }
         _ => {}
@@ -538,18 +578,19 @@ fn walk_condition(
     player: PlayerId,
     inst: &CardInstance,
     source: SourceRef,
+    zone: Zone,
     gates: &mut Vec<GateInfo>,
 ) {
     match cond {
         Condition::Not { .. } => {}
         Condition::All { all } => {
             for c in all {
-                walk_condition(db, c, state, player, inst, source, gates);
+                walk_condition(db, c, state, player, inst, source, zone, gates);
             }
         }
         Condition::Any { any } => {
             for c in any {
-                walk_condition(db, c, state, player, inst, source, gates);
+                walk_condition(db, c, state, player, inst, source, zone, gates);
             }
         }
         Condition::Did { .. }
@@ -566,8 +607,14 @@ fn walk_condition(
         }
         Condition::Combo { combo } => {
             if let Some(need) = amount_int(&combo.n) {
+                // `have` is cards already played this turn. Playing this
+                // card counts toward its own Combo threshold (rulebook;
+                // apply.rs increments combo at play time). Tooltip prints
+                // the raw count; `met` uses +1 only while the card is
+                // still in hand.
                 let have = state.player(player).combo;
-                push_gate(gates, "combo", "combo", need, have, have >= need);
+                let effective = if zone == Zone::Hand { have + 1 } else { have };
+                push_gate(gates, "combo", "combo", need, have, effective >= need);
             }
         }
         Condition::Overflow { overflow } if *overflow => {
