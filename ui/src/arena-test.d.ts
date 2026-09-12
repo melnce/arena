@@ -40,6 +40,14 @@ declare global {
       } | null;
       mountNamedCounter(vars: Record<string, number>): string;
       debugGrantCantAttackLeader(player: string, slot: number): void;
+      catalogIds(): string[];
+      cardText(id: string): {
+        id: string;
+        name: string;
+        text: string;
+        crests?: Array<{ id: string; name: string; text: string; faith: boolean }>;
+        forms?: Array<{ kind: string; cost: number; printed: string }>;
+      };
     };
   }
 }

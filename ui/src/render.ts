@@ -631,20 +631,48 @@ function attachCrestTooltips(
   if (!tip) return;
   slots.forEach((slot, i) => {
     const crest = crests[i];
-    if (!crest) return;
+    if (!crest) {
+      delete slot.dataset.crest;
+      delete slot.dataset.player;
+      slot.onmouseenter = null;
+      slot.onpointermove = null;
+      slot.onmouseleave = null;
+      return;
+    }
+    slot.dataset.crest = crest.id;
+    slot.dataset.player = player;
     slot.onmouseenter = () => {
       tip.innerHTML = formatCrestTooltip(crest, faith);
       tip.style.display = "block";
     };
     slot.onpointermove = (e) => {
-      const offsetY = player === "a" ? -tip.offsetHeight - 12 : 12;
-      tip.style.left = `${Math.min(e.clientX + 12, window.innerWidth - tip.offsetWidth - 12)}px`;
-      tip.style.top = `${Math.max(e.clientY + offsetY, 12)}px`;
+      placeCrestTooltip(slot, e.clientX, e.clientY);
     };
     slot.onmouseleave = () => {
       tip.style.display = "none";
     };
   });
+}
+
+function paintCrestTooltip(slot: HTMLElement): void {
+  if (!tipEl || !lastFull) return;
+  const id = slot.dataset.crest;
+  const player = slot.dataset.player as PlayerId | undefined;
+  if (!id || !player) return;
+  const crest = lastFull.players[player].crests.find((c) => c.id === id);
+  if (!crest) return;
+  tipEl.innerHTML = formatCrestTooltip(crest, lastFull.players[player].faith);
+  tipEl.style.display = "block";
+  tipSession = null;
+}
+
+function placeCrestTooltip(slot: HTMLElement, clientX: number, clientY: number): void {
+  if (!tipEl) return;
+  const player = slot.dataset.player as PlayerId | undefined;
+  const offsetY = player === "a" ? -tipEl.offsetHeight - 12 : 12;
+  tipEl.style.left = `${Math.min(clientX + 12, window.innerWidth - tipEl.offsetWidth - 12)}px`;
+  tipEl.style.top = `${Math.max(clientY + offsetY, 12)}px`;
+  tipEl.style.bottom = "auto";
 }
 
 function renderMulligan(phase: string, acting: PlayerId, hooks: RenderHooks): void {
@@ -1382,15 +1410,72 @@ function refreshOpenTooltip(full: FullState): void {
   if (tipSession.drag) pinDragTooltip();
 }
 
+function bindLongPressTooltip(opts: {
+  match: (target: EventTarget | null) => HTMLElement | null;
+  canOpen?: (el: HTMLElement) => boolean;
+  paint: (el: HTMLElement) => void;
+  place: (el: HTMLElement, x: number, y: number) => void;
+}): void {
+  let pressTimer = 0;
+  let pressEl: HTMLElement | null = null;
+  let pressX = 0;
+  let pressY = 0;
+  let longPinned = false;
+
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (e.pointerType !== "touch") return;
+      const el = opts.match(e.target);
+      window.clearTimeout(pressTimer);
+      pressEl = el;
+      pressX = e.clientX;
+      pressY = e.clientY;
+      if (!el || (opts.canOpen && !opts.canOpen(el))) return;
+      pressTimer = window.setTimeout(() => {
+        if (!pressEl) return;
+        longPinned = true;
+        opts.paint(pressEl);
+        opts.place(pressEl, pressX, pressY);
+      }, 400);
+    },
+    true,
+  );
+  document.addEventListener(
+    "pointermove",
+    (e) => {
+      if (e.pointerType !== "touch" || !pressEl) return;
+      const dx = e.clientX - pressX;
+      const dy = e.clientY - pressY;
+      if (dx * dx + dy * dy > 64) {
+        window.clearTimeout(pressTimer);
+        pressEl = null;
+      }
+    },
+    true,
+  );
+  document.addEventListener(
+    "pointerup",
+    (e) => {
+      window.clearTimeout(pressTimer);
+      if (e.pointerType === "touch") {
+        const el = opts.match(e.target);
+        if (longPinned && (!el || el !== pressEl)) {
+          longPinned = false;
+          tipSession = null;
+          if (tipEl) tipEl.style.display = "none";
+        }
+      }
+      pressEl = null;
+    },
+    true,
+  );
+}
+
 export function bindTooltips(): void {
   const tip = byId("cardTooltip");
   if (!tip) return;
   tipEl = tip;
-  let pressTimer = 0;
-  let pressCard: HTMLElement | null = null;
-  let pressX = 0;
-  let pressY = 0;
-  let longPinned = false;
 
   document.addEventListener("mouseover", (e) => {
     if (tipSession?.drag) return;
@@ -1405,6 +1490,7 @@ export function bindTooltips(): void {
       pinDragTooltip();
       return;
     }
+    if ((e.target as HTMLElement).closest?.(".crest-slot[data-crest]")) return;
     placeTooltip(e.clientX, e.clientY);
   });
   document.addEventListener("mouseout", (e) => {
@@ -1417,53 +1503,20 @@ export function bindTooltips(): void {
     if (tipEl) tipEl.style.display = "none";
   });
 
-  document.addEventListener(
-    "pointerdown",
-    (e) => {
-      if (e.pointerType !== "touch") return;
-      const card = (e.target as HTMLElement).closest<HTMLElement>(".card[data-card]");
-      window.clearTimeout(pressTimer);
-      pressCard = card;
-      pressX = e.clientX;
-      pressY = e.clientY;
-      if (!card || card.dataset.faceDown === "1") return;
-      pressTimer = window.setTimeout(() => {
-        if (!pressCard) return;
-        longPinned = true;
-        tipSession = { card: pressCard, drag: false };
-        paintTooltipHtml(pressCard, lastFull);
-        placeTooltip(pressX, pressY);
-      }, 400);
+  bindLongPressTooltip({
+    match: (target) =>
+      target instanceof Element ? target.closest<HTMLElement>(".card[data-card]") : null,
+    canOpen: (card) => card.dataset.faceDown !== "1",
+    paint: (card) => {
+      tipSession = { card, drag: false };
+      paintTooltipHtml(card, lastFull);
     },
-    true,
-  );
-  document.addEventListener(
-    "pointermove",
-    (e) => {
-      if (e.pointerType !== "touch" || !pressCard) return;
-      const dx = e.clientX - pressX;
-      const dy = e.clientY - pressY;
-      if (dx * dx + dy * dy > 64) {
-        window.clearTimeout(pressTimer);
-        pressCard = null;
-      }
-    },
-    true,
-  );
-  document.addEventListener(
-    "pointerup",
-    (e) => {
-      window.clearTimeout(pressTimer);
-      if (e.pointerType === "touch") {
-        const card = (e.target as HTMLElement).closest<HTMLElement>(".card[data-card]");
-        if (longPinned && (!card || card !== pressCard)) {
-          longPinned = false;
-          tipSession = null;
-          if (tipEl) tipEl.style.display = "none";
-        }
-      }
-      pressCard = null;
-    },
-    true,
-  );
+    place: (_el, x, y) => placeTooltip(x, y),
+  });
+  bindLongPressTooltip({
+    match: (target) =>
+      target instanceof Element ? target.closest<HTMLElement>(".crest-slot[data-crest]") : null,
+    paint: (slot) => paintCrestTooltip(slot),
+    place: (slot, x, y) => placeCrestTooltip(slot, x, y),
+  });
 }

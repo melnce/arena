@@ -37,8 +37,19 @@ export type CatalogEntry = {
   banner: string;
   evoCard: string;
   evoBanner: string;
-  specificEffects: string[];
-  specificEffectTypes: string[];
+};
+
+export type CrestText = {
+  id: string;
+  name: string;
+  text: string;
+  faith: boolean;
+};
+
+export type CardForm = {
+  kind: "enhance" | "accelerate" | "crystallize" | string;
+  cost: number;
+  printed: string;
 };
 
 export type CardText = {
@@ -54,6 +65,8 @@ export type CardText = {
   attack?: number | null;
   defense?: number | null;
   modes?: string[];
+  crests?: CrestText[];
+  forms?: CardForm[];
 };
 
 export type CardInstance = {

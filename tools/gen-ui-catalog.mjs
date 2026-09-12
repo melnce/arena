@@ -27,12 +27,6 @@ const images = {};
 for (const [id, rec] of Object.entries(raw)) {
   if (!rec || typeof rec !== "object" || id.startsWith("_")) continue;
   if (!rec.id && !rec.card_image_hash && !rec.name) continue;
-  const specific = Array.isArray(rec.specific_effect_card_ids)
-    ? rec.specific_effect_card_ids
-    : [];
-  const effects = Array.isArray(rec.specific_effects)
-    ? rec.specific_effects.map((e) => e?.type).filter(Boolean)
-    : [];
   images[id] = {
     name: rec.name ?? id,
     cost: rec.cost ?? null,
@@ -44,8 +38,6 @@ for (const [id, rec] of Object.entries(raw)) {
     banner: rec.card_banner_image_hash ?? "",
     evoCard: rec.evo_card_image_hash ?? "",
     evoBanner: rec.evo_card_banner_image_hash ?? "",
-    specificEffects: specific,
-    specificEffectTypes: effects,
   };
 }
 
