@@ -3830,6 +3830,30 @@ fn apply_effect_with_targets(
                 }
             }
         }
+        Effect::RemoveAbilities { on, .. } => {
+            for t in targets {
+                remove_abilities_opt(state, t, on.as_deref());
+            }
+        }
+        Effect::Cost {
+            delta,
+            set,
+            until_end_of_turn,
+            ..
+        } => {
+            for t in targets {
+                cost_opt(
+                    state,
+                    t,
+                    delta.as_ref(),
+                    set.as_ref(),
+                    until_end_of_turn.unwrap_or(false),
+                    db,
+                    controller,
+                    source,
+                );
+            }
+        }
         Effect::Select { .. } => {}
         _ => {
             apply_effect(db, state, controller, source, e, events)?;

@@ -1,0 +1,31 @@
+{
+  "id": "89900110",
+  "name": "Choose Cost Zero",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89900,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Select a card in your hand and change its cost to 0.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a card in your hand and change its cost to 0.",
+      "effects": [
+        {
+          "op": "cost",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card"
+          },
+          "set": 0,
+          "printed": "Select a card in your hand and change its cost to 0."
+        }
+      ]
+    }
+  ]
+}
