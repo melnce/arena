@@ -7,8 +7,10 @@
 //! `Box<dyn Policy>`.
 
 mod h0;
+mod needs;
 
-pub use h0::H0;
+pub use h0::{ValueVersion, Weights, H0};
+pub use needs::{CardNeeds, NeedsTable, SkippedAmount};
 
 use crate::action::Action;
 use crate::db::CardDb;
@@ -94,6 +96,9 @@ impl AnyPolicy {
     /// `"random"` | `"first-legal"` | `"h0"` ([`H0::default`]) | `"h0-fast"`
     /// ([`H0::fast`]) | `"h0:depth=6,beam=4,k=4,nodes=2000"` — any subset of
     /// keys, the rest default; `k` = `determinizations`, `nodes` = `node_cap`.
+    /// H0 also accepts `value=v0|v1` (default `v0`) and `w_shadows=`,
+    /// `w_earth=`, `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`, `w_lw=`
+    /// (f32; only meaningful with `value=v1`).
     ///
     /// `Err` names the offending token: unknown policy, unknown key, or bad
     /// number.
@@ -110,25 +115,63 @@ impl AnyPolicy {
     }
 
     /// Canonical form: `"random"`, `"first-legal"`, `"h0"`, `"h0-fast"`, or
-    /// `"h0:depth=…,beam=…,k=…,nodes=…"`.
+    /// `"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1` and any non-default
+    /// weight. `"h0"` still round-trips to `"h0"`.
     pub fn spec(&self) -> String {
         match self {
             AnyPolicy::Random(_) => "random".to_string(),
             AnyPolicy::FirstLegal(_) => "first-legal".to_string(),
-            AnyPolicy::H0(h) => {
-                if h0_fields_eq(h, &H0::default()) {
-                    "h0".to_string()
-                } else if h0_fields_eq(h, &H0::fast()) {
-                    "h0-fast".to_string()
-                } else {
-                    format!(
-                        "h0:depth={},beam={},k={},nodes={}",
-                        h.depth, h.beam, h.determinizations, h.node_cap
-                    )
-                }
-            }
+            AnyPolicy::H0(h) => h0_spec(h),
         }
     }
+}
+
+fn h0_spec(h: &H0) -> String {
+    if h0_fields_eq(h, &H0::default()) {
+        return "h0".to_string();
+    }
+    if h0_fields_eq(h, &H0::fast()) {
+        return "h0-fast".to_string();
+    }
+    let def = H0::default();
+    let mut parts: Vec<String> = Vec::new();
+    if h.depth != def.depth
+        || h.beam != def.beam
+        || h.determinizations != def.determinizations
+        || h.node_cap != def.node_cap
+    {
+        parts.push(format!("depth={}", h.depth));
+        parts.push(format!("beam={}", h.beam));
+        parts.push(format!("k={}", h.determinizations));
+        parts.push(format!("nodes={}", h.node_cap));
+    }
+    if h.value != ValueVersion::V0 {
+        parts.push("value=v1".to_string());
+    }
+    let w = &h.weights;
+    let dw = Weights::default();
+    if w.shadows != dw.shadows {
+        parts.push(format!("w_shadows={}", w.shadows));
+    }
+    if w.earth != dw.earth {
+        parts.push(format!("w_earth={}", w.earth));
+    }
+    if w.faith != dw.faith {
+        parts.push(format!("w_faith={}", w.faith));
+    }
+    if w.rally != dw.rally {
+        parts.push(format!("w_rally={}", w.rally));
+    }
+    if w.boost != dw.boost {
+        parts.push(format!("w_boost={}", w.boost));
+    }
+    if w.need != dw.need {
+        parts.push(format!("w_need={}", w.need));
+    }
+    if w.last_words != dw.last_words {
+        parts.push(format!("w_lw={}", w.last_words));
+    }
+    format!("h0:{}", parts.join(","))
 }
 
 fn h0_fields_eq(a: &H0, b: &H0) -> bool {
@@ -136,6 +179,18 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.beam == b.beam
         && a.determinizations == b.determinizations
         && a.node_cap == b.node_cap
+        && a.value == b.value
+        && weights_eq(&a.weights, &b.weights)
+}
+
+fn weights_eq(a: &Weights, b: &Weights) -> bool {
+    a.shadows == b.shadows
+        && a.earth == b.earth
+        && a.faith == b.faith
+        && a.rally == b.rally
+        && a.boost == b.boost
+        && a.need == b.need
+        && a.last_words == b.last_words
 }
 
 fn parse_h0_params(body: &str) -> Result<H0, String> {
@@ -158,6 +213,20 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             "beam" => h.beam = parse_num(val)?,
             "k" => h.determinizations = parse_num(val)?,
             "nodes" => h.node_cap = parse_num(val)?,
+            "value" => {
+                h.value = match val {
+                    "v0" => ValueVersion::V0,
+                    "v1" => ValueVersion::V1,
+                    other => return Err(format!("unknown value '{other}'")),
+                }
+            }
+            "w_shadows" => h.weights.shadows = parse_num(val)?,
+            "w_earth" => h.weights.earth = parse_num(val)?,
+            "w_faith" => h.weights.faith = parse_num(val)?,
+            "w_rally" => h.weights.rally = parse_num(val)?,
+            "w_boost" => h.weights.boost = parse_num(val)?,
+            "w_need" => h.weights.need = parse_num(val)?,
+            "w_lw" => h.weights.last_words = parse_num(val)?,
             other => return Err(format!("unknown key '{other}'")),
         }
     }

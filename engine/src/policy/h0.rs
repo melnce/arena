@@ -8,15 +8,68 @@
 
 use crate::action::{acting_player, Action};
 use crate::apply::{apply, legal_actions};
+use crate::card::CardKind;
 use crate::db::CardDb;
 use crate::determinize::determinize;
 use crate::ids::PlayerId;
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
 use crate::search_key::search_key;
-use crate::state::{Phase, State};
+use crate::state::{Phase, PlayerState, State};
 
+use super::needs::NeedsTable;
 use super::Policy;
+
+/// Economy-term weights for [`ValueVersion::V1`]. A weight of `0` drops that term.
+#[derive(Debug, Clone, Copy)]
+pub struct Weights {
+    pub shadows: f32,
+    pub earth: f32,
+    pub faith: f32,
+    pub rally: f32,
+    pub boost: f32,
+    pub need: f32,
+    pub last_words: f32,
+}
+
+impl Default for Weights {
+    fn default() -> Self {
+        Self {
+            shadows: 0.12,
+            earth: 0.35,
+            faith: 0.15,
+            rally: 0.05,
+            boost: 0.10,
+            need: 0.60,
+            last_words: 0.80,
+        }
+    }
+}
+
+/// Which leaf value `H0` uses. Default stays [`ValueVersion::V0`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ValueVersion {
+    #[default]
+    V0,
+    V1,
+}
+
+/// (`NeedsTable`, version, weights) — the only thing search functions evaluate.
+#[derive(Clone, Copy)]
+struct Evaluator<'a> {
+    needs: &'a NeedsTable,
+    version: ValueVersion,
+    weights: &'a Weights,
+}
+
+impl Evaluator<'_> {
+    fn value(self, state: &State, me: PlayerId) -> f32 {
+        match self.version {
+            ValueVersion::V0 => value(state, me),
+            ValueVersion::V1 => value_v1(state, me, self.needs, self.weights),
+        }
+    }
+}
 
 const INF: f32 = 1.0e9;
 /// Finite stand-in for a terminal when averaging across roots so a lucky
@@ -31,6 +84,8 @@ pub struct H0 {
     pub beam: usize,
     pub determinizations: u32,
     pub node_cap: u32,
+    pub value: ValueVersion,
+    pub weights: Weights,
 }
 
 impl Default for H0 {
@@ -40,6 +95,8 @@ impl Default for H0 {
             beam: 4,
             determinizations: 4,
             node_cap: 2000,
+            value: ValueVersion::V0,
+            weights: Weights::default(),
         }
     }
 }
@@ -52,11 +109,25 @@ impl H0 {
             beam: 2,
             determinizations: 0,
             node_cap: 80,
+            ..Self::default()
         }
     }
 
     fn k(&self) -> u32 {
         self.determinizations.max(1)
+    }
+
+    fn evaluator<'a>(&'a self, db: &'a CardDb) -> Evaluator<'a> {
+        Evaluator {
+            needs: db.needs(),
+            version: self.value,
+            weights: &self.weights,
+        }
+    }
+
+    /// Leaf value under this spec (`v0` is the historical arithmetic).
+    pub fn evaluate(&self, db: &CardDb, state: &State, me: PlayerId) -> f32 {
+        self.evaluator(db).value(state, me)
     }
 }
 
@@ -95,13 +166,14 @@ impl Policy for H0 {
         for _ in 0..k {
             roots.push(determinize(state, me, rng.next_u64()));
         }
+        let eval = self.evaluator(db);
 
         // `fast()` is 1-ply on the determinized root: a depth-2 consensus
         // lethal walk (every legal × every reply, plus `search_key` on each
         // apply) was the 8× regression vs pre-R2 greedy. Immediate wins are
         // still taken; constructed lethals use `H0::default()`.
         if self.depth <= 2 {
-            return cand[one_ply(&roots, db, &subset, me, &mut nodes, self.node_cap)];
+            return cand[one_ply(&roots, db, &subset, me, &mut nodes, self.node_cap, eval)];
         }
 
         if let Some(j) = consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, self.node_cap) {
@@ -132,6 +204,7 @@ impl Policy for H0 {
                         &mut nodes,
                         self.node_cap,
                         &line,
+                        eval,
                     )
                 };
                 acc[j] += finite(v);
@@ -287,6 +360,7 @@ fn one_ply(
     me: PlayerId,
     nodes: &mut u32,
     cap: u32,
+    eval: Evaluator<'_>,
 ) -> usize {
     let mut acc = vec![0.0f32; subset.len()];
     let mut n = vec![0u32; subset.len()];
@@ -303,7 +377,7 @@ fn one_ply(
             let mut v = if s.winner == Some(me) {
                 FINITE_WIN
             } else {
-                value(&s, me)
+                eval.value(&s, me)
             };
             if matches!(
                 a,
@@ -333,6 +407,7 @@ fn one_ply(
     best_i
 }
 
+#[allow(clippy::too_many_arguments)]
 fn greedy_index(
     db: &CardDb,
     state: &State,
@@ -341,6 +416,7 @@ fn greedy_index(
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
+    eval: Evaluator<'_>,
 ) -> usize {
     let mut best_i = 0usize;
     let mut best_v = f32::NEG_INFINITY;
@@ -354,7 +430,7 @@ fn greedy_index(
         let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
             continue;
         };
-        let v = value(&s, me);
+        let v = eval.value(&s, me);
         if v > best_v {
             best_v = v;
             best_i = i;
@@ -373,6 +449,7 @@ fn search_own(
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
+    eval: Evaluator<'_>,
 ) -> f32 {
     if state.winner == Some(me) {
         return INF;
@@ -381,17 +458,17 @@ fn search_own(
         return -INF;
     }
     if *nodes >= cap {
-        return value(state, me);
+        return eval.value(state, me);
     }
     if acting_player(state) != me || matches!(state.phase, Phase::Terminal) {
-        return opponent_reply(db, state, me, nodes, cap, line);
+        return opponent_reply(db, state, me, nodes, cap, line, eval);
     }
     if depth == 0 {
-        return value(state, me);
+        return eval.value(state, me);
     }
     let legal = legal_actions(db, state);
     if legal.is_empty() {
-        return value(state, me);
+        return eval.value(state, me);
     }
 
     let mut scored: Vec<(f32, State, u64)> = Vec::with_capacity(legal.len());
@@ -409,7 +486,7 @@ fn search_own(
             return INF;
         }
         let k = search_key(&s);
-        scored.push((value(&s, me), s, k));
+        scored.push((eval.value(&s, me), s, k));
     }
     scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
     scored.truncate(beam.max(1));
@@ -427,6 +504,7 @@ fn search_own(
             nodes,
             cap,
             &next_line,
+            eval,
         );
         if v > best {
             best = v;
@@ -442,6 +520,7 @@ fn opponent_reply(
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
+    eval: Evaluator<'_>,
 ) -> f32 {
     if state.winner == Some(me) {
         return INF;
@@ -450,10 +529,11 @@ fn opponent_reply(
         return -INF;
     }
     let mut s = state.clone();
-    greedy_until_end(db, &mut s, me.opponent(), nodes, cap, line);
-    value(&s, me)
+    greedy_until_end(db, &mut s, me.opponent(), nodes, cap, line, eval);
+    eval.value(&s, me)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn greedy_until_end(
     db: &CardDb,
     state: &mut State,
@@ -461,6 +541,7 @@ fn greedy_until_end(
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
+    eval: Evaluator<'_>,
 ) {
     let mut steps = 0u32;
     let mut line = line.to_vec();
@@ -483,7 +564,7 @@ fn greedy_until_end(
                 break;
             }
         }
-        let i = greedy_index(db, state, &legal, who, nodes, cap, &line);
+        let i = greedy_index(db, state, &legal, who, nodes, cap, &line, eval);
         let Some(next) = try_apply(db, state, &legal[i], nodes, cap, &line) else {
             break;
         };
@@ -493,7 +574,12 @@ fn greedy_until_end(
     }
 }
 
+/// Historical H0 leaf value (`value=v0`). Byte-for-byte the pre-v1 arithmetic.
 pub fn value(state: &State, me: PlayerId) -> f32 {
+    value_v0(state, me)
+}
+
+pub fn value_v0(state: &State, me: PlayerId) -> f32 {
     if state.winner == Some(me) {
         return INF;
     }
@@ -525,7 +611,93 @@ pub fn value(state: &State, me: PlayerId) -> f32 {
     v
 }
 
-fn next_pp(p: &crate::state::PlayerState) -> f32 {
+fn value_v1(state: &State, me: PlayerId, needs: &NeedsTable, w: &Weights) -> f32 {
+    let v = value_v0(state, me);
+    if !v.is_finite() {
+        return v;
+    }
+    let p = state.player(me);
+    let o = state.player(me.opponent());
+    v + w.shadows * (sat(p.shadows, 10) - sat(o.shadows, 10))
+        + w.earth * (sat(p.earth, 6) - sat(o.earth, 6))
+        + w.faith * (sat(p.faith, 10) - sat(o.faith, 10))
+        + w.rally * (sat(p.rally, 15) - sat(o.rally, 15))
+        + w.boost * (boost(p, needs) - boost(o, needs))
+        + w.need * (live(p, needs) - live(o, needs))
+        + w.last_words * (lw(p, needs) - lw(o, needs))
+}
+
+fn sat(x: i32, cap: i32) -> f32 {
+    x.max(0).min(cap) as f32
+}
+
+fn need_frac(have: i32, n: i32) -> f32 {
+    if n <= 0 {
+        return 1.0;
+    }
+    let have = have.max(0) as f32;
+    let n = n as f32;
+    if have >= n {
+        1.0
+    } else {
+        let r = have / n;
+        r * r
+    }
+}
+
+fn live(p: &PlayerState, needs: &NeedsTable) -> f32 {
+    let mut sum = 0.0f32;
+    for c in &p.hand {
+        let Some(n) = needs.get(c.card) else {
+            continue;
+        };
+        if !n.has_threshold() {
+            continue;
+        }
+        let mut acc = 0.0f32;
+        let mut k = 0u32;
+        for &need in &n.shadows {
+            acc += need_frac(p.shadows, need);
+            k += 1;
+        }
+        for &need in &n.earth {
+            acc += need_frac(p.earth, need);
+            k += 1;
+        }
+        for &need in &n.faith {
+            acc += need_frac(p.faith, need);
+            k += 1;
+        }
+        for &need in &n.rally {
+            acc += need_frac(p.rally, need);
+            k += 1;
+        }
+        if k > 0 {
+            sum += acc / k as f32;
+        }
+    }
+    sum
+}
+
+fn boost(p: &PlayerState, needs: &NeedsTable) -> f32 {
+    let mut s = 0.0f32;
+    for c in &p.hand {
+        if needs.get(c.card).is_some_and(|n| n.spellboost) {
+            s += sat(c.spellboost_count, 10);
+        }
+    }
+    s
+}
+
+fn lw(p: &PlayerState, needs: &NeedsTable) -> f32 {
+    p.field
+        .iter()
+        .flatten()
+        .filter(|c| c.kind == CardKind::Follower && needs.get(c.card).is_some_and(|n| n.last_words))
+        .count() as f32
+}
+
+fn next_pp(p: &PlayerState) -> f32 {
     let mut m = p.pp_max;
     if m < 10 {
         m += 1;
@@ -533,7 +705,7 @@ fn next_pp(p: &crate::state::PlayerState) -> f32 {
     m as f32
 }
 
-fn board_score(p: &crate::state::PlayerState) -> f32 {
+fn board_score(p: &PlayerState) -> f32 {
     let mut s = 0.0f32;
     for c in p.field.iter().flatten() {
         s += (c.attack + c.defense) as f32;
