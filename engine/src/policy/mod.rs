@@ -9,7 +9,7 @@
 mod h0;
 mod needs;
 
-pub use h0::{ValueVersion, Weights, H0};
+pub use h0::{SearchStats, ValueVersion, Weights, H0};
 pub use needs::{CardNeeds, NeedsTable, SkippedAmount};
 
 use crate::action::Action;
@@ -96,7 +96,8 @@ impl AnyPolicy {
     /// `"random"` | `"first-legal"` | `"h0"` ([`H0::default`]) | `"h0-fast"`
     /// ([`H0::fast`]) | `"h0:depth=6,beam=4,k=4,nodes=2000"` — any subset of
     /// keys, the rest default; `k` = `determinizations`, `nodes` = `node_cap`.
-    /// H0 also accepts `value=v0|v1` (default `v0`) and `w_shadows=`,
+    /// H0 also accepts `value=v0|v1` (default `v0`), `odepth=` / `obeam=`
+    /// (opponent model; `odepth=0` is the greedy line), and `w_shadows=`,
     /// `w_earth=`, `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`, `w_lw=`
     /// (f32; only meaningful with `value=v1`).
     ///
@@ -115,8 +116,9 @@ impl AnyPolicy {
     }
 
     /// Canonical form: `"random"`, `"first-legal"`, `"h0"`, `"h0-fast"`, or
-    /// `"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1` and any non-default
-    /// weight. `"h0"` still round-trips to `"h0"`.
+    /// `"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`, non-default
+    /// `odepth` / `obeam`, and any non-default weight. `"h0"` still
+    /// round-trips to `"h0"`.
     pub fn spec(&self) -> String {
         match self {
             AnyPolicy::Random(_) => "random".to_string(),
@@ -147,6 +149,12 @@ fn h0_spec(h: &H0) -> String {
     }
     if h.value != ValueVersion::V0 {
         parts.push("value=v1".to_string());
+    }
+    if h.odepth != def.odepth {
+        parts.push(format!("odepth={}", h.odepth));
+    }
+    if h.obeam != def.obeam {
+        parts.push(format!("obeam={}", h.obeam));
     }
     let w = &h.weights;
     let dw = Weights::default();
@@ -180,6 +188,8 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.determinizations == b.determinizations
         && a.node_cap == b.node_cap
         && a.value == b.value
+        && a.odepth == b.odepth
+        && a.obeam == b.obeam
         && weights_eq(&a.weights, &b.weights)
 }
 
@@ -227,6 +237,8 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             "w_boost" => h.weights.boost = parse_num(val)?,
             "w_need" => h.weights.need = parse_num(val)?,
             "w_lw" => h.weights.last_words = parse_num(val)?,
+            "odepth" => h.odepth = parse_num(val)?,
+            "obeam" => h.obeam = parse_num(val)?,
             other => return Err(format!("unknown key '{other}'")),
         }
     }

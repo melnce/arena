@@ -5,6 +5,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Instant;
 
+use arena_engine::policy::SearchStats;
 use arena_engine::{
     new_game, play_game, policy_rng, AnyPolicy, CardDb, CardId, End, First, GameConfig, PlayerId,
 };
@@ -27,6 +28,7 @@ fn main() {
     let mut deck_b = deck_a.clone();
     let mut policy_a = "random".to_string();
     let mut policy_b: Option<String> = None;
+    let mut print_stats = false;
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -54,6 +56,10 @@ fn main() {
                 policy_b = Some(args[i + 1].clone());
                 i += 2;
             }
+            "--stats" => {
+                print_stats = true;
+                i += 1;
+            }
             _ => i += 1,
         }
     }
@@ -78,6 +84,8 @@ fn main() {
     let mut a_wins = 0u32;
     let mut b_wins = 0u32;
     let pol_b_name = policy_b.clone().unwrap_or_else(|| policy_a.clone());
+    let mut stats_a = SearchStats::default();
+    let mut stats_b = SearchStats::default();
     for g in 0..games {
         let s = seed.wrapping_add(g as u64);
         let mut state = new_game(
@@ -95,6 +103,12 @@ fn main() {
         let mut pol_a = parse_or_exit(&policy_a);
         let mut pol_b = parse_or_exit(&pol_b_name);
         let out = play_game(&db, &mut state, &mut pol_a, &mut pol_b, &mut rng);
+        if let AnyPolicy::H0(h) = &pol_a {
+            stats_a.add(&h.stats);
+        }
+        if let AnyPolicy::H0(h) = &pol_b {
+            stats_b.add(&h.stats);
+        }
         actions += u64::from(out.actions);
         turns += u64::from(out.turns);
         match out.end {
@@ -132,6 +146,27 @@ fn main() {
         }
     });
     println!("{out}");
+    if print_stats {
+        print_search_stats("A", &policy_a, &stats_a);
+        print_search_stats("B", &pol_b_name, &stats_b);
+    }
+}
+
+fn print_search_stats(seat: &str, spec: &str, s: &SearchStats) {
+    if s.decisions == 0 {
+        println!("search-stats {seat} {spec}: decisions=0");
+        return;
+    }
+    let d = s.decisions as f64;
+    println!(
+        "search-stats {seat} {spec}: decisions={} nodes/decision={:.2} cap_hit_rate={:.4} candidates/decision={:.2} opp_leaves/decision={:.2} opp_cap_hit_rate={:.4}",
+        s.decisions,
+        s.nodes as f64 / d,
+        s.cap_hits as f64 / d,
+        s.candidates as f64 / d,
+        s.opp_leaves as f64 / d,
+        s.opp_cap_hits as f64 / d,
+    );
 }
 
 fn load_deck(path: &PathBuf) -> Vec<CardId> {
