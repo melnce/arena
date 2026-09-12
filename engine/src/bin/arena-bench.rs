@@ -6,9 +6,18 @@ use std::path::PathBuf;
 use std::time::Instant;
 
 use arena_engine::{
-    acting_player, apply, legal_actions, new_game, policy_rng, AnyPolicy, CardDb, CardId, First,
-    GameConfig, Phase, PlayerId, Policy, MAX_ACTIONS, MAX_TURNS,
+    new_game, play_game, policy_rng, AnyPolicy, CardDb, CardId, End, First, GameConfig, PlayerId,
 };
+
+fn parse_or_exit(s: &str) -> AnyPolicy {
+    match AnyPolicy::parse_spec(s) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("{e}");
+            std::process::exit(1);
+        }
+    }
+}
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -83,44 +92,22 @@ fn main() {
         )
         .expect("game");
         let mut rng = policy_rng(s);
-        let mut pol_a = AnyPolicy::parse(&policy_a);
-        let mut pol_b = AnyPolicy::parse(&pol_b_name);
-        let mut nact = 0u32;
-        while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
-            if state.turn > MAX_TURNS {
-                turn_cap_n += 1;
-                break;
-            }
-            if nact >= MAX_ACTIONS {
-                action_cap_n += 1;
-                break;
-            }
-            let legal = legal_actions(&db, &state);
-            if legal.is_empty() {
-                break;
-            }
-            let idx = match acting_player(&state) {
-                PlayerId::A => pol_a.choose(&db, &state, &legal, &mut rng),
-                PlayerId::B => pol_b.choose(&db, &state, &legal, &mut rng),
-            };
-            let idx = idx.min(legal.len().saturating_sub(1));
-            if apply(&db, &mut state, legal[idx].clone()).is_err() {
-                break;
-            }
-            nact += 1;
-            actions += 1;
+        let mut pol_a = parse_or_exit(&policy_a);
+        let mut pol_b = parse_or_exit(&pol_b_name);
+        let out = play_game(&db, &mut state, &mut pol_a, &mut pol_b, &mut rng);
+        actions += u64::from(out.actions);
+        turns += u64::from(out.turns);
+        match out.end {
+            End::Lethal => lethal += 1,
+            End::Deckout => deckout += 1,
+            End::TurnCap => turn_cap_n += 1,
+            End::ActionCap => action_cap_n += 1,
+            End::NoLegal | End::Illegal => {}
         }
-        turns += u64::from(state.turn);
-        if let Some(w) = state.winner {
+        if let Some(w) = out.winner {
             match w {
                 PlayerId::A => a_wins += 1,
                 PlayerId::B => b_wins += 1,
-            }
-            let p = state.player(w.opponent());
-            if p.leader_defense <= 0 {
-                lethal += 1;
-            } else {
-                deckout += 1;
             }
         }
     }

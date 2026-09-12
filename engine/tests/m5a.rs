@@ -5,8 +5,8 @@ use std::path::PathBuf;
 
 use arena_engine::{
     apply, by_name, determinize, encode, legal_actions, legal_ids, legal_mask, names, new_game,
-    policy_rng, search_key, Action, ActionId, AttackTarget, CardId, First, GameConfig, Observation,
-    OpeningHands, Phase, PlayerId, Policy, Random, Slot, H0, MAX_ACTIONS, MAX_TURNS,
+    play_game, policy_rng, search_key, Action, ActionId, AttackTarget, CardId, First, GameConfig,
+    Observation, OpeningHands, Phase, PlayerId, Policy, Random, Slot, H0, MAX_ACTIONS, MAX_TURNS,
 };
 
 mod common;
@@ -509,30 +509,11 @@ fn play_pair(
     )
     .unwrap();
     let mut rng = policy_rng(seed);
-    let mut nact = 0u32;
-    while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
-        if state.turn > MAX_TURNS || nact >= MAX_ACTIONS {
-            break;
-        }
-        let legal = legal_actions(db, &state);
-        if legal.is_empty() {
-            break;
-        }
-        let who = arena_engine::acting_player(&state);
-        let idx = match who {
-            PlayerId::A => a.choose(db, &state, &legal, &mut rng),
-            PlayerId::B => b.choose(db, &state, &legal, &mut rng),
-        }
-        .min(legal.len() - 1);
-        if apply(db, &mut state, legal[idx].clone()).is_err() {
-            break;
-        }
-        nact += 1;
-    }
+    let out = play_game(db, &mut state, &mut a, &mut b, &mut rng);
     PlayOut {
-        winner: state.winner,
-        turns: state.turn,
-        actions: nact,
+        winner: out.winner,
+        turns: out.turns,
+        actions: out.actions,
     }
 }
 

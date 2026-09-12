@@ -337,13 +337,43 @@ trait Policy {
 
 fn policy::by_name(name: &str, seed: u64) -> Option<Box<dyn Policy>>;
 fn policy::names() -> &'static [&'static str];   // "random", "first-legal", "h0"
+
+enum End { Lethal, Deckout, TurnCap, ActionCap, NoLegal, Illegal }
+struct Outcome { winner: Option<PlayerId>, first: PlayerId, turns: u32, actions: u32, end: End }
+fn play_game(db: &CardDb, state: &mut State, pol_a: &mut dyn Policy, pol_b: &mut dyn Policy, rng: &mut Xoshiro256ss) -> Outcome
 ```
 
-`Policy` is object-safe. `policy/` (and `encode`, `search_key`, `determinize`)
-compile for `wasm32-unknown-unknown`: no `Instant` / `SystemTime`, threads,
-`std::fs`, or `getrandom`. The node cap is the only search budget. `seed` is
-accepted at construction; current policies do not store it — `choose` uses
-the caller rng (typically `policy_rng(seed)`).
+`play_game` is the shared drive loop (bench, Python matchup, m5a fixtures).
+It stops when `winner` is set or the phase is `Terminal`; `state.turn >
+MAX_TURNS` → `TurnCap`; `actions >= MAX_ACTIONS` → `ActionCap`; empty
+`legal_actions` → `NoLegal`; `apply` error → `Illegal`. The chosen index is
+clamped. Both seats draw from the caller rng (typically
+`policy_rng(game seed)` — the same stream the bench uses). `Lethal` is the
+loser's `leader_defense <= 0`; otherwise a decided game is `Deckout`. No
+`Instant`, threads, or `std::fs` in `play/` — it builds for
+`wasm32-unknown-unknown` with the rest of `policy/`.
+
+`AnyPolicy::parse_spec` is strict (a typo never silently becomes
+`Random`):
+
+```text
+"random" | "first-legal" | "h0" | "h0-fast"
+| "h0:depth=6,beam=4,k=4,nodes=2000"
+```
+
+Any subset of the four H0 keys; omitted keys take [`H0::default`].
+`k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
+`H0::default()`; `"h0-fast"` is `H0::fast()`. `Err` names the offending
+token. `AnyPolicy::spec` is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"`
+or the short names). `by_name` is `parse_spec(name).ok()`; `names()` stays
+`["random", "first-legal", "h0"]` so the WASM client's bot list does not
+change.
+
+`Policy` is object-safe. `policy/` (and `encode`, `search_key`, `determinize`,
+`play`) compile for `wasm32-unknown-unknown`: no `Instant` / `SystemTime`,
+threads, `std::fs`, or `getrandom`. The node cap is the only search budget.
+`seed` is accepted at construction; current policies do not store it —
+`choose` uses the caller rng (typically `policy_rng(seed)`).
 
 `Random` and `FirstLegal` are the arena-bench / arena-trace policies (same
 streams and output as before). `H0` is a determinized search bot:
@@ -373,8 +403,10 @@ Value: leader-defense difference, board (atk+def with Ward/Storm/evolved
 weights), hand size, next-turn PP / EP / SEP, crest / countdown presence;
 terminal = ±∞ on a single root, finite-clamped when averaging.
 
-`arena-bench` accepts `--policy random|first-legal|h0` and `--vs` for
-asymmetric seats. Caps: `engine::limits::{MAX_TURNS, MAX_ACTIONS}` = 60 / 800.
+`arena-bench` accepts `--policy` / `--vs` as `parse_spec` strings (unknown
+names exit with the parser message) and drives games through `play_game`.
+Seeding is unchanged: `seed.wrapping_add(g)`, `First::A`, `policy_rng(s)`
+shared by both seats. Caps: `engine::limits::{MAX_TURNS, MAX_ACTIONS}` = 60 / 800.
 
 ## Throughput
 
@@ -440,6 +472,13 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | `Game.phase` / `active` / `turn` / `winner` / `terminal` | `"mulligan"\|"main"\|"choice"\|"end"\|"terminal"`; `"a"/"b"`; `winner` is `str \| None`. |
 | `Game.clone() -> Game` | Deep copy of `State` (search). |
 | `arena.play_random(db, seed, deck_a, deck_b, first="coin") -> dict` | `{winner, turns, actions, first}`. Random-legal + `policy_rng`. |
-| `arena.matchup(db, decks, games, seed, policy="random", threads=None) -> dict` | Every ordered pair including mirrors. Per pair `{games, a_wins, b_wins, first_player_wins, mean_turns, mean_actions}`. Seed per game = FNV-1a64 of `(seed, pair_index, game_index)`. `policy` is `"random"` (arena-bench random-legal) or `"first-legal"`. Deterministic for a given seed and thread count. |
+| `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)`; both seats share `policy_rng(game seed)` as the bench does. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. |
+| `py/stats.py::wilson(k, n, z=1.96) -> (lo, hi)` | Wilson score interval for `k` successes in `n` trials, clipped to `[0, 1]`. `n == 0` → `(0.0, 1.0)`. |
 
-`py/matchup.py` loads `oracle/decks/*.json` and prints the win-rate matrix.
+`py/matchup.py` loads `oracle/decks/*.json` (plus `--deck-file` extras in the
+client's `{id: count}` / `[ids]` shapes), prints the two existing tables, a
+third table of A's decisive win rate with the Wilson 95 % interval, and a
+summary block (overall rate, first-player rate, means, end-reason counts,
+games/s, `os.cpu_count()`, per-deck row/column rates). `--policy-a` /
+`--policy-b` default to `--policy`; `--first` defaults to `alternate`.
+`matchup.json` also stores `wilson95` per cell and `summary`.

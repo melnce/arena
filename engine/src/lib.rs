@@ -15,6 +15,7 @@ pub mod ids;
 pub mod info;
 pub mod limits;
 pub mod oracle;
+pub mod play;
 pub mod policy;
 pub mod rng;
 pub mod search_key;
@@ -36,6 +37,7 @@ pub use info::{
     board_info, hand_info, player_info, BoardCardInfo, GateInfo, HandCardInfo, PlayerInfo,
 };
 pub use limits::{MAX_ACTIONS, MAX_TURNS};
+pub use play::{play_game, End, Outcome};
 pub use policy::{by_name, names, AnyPolicy, FirstLegal, Policy, Random, H0};
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
 pub use search_key::search_key;
