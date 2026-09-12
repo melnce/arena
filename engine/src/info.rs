@@ -52,7 +52,9 @@ pub struct BoardCardInfo {
     pub evolved: bool,
     pub super_evolved: bool,
     pub gates: Vec<GateInfo>,
-    /// Printed cannot-attack lock (not summoning sickness).
+    /// Total printed lock (`Cannot attack.`) or a leader-only restriction
+    /// (`Cannot attack the leader: …`). Client: chains overlay only for the
+    /// total lock; the leader-only strings are the last tooltip line.
     pub cannot_attack_reason: Option<String>,
     /// First numeric `vars` key (X, then Y, then Z) when this is an amulet
     /// with no countdown.
@@ -195,7 +197,13 @@ pub fn board_info(db: &CardDb, state: &State, player: PlayerId) -> Vec<BoardCard
                 evolved: inst.evolved,
                 super_evolved: inst.super_evolved,
                 gates: collect_board_gates(db, state, player, inst),
-                cannot_attack_reason: cannot_attack_reason(inst),
+                cannot_attack_reason: cannot_attack_reason(
+                    state,
+                    player,
+                    inst,
+                    can_attack,
+                    can_attack_leader,
+                ),
                 named_counter: named_counter(inst),
             })
         })
@@ -249,18 +257,46 @@ fn named_counter(inst: &CardInstance) -> Option<i32> {
     None
 }
 
-fn cannot_attack_reason(inst: &CardInstance) -> Option<String> {
+fn enemy_ward_gates_leader(state: &State, me: PlayerId, inst: &CardInstance) -> bool {
+    if inst.ignores_ward() {
+        return false;
+    }
+    state.player(me.opponent()).field.iter().flatten().any(|f| {
+        f.kind == CardKind::Follower
+            && f.defense > 0
+            && !f.ambush_blocks()
+            && !f.is_intimidate()
+            && f.is_ward()
+    })
+}
+
+fn cannot_attack_reason(
+    state: &State,
+    player: PlayerId,
+    inst: &CardInstance,
+    can_attack: bool,
+    can_attack_leader: bool,
+) -> Option<String> {
     let no_fol = inst.traits.cant_attack_followers == Some(true);
     let no_lead = inst.traits.cant_attack_leader == Some(true);
     if no_fol && no_lead {
-        Some("Cannot attack.".into())
-    } else if no_fol {
-        Some("Cannot attack followers.".into())
-    } else if no_lead {
-        Some("Cannot attack the leader.".into())
-    } else {
-        None
+        return Some("Cannot attack.".into());
     }
+    if no_fol {
+        return Some("Cannot attack followers.".into());
+    }
+    if no_lead {
+        return Some("Cannot attack the leader: printed restriction".into());
+    }
+    if can_attack && !can_attack_leader {
+        if enemy_ward_gates_leader(state, player, inst) {
+            return Some("Cannot attack the leader: an enemy Ward is in play".into());
+        }
+        if inst.flags.summoning_sick {
+            return Some("Cannot attack the leader: it entered the field this turn".into());
+        }
+    }
+    None
 }
 
 fn form_label(form: PlayForm) -> &'static str {

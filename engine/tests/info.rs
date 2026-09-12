@@ -403,6 +403,60 @@ fn board_info_cannot_attack_reason_ignores_sickness() {
 }
 
 #[test]
+fn board_info_cannot_attack_reason_enemy_ward() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, PlayerId::B, "10001120");
+    let info = board_info(&db, &st, me);
+    assert!(info[0].can_attack);
+    assert!(!info[0].can_attack_leader);
+    assert_eq!(
+        info[0].cannot_attack_reason.as_deref(),
+        Some("Cannot attack the leader: an enemy Ward is in play")
+    );
+}
+
+#[test]
+fn board_info_cannot_attack_reason_entered_this_turn() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    put_field(&db, &mut st, PlayerId::B, "88001110");
+    give_pp(&mut st, me, 1, 1);
+    st.player_mut(me).hand.clear();
+    play_id(&db, &mut st, me, "10631110");
+    let info = board_info(&db, &st, me);
+    assert!(info[0].can_attack);
+    assert!(!info[0].can_attack_leader);
+    assert_eq!(
+        info[0].cannot_attack_reason.as_deref(),
+        Some("Cannot attack the leader: it entered the field this turn")
+    );
+}
+
+#[test]
+fn board_info_cannot_attack_reason_printed_leader_lock() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    let slot = put_field(&db, &mut st, me, "88001110");
+    put_field(&db, &mut st, PlayerId::B, "88001110");
+    let inst = st.player_mut(me).field[slot as usize]
+        .as_mut()
+        .expect("field");
+    inst.traits.cant_attack_leader = Some(true);
+    let info = board_info(&db, &st, me);
+    assert!(info[0].can_attack);
+    assert!(!info[0].can_attack_leader);
+    assert_eq!(
+        info[0].cannot_attack_reason.as_deref(),
+        Some("Cannot attack the leader: printed restriction")
+    );
+}
+
+#[test]
 fn board_info_named_counter_is_first_xyz_var_when_no_countdown() {
     let db = load_db();
     let mut st = started(&db, 1);
