@@ -39,6 +39,7 @@ declare global {
         actions: unknown[];
       } | null;
       mountNamedCounter(vars: Record<string, number>): string;
+      debugGrantCantAttackLeader(player: string, slot: number): void;
     };
   }
 }

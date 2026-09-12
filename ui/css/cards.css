@@ -608,6 +608,34 @@
   animation: pulseSuper 1.4s ease-in-out infinite alternate;
 }
 
+/* Attack / playable glow must beat `.card.super-evo` (same 0,2,1, later).
+   Keep the purple inset so SE identity is still visible. */
+.card.super-evo.can-attack .card-image-wrapper,
+.card.super-evo.playable-glow .card-image-wrapper {
+  outline: 4px solid var(--color-success);
+  outline-offset: 0;
+  box-shadow:
+    var(--glow-playable),
+    0 0 22px rgba(57, 217, 138, 0.85),
+    inset 0 0 12px rgba(57, 217, 138, 0.35),
+    0 0 18px rgba(138, 43, 226, 0.7),
+    inset 0 0 12px rgba(138, 43, 226, 0.5);
+  animation: playPulse 1s ease-in-out infinite alternate;
+}
+
+.card.super-evo.rush-glow .card-image-wrapper,
+.card.super-evo.enhance-ready .card-image-wrapper {
+  outline: 4px solid var(--color-warn);
+  outline-offset: 0;
+  box-shadow:
+    var(--glow-enhance),
+    0 0 22px rgba(255, 212, 0, 0.85),
+    inset 0 0 12px var(--color-warn-surface),
+    0 0 18px rgba(138, 43, 226, 0.7),
+    inset 0 0 12px rgba(138, 43, 226, 0.5);
+  animation: enhPulse 1s ease-in-out infinite alternate;
+}
+
 .card.super-evo .card-image-wrapper::after {
   content: "SE";
   position: absolute;
@@ -1184,7 +1212,11 @@
 
 /* if 4+, the 4th will also use a 2s delay; extend if you plan to show >3 distinct icons */
 
-.card.selectable {
+/* Idle dashed ring is only for selectables that have no attack/play glow.
+   The glow is the affordance; a green dash on a yellow rush card is the
+   "green + yellow on the same card" the owner rejected. Choice targeting
+   uses `.select-mode .card.selectable` (yellow solid) instead. */
+.card.selectable:not(.selected):not(.can-attack):not(.rush-glow):not(.playable-glow):not(.legal-play):not(.legal-attack):not(.enhance-ready):not(.engage-ready):not(.alternate-ready) {
   outline: 2px dashed rgba(57, 217, 138, 0.85);
   outline-offset: -3px;
 }
@@ -1206,6 +1238,7 @@
 
 /* Selected ring must win over a later .selectable dashed outline. */
 .card.selected,
+.card.selectable.selected,
 .select-mode .card.selected {
   outline: 3px solid var(--color-success);
   outline-offset: 0;

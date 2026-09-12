@@ -67,6 +67,8 @@ export type CardPaintOpts = {
   form?: HandCardInfo["form"];
   entering?: boolean;
   cannotAttack?: boolean;
+  /** Player earth stack when this board slot is `earth_slot`. */
+  earthStack?: number | null;
 };
 
 export function glowFor(opts: {
@@ -138,7 +140,7 @@ function buildCard(opts: CardPaintOpts): HTMLElement {
   paintWrapper(wrap, opts);
   div.appendChild(wrap);
   div.dataset.name = lookupText(inst.card).name;
-  div.dataset.sig = cardSignature(inst, String(opts.displayCost ?? ""));
+  div.dataset.sig = cardSignature(inst, sigExtra(opts));
   applyChrome(div, opts);
   return div;
 }
@@ -151,7 +153,7 @@ export function updateCard(div: HTMLElement, opts: CardPaintOpts): void {
   applyChrome(div, opts);
   const wrap = div.querySelector<HTMLElement>(".card-image-wrapper");
   if (!wrap) return;
-  const nextSig = cardSignature(inst, String(opts.displayCost ?? ""));
+  const nextSig = cardSignature(inst, sigExtra(opts));
   const prevAtk = wrap.querySelector<HTMLElement>(".card-stats.bottom-left")?.textContent;
   const prevDef = wrap.querySelector<HTMLElement>(
     ".card-stats.bottom-right:not(.countdown-badge)",
@@ -196,7 +198,7 @@ function paintWrapper(wrap: HTMLElement, opts: CardPaintOpts): void {
     badge.textContent = String(inst.spellboost_count);
     wrap.appendChild(badge);
   }
-  paintStats(wrap, inst);
+  paintStats(wrap, inst, opts.earthStack);
   applyOverlays(wrap, inst, !!opts.onBoard, !!opts.cannotAttack);
 }
 
@@ -260,7 +262,11 @@ export function applyStatColors(el: HTMLElement, inst: CardInstance, which: "atk
   else if (inst.defense > printed.defense) el.classList.add("stat-buffed");
 }
 
-function paintStats(wrap: HTMLElement, inst: CardInstance): void {
+function sigExtra(opts: CardPaintOpts): string {
+  return `${opts.displayCost ?? ""}|earth:${opts.earthStack ?? ""}`;
+}
+
+function paintStats(wrap: HTMLElement, inst: CardInstance, earthStack?: number | null): void {
   if (inst.kind === "follower") {
     const atk = document.createElement("div");
     atk.className = "card-stats bottom-left";
@@ -277,6 +283,11 @@ function paintStats(wrap: HTMLElement, inst: CardInstance): void {
     cd.className = "card-stats bottom-right countdown-badge";
     cd.textContent = String(inst.countdown);
     wrap.appendChild(cd);
+  } else if (earthStack != null) {
+    const badge = document.createElement("div");
+    badge.className = "card-stats bottom-right countdown-badge earth-sigil-badge";
+    badge.textContent = String(earthStack);
+    wrap.appendChild(badge);
   } else {
     const named = namedCounterValue(inst);
     if (named != null) {
@@ -317,11 +328,7 @@ function applyOverlays(
     o.className = "intimidate-overlay";
     wrap.appendChild(o);
   }
-  const locked =
-    cannotAttack ||
-    traits.has("cantAttackFollowers") ||
-    traits.has("cantAttackLeader") ||
-    traits.has("cantAttack");
+  const locked = cannotAttack || traits.has("cantAttack");
   if (onBoard && locked) {
     const o = document.createElement("div");
     o.className = "cant_attack-overlay";

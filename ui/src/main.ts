@@ -210,6 +210,11 @@ function exposeArena(): void {
       const id = byId<HTMLSelectElement>("positionSelect")?.value;
       return id ? (savedPositions.get(id) ?? null) : null;
     },
+    debugGrantCantAttackLeader: (player, slot) => {
+      if (!session) throw new Error("no session");
+      session.game.debugGrantCantAttackLeader(player, slot);
+      requestPaint();
+    },
     mountNamedCounter: (vars) => {
       const host = document.getElementById("blueBoard") ?? document.body;
       const inst = {

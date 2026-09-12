@@ -24,6 +24,7 @@ declare module "../pkg/arena_wasm.js" {
     boardInfo(player: string): string;
     playerInfo(player: string): string;
     reseed(seed: number | bigint | string): void;
+    debugGrantCantAttackLeader(player: string, slot: number): void;
   }
   export function cardText(id: string): string;
   export function bundleInfo(): string;

@@ -170,6 +170,7 @@ export type PlayerState = {
   shadows: number;
   combo: number;
   earth: number;
+  earth_slot: number | null;
   faith: number;
   rally: number;
   crests: CrestInstance[];

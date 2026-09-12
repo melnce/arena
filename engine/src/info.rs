@@ -43,16 +43,18 @@ pub struct BoardCardInfo {
     pub id: String,
     pub can_attack: bool,
     pub can_attack_leader: bool,
-    /// Same value as `followers_only_this_turn` — kept so older clients still
-    /// paint the yellow entry-turn ring.
+    /// Yellow ring: this follower's *own* permission denies the leader
+    /// (entry-turn without Storm, or printed `cant_attack_leader`). Not Ward.
     pub rush_only: bool,
-    /// Entered this turn (`summoning_sick`), has a legal attack, and none of
-    /// those attacks is the enemy leader. Client: yellow `rush-glow` only.
+    /// Entered this turn without Storm and has a legal attack. Subset of
+    /// `rush_only`. An enemy Ward does not set this.
     pub followers_only_this_turn: bool,
     pub evolved: bool,
     pub super_evolved: bool,
     pub gates: Vec<GateInfo>,
-    /// Printed cannot-attack lock (not summoning sickness).
+    /// Total printed lock (`Cannot attack.`) or a leader-only restriction
+    /// (`Cannot attack the leader: …`). Client: chains overlay only for the
+    /// total lock; the leader-only strings are the last tooltip line.
     pub cannot_attack_reason: Option<String>,
     /// First numeric `vars` key (X, then Y, then Z) when this is an amulet
     /// with no countdown.
@@ -184,18 +186,25 @@ pub fn board_info(db: &CardDb, state: &State, player: PlayerId) -> Vec<BoardCard
                     )
                 });
             let followers_only_this_turn =
-                inst.flags.summoning_sick && can_attack && !can_attack_leader;
+                can_attack && inst.flags.summoning_sick && !inst.is_storm();
+            let printed_leader_lock = can_attack && inst.traits.cant_attack_leader == Some(true);
             Some(BoardCardInfo {
                 slot: i as u8,
                 id: inst.card.as_str(),
                 can_attack,
                 can_attack_leader,
-                rush_only: followers_only_this_turn,
+                rush_only: followers_only_this_turn || printed_leader_lock,
                 followers_only_this_turn,
                 evolved: inst.evolved,
                 super_evolved: inst.super_evolved,
                 gates: collect_board_gates(db, state, player, inst),
-                cannot_attack_reason: cannot_attack_reason(inst),
+                cannot_attack_reason: cannot_attack_reason(
+                    state,
+                    player,
+                    inst,
+                    can_attack,
+                    can_attack_leader,
+                ),
                 named_counter: named_counter(inst),
             })
         })
@@ -249,18 +258,46 @@ fn named_counter(inst: &CardInstance) -> Option<i32> {
     None
 }
 
-fn cannot_attack_reason(inst: &CardInstance) -> Option<String> {
+fn enemy_ward_gates_leader(state: &State, me: PlayerId, inst: &CardInstance) -> bool {
+    if inst.ignores_ward() {
+        return false;
+    }
+    state.player(me.opponent()).field.iter().flatten().any(|f| {
+        f.kind == CardKind::Follower
+            && f.defense > 0
+            && !f.ambush_blocks()
+            && !f.is_intimidate()
+            && f.is_ward()
+    })
+}
+
+fn cannot_attack_reason(
+    state: &State,
+    player: PlayerId,
+    inst: &CardInstance,
+    can_attack: bool,
+    can_attack_leader: bool,
+) -> Option<String> {
     let no_fol = inst.traits.cant_attack_followers == Some(true);
     let no_lead = inst.traits.cant_attack_leader == Some(true);
     if no_fol && no_lead {
-        Some("Cannot attack.".into())
-    } else if no_fol {
-        Some("Cannot attack followers.".into())
-    } else if no_lead {
-        Some("Cannot attack the leader.".into())
-    } else {
-        None
+        return Some("Cannot attack.".into());
     }
+    if no_fol {
+        return Some("Cannot attack followers.".into());
+    }
+    if no_lead {
+        return Some("Cannot attack the leader: printed restriction".into());
+    }
+    if can_attack && !can_attack_leader {
+        if enemy_ward_gates_leader(state, player, inst) {
+            return Some("Cannot attack the leader: an enemy Ward is in play".into());
+        }
+        if inst.flags.summoning_sick {
+            return Some("Cannot attack the leader: it entered the field this turn".into());
+        }
+    }
+    None
 }
 
 fn form_label(form: PlayForm) -> &'static str {
@@ -330,23 +367,30 @@ fn collect_hand_gates(
         return Vec::new();
     };
     let mut gates = Vec::new();
-    let source = SourceRef::Hand {
+    let ctx = WalkCtx {
+        db,
+        state,
         player,
-        id: inst.id,
+        inst,
+        source: SourceRef::Hand {
+            player,
+            id: inst.id,
+        },
+        zone: Zone::Hand,
     };
     for mode in card.modes() {
         match mode {
             Mode::Enhance { effects, .. } => {
-                walk_effects(db, effects, state, player, inst, source, &mut gates);
+                walk_effects(ctx, effects, &mut gates);
             }
             Mode::Accelerate { effects, .. } => {
-                walk_effects(db, effects, state, player, inst, source, &mut gates);
+                walk_effects(ctx, effects, &mut gates);
             }
             Mode::Crystallize { abilities, .. } => {
                 if let Some(abs) = abilities {
                     for a in abs {
                         if matches!(a, Ability::Fanfare { .. }) {
-                            walk_ability(db, a, state, player, inst, source, &mut gates);
+                            walk_ability(ctx, a, &mut gates);
                         }
                     }
                 }
@@ -355,7 +399,7 @@ fn collect_hand_gates(
     }
     for a in card.abilities() {
         if matches!(a, Ability::Fanfare { .. }) {
-            walk_ability(db, a, state, player, inst, source, &mut gates);
+            walk_ability(ctx, a, &mut gates);
         }
     }
     if inst.printed_tags.contains("spellboost")
@@ -386,60 +430,53 @@ fn collect_board_gates(
         return Vec::new();
     };
     let mut gates = Vec::new();
-    let source = SourceRef::Field {
+    let ctx = WalkCtx {
+        db,
+        state,
         player,
-        id: inst.id,
+        inst,
+        source: SourceRef::Field {
+            player,
+            id: inst.id,
+        },
+        zone: Zone::Field,
     };
     for a in card.abilities() {
-        walk_ability(db, a, state, player, inst, source, &mut gates);
+        walk_ability(ctx, a, &mut gates);
     }
     for a in &inst.granted {
-        walk_ability(db, a, state, player, inst, source, &mut gates);
+        walk_ability(ctx, a, &mut gates);
     }
     gates.retain(|g| matches!(g.kind.as_str(), "rally" | "combo" | "overflow"));
     gates
 }
 
-fn walk_ability(
-    db: &CardDb,
-    ability: &Ability,
-    state: &State,
+#[derive(Clone, Copy)]
+struct WalkCtx<'a> {
+    db: &'a CardDb,
+    state: &'a State,
     player: PlayerId,
-    inst: &CardInstance,
+    inst: &'a CardInstance,
     source: SourceRef,
-    gates: &mut Vec<GateInfo>,
-) {
+    zone: Zone,
+}
+
+fn walk_ability(ctx: WalkCtx<'_>, ability: &Ability, gates: &mut Vec<GateInfo>) {
     if let Some(c) = ability.when_cond() {
-        walk_condition(db, c, state, player, inst, source, gates);
+        walk_condition(ctx, c, gates);
     }
-    walk_effects(db, ability.effects(), state, player, inst, source, gates);
+    walk_effects(ctx, ability.effects(), gates);
 }
 
-fn walk_effects(
-    db: &CardDb,
-    effects: &[Effect],
-    state: &State,
-    player: PlayerId,
-    inst: &CardInstance,
-    source: SourceRef,
-    gates: &mut Vec<GateInfo>,
-) {
+fn walk_effects(ctx: WalkCtx<'_>, effects: &[Effect], gates: &mut Vec<GateInfo>) {
     for e in effects {
-        walk_effect(db, e, state, player, inst, source, gates);
+        walk_effect(ctx, e, gates);
     }
 }
 
-fn walk_effect(
-    db: &CardDb,
-    effect: &Effect,
-    state: &State,
-    player: PlayerId,
-    inst: &CardInstance,
-    source: SourceRef,
-    gates: &mut Vec<GateInfo>,
-) {
+fn walk_effect(ctx: WalkCtx<'_>, effect: &Effect, gates: &mut Vec<GateInfo>) {
     if let Some(c) = effect.when_cond() {
-        walk_condition(db, c, state, player, inst, source, gates);
+        walk_condition(ctx, c, gates);
     }
     match effect {
         Effect::Pay {
@@ -451,17 +488,17 @@ fn walk_effect(
             if let Some(need) = amount_int(amount) {
                 match resource {
                     PayResource::Shadows => {
-                        let have = state.player(player).shadows;
+                        let have = ctx.state.player(ctx.player).shadows;
                         push_gate(gates, "necromancy", "necromancy", need, have, have >= need);
                     }
                     PayResource::Earth => {
-                        let have = state.player(player).earth;
+                        let have = ctx.state.player(ctx.player).earth;
                         push_gate(gates, "earth_rite", "earth rite", need, have, have >= need);
                     }
                     PayResource::Pp | PayResource::Faith => {}
                 }
             }
-            walk_effects(db, effects, state, player, inst, source, gates);
+            walk_effects(ctx, effects, gates);
         }
         Effect::If {
             cond,
@@ -469,51 +506,43 @@ fn walk_effect(
             else_effects,
             ..
         } => {
-            walk_condition(db, cond, state, player, inst, source, gates);
-            walk_effects(db, then, state, player, inst, source, gates);
+            walk_condition(ctx, cond, gates);
+            walk_effects(ctx, then, gates);
             if let Some(els) = else_effects {
-                walk_effects(db, els, state, player, inst, source, gates);
+                walk_effects(ctx, els, gates);
             }
         }
         Effect::Seq { effects, .. } | Effect::Repeat { effects, .. } => {
-            walk_effects(db, effects, state, player, inst, source, gates);
+            walk_effects(ctx, effects, gates);
         }
         Effect::Choose {
             options: Some(opts),
             ..
         } => {
             for o in opts {
-                walk_effects(db, &o.effects, state, player, inst, source, gates);
+                walk_effects(ctx, &o.effects, gates);
             }
         }
         Effect::Sequence { steps, .. } => {
             for s in steps {
-                walk_effects(db, &s.effects, state, player, inst, source, gates);
+                walk_effects(ctx, &s.effects, gates);
             }
         }
         _ => {}
     }
 }
 
-fn walk_condition(
-    db: &CardDb,
-    cond: &Condition,
-    state: &State,
-    player: PlayerId,
-    inst: &CardInstance,
-    source: SourceRef,
-    gates: &mut Vec<GateInfo>,
-) {
+fn walk_condition(ctx: WalkCtx<'_>, cond: &Condition, gates: &mut Vec<GateInfo>) {
     match cond {
         Condition::Not { .. } => {}
         Condition::All { all } => {
             for c in all {
-                walk_condition(db, c, state, player, inst, source, gates);
+                walk_condition(ctx, c, gates);
             }
         }
         Condition::Any { any } => {
             for c in any {
-                walk_condition(db, c, state, player, inst, source, gates);
+                walk_condition(ctx, c, gates);
             }
         }
         Condition::Did { .. }
@@ -524,22 +553,34 @@ fn walk_condition(
         | Condition::CostEq { .. } => {}
         Condition::Rally { rally } => {
             if let Some(need) = amount_int(&rally.n) {
-                let have = state.player(player).rally;
+                let have = ctx.state.player(ctx.player).rally;
                 push_gate(gates, "rally", "rally", need, have, have >= need);
             }
         }
         Condition::Combo { combo } => {
             if let Some(need) = amount_int(&combo.n) {
-                let have = state.player(player).combo;
-                push_gate(gates, "combo", "combo", need, have, have >= need);
+                // `have` is cards already played this turn. Playing this
+                // card counts toward its own Combo threshold (rulebook;
+                // apply.rs increments combo at play time). Tooltip prints
+                // the raw count; `met` uses +1 only while the card is
+                // still in hand.
+                let have = ctx.state.player(ctx.player).combo;
+                let effective = if ctx.zone == Zone::Hand {
+                    have + 1
+                } else {
+                    have
+                };
+                push_gate(gates, "combo", "combo", need, have, effective >= need);
             }
         }
         Condition::Overflow { overflow } if *overflow => {
-            let have = state.player(player).pp_max;
+            let have = ctx.state.player(ctx.player).pp_max;
             push_gate(gates, "overflow", "overflow", 7, have, have >= 7);
         }
         Condition::Overflow { .. } => {}
-        other => push_evaluated(db, other, state, player, inst, source, gates),
+        other => push_evaluated(
+            ctx.db, other, ctx.state, ctx.player, ctx.inst, ctx.source, gates,
+        ),
     }
 }
 

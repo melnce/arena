@@ -134,7 +134,14 @@
   margin-top: var(--space-4);
 }
 
-#cardTooltip .tooltip-play-blocked {
+#cardTooltip .tooltip-earth-sigils {
+  margin-top: 0.5em;
+  color: #c9a227;
+  font-weight: 700;
+}
+
+#cardTooltip .tooltip-play-blocked,
+#cardTooltip .tooltip-leader-blocked {
   margin-top: 0.5em;
   color: #ff8888;
   font-weight: 700;
