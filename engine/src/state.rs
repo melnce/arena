@@ -581,6 +581,12 @@ pub struct State {
     /// Attack target while Strike / Follower Strike / Clash resolve.
     /// `Condition.attackingFollower` is true when this is a field slot.
     pub combat_opposing: Option<TargetOpt>,
+    /// Attacking follower while Strike / Follower Strike / Clash resolve.
+    /// `pick: opposing` is the other combatant relative to the trigger source.
+    pub combat_attacker: Option<TargetOpt>,
+    /// Instance id of the defending follower (None vs a leader). Matched
+    /// against the trigger `source` so `pick: opposing` survives `compact_field`.
+    pub combat_defender_id: Option<u32>,
 }
 
 #[derive(Debug, Clone)]

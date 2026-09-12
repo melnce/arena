@@ -1,0 +1,33 @@
+{
+  "id": "89900120",
+  "name": "Choose Countdown Tick",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89900,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Select an allied amulet and subtract 1 from its countdown.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied amulet and subtract 1 from its countdown.",
+      "effects": [
+        {
+          "op": "countdown",
+          "select": {
+            "pick": "choose",
+            "side": "ally",
+            "zone": "field",
+            "kind": "amulet"
+          },
+          "delta": {
+            "neg": 1
+          },
+          "printed": "Select an allied amulet and subtract 1 from its countdown."
+        }
+      ]
+    }
+  ]
+}
