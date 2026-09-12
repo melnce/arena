@@ -160,8 +160,8 @@ function nearRgb(
 export function assertPngExclusiveRing(path: string, kind: "yellow" | "green"): void {
   const img = pngRgba(readFileSync(path));
   const band = Math.max(6, Math.min(12, Math.floor(img.width * 0.08)));
-  const skipX = Math.floor(img.width * 0.22);
-  const skipY = Math.floor(img.height * 0.22);
+  const skipX = Math.floor(img.width * 0.28);
+  const skipY = Math.floor(img.height * 0.28);
   let foreign = 0;
   let expected = 0;
   const visit = (x: number, y: number) => {
@@ -180,12 +180,11 @@ export function assertPngExclusiveRing(path: string, kind: "yellow" | "green"): 
       if (isGreen) expected += 1;
     }
   };
+  // Left mid-side + bottom mid — skips cost, ATK/DEF, and the E/SE badge.
   for (let y = skipY; y < img.height - skipY; y++) {
     for (let x = 0; x < band; x++) visit(x, y);
-    for (let x = img.width - band; x < img.width; x++) visit(x, y);
   }
   for (let x = skipX; x < img.width - skipX; x++) {
-    for (let y = 0; y < band; y++) visit(x, y);
     for (let y = img.height - band; y < img.height; y++) visit(x, y);
   }
   expect(expected, `${path} edge should contain ${kind}`).toBeGreaterThan(4);
