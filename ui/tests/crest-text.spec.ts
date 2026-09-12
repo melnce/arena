@@ -373,6 +373,51 @@ test("crest icon contact sheet of all 42", async ({ page }) => {
   });
 });
 
+test("filled crest slot keeps the empty-slot box; no leaked gradient", async ({ page }) => {
+  await boot(page);
+  const id = await importDeck(page, "crest-rail.json", { [MAJESTIC]: 40 });
+  await startGame(page, id);
+  await confirmMulligans(page);
+  await closeDrawer(page);
+
+  const played = await page.evaluate((card) => {
+    const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
+    const act = legal.find((a) => a.play?.card === card);
+    if (!act) return false;
+    window.__arena!.apply(act);
+    return true;
+  }, MAJESTIC);
+  expect(played, "play Majestic Conquest").toBeTruthy();
+
+  const filled = page.locator("#blueCrests .crest-slot[data-crest]").first();
+  const empty = page.locator("#blueCrests .crest-slot:not([data-crest])").first();
+  await expect(filled).toBeVisible();
+  await expect(empty).toBeVisible();
+
+  const boxes = await page.evaluate(() => {
+    const filledEl = document.querySelector("#blueCrests .crest-slot[data-crest]");
+    const emptyEl = document.querySelector("#blueCrests .crest-slot:not([data-crest])");
+    if (!filledEl || !emptyEl) return null;
+    const f = filledEl.getBoundingClientRect();
+    const e = emptyEl.getBoundingClientRect();
+    const fs = getComputedStyle(filledEl);
+    return {
+      fw: f.width,
+      fh: f.height,
+      ew: e.width,
+      eh: e.height,
+      radius: fs.borderRadius,
+      bgImage: fs.backgroundImage,
+    };
+  });
+  expect(boxes).toBeTruthy();
+  expect(Math.abs(boxes!.fw - boxes!.ew)).toBeLessThanOrEqual(1);
+  expect(Math.abs(boxes!.fh - boxes!.eh)).toBeLessThanOrEqual(1);
+  expect(boxes!.radius).toBe("50%");
+  expect(boxes!.bgImage).toBe("none");
+  await artShot(page.locator("#blueCrests"), `${ART}/blue_crests_one_filled.png`);
+});
+
 test.describe("crest slot long-press", () => {
   test.use({ hasTouch: true });
 
