@@ -528,14 +528,15 @@ function renderLeaders(
           a.attack.attacker_slot === atk.slot &&
           a.attack.target === "leader",
       );
+    const drag = attackDragHot;
     const dragHot =
-      !!attackDragHot &&
-      attackDragHot.player === enemy &&
+      !!drag &&
+      drag.player === enemy &&
       legal.some(
         (a) =>
           "attack" in a &&
           a.attack.player === enemy &&
-          a.attack.attacker_slot === attackDragHot.slot &&
+          a.attack.attacker_slot === drag.slot &&
           a.attack.target === "leader",
       );
     if (pending) {
