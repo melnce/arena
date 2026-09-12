@@ -1,10 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { ART, artShot, assertGlow, assertPngLeftEdge } from "./helpers.ts";
 
 const RUSH = "10631110";
 const RUSH_2_2 = "10621110";
-
 const FIGHTER = "10001110";
+const LEAH = "10001120";
+const TIKOH = "10463110";
 
 async function openSettings(page: Page) {
   const drawer = page.locator("#settingsDrawer");
@@ -196,6 +197,14 @@ test("rush follower is yellow, then no glow on the opponent's turn, then green",
   await expect(card).not.toHaveClass(/can-attack/);
   await assertGlow(card, "yellow");
   await artShot(card, `${ART}/rush_glow_entry_yellow.png`);
+  const entryReason = await page.evaluate(() => {
+    const info = window.__arena!.boardInfo("a") as Array<{ cannot_attack_reason?: string | null }>;
+    return info[0]?.cannot_attack_reason ?? null;
+  });
+  expect(entryReason).toBe("Cannot attack the leader: it entered the field this turn");
+  await card.hover();
+  const entryTip = page.locator("#cardTooltip .tooltip-leader-blocked");
+  await expect(entryTip).toHaveText("Cannot attack the leader: it entered the field this turn");
 
   await applyFirst(page, "end_turn");
   await expect(card).not.toHaveClass(/rush-glow/);
@@ -263,4 +272,219 @@ test("rush follower loses glow after it attacks", async ({ page }) => {
   await expect(card).not.toHaveClass(/can-attack/);
   await assertGlow(card, "none");
   await artShot(card, `${ART}/rush_glow_after_attack_none.png`);
+});
+
+async function closeDrawer(page: Page) {
+  await page.evaluate(() => {
+    document.getElementById("settingsDrawer")?.classList.remove("open");
+    document.getElementById("settingsScrim")?.classList.remove("show");
+  });
+}
+
+async function dragOnto(page: Page, src: Locator, dst: Locator) {
+  const a = await src.boundingBox();
+  const b = await dst.boundingBox();
+  expect(a, "drag source box").toBeTruthy();
+  expect(b, "drop target box").toBeTruthy();
+  await page.mouse.move(a!.x + a!.width / 2, a!.y + a!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(b!.x + b!.width / 2, b!.y + b!.height / 2, { steps: 12 });
+}
+
+async function fieldFollower(
+  page: Page,
+  player: "a" | "b",
+  card: string,
+): Promise<{ slot: number; attacksLeft: number; uid: number }> {
+  return page.evaluate(
+    ({ player: who, card: id }) => {
+      const full = window.__arena!.full() as {
+        players: Record<
+          string,
+          { field: Array<{ card: string; id: number; flags: { attacks_left: number } } | null> }
+        >;
+      };
+      const i = full.players[who].field.findIndex((f) => f?.card === id);
+      const inst = full.players[who].field[i];
+      if (i < 0 || !inst) throw new Error(`no ${id} on ${who}`);
+      return { slot: i, attacksLeft: inst.flags.attacks_left, uid: inst.id };
+    },
+    { player, card },
+  );
+}
+
+test("enemy Ward is yellow, leader drop is refused, killing Ward turns green", async ({ page }) => {
+  test.setTimeout(90_000);
+  await boot(page);
+  const me = await importDeck(page, "ward-atk.json", { [RUSH_2_2]: 40 });
+  const them = await importDeck(page, "ward-leah.json", { [LEAH]: 40 });
+  await startGame(page, me, them);
+  await confirmMulligans(page);
+  await closeDrawer(page);
+
+  await applyFirst(page, "end_turn");
+  await applyFirst(page, "end_turn");
+  await playCard(page, RUSH_2_2);
+  await applyFirst(page, "end_turn");
+  await playCard(page, LEAH);
+  await applyFirst(page, "end_turn");
+
+  const card = page.locator("#blueBoard .card[data-card='10621110']").first();
+  await expect(card).toHaveClass(/rush-glow/);
+  await expect(card).not.toHaveClass(/can-attack/);
+  await assertGlow(card, "yellow");
+  const outline = await card.locator(".card-image-wrapper").evaluate((el) => getComputedStyle(el).outlineColor);
+  expect(outline).toBe("rgb(255, 212, 0)");
+  const yellowPath = await artShot(card, `${ART}/leader_glow_ward_yellow.png`);
+  assertPngLeftEdge(yellowPath, "yellow");
+
+  const wardReason = await page.evaluate(() => {
+    const info = window.__arena!.boardInfo("a") as Array<{ cannot_attack_reason?: string | null }>;
+    return info[0]?.cannot_attack_reason ?? null;
+  });
+  expect(wardReason).toBe("Cannot attack the leader: an enemy Ward is in play");
+  await card.hover();
+  await expect(page.locator("#cardTooltip .tooltip-leader-blocked")).toHaveText(
+    "Cannot attack the leader: an enemy Ward is in play",
+  );
+
+  const before = await fieldFollower(page, "a", RUSH_2_2);
+  const leader = page.locator("#redLeader");
+  await dragOnto(page, card, leader);
+  const highlighted = await leader.evaluate((el) => el.classList.contains("pointer-drop-highlight"));
+  expect(highlighted).toBe(false);
+  await page.mouse.up();
+  const afterRefuse = await fieldFollower(page, "a", RUSH_2_2);
+  expect(afterRefuse.attacksLeft).toBe(before.attacksLeft);
+  await expect(card).toHaveClass(/rush-glow/);
+
+  await playCard(page, RUSH_2_2);
+  const killed = await page.evaluate((keepSlot) => {
+    const legal = window.__arena!.legal() as Array<{
+      attack?: { player: string; attacker_slot: number; target: unknown };
+    }>;
+    const act = legal.find(
+      (a) => a.attack?.player === "a" && a.attack.attacker_slot !== keepSlot && a.attack.target !== "leader",
+    );
+    if (!act) return false;
+    window.__arena!.apply(act);
+    return true;
+  }, before.slot);
+  expect(killed, "expected the new Rush follower to kill Ward").toBeTruthy();
+
+  await expect(card).toHaveClass(/can-attack/);
+  await expect(card).not.toHaveClass(/rush-glow/);
+  await assertGlow(card, "green");
+  const greenPath = await artShot(card, `${ART}/leader_glow_ward_cleared_green.png`);
+  assertPngLeftEdge(greenPath, "green");
+});
+
+test("printed can't-attack-leader follower is yellow every turn", async ({ page }) => {
+  test.setTimeout(90_000);
+  await boot(page);
+  const me = await importDeck(page, "printed-lock-a.json", { [FIGHTER]: 40 });
+  const them = await importDeck(page, "printed-lock-b.json", { [FIGHTER]: 40 });
+  await startGame(page, me, them);
+  await confirmMulligans(page);
+  await closeDrawer(page);
+
+  await applyFirst(page, "end_turn");
+  await applyFirst(page, "end_turn");
+  await playCard(page, FIGHTER);
+  await applyFirst(page, "end_turn");
+  await playCard(page, FIGHTER);
+  await applyFirst(page, "end_turn");
+
+  const card = page.locator("#blueBoard .card[data-card='10001110']").first();
+  await expect(card).toHaveClass(/can-attack/);
+  await expect(card).not.toHaveClass(/rush-glow/);
+
+  const slot = await page.evaluate(() => {
+    const info = window.__arena!.boardInfo("a") as Array<{ slot: number }>;
+    return info[0]?.slot ?? 0;
+  });
+  await page.evaluate((s) => window.__arena!.debugGrantCantAttackLeader("a", s), slot);
+  await expect(card).toHaveClass(/rush-glow/);
+  await expect(card).not.toHaveClass(/can-attack/);
+  await assertGlow(card, "yellow");
+  const outline = await card.locator(".card-image-wrapper").evaluate((el) => getComputedStyle(el).outlineColor);
+  expect(outline).toBe("rgb(255, 212, 0)");
+  const yellowPath = await artShot(card, `${ART}/leader_glow_printed_yellow.png`);
+  assertPngLeftEdge(yellowPath, "yellow");
+
+  const printed = await page.evaluate(() => {
+    const info = window.__arena!.boardInfo("a") as Array<{ cannot_attack_reason?: string | null }>;
+    return info[0]?.cannot_attack_reason ?? null;
+  });
+  expect(printed).toBe("Cannot attack the leader: printed restriction");
+  await card.hover();
+  await expect(page.locator("#cardTooltip .tooltip-leader-blocked")).toHaveText(
+    "Cannot attack the leader: printed restriction",
+  );
+  await expect(card.locator(".cant_attack-overlay")).toHaveCount(0);
+
+  await applyFirst(page, "end_turn");
+  await expect(card).not.toHaveClass(/rush-glow/);
+  await applyFirst(page, "end_turn");
+  await expect(card).toHaveClass(/rush-glow/);
+  await expect(card).not.toHaveClass(/can-attack/);
+  await assertGlow(card, "yellow");
+});
+
+test("0-attack follower is green and a leader drop applies", async ({ page }) => {
+  test.setTimeout(90_000);
+  await boot(page);
+  const me = await importDeck(page, "zero-atk.json", { [TIKOH]: 40 });
+  const them = await importDeck(page, "zero-atk-opp.json", { [FIGHTER]: 40 });
+  await startGame(page, me, them);
+  await confirmMulligans(page);
+  await closeDrawer(page);
+
+  await playCard(page, TIKOH);
+  await applyFirst(page, "end_turn");
+  await applyFirst(page, "end_turn");
+
+  const card = page.locator("#blueBoard .card[data-card='10463110']").first();
+  await expect(card).toHaveClass(/can-attack/);
+  await expect(card).not.toHaveClass(/rush-glow/);
+  await assertGlow(card, "green");
+  const outline = await card.locator(".card-image-wrapper").evaluate((el) => getComputedStyle(el).outlineColor);
+  expect(outline).toBe("rgb(57, 217, 138)");
+  const greenPath = await artShot(card, `${ART}/leader_glow_zero_atk_green.png`);
+  assertPngLeftEdge(greenPath, "green");
+
+  const before = await page.evaluate(() => {
+    const full = window.__arena!.full() as {
+      players: {
+        a: { field: Array<{ flags: { attacks_left: number } } | null> };
+        b: { leader_defense: number };
+      };
+    };
+    const inst = full.players.a.field.find((f) => f) ?? null;
+    return { def: full.players.b.leader_defense, attacksLeft: inst?.flags.attacks_left ?? -1 };
+  });
+  expect(before.attacksLeft).toBeGreaterThan(0);
+
+  const leader = page.locator("#redLeader");
+  await dragOnto(page, card, leader);
+  const highlighted = await leader.evaluate((el) => el.classList.contains("pointer-drop-highlight"));
+  expect(highlighted).toBe(true);
+  await page.mouse.up();
+
+  const after = await page.evaluate(() => {
+    const full = window.__arena!.full() as {
+      players: {
+        a: { field: Array<{ flags: { attacks_left: number } } | null> };
+        b: { leader_defense: number };
+      };
+    };
+    const inst = full.players.a.field.find((f) => f) ?? null;
+    return { def: full.players.b.leader_defense, attacksLeft: inst?.flags.attacks_left ?? -1 };
+  });
+  expect(after.def).toBe(before.def);
+  expect(after.attacksLeft).toBe(0);
+  await expect(card).not.toHaveClass(/can-attack/);
+  await expect(card).not.toHaveClass(/rush-glow/);
+  await assertGlow(card, "none");
+  await artShot(card, `${ART}/leader_glow_zero_atk_after.png`);
 });
