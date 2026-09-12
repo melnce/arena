@@ -149,6 +149,7 @@ test("Accelerate / Crystallize form lines; Enhance stays once", async ({ page })
   const tip = page.locator("#cardTooltip");
   await paintCardTooltip(page, ACCELERATE);
   await expect(tip).toContainText("Accelerate (3): Gain 1 max play point.");
+  await artShot(tip, `${ART}/accelerate_form_line.png`);
 
   await paintCardTooltip(page, CRYSTALLIZE);
   await expect(tip).toContainText("Crystallize (2):");
@@ -191,6 +192,7 @@ test("crest icon: art loads; missing art uses frame, never an empty box", async 
   expect(broken).toBe(0);
   const emptyBox = tip.locator("div.tooltip-crest-icon");
   await expect(emptyBox).toHaveCount(0);
+  await artShot(tip, `${ART}/majestic_crest_frame_fallback.png`);
 });
 
 test.describe("crest slot long-press", () => {
