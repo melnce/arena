@@ -1,16 +1,32 @@
 //! Ordered-pair matchup matrix. Whole games stay in Rust (rayon).
 
 use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::fs::{self, File};
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
-use arena_engine::{AnyPolicy, CardDb, CardId, End, First, Outcome, PlayerId};
+use arena_engine::{AnyPolicy, CardDb, CardId, End, First, Observation, Outcome, PlayerId, Sample};
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use rayon::prelude::*;
 
 use crate::convert::{deck_from_value, py_err_msg, py_to_value, value_to_py};
 use crate::game::PyCardDb;
-use crate::play::{game_seed, play_one};
+use crate::play::{game_seed, play_one, play_one_export};
+
+const AUX_COLUMNS: &[&str] = &[
+    "game_index",
+    "decision_index",
+    "side",
+    "turn",
+    "phase",
+    "v0",
+    "legal_len",
+    "chosen",
+    "random",
+    "first_is_me",
+];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FirstMode {
@@ -89,6 +105,8 @@ struct GameRow {
         policy_b = None,
         first = "alternate",
         records = false,
+        export = None,
+        export_epsilon = 0.0,
     )
 )]
 #[allow(clippy::too_many_arguments)]
@@ -104,6 +122,8 @@ pub fn py_matchup<'py>(
     policy_b: Option<&str>,
     first: &str,
     records: bool,
+    export: Option<&str>,
+    export_epsilon: f32,
 ) -> PyResult<Bound<'py, PyAny>> {
     let pol_a = policy_a.unwrap_or(policy);
     let pol_b = policy_b.unwrap_or(policy);
@@ -130,19 +150,59 @@ pub fn py_matchup<'py>(
         .flat_map(|i| (0..n).flat_map(move |j| (0..games).map(move |g| (i, j, g))))
         .collect();
 
+    let export_dir = match export {
+        Some(p) if !p.is_empty() => Some(PathBuf::from(p)),
+        _ => None,
+    };
+    let sink = match &export_dir {
+        Some(dir) => Some(Arc::new(Mutex::new(
+            ExportSink::create(dir).map_err(py_err_msg)?,
+        ))),
+        None => None,
+    };
+
     let rows = py.allow_threads(|| {
         run_jobs(JobSet {
             db: &db,
             lists: &lists,
             n,
             seed,
+            games,
             pol_a,
             pol_b,
             first_mode,
             n_threads,
             jobs: &jobs,
+            sink: sink.clone(),
+            epsilon: export_epsilon,
         })
     })?;
+
+    let export_info = if let Some(dir) = &export_dir {
+        let samples = {
+            let guard = sink
+                .as_ref()
+                .expect("export dir implies sink")
+                .lock()
+                .map_err(|_| py_err_msg("export sink poisoned"))?;
+            guard.samples
+        };
+        write_meta(
+            dir,
+            samples,
+            pol_a,
+            pol_b,
+            first,
+            seed,
+            games,
+            export_epsilon,
+            &names,
+        )
+        .map_err(py_err_msg)?;
+        Some((dir.display().to_string(), samples, jobs.len() as u64))
+    } else {
+        None
+    };
 
     let mut aggs: Vec<Vec<PairAgg>> = vec![vec![PairAgg::default(); n]; n];
     for row in &rows {
@@ -238,6 +298,16 @@ pub fn py_matchup<'py>(
             .expect("object")
             .insert("records".into(), serde_json::Value::Array(recs));
     }
+    if let Some((dir, samples, n_games)) = export_info {
+        top.as_object_mut().expect("object").insert(
+            "export".into(),
+            serde_json::json!({
+                "dir": dir,
+                "samples": samples,
+                "games": n_games,
+            }),
+        );
+    }
 
     value_to_py(py, &top)
 }
@@ -253,34 +323,70 @@ struct JobSet<'a> {
     lists: &'a [Vec<CardId>],
     n: usize,
     seed: u64,
+    games: u32,
     pol_a: &'a str,
     pol_b: &'a str,
     first_mode: FirstMode,
     n_threads: usize,
     jobs: &'a [(usize, usize, u32)],
+    sink: Option<Arc<Mutex<ExportSink>>>,
+    epsilon: f32,
 }
 
 fn run_jobs(set: JobSet<'_>) -> PyResult<Vec<GameRow>> {
     let work = |i: usize, j: usize, g: u32| {
-        let s = game_seed(set.seed, (i * set.n + j) as u64, u64::from(g));
+        let pair_index = (i * set.n + j) as u64;
+        let s = game_seed(set.seed, pair_index, u64::from(g));
         let first = set.first_mode.for_game(g);
-        play_one(
-            set.db,
-            s,
-            &set.lists[i],
-            &set.lists[j],
-            first,
-            set.pol_a,
-            set.pol_b,
-        )
-        .map(|out| GameRow {
-            i,
-            j,
-            g,
-            seed: s,
-            out,
-        })
-        .map_err(py_err_msg)
+        // `game_index = pair_index * games + g` (pair_index = i * n + j, same as game_seed).
+        let game_index = pair_index * u64::from(set.games) + u64::from(g);
+        if let Some(sink) = &set.sink {
+            let (out, samples_a, samples_b) = play_one_export(
+                set.db,
+                s,
+                &set.lists[i],
+                &set.lists[j],
+                first,
+                set.pol_a,
+                set.pol_b,
+                set.epsilon,
+            )
+            .map_err(py_err_msg)?;
+            let mut guard = sink
+                .lock()
+                .map_err(|_| py_err_msg("export sink poisoned"))?;
+            guard
+                .append(game_index as u32, 0, &samples_a)
+                .map_err(py_err_msg)?;
+            guard
+                .append(game_index as u32, 1, &samples_b)
+                .map_err(py_err_msg)?;
+            Ok(GameRow {
+                i,
+                j,
+                g,
+                seed: s,
+                out,
+            })
+        } else {
+            play_one(
+                set.db,
+                s,
+                &set.lists[i],
+                &set.lists[j],
+                first,
+                set.pol_a,
+                set.pol_b,
+            )
+            .map(|out| GameRow {
+                i,
+                j,
+                g,
+                seed: s,
+                out,
+            })
+            .map_err(py_err_msg)
+        }
     };
 
     if set.n_threads <= 1 {
@@ -301,4 +407,113 @@ fn run_jobs(set: JobSet<'_>) -> PyResult<Vec<GameRow>> {
             .map(|&(i, j, g)| work(i, j, g))
             .collect::<PyResult<Vec<_>>>()
     })
+}
+
+struct ExportSink {
+    features: File,
+    ids: File,
+    labels: File,
+    aux: File,
+    samples: u64,
+}
+
+impl ExportSink {
+    fn create(dir: &Path) -> Result<Self, String> {
+        fs::create_dir_all(dir).map_err(|e| format!("export dir: {e}"))?;
+        Ok(Self {
+            features: File::create(dir.join("features.f32le")).map_err(io_err)?,
+            ids: File::create(dir.join("ids.u32le")).map_err(io_err)?,
+            labels: File::create(dir.join("labels.f32le")).map_err(io_err)?,
+            aux: File::create(dir.join("aux.f32le")).map_err(io_err)?,
+            samples: 0,
+        })
+    }
+
+    fn append(&mut self, game_index: u32, side: u32, samples: &[Sample]) -> Result<(), String> {
+        for s in samples {
+            write_f32s(&mut self.features, &s.features)?;
+            write_u32s(&mut self.ids, &s.ids)?;
+            self.labels
+                .write_all(&s.label.to_le_bytes())
+                .map_err(io_err)?;
+            let first_is_me = s.features.get(8).copied().unwrap_or(0.0);
+            let aux = [
+                game_index as f32,
+                s.decision_index as f32,
+                side as f32,
+                s.turn as f32,
+                f32::from(s.phase),
+                s.v0,
+                s.legal_len as f32,
+                s.chosen as f32,
+                if s.random { 1.0 } else { 0.0 },
+                first_is_me,
+            ];
+            write_f32s(&mut self.aux, &aux)?;
+            self.samples += 1;
+        }
+        Ok(())
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn write_meta(
+    dir: &Path,
+    samples: u64,
+    policy_a: &str,
+    policy_b: &str,
+    first: &str,
+    seed: u64,
+    games: u32,
+    epsilon: f32,
+    decks: &[String],
+) -> Result<(), String> {
+    let layout: Vec<serde_json::Value> = Observation::LAYOUT
+        .iter()
+        .map(|f| {
+            serde_json::json!({
+                "name": f.name,
+                "offset": f.offset,
+                "width": f.width,
+            })
+        })
+        .collect();
+    let meta = serde_json::json!({
+        "samples": samples,
+        "feature_len": Observation::LEN,
+        "ids_len": Observation::IDS_LEN,
+        "aux_columns": AUX_COLUMNS,
+        "layout": layout,
+        "policy_a": policy_a,
+        "policy_b": policy_b,
+        "first": first,
+        "seed": seed,
+        "games": games,
+        "epsilon": epsilon,
+        "decks": decks,
+        "engine_version": env!("CARGO_PKG_VERSION"),
+    });
+    fs::write(
+        dir.join("meta.json"),
+        serde_json::to_string_pretty(&meta).map_err(|e| e.to_string())? + "\n",
+    )
+    .map_err(io_err)
+}
+
+fn write_f32s(w: &mut File, xs: &[f32]) -> Result<(), String> {
+    for x in xs {
+        w.write_all(&x.to_le_bytes()).map_err(io_err)?;
+    }
+    Ok(())
+}
+
+fn write_u32s(w: &mut File, xs: &[u32]) -> Result<(), String> {
+    for x in xs {
+        w.write_all(&x.to_le_bytes()).map_err(io_err)?;
+    }
+    Ok(())
+}
+
+fn io_err(e: impl std::fmt::Display) -> String {
+    e.to_string()
 }

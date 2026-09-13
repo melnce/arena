@@ -39,8 +39,8 @@ pub use info::{
 pub use limits::{MAX_ACTIONS, MAX_TURNS};
 pub use play::{play_game, End, Outcome};
 pub use policy::{
-    by_name, names, AnyPolicy, CardNeeds, FirstLegal, NeedsTable, Policy, Random, SkippedAmount,
-    ValueVersion, Weights, H0,
+    by_name, names, AnyPolicy, CardNeeds, FirstLegal, NeedsTable, Policy, Random, Recorder, Sample,
+    SkippedAmount, ValueVersion, Weights, H0,
 };
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
 pub use search_key::search_key;

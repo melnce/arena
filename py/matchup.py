@@ -180,7 +180,7 @@ def summarize(
             "policy_b_as_col": col_bw / col_dec if col_dec else 0.0,
         }
     gps = total / secs if secs > 0 else 0.0
-    return {
+    out = {
         "policy_a": result["policy_a"],
         "policy_b": result["policy_b"],
         "games": games,
@@ -197,6 +197,10 @@ def summarize(
         "cpu_count": os.cpu_count(),
         "per_deck": per_deck,
     }
+    if "export" in result:
+        out["export_samples"] = int(result["export"]["samples"])
+        out["export_games"] = int(result["export"]["games"])
+    return out
 
 
 def format_summary(s: dict) -> str:
@@ -212,8 +216,12 @@ def format_summary(s: dict) -> str:
         f"mean turns: {s['mean_turns']:.2f}  mean actions: {s['mean_actions']:.2f}",
         f"end: {end_s}",
         f"{s['seconds']:.3f}s  {s['games_per_second']:.2f} games/s  cpus={s['cpu_count']}",
-        "per deck:",
     ]
+    if "export_samples" in s:
+        games = s["export_games"] or 1
+        per = s["export_samples"] / games
+        lines.append(f"samples: {s['export_samples']} ({per:.1f} per game)")
+    lines.append("per deck:")
     for name, d in s["per_deck"].items():
         lines.append(
             f"  {name}: policy_a (row) {d['policy_a_as_row']:.3f}  "
@@ -253,6 +261,17 @@ def main(argv: list[str] | None = None) -> int:
         help="who goes first (default: alternate, seats mirrored)",
     )
     parser.add_argument("--records", action="store_true", help="include per-game records in JSON")
+    parser.add_argument(
+        "--export",
+        default=None,
+        help="directory for training-sample shards (created if missing)",
+    )
+    parser.add_argument(
+        "--export-epsilon",
+        type=float,
+        default=0.0,
+        help="ε-greedy exploration on export (default 0; inner policy still asked first)",
+    )
     parser.add_argument("--out", default="matchup.json")
     parser.add_argument("--cards", default=None, help="cards/ or repo root (default: repo cards/)")
     args = parser.parse_args(argv)
@@ -287,6 +306,8 @@ def main(argv: list[str] | None = None) -> int:
         policy_b=policy_b,
         first=args.first,
         records=args.records,
+        export=args.export,
+        export_epsilon=args.export_epsilon,
     )
     secs = time.perf_counter() - t0
     gps = total / secs if secs > 0 else 0.0

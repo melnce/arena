@@ -583,7 +583,7 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | `Game.phase` / `active` / `turn` / `winner` / `terminal` | `"mulligan"\|"main"\|"choice"\|"end"\|"terminal"`; `"a"/"b"`; `winner` is `str \| None`. |
 | `Game.clone() -> Game` | Deep copy of `State` (search). |
 | `arena.play_random(db, seed, deck_a, deck_b, first="coin") -> dict` | `{winner, turns, actions, first}`. Random-legal + `policy_rng`. |
-| `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)`; both seats share `policy_rng(game seed)` as the bench does. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. |
+| `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False, export=None, export_epsilon=0.0) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)`; both seats share `policy_rng(game seed)` as the bench does. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. `export=None` (default) is byte-identical to today — no extra files, no `"export"` key. `export=<dir>` writes training-sample shards (see Training samples (M5b)) and adds `"export": {dir, samples, games}`; `export_epsilon` is ε-greedy exploration on those games (inner policy still asked first). |
 | `py/stats.py::wilson(k, n, z=1.96) -> (lo, hi)` | Wilson score interval for `k` successes in `n` trials, clipped to `[0, 1]`. `n == 0` → `(0.0, 1.0)`. |
 
 `py/matchup.py` loads `oracle/decks/*.json` (plus `--deck-file` extras in the
@@ -592,4 +592,44 @@ third table of A's decisive win rate with the Wilson 95 % interval, and a
 summary block (overall rate, first-player rate, means, end-reason counts,
 games/s, `os.cpu_count()`, per-deck row/column rates). `--policy-a` /
 `--policy-b` default to `--policy`; `--first` defaults to `alternate`.
+`--export <dir>` / `--export-epsilon <f>` (default 0) forward to `matchup`;
+the summary prints `samples: N (k per game)` when exporting.
 `matchup.json` also stores `wilson95` per cell and `summary`.
+
+## Training samples (M5b)
+
+`Recorder` wraps any `Box<dyn Policy>` and implements `Policy`. On each
+`choose` for its seat it encodes the state (`Observation::LEN` = 545,
+`IDS_LEN` = 220), records `value_v0` (the hand-written leaf), then asks
+the inner policy. With probability `epsilon` it replaces that choice by a
+uniform legal index **after** the inner call, so `epsilon = 0` consumes no
+extra rng and is byte-identical. After the game the caller labels the
+buffer: `+1` if that seat won, `−1` if it lost, `0` on a draw.
+`Recorder::take` hands the buffer over. No file IO in the engine (wasm32
+builds the module; it just is not used).
+
+`arena.matchup(..., export=<dir>)` wraps both seats, labels both buffers
+from the outcome, and appends samples under a mutex as rayon workers
+finish. **Sample order is not deterministic across runs — the content
+is.** Every sample carries `game_index = pair_index * games + g`
+(`pair_index = i * n + j`, the same index `game_seed` uses) and a
+per-seat `decision_index`. The multiset of samples for a given seed is
+identical run to run. Files in `<export>/` are raw little-endian arrays
+with no headers (`numpy.fromfile`; `py/samples.py::load` reshapes them):
+
+| file | dtype | shape |
+|---|---|---|
+| `features.f32le` | f32 | N × 545 |
+| `ids.u32le` | u32 | N × 220 |
+| `labels.f32le` | f32 | N (`+1` / `−1` / `0`, acting player's outcome) |
+| `aux.f32le` | f32 | N × 10 |
+| `meta.json` | — | `{samples, feature_len, ids_len, aux_columns, layout, policy_a, policy_b, first, seed, games, epsilon, decks, engine_version}` |
+
+`aux` columns, in order: `game_index`, `decision_index`, `side` (0 = A,
+1 = B), `turn`, `phase` (0 mulligan, 1 main, 2 choice, 3 end, 4
+terminal), `v0`, `legal_len`, `chosen`, `random` (0/1), `first_is_me`
+(0/1). `meta.layout` is `Observation::LAYOUT` as `{name, offset, width}`.
+`py/samples.py::load(dir)` returns numpy arrays `features (N, 545)
+float32`, `ids (N, 220) uint32`, `labels (N,)`, `aux (N, 10)`, plus
+`meta` and `aux_columns`. Numpy is a test/tool dependency, not of the
+extension.
