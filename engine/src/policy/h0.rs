@@ -152,7 +152,7 @@ pub struct H0 {
     /// Root-level finite stand-in for a terminal when averaging across
     /// roots (`wv`). Default `80` is today's clamp.
     pub wv: f32,
-    /// Per-decision transposition table. Off by default (`tt=0`).
+    /// Per-decision transposition table. On by default (`tt=1`).
     pub tt: bool,
     /// Bounded opponent-lethal sweep before the greedy line (`odepth=0` only).
     pub olethal: bool,
@@ -174,7 +174,7 @@ impl Default for H0 {
             odepth: 0,
             obeam: 3,
             wv: DEFAULT_WV,
-            tt: false,
+            tt: true,
             olethal: false,
             osteps: 3,
             stats: SearchStats::default(),
@@ -190,6 +190,7 @@ impl H0 {
             beam: 2,
             determinizations: 0,
             node_cap: 80,
+            tt: false,
             ..Self::default()
         }
     }

@@ -369,13 +369,13 @@ Any subset of the H0 keys; omitted keys take [`H0::default`].
 ignored when `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step;
 default `3`; hard stop is `osteps+3`),
 `wv=<f32>` (root-level terminal stand-in; default `80`),
-`tt=0|1` (per-decision transposition table; default `0`),
+`tt=0|1` (per-decision transposition table; default `1`),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
 is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`,
 non-default `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
-non-default `wv`, `tt=1` when set, and any
+non-default `wv`, `tt=0` when the table is off, and any
 non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
@@ -409,7 +409,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `olethal` | 0 | glance-level opponent-lethal sweep before the greedy line; `1` = on. Ignored when `odepth≥1` |
 | `osteps` | 3 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 6) |
 | `wv` | 80 | root-level finite stand-in for a terminal when averaging K roots |
-| `tt` | 0 | per-decision transposition table; `1` = on |
+| `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 
 H0 builds `K = max(1, determinizations)` search roots via
 `determinize(state, me, seed)` (which reseeds the game RNG) from the
@@ -418,7 +418,8 @@ run on those roots — the true hidden hand and live game RNG are never
 read. A lethal is taken only when every root agrees (a random lethal is
 a bet, not a lethal). Candidate values are averaged over the K roots.
 The node cap is global. `H0::fast()` uses `K = 1` and a 1-ply value
-on that root (no depth-2 consensus-lethal walk).
+on that root (no depth-2 consensus-lethal walk). `h0-fast` keeps `tt=0`
+so the client's cheap bot stays byte-identical to the pre-flip search.
 
 The opponent model is a switch. `odepth=0` (default) is the historical
 greedy line: at most `osteps+3` steps (default six), and **EndTurn after
@@ -475,9 +476,8 @@ of the decision and is never shared across roots or decisions (the K
 determinized roots have different hidden hands and therefore different
 keys). A hit does not increment the node cap — that is the point. A
 cached value may have been computed under a different cycle-guard
-`line`; reusing it is the standard transposition approximation. `tt=0`
-(the default) is bit-identical to today's search. This PR does not flip
-the default.
+`line`; reusing it is the standard transposition approximation. `tt=1`
+is the default. `tt=0` restores the pre-#32 search.
 
 `arena-bench --stats` prints, after the JSON line, one `search-stats`
 line per seat with means per decision:

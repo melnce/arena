@@ -104,7 +104,7 @@ impl AnyPolicy {
     /// `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step; default `3`;
     /// hard stop is `osteps+3`), `wv=<f32>` (root-level
     /// terminal stand-in; default `80`), `tt=0|1` (per-decision
-    /// transposition table; default `0`), and `w_shadows=`, `w_earth=`,
+    /// transposition table; default `1`), and `w_shadows=`, `w_earth=`,
     /// `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`, `w_lw=` (f32; only
     /// meaningful with `value=v1`).
     ///
@@ -125,7 +125,7 @@ impl AnyPolicy {
     /// Canonical form: `"random"`, `"first-legal"`, `"h0"`, `"h0-fast"`, or
     /// `"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`, non-default
     /// `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
-    /// non-default `wv`, `tt=1` when set, and any
+    /// non-default `wv`, `tt=0` when the table is off, and any
     /// non-default weight.
     /// `"h0"` still round-trips to `"h0"`.
     pub fn spec(&self) -> String {
@@ -174,8 +174,8 @@ fn h0_spec(h: &H0) -> String {
     if h.wv != def.wv {
         parts.push(format!("wv={}", h.wv));
     }
-    if h.tt {
-        parts.push("tt=1".to_string());
+    if !h.tt {
+        parts.push("tt=0".to_string());
     }
     let w = &h.weights;
     let dw = Weights::default();
