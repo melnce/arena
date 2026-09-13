@@ -365,12 +365,13 @@ Any subset of the H0 keys; omitted keys take [`H0::default`].
 `k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
 `H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1`
 (default `v0`), `odepth=` / `obeam=` (opponent model; defaults `0` / `3`),
+`tt=0|1` (per-decision transposition table; default `0`),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
 is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`,
-non-default `odepth` / `obeam`, and any non-default weight, or the short
-names). `"h0"` still round-trips to `"h0"`. `by_name` is
+non-default `odepth` / `obeam`, `tt=1` when set, and any non-default
+weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
 change.
@@ -400,6 +401,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `w_lw` | 0.80 | v1: Last Words followers on the field |
 | `odepth` | 0 | opponent-model action depth; `0` = greedy line |
 | `obeam` | 3 | opponent beam (plus `EndTurn` always) |
+| `tt` | 0 | per-decision transposition table; `1` = on |
 
 H0 builds `K = max(1, determinizations)` search roots via
 `determinize(state, me, seed)` (which reseeds the game RNG) from the
@@ -423,17 +425,32 @@ A mid-turn choice handed to me is resolved with a 1-ply greedy pick from
 my perspective, then the opponent's line continues. The node cap is
 shared with the own-turn search and is not raised by this switch.
 
+When `tt=1`, each `choose` builds an empty
+`HashMap<(u64, u8, bool), f32>` keyed by
+`(search_key(state), remaining depth, side-to-move-is-me)` and consults
+it in `search_own` / `search_opp` before expanding a node. After a
+state's value is computed it is stored. The table is dropped at the end
+of the decision and is never shared across roots or decisions (the K
+determinized roots have different hidden hands and therefore different
+keys). A hit does not increment the node cap — that is the point. A
+cached value may have been computed under a different cycle-guard
+`line`; reusing it is the standard transposition approximation. `tt=0`
+(the default) is bit-identical to today's search. This PR does not flip
+the default.
+
 `arena-bench --stats` prints, after the JSON line, one `search-stats`
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… opp_leaves/decision=… opp_cap_hit_rate=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
 the fraction of decisions that exhausted `node_cap`; `candidates` are
 legal actions kept after the Bonus-PP filter; `opp_leaves` /
-`opp_cap_hit_rate` describe the opponent model. Non-H0 seats print
+`opp_cap_hit_rate` describe the opponent model; `tt_hits` / `tt_stores`
+are transposition-table lookups that returned a value and writes
+(`0` when `tt=0`). Non-H0 seats print
 `decisions=0`.
 
 `BonusPp` is considered only in the **activate** direction

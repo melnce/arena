@@ -159,13 +159,15 @@ fn print_search_stats(seat: &str, spec: &str, s: &SearchStats) {
     }
     let d = s.decisions as f64;
     println!(
-        "search-stats {seat} {spec}: decisions={} nodes/decision={:.2} cap_hit_rate={:.4} candidates/decision={:.2} opp_leaves/decision={:.2} opp_cap_hit_rate={:.4}",
+        "search-stats {seat} {spec}: decisions={} nodes/decision={:.2} cap_hit_rate={:.4} candidates/decision={:.2} opp_leaves/decision={:.2} opp_cap_hit_rate={:.4} tt_hits/decision={:.2} tt_stores/decision={:.2}",
         s.decisions,
         s.nodes as f64 / d,
         s.cap_hits as f64 / d,
         s.candidates as f64 / d,
         s.opp_leaves as f64 / d,
         s.opp_cap_hits as f64 / d,
+        s.tt_hits as f64 / d,
+        s.tt_stores as f64 / d,
     );
 }
 
