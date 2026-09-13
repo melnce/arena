@@ -364,12 +364,14 @@ loser's `leader_defense <= 0`; otherwise a decided game is `Deckout`. No
 Any subset of the H0 keys; omitted keys take [`H0::default`].
 `k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
 `H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1`
-(default `v0`) and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
+(default `v0`), `odepth=` / `obeam=` (opponent model; defaults `0` / `3`),
+and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
-is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`
-and any non-default weight, or the short names). `"h0"` still round-trips
-to `"h0"`. `by_name` is `parse_spec(name).ok()`; `names()` stays
+is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`,
+non-default `odepth` / `obeam`, and any non-default weight, or the short
+names). `"h0"` still round-trips to `"h0"`. `by_name` is
+`parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
 change.
 
@@ -396,15 +398,43 @@ streams and output as before). `H0` is a determinized search bot:
 | `w_boost` | 0.10 | v1: spellboost counters on Spellboost cards in hand |
 | `w_need` | 0.60 | v1: “is this card live yet” over hand thresholds |
 | `w_lw` | 0.80 | v1: Last Words followers on the field |
+| `odepth` | 0 | opponent-model action depth; `0` = greedy line |
+| `obeam` | 3 | opponent beam (plus `EndTurn` always) |
 
 H0 builds `K = max(1, determinizations)` search roots via
 `determinize(state, me, seed)` (which reseeds the game RNG) from the
-policy rng. Own-turn search, lethal, and the opponent's greedy reply all
+policy rng. Own-turn search, lethal, and the opponent model all
 run on those roots — the true hidden hand and live game RNG are never
 read. A lethal is taken only when every root agrees (a random lethal is
 a bet, not a lethal). Candidate values are averaged over the K roots.
 The node cap is global. `H0::fast()` uses `K = 1` and a 1-ply value
 on that root (no depth-2 consensus-lethal walk).
+
+The opponent model is a switch. `odepth=0` (default) is the historical
+greedy line: at most six steps, and **EndTurn after three** whenever
+`EndTurn` is legal. `odepth≥1` replaces that with a depth-limited beam
+over the opponent's actions, ranked by the opponent's leaf value (the
+value is antisymmetric, so maximising theirs minimises mine). Each ply
+keeps the `obeam` best actions **and always `EndTurn`**, so "do nothing
+more" is a considered line rather than a hard 3-step cutoff. If any
+explored opponent line reaches `winner == opponent`, the model returns
+`-FINITE_WIN` immediately (the opponent is assumed to find its lethal).
+A mid-turn choice handed to me is resolved with a 1-ply greedy pick from
+my perspective, then the opponent's line continues. The node cap is
+shared with the own-turn search and is not raised by this switch.
+
+`arena-bench --stats` prints, after the JSON line, one `search-stats`
+line per seat with means per decision:
+
+```text
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… opp_leaves/decision=… opp_cap_hit_rate=…
+```
+
+`decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
+the fraction of decisions that exhausted `node_cap`; `candidates` are
+legal actions kept after the Bonus-PP filter; `opp_leaves` /
+`opp_cap_hit_rate` describe the opponent model. Non-H0 seats print
+`decisions=0`.
 
 `BonusPp` is considered only in the **activate** direction
 (`!bonus_pp.active`); cancel is never chosen. Cycles are skipped: any
@@ -424,8 +454,10 @@ default.
 
 `arena-bench` accepts `--policy` / `--vs` as `parse_spec` strings (unknown
 names exit with the parser message) and drives games through `play_game`.
-Seeding is unchanged: `seed.wrapping_add(g)`, `First::A`, `policy_rng(s)`
-shared by both seats. Caps: `engine::limits::{MAX_TURNS, MAX_ACTIONS}` = 60 / 800.
+`--stats` adds the per-seat search-stat lines described above (JSON
+fields are unchanged). Seeding is unchanged: `seed.wrapping_add(g)`,
+`First::A`, `policy_rng(s)` shared by both seats. Caps:
+`engine::limits::{MAX_TURNS, MAX_ACTIONS}` = 60 / 800.
 
 ## Throughput
 

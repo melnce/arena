@@ -76,8 +76,43 @@ const INF: f32 = 1.0e9;
 /// lethal does not look like consensus.
 const FINITE_WIN: f32 = 80.0;
 
-/// Determinized search bot. Opponent replies use a greedy value maximiser
-/// on the already-determinized root (not a nested H0).
+/// Per-decision search counters, accumulated across [`H0::choose`] calls.
+#[derive(Default, Clone, Debug)]
+pub struct SearchStats {
+    /// `choose` invocations.
+    pub decisions: u64,
+    /// `apply`s (`try_apply` / one-ply applies).
+    pub nodes: u64,
+    /// Decisions that exhausted `node_cap`.
+    pub cap_hits: u64,
+    /// Legal actions kept after the Bonus-PP useful-action filter.
+    pub candidates: u64,
+    /// Determinized roots built.
+    pub roots: u64,
+    /// Opponent-model leaf evaluations.
+    pub opp_leaves: u64,
+    /// Opponent searches truncated by the node cap.
+    pub opp_cap_hits: u64,
+}
+
+impl SearchStats {
+    pub fn add(&mut self, other: &SearchStats) {
+        self.accum(other);
+    }
+
+    fn accum(&mut self, other: &SearchStats) {
+        self.decisions += other.decisions;
+        self.nodes += other.nodes;
+        self.cap_hits += other.cap_hits;
+        self.candidates += other.candidates;
+        self.roots += other.roots;
+        self.opp_leaves += other.opp_leaves;
+        self.opp_cap_hits += other.opp_cap_hits;
+    }
+}
+
+/// Determinized search bot. With `odepth = 0` (default) the opponent reply is
+/// the historical greedy line; `odepth ≥ 1` replaces that with a beam search.
 #[derive(Debug, Clone)]
 pub struct H0 {
     pub depth: u32,
@@ -86,6 +121,9 @@ pub struct H0 {
     pub node_cap: u32,
     pub value: ValueVersion,
     pub weights: Weights,
+    pub odepth: u32,
+    pub obeam: usize,
+    pub stats: SearchStats,
 }
 
 impl Default for H0 {
@@ -97,6 +135,9 @@ impl Default for H0 {
             node_cap: 2000,
             value: ValueVersion::V0,
             weights: Weights::default(),
+            odepth: 0,
+            obeam: 3,
+            stats: SearchStats::default(),
         }
     }
 }
@@ -129,6 +170,31 @@ impl H0 {
     pub fn evaluate(&self, db: &CardDb, state: &State, me: PlayerId) -> f32 {
         self.evaluator(db).value(state, me)
     }
+
+    /// Run only the opponent model from a state where it is the opponent's
+    /// turn. `odepth = 0` is the greedy line's value.
+    pub fn opponent_value(&self, db: &CardDb, state: &State, me: PlayerId) -> f32 {
+        let mut nodes = 0u32;
+        let eval = self.evaluator(db);
+        let line = [search_key(state)];
+        let mut stats = SearchStats::default();
+        opponent_reply(
+            db,
+            state,
+            me,
+            &mut nodes,
+            self.node_cap,
+            &line,
+            eval,
+            self.odepth,
+            self.obeam,
+            &mut stats,
+        )
+    }
+
+    pub fn reset_stats(&mut self) {
+        self.stats = SearchStats::default();
+    }
 }
 
 impl Policy for H0 {
@@ -139,6 +205,7 @@ impl Policy for H0 {
         legal: &[Action],
         rng: &mut Xoshiro256ss,
     ) -> usize {
+        self.stats.decisions += 1;
         if legal.len() <= 1 {
             return 0;
         }
@@ -153,6 +220,7 @@ impl Policy for H0 {
             .filter(|(_, a)| useful_action(state, me, a))
             .map(|(i, _)| i)
             .collect();
+        self.stats.candidates += cand.len() as u64;
         if cand.is_empty() {
             return 0;
         }
@@ -166,65 +234,79 @@ impl Policy for H0 {
         for _ in 0..k {
             roots.push(determinize(state, me, rng.next_u64()));
         }
+        self.stats.roots += u64::from(k);
         let eval = self.evaluator(db);
+        let odepth = self.odepth;
+        let obeam = self.obeam;
+        let mut dec_stats = SearchStats::default();
 
         // `fast()` is 1-ply on the determinized root: a depth-2 consensus
         // lethal walk (every legal × every reply, plus `search_key` on each
         // apply) was the 8× regression vs pre-R2 greedy. Immediate wins are
         // still taken; constructed lethals use `H0::default()`.
-        if self.depth <= 2 {
-            return cand[one_ply(&roots, db, &subset, me, &mut nodes, self.node_cap, eval)];
-        }
-
-        if let Some(j) = consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, self.node_cap) {
-            return cand[j];
-        }
-
-        let mut acc = vec![0.0f32; subset.len()];
-        let mut n = vec![0u32; subset.len()];
-        for root in &roots {
-            let root_key = search_key(root);
-            for (j, a) in subset.iter().enumerate() {
-                if nodes >= self.node_cap {
-                    break;
+        let pick = if self.depth <= 2 {
+            cand[one_ply(&roots, db, &subset, me, &mut nodes, self.node_cap, eval)]
+        } else if let Some(j) =
+            consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, self.node_cap)
+        {
+            cand[j]
+        } else {
+            let mut acc = vec![0.0f32; subset.len()];
+            let mut n = vec![0u32; subset.len()];
+            for root in &roots {
+                let root_key = search_key(root);
+                for (j, a) in subset.iter().enumerate() {
+                    if nodes >= self.node_cap {
+                        break;
+                    }
+                    let Some(s) = try_apply(db, root, a, &mut nodes, self.node_cap, &[root_key])
+                    else {
+                        continue;
+                    };
+                    let v = if s.winner == Some(me) {
+                        FINITE_WIN
+                    } else {
+                        let line = vec![root_key, search_key(&s)];
+                        search_own(
+                            db,
+                            &s,
+                            me,
+                            self.depth.saturating_sub(1),
+                            self.beam,
+                            &mut nodes,
+                            self.node_cap,
+                            &line,
+                            eval,
+                            odepth,
+                            obeam,
+                            &mut dec_stats,
+                        )
+                    };
+                    acc[j] += finite(v);
+                    n[j] += 1;
                 }
-                let Some(s) = try_apply(db, root, a, &mut nodes, self.node_cap, &[root_key]) else {
-                    continue;
-                };
-                let v = if s.winner == Some(me) {
-                    FINITE_WIN
-                } else {
-                    let line = vec![root_key, search_key(&s)];
-                    search_own(
-                        db,
-                        &s,
-                        me,
-                        self.depth.saturating_sub(1),
-                        self.beam,
-                        &mut nodes,
-                        self.node_cap,
-                        &line,
-                        eval,
-                    )
-                };
-                acc[j] += finite(v);
-                n[j] += 1;
             }
-        }
 
-        let mut best_i = 0usize;
-        let mut best_v = f32::NEG_INFINITY;
-        for (j, &c) in n.iter().enumerate() {
-            if c == 0 {
-                continue;
+            let mut best_i = 0usize;
+            let mut best_v = f32::NEG_INFINITY;
+            for (j, &c) in n.iter().enumerate() {
+                if c == 0 {
+                    continue;
+                }
+                let v = acc[j] / c as f32;
+                if v > best_v {
+                    best_v = v;
+                    best_i = j;
+                }
             }
-            let v = acc[j] / c as f32;
-            if v > best_v {
-                best_v = v;
-                best_i = j;
-            }
+            cand[best_i]
+        };
+        self.stats.nodes += u64::from(nodes);
+        if nodes >= self.node_cap {
+            self.stats.cap_hits += 1;
         }
-        cand[best_i]
+        self.stats.accum(&dec_stats);
+        pick
     }
 }
 
@@ -450,6 +532,9 @@ fn search_own(
     cap: u32,
     line: &[u64],
     eval: Evaluator<'_>,
+    odepth: u32,
+    obeam: usize,
+    stats: &mut SearchStats,
 ) -> f32 {
     if state.winner == Some(me) {
         return INF;
@@ -461,7 +546,7 @@ fn search_own(
         return eval.value(state, me);
     }
     if acting_player(state) != me || matches!(state.phase, Phase::Terminal) {
-        return opponent_reply(db, state, me, nodes, cap, line, eval);
+        return opponent_reply(db, state, me, nodes, cap, line, eval, odepth, obeam, stats);
     }
     if depth == 0 {
         return eval.value(state, me);
@@ -505,6 +590,9 @@ fn search_own(
             cap,
             &next_line,
             eval,
+            odepth,
+            obeam,
+            stats,
         );
         if v > best {
             best = v;
@@ -513,6 +601,7 @@ fn search_own(
     best
 }
 
+#[allow(clippy::too_many_arguments)]
 fn opponent_reply(
     db: &CardDb,
     state: &State,
@@ -521,6 +610,9 @@ fn opponent_reply(
     cap: u32,
     line: &[u64],
     eval: Evaluator<'_>,
+    odepth: u32,
+    obeam: usize,
+    stats: &mut SearchStats,
 ) -> f32 {
     if state.winner == Some(me) {
         return INF;
@@ -528,9 +620,173 @@ fn opponent_reply(
     if state.winner == Some(me.opponent()) {
         return -INF;
     }
-    let mut s = state.clone();
-    greedy_until_end(db, &mut s, me.opponent(), nodes, cap, line, eval);
-    eval.value(&s, me)
+    if odepth == 0 {
+        let mut s = state.clone();
+        greedy_until_end(db, &mut s, me.opponent(), nodes, cap, line, eval);
+        if *nodes >= cap {
+            stats.opp_cap_hits += 1;
+        }
+        stats.opp_leaves += 1;
+        return eval.value(&s, me);
+    }
+    let mut truncated = false;
+    let v = search_opp(
+        db,
+        state,
+        me,
+        odepth,
+        obeam,
+        nodes,
+        cap,
+        line,
+        eval,
+        stats,
+        &mut truncated,
+    );
+    if truncated {
+        stats.opp_cap_hits += 1;
+    }
+    v
+}
+
+/// Maximising `eval.value(s, opp)` is minimising `eval.value(s, me)`: the
+/// leaf value is antisymmetric term by term (`value(s, A) == -value(s, B)`).
+#[allow(clippy::too_many_arguments)]
+fn search_opp(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    depth: u32,
+    beam: usize,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    stats: &mut SearchStats,
+    truncated: &mut bool,
+) -> f32 {
+    let opp = me.opponent();
+    if state.winner == Some(me) {
+        return INF;
+    }
+    if state.winner == Some(opp) {
+        return -FINITE_WIN;
+    }
+    if matches!(state.phase, Phase::Terminal) || state.turn > MAX_TURNS {
+        stats.opp_leaves += 1;
+        return eval.value(state, me);
+    }
+    if *nodes >= cap {
+        *truncated = true;
+        stats.opp_leaves += 1;
+        return eval.value(state, me);
+    }
+
+    // Effect handed a choice to `me` while it is still the opponent's turn.
+    if acting_player(state) == me && state.active == opp {
+        let legal = legal_actions(db, state);
+        if legal.is_empty() {
+            stats.opp_leaves += 1;
+            return eval.value(state, me);
+        }
+        let i = greedy_index(db, state, &legal, me, nodes, cap, line, eval);
+        let Some(s) = try_apply(db, state, &legal[i], nodes, cap, line) else {
+            if *nodes >= cap {
+                *truncated = true;
+            }
+            stats.opp_leaves += 1;
+            return eval.value(state, me);
+        };
+        let mut next_line = line.to_vec();
+        next_line.push(search_key(&s));
+        return search_opp(
+            db, &s, me, depth, beam, nodes, cap, &next_line, eval, stats, truncated,
+        );
+    }
+
+    if acting_player(state) != opp {
+        stats.opp_leaves += 1;
+        return eval.value(state, me);
+    }
+    if depth == 0 {
+        stats.opp_leaves += 1;
+        return eval.value(state, me);
+    }
+
+    let legal = legal_actions(db, state);
+    if legal.is_empty() {
+        stats.opp_leaves += 1;
+        return eval.value(state, me);
+    }
+
+    let mut scored: Vec<(f32, State, u64)> = Vec::new();
+    let mut end_turn: Option<(State, u64)> = None;
+    for a in &legal {
+        if *nodes >= cap {
+            *truncated = true;
+            break;
+        }
+        if !useful_action(state, opp, a) {
+            continue;
+        }
+        let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+            if *nodes >= cap {
+                *truncated = true;
+            }
+            continue;
+        };
+        if s.winner == Some(opp) {
+            return -FINITE_WIN;
+        }
+        let k = search_key(&s);
+        if matches!(a, Action::EndTurn) {
+            end_turn = Some((s, k));
+        } else {
+            scored.push((eval.value(&s, opp), s, k));
+        }
+    }
+    scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+    scored.truncate(beam.max(1));
+    // EndTurn is always kept so "do nothing more" is a considered line — that
+    // is what removes the greedy 3-step cutoff honestly.
+    if let Some((s, k)) = end_turn {
+        scored.push((0.0, s, k));
+    }
+    if scored.is_empty() {
+        stats.opp_leaves += 1;
+        return eval.value(state, me);
+    }
+
+    let mut worst = f32::INFINITY;
+    for (_, s, k) in scored {
+        let mut next_line = line.to_vec();
+        next_line.push(k);
+        let v = search_opp(
+            db,
+            &s,
+            me,
+            depth.saturating_sub(1),
+            beam,
+            nodes,
+            cap,
+            &next_line,
+            eval,
+            stats,
+            truncated,
+        );
+        if v == -FINITE_WIN {
+            return -FINITE_WIN;
+        }
+        if v < worst {
+            worst = v;
+        }
+    }
+    if worst.is_finite() {
+        worst
+    } else {
+        stats.opp_leaves += 1;
+        eval.value(state, me)
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
