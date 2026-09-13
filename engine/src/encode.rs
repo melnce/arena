@@ -141,6 +141,22 @@ impl Observation {
 }
 
 pub fn encode(state: &State, perspective: PlayerId) -> Observation {
+    encode_with_vocab(state, perspective, &vocab(state))
+}
+
+/// Same as [`encode`], but the histogram vocabulary is supplied by the
+/// caller. Lookups are binary search (`vocab` is sorted). A token that is
+/// not in `vocab` is omitted from the histograms (empty column).
+pub fn encode_with_vocab(
+    state: &State,
+    perspective: PlayerId,
+    vocab: &[crate::card::CardId],
+) -> Observation {
+    let vocab = if vocab.len() > HIST_WIDTH {
+        &vocab[..HIST_WIDTH]
+    } else {
+        vocab
+    };
     let mut feat = vec![0.0f32; LEN];
     let mut ids = vec![0u32; IDS_LEN];
     let me = perspective;
@@ -183,12 +199,11 @@ pub fn encode(state: &State, perspective: PlayerId) -> Observation {
         ids[IDS_OWN_HAND + i] = c.card.0;
     }
 
-    let vocab = vocab(state);
     write_board(&mut feat, 153, &mut ids, IDS_OWN_BOARD, state, me);
     write_board(&mut feat, 253, &mut ids, IDS_OPP_BOARD, state, opp);
 
-    let own_deck = deck_hist(state.player(me), &vocab);
-    let opp_pool = pool_hist(state.player(opp), &vocab);
+    let own_deck = deck_hist(state.player(me), vocab);
+    let opp_pool = pool_hist(state.player(opp), vocab);
     for i in 0..HIST_WIDTH {
         feat[353 + i] = own_deck[i];
         feat[353 + HIST_WIDTH + i] = opp_pool[i];
@@ -299,7 +314,9 @@ fn is_bound(state: &State, c: &CardInstance) -> bool {
     })
 }
 
-fn vocab(state: &State) -> Vec<crate::card::CardId> {
+/// Sorted union of both starting decklists plus visible token ids, capped
+/// at [`HIST_WIDTH`]. Public so H0 can compute it once per `choose`.
+pub fn vocab(state: &State) -> Vec<crate::card::CardId> {
     let mut set = BTreeSet::new();
     for p in &state.players {
         for id in &p.starting_deck {
@@ -316,7 +333,7 @@ fn vocab(state: &State) -> Vec<crate::card::CardId> {
 fn deck_hist(p: &PlayerState, vocab: &[crate::card::CardId]) -> [f32; HIST_WIDTH] {
     let mut h = [0.0f32; HIST_WIDTH];
     for c in &p.deck {
-        if let Some(i) = vocab.iter().position(|id| *id == c.card) {
+        if let Ok(i) = vocab.binary_search(&c.card) {
             h[i] += 1.0;
         }
     }
@@ -326,7 +343,7 @@ fn deck_hist(p: &PlayerState, vocab: &[crate::card::CardId]) -> [f32; HIST_WIDTH
 fn pool_hist(p: &PlayerState, vocab: &[crate::card::CardId]) -> [f32; HIST_WIDTH] {
     let mut h = [0.0f32; HIST_WIDTH];
     for (id, n) in p.known_remaining_pool() {
-        if let Some(i) = vocab.iter().position(|v| *v == id) {
+        if let Ok(i) = vocab.binary_search(&id) {
             h[i] = n as f32;
         }
     }

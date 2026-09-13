@@ -310,7 +310,10 @@ opponent-hand id region is always `0`.
 Ids: own hand 9, own-deck vocab 96, opponent board 5, own board 5, opponent
 known-pool vocab 96, opponent hand 9 (always 0). Histograms are counts over
 the sorted union of both starting decklists plus visible token ids, padded
-to `HIST_WIDTH = 96`.
+to `HIST_WIDTH = 96`. `vocab(state)` returns that sorted union (capped at
+96). `encode_with_vocab(state, perspective, vocab)` is the same walk with
+the vocabulary supplied by the caller and binary-search histogram lookups;
+`encode` is `encode_with_vocab(state, p, &vocab(state))`.
 
 ## search_key (M5)
 
@@ -363,8 +366,9 @@ loser's `leader_defense <= 0`; otherwise a decided game is `Deckout`. No
 
 Any subset of the H0 keys; omitted keys take [`H0::default`].
 `k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
-`H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1`
-(default `v0`), `odepth=` / `obeam=` (opponent model; defaults `0` / `3`),
+`H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1|net`
+(default `v0`), `net=<path>` (required together with `value=net`; the path
+may not contain commas), `odepth=` / `obeam=` (opponent model; defaults `0` / `3`),
 `olethal=0|1` (cheap opponent-lethal sweep on the greedy path; default `0`;
 ignored when `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step;
 default `3`; hard stop is `osteps+3`),
@@ -373,7 +377,8 @@ default `3`; hard stop is `osteps+3`),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
-is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`,
+is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1` or
+`value=net,net=<path>`,
 non-default `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
 non-default `wv`, `tt=0` when the table is off, and any
 non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
@@ -396,7 +401,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `beam` | 4 | top-k by value each ply |
 | `determinizations` | 4 | opponent-reply samples |
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
-| `value` | `v0` | leaf evaluator; `v1` adds economy terms |
+| `value` | `v0` | leaf evaluator; `v1` adds economy terms; `net` is a learned leaf |
+| `net` | — | path to `net.json`; required together with `value=net` |
 | `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
 | `w_earth` | 0.35 | v1: saturated earth sigils (cap 6) |
 | `w_faith` | 0.15 | v1: saturated faith (cap 10) |
@@ -633,3 +639,77 @@ terminal), `v0`, `legal_len`, `chosen`, `random` (0/1), `first_is_me`
 float32`, `ids (N, 220) uint32`, `labels (N,)`, `aux (N, 10)`, plus
 `meta` and `aux_columns`. Numpy is a test/tool dependency, not of the
 extension.
+
+## Learned value (M5b-lite)
+
+`h0:value=net,net=<path>` replaces the hand-written leaf with a learned
+one. The search, the determinization, and the opponent model stay exactly
+as they are (`value=v1`, `tt`, `wv`, `odepth`, `olethal`, `osteps`
+untouched). `value=v0` (the default) is byte-identical to today's leaf.
+Both keys are required together: `value=net` without `net=` is a parse
+error naming the missing key; a missing file is a parse error naming the
+path. The path may not contain commas. `spec()` prints
+`value=net,net=<path>`; `h0_fields_eq` compares the path. `names()` is
+unchanged.
+
+`ValueNet::load(path)` parses `net.json` (`serde_json`; no ONNX runtime).
+`ValueNet::value(&obs)` standardizes the 545 features with the stored
+mean/std (std floored at `1e-3` at train time), adds per-zone card
+terms, applies `tanh`, and returns **`scale × tanh(…)`**. Default
+`scale = 60` puts a sure win at +60, below the terminal stand-in `wv`
+(80), so `one_ply`'s `+3.0` face-attack bonus stays proportionate on the
+v0 scale. Do not change `wv` or the bonus.
+
+Model file (one JSON object, f32 values as JSON numbers):
+
+```text
+{
+  "arch": "linear" | "mlp",
+  "feature_len": 545,
+  "feat_mean": [545], "feat_std": [545],
+  "vocab": [ids ascending, index 0 = 0],
+  "zones": [{"name", "id_offset", "count", "hist_offset" | null} × 5],
+  "scale": 60.0,
+  "linear": {"w": [545], "zone_w": [5][vocab], "b": f}
+    | "mlp": {"emb": [vocab][emb], "w1": [hidden][545 + 5·emb],
+              "b1": [hidden], "w2": [hidden], "b2": f},
+  "trained_on": {"dirs", "rows", "games", "holdout": {…metrics}}
+}
+```
+
+Unknown ids at inference map to index 0. Opponent-hand slots are always
+0 and are ignored.
+
+Zones (220 id slots, 5 groups):
+
+| name | id slots | count weight |
+|---|---|---|
+| `own_hand` | `0..9` | 1 per slot |
+| `own_deck` | `9..105` | `own_deck_hist` at feature offset 353 |
+| `opp_board` | `IDS_OPP_BOARD..+5` | 1 per slot |
+| `own_board` | `IDS_OWN_BOARD..+5` | 1 per slot |
+| `opp_pool` | `IDS_OPP_POOL..+96` | `opp_known_pool_hist` at offset 449 |
+
+`linear`: `tanh(w·x + Σ_zone Σ_slot count·W_zone[id] + b)` — one scalar
+weight table per zone. `mlp`: per-zone weighted sums of a shared `emb`
+(vocab × `emb`) concatenated with the 545 standardized features
+(`545 + 5·emb`) → `hidden` ReLU → 1 → `tanh`.
+
+The `Evaluator` computes `vocab(root)` **once per `choose`** from the
+root state and reuses it for every leaf `encode_with_vocab`. A token
+that first appears inside the search tree is simply not in the
+histogram (its column stays empty). Training data uses the per-state
+vocabulary, which is the same thing whenever no new token appeared.
+
+`py/train_value.py --data <dir> [<dir> …] --model linear|mlp --out <net.json>`
+loads every directory with `py/samples.py`, concatenates, and splits
+**by game** (`holdout` fraction of distinct `game_index` values, offset
+per directory so games never collide). Flags: `--holdout` (default 0.1),
+`--epochs` (30), `--seed`, `--hidden` (128), `--emb` (16), `--l2`
+(1e-4), `--max-samples`. Loss is MSE against `+1/−1/0` labels; Adam
+with `--l2` weight decay; early stopping on holdout MSE (patience 3).
+The printed report (also `<net>.report.json`) is rows/games
+train/holdout, label balance, holdout MSE / sign accuracy (over
+`label != 0`) / AUC, the same three for the `v0` baseline
+(`aux[:, v0]`), all of it by turn bucket (`turn ≤ 3`, `4–6`, `≥ 7`) and
+overall, plus training time.
