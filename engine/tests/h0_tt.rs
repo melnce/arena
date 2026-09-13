@@ -1,4 +1,4 @@
-//! H0 per-decision transposition table: tt=0 identity, unbounded-cap
+//! H0 per-decision transposition table: tt=1 identity, unbounded-cap
 //! agreement, hits at the real cap, determinism.
 
 use arena_engine::{
@@ -90,12 +90,14 @@ fn pick(h: &mut H0, db: &CardDb, state: &arena_engine::State, seed: u64) -> (usi
     (i, legal[i].clone())
 }
 
-fn check_tt0_identity(n: usize) {
+fn check_tt1_identity(n: usize) {
     let db = load_db();
     let states = collect_states(&db, n, true);
     assert_eq!(states.len(), n, "could not reach {n} mid-game states");
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:tt=0").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:tt=1").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:tt=0").unwrap().spec(), "h0:tt=0");
+    assert_eq!(AnyPolicy::parse_spec("h0-fast").unwrap().spec(), "h0-fast");
     for (i, state) in states.iter().enumerate() {
         let legal = legal_actions(&db, state);
         if legal.is_empty() {
@@ -104,30 +106,28 @@ fn check_tt0_identity(n: usize) {
         let seed = 20260913u64.wrapping_add(i as u64);
         let mut main = H0::default();
         let mut named = parse_h0("h0");
-        let mut off = parse_h0("h0:tt=0");
+        let mut on = parse_h0("h0:tt=1");
         let mut rng_m = policy_rng(seed);
         let mut rng_n = policy_rng(seed);
         let mut rng_o = policy_rng(seed);
         let im = main.choose(&db, state, &legal, &mut rng_m);
         let inn = named.choose(&db, state, &legal, &mut rng_n);
-        let io = off.choose(&db, state, &legal, &mut rng_o);
+        let io = on.choose(&db, state, &legal, &mut rng_o);
         assert_eq!(im, inn, "h0 vs H0::default at state {i}");
-        assert_eq!(im, io, "h0 vs h0:tt=0 at state {i}");
+        assert_eq!(im, io, "h0 vs h0:tt=1 at state {i}");
         assert!(im < legal.len());
-        assert_eq!(off.stats.tt_hits, 0);
-        assert_eq!(off.stats.tt_stores, 0);
     }
 }
 
 #[test]
-fn tt0_identity_smoke() {
-    check_tt0_identity(8);
+fn tt1_identity_smoke() {
+    check_tt1_identity(8);
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn tt0_identity_200_midgame() {
-    check_tt0_identity(200);
+fn tt1_identity_200_midgame() {
+    check_tt1_identity(200);
 }
 
 fn check_unbounded_identity(n: usize, spec_off: &str, spec_on: &str) {
@@ -195,8 +195,8 @@ fn check_table_does_work(n: usize) {
     let db = load_db();
     let states = collect_states(&db, n, true);
     assert_eq!(states.len(), n, "could not reach {n} mid-game states");
-    let mut off = parse_h0("h0");
-    let mut on = parse_h0("h0:tt=1");
+    let mut off = parse_h0("h0:tt=0");
+    let mut on = parse_h0("h0");
     let mut hit_decisions = 0u32;
     let mut searched = 0u32;
     for (i, state) in states.iter().enumerate() {
@@ -299,11 +299,16 @@ fn tt1_determinism_20_games() {
 #[test]
 fn spec_tt() {
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:tt=0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:tt=1").unwrap().spec(), "h0:tt=1");
+    assert_eq!(AnyPolicy::parse_spec("h0:tt=1").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:tt=0").unwrap().spec(), "h0:tt=0");
+    assert_eq!(AnyPolicy::parse_spec("h0-fast").unwrap().spec(), "h0-fast");
     assert_eq!(
         AnyPolicy::parse_spec("h0:tt=1,odepth=5").unwrap().spec(),
-        "h0:odepth=5,tt=1"
+        "h0:odepth=5"
+    );
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:tt=0,odepth=5").unwrap().spec(),
+        "h0:odepth=5,tt=0"
     );
     let e = AnyPolicy::parse_spec("h0:tt=x").unwrap_err();
     assert!(e.contains("x"), "{e}");
