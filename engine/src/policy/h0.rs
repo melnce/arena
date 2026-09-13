@@ -59,12 +59,15 @@ pub enum ValueVersion {
     V1,
 }
 
-/// (`NeedsTable`, version, weights) — the only thing search functions evaluate.
+/// Leaf evaluator plus the root-level terminal stand-in (`wv`).
+/// `wv` is carried here (not as a sibling of `odepth`/`obeam`) so
+/// `finite`, `one_ply`, and the opponent lethal short-circuit share one value.
 #[derive(Clone, Copy)]
 struct Evaluator<'a> {
     needs: &'a NeedsTable,
     version: ValueVersion,
     weights: &'a Weights,
+    wv: f32,
 }
 
 impl Evaluator<'_> {
@@ -77,9 +80,9 @@ impl Evaluator<'_> {
 }
 
 const INF: f32 = 1.0e9;
-/// Finite stand-in for a terminal when averaging across roots so a lucky
-/// lethal does not look like consensus.
-const FINITE_WIN: f32 = 80.0;
+/// Default root-level stand-in for a terminal (`wv`). 80 is today's clamp;
+/// it sits inside the reachable live range of [`value_v0`].
+const DEFAULT_WV: f32 = 80.0;
 
 /// Per-decision search counters, accumulated across [`H0::choose`] calls.
 #[derive(Default, Clone, Debug)]
@@ -134,6 +137,9 @@ pub struct H0 {
     pub weights: Weights,
     pub odepth: u32,
     pub obeam: usize,
+    /// Root-level finite stand-in for a terminal when averaging across
+    /// roots (`wv`). Default `80` is today's clamp.
+    pub wv: f32,
     /// Per-decision transposition table. Off by default (`tt=0`).
     pub tt: bool,
     pub stats: SearchStats,
@@ -150,6 +156,7 @@ impl Default for H0 {
             weights: Weights::default(),
             odepth: 0,
             obeam: 3,
+            wv: DEFAULT_WV,
             tt: false,
             stats: SearchStats::default(),
         }
@@ -177,6 +184,7 @@ impl H0 {
             needs: db.needs(),
             version: self.value,
             weights: &self.weights,
+            wv: self.wv,
         }
     }
 
@@ -306,7 +314,7 @@ impl Policy for H0 {
                         continue;
                     };
                     let v = if s.winner == Some(me) {
-                        FINITE_WIN
+                        eval.wv
                     } else {
                         let line = vec![root_key, search_key(&s)];
                         search_own(
@@ -325,7 +333,7 @@ impl Policy for H0 {
                             table.as_mut(),
                         )
                     };
-                    acc[j] += finite(v);
+                    acc[j] += finite(v, eval.wv);
                     n[j] += 1;
                 }
             }
@@ -376,11 +384,11 @@ fn useful_action(state: &State, me: PlayerId, a: &Action) -> bool {
     }
 }
 
-fn finite(v: f32) -> f32 {
+fn finite(v: f32, wv: f32) -> f32 {
     if v.is_nan() {
         0.0
     } else {
-        v.clamp(-FINITE_WIN, FINITE_WIN)
+        v.clamp(-wv, wv)
     }
 }
 
@@ -500,7 +508,7 @@ fn one_ply(
                 continue;
             }
             let mut v = if s.winner == Some(me) {
-                FINITE_WIN
+                eval.wv
             } else {
                 eval.value(&s, me)
             };
@@ -513,7 +521,7 @@ fn one_ply(
             ) {
                 v += 3.0;
             }
-            acc[j] += finite(v);
+            acc[j] += finite(v, eval.wv);
             n[j] += 1;
         }
     }
@@ -686,7 +694,7 @@ fn opponent_reply(
         return INF;
     }
     if state.winner == Some(me.opponent()) {
-        return -INF;
+        return -eval.wv;
     }
     if odepth == 0 {
         let mut s = state.clone();
@@ -740,7 +748,7 @@ fn search_opp(
         return INF;
     }
     if state.winner == Some(opp) {
-        return -FINITE_WIN;
+        return -eval.wv;
     }
     if matches!(state.phase, Phase::Terminal) || state.turn > MAX_TURNS {
         stats.opp_leaves += 1;
@@ -846,7 +854,7 @@ fn search_opp_expand(
             continue;
         };
         if s.winner == Some(opp) {
-            return -FINITE_WIN;
+            return -eval.wv;
         }
         let k = search_key(&s);
         if matches!(a, Action::EndTurn) {
@@ -885,8 +893,8 @@ fn search_opp_expand(
             truncated,
             tt.as_deref_mut(),
         );
-        if v == -FINITE_WIN {
-            return -FINITE_WIN;
+        if v == -eval.wv {
+            return -eval.wv;
         }
         if v < worst {
             worst = v;
