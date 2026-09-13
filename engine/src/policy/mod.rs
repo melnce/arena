@@ -8,9 +8,11 @@
 
 mod h0;
 mod needs;
+mod record;
 
 pub use h0::{SearchStats, ValueVersion, Weights, H0};
 pub use needs::{CardNeeds, NeedsTable, SkippedAmount};
+pub use record::{Recorder, Sample};
 
 use crate::action::Action;
 use crate::db::CardDb;
