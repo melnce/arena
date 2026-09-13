@@ -2,16 +2,19 @@
 //!
 //! This module (and `encode` / `search_key` / `determinize`) must compile for
 //! `wasm32-unknown-unknown`: no `std::time::{Instant, SystemTime}`, threads,
-//! rayon, `std::fs`, or `getrandom` without the js feature. The node cap is
-//! the only search budget. `Policy` is object-safe so WASM can hold
-//! `Box<dyn Policy>`.
+//! rayon, or `getrandom` without the js feature. `ValueNet::load` uses
+//! `std::fs::read_to_string` (compiles on wasm32; never called there). The
+//! node cap is the only search budget. `Policy` is object-safe so WASM can
+//! hold `Box<dyn Policy>`.
 
 mod h0;
 mod needs;
+mod net;
 mod record;
 
 pub use h0::{SearchStats, ValueVersion, Weights, H0};
 pub use needs::{CardNeeds, NeedsTable, SkippedAmount};
+pub use net::ValueNet;
 pub use record::{Recorder, Sample};
 
 use crate::action::Action;
@@ -98,7 +101,10 @@ impl AnyPolicy {
     /// `"random"` | `"first-legal"` | `"h0"` ([`H0::default`]) | `"h0-fast"`
     /// ([`H0::fast`]) | `"h0:depth=6,beam=4,k=4,nodes=2000"` — any subset of
     /// keys, the rest default; `k` = `determinizations`, `nodes` = `node_cap`.
-    /// H0 also accepts `value=v0|v1` (default `v0`), `odepth=` / `obeam=`
+    /// H0 also accepts `value=v0|v1|net` (default `v0`), `net=<path>`
+    /// (required together with `value=net`; the path may not contain
+    /// commas; a missing file is a parse error naming the path),
+    /// `odepth=` / `obeam=`
     /// (opponent model; `odepth=0` is the greedy line), `olethal=0|1` (cheap
     /// opponent-lethal sweep on the greedy path; default `0`; ignored when
     /// `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step; default `3`;
@@ -123,7 +129,8 @@ impl AnyPolicy {
     }
 
     /// Canonical form: `"random"`, `"first-legal"`, `"h0"`, `"h0-fast"`, or
-    /// `"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`, non-default
+    /// `"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1` or
+    /// `value=net,net=<path>`, non-default
     /// `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
     /// non-default `wv`, `tt=0` when the table is off, and any
     /// non-default weight.
@@ -156,8 +163,15 @@ fn h0_spec(h: &H0) -> String {
         parts.push(format!("k={}", h.determinizations));
         parts.push(format!("nodes={}", h.node_cap));
     }
-    if h.value != ValueVersion::V0 {
-        parts.push("value=v1".to_string());
+    match h.value {
+        ValueVersion::V0 => {}
+        ValueVersion::V1 => parts.push("value=v1".to_string()),
+        ValueVersion::Net => {
+            parts.push("value=net".to_string());
+            if let Some(path) = &h.net_path {
+                parts.push(format!("net={path}"));
+            }
+        }
     }
     if h.odepth != def.odepth {
         parts.push(format!("odepth={}", h.odepth));
@@ -215,6 +229,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.osteps == b.osteps
         && a.wv == b.wv
         && a.tt == b.tt
+        && a.net_path == b.net_path
         && weights_eq(&a.weights, &b.weights)
 }
 
@@ -230,6 +245,7 @@ fn weights_eq(a: &Weights, b: &Weights) -> bool {
 
 fn parse_h0_params(body: &str) -> Result<H0, String> {
     let mut h = H0::default();
+    let mut net_path: Option<String> = None;
     if body.is_empty() {
         return Ok(h);
     }
@@ -252,8 +268,15 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                 h.value = match val {
                     "v0" => ValueVersion::V0,
                     "v1" => ValueVersion::V1,
+                    "net" => ValueVersion::Net,
                     other => return Err(format!("unknown value '{other}'")),
                 }
+            }
+            "net" => {
+                if val.is_empty() {
+                    return Err("missing key 'net'".to_string());
+                }
+                net_path = Some(val.to_string());
             }
             "w_shadows" => h.weights.shadows = parse_num(val)?,
             "w_earth" => h.weights.earth = parse_num(val)?,
@@ -282,6 +305,16 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             }
             other => return Err(format!("unknown key '{other}'")),
         }
+    }
+    match (h.value, net_path) {
+        (ValueVersion::Net, Some(path)) => {
+            let net = crate::policy::net::ValueNet::load(&path)?;
+            h.net = Some(net);
+            h.net_path = Some(path);
+        }
+        (ValueVersion::Net, None) => return Err("missing key 'net'".to_string()),
+        (_, Some(_)) => return Err("missing key 'value'".to_string()),
+        _ => {}
     }
     Ok(h)
 }

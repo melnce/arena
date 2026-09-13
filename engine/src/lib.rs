@@ -30,7 +30,7 @@ pub use apply::{apply, apply_neutral, legal_actions, new_game, zone_count};
 pub use card::{Card, CardId, CardOrCrest};
 pub use db::CardDb;
 pub use determinize::determinize;
-pub use encode::{encode, Observation};
+pub use encode::{encode, encode_with_vocab, vocab, Observation};
 pub use error::{Illegal, LoadError, OraclePickNotLegal, ReplayError, Unsupported};
 pub use ids::{AttackTarget, First, PlayerId, Slot};
 pub use info::{
@@ -40,7 +40,7 @@ pub use limits::{MAX_ACTIONS, MAX_TURNS};
 pub use play::{play_game, End, Outcome};
 pub use policy::{
     by_name, names, AnyPolicy, CardNeeds, FirstLegal, NeedsTable, Policy, Random, Recorder, Sample,
-    SkippedAmount, ValueVersion, Weights, H0,
+    SkippedAmount, ValueNet, ValueVersion, Weights, H0,
 };
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
 pub use search_key::search_key;

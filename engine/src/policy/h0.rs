@@ -7,12 +7,14 @@
 //! taken only when every root agrees. The node cap is global.
 
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::action::{acting_player, Action};
 use crate::apply::{apply, legal_actions};
-use crate::card::CardKind;
+use crate::card::{CardId, CardKind};
 use crate::db::CardDb;
 use crate::determinize::determinize;
+use crate::encode::{encode_with_vocab, vocab};
 use crate::ids::{AttackTarget, PlayerId};
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
@@ -57,6 +59,9 @@ pub enum ValueVersion {
     #[default]
     V0,
     V1,
+    /// Learned leaf from `net.json`. Search, determinization, and the
+    /// opponent model are unchanged; only [`Evaluator::value`] dispatches.
+    Net,
 }
 
 /// Leaf evaluator plus the root-level terminal stand-in (`wv`) and the
@@ -71,6 +76,8 @@ struct Evaluator<'a> {
     wv: f32,
     olethal: bool,
     osteps: u32,
+    net: Option<&'a super::net::ValueNet>,
+    vocab: &'a [CardId],
 }
 
 impl Evaluator<'_> {
@@ -78,6 +85,10 @@ impl Evaluator<'_> {
         match self.version {
             ValueVersion::V0 => value(state, me),
             ValueVersion::V1 => value_v1(state, me, self.needs, self.weights),
+            ValueVersion::Net => self
+                .net
+                .expect("value=net requires a loaded net")
+                .value(&encode_with_vocab(state, me, self.vocab)),
         }
     }
 }
@@ -159,6 +170,10 @@ pub struct H0 {
     /// Greedy-line steps before a forced `EndTurn`. Default `3` is today's cutoff;
     /// the hard stop is `osteps + 3` (today: 6).
     pub osteps: u32,
+    /// Learned leaf (`value=net`). `None` when the leaf is v0/v1.
+    pub net: Option<Arc<super::net::ValueNet>>,
+    /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
+    pub net_path: Option<String>,
     pub stats: SearchStats,
 }
 
@@ -177,6 +192,8 @@ impl Default for H0 {
             tt: true,
             olethal: false,
             osteps: 3,
+            net: None,
+            net_path: None,
             stats: SearchStats::default(),
         }
     }
@@ -199,7 +216,7 @@ impl H0 {
         self.determinizations.max(1)
     }
 
-    fn evaluator<'a>(&'a self, db: &'a CardDb) -> Evaluator<'a> {
+    fn evaluator<'a>(&'a self, db: &'a CardDb, root_vocab: &'a [CardId]) -> Evaluator<'a> {
         Evaluator {
             needs: db.needs(),
             version: self.value,
@@ -207,12 +224,23 @@ impl H0 {
             wv: self.wv,
             olethal: self.olethal,
             osteps: self.osteps,
+            net: self.net.as_deref(),
+            vocab: root_vocab,
+        }
+    }
+
+    fn root_vocab(&self, state: &State) -> Vec<CardId> {
+        if self.value == ValueVersion::Net {
+            vocab(state)
+        } else {
+            Vec::new()
         }
     }
 
     /// Leaf value under this spec (`v0` is the historical arithmetic).
     pub fn evaluate(&self, db: &CardDb, state: &State, me: PlayerId) -> f32 {
-        self.evaluator(db).value(state, me)
+        let root_vocab = self.root_vocab(state);
+        self.evaluator(db, &root_vocab).value(state, me)
     }
 
     /// Run only the opponent model from a state where it is the opponent's
@@ -220,7 +248,8 @@ impl H0 {
     /// counters into `self.stats` (including `opp_lethal_*` when the sweep runs).
     pub fn opponent_value(&mut self, db: &CardDb, state: &State, me: PlayerId) -> f32 {
         let mut nodes = 0u32;
-        let eval = self.evaluator(db);
+        let root_vocab = self.root_vocab(state);
+        let eval = self.evaluator(db, &root_vocab);
         let line = [search_key(state)];
         let mut stats = SearchStats::default();
         let v = opponent_reply(
@@ -311,7 +340,8 @@ impl Policy for H0 {
             roots.push(determinize(state, me, rng.next_u64()));
         }
         self.stats.roots += u64::from(k);
-        let eval = self.evaluator(db);
+        let root_vocab = self.root_vocab(state);
+        let eval = self.evaluator(db, &root_vocab);
         let odepth = self.odepth;
         let obeam = self.obeam;
         let mut dec_stats = SearchStats::default();
