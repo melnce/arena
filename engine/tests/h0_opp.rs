@@ -348,8 +348,8 @@ fn storm_lethal_opp_state(db: &CardDb) -> arena_engine::State {
 fn play_then_attack_opp_lethal_values() {
     let db = load_db();
     let st = storm_lethal_opp_state(&db);
-    let greedy = parse_h0("h0");
-    let cand = parse_h0("h0:odepth=5,obeam=3");
+    let mut greedy = parse_h0("h0");
+    let mut cand = parse_h0("h0:odepth=5,obeam=3");
     let gv = greedy.opponent_value(&db, &st, PlayerId::A);
     let cv = cand.opponent_value(&db, &st, PlayerId::A);
     eprintln!("play-then-attack greedy={gv} candidate={cv}");

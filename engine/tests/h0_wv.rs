@@ -157,8 +157,8 @@ fn dead_is_below_alive() {
     let db = load_db();
     let dead = dead_opp_won(&db);
     let live = live_empty_opp_turn(&db);
-    let h80 = parse_h0("h0:wv=80");
-    let h300 = parse_h0("h0:wv=300");
+    let mut h80 = parse_h0("h0:wv=80");
+    let mut h300 = parse_h0("h0:wv=300");
     let dead80 = h80.opponent_value(&db, &dead, PlayerId::A);
     let live80 = h80.opponent_value(&db, &live, PlayerId::A);
     let leaf = h80.evaluate(&db, &live, PlayerId::A);
