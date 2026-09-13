@@ -97,7 +97,8 @@ impl AnyPolicy {
     /// ([`H0::fast`]) | `"h0:depth=6,beam=4,k=4,nodes=2000"` — any subset of
     /// keys, the rest default; `k` = `determinizations`, `nodes` = `node_cap`.
     /// H0 also accepts `value=v0|v1` (default `v0`), `odepth=` / `obeam=`
-    /// (opponent model; `odepth=0` is the greedy line), `tt=0|1` (per-decision
+    /// (opponent model; `odepth=0` is the greedy line), `wv=<f32>` (root-level
+    /// terminal stand-in; default `80`), `tt=0|1` (per-decision
     /// transposition table; default `0`), and `w_shadows=`, `w_earth=`,
     /// `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`, `w_lw=` (f32; only
     /// meaningful with `value=v1`).
@@ -118,7 +119,8 @@ impl AnyPolicy {
 
     /// Canonical form: `"random"`, `"first-legal"`, `"h0"`, `"h0-fast"`, or
     /// `"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`, non-default
-    /// `odepth` / `obeam`, `tt=1` when set, and any non-default weight.
+    /// `odepth` / `obeam`, non-default `wv`, `tt=1` when set, and any
+    /// non-default weight.
     /// `"h0"` still round-trips to `"h0"`.
     pub fn spec(&self) -> String {
         match self {
@@ -157,6 +159,9 @@ fn h0_spec(h: &H0) -> String {
     if h.obeam != def.obeam {
         parts.push(format!("obeam={}", h.obeam));
     }
+    if h.wv != def.wv {
+        parts.push(format!("wv={}", h.wv));
+    }
     if h.tt {
         parts.push("tt=1".to_string());
     }
@@ -194,6 +199,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.value == b.value
         && a.odepth == b.odepth
         && a.obeam == b.obeam
+        && a.wv == b.wv
         && a.tt == b.tt
         && weights_eq(&a.weights, &b.weights)
 }
@@ -244,6 +250,7 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             "w_lw" => h.weights.last_words = parse_num(val)?,
             "odepth" => h.odepth = parse_num(val)?,
             "obeam" => h.obeam = parse_num(val)?,
+            "wv" => h.wv = parse_num(val)?,
             "tt" => {
                 h.tt = match val {
                     "0" => false,

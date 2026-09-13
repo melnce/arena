@@ -365,13 +365,14 @@ Any subset of the H0 keys; omitted keys take [`H0::default`].
 `k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
 `H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1`
 (default `v0`), `odepth=` / `obeam=` (opponent model; defaults `0` / `3`),
+`wv=<f32>` (root-level terminal stand-in; default `80`),
 `tt=0|1` (per-decision transposition table; default `0`),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
 is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`,
-non-default `odepth` / `obeam`, `tt=1` when set, and any non-default
-weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
+non-default `odepth` / `obeam`, non-default `wv`, `tt=1` when set, and any
+non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
 change.
@@ -401,6 +402,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `w_lw` | 0.80 | v1: Last Words followers on the field |
 | `odepth` | 0 | opponent-model action depth; `0` = greedy line |
 | `obeam` | 3 | opponent beam (plus `EndTurn` always) |
+| `wv` | 80 | root-level finite stand-in for a terminal when averaging K roots |
 | `tt` | 0 | per-decision transposition table; `1` = on |
 
 H0 builds `K = max(1, determinizations)` search roots via
@@ -420,10 +422,23 @@ value is antisymmetric, so maximising theirs minimises mine). Each ply
 keeps the `obeam` best actions **and always `EndTurn`**, so "do nothing
 more" is a considered line rather than a hard 3-step cutoff. If any
 explored opponent line reaches `winner == opponent`, the model returns
-`-FINITE_WIN` immediately (the opponent is assumed to find its lethal).
+`-wv` immediately (the opponent is assumed to find its lethal).
 A mid-turn choice handed to me is resolved with a 1-ply greedy pick from
 my perspective, then the opponent's line continues. The node cap is
 shared with the own-turn search and is not raised by this switch.
+
+`wv` is the finite stand-in for a terminal when the K root values are
+averaged (`finite(v)` clamps every root value to ±`wv`). The in-search
+terminal stays ±`INF` (`1e9`); only the number that reaches the root
+average changes. Default `wv=80` is today's clamp — it sits *inside* the
+reachable live range of `value_v0` (`4.5 ×` leader-defense difference is
+already ±90, plus `board_score` of every follower). A live position at
+−95 (behind on life and board, but alive) therefore clamps to −80, the
+same score as a lost root, so "I survive this turn at 3 life" and "I am
+dead" are indistinguishable, and a sure next-turn win (+95) equals a
+lucky lethal (+80). Candidates: `wv=300` sits just above the live range;
+`wv=1000` makes one lethal root out of four outvote three bad live
+roots. This PR does not flip the default.
 
 When `tt=1`, each `choose` builds an empty
 `HashMap<(u64, u8, bool), f32>` keyed by
