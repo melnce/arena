@@ -6,6 +6,8 @@
 //! true hidden hand and live game RNG are never consulted. A lethal is
 //! taken only when every root agrees. The node cap is global.
 
+use std::collections::HashMap;
+
 use crate::action::{acting_player, Action};
 use crate::apply::{apply, legal_actions};
 use crate::card::CardKind;
@@ -19,6 +21,9 @@ use crate::state::{Phase, PlayerState, State};
 
 use super::needs::NeedsTable;
 use super::Policy;
+
+/// Per-decision transposition table: (`search_key`, remaining depth, side-to-move-is-me).
+type Tt = HashMap<(u64, u8, bool), f32>;
 
 /// Economy-term weights for [`ValueVersion::V1`]. A weight of `0` drops that term.
 #[derive(Debug, Clone, Copy)]
@@ -93,6 +98,10 @@ pub struct SearchStats {
     pub opp_leaves: u64,
     /// Opponent searches truncated by the node cap.
     pub opp_cap_hits: u64,
+    /// TT lookups that returned a value (`tt=1` only).
+    pub tt_hits: u64,
+    /// Values written to the per-decision table (`tt=1` only).
+    pub tt_stores: u64,
 }
 
 impl SearchStats {
@@ -108,6 +117,8 @@ impl SearchStats {
         self.roots += other.roots;
         self.opp_leaves += other.opp_leaves;
         self.opp_cap_hits += other.opp_cap_hits;
+        self.tt_hits += other.tt_hits;
+        self.tt_stores += other.tt_stores;
     }
 }
 
@@ -123,6 +134,8 @@ pub struct H0 {
     pub weights: Weights,
     pub odepth: u32,
     pub obeam: usize,
+    /// Per-decision transposition table. Off by default (`tt=0`).
+    pub tt: bool,
     pub stats: SearchStats,
 }
 
@@ -137,6 +150,7 @@ impl Default for H0 {
             weights: Weights::default(),
             odepth: 0,
             obeam: 3,
+            tt: false,
             stats: SearchStats::default(),
         }
     }
@@ -189,11 +203,38 @@ impl H0 {
             self.odepth,
             self.obeam,
             &mut stats,
+            None,
         )
     }
 
     pub fn reset_stats(&mut self) {
         self.stats = SearchStats::default();
+    }
+}
+
+fn tt_get(
+    tt: Option<&Tt>,
+    state: &State,
+    depth: u32,
+    me_to_move: bool,
+    stats: &mut SearchStats,
+) -> Option<f32> {
+    let v = *tt?.get(&(search_key(state), depth as u8, me_to_move))?;
+    stats.tt_hits += 1;
+    Some(v)
+}
+
+fn tt_put(
+    tt: Option<&mut Tt>,
+    state: &State,
+    depth: u32,
+    me_to_move: bool,
+    v: f32,
+    stats: &mut SearchStats,
+) {
+    if let Some(tt) = tt {
+        tt.insert((search_key(state), depth as u8, me_to_move), v);
+        stats.tt_stores += 1;
     }
 }
 
@@ -206,6 +247,7 @@ impl Policy for H0 {
         rng: &mut Xoshiro256ss,
     ) -> usize {
         self.stats.decisions += 1;
+        let mut table = self.tt.then(HashMap::new);
         if legal.len() <= 1 {
             return 0;
         }
@@ -280,6 +322,7 @@ impl Policy for H0 {
                             odepth,
                             obeam,
                             &mut dec_stats,
+                            table.as_mut(),
                         )
                     };
                     acc[j] += finite(v);
@@ -535,6 +578,7 @@ fn search_own(
     odepth: u32,
     obeam: usize,
     stats: &mut SearchStats,
+    mut tt: Option<&mut Tt>,
 ) -> f32 {
     if state.winner == Some(me) {
         return INF;
@@ -546,10 +590,30 @@ fn search_own(
         return eval.value(state, me);
     }
     if acting_player(state) != me || matches!(state.phase, Phase::Terminal) {
-        return opponent_reply(db, state, me, nodes, cap, line, eval, odepth, obeam, stats);
+        if let Some(v) = tt_get(tt.as_deref(), state, depth, false, stats) {
+            return v;
+        }
+        let v = opponent_reply(
+            db,
+            state,
+            me,
+            nodes,
+            cap,
+            line,
+            eval,
+            odepth,
+            obeam,
+            stats,
+            tt.as_deref_mut(),
+        );
+        tt_put(tt, state, depth, false, v, stats);
+        return v;
     }
     if depth == 0 {
         return eval.value(state, me);
+    }
+    if let Some(v) = tt_get(tt.as_deref(), state, depth, true, stats) {
+        return v;
     }
     let legal = legal_actions(db, state);
     if legal.is_empty() {
@@ -568,6 +632,7 @@ fn search_own(
             continue;
         };
         if s.winner == Some(me) {
+            tt_put(tt, state, depth, true, INF, stats);
             return INF;
         }
         let k = search_key(&s);
@@ -593,11 +658,13 @@ fn search_own(
             odepth,
             obeam,
             stats,
+            tt.as_deref_mut(),
         );
         if v > best {
             best = v;
         }
     }
+    tt_put(tt, state, depth, true, best, stats);
     best
 }
 
@@ -613,6 +680,7 @@ fn opponent_reply(
     odepth: u32,
     obeam: usize,
     stats: &mut SearchStats,
+    tt: Option<&mut Tt>,
 ) -> f32 {
     if state.winner == Some(me) {
         return INF;
@@ -642,6 +710,7 @@ fn opponent_reply(
         eval,
         stats,
         &mut truncated,
+        tt,
     );
     if truncated {
         stats.opp_cap_hits += 1;
@@ -664,6 +733,7 @@ fn search_opp(
     eval: Evaluator<'_>,
     stats: &mut SearchStats,
     truncated: &mut bool,
+    mut tt: Option<&mut Tt>,
 ) -> f32 {
     let opp = me.opponent();
     if state.winner == Some(me) {
@@ -681,6 +751,46 @@ fn search_opp(
         stats.opp_leaves += 1;
         return eval.value(state, me);
     }
+
+    let me_to_move = acting_player(state) == me;
+    if let Some(v) = tt_get(tt.as_deref(), state, depth, me_to_move, stats) {
+        return v;
+    }
+
+    let v = search_opp_expand(
+        db,
+        state,
+        me,
+        depth,
+        beam,
+        nodes,
+        cap,
+        line,
+        eval,
+        stats,
+        truncated,
+        tt.as_deref_mut(),
+    );
+    tt_put(tt, state, depth, me_to_move, v, stats);
+    v
+}
+
+#[allow(clippy::too_many_arguments)]
+fn search_opp_expand(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    depth: u32,
+    beam: usize,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    stats: &mut SearchStats,
+    truncated: &mut bool,
+    mut tt: Option<&mut Tt>,
+) -> f32 {
+    let opp = me.opponent();
 
     // Effect handed a choice to `me` while it is still the opponent's turn.
     if acting_player(state) == me && state.active == opp {
@@ -700,7 +810,7 @@ fn search_opp(
         let mut next_line = line.to_vec();
         next_line.push(search_key(&s));
         return search_opp(
-            db, &s, me, depth, beam, nodes, cap, &next_line, eval, stats, truncated,
+            db, &s, me, depth, beam, nodes, cap, &next_line, eval, stats, truncated, tt,
         );
     }
 
@@ -773,6 +883,7 @@ fn search_opp(
             eval,
             stats,
             truncated,
+            tt.as_deref_mut(),
         );
         if v == -FINITE_WIN {
             return -FINITE_WIN;

@@ -213,6 +213,28 @@ def test_h0_value_v1_determinism(db, root: Path) -> None:
     assert none["records"] == a["records"]
 
 
+def test_h0_tt_determinism(db, root: Path) -> None:
+    import arena
+
+    decks = _forest(root)
+    kwargs = dict(
+        db=db,
+        decks=decks,
+        games=2,
+        seed=17,
+        policy_a="h0:tt=1,depth=2,nodes=200",
+        policy_b="h0-fast",
+        first="alternate",
+        records=True,
+    )
+    a = arena.matchup(**kwargs, threads=1)
+    b = arena.matchup(**kwargs, threads=1)
+    assert a == b
+    none = arena.matchup(**kwargs, threads=None)
+    assert none["matrix"] == a["matrix"]
+    assert none["records"] == a["records"]
+
+
 def test_h0_odepth_determinism(db, root: Path) -> None:
     import arena
 
