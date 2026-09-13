@@ -121,6 +121,10 @@ fn set_body(state: &mut arena_engine::State, who: PlayerId, slot: u8, atk: i32, 
 }
 
 fn four_attacker_state(db: &CardDb, my_leader: i32) -> arena_engine::State {
+    four_attacker_state_ward_def(db, my_leader, 15)
+}
+
+fn four_attacker_state_ward_def(db: &CardDb, my_leader: i32, ward_def: i32) -> arena_engine::State {
     let mut st = started(db, 41);
     clear_hand(&mut st, PlayerId::A);
     clear_hand(&mut st, PlayerId::B);
@@ -144,11 +148,12 @@ fn four_attacker_state(db: &CardDb, my_leader: i32) -> arena_engine::State {
     put_hand(db, &mut st, PlayerId::A, WARD);
     // 1/3 dies to the first 3-atk and the live leaf falls through the ±80
     // clamp (`finite`), so Ward and dying look identical. A 1/15 Ward keeps
-    // the "I lived" value above -FINITE_WIN.
+    // the "I lived" value above -FINITE_WIN. The wv=300 fixture uses the
+    // printed 1/3 (see `four_attacker_normal_ward_wv300_plays_ward`).
     {
         let w = st.player_mut(PlayerId::A).hand.last_mut().unwrap();
-        w.defense = 15;
-        w.max_defense = 15;
+        w.defense = ward_def;
+        w.max_defense = ward_def;
     }
     give_pp(&mut st, PlayerId::A, 3, 3);
     st.player_mut(PlayerId::A).leader_defense = my_leader;
@@ -274,6 +279,32 @@ fn four_attacker_ward_candidate_plays_ward() {
     assert!(
         !is_play_id(&st, PlayerId::A, &ga, WARD),
         "odepth=0 played the Ward too: {ga:?}"
+    );
+}
+
+#[test]
+fn four_attacker_normal_ward_wv300_plays_ward() {
+    let db = load_db();
+    // Printed 1/3 Ward on the same lure. Depth-6 own-turn search would
+    // otherwise play the 10-atk Storm and snipe a 3/3 — that also lives at
+    // 3 life and outscores the Ward chump. 3/11 keeps incoming at 12 so
+    // Storm cannot cut an attacker; the only survival is the Ward
+    // (alive at 3 ≈ −76, which beats dead at −300 and loses to −80).
+    let mut st = four_attacker_state_ward_def(&db, 12, 3);
+    for slot in 0..5u8 {
+        if let Some(f) = st.field_inst_mut(PlayerId::B, slot) {
+            f.defense = 11;
+            f.max_defense = 11;
+        }
+    }
+    let mut cand80 = parse_h0("h0:odepth=5,obeam=3");
+    let mut cand300 = parse_h0("h0:odepth=5,obeam=3,wv=300");
+    let (i80, a80) = pick(&mut cand80, &db, &st, 7);
+    let (i300, a300) = pick(&mut cand300, &db, &st, 7);
+    eprintln!("1/3-Ward wv=80={a80:?} idx={i80}  wv=300={a300:?} idx={i300}");
+    assert!(
+        is_play_id(&st, PlayerId::A, &a300, WARD),
+        "wv=300 must play Ward {WARD}, got {a300:?} idx={i300}"
     );
 }
 
