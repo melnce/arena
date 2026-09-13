@@ -365,13 +365,17 @@ Any subset of the H0 keys; omitted keys take [`H0::default`].
 `k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
 `H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1`
 (default `v0`), `odepth=` / `obeam=` (opponent model; defaults `0` / `3`),
+`olethal=0|1` (cheap opponent-lethal sweep on the greedy path; default `0`;
+ignored when `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step;
+default `3`; hard stop is `osteps+3`),
 `wv=<f32>` (root-level terminal stand-in; default `80`),
 `tt=0|1` (per-decision transposition table; default `0`),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
 is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1`,
-non-default `odepth` / `obeam`, non-default `wv`, `tt=1` when set, and any
+non-default `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
+non-default `wv`, `tt=1` when set, and any
 non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
@@ -402,6 +406,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `w_lw` | 0.80 | v1: Last Words followers on the field |
 | `odepth` | 0 | opponent-model action depth; `0` = greedy line |
 | `obeam` | 3 | opponent beam (plus `EndTurn` always) |
+| `olethal` | 0 | glance-level opponent-lethal sweep before the greedy line; `1` = on. Ignored when `odepth≥1` |
+| `osteps` | 3 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 6) |
 | `wv` | 80 | root-level finite stand-in for a terminal when averaging K roots |
 | `tt` | 0 | per-decision transposition table; `1` = on |
 
@@ -415,8 +421,8 @@ The node cap is global. `H0::fast()` uses `K = 1` and a 1-ply value
 on that root (no depth-2 consensus-lethal walk).
 
 The opponent model is a switch. `odepth=0` (default) is the historical
-greedy line: at most six steps, and **EndTurn after three** whenever
-`EndTurn` is legal. `odepth≥1` replaces that with a depth-limited beam
+greedy line: at most `osteps+3` steps (default six), and **EndTurn after
+`osteps`** (default three) whenever `EndTurn` is legal. `odepth≥1` replaces that with a depth-limited beam
 over the opponent's actions, ranked by the opponent's leaf value (the
 value is antisymmetric, so maximising theirs minimises mine). Each ply
 keeps the `obeam` best actions **and always `EndTurn`**, so "do nothing
@@ -426,6 +432,26 @@ explored opponent line reaches `winner == opponent`, the model returns
 A mid-turn choice handed to me is resolved with a 1-ply greedy pick from
 my perspective, then the opponent's line continues. The node cap is
 shared with the own-turn search and is not raised by this switch.
+
+When `olethal=1` and `odepth=0`, `opponent_reply` runs a bounded lethal
+sweep from the opponent's side *before* the greedy line. The sweep asks
+one question — can the opponent kill my leader this turn with lines a
+human would see at a glance — and does it with few applies: (1) a **face
+line** — clone the state and, while a legal `Attack { target: Leader }`
+exists, apply the first one (attacks to the leader commute, so one fixed
+order suffices); if my leader dies, that is lethal; (2) **play-then-face**
+— for each legal `Play` from the original determinized opponent hand,
+apply it, depth-first branch any pending `Choose` in index order, apply
+any required `Confirm`, and if my leader died that is lethal; otherwise
+run the face line from there only if the play produced a new legal
+leader attack or lowered my leader defense. `Evolve`, `Engage`, `Fuse`,
+and `BonusPp` lines are skipped (rare lethal sources; the greedy line
+still uses them). The whole sweep spends at most 40 `apply`s per leaf,
+all charged to `nodes` through `try_apply`, and stops early at the cap
+(cycle guard as today). If it finds lethal the leaf is `-wv` and the
+greedy line is skipped; otherwise the greedy line runs with the remaining
+budget. `odepth≥1` ignores `olethal` — the beam search is the opponent
+model.
 
 `wv` is the finite stand-in for a terminal when the K root values are
 averaged (`finite(v)` clamps every root value to ±`wv`). The in-search
@@ -457,7 +483,7 @@ the default.
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_nodes/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
@@ -465,7 +491,9 @@ the fraction of decisions that exhausted `node_cap`; `candidates` are
 legal actions kept after the Bonus-PP filter; `opp_leaves` /
 `opp_cap_hit_rate` describe the opponent model; `tt_hits` / `tt_stores`
 are transposition-table lookups that returned a value and writes
-(`0` when `tt=0`). Non-H0 seats print
+(`0` when `tt=0`); `opp_lethal_checks` / `opp_lethal_found` /
+`opp_lethal_nodes` are sweeps run, lethals found, and applies spent by
+the `olethal` sweep (`0` when `olethal=0`). Non-H0 seats print
 `decisions=0`.
 
 `BonusPp` is considered only in the **activate** direction

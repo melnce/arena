@@ -13,7 +13,7 @@ use crate::apply::{apply, legal_actions};
 use crate::card::CardKind;
 use crate::db::CardDb;
 use crate::determinize::determinize;
-use crate::ids::PlayerId;
+use crate::ids::{AttackTarget, PlayerId};
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
 use crate::search_key::search_key;
@@ -59,15 +59,18 @@ pub enum ValueVersion {
     V1,
 }
 
-/// Leaf evaluator plus the root-level terminal stand-in (`wv`).
-/// `wv` is carried here (not as a sibling of `odepth`/`obeam`) so
-/// `finite`, `one_ply`, and the opponent lethal short-circuit share one value.
+/// Leaf evaluator plus the root-level terminal stand-in (`wv`) and the
+/// cheap opponent-model knobs (`olethal`, `osteps`). `wv` is carried here
+/// (not as a sibling of `odepth`/`obeam`) so `finite`, `one_ply`, and the
+/// opponent lethal short-circuit share one value.
 #[derive(Clone, Copy)]
 struct Evaluator<'a> {
     needs: &'a NeedsTable,
     version: ValueVersion,
     weights: &'a Weights,
     wv: f32,
+    olethal: bool,
+    osteps: u32,
 }
 
 impl Evaluator<'_> {
@@ -101,6 +104,12 @@ pub struct SearchStats {
     pub opp_leaves: u64,
     /// Opponent searches truncated by the node cap.
     pub opp_cap_hits: u64,
+    /// Lethal sweeps run (`olethal=1`, `odepth=0`).
+    pub opp_lethal_checks: u64,
+    /// Sweeps that found a glance-level opponent lethal.
+    pub opp_lethal_found: u64,
+    /// `apply`s spent inside lethal sweeps.
+    pub opp_lethal_nodes: u64,
     /// TT lookups that returned a value (`tt=1` only).
     pub tt_hits: u64,
     /// Values written to the per-decision table (`tt=1` only).
@@ -120,6 +129,9 @@ impl SearchStats {
         self.roots += other.roots;
         self.opp_leaves += other.opp_leaves;
         self.opp_cap_hits += other.opp_cap_hits;
+        self.opp_lethal_checks += other.opp_lethal_checks;
+        self.opp_lethal_found += other.opp_lethal_found;
+        self.opp_lethal_nodes += other.opp_lethal_nodes;
         self.tt_hits += other.tt_hits;
         self.tt_stores += other.tt_stores;
     }
@@ -142,6 +154,11 @@ pub struct H0 {
     pub wv: f32,
     /// Per-decision transposition table. Off by default (`tt=0`).
     pub tt: bool,
+    /// Bounded opponent-lethal sweep before the greedy line (`odepth=0` only).
+    pub olethal: bool,
+    /// Greedy-line steps before a forced `EndTurn`. Default `3` is today's cutoff;
+    /// the hard stop is `osteps + 3` (today: 6).
+    pub osteps: u32,
     pub stats: SearchStats,
 }
 
@@ -158,6 +175,8 @@ impl Default for H0 {
             obeam: 3,
             wv: DEFAULT_WV,
             tt: false,
+            olethal: false,
+            osteps: 3,
             stats: SearchStats::default(),
         }
     }
@@ -185,6 +204,8 @@ impl H0 {
             version: self.value,
             weights: &self.weights,
             wv: self.wv,
+            olethal: self.olethal,
+            osteps: self.osteps,
         }
     }
 
@@ -194,13 +215,14 @@ impl H0 {
     }
 
     /// Run only the opponent model from a state where it is the opponent's
-    /// turn. `odepth = 0` is the greedy line's value.
-    pub fn opponent_value(&self, db: &CardDb, state: &State, me: PlayerId) -> f32 {
+    /// turn. `odepth = 0` is the greedy line's value. Records search
+    /// counters into `self.stats` (including `opp_lethal_*` when the sweep runs).
+    pub fn opponent_value(&mut self, db: &CardDb, state: &State, me: PlayerId) -> f32 {
         let mut nodes = 0u32;
         let eval = self.evaluator(db);
         let line = [search_key(state)];
         let mut stats = SearchStats::default();
-        opponent_reply(
+        let v = opponent_reply(
             db,
             state,
             me,
@@ -212,7 +234,10 @@ impl H0 {
             self.obeam,
             &mut stats,
             None,
-        )
+        );
+        self.stats.nodes += u64::from(nodes);
+        self.stats.accum(&stats);
+        v
     }
 
     pub fn reset_stats(&mut self) {
@@ -697,6 +722,13 @@ fn opponent_reply(
         return -eval.wv;
     }
     if odepth == 0 {
+        if eval.olethal
+            && acting_player(state) == me.opponent()
+            && opp_lethal_sweep(db, state, me, nodes, cap, line, stats)
+        {
+            stats.opp_leaves += 1;
+            return -eval.wv;
+        }
         let mut s = state.clone();
         greedy_until_end(db, &mut s, me.opponent(), nodes, cap, line, eval);
         if *nodes >= cap {
@@ -924,7 +956,7 @@ fn greedy_until_end(
         && !matches!(state.phase, Phase::Terminal)
         && acting_player(state) == who
         && *nodes < cap
-        && steps < 6
+        && steps < eval.osteps + 3
         && state.turn <= MAX_TURNS
     {
         let legal = legal_actions(db, state);
@@ -932,7 +964,7 @@ fn greedy_until_end(
             break;
         }
         if let Some(end) = legal.iter().position(|a| matches!(a, Action::EndTurn)) {
-            if steps >= 3 {
+            if steps >= eval.osteps {
                 if let Some(next) = try_apply(db, state, &legal[end], nodes, cap, &line) {
                     *state = next;
                 }
@@ -947,6 +979,196 @@ fn greedy_until_end(
         *state = next;
         steps += 1;
     }
+}
+
+/// Applies spent by one opponent-lethal sweep, charged through [`try_apply`].
+const OPP_LETHAL_APPLY_CAP: u32 = 40;
+
+fn leader_attackers(db: &CardDb, state: &State) -> Vec<u8> {
+    legal_actions(db, state)
+        .into_iter()
+        .filter_map(|a| match a {
+            Action::Attack {
+                attacker,
+                target: AttackTarget::Leader,
+            } => Some(attacker.0),
+            _ => None,
+        })
+        .collect()
+}
+
+/// First legal face attack, then the next, until none remain. Attacks to the
+/// leader commute, so one fixed order suffices.
+fn face_line_kills(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+) -> bool {
+    let opp = me.opponent();
+    let mut s = state.clone();
+    let mut line = line.to_vec();
+    loop {
+        if s.winner == Some(opp) {
+            return true;
+        }
+        if s.winner.is_some() || matches!(s.phase, Phase::Terminal) {
+            return false;
+        }
+        if acting_player(&s) != opp || *nodes >= cap {
+            return false;
+        }
+        let legal = legal_actions(db, &s);
+        let Some(a) = legal.iter().find(|a| {
+            matches!(
+                a,
+                Action::Attack {
+                    target: AttackTarget::Leader,
+                    ..
+                }
+            )
+        }) else {
+            return false;
+        };
+        let Some(next) = try_apply(db, &s, a, nodes, cap, &line) else {
+            return false;
+        };
+        line.push(search_key(&next));
+        s = next;
+    }
+}
+
+/// Depth-first resolve of a play: pending `Choose` in index order, then any
+/// required `Confirm`. Then a face line only if the play added a leader
+/// attack or lowered my defense.
+#[allow(clippy::too_many_arguments)]
+fn resolve_play_line(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    origin_def: i32,
+    origin_faces: &[u8],
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+) -> bool {
+    let opp = me.opponent();
+    if state.winner == Some(opp) {
+        return true;
+    }
+    if state.winner.is_some() || matches!(state.phase, Phase::Terminal) || *nodes >= cap {
+        return false;
+    }
+
+    if matches!(state.phase, Phase::Choice { .. }) {
+        let legal = legal_actions(db, state);
+        let chooses: Vec<Action> = legal
+            .iter()
+            .filter(|a| matches!(a, Action::Choose(_)))
+            .cloned()
+            .collect();
+        for a in &chooses {
+            if *nodes >= cap {
+                return false;
+            }
+            let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+                continue;
+            };
+            let mut next_line = line.to_vec();
+            next_line.push(search_key(&s));
+            if resolve_play_line(db, &s, me, origin_def, origin_faces, nodes, cap, &next_line) {
+                return true;
+            }
+        }
+        if chooses.is_empty() {
+            if let Some(a) = legal.iter().find(|a| matches!(a, Action::Confirm)) {
+                let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+                    return false;
+                };
+                let mut next_line = line.to_vec();
+                next_line.push(search_key(&s));
+                return resolve_play_line(
+                    db,
+                    &s,
+                    me,
+                    origin_def,
+                    origin_faces,
+                    nodes,
+                    cap,
+                    &next_line,
+                );
+            }
+        }
+        return false;
+    }
+
+    if acting_player(state) != opp {
+        return false;
+    }
+    let lowered = state.player(me).leader_defense < origin_def;
+    let now_faces = leader_attackers(db, state);
+    let new_face = now_faces.iter().any(|slot| !origin_faces.contains(slot));
+    if !(new_face || lowered) {
+        return false;
+    }
+    face_line_kills(db, state, me, nodes, cap, line)
+}
+
+/// Glance-level opponent lethal: face attacks, then each `Play` (plus its
+/// `Choose`/`Confirm`) and a face line when that play opened one. Caps at
+/// [`OPP_LETHAL_APPLY_CAP`] applies, all charged to `nodes`.
+fn opp_lethal_sweep(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    stats: &mut SearchStats,
+) -> bool {
+    stats.opp_lethal_checks += 1;
+    let start = *nodes;
+    let sweep_cap = nodes.saturating_add(OPP_LETHAL_APPLY_CAP).min(cap);
+    let found = face_line_kills(db, state, me, nodes, sweep_cap, line) || {
+        let origin_def = state.player(me).leader_defense;
+        let origin_faces = leader_attackers(db, state);
+        let legal = legal_actions(db, state);
+        let mut hit = false;
+        for a in &legal {
+            if *nodes >= sweep_cap {
+                break;
+            }
+            if !matches!(a, Action::Play { .. }) {
+                continue;
+            }
+            let Some(s) = try_apply(db, state, a, nodes, sweep_cap, line) else {
+                continue;
+            };
+            let mut next_line = line.to_vec();
+            next_line.push(search_key(&s));
+            if resolve_play_line(
+                db,
+                &s,
+                me,
+                origin_def,
+                &origin_faces,
+                nodes,
+                sweep_cap,
+                &next_line,
+            ) {
+                hit = true;
+                break;
+            }
+        }
+        hit
+    };
+    stats.opp_lethal_nodes += u64::from(*nodes - start);
+    if found {
+        stats.opp_lethal_found += 1;
+    }
+    found
 }
 
 /// Historical H0 leaf value (`value=v0`). Byte-for-byte the pre-v1 arithmetic.
