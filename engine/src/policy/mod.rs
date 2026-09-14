@@ -2,19 +2,20 @@
 //!
 //! This module (and `encode` / `search_key` / `determinize`) must compile for
 //! `wasm32-unknown-unknown`: no `std::time::{Instant, SystemTime}`, threads,
-//! rayon, or `getrandom` without the js feature. `ValueNet::load` uses
-//! `std::fs::read_to_string` (compiles on wasm32; never called there). The
-//! node cap is the only search budget. `Policy` is object-safe so WASM can
-//! hold `Box<dyn Policy>`.
+//! rayon, or `getrandom` without the js feature. The built-in value model is
+//! `include_str!`-embedded and parsed once through `OnceLock`.
+//! `ValueNet::load` is still the only `std::fs` user and is never called
+//! from wasm (it compiles on wasm32). The node cap is the only search
+//! budget. `Policy` is object-safe so WASM can hold `Box<dyn Policy>`.
 
 mod h0;
 mod needs;
 mod net;
 mod record;
 
-pub use h0::{SearchStats, ValueVersion, Weights, H0};
+pub use h0::{builtin_net, SearchStats, ValueVersion, Weights, BUILTIN_NET_NAME, H0};
 pub use needs::{CardNeeds, NeedsTable, SkippedAmount};
-pub use net::ValueNet;
+pub use net::{NetArch, ValueNet};
 pub use record::{Recorder, Sample};
 
 use crate::action::Action;
@@ -101,9 +102,11 @@ impl AnyPolicy {
     /// `"random"` | `"first-legal"` | `"h0"` ([`H0::default`]) | `"h0-fast"`
     /// ([`H0::fast`]) | `"h0:depth=6,beam=4,k=4,nodes=2000"` — any subset of
     /// keys, the rest default; `k` = `determinizations`, `nodes` = `node_cap`.
-    /// H0 also accepts `value=v0|v1|net` (default `v0`), `net=<path>`
-    /// (required together with `value=net`; the path may not contain
-    /// commas; a missing file is a parse error naming the path),
+    /// H0 also accepts `value=v0|v1|net` (default `net` = the built-in
+    /// `h0-linear-v1`), `net=<path>` (overrides the built-in; only
+    /// meaningful with `value=net`; `h0:net=<path>` alone means
+    /// `h0:value=net,net=<path>`; the path may not contain commas; a
+    /// missing file is a parse error naming the path),
     /// `odepth=` / `obeam=`
     /// (opponent model; `odepth=0` is the greedy line), `olethal=0|1` (cheap
     /// opponent-lethal sweep on the greedy path; default `0`; ignored when
@@ -129,8 +132,9 @@ impl AnyPolicy {
     }
 
     /// Canonical form: `"random"`, `"first-legal"`, `"h0"`, `"h0-fast"`, or
-    /// `"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1` or
-    /// `value=net,net=<path>`, non-default
+    /// `"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` / `value=v1` or
+    /// `value=net,net=<path>` (the built-in net is the default and is not
+    /// printed), non-default
     /// `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
     /// non-default `wv`, `tt=0` when the table is off, and any
     /// non-default weight.
@@ -164,11 +168,11 @@ fn h0_spec(h: &H0) -> String {
         parts.push(format!("nodes={}", h.node_cap));
     }
     match h.value {
-        ValueVersion::V0 => {}
+        ValueVersion::V0 => parts.push("value=v0".to_string()),
         ValueVersion::V1 => parts.push("value=v1".to_string()),
         ValueVersion::Net => {
-            parts.push("value=net".to_string());
             if let Some(path) = &h.net_path {
+                parts.push("value=net".to_string());
                 parts.push(format!("net={path}"));
             }
         }
@@ -312,9 +316,13 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             h.net = Some(net);
             h.net_path = Some(path);
         }
-        (ValueVersion::Net, None) => return Err("missing key 'net'".to_string()),
-        (_, Some(_)) => return Err("missing key 'value'".to_string()),
-        _ => {}
+        (ValueVersion::Net, None) => {}
+        (ValueVersion::V0 | ValueVersion::V1, None) => {
+            h.net = None;
+        }
+        (ValueVersion::V0 | ValueVersion::V1, Some(_)) => {
+            return Err("net= requires value=net".to_string());
+        }
     }
     Ok(h)
 }

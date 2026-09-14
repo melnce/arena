@@ -1,8 +1,12 @@
 //! Hand-rolled value-net inference. No ONNX, no extra crate: `serde_json`
 //! parses `net.json` and [`ValueNet::value`] runs the forward pass.
 //!
-//! `load` uses `std::fs::read_to_string`, which compiles for
-//! `wasm32-unknown-unknown` and is never called from the WASM client.
+//! The built-in model is `include_str!`-embedded and parsed once through
+//! `OnceLock` ([`crate::policy::builtin_net`]). [`ValueNet::load`] uses
+//! `std::fs::read_to_string`, which compiles for `wasm32-unknown-unknown`
+//! and is never called from the WASM client. [`ValueNet::from_json`]
+//! names the source `<json>`; [`ValueNet::from_json_named`] names it
+//! (the built-in uses `builtin:h0-linear-v1`).
 
 use std::path::Path;
 use std::sync::Arc;
@@ -80,6 +84,11 @@ impl ValueNet {
     /// Parse a model document (tests / in-memory).
     pub fn from_json(text: &str) -> Result<Arc<ValueNet>, String> {
         Self::parse("<json>", text)
+    }
+
+    /// Parse a model document and name it in `Debug` / errors (`src`).
+    pub fn from_json_named(name: &str, text: &str) -> Result<Arc<ValueNet>, String> {
+        Self::parse(&format!("builtin:{name}"), text)
     }
 
     fn parse(src: &str, text: &str) -> Result<Arc<ValueNet>, String> {

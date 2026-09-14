@@ -252,7 +252,7 @@ fn value_is_antisymmetric_v0_and_v1() {
     let db = load_db();
     let states = collect_states(&db, 200, false);
     assert_eq!(states.len(), 200);
-    check_antisymmetry("h0", &states, &db);
+    check_antisymmetry("h0:value=v0", &states, &db);
     check_antisymmetry("h0:value=v1", &states, &db);
 }
 
