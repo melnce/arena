@@ -4,9 +4,9 @@ use std::path::PathBuf;
 use std::time::Instant;
 
 use arena_engine::{
-    apply, encode, encode_with_vocab, legal_actions, new_game, play_game, policy_rng, vocab,
-    AnyPolicy, CardId, End, First, GameConfig, Observation, Phase, PlayerId, Policy, Random,
-    ValueNet, H0, MAX_ACTIONS, MAX_TURNS,
+    apply, builtin_net, encode, encode_with_vocab, legal_actions, new_game, play_game, policy_rng,
+    vocab, AnyPolicy, CardId, End, First, GameConfig, NetArch, Observation, Phase, PlayerId,
+    Policy, Random, ValueNet, H0, MAX_ACTIONS, MAX_TURNS,
 };
 
 mod common;
@@ -92,12 +92,28 @@ fn net_dir() -> PathBuf {
     fixtures_dir().join("net")
 }
 
-fn check_v0_identity(n: usize) {
+fn builtin_model_path() -> PathBuf {
+    crate_dir().join("models/h0-linear-v1.json")
+}
+
+fn check_builtin_identity(n: usize) {
     let db = load_db();
     let states = collect_states(&db, n, true);
     assert_eq!(states.len(), n, "could not reach {n} mid-game states");
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:value=v0").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:value=net").unwrap().spec(), "h0");
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:value=v0").unwrap().spec(),
+        "h0:value=v0"
+    );
+    let path = builtin_model_path();
+    let file_spec = format!("h0:value=net,net={}", path.display());
+    assert_eq!(
+        AnyPolicy::parse_spec(&file_spec)
+            .unwrap_or_else(|e| panic!("{e}"))
+            .spec(),
+        file_spec
+    );
     let mut agree = 0u32;
     for (i, state) in states.iter().enumerate() {
         let legal = legal_actions(&db, state);
@@ -106,26 +122,54 @@ fn check_v0_identity(n: usize) {
         }
         let seed = 20260913u64.wrapping_add(i as u64);
         let mut a = parse_h0("h0");
-        let mut b = parse_h0("h0:value=v0");
+        let mut b = parse_h0("h0:value=net");
+        let mut c = parse_h0(&file_spec);
         let mut ra = policy_rng(seed);
         let mut rb = policy_rng(seed);
+        let mut rc = policy_rng(seed);
         let ia = a.choose(&db, state, &legal, &mut ra);
         let ib = b.choose(&db, state, &legal, &mut rb);
-        assert_eq!(ia, ib, "h0 vs h0:value=v0 at state {i}");
+        let ic = c.choose(&db, state, &legal, &mut rc);
+        assert_eq!(ia, ib, "h0 vs h0:value=net at state {i}");
+        assert_eq!(ia, ic, "h0 vs file net at state {i}");
         agree += 1;
     }
-    eprintln!("v0 choose identity: {agree}/{n} mid-game states agreed");
+    eprintln!("builtin choose identity: {agree}/{n} mid-game states agreed");
 }
 
 #[test]
-fn v0_choose_identity_smoke() {
-    check_v0_identity(20);
+fn builtin_choose_identity_smoke() {
+    check_builtin_identity(20);
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn v0_choose_identity_200_midgame() {
-    check_v0_identity(200);
+fn builtin_choose_identity_200_midgame() {
+    check_builtin_identity(200);
+}
+
+#[test]
+fn builtin_model_is_the_committed_file() {
+    let net = ValueNet::from_json(include_str!("../models/h0-linear-v1.json")).expect("parse");
+    assert_eq!(net.arch, NetArch::Linear);
+    assert_eq!(net.feature_len, 545);
+    let a = builtin_net();
+    let b = builtin_net();
+    assert!(std::sync::Arc::ptr_eq(&a, &b));
+
+    let db = load_db();
+    let states = collect_states(&db, 200, true);
+    assert_eq!(states.len(), 200);
+    let path = builtin_model_path();
+    let file_h = parse_h0(&format!("h0:value=net,net={}", path.display()));
+    let builtin_h = H0::default();
+    for (i, state) in states.iter().enumerate() {
+        for me in [PlayerId::A, PlayerId::B] {
+            let x = builtin_h.evaluate(&db, state, me);
+            let y = file_h.evaluate(&db, state, me);
+            assert_eq!(x.to_bits(), y.to_bits(), "evaluate state {i} {me:?}");
+        }
+    }
 }
 
 #[test]
@@ -261,8 +305,12 @@ fn spec_round_trip_missing_net_and_file() {
     assert_eq!(parsed.spec(), spec);
     assert_eq!(AnyPolicy::parse_spec(&parsed.spec()).unwrap(), parsed);
 
-    let e = AnyPolicy::parse_spec("h0:value=net").unwrap_err();
-    assert!(e.contains("net"), "{e}");
+    let net_default = AnyPolicy::parse_spec("h0:value=net").unwrap();
+    assert_eq!(net_default, AnyPolicy::parse_spec("h0").unwrap());
+    assert_eq!(net_default.spec(), "h0");
+
+    let e = AnyPolicy::parse_spec(&format!("h0:value=v0,net={}", path.display())).unwrap_err();
+    assert!(e.contains("value=net"), "{e}");
 
     let missing = "/tmp/arena-no-such-net.json";
     let e = AnyPolicy::parse_spec(&format!("h0:value=net,net={missing}")).unwrap_err();
@@ -284,7 +332,8 @@ fn evaluate_cost_us_per_call() {
     let db = load_db();
     let states = collect_states(&db, 200, true);
     assert_eq!(states.len(), 200);
-    let v0 = H0::default();
+    let v0 = parse_h0("h0:value=v0");
+    let builtin = H0::default();
     let linear = parse_h0(&format!(
         "h0:value=net,net={}",
         net_dir().join("tiny-linear.json").display()
@@ -294,7 +343,12 @@ fn evaluate_cost_us_per_call() {
         net_dir().join("tiny-mlp.json").display()
     ));
     let mut times = Vec::new();
-    for (name, h) in [("v0", &v0), ("linear", &linear), ("mlp", &mlp)] {
+    for (name, h) in [
+        ("v0", &v0),
+        ("linear", &linear),
+        ("mlp", &mlp),
+        ("builtin", &builtin),
+    ] {
         // Warm the caches / page in the model.
         for s in states.iter().take(4) {
             let _ = h.evaluate(&db, s, PlayerId::A);
@@ -311,5 +365,5 @@ fn evaluate_cost_us_per_call() {
         eprintln!("{name}: {us:.2} µs/call ({n} calls)");
         times.push((name, us));
     }
-    assert_eq!(times.len(), 3);
+    assert_eq!(times.len(), 4);
 }

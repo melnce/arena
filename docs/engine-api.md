@@ -367,7 +367,10 @@ loser's `leader_defense <= 0`; otherwise a decided game is `Deckout`. No
 Any subset of the H0 keys; omitted keys take [`H0::default`].
 `k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
 `H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1|net`
-(default `v0`), `net=<path>` (required together with `value=net`; the path
+(default `net` = the built-in `h0-linear-v1`; `value=v0` is the
+hand-written leaf the bot used before this default), `net=<path>`
+(overrides the built-in; only meaningful with `value=net`;
+`h0:net=<path>` alone means `h0:value=net,net=<path>`; the path
 may not contain commas), `odepth=` / `obeam=` (opponent model; defaults `0` / `3`),
 `olethal=0|1` (cheap opponent-lethal sweep on the greedy path; default `0`;
 ignored when `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step;
@@ -377,14 +380,14 @@ default `3`; hard stop is `osteps+3`),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
-is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v1` or
-`value=net,net=<path>`,
+is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
+`value=v1` or `value=net,net=<path>` — the built-in net is not printed,
 non-default `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
 non-default `wv`, `tt=0` when the table is off, and any
 non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
-change.
+change. The client's `h0` now plays with the learned leaf.
 
 `Policy` is object-safe. `policy/` (and `encode`, `search_key`, `determinize`,
 `play`) compile for `wasm32-unknown-unknown`: no `Instant` / `SystemTime`,
@@ -401,8 +404,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `beam` | 4 | top-k by value each ply |
 | `determinizations` | 4 | opponent-reply samples |
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
-| `value` | `v0` | leaf evaluator; `v1` adds economy terms; `net` is a learned leaf |
-| `net` | — | path to `net.json`; required together with `value=net` |
+| `value` | `net` (built-in `h0-linear-v1`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
+| `net` | — | path to a `net.json` overriding the built-in model |
 | `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
 | `w_earth` | 0.35 | v1: saturated earth sigils (cap 6) |
 | `w_faith` | 0.15 | v1: saturated faith (cap 10) |
@@ -425,7 +428,8 @@ read. A lethal is taken only when every root agrees (a random lethal is
 a bet, not a lethal). Candidate values are averaged over the K roots.
 The node cap is global. `H0::fast()` uses `K = 1` and a 1-ply value
 on that root (no depth-2 consensus-lethal walk). `h0-fast` keeps `tt=0`
-so the client's cheap bot stays byte-identical to the pre-flip search.
+and `value=v0` so the client's cheap bot stays byte-identical to the
+pre-flip search (the TE precedent: `h0-fast` keeps `tt=0`).
 
 The opponent model is a switch. `odepth=0` (default) is the historical
 greedy line: at most `osteps+3` steps (default six), and **EndTurn after
@@ -510,13 +514,13 @@ dropped. Mulligan: swap every card whose cost is ≥ 4 (both seats).
 Value: leader-defense difference, board (atk+def with Ward/Storm/evolved
 weights), hand size, next-turn PP / EP / SEP, crest / countdown presence;
 terminal = ±∞ on a single root, finite-clamped when averaging. That
-arithmetic is `value=v0` and remains the default. `value=v1` adds
+arithmetic is `value=v0`. The default leaf is the built-in
+`h0-linear-v1` net (`value=net`). `value=v1` adds
 saturated shadows / earth / faith / rally, spellboost counters on cards
 that print Spellboost, a threshold-shaped “live” bonus for hand cards
 that pay those resources or check Rally, and a count of Last Words
 followers on the field — all from a state-free `NeedsTable` built next
-to `when_cards`. Weights are the `w_*` keys; this PR does not flip the
-default.
+to `when_cards`. Weights are the `w_*` keys.
 
 `arena-bench` accepts `--policy` / `--vs` as `parse_spec` strings (unknown
 names exit with the parser message) and drives games through `play_game`.
@@ -556,7 +560,7 @@ The WASM binary `include_str!`s every authored `cards/**/*.json` except `cards/o
 | `cardText(id)` | string | JSON `{id, name, text, kind, cost, …}` from the baked bundle. Cards also include `crests` and `forms` (see below). Crest / faith ids omit both (do not recurse). |
 | `bundleInfo()` | string | `{cards, crests, bytes}` |
 | `version()` | string | git SHA baked at build, or `"dev"` |
-| `botPolicies()` | string | JSON array from `engine::policy::names()` — `["random","first-legal","h0"]` |
+| `botPolicies()` | string | JSON array from `engine::policy::names()` — `["random","first-legal","h0"]`. The client's `h0` now plays with the learned leaf; `names()` is unchanged. |
 
 `cardText` on a collectible / token adds two read-only arrays (no existing field changes):
 
@@ -642,15 +646,27 @@ extension.
 
 ## Learned value (M5b-lite)
 
-`h0:value=net,net=<path>` replaces the hand-written leaf with a learned
-one. The search, the determinization, and the opponent model stay exactly
-as they are (`value=v1`, `tt`, `wv`, `odepth`, `olethal`, `osteps`
-untouched). `value=v0` (the default) is byte-identical to today's leaf.
-Both keys are required together: `value=net` without `net=` is a parse
-error naming the missing key; a missing file is a parse error naming the
-path. The path may not contain commas. `spec()` prints
-`value=net,net=<path>`; `h0_fields_eq` compares the path. `names()` is
-unchanged.
+The default H0 leaf is the built-in `h0-linear-v1` model
+(`engine/models/h0-linear-v1.json`), `include_str!`-embedded and parsed
+once through `OnceLock` (`builtin_net()` / `BUILTIN_NET_NAME`). Provenance
+and the immutability rule live in `engine/models/README.md`: model files
+are measured artifacts — a retrained model is a new file with a new name
+and becomes the default only after it beats the current default on the
+4 096-game yardstick. The search, the determinization, and the opponent
+model stay exactly as they are (`value=v1`, `tt`, `wv`, `odepth`,
+`olethal`, `osteps` untouched). `value=v0` is the hand-written leaf the
+bot used before this default and is byte-identical to that arithmetic.
+`h0:value=net` (no path) keeps the built-in — it is the same as `"h0"`.
+`net=<path>` overrides the built-in (`h0:net=<path>` alone means
+`h0:value=net,net=<path>`). `net=` with `value=v0` or `value=v1` is a
+parse error naming both keys (`net= requires value=net`). A missing file
+is a parse error naming the path. The path may not contain commas.
+`spec()` prints nothing for the built-in net and `value=net,net=<path>`
+when a path is set; `h0_fields_eq` compares the path. `names()` is
+unchanged. The linear leaf costs ~6 µs against v0's 0.15 µs (−14 %
+throughput). The model adds ~56 KB to the engine and to the wasm binary;
+`ValueNet::load` is still the only `std::fs` user and is never called
+from wasm.
 
 `ValueNet::load(path)` parses `net.json` (`serde_json`; no ONNX runtime).
 `ValueNet::value(&obs)` standardizes the 545 features with the stored

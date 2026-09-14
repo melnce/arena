@@ -286,18 +286,12 @@ fn v0_bit_identical_on_200_midgame_states() {
     assert_eq!(states.len(), 200, "could not reach 200 mid-game states");
     let h0 = parse_h0("h0");
     let h0v0 = parse_h0("h0:value=v0");
-    assert_eq!(h0.value, ValueVersion::V0);
+    assert_eq!(h0.value, ValueVersion::Net);
     assert_eq!(h0v0.value, ValueVersion::V0);
     for (i, state) in states.iter().enumerate() {
         for me in [PlayerId::A, PlayerId::B] {
             let want = value_main(state, me);
-            let a = h0.evaluate(&db, state, me);
             let b = h0v0.evaluate(&db, state, me);
-            assert_eq!(
-                a.to_bits(),
-                want.to_bits(),
-                "h0 vs main at state {i} {me:?}"
-            );
             assert_eq!(
                 b.to_bits(),
                 want.to_bits(),
@@ -327,7 +321,7 @@ fn v1_sensitivity_shadows_earth_last_words() {
     let db = load_db();
     let w = Weights::default();
     let v1 = parse_h0("h0:value=v1");
-    let v0 = parse_h0("h0");
+    let v0 = parse_h0("h0:value=v0");
 
     let (shadows_id, shadows_n) = pick_need(&db, |n| {
         n.shadows.contains(&6) && n.earth.is_empty() && n.faith.is_empty() && n.rally.is_empty()
@@ -417,7 +411,10 @@ fn zero_weight_removes_its_term() {
 #[test]
 fn spec_value_and_weights() {
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:value=v0").unwrap().spec(), "h0");
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:value=v0").unwrap().spec(),
+        "h0:value=v0"
+    );
     assert_eq!(
         AnyPolicy::parse_spec("h0:value=v1").unwrap().spec(),
         "h0:value=v1"

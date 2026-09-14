@@ -1,4 +1,6 @@
-//! H0: depth-limited beam search with a hand-written value.
+//! H0: depth-limited beam search. The default leaf is the built-in
+//! `h0-linear-v1` value net; `value=v0` is the historical hand-written
+//! arithmetic. [`H0::fast`] keeps `value=v0` and `tt=0`.
 //!
 //! Search starts from `K = max(1, determinizations)` roots produced by
 //! `determinize(state, me, seed)` (which reseeds the game RNG). Own-turn
@@ -7,7 +9,7 @@
 //! taken only when every root agrees. The node cap is global.
 
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use crate::action::{acting_player, Action};
 use crate::apply::{apply, legal_actions};
@@ -22,6 +24,7 @@ use crate::search_key::search_key;
 use crate::state::{Phase, PlayerState, State};
 
 use super::needs::NeedsTable;
+use super::net::ValueNet;
 use super::Policy;
 
 /// Per-decision transposition table: (`search_key`, remaining depth, side-to-move-is-me).
@@ -53,15 +56,34 @@ impl Default for Weights {
     }
 }
 
-/// Which leaf value `H0` uses. Default stays [`ValueVersion::V0`].
+/// Which leaf value `H0` uses. Default is [`ValueVersion::Net`] (the
+/// built-in `h0-linear-v1` model). [`ValueVersion::V0`] is the
+/// hand-written leaf the bot used before the net became the default.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ValueVersion {
-    #[default]
     V0,
     V1,
-    /// Learned leaf from `net.json`. Search, determinization, and the
-    /// opponent model are unchanged; only [`Evaluator::value`] dispatches.
+    /// Learned leaf. Search, determinization, and the opponent model
+    /// are unchanged; only [`Evaluator::value`] dispatches. Without
+    /// `net=<path>` this is [`builtin_net`].
+    #[default]
     Net,
+}
+
+const BUILTIN_NET_JSON: &str = include_str!("../../models/h0-linear-v1.json");
+/// Committed name of the built-in value model (`engine/models/h0-linear-v1.json`).
+pub const BUILTIN_NET_NAME: &str = "h0-linear-v1";
+static BUILTIN_NET: OnceLock<Arc<ValueNet>> = OnceLock::new();
+
+/// The built-in `h0-linear-v1` model, parsed once. A parse failure is a
+/// build defect.
+pub fn builtin_net() -> Arc<ValueNet> {
+    BUILTIN_NET
+        .get_or_init(|| {
+            ValueNet::from_json_named(BUILTIN_NET_NAME, BUILTIN_NET_JSON)
+                .expect("built-in value model parses")
+        })
+        .clone()
 }
 
 /// Leaf evaluator plus the root-level terminal stand-in (`wv`) and the
@@ -76,7 +98,7 @@ struct Evaluator<'a> {
     wv: f32,
     olethal: bool,
     osteps: u32,
-    net: Option<&'a super::net::ValueNet>,
+    net: Option<&'a ValueNet>,
     vocab: &'a [CardId],
 }
 
@@ -171,7 +193,7 @@ pub struct H0 {
     /// the hard stop is `osteps + 3` (today: 6).
     pub osteps: u32,
     /// Learned leaf (`value=net`). `None` when the leaf is v0/v1.
-    pub net: Option<Arc<super::net::ValueNet>>,
+    pub net: Option<Arc<ValueNet>>,
     /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
     pub net_path: Option<String>,
     pub stats: SearchStats,
@@ -184,7 +206,7 @@ impl Default for H0 {
             beam: 4,
             determinizations: 4,
             node_cap: 2000,
-            value: ValueVersion::V0,
+            value: ValueVersion::Net,
             weights: Weights::default(),
             odepth: 0,
             obeam: 3,
@@ -192,7 +214,7 @@ impl Default for H0 {
             tt: true,
             olethal: false,
             osteps: 3,
-            net: None,
+            net: Some(builtin_net()),
             net_path: None,
             stats: SearchStats::default(),
         }
@@ -208,6 +230,8 @@ impl H0 {
             determinizations: 0,
             node_cap: 80,
             tt: false,
+            value: ValueVersion::V0,
+            net: None,
             ..Self::default()
         }
     }

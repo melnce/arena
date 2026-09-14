@@ -157,13 +157,15 @@ fn dead_is_below_alive() {
     let db = load_db();
     let dead = dead_opp_won(&db);
     let live = live_empty_opp_turn(&db);
-    let mut h80 = parse_h0("h0:wv=80");
-    let mut h300 = parse_h0("h0:wv=300");
-    let dead80 = h80.opponent_value(&db, &dead, PlayerId::A);
-    let live80 = h80.opponent_value(&db, &live, PlayerId::A);
-    let leaf = h80.evaluate(&db, &live, PlayerId::A);
+
+    // Pre-TK leaf (`value=v0`): live ≈ 4.5×(1−20) and the wv=80 inversion.
+    let mut v0_80 = parse_h0("h0:value=v0,wv=80");
+    let mut v0_300 = parse_h0("h0:value=v0,wv=300");
+    let dead80 = v0_80.opponent_value(&db, &dead, PlayerId::A);
+    let live80 = v0_80.opponent_value(&db, &live, PlayerId::A);
+    let leaf = v0_80.evaluate(&db, &live, PlayerId::A);
     eprintln!(
-        "wv=80 dead={dead80} live_opp={live80} live_leaf={leaf} \
+        "v0 wv=80 dead={dead80} live_opp={live80} live_leaf={leaf} \
          (want live ≈ -85.5 = 4.5×(1-20) plus small terms)"
     );
     assert!(
@@ -178,9 +180,9 @@ fn dead_is_below_alive() {
         dead80 > live80,
         "wv=80 inversion: dead {dead80} should score above live {live80}"
     );
-    let dead300 = h300.opponent_value(&db, &dead, PlayerId::A);
-    let live300 = h300.opponent_value(&db, &live, PlayerId::A);
-    eprintln!("wv=300 dead={dead300} live_opp={live300} live_leaf={leaf}");
+    let dead300 = v0_300.opponent_value(&db, &dead, PlayerId::A);
+    let live300 = v0_300.opponent_value(&db, &live, PlayerId::A);
+    eprintln!("v0 wv=300 dead={dead300} live_opp={live300} live_leaf={leaf}");
     assert!(
         (dead300 + 300.0).abs() < 1e-3,
         "wv=300 dead should be -300, got {dead300}"
@@ -192,6 +194,37 @@ fn dead_is_below_alive() {
     assert!(
         dead300 < live300,
         "wv=300: dead {dead300} must be strictly below live {live300}"
+    );
+
+    // Default (net) leaf: −wv sentinels and "live does not depend on wv"
+    // are leaf-independent. The v0 live-leaf pin and the wv=80 inversion
+    // do not hold (net live ≈ −51, so −80 is below live, not above).
+    let mut net80 = parse_h0("h0:wv=80");
+    let mut net300 = parse_h0("h0:wv=300");
+    let n_dead80 = net80.opponent_value(&db, &dead, PlayerId::A);
+    let n_live80 = net80.opponent_value(&db, &live, PlayerId::A);
+    let n_leaf = net80.evaluate(&db, &live, PlayerId::A);
+    let n_dead300 = net300.opponent_value(&db, &dead, PlayerId::A);
+    let n_live300 = net300.opponent_value(&db, &live, PlayerId::A);
+    eprintln!(
+        "net wv=80 dead={n_dead80} live_opp={n_live80} live_leaf={n_leaf}; \
+         wv=300 dead={n_dead300} live_opp={n_live300}"
+    );
+    assert!(
+        (n_dead80 + 80.0).abs() < 1e-3,
+        "net wv=80 dead should be -80, got {n_dead80}"
+    );
+    assert!(
+        (n_dead300 + 300.0).abs() < 1e-3,
+        "net wv=300 dead should be -300, got {n_dead300}"
+    );
+    assert!(
+        (n_live300 - n_live80).abs() < 1e-3,
+        "net live value must not depend on wv: {n_live300} vs {n_live80}"
+    );
+    assert!(
+        n_dead300 < n_live300,
+        "net wv=300: dead {n_dead300} must be strictly below live {n_live300}"
     );
 }
 
