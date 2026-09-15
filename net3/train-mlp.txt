@@ -1,0 +1,26 @@
+arch=mlp  train_rows=857765 holdout_rows=94815
+games train/holdout=11059/1229
+label balance train={'+1': 453157, '-1': 404608, '0': 0} holdout={'+1': 50372, '-1': 44443, '0': 0}
+training time 315.89s
+target=mix  mix_weight=0.5  search_scale=60.0  search_rows=758744/952580
+--- net ---
+  overall  rows= 94815  mse=0.52898  sign_acc=0.8079  auc=0.8951
+  <=3      rows= 23700  mse=0.59631  sign_acc=0.7802  auc=0.8663
+  4-6      rows= 42041  mse=0.51869  sign_acc=0.8128  auc=0.9001
+  >=7      rows= 29074  mse=0.48897  sign_acc=0.8235  auc=0.9138
+--- v0 ---
+  overall  rows= 94815  mse=1060.67297  sign_acc=0.6531  auc=0.7446
+  <=3      rows= 23700  mse=46.46653  sign_acc=0.4916  auc=0.5875
+  4-6      rows= 42041  mse=1000.08344  sign_acc=0.6905  auc=0.7638
+  >=7      rows= 29074  mse=1975.02734  sign_acc=0.7305  auc=0.8108
+--- search_v ---
+  overall  rows= 75452  mse=2203.40210  sign_acc=0.7873  auc=0.8850
+  <=3      rows= 14305  mse=1465.23010  sign_acc=0.7672  auc=0.8562
+  4-6      rows= 35817  mse=2023.11975  sign_acc=0.7842  auc=0.8851
+  >=7      rows= 25330  mse=2875.20312  sign_acc=0.8030  auc=0.9056
+--- eval h0-linear-v1.json ---
+  overall  rows= 94815  mse=0.55286  sign_acc=0.7979  auc=0.8851
+  <=3      rows= 23700  mse=0.62362  sign_acc=0.7675  auc=0.8547
+  4-6      rows= 42041  mse=0.53994  sign_acc=0.8054  auc=0.8909
+  >=7      rows= 29074  mse=0.51387  sign_acc=0.8118  auc=0.8996
+wrote C:\Users\agban\projects\arena\results\net3\mlp.json and C:\Users\agban\projects\arena\results\net3\mlp.report.json
