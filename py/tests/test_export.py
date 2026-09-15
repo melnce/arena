@@ -64,7 +64,7 @@ def test_export_determinism_and_byte_layout(db, root: Path, tmp_path: Path) -> N
     assert (tmp1 / "features.f32le").stat().st_size == n * 545 * 4
     assert (tmp1 / "ids.u32le").stat().st_size == n * 220 * 4
     assert (tmp1 / "labels.f32le").stat().st_size == n * 4
-    assert (tmp1 / "aux.f32le").stat().st_size == n * 10 * 4
+    assert (tmp1 / "aux.f32le").stat().st_size == n * 11 * 4
 
     a = _sorted(samples.load(tmp1))
     b = _sorted(samples.load(tmp2))
@@ -73,6 +73,7 @@ def test_export_determinism_and_byte_layout(db, root: Path, tmp_path: Path) -> N
     np.testing.assert_array_equal(a["labels"], b["labels"])
     np.testing.assert_array_equal(a["aux"], b["aux"])
     assert a["meta"]["samples"] == n
+    assert a["aux_columns"][-1] == "search_v"
     assert set(np.unique(a["labels"])).issubset({-1.0, 0.0, 1.0})
 
     aux = a["aux"]
@@ -125,3 +126,53 @@ def test_export_epsilon_one_is_random(db, root: Path, tmp_path: Path) -> None:
     random_col = data["aux_columns"].index("random")
     assert np.all(data["aux"][:, random_col] == 1.0)
     assert ones["records"] != zero["records"]
+
+
+LEGACY_AUX_COLUMNS = [
+    "game_index",
+    "decision_index",
+    "side",
+    "turn",
+    "phase",
+    "v0",
+    "legal_len",
+    "chosen",
+    "random",
+    "first_is_me",
+]
+
+
+def write_legacy_10col(dir: Path, n: int = 12) -> None:
+    """A 10-column export as written before `search_v` existed."""
+    import json
+
+    dir.mkdir(parents=True, exist_ok=True)
+    feat = np.zeros((n, 545), dtype="<f4")
+    feat[:, 0] = 1.0
+    ids = np.zeros((n, 220), dtype="<u4")
+    labels = np.array([1.0 if i % 2 == 0 else -1.0 for i in range(n)], dtype="<f4")
+    aux = np.zeros((n, 10), dtype="<f4")
+    aux[:, 0] = np.arange(n) % 4
+    aux[:, 3] = 4
+    aux[:, 5] = 0.25
+    aux[:, 6] = 3
+    feat.tofile(dir / "features.f32le")
+    ids.tofile(dir / "ids.u32le")
+    labels.tofile(dir / "labels.f32le")
+    aux.tofile(dir / "aux.f32le")
+    meta = {
+        "samples": n,
+        "feature_len": 545,
+        "ids_len": 220,
+        "aux_columns": LEGACY_AUX_COLUMNS,
+    }
+    (dir / "meta.json").write_text(json.dumps(meta) + "\n")
+
+
+def test_legacy_10col_dataset_loads(tmp_path: Path) -> None:
+    d = tmp_path / "legacy10"
+    write_legacy_10col(d, n=12)
+    data = samples.load(d)
+    assert data["aux"].shape == (12, 10)
+    assert data["aux_columns"] == LEGACY_AUX_COLUMNS
+    assert "search_v" not in data["aux_columns"]

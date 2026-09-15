@@ -197,6 +197,9 @@ pub struct H0 {
     /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
     pub net_path: Option<String>,
     pub stats: SearchStats,
+    /// Root value of the most recent [`Policy::choose`]. Reset every
+    /// `choose`; ignored by `h0_fields_eq` and `spec()`.
+    pub last_value: Option<f32>,
 }
 
 impl Default for H0 {
@@ -217,6 +220,7 @@ impl Default for H0 {
             net: Some(builtin_net()),
             net_path: None,
             stats: SearchStats::default(),
+            last_value: None,
         }
     }
 }
@@ -333,6 +337,7 @@ impl Policy for H0 {
         legal: &[Action],
         rng: &mut Xoshiro256ss,
     ) -> usize {
+        self.last_value = None;
         self.stats.decisions += 1;
         let mut table = self.tt.then(HashMap::new);
         if legal.len() <= 1 {
@@ -375,10 +380,13 @@ impl Policy for H0 {
         // apply) was the 8× regression vs pre-R2 greedy. Immediate wins are
         // still taken; constructed lethals use `H0::default()`.
         let pick = if self.depth <= 2 {
-            cand[one_ply(&roots, db, &subset, me, &mut nodes, self.node_cap, eval)]
+            let (j, v) = one_ply(&roots, db, &subset, me, &mut nodes, self.node_cap, eval);
+            self.last_value = Some(v);
+            cand[j]
         } else if let Some(j) =
             consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, self.node_cap)
         {
+            self.last_value = Some(self.wv);
             cand[j]
         } else {
             let mut acc = vec![0.0f32; subset.len()];
@@ -430,6 +438,7 @@ impl Policy for H0 {
                     best_i = j;
                 }
             }
+            self.last_value = Some(finite(best_v, self.wv));
             cand[best_i]
         };
         self.stats.nodes += u64::from(nodes);
@@ -438,6 +447,10 @@ impl Policy for H0 {
         }
         self.stats.accum(&dec_stats);
         pick
+    }
+
+    fn last_value(&self) -> Option<f32> {
+        self.last_value
     }
 }
 
@@ -574,7 +587,7 @@ fn one_ply(
     nodes: &mut u32,
     cap: u32,
     eval: Evaluator<'_>,
-) -> usize {
+) -> (usize, f32) {
     let mut acc = vec![0.0f32; subset.len()];
     let mut n = vec![0u32; subset.len()];
     for root in roots {
@@ -617,7 +630,7 @@ fn one_ply(
             best_i = j;
         }
     }
-    best_i
+    (best_i, finite(best_v, eval.wv))
 }
 
 #[allow(clippy::too_many_arguments)]

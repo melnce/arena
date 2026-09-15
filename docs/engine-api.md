@@ -336,6 +336,7 @@ uniformly, leftover pool becomes the deck. Own side is untouched.
 ```text
 trait Policy {
     fn choose(&mut self, db: &CardDb, state: &State, legal: &[Action], rng: &mut Xoshiro256ss) -> usize;
+    fn last_value(&self) -> Option<f32> { None }
 }
 
 fn policy::by_name(name: &str, seed: u64) -> Option<Box<dyn Policy>>;
@@ -389,11 +390,18 @@ non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
 change. The client's `h0` now plays with the learned leaf.
 
-`Policy` is object-safe. `policy/` (and `encode`, `search_key`, `determinize`,
-`play`) compile for `wasm32-unknown-unknown`: no `Instant` / `SystemTime`,
-threads, `std::fs`, or `getrandom`. The node cap is the only search budget.
-`seed` is accepted at construction; current policies do not store it —
-`choose` uses the caller rng (typically `policy_rng(seed)`).
+`Policy` is object-safe. `last_value` is the value the policy computed
+for the position at its most recent `choose`, from the acting player's
+perspective, on the leaf's scale (`[-wv, wv]`); `None` when it did not
+search. The trait default is `None` (`Random` / `FirstLegal`); `H0`
+stores it in `H0.last_value` (reset every `choose`; ignored by
+`h0_fields_eq` / `spec()`); `AnyPolicy` forwards to the inner policy.
+Reading it never alters the search. `policy/` (and `encode`, `search_key`,
+`determinize`, `play`) compile for `wasm32-unknown-unknown`: no `Instant`
+/ `SystemTime`, threads, `std::fs`, or `getrandom`. The node cap is the
+only search budget. `seed` is accepted at construction; current policies
+do not store it — `choose` uses the caller rng (typically
+`policy_rng(seed)`).
 
 `Random` and `FirstLegal` are the arena-bench / arena-trace policies (same
 streams and output as before). `H0` is a determinized search bot:
@@ -632,17 +640,24 @@ with no headers (`numpy.fromfile`; `py/samples.py::load` reshapes them):
 | `features.f32le` | f32 | N × 545 |
 | `ids.u32le` | u32 | N × 220 |
 | `labels.f32le` | f32 | N (`+1` / `−1` / `0`, acting player's outcome) |
-| `aux.f32le` | f32 | N × 10 |
+| `aux.f32le` | f32 | N × 11 |
 | `meta.json` | — | `{samples, feature_len, ids_len, aux_columns, layout, policy_a, policy_b, first, seed, games, epsilon, decks, engine_version}` |
 
 `aux` columns, in order: `game_index`, `decision_index`, `side` (0 = A,
 1 = B), `turn`, `phase` (0 mulligan, 1 main, 2 choice, 3 end, 4
 terminal), `v0`, `legal_len`, `chosen`, `random` (0/1), `first_is_me`
-(0/1). `meta.layout` is `Observation::LAYOUT` as `{name, offset, width}`.
+(0/1), `search_v` (the inner policy's `last_value` at that decision, or
+`NaN` when it did not search — mulligan, forced/`legal_len == 1`,
+single-candidate, or a policy with no search). Indices 0–9 are
+unchanged; `search_v` is the 11th (last) column. The ε-random
+replacement does not change `search_v` (it is the value of the
+position, not of the random action). `meta.layout` is
+`Observation::LAYOUT` as `{name, offset, width}`.
 `py/samples.py::load(dir)` returns numpy arrays `features (N, 545)
-float32`, `ids (N, 220) uint32`, `labels (N,)`, `aux (N, 10)`, plus
-`meta` and `aux_columns`. Numpy is a test/tool dependency, not of the
-extension.
+float32`, `ids (N, 220) uint32`, `labels (N,)`,
+`aux (N, len(aux_columns))`, plus `meta` and `aux_columns`. Existing
+10-column data sets (no `search_v`) still load. Numpy is a test/tool
+dependency, not of the extension.
 
 ## Learned value (M5b-lite)
 
@@ -717,15 +732,39 @@ that first appears inside the search tree is simply not in the
 histogram (its column stays empty). Training data uses the per-state
 vocabulary, which is the same thing whenever no new token appeared.
 
+The learned leaf is trained on one label per position — by default the
+final outcome of the game, ±1. That label is the same for every
+position of a game, so on a long game the early positions carry almost
+no information, and it says nothing about *how good* a position is,
+only who eventually won. A net that is good pointwise on outcome can
+still rank siblings poorly inside the search. The standard remedy is
+**search-improved targets**: at every decision H0 already computes a
+value for the position (the K-root average of the chosen action's
+search value, on the leaf's own scale), and that number is a far less
+noisy teacher than the outcome.
+
 `py/train_value.py --data <dir> [<dir> …] --model linear|mlp --out <net.json>`
 loads every directory with `py/samples.py`, concatenates, and splits
 **by game** (`holdout` fraction of distinct `game_index` values, offset
 per directory so games never collide). Flags: `--holdout` (default 0.1),
 `--epochs` (30), `--seed`, `--hidden` (128), `--emb` (16), `--l2`
-(1e-4), `--max-samples`. Loss is MSE against `+1/−1/0` labels; Adam
-with `--l2` weight decay; early stopping on holdout MSE (patience 3).
-The printed report (also `<net>.report.json`) is rows/games
-train/holdout, label balance, holdout MSE / sign accuracy (over
-`label != 0`) / AUC, the same three for the `v0` baseline
-(`aux[:, v0]`), all of it by turn bucket (`turn ≤ 3`, `4–6`, `≥ 7`) and
-overall, plus training time.
+(1e-4), `--max-samples`, `--target outcome|search|mix` (default
+`outcome` — trains exactly as before), `--mix-weight w` (default 0.5;
+only meaningful with `mix`), `--search-scale S` (default 60.0, the
+built-in net's `scale`), `--eval MODEL [MODEL …]`. Per row
+`s = clip(search_v / S, −1, 1)`; the training target is `outcome` →
+`label`; `search` → `s`; `mix` → `(1 − w)·label + w·s`. Rows whose
+`search_v` is `NaN`, and every row of a data set that has no
+`search_v` column at all, use `label` regardless of `--target` (the
+summary prints how many rows had a search value). Loss is MSE against
+that target; Adam with `--l2` weight decay; early stopping on holdout
+MSE (patience 3). Holdout metrics (`sign_acc`, `auc`, `mse`, by turn
+band, the `v0` baseline) stay against the **outcome** label. The
+report adds a `search_v` block alongside `v0` (the search value's own
+sign accuracy / AUC against the outcome on the held-out rows; skipped
+with a note when the column is absent) and, when `--eval` is given,
+an `eval` map of each model JSON's `metric_block` on those same rows
+(printed as `--- eval <basename> ---` after `v0`; unknown ids map to
+index 0 as in the engine). `target`, `mix_weight`, `search_scale`, and
+the search-row count are written into the report and into
+`trained_on`. The model file format does not change.

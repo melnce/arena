@@ -32,6 +32,13 @@ pub trait Policy {
         legal: &[Action],
         rng: &mut Xoshiro256ss,
     ) -> usize;
+
+    /// Value the policy computed for the position at its most recent
+    /// [`choose`], from the acting player's perspective, on the leaf's
+    /// scale (`[-wv, wv]`). `None` when it did not search.
+    fn last_value(&self) -> Option<f32> {
+        None
+    }
 }
 
 const NAMES: &[&str] = &["random", "first-legal", "h0"];
@@ -88,6 +95,7 @@ impl Policy for FirstLegal {
 }
 
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum AnyPolicy {
     Random(Random),
     FirstLegal(FirstLegal),
@@ -355,6 +363,14 @@ impl Policy for AnyPolicy {
             AnyPolicy::Random(p) => p.choose(db, state, legal, rng),
             AnyPolicy::FirstLegal(p) => p.choose(db, state, legal, rng),
             AnyPolicy::H0(p) => p.choose(db, state, legal, rng),
+        }
+    }
+
+    fn last_value(&self) -> Option<f32> {
+        match self {
+            AnyPolicy::Random(p) => p.last_value(),
+            AnyPolicy::FirstLegal(p) => p.last_value(),
+            AnyPolicy::H0(p) => p.last_value(),
         }
     }
 }

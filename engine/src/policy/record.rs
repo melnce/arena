@@ -26,6 +26,10 @@ pub struct Sample {
     pub random: bool,
     pub decision_index: u32,
     pub label: f32,
+    /// Root value of the inner policy at this decision, on the leaf's
+    /// scale. `NaN` means the inner policy did not search (mulligan,
+    /// forced move, or a policy with no search).
+    pub search_v: f32,
 }
 
 /// Wraps `inner` and records every `choose` for seat `me`.
@@ -99,6 +103,8 @@ impl Policy for Recorder {
         let obs = encode(state, self.me);
         let v0 = value_v0(state, self.me);
         let mut idx = self.inner.choose(db, state, legal, rng);
+        // Value of the position, not of the (possibly ε-random) action.
+        let search_v = self.inner.last_value().unwrap_or(f32::NAN);
         let mut random = false;
         // `epsilon == 0` must not touch rng: inner consumption stays identical.
         if self.epsilon > 0.0 && !legal.is_empty() {
@@ -121,6 +127,7 @@ impl Policy for Recorder {
             random,
             decision_index,
             label: 0.0,
+            search_v,
         });
         idx
     }
