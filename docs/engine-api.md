@@ -768,3 +768,71 @@ an `eval` map of each model JSON's `metric_block` on those same rows
 index 0 as in the engine). `target`, `mix_weight`, `search_scale`, and
 the search-row count are written into the report and into
 `trained_on`. The model file format does not change.
+
+## One-command iteration (`py/iterate.py`)
+
+```
+python py/iterate.py --tag net3 --seed 401 [options]
+```
+
+A driver only: it calls `py/matchup.py` and `py/train_value.py` as
+subprocesses (the venv interpreter, absolute paths, no `shell=True`) and
+changes no engine or training behaviour. Everything lands under
+`<root>/<tag>/` (`--root` defaults to `<repo>/results`). Stages run in
+order and are resumable — a stage whose outputs already exist is skipped
+with a `skip: <what>` line (`--force` reruns everything; `--only
+data|train|yard|summary|publish` runs one stage; `--skip-data` and the
+other `--skip-*` flags are the obvious negatives). Every subprocess argv
+is printed before it runs; stdout/stderr is teed to
+`<tag>/<name>.txt`. A non-zero exit stops the run naming the stage and
+the log file. `<tag>/RUN.json` records the command line, start/end times
+per stage, `git rev-parse HEAD`, `sys.version`, and `os.cpu_count()`.
+
+| stage | what | files |
+|---|---|---|
+| **data** | `matchup.py --policy <bot>` (default `h0`) `--games G` (default 24) `--seed S --export <tag>/data-e0` and `--seed S+1 --export-epsilon <ε>` (default 0.1) `--export <tag>/data-e10`. `--decks` passed through when given. | `data-e0.txt` / `data-e10.txt`, the export directories, `data-e0.json` / `data-e10.json` |
+| **train** | For each `--models` entry (default `linear mlp`): `train_value.py --data <tag>/data-e0 <tag>/data-e10 <extra --data dirs>` (new directories first so `--max-samples` keeps them) `--out <tag>/m.json --target` (default `outcome`) `--mix-weight` / `--search-scale` / `--eval` (default `engine/models/h0-linear-v1.json` when that file exists) and `--epochs` / `--max-samples` when given. If `torch` is not importable and `mlp` is requested, that model is skipped with a clear line; the run does not fail. | `train-m.txt`, `m.json`, `m.report.json` |
+| **yard** | For each trained model `C = h0:value=net,net=<absolute path of <tag>/m.json>` (the path may not contain a comma — the spec parser splits on commas) against `--baseline` (default `h0`): main (`--policy-a C --policy-b B --games` `--yard-games`, default 16), reverse seating (`--policy-a B --policy-b C --games` `--reverse-games`, default 8), sanity (`C` vs `random`, `--sanity-games` default 100, `--decks basic-forest`), throughput (`--policy C --games` `--tp-games` default 1), and a craft mirror per `--mirrors` deck (default `royal-nattui`, `--mirror-games` default 200). Once: `--policy B --games <tp-games>` → `tp-h0`. `--threads` passes through everywhere. `--yard-seed` (default 1) is independent of the data `--seed` so evaluation games are not the same shuffles the net trained on. | `main-m.txt/json`, `reverse-m.*`, `sanity-m.*`, `tp-m.*`, `mirror-<deck>-m.*`, `tp-h0.*` |
+| **summary** | Written from the JSON files (never by parsing the text). | `SUMMARY.md` |
+| **publish** | Off unless `--publish`. | copy into the results worktree (below) |
+
+`--smoke` sets the whole run to a few minutes on 4 cpus for testing:
+`--decks basic-forest basic-rune --games 1 --yard-games 1
+--reverse-games 1 --sanity-games 4 --mirror-games 2 --tp-games 1
+--epochs 2 --models linear`. Explicit flags still override. Everything
+else is identical, including publish.
+
+`SUMMARY.md` has a header (tag, seeds, bot, baseline, engine SHA, total
+wall time and per-stage times); a **data** table (games, samples,
+samples per game, first-player rate, throughput per run); a **holdout**
+table per model (net / v0 / search_v / each eval baseline: sign acc,
+AUC, MSE overall and by turn band — from `m.report.json`); a
+**yardstick** table per model (main rate with the Wilson 95 % interval,
+reverse seat as the candidate's rate `1 −` A's rate with the interval
+flipped, sanity rate, throughput g/s vs `tp-h0`, each mirror's rate +
+interval); and a **verdict** per model by the standing rule: `better` if
+the main interval's low end > 0.50 **and** the reverse interval
+(candidate's) low end > 0.50; `worse` if the main interval's high end <
+0.50; `coin flip` if both intervals contain 0.50; otherwise
+`unclear (…)` naming which side disagrees. It ends with the one line
+the owner reads first: `verdict: <model> <better|worse|coin flip|unclear>
+— main 0.5xx [lo, hi], reverse 0.5xx [lo, hi]` per model.
+
+`--publish` (default off; `--publish-remote` default `origin`,
+`--publish-branch` default `results`, `--publish-dir` default
+`<repo>/../arena-results-wt`) copies `<tag>/*.txt`, `<tag>/*.json` and
+`SUMMARY.md` — never the `data-*` directories — into
+`<publish-dir>/<tag>/`. That directory is a `git worktree` of the
+orphan branch `results`: if the branch exists on the remote,
+`git worktree add <dir> <branch>` (or `git -C <dir> pull --ff-only`
+when the worktree already exists); if not, `git worktree add --detach
+<dir>`, `git -C <dir> checkout --orphan <branch>`, `git -C <dir> rm -rf
+-q .`, an empty first commit, `git -C <dir> push -u <remote> <branch>`.
+Then `git -C <dir> add -A`, `git -C <dir> commit -m "<tag> results
+<YYYY-MM-DD>"`, `git -C <dir> push`. The main working tree is never
+touched. A publish with nothing new to commit is not an error. Do not
+push to `origin/results` from a test environment — tests use a
+temporary bare remote only.
+
+The script never writes under `engine/models/` — shipping a model stays
+a reviewed PR (`engine/models/README.md`).
