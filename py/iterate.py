@@ -131,6 +131,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--epochs", type=int, default=None, help="passed to train_value when set")
     p.add_argument("--max-samples", type=int, default=None, help="passed to train_value when set")
     p.add_argument("--baseline", default="h0", help="yardstick opponent (default: h0)")
+    p.add_argument(
+        "--yard-seed",
+        type=int,
+        default=1,
+        help="matchup seed for every yardstick run (default: 1; not the data --seed)",
+    )
     p.add_argument("--yard-games", type=int, default=16)
     p.add_argument("--reverse-games", type=int, default=8)
     p.add_argument("--sanity-games", type=int, default=100)
@@ -377,8 +383,8 @@ class Runner:
         cmd = self.py_tool("matchup.py")
         cmd.extend(extra)
         cmd.extend(["--out", str(out_json.resolve())])
-        if self.args.seed is not None and "--seed" not in extra:
-            cmd.extend(["--seed", str(self.args.seed)])
+        if "--seed" not in extra:
+            cmd.extend(["--seed", str(self.args.yard_seed)])
         self.add_threads(cmd)
         self.tee(cmd, log, stage)
 

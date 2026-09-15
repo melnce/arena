@@ -160,6 +160,9 @@ def test_smoke_end_to_end(smoke, db, root: Path) -> None:
     ):
         assert (tag / name).is_file(), name
 
+    assert json.loads((tag / "main-linear.json").read_text())["seed"] == 1
+    assert json.loads((tag / "data-e0.json").read_text())["seed"] == 7
+
     summary = (tag / "SUMMARY.md").read_text()
     verdict_lines = [ln for ln in summary.splitlines() if ln.startswith("verdict: linear")]
     assert verdict_lines, summary
@@ -236,6 +239,57 @@ def test_verdict_rule() -> None:
     assert "reverse" in unclear
     assert iterate.verdict(0.496, (0.466, 0.527), 0.490, (0.46, 0.52)) == "coin flip"
     assert iterate.verdict(0.389, (0.347, 0.432), 0.500, (0.40, 0.60)) == "worse"
+
+
+def test_yard_seed_in_matchup_argv(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: list[list[str]] = []
+
+    def fake_tee(self, argv, log_path, stage, append=False):
+        captured.append([str(a) for a in argv])
+
+    monkeypatch.setattr(iterate.Runner, "tee", fake_tee)
+    root = tmp_path / "results"
+    tag = root / "t1"
+    tag.mkdir(parents=True)
+    (tag / "linear.json").write_text("{}\n", encoding="utf-8")
+    rc = iterate.main(
+        [
+            "--tag",
+            "t1",
+            "--seed",
+            "99",
+            "--yard-seed",
+            "5",
+            "--root",
+            str(root),
+            "--only",
+            "yard",
+            "--models",
+            "linear",
+            "--yard-games",
+            "1",
+            "--reverse-games",
+            "1",
+            "--sanity-games",
+            "1",
+            "--tp-games",
+            "1",
+            "--mirror-games",
+            "1",
+            "--mirrors",
+            "basic-forest",
+        ]
+    )
+    assert rc == 0
+    matchups = [a for a in captured if any(str(x).endswith("matchup.py") for x in a)]
+    assert matchups
+    mains = [a for a in matchups if any("main-linear.json" in x for x in a)]
+    revs = [a for a in matchups if any("reverse-linear.json" in x for x in a)]
+    assert mains and revs
+    for argv in (*mains, *revs):
+        assert "--seed" in argv
+        assert argv[argv.index("--seed") + 1] == "5"
+        assert "99" not in argv[argv.index("--seed") :]
 
 
 def test_comma_in_root_stops_yard(tmp_path: Path) -> None:
