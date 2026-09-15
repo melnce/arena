@@ -1,0 +1,15 @@
+arch=mlp  train_rows=1777746 holdout_rows=198025
+games train/holdout=22118/2458
+label balance train={'+1': 935271, '-1': 841675, '0': 800} holdout={'+1': 104262, '-1': 93763, '0': 0}
+training time 896.93s
+--- net ---
+  overall  rows=198025  mse=0.53402  sign_acc=0.8058  auc=0.8926
+  <=3      rows= 47031  mse=0.61760  sign_acc=0.7712  auc=0.8569
+  4-6      rows= 84173  mse=0.54149  sign_acc=0.8020  auc=0.8900
+  >=7      rows= 66821  mse=0.46578  sign_acc=0.8348  auc=0.9173
+--- v0 ---
+  overall  rows=198025  mse=1072.26831  sign_acc=0.6397  auc=0.7311
+  <=3      rows= 47031  mse=45.77111  sign_acc=0.4730  auc=0.5687
+  4-6      rows= 84173  mse=950.45374  sign_acc=0.6631  auc=0.7314
+  >=7      rows= 66821  mse=1948.20081  sign_acc=0.7275  auc=0.8101
+wrote results\net2\mlp.json and results\net2\mlp.report.json

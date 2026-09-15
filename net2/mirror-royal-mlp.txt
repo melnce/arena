@@ -1,0 +1,26 @@
+matchup: 1 decks × 200 games = 200 games (seed=1, policy_a=h0:value=net,net=C:\Users\agban\projects\arena\results\net2\mlp.json, policy_b=h0, first=alternate, threads=None)
+
+200 games in 133.395s (1.5 games/s)
+wrote results\net2\mirror-royal-mlp.json
+Win rate (row = A, col = B; cell = A's win rate)
+                        royal-nattui
+royal-nattui                   0.400
+
+First-player win rate / mean turns
+                        royal-nattui
+royal-nattui           0.640 /   8.1
+
+A win rate over decisive games, Wilson 95% [lo, hi]
+                        royal-nattui
+royal-nattui    0.400 [0.335, 0.469]
+
+=== summary ===
+h0:value=net,net=C:\Users\agban\projects\arena\results\net2\mlp.json vs h0
+games: 200  decisive: 200  draws: 0
+policy_a win rate: 0.400 [0.335, 0.469]
+first-player win rate: 0.640
+mean turns: 8.06  mean actions: 82.95
+end: lethal=200 deckout=0 turn_cap=0 action_cap=0 no_legal=0 illegal=0
+133.395s  1.50 games/s  cpus=28
+per deck:
+  royal-nattui: policy_a (row) 0.400  policy_b (col) 0.600

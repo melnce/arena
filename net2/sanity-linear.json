@@ -1,0 +1,73 @@
+{
+  "decks": [
+    "basic-forest"
+  ],
+  "first": "alternate",
+  "games": 100,
+  "games_per_second": 6.581375939442086,
+  "matrix": {
+    "basic-forest": {
+      "basic-forest": {
+        "a_games_as_first": 50,
+        "a_wins": 100,
+        "a_wins_as_first": 50,
+        "b_wins": 0,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 100,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 50,
+        "games": 100,
+        "mean_actions": 55.47,
+        "mean_turns": 6.63,
+        "wilson95": [
+          0.9630051925239981,
+          0.9999999999999999
+        ],
+        "wr_decisive": 1.0
+      }
+    }
+  },
+  "policy_a": "h0:value=net,net=C:\\Users\\agban\\projects\\arena\\results\\net2\\linear.json",
+  "policy_b": "random",
+  "seconds": 15.194391099998029,
+  "seed": 1,
+  "summary": {
+    "cpu_count": 28,
+    "decisive": 100,
+    "draws": 0,
+    "end": {
+      "action_cap": 0,
+      "deckout": 0,
+      "illegal": 0,
+      "lethal": 100,
+      "no_legal": 0,
+      "turn_cap": 0
+    },
+    "first_player_win_rate": 0.5,
+    "games": 100,
+    "games_per_second": 6.581375939442086,
+    "mean_actions": 55.47,
+    "mean_turns": 6.63,
+    "per_deck": {
+      "basic-forest": {
+        "policy_a_as_row": 1.0,
+        "policy_b_as_col": 0.0
+      }
+    },
+    "policy_a": "h0:value=net,net=C:\\Users\\agban\\projects\\arena\\results\\net2\\linear.json",
+    "policy_a_win_rate": 1.0,
+    "policy_b": "random",
+    "seconds": 15.194391099998029,
+    "wilson95": [
+      0.9630051925239981,
+      0.9999999999999999
+    ]
+  },
+  "threads": 28
+}
