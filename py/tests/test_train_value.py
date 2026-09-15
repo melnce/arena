@@ -143,3 +143,178 @@ def test_train_linear_and_mlp_shapes_and_numpy_forward(db, root: Path, tmp_path:
         script = train_value.predict(spec, feats, ids)
         indie = _numpy_forward(spec, feats, ids)
         np.testing.assert_allclose(indie, script, atol=1e-5, rtol=0.0)
+
+
+def _report_path(out: Path) -> Path:
+    return out.with_name(out.stem + ".report.json")
+
+
+def _write_legacy_10col(dir: Path, n: int = 12) -> None:
+    dir.mkdir(parents=True, exist_ok=True)
+    feat = np.zeros((n, 545), dtype="<f4")
+    feat[:, 0] = 1.0
+    ids = np.zeros((n, 220), dtype="<u4")
+    labels = np.array([1.0 if i % 2 == 0 else -1.0 for i in range(n)], dtype="<f4")
+    aux = np.zeros((n, 10), dtype="<f4")
+    aux[:, 0] = np.arange(n) % 4
+    aux[:, 3] = 4
+    aux[:, 5] = 0.25
+    aux[:, 6] = 3
+    feat.tofile(dir / "features.f32le")
+    ids.tofile(dir / "ids.u32le")
+    labels.tofile(dir / "labels.f32le")
+    aux.tofile(dir / "aux.f32le")
+    meta = {
+        "samples": n,
+        "feature_len": 545,
+        "ids_len": 220,
+        "aux_columns": [
+            "game_index",
+            "decision_index",
+            "side",
+            "turn",
+            "phase",
+            "v0",
+            "legal_len",
+            "chosen",
+            "random",
+            "first_is_me",
+        ],
+    }
+    (dir / "meta.json").write_text(json.dumps(meta) + "\n")
+
+
+def test_target_search_mix_eval_parses(db, root: Path, tmp_path: Path) -> None:
+    import arena
+
+    export = tmp_path / "tiny"
+    arena.matchup(
+        db,
+        _forest(root),
+        2,
+        17,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        export=str(export),
+        threads=1,
+    )
+
+    search_out = tmp_path / "search.json"
+    train_value.main(
+        [
+            "--data",
+            str(export),
+            "--model",
+            "linear",
+            "--out",
+            str(search_out),
+            "--epochs",
+            "2",
+            "--seed",
+            "3",
+            "--target",
+            "search",
+            "--holdout",
+            "0.5",
+        ]
+    )
+    search_report = json.loads(_report_path(search_out).read_text())
+    assert search_report["target"] == "search"
+    assert search_report["search_v"] is not None
+    assert "overall" in search_report["search_v"]
+    spec = json.loads(search_out.read_text())
+    _assert_shapes(spec, "linear")
+    arena.matchup(
+        db,
+        _forest(root),
+        1,
+        5,
+        policy_a=f"h0:value=net,net={search_out}",
+        policy_b="h0-fast",
+        threads=1,
+    )
+
+    mix_out = tmp_path / "mix.json"
+    train_value.main(
+        [
+            "--data",
+            str(export),
+            "--model",
+            "linear",
+            "--out",
+            str(mix_out),
+            "--epochs",
+            "2",
+            "--seed",
+            "3",
+            "--target",
+            "mix",
+            "--mix-weight",
+            "0.5",
+            "--holdout",
+            "0.5",
+        ]
+    )
+    mix_report = json.loads(_report_path(mix_out).read_text())
+    assert mix_report["target"] == "mix"
+    assert mix_report["mix_weight"] == 0.5
+    assert mix_report["search_v"] is not None
+    arena.matchup(
+        db,
+        _forest(root),
+        1,
+        5,
+        policy_a=f"h0:value=net,net={mix_out}",
+        policy_b="h0-fast",
+        threads=1,
+    )
+
+    eval_out = tmp_path / "evaled.json"
+    builtin = root / "engine" / "models" / "h0-linear-v1.json"
+    train_value.main(
+        [
+            "--data",
+            str(export),
+            "--model",
+            "linear",
+            "--out",
+            str(eval_out),
+            "--epochs",
+            "2",
+            "--seed",
+            "3",
+            "--eval",
+            str(builtin),
+            "--holdout",
+            "0.5",
+        ]
+    )
+    eval_report = json.loads(_report_path(eval_out).read_text())
+    ev = eval_report["eval"]["h0-linear-v1.json"]
+    acc = ev["overall"]["sign_acc"]
+    assert np.isfinite(acc)
+    assert 0.0 <= acc <= 1.0
+
+    legacy = tmp_path / "legacy10"
+    _write_legacy_10col(legacy, n=12)
+    legacy_out = tmp_path / "legacy.json"
+    train_value.main(
+        [
+            "--data",
+            str(legacy),
+            "--model",
+            "linear",
+            "--out",
+            str(legacy_out),
+            "--epochs",
+            "1",
+            "--seed",
+            "3",
+            "--target",
+            "search",
+        ]
+    )
+    legacy_report = json.loads(_report_path(legacy_out).read_text())
+    assert legacy_report["target"] == "search"
+    assert legacy_report["search_rows"] == 0
+    assert legacy_report["search_v"] is None

@@ -60,6 +60,21 @@ def _try_torch():
         return None
 
 
+def _pad_aux(arrs: list[Any], np):
+    if not arrs:
+        return np.zeros((0, 10), np.float32)
+    width = max(int(a.shape[1]) for a in arrs)
+    padded = []
+    for a in arrs:
+        if a.shape[1] == width:
+            padded.append(a)
+        else:
+            out = np.full((a.shape[0], width), np.nan, dtype=np.float32)
+            out[:, : a.shape[1]] = a
+            padded.append(out)
+    return np.concatenate(padded, axis=0)
+
+
 def load_dirs(dirs: list[str], max_samples: int | None = None) -> dict[str, Any]:
     import numpy as np
 
@@ -69,6 +84,8 @@ def load_dirs(dirs: list[str], max_samples: int | None = None) -> dict[str, Any]
     labels: list[Any] = []
     aux: list[Any] = []
     games: list[Any] = []
+    search: list[Any] = []
+    has_search_v = False
     offset = 0
     for d in dirs:
         data = samples.load(d)
@@ -78,28 +95,40 @@ def load_dirs(dirs: list[str], max_samples: int | None = None) -> dict[str, Any]
             offset = int(mapped.max()) + 1
         else:
             mapped = gi
+        cols = list(data["aux_columns"])
+        n = int(data["features"].shape[0])
+        if "search_v" in cols:
+            has_search_v = True
+            sv = data["aux"][:, cols.index("search_v")].astype(np.float32, copy=False)
+        else:
+            sv = np.full(n, np.nan, dtype=np.float32)
         feats.append(data["features"])
         ids.append(data["ids"])
         labels.append(data["labels"])
         aux.append(data["aux"])
         games.append(mapped)
+        search.append(sv)
     features = np.concatenate(feats, axis=0) if feats else np.zeros((0, FEATURE_LEN), np.float32)
     id_arr = np.concatenate(ids, axis=0) if ids else np.zeros((0, 220), np.uint32)
     lab = np.concatenate(labels, axis=0) if labels else np.zeros((0,), np.float32)
-    ax = np.concatenate(aux, axis=0) if aux else np.zeros((0, 10), np.float32)
+    ax = _pad_aux(aux, np)
     game_index = np.concatenate(games, axis=0) if games else np.zeros((0,), np.int64)
+    search_v = np.concatenate(search, axis=0) if search else np.zeros((0,), np.float32)
     if max_samples is not None and features.shape[0] > max_samples:
         features = features[:max_samples]
         id_arr = id_arr[:max_samples]
         lab = lab[:max_samples]
         ax = ax[:max_samples]
         game_index = game_index[:max_samples]
+        search_v = search_v[:max_samples]
     return {
         "features": features.astype(np.float32, copy=False),
         "ids": id_arr.astype(np.uint32, copy=False),
         "labels": lab.astype(np.float32, copy=False),
         "aux": ax.astype(np.float32, copy=False),
         "game_index": game_index.astype(np.int64, copy=False),
+        "search_v": search_v.astype(np.float32, copy=False),
+        "has_search_v": has_search_v,
     }
 
 
@@ -553,6 +582,27 @@ def train_linear_numpy(
     return w.astype(np.float32), zone_w.astype(np.float32), float(b)
 
 
+def _json_safe(obj: Any) -> Any:
+    """Replace NaN/Inf with None so the model file is strict JSON."""
+    if isinstance(obj, float) and (obj != obj or obj in (float("inf"), float("-inf"))):
+        return None
+    if isinstance(obj, dict):
+        return {k: _json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_json_safe(v) for v in obj]
+    return obj
+
+
+def _format_metric_block(lines: list[str], who: str, block: dict[str, Any]) -> None:
+    lines.append(f"--- {who} ---")
+    for key in ("overall", "<=3", "4-6", ">=7"):
+        m = block[key]
+        lines.append(
+            f"  {key:8} rows={m['rows']:6}  mse={m['mse']:.5f}  "
+            f"sign_acc={m['sign_acc']:.4f}  auc={m['auc']:.4f}"
+        )
+
+
 def format_report(report: dict[str, Any]) -> str:
     lines = [
         f"arch={report['arch']}  train_rows={report['rows_train']} holdout_rows={report['rows_holdout']}",
@@ -560,15 +610,21 @@ def format_report(report: dict[str, Any]) -> str:
         f"label balance train={report['label_balance_train']} holdout={report['label_balance_holdout']}",
         f"training time {report['train_seconds']:.2f}s",
     ]
+    if "target" in report:
+        lines.append(
+            f"target={report['target']}  mix_weight={report['mix_weight']}  "
+            f"search_scale={report['search_scale']}  "
+            f"search_rows={report['search_rows']}/{report['rows_train'] + report['rows_holdout']}"
+        )
     for who in ("net", "v0"):
-        block = report[who]
-        lines.append(f"--- {who} ---")
-        for key in ("overall", "<=3", "4-6", ">=7"):
-            m = block[key]
-            lines.append(
-                f"  {key:8} rows={m['rows']:6}  mse={m['mse']:.5f}  "
-                f"sign_acc={m['sign_acc']:.4f}  auc={m['auc']:.4f}"
-            )
+        _format_metric_block(lines, who, report[who])
+    if report.get("search_v") is None:
+        lines.append("--- search_v ---")
+        lines.append("  (no search_v column; rows fell back to the outcome label)")
+    elif "search_v" in report:
+        _format_metric_block(lines, "search_v", report["search_v"])
+    for name, block in (report.get("eval") or {}).items():
+        _format_metric_block(lines, f"eval {name}", block)
     return "\n".join(lines)
 
 
@@ -586,6 +642,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     labels = data["labels"]
     aux = data["aux"]
     game_index = data["game_index"]
+    search_v = data["search_v"]
+    has_search_v = bool(data["has_search_v"])
     if features.shape[0] == 0:
         raise SystemExit("no samples in --data")
     train_m, hold_m = split_by_game(game_index, args.holdout, args.seed)
@@ -595,10 +653,24 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
 
     feat_tr, feat_ho = features[train_m], features[hold_m]
     ids_tr, ids_ho = ids[train_m], ids[hold_m]
-    y_tr, y_ho = labels[train_m], labels[hold_m]
-    turns_tr = aux[train_m, 3]
+    lab_tr, lab_ho = labels[train_m], labels[hold_m]
+    scale_s = float(args.search_scale)
+    mix_w = float(args.mix_weight)
+    has_sv = np.isfinite(search_v)
+    search_rows = int(np.sum(has_sv))
+    s_unit = np.clip(search_v / scale_s, -1.0, 1.0)
+    if args.target == "search":
+        y_all = np.where(has_sv, s_unit, labels).astype(np.float32)
+    elif args.target == "mix":
+        y_all = np.where(has_sv, (1.0 - mix_w) * labels + mix_w * s_unit, labels).astype(
+            np.float32
+        )
+    else:
+        y_all = labels
+    y_tr, y_ho = y_all[train_m], y_all[hold_m]
     turns_ho = aux[hold_m, 3]
     v0_ho = aux[hold_m, 5]
+    sv_ho = search_v[hold_m]
     games_tr = int(np.unique(game_index[train_m]).size)
     games_ho = int(np.unique(game_index[hold_m]).size) if np.any(hold_m) else 0
 
@@ -669,42 +741,72 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         if feat_ho.shape[0]
         else np.zeros((0,), dtype=np.float32)
     )
-    # Training is MSE(tanh, label). `predict` returns scale×tanh so the
+    # Training is MSE(tanh, target). `predict` returns scale×tanh so the
     # engine leaf lives on the v0/`wv` scale; report MSE on the tanh.
+    # Holdout metrics stay against the outcome label.
     scale = float(spec.get("scale", SCALE))
     pred_unit = pred_ho / scale if pred_ho.size else pred_ho
-    net_metrics = metric_block(pred_unit, y_ho, turns_ho)
-    v0_metrics = metric_block(v0_ho, y_ho, turns_ho)
+    net_metrics = metric_block(pred_unit, lab_ho, turns_ho)
+    v0_metrics = metric_block(v0_ho, lab_ho, turns_ho)
+    if has_search_v:
+        sv_ok = np.isfinite(sv_ho)
+        search_metrics = metric_block(sv_ho[sv_ok], lab_ho[sv_ok], turns_ho[sv_ok])
+    else:
+        search_metrics = None
+    eval_blocks: dict[str, Any] = {}
+    for path in args.eval or []:
+        ev_path = Path(path)
+        ev_spec = json.loads(ev_path.read_text())
+        ev_pred = (
+            predict(ev_spec, feat_ho, ids_ho)
+            if feat_ho.shape[0]
+            else np.zeros((0,), dtype=np.float32)
+        )
+        ev_scale = float(ev_spec.get("scale", SCALE))
+        ev_unit = ev_pred / ev_scale if ev_pred.size else ev_pred
+        eval_blocks[ev_path.name] = metric_block(ev_unit, lab_ho, turns_ho)
     report = {
         "arch": spec["arch"],
         "rows_train": int(y_tr.size),
-        "rows_holdout": int(y_ho.size),
+        "rows_holdout": int(lab_ho.size),
         "games_train": games_tr,
         "games_holdout": games_ho,
-        "label_balance_train": label_balance(y_tr),
-        "label_balance_holdout": label_balance(y_ho),
+        "label_balance_train": label_balance(lab_tr),
+        "label_balance_holdout": label_balance(lab_ho),
         "train_seconds": train_s,
         "net": net_metrics,
         "v0": v0_metrics,
+        "search_v": search_metrics,
+        "eval": eval_blocks,
         "dirs": [str(Path(d)) for d in args.data],
         "holdout": args.holdout,
         "seed": args.seed,
         "epochs": args.epochs,
+        "target": args.target,
+        "mix_weight": mix_w,
+        "search_scale": scale_s,
+        "search_rows": search_rows,
     }
     spec["trained_on"] = {
         "dirs": report["dirs"],
         "rows": int(features.shape[0]),
         "games": int(np.unique(game_index).size),
+        "target": args.target,
+        "mix_weight": mix_w,
+        "search_scale": scale_s,
+        "search_rows": search_rows,
         "holdout": {
             "rows": report["rows_holdout"],
             "games": games_ho,
             "net": net_metrics,
             "v0": v0_metrics,
+            "search_v": search_metrics,
         },
     }
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(spec) + "\n")
+    # serde_json rejects NaN; empty turn-band metrics become null.
+    out.write_text(json.dumps(_json_safe(spec)) + "\n")
     report_path = out.with_suffix(out.suffix + ".report.json")
     if out.suffix == ".json":
         report_path = out.with_name(out.stem + ".report.json")
@@ -727,6 +829,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--emb", type=int, default=16)
     p.add_argument("--l2", type=float, default=1e-4)
     p.add_argument("--max-samples", type=int, default=None)
+    p.add_argument("--target", choices=("outcome", "search", "mix"), default="outcome")
+    p.add_argument("--mix-weight", type=float, default=0.5)
+    p.add_argument("--search-scale", type=float, default=SCALE)
+    p.add_argument("--eval", nargs="+", default=None)
     args = p.parse_args(argv)
     train(args)
     return 0
