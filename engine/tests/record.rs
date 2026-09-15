@@ -1,8 +1,9 @@
 //! Recorder fixtures: ε = 0 identity, one sample per decision, labels, ε = 1.
 
 use arena_engine::{
-    acting_player, legal_actions, new_game, play_game, policy_rng, AnyPolicy, CardId, End, First,
-    FirstLegal, GameConfig, Observation, Outcome, PlayerId, Policy, Recorder, MAX_TURNS,
+    acting_player, apply, legal_actions, new_game, play_game, policy_rng, Action, AnyPolicy,
+    CardId, End, First, FirstLegal, GameConfig, Observation, Outcome, Phase, PlayerId, Policy,
+    Random, Recorder, H0, MAX_TURNS,
 };
 
 mod common;
@@ -219,4 +220,248 @@ fn epsilon_one_is_random_and_changes_outcomes() {
         ones.push(out1);
     }
     assert_ne!(zero, ones, "ε = 1 must play different games than ε = 0");
+}
+
+fn useful_local(state: &arena_engine::State, me: PlayerId, a: &Action) -> bool {
+    match a {
+        Action::BonusPp => !state.player(me).bonus_pp.active,
+        _ => true,
+    }
+}
+
+fn check_search_v(spec: &str, seeds: impl IntoIterator<Item = u64>) {
+    for seed in seeds {
+        let db = load_db();
+        let deck = forest();
+        let mut state = new_game(
+            &db,
+            GameConfig {
+                seed,
+                deck_a: deck.clone(),
+                deck_b: deck,
+                first: First::A,
+                opening_hands: None,
+            },
+        )
+        .expect("new_game");
+        let mut a = Recorder::new(
+            Box::new(AnyPolicy::parse_spec(spec).expect("spec a")),
+            PlayerId::A,
+        );
+        let mut b = Recorder::new(
+            Box::new(AnyPolicy::parse_spec(spec).expect("spec b")),
+            PlayerId::B,
+        );
+        let mut rng = policy_rng(seed);
+        play_game(&db, &mut state, &mut a, &mut b, &mut rng);
+
+        // Replay the same seed to classify each decision (single-candidate).
+        let mut state = new_game(
+            &db,
+            GameConfig {
+                seed,
+                deck_a: forest(),
+                deck_b: forest(),
+                first: First::A,
+                opening_hands: None,
+            },
+        )
+        .expect("new_game");
+        let mut ia = 0usize;
+        let mut ib = 0usize;
+        let mut rng = policy_rng(seed);
+        let mut pa = AnyPolicy::parse_spec(spec).expect("spec a");
+        let mut pb = AnyPolicy::parse_spec(spec).expect("spec b");
+        let mut actions = 0u32;
+        while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
+            if state.turn > MAX_TURNS {
+                break;
+            }
+            if actions >= arena_engine::MAX_ACTIONS {
+                break;
+            }
+            let legal = legal_actions(&db, &state);
+            if legal.is_empty() {
+                break;
+            }
+            let me = acting_player(&state);
+            let mull = matches!(state.phase, Phase::Mulligan { .. });
+            let useful = legal.iter().filter(|a| useful_local(&state, me, a)).count();
+            let idx = match me {
+                PlayerId::A => pa.choose(&db, &state, &legal, &mut rng),
+                PlayerId::B => pb.choose(&db, &state, &legal, &mut rng),
+            };
+            let sample = match me {
+                PlayerId::A => {
+                    let s = &a.samples()[ia];
+                    ia += 1;
+                    s
+                }
+                PlayerId::B => {
+                    let s = &b.samples()[ib];
+                    ib += 1;
+                    s
+                }
+            };
+            if legal.len() <= 1 || mull {
+                assert!(
+                    sample.search_v.is_nan(),
+                    "{spec} seed={seed} legal_len={} phase={} expected NaN, got {}",
+                    legal.len(),
+                    sample.phase,
+                    sample.search_v
+                );
+            } else if useful >= 2 {
+                assert!(
+                    sample.search_v.is_finite(),
+                    "{spec} seed={seed} expected finite search_v, got {}",
+                    sample.search_v
+                );
+                assert!(
+                    (-80.0..=80.0).contains(&sample.search_v),
+                    "{spec} seed={seed} search_v {} outside [-80, 80]",
+                    sample.search_v
+                );
+            } else {
+                assert!(
+                    sample.search_v.is_nan(),
+                    "{spec} seed={seed} single-candidate expected NaN, got {}",
+                    sample.search_v
+                );
+            }
+            let idx = idx.min(legal.len().saturating_sub(1));
+            apply(&db, &mut state, legal[idx].clone()).expect("apply");
+            actions += 1;
+        }
+    }
+}
+
+#[test]
+fn search_v_h0_fast_twenty() {
+    check_search_v("h0-fast", 1u64..=20);
+}
+
+#[test]
+fn search_v_h0_one() {
+    check_search_v("h0", [1u64]);
+}
+
+#[test]
+#[ignore]
+fn search_v_h0_three() {
+    check_search_v("h0", 1u64..=3);
+}
+
+#[test]
+fn search_v_random_is_nan() {
+    for seed in 1u64..=5 {
+        let (out, a, b) = play_recorded_random(seed);
+        let _ = out;
+        for s in a.samples().iter().chain(b.samples()) {
+            assert!(
+                s.search_v.is_nan(),
+                "Random recorder must write NaN, got {}",
+                s.search_v
+            );
+        }
+    }
+}
+
+fn play_recorded_random(seed: u64) -> (Outcome, Recorder, Recorder) {
+    let db = load_db();
+    let deck = forest();
+    let mut state = new_game(
+        &db,
+        GameConfig {
+            seed,
+            deck_a: deck.clone(),
+            deck_b: deck,
+            first: First::A,
+            opening_hands: None,
+        },
+    )
+    .expect("new_game");
+    let mut a = Recorder::new(Box::new(Random), PlayerId::A);
+    let mut b = Recorder::new(Box::new(Random), PlayerId::B);
+    let mut rng = policy_rng(seed);
+    let out = play_game(&db, &mut state, &mut a, &mut b, &mut rng);
+    (out, a, b)
+}
+
+#[test]
+fn last_value_consensus_lethal() {
+    let db = load_db();
+    let mut st = started_decks(&db, 11, &["10461110"], &["88001110"]);
+    clear_hand(&mut st, PlayerId::A);
+    clear_hand(&mut st, PlayerId::B);
+    let slot = put_field(&db, &mut st, PlayerId::A, "10461110");
+    {
+        let f = st.field_inst_mut(PlayerId::A, slot).unwrap();
+        f.flags.summoning_sick = false;
+        f.flags.attacks_left = 1;
+    }
+    st.player_mut(PlayerId::B).leader_defense = 2;
+    let legal = legal_actions(&db, &st);
+    assert!(
+        legal.len() >= 2,
+        "need a search (got {} legal)",
+        legal.len()
+    );
+    let mut h0 = H0::default();
+    let mut rng = policy_rng(1);
+    h0.choose(&db, &st, &legal, &mut rng);
+    assert_eq!(h0.last_value(), Some(80.0));
+}
+
+#[test]
+fn last_value_midgame_deterministic() {
+    let db = load_db();
+    let deck = forest();
+    let mut state = new_game(
+        &db,
+        GameConfig {
+            seed: 11,
+            deck_a: deck.clone(),
+            deck_b: deck,
+            first: First::A,
+            opening_hands: None,
+        },
+    )
+    .expect("new_game");
+    let mut fa = H0::fast();
+    let mut fb = H0::fast();
+    let mut rng = policy_rng(11);
+    for _ in 0..80 {
+        if state.winner.is_some() || matches!(state.phase, Phase::Terminal) {
+            break;
+        }
+        let legal = legal_actions(&db, &state);
+        if legal.is_empty() {
+            break;
+        }
+        if legal.len() >= 2 && !matches!(state.phase, Phase::Mulligan { .. }) {
+            let snap = state.clone();
+            let mut h1 = H0::default();
+            let mut r1 = policy_rng(99);
+            h1.choose(&db, &snap, &legal, &mut r1);
+            let v1 = h1.last_value();
+            let mut h2 = H0::default();
+            let mut r2 = policy_rng(99);
+            h2.choose(&db, &snap, &legal, &mut r2);
+            let v2 = h2.last_value();
+            if let Some(v) = v1 {
+                assert!(v.is_finite(), "last_value not finite: {v}");
+                assert_eq!(v1, v2, "last_value must be deterministic");
+                return;
+            }
+        }
+        let me = acting_player(&state);
+        let idx = match me {
+            PlayerId::A => fa.choose(&db, &state, &legal, &mut rng),
+            PlayerId::B => fb.choose(&db, &state, &legal, &mut rng),
+        };
+        let idx = idx.min(legal.len().saturating_sub(1));
+        apply(&db, &mut state, legal[idx].clone()).expect("apply");
+    }
+    panic!("no mid-game search decision with a finite last_value");
 }
