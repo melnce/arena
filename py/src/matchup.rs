@@ -26,6 +26,7 @@ const AUX_COLUMNS: &[&str] = &[
     "chosen",
     "random",
     "first_is_me",
+    "search_v",
 ];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -448,6 +449,7 @@ impl ExportSink {
                 s.chosen as f32,
                 if s.random { 1.0 } else { 0.0 },
                 first_is_me,
+                s.search_v,
             ];
             write_f32s(&mut self.aux, &aux)?;
             self.samples += 1;
