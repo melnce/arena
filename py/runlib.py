@@ -234,6 +234,38 @@ def local_has_branch(repo: Path, branch: str) -> bool:
     return r.returncode == 0
 
 
+def git_has_ident(cwd: Path) -> bool:
+    """True when env or git config can form a commit identity (GHA often cannot)."""
+    env_name = os.environ.get("GIT_AUTHOR_NAME") or os.environ.get("GIT_COMMITTER_NAME")
+    env_email = os.environ.get("GIT_AUTHOR_EMAIL") or os.environ.get("GIT_COMMITTER_EMAIL")
+    if env_name and env_email:
+        return True
+    name = subprocess.run(
+        ["git", "-C", str(cwd), "config", "user.name"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    email = subprocess.run(
+        ["git", "-C", str(cwd), "config", "user.email"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    return bool(name.stdout.strip()) and bool(email.stdout.strip())
+
+
+def git_commit_argv(cwd: Path, *commit_args: str) -> list[str]:
+    cmd = ["git", "-C", str(cwd)]
+    if not git_has_ident(cwd):
+        cmd.extend(["-c", "user.name=arena", "-c", "user.email=arena@localhost"])
+    cmd.append("commit")
+    cmd.extend(commit_args)
+    return cmd
+
+
 def copy_tag_artifacts(tag_dir: Path, dest: Path) -> None:
     dest.mkdir(parents=True, exist_ok=True)
     for p in sorted(tag_dir.iterdir()):
@@ -283,11 +315,7 @@ def ensure_worktree(
     do_tee(["git", "-C", str(repo), "worktree", "add", "--detach", str(dest)], log, True)
     do_tee(["git", "-C", str(dest), "checkout", "--orphan", branch], log, True)
     do_tee(["git", "-C", str(dest), "rm", "-rf", "-q", "."], log, True)
-    do_tee(
-        ["git", "-C", str(dest), "commit", "--allow-empty", "-m", f"init {branch}"],
-        log,
-        True,
-    )
+    do_tee(git_commit_argv(dest, "--allow-empty", "-m", f"init {branch}"), log, True)
     do_tee(["git", "-C", str(dest), "push", "-u", remote, branch], log, True)
 
 
@@ -319,7 +347,7 @@ def publish_tag(
     if status.stdout.strip():
         day = dt.datetime.now(dt.timezone.utc).date().isoformat()
         msg = f"{tag} results {day}"
-        do_tee(["git", "-C", str(publish_dir), "commit", "-m", msg], log, True)
+        do_tee(git_commit_argv(publish_dir, "-m", msg), log, True)
         do_tee(["git", "-C", str(publish_dir), "push"], log, True)
         show = subprocess.run(
             ["git", "-C", str(publish_dir), "log", "-1", "--oneline"],

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import time
@@ -38,11 +39,17 @@ def _porcelain(repo: Path) -> str:
 
 
 def _run_sweep(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    env.setdefault("GIT_AUTHOR_NAME", "arena-sweep-test")
+    env.setdefault("GIT_AUTHOR_EMAIL", "arena-sweep-test@example.com")
+    env.setdefault("GIT_COMMITTER_NAME", "arena-sweep-test")
+    env.setdefault("GIT_COMMITTER_EMAIL", "arena-sweep-test@example.com")
     return subprocess.run(
         [sys.executable, str(_SWEEP), *args],
         cwd=cwd or _REPO,
         text=True,
         capture_output=True,
+        env=env,
     )
 
 
