@@ -5,8 +5,8 @@ use std::sync::Arc;
 use arena_engine::trace::NeutralAction;
 use arena_engine::trace::Pick;
 use arena_engine::{
-    apply_neutral, legal_actions_neutral, new_game, snapshot_json, CardDb, GameConfig, GameRng,
-    Phase,
+    apply_neutral, by_name, legal_actions, legal_actions_neutral, names, new_game, policy_rng,
+    snapshot_json, to_neutral, CardDb, GameConfig, GameRng, Phase,
 };
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
@@ -128,6 +128,39 @@ impl PyGame {
 
     fn hash(&self) -> u64 {
         arena_engine::hash(&self.state)
+    }
+
+    /// Replace the live RNG. Canonical `hash` is unchanged (same as wasm `reseed`).
+    fn reseed(&mut self, seed: u64) {
+        self.state.reseed(seed);
+    }
+
+    /// One NeutralAction dict for the acting player via `engine::policy::by_name`.
+    /// Mirrors wasm `pick_bot_action` without the per-Game policy cache.
+    fn bot_action<'py>(
+        &self,
+        py: Python<'py>,
+        policy: &str,
+        seed: u64,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let legal = legal_actions(&self.db, &self.state);
+        if legal.is_empty() {
+            return Err(py_err_msg("no legal actions"));
+        }
+        let available = serde_json::to_string(names()).unwrap_or_else(|_| "[]".into());
+        let mut boxed = by_name(policy, seed)
+            .ok_or_else(|| py_err_msg(format!("unknown policy {policy}; available {available}")))?;
+        let mut rng = policy_rng(seed);
+        let idx = boxed.choose(&self.db, &self.state, &legal, &mut rng);
+        if idx >= legal.len() {
+            return Err(py_err_msg(format!(
+                "policy {policy} chose {idx} past legal_len={}",
+                legal.len()
+            )));
+        }
+        let chosen = to_neutral(&self.state, &legal[idx]);
+        let val = serde_json::to_value(&chosen).unwrap_or(serde_json::Value::Null);
+        value_to_py(py, &val)
     }
 
     #[getter]

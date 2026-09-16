@@ -24,6 +24,12 @@ declare global {
       watchDelayMs(): number;
       humanSide(): "a" | "b" | null;
       policies(): [string, string] | null;
+      localBot(): {
+        badge: string;
+        remote: number;
+        backend: "server" | "browser";
+        error: string | null;
+      };
       reseed(seed: string | number | bigint): void;
       exportLog(): unknown;
       loadLog(log: unknown): void;

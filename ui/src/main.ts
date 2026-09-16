@@ -15,12 +15,15 @@ import {
 import { byId } from "./render/ids.ts";
 import {
   applyAction,
+  botPolicyFor,
   botStep,
+  botStepRemote,
   canRedo,
   canUndo,
   createSession,
   disposeSession,
   isHumanActing,
+  lastLocalBotStepMeta,
   legalActions,
   redo,
   checkpointStatusText,
@@ -48,6 +51,15 @@ import type {
 let session: Session | null = null;
 let pending: Pending = null;
 let watchPlaying = false;
+
+const LOCAL_BOT_HOST = "http://127.0.0.1:8765";
+
+type LocalBotHealth = { strong: string; cpus: number | null; version: string };
+
+let localBot: LocalBotHealth | null = null;
+let localBotGameError: string | null = null;
+let localBotRemoteCount = 0;
+let localBotThinking = false;
 let watchTimer = 0;
 let paintQueued = 0;
 const importedDecks = new Map<string, { label: string; cards: Record<string, number> }>();
@@ -216,6 +228,12 @@ function exposeArena(): void {
       session.game.debugGrantCantAttackLeader(player, slot);
       requestPaint();
     },
+    localBot: () => ({
+      badge: botBackendBadgeText(),
+      remote: localBotRemoteCount,
+      backend: localBot && !localBotGameError ? "server" : "browser",
+      error: localBotGameError,
+    }),
     catalogIds,
     cardText: (id) => lookupText(id),
     mountNamedCounter: (vars) => {
@@ -461,6 +479,9 @@ async function startFromForm(): Promise<void> {
 
 function startSession(cfg: SessionConfig): void {
   watchPlaying = false;
+  localBotGameError = null;
+  localBotRemoteCount = 0;
+  localBotThinking = false;
   disposeSession(session);
   session = createSession(cfg);
   resetZoneCache();
@@ -522,6 +543,106 @@ async function rematch(keepSeed: boolean): Promise<void> {
   startSession(cfg);
 }
 
+function localBotQueryOff(): boolean {
+  try {
+    return new URLSearchParams(location.search).get("localbot") === "0";
+  } catch {
+    return false;
+  }
+}
+
+function localBotToggleOn(): boolean {
+  const box = byId<HTMLInputElement>("localBotToggle");
+  if (box) return box.checked;
+  try {
+    return localStorage.getItem("svwb.localBot") !== "0";
+  } catch {
+    return true;
+  }
+}
+
+function botBackendBadgeText(): string {
+  if (localBotThinking && localBot && !localBotGameError) {
+    return "bot: local server — thinking…";
+  }
+  if (localBotGameError) {
+    return `bot: browser (server error: ${localBotGameError})`;
+  }
+  if (localBot && localBotToggleOn() && !localBotQueryOff()) {
+    const cpus = localBot.cpus == null ? "?" : String(localBot.cpus);
+    return `bot: local server (${localBot.strong}, ${cpus} cpus)`;
+  }
+  return "bot: browser";
+}
+
+function refreshBotBackendBadge(): void {
+  const el = byId("botBackendBadge");
+  if (el) el.textContent = botBackendBadgeText();
+}
+
+async function applyHealthResponse(res: Response): Promise<void> {
+  if (!res.ok) throw new Error(`${res.status}`);
+  const data = (await res.json()) as {
+    ok?: boolean;
+    strong?: string;
+    cpus?: number | null;
+    version?: string;
+  };
+  if (!data.ok || !data.strong) throw new Error("health not ok");
+  localBot = {
+    strong: data.strong,
+    cpus: data.cpus ?? null,
+    version: data.version ?? "dev",
+  };
+  console.debug("local bot server", localBot);
+}
+
+async function probeLocalBotLong(): Promise<void> {
+  try {
+    const res = await fetch(`${LOCAL_BOT_HOST}/health`, {
+      signal: AbortSignal.timeout(30_000),
+    });
+    await applyHealthResponse(res);
+  } catch {
+    localBot = null;
+    console.debug("local bot server unreachable");
+  }
+  refreshBotBackendBadge();
+}
+
+async function probeLocalBot(): Promise<void> {
+  if (localBotQueryOff() || !localBotToggleOn()) {
+    localBot = null;
+    refreshBotBackendBadge();
+    return;
+  }
+  if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+    localBot = null;
+    refreshBotBackendBadge();
+    return;
+  }
+  try {
+    const res = await fetch(`${LOCAL_BOT_HOST}/health`, {
+      signal: AbortSignal.timeout(400),
+    });
+    await applyHealthResponse(res);
+  } catch (err) {
+    const name = err instanceof Error ? err.name : "";
+    if (name === "TimeoutError" || name === "AbortError") {
+      void probeLocalBotLong();
+      return;
+    }
+    localBot = null;
+    console.debug("local bot server unreachable");
+  }
+  refreshBotBackendBadge();
+}
+
+function shouldUseLocalBot(s: Session): boolean {
+  if (localBotQueryOff() || !localBotToggleOn() || !localBot || localBotGameError) return false;
+  return botPolicyFor(s, s.game.acting() as PlayerId).startsWith("h0");
+}
+
 async function maybeBots(): Promise<void> {
   if (!session) return;
   if (session.game.phase() === "terminal") return;
@@ -530,15 +651,36 @@ async function maybeBots(): Promise<void> {
     if (watchPlaying) scheduleWatch();
     return;
   }
+  const s = session;
   // vs-bot — one engine action per beat so the human can follow.
   let guard = 0;
-  while (session && !isHumanActing(session) && session.game.phase() !== "terminal" && guard < 80) {
-    const events = botStep(session);
+  while (session === s && !isHumanActing(s) && s.game.phase() !== "terminal" && guard < 80) {
+    const useLocal = shouldUseLocalBot(s);
+    if (useLocal) {
+      localBotThinking = true;
+      refreshBotBackendBadge();
+    }
+    const events = useLocal
+      ? await botStepRemote(s, `${LOCAL_BOT_HOST}/bot`, { isCurrent: () => session === s })
+      : botStep(s);
+    if (useLocal) {
+      const meta = lastLocalBotStepMeta();
+      if (meta.stale) {
+        localBotThinking = false;
+        refreshBotBackendBadge();
+        guard += 1;
+        continue;
+      }
+      localBotThinking = false;
+      if (meta.usedRemote) localBotRemoteCount += 1;
+      if (meta.error) localBotGameError = meta.error;
+      refreshBotBackendBadge();
+    }
     guard += 1;
     showCombat(events);
     await new Promise<void>((r) => window.setTimeout(r, 280));
   }
-  paint();
+  if (session === s) paint();
 }
 
 /** Geometric watch delay: v1 = 3000 ms … v19 = 16 ms, v20 = 0 (unthrottled). */
@@ -686,6 +828,8 @@ function syncModeChrome(): void {
   byId("vsBotFields")?.toggleAttribute("hidden", mode !== "vs-bot");
   byId("watchFields")?.toggleAttribute("hidden", mode !== "watch");
   syncVsBotRoleLabels();
+  refreshBotBackendBadge();
+  if (mode === "vs-bot") void probeLocalBot();
 }
 
 function syncVsBotRoleLabels(): void {
@@ -1046,11 +1190,14 @@ function initWatch(): void {
 function restorePersistedToggles(): void {
   const bottom = localStorage.getItem("svwb.activeOnBottom") === "1";
   const fct = localStorage.getItem("svwb.floatingCombatText");
+  const localBotStored = localStorage.getItem("svwb.localBot");
   const bottomBox = byId<HTMLInputElement>("activeOnBottomToggle");
   const fctBox = byId<HTMLInputElement>("floatingCombatTextToggle");
+  const localBotBox = byId<HTMLInputElement>("localBotToggle");
   if (bottomBox) bottomBox.checked = bottom;
   document.body.classList.toggle("active-on-bottom", bottom);
   if (fctBox) fctBox.checked = fct == null ? true : fct !== "0";
+  if (localBotBox) localBotBox.checked = localBotStored == null ? true : localBotStored !== "0";
   const speedRaw = localStorage.getItem("svwb.watchSpeed");
   const sl = byId<HTMLInputElement>("watchSpeed");
   if (sl && speedRaw != null) {
@@ -1111,6 +1258,8 @@ async function boot(): Promise<void> {
   byId("undoBtn")?.addEventListener("click", () => applyHistory(undo));
   byId("redoBtn")?.addEventListener("click", () => applyHistory(redo));
   exposeArena();
+  refreshBotBackendBadge();
+  void probeLocalBot();
   byId("modeSelect")?.addEventListener("change", syncModeChrome);
   byId("humanSideSelect")?.addEventListener("change", () => {
     syncVsBotRoleLabels();
@@ -1124,6 +1273,16 @@ async function boot(): Promise<void> {
   byId("floatingCombatTextToggle")?.addEventListener("change", (e) => {
     const on = (e.target as HTMLInputElement).checked;
     localStorage.setItem("svwb.floatingCombatText", on ? "1" : "0");
+  });
+  byId("localBotToggle")?.addEventListener("change", (e) => {
+    const on = (e.target as HTMLInputElement).checked;
+    localStorage.setItem("svwb.localBot", on ? "1" : "0");
+    if (!on) {
+      localBot = null;
+      refreshBotBackendBadge();
+    } else {
+      void probeLocalBot();
+    }
   });
   byId("copySeedBtn")?.addEventListener("click", async () => {
     const btn = byId<HTMLButtonElement>("copySeedBtn");
