@@ -109,6 +109,7 @@ test("persistence: stored choice survives reload; bogus falls back", async ({ pa
   await expect(page.locator("#vsBotPolicy")).toHaveValue("h0");
 
   await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
   await page.locator("#vsBotPolicy").selectOption(STRONG);
   await page.reload();
   await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
