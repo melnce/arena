@@ -84,7 +84,14 @@ test("desktop: option list defaults to h0 (strong)", async ({ page }) => {
 });
 
 test.describe("phone", () => {
-  test.use({ ...devices["Pixel 5"] });
+  const pixel5 = devices["Pixel 5"];
+  test.use({
+    viewport: pixel5.viewport,
+    userAgent: pixel5.userAgent,
+    deviceScaleFactor: pixel5.deviceScaleFactor,
+    isMobile: pixel5.isMobile,
+    hasTouch: pixel5.hasTouch,
+  });
 
   test("defaults to standard h0", async ({ page }) => {
     await boot(page);
