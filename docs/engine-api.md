@@ -836,3 +836,57 @@ temporary bare remote only.
 
 The script never writes under `engine/models/` — shipping a model stays
 a reviewed PR (`engine/models/README.md`).
+
+## Sweeps (`py/sweep.py`)
+
+```
+python py/sweep.py --tag sweep1 --candidates "h0:nodes=4000" "h0:depth=4,beam=8" "h0:k=8" --baseline h0 --publish
+```
+
+A measurement driver only: it calls `py/matchup.py` as a subprocess (the
+venv interpreter, absolute paths, no `shell=True`) and runs no training.
+Everything lands under `<root>/<tag>/` (`--root` defaults to
+`<repo>/results`). Candidates are numbered in the order given;
+**files are named by index, never by spec** (specs contain `:`, `=`, `,`
+and paths): `<tag>/candidates.json` is
+`[{"index": 1, "spec": "h0:nodes=4000"}, …]`, then `c01-screen.json/.txt`,
+`c01-final.json`, `c01-reverse.json`, `tp-c01.json`, plus one
+`tp-baseline.json`. Every spec is validated up front by a 0-game
+`arena.matchup` call, which exercises `AnyPolicy::parse_spec` (the same
+parser `by_name` uses); a bad token such as `h0:depht=2` stops the run
+before any matchup file is written.
+
+| stage | what | files |
+|---|---|---|
+| **screen** | For each candidate `C` vs `--baseline` `B` (default `h0`): `--policy-a C --policy-b B --games` `--screen-games` (default 4 = 1 024 games over the 16 decks), `--seed` (default 1). Once: `--policy B --games` `--tp-games` (default 1) → `tp-baseline`. Per candidate: `--policy C --games <tp-games>` → `tp-cNN`. `--decks` / `--threads` pass through. | `cNN-screen.*`, `tp-cNN.*`, `tp-baseline.*` |
+| **finalists** | Rank by screen rate; keep the top `--finalists` (default 2) among those whose screen interval's **high** end is **above** 0.50 (already lost at ±3 % → no final; high end exactly 0.50 is not above). The choice and the reason for every candidate (`finalist`, `skipped: interval high 0.48 < 0.50`, `not in top 2`) go into `RUN.json` and the summary. | `RUN.json` |
+| **final** | For each finalist: main `--games` `--final-games` (default 16 = 4 096) and reverse `--policy-a B --policy-b C --games` `--final-reverse` (default 8 = 2 048). Optional `--mirrors <deck …>` at `--mirror-games` (default none). | `cNN-final.*`, `cNN-reverse.*`, `cNN-mirror-<deck>.*` |
+| **summary** | Written from the JSON files (never by parsing the text). | `SUMMARY.md` |
+| **publish** | Off unless `--publish`. Same flags and worktree / orphan-branch mechanics as `iterate.py` (`--publish-remote`, `--publish-branch`, `--publish-dir`). Copies `<tag>/*.txt`, `*.json`, `SUMMARY.md`; never touches the main working tree; nothing new to commit is not an error. | copy into the results worktree |
+
+Stages are resumable per file exactly like `iterate.py`: a matchup whose
+`.json` already exists is skipped (`--force` reruns; `--only
+screen|final|summary|publish` runs one stage). Every subprocess argv is
+printed and teed to `<tag>/<name>.txt`. `<tag>/RUN.json` records the
+command line, engine SHA, per-stage times, and the finalist decisions.
+
+`--smoke` sets `--decks basic-forest basic-rune --screen-games 1
+--final-games 1 --final-reverse 1 --tp-games 1 --finalists 1` and, unless
+`--baseline` is given, the `h0-fast` spec
+`h0:depth=2,beam=2,k=1,nodes=80,value=v0,tt=0`. Explicit flags still
+override.
+
+`SUMMARY.md` has a header (tag, baseline, seed, engine SHA, wall time
+per stage); a **screen** table sorted by rate (index, spec, rate +
+Wilson interval, games, throughput g/s vs baseline, finalist decision);
+a **final** table (index, spec, main rate + interval, reverse as the
+candidate's rate with the interval flipped, mirrors); a `verdict:` line
+per finalist by the standing rule (`better` if both low ends > 0.50;
+`worse` if the main high end < 0.50; `coin flip` if both intervals
+contain 0.50; else `unclear (…)`); and a last line
+`best: <spec> (<verdict>)` naming the finalist with the highest main
+rate, or `best: none` when there is no finalist.
+
+`py/runlib.py` is the shared home of the helpers both drivers import
+(`verdict`, `format_verdict_line`, `reverse_candidate`, the tee runner,
+the matchup caller, Wilson/rate formatting, and publish / worktree).
