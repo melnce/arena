@@ -388,6 +388,43 @@ function formConfig(): SessionConfig {
   };
 }
 
+/**
+ * Sweep1 (`results` / `sweep1/SUMMARY.md`): `h0:nodes=4000` scored
+ * 0.544 [0.529, 0.560] over 4 096 games vs current `h0` (reverse seating
+ * 0.540 [0.518, 0.561]). A later stacked setting (`depth=4,beam=8,nodes=4000`)
+ * is a one-line edit here.
+ */
+const STRONG_H0 = "h0:nodes=4000";
+const STRONG_H0_TITLE =
+  "4 000 search nodes per decision — stronger, ~1.6× slower; default on desktop";
+
+function isDesktopClassDevice(): boolean {
+  return (
+    window.matchMedia("(pointer: fine)").matches &&
+    !window.matchMedia("(hover: none)").matches
+  );
+}
+
+function defaultVsBotPolicy(): string {
+  return isDesktopClassDevice() ? STRONG_H0 : "h0";
+}
+
+function readStoredBotPolicy(): string | null {
+  try {
+    return localStorage.getItem("svwb.botPolicy");
+  } catch {
+    return null;
+  }
+}
+
+function persistBotPolicy(value: string): void {
+  try {
+    localStorage.setItem("svwb.botPolicy", value);
+  } catch {
+    /* quota / private mode */
+  }
+}
+
 const deckCache = new Map<string, Record<string, number>>();
 
 async function ensureDecks(): Promise<void> {
@@ -404,6 +441,8 @@ function deckCardsResolved(id: string): Record<string, number> {
 
 async function startFromForm(): Promise<void> {
   await ensureDecks();
+  const mode = (byId<HTMLSelectElement>("modeSelect")?.value ?? "hotseat") as Mode;
+  if (mode === "vs-bot") applyVsBotPolicy();
   const cfg = formConfig();
   cfg.deckA = deckCardsResolved(cfg.deckAId);
   cfg.deckB = deckCardsResolved(cfg.deckBId);
@@ -549,6 +588,19 @@ function scheduleWatch(): void {
   else watchTimer = window.setTimeout(step, delay);
 }
 
+function appendPolicyOption(
+  sel: HTMLSelectElement,
+  value: string,
+  label: string,
+  title?: string,
+): void {
+  const o = document.createElement("option");
+  o.value = value;
+  o.textContent = label;
+  if (title) o.title = title;
+  sel.appendChild(o);
+}
+
 function populatePolicies(): void {
   const names = JSON.parse(botPolicies()) as string[];
   for (const id of ["policyASelect", "policyBSelect", "vsBotPolicy"]) {
@@ -556,13 +608,23 @@ function populatePolicies(): void {
     if (!sel) continue;
     sel.innerHTML = "";
     for (const n of names) {
-      const o = document.createElement("option");
-      o.value = n;
-      o.textContent = n;
-      sel.appendChild(o);
+      appendPolicyOption(sel, n, n === "h0" ? "h0 (standard)" : n);
+      if (n === "h0") {
+        appendPolicyOption(sel, STRONG_H0, "h0 (strong)", STRONG_H0_TITLE);
+      }
     }
   }
-  byId("vsBotPolicy")?.addEventListener("change", applyVsBotPolicy);
+  const vs = byId<HTMLSelectElement>("vsBotPolicy");
+  if (vs) {
+    vs.title = STRONG_H0_TITLE;
+    const allowed = new Set([...vs.options].map((o) => o.value));
+    const stored = readStoredBotPolicy();
+    vs.value = stored && allowed.has(stored) ? stored : defaultVsBotPolicy();
+    vs.addEventListener("change", () => {
+      persistBotPolicy(vs.value);
+      applyVsBotPolicy();
+    });
+  }
 }
 
 function applyVsBotPolicy(): void {
