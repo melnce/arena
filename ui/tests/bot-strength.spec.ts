@@ -149,3 +149,27 @@ test("vs bot: human A vs h0:nodes=4000, bot turn resolves", async ({ page }) => 
   });
   console.log(`strong botAction ${ms.toFixed(1)} ms`);
 });
+
+test("vs-bot coin: both seats get vsBotPolicy, not leftover random", async ({ page }) => {
+  await boot(page);
+  await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#humanSideSelect").selectOption("coin");
+  await page.locator("#seedInput").fill("7");
+  await page.locator("#firstSelect").selectOption("a");
+  await page.locator("#blueDeckSelect").selectOption("basic-forest");
+  await page.locator("#redDeckSelect").selectOption("basic-rune");
+  await page.locator("#policyASelect").selectOption("random", { force: true });
+  await page.locator("#policyBSelect").selectOption("random", { force: true });
+  await page.locator("#vsBotPolicy").selectOption(STRONG);
+  await page.locator("#startGameBtn").click();
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
+    timeout: 15_000,
+  });
+  const snap = await page.evaluate(() => ({
+    policies: window.__arena!.policies(),
+    human: window.__arena!.humanSide(),
+  }));
+  expect(snap.policies).toEqual([STRONG, STRONG]);
+  expect(snap.human === "a" || snap.human === "b").toBeTruthy();
+});

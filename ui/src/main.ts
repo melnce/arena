@@ -170,6 +170,7 @@ function exposeArena(): void {
     paintMs: window.__arena?.paintMs,
     watchDelayMs,
     humanSide: () => session?.cfg.humanSide ?? null,
+    policies: () => (session ? [session.cfg.policyA, session.cfg.policyB] : null),
     reseed: (seed) => {
       if (!session) throw new Error("no session");
       session.game.reseed(seed);
@@ -446,6 +447,15 @@ async function startFromForm(): Promise<void> {
   const cfg = formConfig();
   cfg.deckA = deckCardsResolved(cfg.deckAId);
   cfg.deckB = deckCardsResolved(cfg.deckBId);
+  // Coin is rolled in formConfig(); applyVsBotPolicy only copied onto the
+  // pre-roll assumed side. The human seat's policy is never consulted.
+  if (mode === "vs-bot") {
+    const vs = byId<HTMLSelectElement>("vsBotPolicy")?.value;
+    if (vs) {
+      cfg.policyA = vs;
+      cfg.policyB = vs;
+    }
+  }
   startSession(cfg);
 }
 
@@ -616,7 +626,6 @@ function populatePolicies(): void {
   }
   const vs = byId<HTMLSelectElement>("vsBotPolicy");
   if (vs) {
-    vs.title = STRONG_H0_TITLE;
     const allowed = new Set([...vs.options].map((o) => o.value));
     const stored = readStoredBotPolicy();
     vs.value = stored && allowed.has(stored) ? stored : defaultVsBotPolicy();
@@ -1132,8 +1141,6 @@ async function boot(): Promise<void> {
       }, 1200);
     }
   });
-  byId("vsBotPolicy")?.addEventListener("change", applyVsBotPolicy);
-
   const info = JSON.parse(bundleInfo()) as {
     cards: number;
     crests: number;

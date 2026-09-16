@@ -23,6 +23,7 @@ declare global {
       paintMs?: number;
       watchDelayMs(): number;
       humanSide(): "a" | "b" | null;
+      policies(): [string, string] | null;
       reseed(seed: string | number | bigint): void;
       exportLog(): unknown;
       loadLog(log: unknown): void;
