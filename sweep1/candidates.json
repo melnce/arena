@@ -1,0 +1,34 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:nodes=4000"
+  },
+  {
+    "index": 2,
+    "spec": "h0:depth=4,beam=8"
+  },
+  {
+    "index": 3,
+    "spec": "h0:depth=8,beam=3"
+  },
+  {
+    "index": 4,
+    "spec": "h0:k=8"
+  },
+  {
+    "index": 5,
+    "spec": "h0:k=2"
+  },
+  {
+    "index": 6,
+    "spec": "h0:odepth=1"
+  },
+  {
+    "index": 7,
+    "spec": "h0:beam=6"
+  },
+  {
+    "index": 8,
+    "spec": "h0:osteps=6"
+  }
+]

@@ -1,0 +1,84 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\sweep.py",
+    "--tag",
+    "sweep1",
+    "--baseline",
+    "h0",
+    "--candidates",
+    "h0:nodes=4000",
+    "h0:depth=4,beam=8",
+    "h0:depth=8,beam=3",
+    "h0:k=8",
+    "h0:k=2",
+    "h0:odepth=1",
+    "h0:beam=6",
+    "h0:osteps=6",
+    "--finalists",
+    "2",
+    "--publish"
+  ],
+  "git": "f8fd977668dd82662de98fdfccc6c5a927b42c54",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "screen": {
+      "start": "2026-09-16T17:13:50.169814+00:00",
+      "end": "2026-09-16T18:36:54.531916+00:00"
+    },
+    "final": {
+      "start": "2026-09-16T18:36:54.552182+00:00",
+      "end": "2026-09-16T19:58:57.664581+00:00"
+    },
+    "summary": {
+      "start": "2026-09-16T19:58:57.697630+00:00",
+      "end": "2026-09-16T19:58:57.728641+00:00"
+    },
+    "publish": {
+      "start": "2026-09-16T19:58:57.899051+00:00"
+    }
+  },
+  "finalist_decisions": [
+    {
+      "index": 1,
+      "spec": "h0:nodes=4000",
+      "decision": "finalist"
+    },
+    {
+      "index": 2,
+      "spec": "h0:depth=4,beam=8",
+      "decision": "finalist"
+    },
+    {
+      "index": 3,
+      "spec": "h0:depth=8,beam=3",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 4,
+      "spec": "h0:k=8",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 5,
+      "spec": "h0:k=2",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 6,
+      "spec": "h0:odepth=1",
+      "decision": "skipped: interval high 0.43 < 0.50"
+    },
+    {
+      "index": 7,
+      "spec": "h0:beam=6",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 8,
+      "spec": "h0:osteps=6",
+      "decision": "not in top 2"
+    }
+  ]
+}
