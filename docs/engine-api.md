@@ -564,11 +564,11 @@ The WASM binary `include_str!`s every authored `cards/**/*.json` except `cards/o
 | `active()` | string | `"a"` / `"b"` — the player whose turn it is |
 | `turn()` | number | round number (`0` during mulligan) |
 | `winner()` | string \| null | `"a"` / `"b"` / `null` |
-| `botAction(policy, seed)` | string | one `NeutralAction` JSON for the acting player. `policy` is a name from `botPolicies()`; `seed` is a bigint or number. Routes through `engine::policy::by_name` + `policy_rng(seed)`; unknown names throw a string. The `Game` keeps a `Box<dyn Policy>` keyed by name. |
+| `botAction(policy, seed)` | string | one `NeutralAction` JSON for the acting player. `policy` is any `parse_spec` string (it always was — `by_name` is `parse_spec`; the `Game` caches a `Box<dyn Policy>` keyed by that string). `seed` is a bigint or number. Unknown specs throw a string. |
 | `cardText(id)` | string | JSON `{id, name, text, kind, cost, …}` from the baked bundle. Cards also include `crests` and `forms` (see below). Crest / faith ids omit both (do not recurse). |
 | `bundleInfo()` | string | `{cards, crests, bytes}` |
 | `version()` | string | git SHA baked at build, or `"dev"` |
-| `botPolicies()` | string | JSON array from `engine::policy::names()` — `["random","first-legal","h0"]`. The client's `h0` now plays with the learned leaf; `names()` is unchanged. |
+| `botPolicies()` | string | JSON array from `engine::policy::names()` — `["random","first-legal","h0"]`. The client lists those plus `h0 (standard)` = `h0` and `h0 (strong)` = `h0:nodes=4000` (desktop default strong, phone default standard, stored as `svwb.botPolicy`). Engine `H0::default()` stays 2 000 nodes: sweep1 measured `h0:nodes=4000` at 0.544 [0.529, 0.560] over 4 096 games (reverse seating 0.540 [0.518, 0.561]) but ~1.6× slower (2.10 → 1.33 games/s). |
 
 `cardText` on a collectible / token adds two read-only arrays (no existing field changes):
 
