@@ -11,6 +11,15 @@ import type {
 import { isReseedStep } from "./types.ts";
 import { rerollSeed } from "./reroll.ts";
 
+/** Outcome of the last `botStepRemote` call (wasm fallback vs server). */
+export type LocalBotStepMeta = { usedRemote: boolean; error?: string };
+
+let lastLocalBotMeta: LocalBotStepMeta = { usedRemote: false };
+
+export function lastLocalBotStepMeta(): LocalBotStepMeta {
+  return lastLocalBotMeta;
+}
+
 /** Ring limit — same as the old practice tool. */
 export const HISTORY_LIMIT = 200;
 
@@ -425,8 +434,73 @@ export function nextBotSeed(s: Session): bigint {
   return seed;
 }
 
-export function botStep(s: Session): EngineEvent[] {
+export function botStepWithSeed(s: Session, seed: bigint): EngineEvent[] {
   const policy = botPolicyFor(s, s.game.acting() as PlayerId);
-  const action = JSON.parse(s.game.botAction(policy, nextBotSeed(s).toString())) as NeutralAction;
+  const action = JSON.parse(s.game.botAction(policy, seed.toString())) as NeutralAction;
   return applyAction(s, action, { human: false });
+}
+
+export function botStep(s: Session): EngineEvent[] {
+  return botStepWithSeed(s, nextBotSeed(s));
+}
+
+function localBotRequestBody(
+  s: Session,
+  policy: string,
+  botSeed: string,
+): {
+  seed: string;
+  deckA: string;
+  deckB: string;
+  first: string;
+  actions: LogStep[];
+  policy: string;
+  botSeed: string;
+  hash: string;
+} {
+  const log = toPositionLog(s);
+  return {
+    seed: log.seed,
+    deckA: JSON.stringify(log.deckA),
+    deckB: JSON.stringify(log.deckB),
+    first: log.first,
+    actions: log.actions,
+    policy,
+    botSeed,
+    hash: s.game.hash(),
+  };
+}
+
+export async function botStepRemote(s: Session, endpoint: string): Promise<EngineEvent[]> {
+  const seed = nextBotSeed(s);
+  const acting = s.game.acting() as PlayerId;
+  const policy = botPolicyFor(s, acting);
+  lastLocalBotMeta = { usedRemote: false };
+  if (!policy.startsWith("h0")) {
+    return botStepWithSeed(s, seed);
+  }
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(localBotRequestBody(s, policy, seed.toString())),
+      signal: AbortSignal.timeout(90_000),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(text || `${res.status} ${res.statusText}`);
+    }
+    const data = (await res.json()) as { action?: NeutralAction };
+    if (!data.action || typeof data.action !== "object") {
+      throw new Error("server returned no action");
+    }
+    const events = applyAction(s, data.action, { human: false });
+    lastLocalBotMeta = { usedRemote: true };
+    return events;
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    lastLocalBotMeta = { usedRemote: false, error: reason };
+    console.warn(`local bot server failed, falling back to wasm: ${reason}`);
+    return botStepWithSeed(s, seed);
+  }
 }
