@@ -17,6 +17,16 @@ maturin develop --release -m py/Cargo.toml
 On Windows the path is `py\Cargo.toml`. `maturin` must compile with the
 same stable rustc as clippy.
 
+## Windows (owner)
+
+```
+cd C:\Users\agban\projects\arena
+git pull --ff-only
+.\.venv\Scripts\Activate.ps1
+maturin develop --release -m py\Cargo.toml
+python py\serve.py --strong "h0:nodes=16000"
+```
+
 ## Run
 
 ```
@@ -31,9 +41,19 @@ browser session** (the production HTTPS origin is allowed to call
 `http://127.0.0.1` — it is a potentially-trustworthy origin). If a
 browser still blocks the request, run the UI with `cd ui && npm run dev`.
 
-Settings → **Use local bot server when available** (on by default). In
-vs-bot the badge next to the policy select should read something like
+Settings → **Use local bot server when available** (on by default; the
+`?localbot=0` query flag also skips the probe and every `/bot` POST).
+In vs-bot the badge next to the policy select should read something like
 `bot: local server (h0:nodes=16000, 28 cpus)`. No server → `bot: browser`.
+
+Chrome 142+ treats a public HTTPS page's first `fetch` to `127.0.0.1`
+as local-network access. On the first vs-bot game after starting the
+server it asks to allow local network access for
+`arena-nu-one.vercel.app` — click **Allow**. The client retries the
+health probe once for up to 30 s after a 400 ms timeout so the prompt
+can be answered. If it was denied once, re-enable it in the site's
+permissions (lock icon → Site settings → Local network access), then
+reload.
 
 ## Strength
 
