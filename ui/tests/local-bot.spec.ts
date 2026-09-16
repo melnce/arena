@@ -46,13 +46,15 @@ async function startGame(
 }
 
 async function confirmMulligans(page: Page) {
-  for (let i = 0; i < 2; i++) {
-    const btn = page.locator(".mulligan-confirm-btn").locator("visible=true");
-    if (await btn.count()) {
-      await btn.first().click();
-      await expect(btn).toBeHidden({ timeout: 5000 }).catch(() => undefined);
-    }
-  }
+  // These vs-bot fixtures always seat the human as blue. Wait for that
+  // confirm (the bot's remote / wasm mulligan has finished) instead of
+  // latching onto #redMulliganConfirm while /bot is still in flight —
+  // a click on that node hangs until the 90 s test timeout once the
+  // bot reply hides it.
+  const btn = page.locator("#blueMulliganConfirm");
+  await expect(btn).toBeVisible({ timeout: 15_000 });
+  await btn.click();
+  await expect(btn).toBeHidden({ timeout: 5_000 });
 }
 
 async function mockLocalBot(
