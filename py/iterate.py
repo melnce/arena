@@ -4,107 +4,44 @@
 from __future__ import annotations
 
 import argparse
-import datetime as dt
 import importlib.util
 import json
-import os
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
+_HERE = Path(__file__).resolve().parent
+if str(_HERE) not in sys.path:
+    sys.path.insert(0, str(_HERE))
+
+from runlib import (  # noqa: E402
+    ensure_worktree as runlib_ensure_worktree,
+    flag_given,
+    format_verdict_line,
+    git_head,
+    load_run,
+    mark_end as runlib_mark_end,
+    mark_start as runlib_mark_start,
+    matchup_argv,
+    new_run,
+    publish_output_exist,
+    publish_tag,
+    rate_ci as _rate_ci,
+    repo_root,
+    reverse_candidate,
+    run_tee,
+    save_run as runlib_save_run,
+    stage_seconds as runlib_stage_seconds,
+    verdict,
+)
+
 
 STAGES = ("data", "train", "yard", "summary", "publish")
-HALF = 0.5
 DEFAULT_EVAL = Path("engine") / "models" / "h0-linear-v1.json"
-
-
-def repo_root() -> Path:
-    here = Path(__file__).resolve().parent
-    for d in (Path.cwd(), here, *here.parents):
-        if (d / "oracle" / "decks").is_dir() and (d / "cards").is_dir():
-            return d
-    return Path.cwd()
 
 
 def have_torch() -> bool:
     return importlib.util.find_spec("torch") is not None
-
-
-def flag_given(argv: list[str], *names: str) -> bool:
-    for a in argv:
-        if a in names:
-            return True
-        for n in names:
-            if a.startswith(n + "="):
-                return True
-    return False
-
-
-def utc_now() -> str:
-    return dt.datetime.now(dt.timezone.utc).isoformat()
-
-
-def git_head(repo: Path) -> str:
-    r = subprocess.run(
-        ["git", "-C", str(repo), "rev-parse", "HEAD"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    return r.stdout.strip() if r.returncode == 0 else "unknown"
-
-
-def verdict(
-    main_rate: float,
-    main_interval: tuple[float, float],
-    reverse_rate: float,
-    reverse_interval: tuple[float, float],
-) -> str:
-    """Standing yardstick rule. Intervals are Wilson 95 % [lo, hi]."""
-    del main_rate, reverse_rate
-    mlo, mhi = main_interval
-    rlo, rhi = reverse_interval
-    if mhi < HALF:
-        return "worse"
-    main_clear = mlo > HALF
-    rev_clear = rlo > HALF
-    if main_clear and rev_clear:
-        return "better"
-    main_has = mlo <= HALF <= mhi
-    rev_has = rlo <= HALF <= rhi
-    if main_has and rev_has:
-        return "coin flip"
-    disagree: list[str] = []
-    if not main_clear:
-        disagree.append("main")
-    if not rev_clear:
-        disagree.append("reverse")
-    return "unclear (" + ", ".join(disagree) + ")"
-
-
-def format_verdict_line(
-    model: str,
-    main_rate: float,
-    main_ci: tuple[float, float],
-    rev_rate: float,
-    rev_ci: tuple[float, float],
-) -> str:
-    word = verdict(main_rate, main_ci, rev_rate, rev_ci)
-    return (
-        f"verdict: {model} {word} — "
-        f"main {main_rate:.3f} [{main_ci[0]:.3f}, {main_ci[1]:.3f}], "
-        f"reverse {rev_rate:.3f} [{rev_ci[0]:.3f}, {rev_ci[1]:.3f}]"
-    )
-
-
-def reverse_candidate(summary: dict[str, Any]) -> tuple[float, tuple[float, float]]:
-    """Candidate is seat B: flip A's decisive rate and Wilson interval."""
-    a_rate = float(summary["policy_a_win_rate"])
-    lo, hi = summary["wilson95"]
-    return 1.0 - a_rate, (1.0 - float(hi), 1.0 - float(lo))
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -232,63 +169,32 @@ class Runner:
             return [str(builtin.resolve())]
         return []
 
+    def _argv_list(self) -> list[str]:
+        return [sys.executable, str(Path(__file__).resolve()), *self.args._argv]
+
     def _load_run(self) -> dict[str, Any]:
-        if self.run_path.is_file():
-            try:
-                data = json.loads(self.run_path.read_text(encoding="utf-8"))
-                if isinstance(data, dict):
-                    data.setdefault("stages", {})
-                    return data
-            except json.JSONDecodeError:
-                pass
-        return {
-            "argv": [sys.executable, str(Path(__file__).resolve()), *self.args._argv],
-            "git": git_head(self.repo),
-            "python": sys.version,
-            "cpu_count": os.cpu_count(),
-            "stages": {},
-        }
+        data = load_run(self.run_path)
+        if data is not None:
+            return data
+        return new_run(self._argv_list(), self.repo)
 
     def save_run(self) -> None:
-        self.run["argv"] = [sys.executable, str(Path(__file__).resolve()), *self.args._argv]
-        self.run["git"] = git_head(self.repo)
-        self.run["python"] = sys.version
-        self.run["cpu_count"] = os.cpu_count()
-        self.run_path.write_text(json.dumps(self.run, indent=2) + "\n", encoding="utf-8")
+        runlib_save_run(self.run_path, self.run, self._argv_list(), self.repo)
 
     def tee(self, argv: list[str], log_path: Path, stage: str, append: bool = False) -> None:
-        print(argv, flush=True)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        mode = "a" if append else "w"
-        with log_path.open(mode, encoding="utf-8", errors="replace") as log:
-            proc = subprocess.Popen(
-                argv,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                bufsize=1,
-            )
-            assert proc.stdout is not None
-            for line in proc.stdout:
-                sys.stdout.write(line)
-                sys.stdout.flush()
-                log.write(line)
-            rc = proc.wait()
-        if rc != 0:
-            raise SystemExit(f"{stage} failed (exit {rc}); log: {log_path}")
+        try:
+            run_tee(argv, log_path, append=append)
+        except SystemExit as e:
+            text = str(e)
+            if text.startswith("failed "):
+                raise SystemExit(f"{stage} {text}") from None
+            raise
 
     def mark_start(self, stage: str) -> None:
-        self.run.setdefault("stages", {})
-        self.run["stages"].setdefault(stage, {})
-        self.run["stages"][stage]["start"] = utc_now()
-        self.save_run()
+        runlib_mark_start(self.run, self.run_path, stage, self._argv_list(), self.repo)
 
     def mark_end(self, stage: str) -> None:
-        self.run["stages"].setdefault(stage, {})
-        self.run["stages"][stage]["end"] = utc_now()
-        self.save_run()
+        runlib_mark_end(self.run, self.run_path, stage, self._argv_list(), self.repo)
 
     def py_tool(self, name: str) -> list[str]:
         return [sys.executable, str(self.py_dir / name)]
@@ -362,11 +268,7 @@ class Runner:
         return (self.tag_dir / "SUMMARY.md").is_file()
 
     def publish_output_exist(self) -> bool:
-        dest = self.publish_dir / self.args.tag / "SUMMARY.md"
-        local = self.tag_dir / "SUMMARY.md"
-        if not dest.is_file() or not local.is_file():
-            return False
-        return dest.read_text(encoding="utf-8") == local.read_text(encoding="utf-8")
+        return publish_output_exist(self.publish_dir, self.args.tag, self.tag_dir)
 
     def candidate_spec(self, model: str) -> str:
         net = (self.tag_dir / f"{model}.json").resolve()
@@ -380,12 +282,13 @@ class Runner:
     def run_matchup(self, extra: list[str], out_stem: str, stage: str) -> None:
         out_json = self.tag_dir / f"{out_stem}.json"
         log = self.tag_dir / f"{out_stem}.txt"
-        cmd = self.py_tool("matchup.py")
-        cmd.extend(extra)
-        cmd.extend(["--out", str(out_json.resolve())])
-        if "--seed" not in extra:
-            cmd.extend(["--seed", str(self.args.yard_seed)])
-        self.add_threads(cmd)
+        cmd = matchup_argv(
+            self.py_dir,
+            extra,
+            out_json,
+            seed=self.args.yard_seed,
+            threads=self.args.threads,
+        )
         self.tee(cmd, log, stage)
 
     def stage_data(self) -> None:
@@ -505,16 +408,7 @@ class Runner:
         return json.loads(path.read_text(encoding="utf-8"))
 
     def stage_seconds(self, stage: str) -> float | None:
-        rec = self.run.get("stages", {}).get(stage) or {}
-        start, end = rec.get("start"), rec.get("end")
-        if not start or not end:
-            return None
-        try:
-            a = dt.datetime.fromisoformat(start)
-            b = dt.datetime.fromisoformat(end)
-        except ValueError:
-            return None
-        return max(0.0, (b - a).total_seconds())
+        return runlib_stage_seconds(self.run, stage)
 
     def build_summary(self) -> str:
         models = self.trained_models()
@@ -627,6 +521,9 @@ class Runner:
         lines.append("")
         return "\n".join(lines)
 
+    def _tee_publish(self, argv: list[str], log_path: Path, append: bool = False) -> None:
+        self.tee(argv, log_path, "publish", append=append)
+
     def stage_publish(self) -> None:
         if not self.args.force and self.publish_output_exist():
             print("skip: publish", flush=True)
@@ -635,135 +532,32 @@ class Runner:
         log = self.tag_dir / "publish.txt"
         if log.is_file():
             log.unlink()
-        self.ensure_worktree(log)
-        dest = self.publish_dir / self.args.tag
-        dest.mkdir(parents=True, exist_ok=True)
-        for p in sorted(self.tag_dir.iterdir()):
-            if not p.is_file():
-                continue
-            if p.name == "SUMMARY.md" or p.suffix in {".txt", ".json"}:
-                shutil.copy2(p, dest / p.name)
-        self.tee(
-            ["git", "-C", str(self.publish_dir), "add", "-A"],
-            log,
-            "publish",
-            append=True,
-        )
-        status = subprocess.run(
-            ["git", "-C", str(self.publish_dir), "status", "--porcelain"],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-        if status.returncode != 0:
-            raise SystemExit(f"publish failed (exit {status.returncode}); log: {log}")
-        if status.stdout.strip():
-            day = dt.datetime.now(dt.timezone.utc).date().isoformat()
-            msg = f"{self.args.tag} results {day}"
-            self.tee(
-                ["git", "-C", str(self.publish_dir), "commit", "-m", msg],
+        try:
+            publish_tag(
+                self.repo,
+                self.publish_dir,
+                self.args.publish_remote,
+                self.args.publish_branch,
+                self.tag_dir,
+                self.args.tag,
                 log,
-                "publish",
-                append=True,
+                tee=self._tee_publish,
             )
-            self.tee(
-                ["git", "-C", str(self.publish_dir), "push"],
-                log,
-                "publish",
-                append=True,
-            )
-            show = subprocess.run(
-                ["git", "-C", str(self.publish_dir), "log", "-1", "--oneline"],
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
-            print(show.stdout, end="", flush=True)
-        else:
-            print("publish: nothing new to commit", flush=True)
+        except SystemExit as e:
+            text = str(e)
+            if text.startswith("failed "):
+                raise SystemExit(f"publish {text}") from None
+            raise
         self.mark_end("publish")
 
     def ensure_worktree(self, log: Path) -> None:
-        remote = self.args.publish_remote
-        branch = self.args.publish_branch
-        repo = self.repo
-        dest = self.publish_dir
-        if _is_git_dir(dest):
-            self.tee(
-                ["git", "-C", str(dest), "pull", "--ff-only"],
-                log,
-                "publish",
-                append=True,
-            )
-            return
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        if _remote_has_branch(repo, remote, branch):
-            if _local_has_branch(repo, branch):
-                self.tee(
-                    ["git", "-C", str(repo), "fetch", remote, branch],
-                    log,
-                    "publish",
-                    append=True,
-                )
-                self.tee(
-                    ["git", "-C", str(repo), "worktree", "add", str(dest), branch],
-                    log,
-                    "publish",
-                    append=True,
-                )
-            else:
-                self.tee(
-                    ["git", "-C", str(repo), "fetch", remote, f"{branch}:{branch}"],
-                    log,
-                    "publish",
-                    append=True,
-                )
-                self.tee(
-                    ["git", "-C", str(repo), "worktree", "add", str(dest), branch],
-                    log,
-                    "publish",
-                    append=True,
-                )
-            return
-        if _local_has_branch(repo, branch):
-            self.tee(
-                ["git", "-C", str(repo), "worktree", "add", str(dest), branch],
-                log,
-                "publish",
-                append=True,
-            )
-            return
-        self.tee(
-            ["git", "-C", str(repo), "worktree", "add", "--detach", str(dest)],
+        runlib_ensure_worktree(
+            self.repo,
+            self.publish_dir,
+            self.args.publish_remote,
+            self.args.publish_branch,
             log,
-            "publish",
-            append=True,
-        )
-        self.tee(
-            ["git", "-C", str(dest), "checkout", "--orphan", branch],
-            log,
-            "publish",
-            append=True,
-        )
-        self.tee(
-            ["git", "-C", str(dest), "rm", "-rf", "-q", "."],
-            log,
-            "publish",
-            append=True,
-        )
-        self.tee(
-            ["git", "-C", str(dest), "commit", "--allow-empty", "-m", f"init {branch}"],
-            log,
-            "publish",
-            append=True,
-        )
-        self.tee(
-            ["git", "-C", str(dest), "push", "-u", remote, branch],
-            log,
-            "publish",
-            append=True,
+            tee=self._tee_publish,
         )
 
     def go(self) -> int:
@@ -779,35 +573,6 @@ class Runner:
         for stage in wanted:
             dispatch[stage]()
         return 0
-
-
-def _is_git_dir(path: Path) -> bool:
-    if not path.is_dir():
-        return False
-    git = path / ".git"
-    return git.is_file() or git.is_dir()
-
-
-def _remote_has_branch(repo: Path, remote: str, branch: str) -> bool:
-    r = subprocess.run(
-        ["git", "-C", str(repo), "ls-remote", "--heads", remote, branch],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    return r.returncode == 0 and bool(r.stdout.strip())
-
-
-def _local_has_branch(repo: Path, branch: str) -> bool:
-    r = subprocess.run(
-        ["git", "-C", str(repo), "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    return r.returncode == 0
 
 
 def _fmt_num(x: Any) -> str:
@@ -836,10 +601,6 @@ def _holdout_cells(block: dict[str, Any] | None) -> str:
         f"{_fmt_num(overall.get('mse'))} | {_band_triple(block, '<=3')} | "
         f"{_band_triple(block, '4-6')} | {_band_triple(block, '>=7')}"
     )
-
-
-def _rate_ci(rate: float, ci: tuple[float, float]) -> str:
-    return f"{rate:.3f} [{ci[0]:.3f}, {ci[1]:.3f}]"
 
 
 def main(argv: list[str] | None = None) -> int:
