@@ -580,6 +580,36 @@ function refreshBotBackendBadge(): void {
   if (el) el.textContent = botBackendBadgeText();
 }
 
+async function applyHealthResponse(res: Response): Promise<void> {
+  if (!res.ok) throw new Error(`${res.status}`);
+  const data = (await res.json()) as {
+    ok?: boolean;
+    strong?: string;
+    cpus?: number | null;
+    version?: string;
+  };
+  if (!data.ok || !data.strong) throw new Error("health not ok");
+  localBot = {
+    strong: data.strong,
+    cpus: data.cpus ?? null,
+    version: data.version ?? "dev",
+  };
+  console.debug("local bot server", localBot);
+}
+
+async function probeLocalBotLong(): Promise<void> {
+  try {
+    const res = await fetch(`${LOCAL_BOT_HOST}/health`, {
+      signal: AbortSignal.timeout(30_000),
+    });
+    await applyHealthResponse(res);
+  } catch {
+    localBot = null;
+    console.debug("local bot server unreachable");
+  }
+  refreshBotBackendBadge();
+}
+
 async function probeLocalBot(): Promise<void> {
   if (localBotQueryOff() || !localBotToggleOn()) {
     localBot = null;
@@ -595,21 +625,13 @@ async function probeLocalBot(): Promise<void> {
     const res = await fetch(`${LOCAL_BOT_HOST}/health`, {
       signal: AbortSignal.timeout(400),
     });
-    if (!res.ok) throw new Error(`${res.status}`);
-    const data = (await res.json()) as {
-      ok?: boolean;
-      strong?: string;
-      cpus?: number | null;
-      version?: string;
-    };
-    if (!data.ok || !data.strong) throw new Error("health not ok");
-    localBot = {
-      strong: data.strong,
-      cpus: data.cpus ?? null,
-      version: data.version ?? "dev",
-    };
-    console.debug("local bot server", localBot);
-  } catch {
+    await applyHealthResponse(res);
+  } catch (err) {
+    const name = err instanceof Error ? err.name : "";
+    if (name === "TimeoutError" || name === "AbortError") {
+      void probeLocalBotLong();
+      return;
+    }
     localBot = null;
     console.debug("local bot server unreachable");
   }
@@ -629,20 +651,27 @@ async function maybeBots(): Promise<void> {
     if (watchPlaying) scheduleWatch();
     return;
   }
+  const s = session;
   // vs-bot — one engine action per beat so the human can follow.
   let guard = 0;
-  while (session && !isHumanActing(session) && session.game.phase() !== "terminal" && guard < 80) {
-    const useLocal = shouldUseLocalBot(session);
+  while (session === s && !isHumanActing(s) && s.game.phase() !== "terminal" && guard < 80) {
+    const useLocal = shouldUseLocalBot(s);
     if (useLocal) {
       localBotThinking = true;
       refreshBotBackendBadge();
     }
     const events = useLocal
-      ? await botStepRemote(session, `${LOCAL_BOT_HOST}/bot`)
-      : botStep(session);
+      ? await botStepRemote(s, `${LOCAL_BOT_HOST}/bot`, { isCurrent: () => session === s })
+      : botStep(s);
     if (useLocal) {
-      localBotThinking = false;
       const meta = lastLocalBotStepMeta();
+      if (meta.stale) {
+        localBotThinking = false;
+        refreshBotBackendBadge();
+        guard += 1;
+        continue;
+      }
+      localBotThinking = false;
       if (meta.usedRemote) localBotRemoteCount += 1;
       if (meta.error) localBotGameError = meta.error;
       refreshBotBackendBadge();
@@ -651,7 +680,7 @@ async function maybeBots(): Promise<void> {
     showCombat(events);
     await new Promise<void>((r) => window.setTimeout(r, 280));
   }
-  paint();
+  if (session === s) paint();
 }
 
 /** Geometric watch delay: v1 = 3000 ms … v19 = 16 ms, v20 = 0 (unthrottled). */

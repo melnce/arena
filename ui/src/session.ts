@@ -12,7 +12,7 @@ import { isReseedStep } from "./types.ts";
 import { rerollSeed } from "./reroll.ts";
 
 /** Outcome of the last `botStepRemote` call (wasm fallback vs server). */
-export type LocalBotStepMeta = { usedRemote: boolean; error?: string };
+export type LocalBotStepMeta = { usedRemote: boolean; error?: string; stale?: boolean };
 
 let lastLocalBotMeta: LocalBotStepMeta = { usedRemote: false };
 
@@ -471,7 +471,11 @@ function localBotRequestBody(
   };
 }
 
-export async function botStepRemote(s: Session, endpoint: string): Promise<EngineEvent[]> {
+export async function botStepRemote(
+  s: Session,
+  endpoint: string,
+  opts?: { isCurrent?: () => boolean },
+): Promise<EngineEvent[]> {
   const seed = nextBotSeed(s);
   const acting = s.game.acting() as PlayerId;
   const policy = botPolicyFor(s, acting);
@@ -479,11 +483,37 @@ export async function botStepRemote(s: Session, endpoint: string): Promise<Engin
   if (!policy.startsWith("h0")) {
     return botStepWithSeed(s, seed);
   }
+  const sentHash = s.game.hash();
+  const sentActions = s.actions.length;
+  const sentBotSeq = s.botSeq;
+  const dropStale = (): boolean => {
+    if (opts?.isCurrent && !opts.isCurrent()) {
+      lastLocalBotMeta = { usedRemote: false, stale: true };
+      return true;
+    }
+    try {
+      if (
+        s.game.hash() !== sentHash ||
+        s.actions.length !== sentActions ||
+        s.botSeq !== sentBotSeq
+      ) {
+        lastLocalBotMeta = { usedRemote: false, stale: true };
+        return true;
+      }
+    } catch {
+      lastLocalBotMeta = { usedRemote: false, stale: true };
+      return true;
+    }
+    return false;
+  };
   try {
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(localBotRequestBody(s, policy, seed.toString())),
+      body: JSON.stringify({
+        ...localBotRequestBody(s, policy, seed.toString()),
+        hash: sentHash,
+      }),
       signal: AbortSignal.timeout(90_000),
     });
     if (!res.ok) {
@@ -494,10 +524,12 @@ export async function botStepRemote(s: Session, endpoint: string): Promise<Engin
     if (!data.action || typeof data.action !== "object") {
       throw new Error("server returned no action");
     }
+    if (dropStale()) return [];
     const events = applyAction(s, data.action, { human: false });
     lastLocalBotMeta = { usedRemote: true };
     return events;
   } catch (err) {
+    if (dropStale()) return [];
     const reason = err instanceof Error ? err.message : String(err);
     lastLocalBotMeta = { usedRemote: false, error: reason };
     console.warn(`local bot server failed, falling back to wasm: ${reason}`);
