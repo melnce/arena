@@ -30,7 +30,7 @@ The plain harness at `ui/dev/` is unchanged (debug page).
 Set in the settings drawer (hamburger / Ctrl+Shift+M):
 
 - **Hotseat** — both sides human; both hands visible (owner ruling 2026-08-13).
-- **Play vs bot** — human A, B, or coin; bot policy from `botPolicies()`; "hide the bot's hand" defaults on.
+- **Play vs bot** — human A, B, or coin; bot policy from `botPolicies()` plus `h0 (strong)` (`h0:nodes=4000`); desktop defaults to strong, phones to standard `h0`; stored as `svwb.botPolicy`; "hide the bot's hand" defaults on.
 - **Watch bots** — policy per side; Step / Play / Pause and a speed slider (1 action/s … as fast as the tab will paint). Both hands visible. Max speed yields with `requestAnimationFrame`.
 
 Share URL: `?seed=&deckA=&deckB=&mode=` plus write-time aliases `a` / `b` (old bookmarks that only carry `a`/`b` still open the same match).
@@ -45,7 +45,7 @@ Undo / redo is a ring of `Game.clone()` snapshots taken before each `NeutralActi
 
 ## Bindings added in this milestone
 
-`Game.acting`, `Game.active`, `Game.turn`, `Game.winner`, `Game.botAction(policy, seed)`, `Game.reseed(seed)`, `botPolicies()`. Every name (including `"h0"`) is `engine::policy::by_name` / `names()`; the client's selector grows with that list. `botAction` uses `policy_rng(seed)` and keeps a `Box<dyn Policy>` per name on the `Game`. `reseed` replaces only the live xoshiro.
+`Game.acting`, `Game.active`, `Game.turn`, `Game.winner`, `Game.botAction(policy, seed)`, `Game.reseed(seed)`, `botPolicies()`. `botAction` accepts any `parse_spec` string (it always did); `names()` stays `["random","first-legal","h0"]` and the client adds `h0 (strong)` = `h0:nodes=4000` after `h0`. `botAction` uses `policy_rng(seed)` and keeps a `Box<dyn Policy>` per spec string on the `Game`. `reseed` replaces only the live xoshiro.
 
 ## Ported / not ported
 
