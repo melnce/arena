@@ -504,11 +504,17 @@ today. Only when the global budget is exhausted is a pair skipped.
 `H0::default()` stays `alloc=root` bit for bit; the owner's 4 096-game
 yardstick decides any flip. Measured on this box (200 mid-game states,
 `nodes=2000`): `root` skipped 3 182 pairs, `fair` skipped 0; node totals
-270 854 vs 265 257 (within 5 %). `MIN_SHARE` floors the pair share at 24
-when every remaining pair can still receive it; otherwise the leftover
-is split evenly so later pairs still get a search. Decisions where
-`consensus_lethal` already spent the cap are not counted — neither
-allocator had a budget.
+270 854 vs 265 257 (within 5 %). 50-game abyss-p8rfn `--stats`:
+`pairs_skipped/decision` 10.53 (`root`) vs 0.04 (`fair`),
+`cap_hit_rate` 0.418 vs 0.144. Yardstick (16 decks, `first=alternate`,
+seed 1, `nproc=4`): `h0:alloc=fair` vs `h0` 0.568 [0.525, 0.611] over
+512 games; reverse seats 0.438 [0.378, 0.499] (fair as B = 0.562
+[0.501, 0.622]). At `nodes=6000` the edge shrinks to 0.547 [0.486, 0.607]
+/ reverse 0.504 [0.443, 0.565]. Throughput C vs C 1.02 g/s vs B vs B
+0.94 g/s. `MIN_SHARE` floors the pair share at 24 when every remaining
+pair can still receive it; otherwise the leftover is split evenly so
+later pairs still get a search. Decisions where `consensus_lethal`
+already spent the cap are not counted — neither allocator had a budget.
 
 When `tt=1`, each `choose` builds an empty
 `HashMap<(u64, u8, bool), f32>` keyed by
