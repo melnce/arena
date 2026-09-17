@@ -147,6 +147,10 @@ pub struct SearchStats {
     pub tt_hits: u64,
     /// Values written to the per-decision table (`tt=1` only).
     pub tt_stores: u64,
+    /// `(root, candidate)` pairs never given a search after
+    /// `consensus_lethal` left leftover budget:
+    /// `k × |subset| − attempted` per searched decision.
+    pub pairs_skipped: u64,
 }
 
 impl SearchStats {
@@ -167,7 +171,22 @@ impl SearchStats {
         self.opp_lethal_nodes += other.opp_lethal_nodes;
         self.tt_hits += other.tt_hits;
         self.tt_stores += other.tt_stores;
+        self.pairs_skipped += other.pairs_skipped;
     }
+}
+
+/// How [`H0::choose`] spends `node_cap` across `(root, candidate)` pairs.
+/// [`Alloc::Root`] is today's root-major spend (later pairs skipped when
+/// the cap binds). [`Alloc::Fair`] gives each remaining pair a share.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Alloc {
+    /// Budget spent root-major: later candidates / roots are skipped
+    /// when `node_cap` binds. Today's behaviour.
+    #[default]
+    Root,
+    /// Per-pair share of the remaining budget so every candidate is
+    /// scored on every determinization (depth is what the share affords).
+    Fair,
 }
 
 /// Determinized search bot. With `odepth = 0` (default) the opponent reply is
@@ -178,6 +197,9 @@ pub struct H0 {
     pub beam: usize,
     pub determinizations: u32,
     pub node_cap: u32,
+    /// How the node cap is split across `(root, candidate)` pairs.
+    /// Default [`Alloc::Root`] is today's root-major spend.
+    pub alloc: Alloc,
     pub value: ValueVersion,
     pub weights: Weights,
     pub odepth: u32,
@@ -209,6 +231,7 @@ impl Default for H0 {
             beam: 4,
             determinizations: 4,
             node_cap: 2000,
+            alloc: Alloc::Root,
             value: ValueVersion::Net,
             weights: Weights::default(),
             odepth: 0,
@@ -391,14 +414,37 @@ impl Policy for H0 {
         } else {
             let mut acc = vec![0.0f32; subset.len()];
             let mut n = vec![0u32; subset.len()];
-            for root in &roots {
+            let total_pairs = u64::from(k) * subset.len() as u64;
+            let mut attempted = 0u64;
+            let nodes_after_lethal = nodes;
+            for (r, root) in roots.iter().enumerate() {
                 let root_key = search_key(root);
                 for (j, a) in subset.iter().enumerate() {
                     if nodes >= self.node_cap {
                         break;
                     }
-                    let Some(s) = try_apply(db, root, a, &mut nodes, self.node_cap, &[root_key])
-                    else {
+                    attempted += 1;
+                    let cap = match self.alloc {
+                        Alloc::Root => self.node_cap,
+                        Alloc::Fair => {
+                            const MIN_SHARE: u32 = 24;
+                            let pairs_left = (k as usize - r) * subset.len() - j;
+                            let remaining = self.node_cap - nodes;
+                            let even = remaining / pairs_left as u32;
+                            // Floor at MIN_SHARE only when every remaining pair
+                            // can still receive it. Otherwise split evenly —
+                            // later pairs still get a search; depth is what
+                            // the leftover budget affords.
+                            let share = if remaining >= MIN_SHARE.saturating_mul(pairs_left as u32)
+                            {
+                                even.max(MIN_SHARE)
+                            } else {
+                                even.max(1)
+                            };
+                            nodes.saturating_add(share).min(self.node_cap)
+                        }
+                    };
+                    let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key]) else {
                         continue;
                     };
                     let v = if s.winner == Some(me) {
@@ -412,7 +458,7 @@ impl Policy for H0 {
                             self.depth.saturating_sub(1),
                             self.beam,
                             &mut nodes,
-                            self.node_cap,
+                            cap,
                             &line,
                             eval,
                             odepth,
@@ -424,6 +470,12 @@ impl Policy for H0 {
                     acc[j] += finite(v, eval.wv);
                     n[j] += 1;
                 }
+            }
+            // Lethal may already have spent the cap; those pairs were never
+            // offered to either allocator. Count only skips after search
+            // had leftover budget (`k × |subset| − attempted`).
+            if nodes_after_lethal < self.node_cap {
+                self.stats.pairs_skipped += total_pairs - attempted;
             }
 
             let mut best_i = 0usize;
