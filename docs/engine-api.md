@@ -568,7 +568,7 @@ The WASM binary `include_str!`s every authored `cards/**/*.json` except `cards/o
 | `cardText(id)` | string | JSON `{id, name, text, kind, cost, …}` from the baked bundle. Cards also include `crests` and `forms` (see below). Crest / faith ids omit both (do not recurse). |
 | `bundleInfo()` | string | `{cards, crests, bytes}` |
 | `version()` | string | git SHA baked at build, or `"dev"` |
-| `botPolicies()` | string | JSON array from `engine::policy::names()` — `["random","first-legal","h0"]`. The client lists those plus `h0 (standard)` = `h0` and `h0 (strong)` = `h0:nodes=4000` (desktop default strong, phone default standard, stored as `svwb.botPolicy`). Engine `H0::default()` stays 2 000 nodes: sweep1 measured `h0:nodes=4000` at 0.544 [0.529, 0.560] over 4 096 games (reverse seating 0.540 [0.518, 0.561]) but ~1.6× slower (2.10 → 1.33 games/s). |
+| `botPolicies()` | string | JSON array from `engine::policy::names()` — `["random","first-legal","h0"]`. The client lists those plus `h0 (standard)` = `h0` and `h0 (strong)` = `h0:nodes=6000` (desktop default strong, phone default standard, stored as `svwb.botPolicy`). Engine `H0::default()` stays 2 000 nodes: sweep2 measured `h0:nodes=6000` at 0.562 [0.547, 0.577] over 4 096 games (reverse seating 0.553 [0.531, 0.574]; +6.2 pt, both seats) vs current `h0`. |
 
 `cardText` on a collectible / token adds two read-only arrays (no existing field changes):
 
@@ -594,7 +594,7 @@ server constructs the policy per call (no cache). Unknown specs raise
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
 `h0:nodes=16000`) is the spec used whenever the request's `policy` is an
-h0 variant (`h0`, `h0:nodes=4000`, `h0:…`). `random` / `first-legal` and
+h0 variant (`h0`, `h0:nodes=6000`, `h0:…`). `random` / `first-legal` and
 any non-h0 spec pass through unchanged — the server, not the client,
 decides H0 strength. `--origins` is the CORS allow list (default
 `https://arena-nu-one.vercel.app,http://localhost:5173,http://127.0.0.1:5173`);

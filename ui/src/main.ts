@@ -408,14 +408,16 @@ function formConfig(): SessionConfig {
 }
 
 /**
- * Sweep1 (`results` / `sweep1/SUMMARY.md`): `h0:nodes=4000` scored
- * 0.544 [0.529, 0.560] over 4 096 games vs current `h0` (reverse seating
- * 0.540 [0.518, 0.561]). A later stacked setting (`depth=4,beam=8,nodes=4000`)
- * is a one-line edit here.
+ * Sweep2 (`results` / `sweep2/SUMMARY.md`): `h0:nodes=6000` scored
+ * 0.562 [0.547, 0.577] over 4 096 games vs current `h0` (reverse seating
+ * 0.553 [0.531, 0.574]; +6.2 pt, both seats). Sweep 1's `h0:nodes=4000`
+ * was 0.544 [0.529, 0.560]; stacked `depth=4,beam=8,nodes=4000` (0.547)
+ * adds nothing over the budget alone. A later setting is a one-line
+ * edit here.
  */
-const STRONG_H0 = "h0:nodes=4000";
+const STRONG_H0 = "h0:nodes=6000";
 const STRONG_H0_TITLE =
-  "4 000 search nodes per decision — stronger, ~1.6× slower; default on desktop";
+  "6 000 search nodes per decision — stronger, ~2× slower; default on desktop";
 
 function isDesktopClassDevice(): boolean {
   return (

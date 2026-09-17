@@ -1,7 +1,7 @@
 import { expect, test, devices, type Page } from "@playwright/test";
 import { ART, artShot } from "./helpers.ts";
 
-const STRONG = "h0:nodes=4000";
+const STRONG = "h0:nodes=6000";
 
 async function openSettings(page: Page) {
   const drawer = page.locator("#settingsDrawer");
@@ -74,9 +74,9 @@ test("desktop: option list defaults to h0 (strong)", async ({ page }) => {
   expect(opts.map((o) => o.value)).toEqual(["random", "first-legal", "h0", STRONG]);
   expect(opts[2]?.label).toBe("h0 (standard)");
   expect(opts[3]?.label).toBe("h0 (strong)");
-  expect(opts[3]?.title).toContain("4 000 search nodes");
+  expect(opts[3]?.title).toContain("6 000 search nodes");
   await expect(page.locator("#vsBotPolicy")).toHaveValue(STRONG);
-  await expect(page.locator("#vsBotPolicyHint")).toContainText("4 000 search nodes");
+  await expect(page.locator("#vsBotPolicyHint")).toContainText("6 000 search nodes");
   await page.locator("#vsBotPolicy").evaluate((el) => {
     (el as HTMLSelectElement).size = 4;
   });
@@ -116,15 +116,17 @@ test("persistence: stored choice survives reload; bogus falls back", async ({ pa
   await expect(page.locator("#vsBotPolicy")).toHaveValue(STRONG);
 });
 
-test("bogus stored policy falls back to the device default", async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem("svwb.botPolicy", "h0:nodes=999999999");
+for (const stored of ["h0:nodes=999999999", "h0:nodes=4000"] as const) {
+  test(`bogus stored policy falls back to the device default (${stored})`, async ({ page }) => {
+    await page.addInitScript((value) => {
+      localStorage.setItem("svwb.botPolicy", value);
+    }, stored);
+    await boot(page);
+    await expect(page.locator("#vsBotPolicy")).toHaveValue(STRONG);
   });
-  await boot(page);
-  await expect(page.locator("#vsBotPolicy")).toHaveValue(STRONG);
-});
+}
 
-test("vs bot: human A vs h0:nodes=4000, bot turn resolves", async ({ page }) => {
+test("vs bot: human A vs h0:nodes=6000, bot turn resolves", async ({ page }) => {
   await boot(page);
   await startGame(page, {
     mode: "vs-bot",
@@ -144,7 +146,7 @@ test("vs bot: human A vs h0:nodes=4000, bot turn resolves", async ({ page }) => 
   expect(events.length).toBeGreaterThan(0);
   const ms = await page.evaluate(() => {
     const t0 = performance.now();
-    window.__arena!.botAction("h0:nodes=4000", "1");
+    window.__arena!.botAction("h0:nodes=6000", "1");
     return performance.now() - t0;
   });
   console.log(`strong botAction ${ms.toFixed(1)} ms`);
