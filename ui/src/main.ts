@@ -672,6 +672,7 @@ async function maybeBots(): Promise<void> {
       let events = useLocal
         ? await botStepRemote(s, `${LOCAL_BOT_HOST}/bot`, { isCurrent: () => session === s })
         : botStep(s);
+      if (session !== s) break;
       if (useLocal) {
         const meta = lastLocalBotStepMeta();
         if (meta.stale) {
