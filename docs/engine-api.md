@@ -378,13 +378,16 @@ ignored when `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step;
 default `3`; hard stop is `osteps+3`),
 `wv=<f32>` (root-level terminal stand-in; default `80`),
 `tt=0|1` (per-decision transposition table; default `1`),
+`alloc=root|fair` (how the node cap is spent across `(root, candidate)`
+pairs; default `root` = today's root-major spend),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
 is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
 `value=v1` or `value=net,net=<path>` — the built-in net is not printed,
 non-default `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
-non-default `wv`, `tt=0` when the table is off, and any
+non-default `wv`, `tt=0` when the table is off, `alloc=fair` when the
+per-pair share is on, and any
 non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
@@ -427,6 +430,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `osteps` | 3 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 6) |
 | `wv` | 80 | root-level finite stand-in for a terminal when averaging K roots |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
+| `alloc` | `root` | budget spend across `(root, candidate)` pairs; `root` = root-major (later pairs skipped when the cap binds — today); `fair` = per-pair share so every candidate is scored on every determinization |
 
 H0 builds `K = max(1, determinizations)` search roots via
 `determinize(state, me, seed)` (which reseeds the game RNG) from the
@@ -485,6 +489,27 @@ lucky lethal (+80). Candidates: `wv=300` sits just above the live range;
 `wv=1000` makes one lethal root out of four outvote three bad live
 roots. This PR does not flip the default.
 
+`choose` spends the node cap root by root and candidate by candidate
+(`for root in roots { for candidate in subset { … search_own } }`).
+With `alloc=root` (default) a single candidate's subtree can consume
+thousands of applies at depth 6 / beam 4, so when the cap binds the
+later candidates on that root are never evaluated (`n[j] == 0` → they
+cannot be chosen) and later determinizations are skipped. `alloc=fair`
+keeps the same pair order but gives each remaining pair a share of the
+leftover budget: `share = max(24, remaining / pairs_left)`,
+`pair_cap = min(node_cap, nodes + share)`. A pair that finishes under
+its share hands the rest to the following pairs; a pair that would
+exceed it is cut inside `search_own` exactly as the global cap cuts
+today. Only when the global budget is exhausted is a pair skipped.
+`H0::default()` stays `alloc=root` bit for bit; the owner's 4 096-game
+yardstick decides any flip. Measured on this box (200 mid-game states,
+`nodes=2000`): `root` skipped 3 182 pairs, `fair` skipped 0; node totals
+270 854 vs 265 257 (within 5 %). `MIN_SHARE` floors the pair share at 24
+when every remaining pair can still receive it; otherwise the leftover
+is split evenly so later pairs still get a search. Decisions where
+`consensus_lethal` already spent the cap are not counted — neither
+allocator had a budget.
+
 When `tt=1`, each `choose` builds an empty
 `HashMap<(u64, u8, bool), f32>` keyed by
 `(search_key(state), remaining depth, side-to-move-is-me)` and consults
@@ -501,12 +526,14 @@ is the default. `tt=0` restores the pre-#32 search.
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_nodes/decision=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_nodes/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
 the fraction of decisions that exhausted `node_cap`; `candidates` are
-legal actions kept after the Bonus-PP filter; `opp_leaves` /
+legal actions kept after the Bonus-PP filter; `pairs_skipped` is
+`k × |subset| − Σ n[j]` (pairs that produced no value) per decision;
+`opp_leaves` /
 `opp_cap_hit_rate` describe the opponent model; `tt_hits` / `tt_stores`
 are transposition-table lookups that returned a value and writes
 (`0` when `tt=0`); `opp_lethal_checks` / `opp_lethal_found` /
