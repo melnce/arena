@@ -538,7 +538,8 @@ search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/de
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
 the fraction of decisions that exhausted `node_cap`; `candidates` are
 legal actions kept after the Bonus-PP filter; `pairs_skipped` is
-`k × |subset| − Σ n[j]` (pairs that produced no value) per decision;
+`k × |subset| − attempted` (pairs never given a search after
+`consensus_lethal` left leftover budget) per decision;
 `opp_leaves` /
 `opp_cap_hit_rate` describe the opponent model; `tt_hits` / `tt_stores`
 are transposition-table lookups that returned a value and writes

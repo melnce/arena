@@ -147,8 +147,9 @@ pub struct SearchStats {
     pub tt_hits: u64,
     /// Values written to the per-decision table (`tt=1` only).
     pub tt_stores: u64,
-    /// `(root, candidate)` pairs that produced no value:
-    /// `k × |subset| − Σ n[j]` per searched decision.
+    /// `(root, candidate)` pairs never given a search after
+    /// `consensus_lethal` left leftover budget:
+    /// `k × |subset| − attempted` per searched decision.
     pub pairs_skipped: u64,
 }
 
