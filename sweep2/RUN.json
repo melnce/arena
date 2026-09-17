@@ -1,0 +1,86 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\sweep.py",
+    "--tag",
+    "sweep2",
+    "--seed",
+    "2",
+    "--baseline",
+    "h0",
+    "--candidates",
+    "h0:depth=4,beam=8,nodes=4000",
+    "h0:depth=4,beam=8",
+    "h0:nodes=3000",
+    "h0:nodes=6000",
+    "h0:depth=4,beam=12",
+    "h0:depth=3,beam=12",
+    "h0:depth=5,beam=6",
+    "h0:depth=4,beam=8,nodes=3000",
+    "--finalists",
+    "2",
+    "--publish"
+  ],
+  "git": "f8fd977668dd82662de98fdfccc6c5a927b42c54",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "screen": {
+      "start": "2026-09-16T21:13:42.278293+00:00",
+      "end": "2026-09-16T22:31:53.272380+00:00"
+    },
+    "final": {
+      "start": "2026-09-16T22:31:53.291416+00:00",
+      "end": "2026-09-17T00:13:49.055502+00:00"
+    },
+    "summary": {
+      "start": "2026-09-17T00:13:49.076277+00:00",
+      "end": "2026-09-17T00:13:49.094064+00:00"
+    },
+    "publish": {
+      "start": "2026-09-17T00:13:49.136947+00:00"
+    }
+  },
+  "finalist_decisions": [
+    {
+      "index": 1,
+      "spec": "h0:depth=4,beam=8,nodes=4000",
+      "decision": "finalist"
+    },
+    {
+      "index": 2,
+      "spec": "h0:depth=4,beam=8",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 3,
+      "spec": "h0:nodes=3000",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 4,
+      "spec": "h0:nodes=6000",
+      "decision": "finalist"
+    },
+    {
+      "index": 5,
+      "spec": "h0:depth=4,beam=12",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 6,
+      "spec": "h0:depth=3,beam=12",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 7,
+      "spec": "h0:depth=5,beam=6",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 8,
+      "spec": "h0:depth=4,beam=8,nodes=3000",
+      "decision": "not in top 2"
+    }
+  ]
+}
