@@ -45,6 +45,10 @@ Settings → **Use local bot server when available** (on by default; the
 `?localbot=0` query flag also skips the probe and every `/bot` POST).
 In vs-bot the badge next to the policy select should read something like
 `bot: local server (h0:nodes=16000, 28 cpus)`. No server → `bot: browser`.
+One vs-bot loop runs per game, so acting while the bot is thinking never
+starts a second one. A reply that arrives after the position has moved is
+dropped and the move is recomputed, and after three such drops in a row
+that decision falls back to the browser bot so play always continues.
 
 Chrome 142+ treats a public HTTPS page's first `fetch` to `127.0.0.1`
 as local-network access. On the first vs-bot game after starting the
