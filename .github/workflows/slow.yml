@@ -7,10 +7,7 @@ on:
     - cron: "0 7 * * *"
   workflow_dispatch:
   push:
-    # `main` is the standing trigger. `cursor/slow-suite-split` is a
-    # one-time registration so `workflow_dispatch` can target this branch
-    # before the file exists on default; dropped in a follow-up commit.
-    branches: [main, cursor/slow-suite-split]
+    branches: [main]
 
 # Cancel stacked merge-to-main runs. workflow_dispatch / schedule keep
 # their own group so a manual rerun does not kill a nightly, and a
