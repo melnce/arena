@@ -1,0 +1,18 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:alloc=fair"
+  },
+  {
+    "index": 2,
+    "spec": "h0:alloc=fair,nodes=6000"
+  },
+  {
+    "index": 3,
+    "spec": "h0:alloc=fair,depth=4"
+  },
+  {
+    "index": 4,
+    "spec": "h0:alloc=fair,k=8"
+  }
+]
