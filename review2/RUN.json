@@ -1,0 +1,35 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\review.py",
+    "--tag",
+    "review2",
+    "--publish",
+    "--games",
+    "results\\games-review2"
+  ],
+  "git": "f7b0a614546091244ddedadd9a54f6e967d6e384",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "analyse": {
+      "start": "2026-09-18T21:57:22.038067+00:00",
+      "end": "2026-09-18T22:29:46.247105+00:00"
+    },
+    "summary": {
+      "start": "2026-09-18T22:29:46.277105+00:00",
+      "end": "2026-09-18T22:29:46.399789+00:00"
+    },
+    "publish": {
+      "start": "2026-09-18T22:29:46.427397+00:00"
+    }
+  },
+  "review": {
+    "games": 14,
+    "clamped_negative": 124,
+    "mean_ms": 22270.64305102596,
+    "ref": "h0:nodes=200000,k=16",
+    "side": "bot",
+    "engine": "f7b0a614546091244ddedadd9a54f6e967d6e384"
+  }
+}

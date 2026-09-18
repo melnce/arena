@@ -1,0 +1,1151 @@
+{
+  "clamped_negative": 9,
+  "decisions": [
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.5887870788574219,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "ply": 5,
+      "position": {
+        "a": {
+          "board": 0,
+          "ep": 2,
+          "hand": 5,
+          "hp": 20,
+          "pp": 1,
+          "sep": 2
+        },
+        "b": {
+          "board": 1,
+          "ep": 2,
+          "hand": 5,
+          "hp": 20,
+          "pp": 2,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "10052110",
+          "hand_pos": 0,
+          "player": "b"
+        }
+      },
+      "turn": 2,
+      "v_best": 54.480525970458984,
+      "v_played": 53.89173889160156
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.20360183715820312,
+      "phase": "main",
+      "played": {
+        "play": {
+          "card": "10452130",
+          "hand_pos": 0,
+          "player": "b"
+        }
+      },
+      "ply": 11,
+      "position": {
+        "a": {
+          "board": 0,
+          "ep": 2,
+          "hand": 5,
+          "hp": 19,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 2,
+          "ep": 2,
+          "hand": 5,
+          "hp": 20,
+          "pp": 3,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "10452130",
+          "hand_pos": 0,
+          "player": "b"
+        }
+      },
+      "turn": 3,
+      "v_best": 56.69149398803711,
+      "v_played": 56.487892150878906
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.17047500610351562,
+      "phase": "choice",
+      "played": {
+        "choose": {
+          "option": {
+            "mode": 0
+          },
+          "player": "b"
+        }
+      },
+      "ply": 12,
+      "position": {
+        "a": {
+          "board": 0,
+          "ep": 2,
+          "hand": 5,
+          "hp": 19,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 3,
+          "ep": 2,
+          "hand": 4,
+          "hp": 20,
+          "pp": 0,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "choose": {
+          "option": {
+            "mode": 0
+          },
+          "player": "b"
+        }
+      },
+      "turn": 3,
+      "v_best": 56.80397415161133,
+      "v_played": 56.63349914550781
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.0,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "ply": 13,
+      "position": {
+        "a": {
+          "board": 0,
+          "ep": 2,
+          "hand": 5,
+          "hp": 19,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 3,
+          "ep": 2,
+          "hand": 4,
+          "hp": 20,
+          "pp": 0,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "turn": 3,
+      "v_best": 56.627349853515625,
+      "v_played": 57.00233840942383
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.24438858032226562,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 2,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "ply": 19,
+      "position": {
+        "a": {
+          "board": 2,
+          "ep": 2,
+          "hand": 4,
+          "hp": 16,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 3,
+          "ep": 2,
+          "hand": 5,
+          "hp": 20,
+          "pp": 4,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "attack": {
+          "attacker_slot": 2,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "turn": 4,
+      "v_best": 57.249202728271484,
+      "v_played": 57.00481414794922
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.2917213439941406,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": {
+            "slot": 0
+          }
+        }
+      },
+      "ply": 20,
+      "position": {
+        "a": {
+          "board": 2,
+          "ep": 2,
+          "hand": 4,
+          "hp": 13,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 3,
+          "ep": 2,
+          "hand": 5,
+          "hp": 20,
+          "pp": 4,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "attack": {
+          "attacker_slot": 1,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "turn": 4,
+      "v_best": 56.023345947265625,
+      "v_played": 55.731624603271484
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.0,
+      "phase": "main",
+      "played": {
+        "play": {
+          "card": "10753310",
+          "hand_pos": 0,
+          "player": "b"
+        }
+      },
+      "ply": 21,
+      "position": {
+        "a": {
+          "board": 2,
+          "ep": 2,
+          "hand": 4,
+          "hp": 13,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 2,
+          "ep": 2,
+          "hand": 6,
+          "hp": 20,
+          "pp": 4,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "10753310",
+          "hand_pos": 0,
+          "player": "b"
+        }
+      },
+      "turn": 4,
+      "v_best": 55.80548095703125,
+      "v_played": 55.83345031738281
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.15062713623046875,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "ply": 22,
+      "position": {
+        "a": {
+          "board": 0,
+          "ep": 2,
+          "hand": 4,
+          "hp": 13,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 2,
+          "ep": 2,
+          "hand": 5,
+          "hp": 20,
+          "pp": 1,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "turn": 4,
+      "v_best": 56.09696960449219,
+      "v_played": 55.94634246826172
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.0,
+      "phase": "main",
+      "played": {
+        "play": {
+          "card": "10751120",
+          "hand_pos": 1,
+          "player": "b"
+        }
+      },
+      "ply": 29,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 1,
+          "hand": 4,
+          "hp": 11,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 2,
+          "ep": 2,
+          "hand": 5,
+          "hp": 20,
+          "pp": 5,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "10751120",
+          "hand_pos": 1,
+          "player": "b"
+        }
+      },
+      "turn": 5,
+      "v_best": 56.13102340698242,
+      "v_played": 56.31742477416992
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.0,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "ply": 30,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 1,
+          "hand": 4,
+          "hp": 11,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 3,
+          "ep": 2,
+          "hand": 4,
+          "hp": 20,
+          "pp": 3,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "turn": 5,
+      "v_best": 56.19941329956055,
+      "v_played": 56.82987594604492
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.0,
+      "phase": "main",
+      "played": {
+        "play": {
+          "card": "10552110",
+          "hand_pos": 3,
+          "player": "b"
+        }
+      },
+      "ply": 33,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 1,
+          "hand": 4,
+          "hp": 9,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 3,
+          "ep": 1,
+          "hand": 4,
+          "hp": 20,
+          "pp": 3,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "10552110",
+          "hand_pos": 3,
+          "player": "b"
+        }
+      },
+      "turn": 5,
+      "v_best": 55.42040252685547,
+      "v_played": 56.2941780090332
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 3.1660194396972656,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 1,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "ply": 34,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 1,
+          "hand": 4,
+          "hp": 9,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 5,
+          "ep": 1,
+          "hand": 3,
+          "hp": 20,
+          "pp": 0,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "attack": {
+          "attacker_slot": 1,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "turn": 5,
+      "v_best": 56.4647216796875,
+      "v_played": 53.298702239990234
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.0,
+      "phase": "main",
+      "played": {
+        "evolve": {
+          "player": "b",
+          "slot": 1,
+          "super": false
+        }
+      },
+      "ply": 43,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 0,
+          "hand": 2,
+          "hp": 8,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 3,
+          "ep": 1,
+          "hand": 5,
+          "hp": 18,
+          "pp": 6,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "10654120",
+          "hand_pos": 0,
+          "player": "b"
+        }
+      },
+      "turn": 6,
+      "v_best": 58.91127014160156,
+      "v_played": 59.00238037109375
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.06462860107421875,
+      "phase": "main",
+      "played": {
+        "play": {
+          "card": "10654120",
+          "hand_pos": 0,
+          "player": "b"
+        }
+      },
+      "ply": 44,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 0,
+          "hand": 2,
+          "hp": 8,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 4,
+          "ep": 0,
+          "hand": 5,
+          "hp": 18,
+          "pp": 6,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "10654120",
+          "hand_pos": 0,
+          "player": "b"
+        }
+      },
+      "turn": 6,
+      "v_best": 59.15458297729492,
+      "v_played": 59.0899543762207
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 1.8244895935058594,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 1,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "ply": 45,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 0,
+          "hand": 2,
+          "hp": 8,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 5,
+          "ep": 0,
+          "hand": 5,
+          "hp": 18,
+          "pp": 2,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "attack": {
+          "attacker_slot": 1,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "turn": 6,
+      "v_best": 58.83293151855469,
+      "v_played": 57.00844192504883
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 2.062389373779297,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "ply": 46,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 0,
+          "hand": 2,
+          "hp": 5,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 5,
+          "ep": 0,
+          "hand": 5,
+          "hp": 18,
+          "pp": 2,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "turn": 6,
+      "v_best": 57.88914108276367,
+      "v_played": 55.826751708984375
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 1.2068824768066406,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 2,
+          "player": "b",
+          "target": {
+            "slot": 0
+          }
+        }
+      },
+      "ply": 47,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 0,
+          "hand": 2,
+          "hp": 4,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 5,
+          "ep": 0,
+          "hand": 5,
+          "hp": 19,
+          "pp": 2,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "attack": {
+          "attacker_slot": 2,
+          "player": "b",
+          "target": "leader"
+        }
+      },
+      "turn": 6,
+      "v_best": 58.222862243652344,
+      "v_played": 57.0159797668457
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.48232269287109375,
+      "phase": "main",
+      "played": {
+        "play": {
+          "card": "90054330",
+          "hand_pos": 4,
+          "player": "b"
+        }
+      },
+      "ply": 48,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 0,
+          "hand": 2,
+          "hp": 4,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 4,
+          "ep": 0,
+          "hand": 5,
+          "hp": 19,
+          "pp": 2,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "90051120",
+          "hand_pos": 2,
+          "player": "b"
+        }
+      },
+      "turn": 6,
+      "v_best": 57.657405853271484,
+      "v_played": 57.17508316040039
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 25.26763153076172,
+      "phase": "main",
+      "played": {
+        "end_turn": {
+          "player": "b"
+        }
+      },
+      "ply": 49,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 0,
+          "hand": 2,
+          "hp": 4,
+          "pp": 0,
+          "sep": 2
+        },
+        "b": {
+          "board": 4,
+          "ep": 0,
+          "hand": 6,
+          "hp": 19,
+          "pp": 1,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "90051120",
+          "hand_pos": 2,
+          "player": "b"
+        }
+      },
+      "turn": 6,
+      "v_best": 58.795326232910156,
+      "v_played": 33.52769470214844
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.0,
+      "phase": "main",
+      "played": {
+        "play": {
+          "card": "10752110",
+          "hand_pos": 6,
+          "player": "b"
+        }
+      },
+      "ply": 55,
+      "position": {
+        "a": {
+          "board": 2,
+          "ep": 0,
+          "hand": 2,
+          "hp": 4,
+          "pp": 0,
+          "sep": 1
+        },
+        "b": {
+          "board": 0,
+          "ep": 0,
+          "hand": 7,
+          "hp": 13,
+          "pp": 7,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "10754110",
+          "hand_pos": 1,
+          "player": "b"
+        }
+      },
+      "turn": 7,
+      "v_best": 57.487709045410156,
+      "v_played": 57.75362014770508
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 4.85321044921875,
+      "phase": "choice",
+      "played": {
+        "choose": {
+          "option": {
+            "slot": 1
+          },
+          "player": "b"
+        }
+      },
+      "ply": 56,
+      "position": {
+        "a": {
+          "board": 2,
+          "ep": 0,
+          "hand": 2,
+          "hp": 4,
+          "pp": 0,
+          "sep": 1
+        },
+        "b": {
+          "board": 1,
+          "ep": 0,
+          "hand": 6,
+          "hp": 13,
+          "pp": 2,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "choose": {
+          "option": {
+            "slot": 1
+          },
+          "player": "b"
+        }
+      },
+      "turn": 7,
+      "v_best": 57.485591888427734,
+      "v_played": 52.632381439208984
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.0,
+      "phase": "main",
+      "played": {
+        "evolve": {
+          "player": "b",
+          "slot": 0,
+          "super": true
+        }
+      },
+      "ply": 57,
+      "position": {
+        "a": {
+          "board": 2,
+          "ep": 0,
+          "hand": 2,
+          "hp": 4,
+          "pp": 0,
+          "sep": 1
+        },
+        "b": {
+          "board": 2,
+          "ep": 0,
+          "hand": 6,
+          "hp": 13,
+          "pp": 2,
+          "sep": 2
+        }
+      },
+      "reference": {
+        "evolve": {
+          "player": "b",
+          "slot": 0,
+          "super": true
+        }
+      },
+      "turn": 7,
+      "v_best": 51.708518981933594,
+      "v_played": 51.72639846801758
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.7498092651367188,
+      "phase": "choice",
+      "played": {
+        "choose": {
+          "option": {
+            "slot": 1
+          },
+          "player": "b"
+        }
+      },
+      "ply": 58,
+      "position": {
+        "a": {
+          "board": 2,
+          "ep": 0,
+          "hand": 2,
+          "hp": 4,
+          "pp": 0,
+          "sep": 1
+        },
+        "b": {
+          "board": 2,
+          "ep": 0,
+          "hand": 6,
+          "hp": 13,
+          "pp": 2,
+          "sep": 1
+        }
+      },
+      "reference": {
+        "choose": {
+          "option": {
+            "slot": 1
+          },
+          "player": "b"
+        }
+      },
+      "turn": 7,
+      "v_best": 53.66777038574219,
+      "v_played": 52.91796112060547
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 0.0,
+      "phase": "main",
+      "played": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": {
+            "slot": 1
+          }
+        }
+      },
+      "ply": 59,
+      "position": {
+        "a": {
+          "board": 2,
+          "ep": 0,
+          "hand": 2,
+          "hp": 4,
+          "pp": 0,
+          "sep": 1
+        },
+        "b": {
+          "board": 3,
+          "ep": 0,
+          "hand": 6,
+          "hp": 13,
+          "pp": 2,
+          "sep": 1
+        }
+      },
+      "reference": {
+        "attack": {
+          "attacker_slot": 0,
+          "player": "b",
+          "target": {
+            "slot": 1
+          }
+        }
+      },
+      "turn": 7,
+      "v_best": 48.06278610229492,
+      "v_played": 49.25473403930664
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 10.063968658447266,
+      "phase": "main",
+      "played": {
+        "play": {
+          "card": "10052110",
+          "hand_pos": 5,
+          "player": "b"
+        }
+      },
+      "ply": 60,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 0,
+          "hand": 2,
+          "hp": 3,
+          "pp": 0,
+          "sep": 1
+        },
+        "b": {
+          "board": 3,
+          "ep": 0,
+          "hand": 6,
+          "hp": 13,
+          "pp": 2,
+          "sep": 1
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "10052110",
+          "hand_pos": 5,
+          "player": "b"
+        }
+      },
+      "turn": 7,
+      "v_best": 51.31718444824219,
+      "v_played": 41.25321578979492
+    },
+    {
+      "acting": "b",
+      "bot_value": null,
+      "cost": 24.79718589782715,
+      "phase": "main",
+      "played": {
+        "end_turn": {
+          "player": "b"
+        }
+      },
+      "ply": 61,
+      "position": {
+        "a": {
+          "board": 1,
+          "ep": 0,
+          "hand": 2,
+          "hp": 3,
+          "pp": 0,
+          "sep": 1
+        },
+        "b": {
+          "board": 4,
+          "ep": 0,
+          "hand": 5,
+          "hp": 13,
+          "pp": 1,
+          "sep": 1
+        }
+      },
+      "reference": {
+        "play": {
+          "card": "90051120",
+          "hand_pos": 2,
+          "player": "b"
+        }
+      },
+      "turn": 7,
+      "v_best": 42.03435134887695,
+      "v_played": 17.237165451049805
+    }
+  ],
+  "deckA": {
+    "10042310": 3,
+    "10403120": 3,
+    "10444120": 3,
+    "10503310": 1,
+    "10542310": 1,
+    "10543310": 3,
+    "10544110": 3,
+    "10644110": 3,
+    "10644120": 3,
+    "10741110": 3,
+    "10742310": 1,
+    "10744110": 3,
+    "10804110": 1,
+    "10842120": 3,
+    "10844120": 3,
+    "10944120": 3
+  },
+  "deckB": {
+    "10052110": 3,
+    "10452130": 3,
+    "10552110": 3,
+    "10654120": 3,
+    "10751120": 3,
+    "10752110": 3,
+    "10753310": 3,
+    "10754110": 3,
+    "10754120": 3,
+    "10854110": 2,
+    "10951120": 3,
+    "10952110": 2,
+    "10954110": 3,
+    "10954120": 3
+  },
+  "first": "coin",
+  "game_id": "16023671569583037603-1dbd2e6a",
+  "policy": "h0:olethal=1,osteps=6,nodes=16000",
+  "ref": "h0:nodes=200000,k=16",
+  "seed": 16023671569583037603,
+  "side": "bot",
+  "strong": "h0:olethal=1,osteps=6,nodes=16000",
+  "turns": 7,
+  "v": 1,
+  "winner": "a"
+}
