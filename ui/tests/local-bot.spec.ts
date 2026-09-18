@@ -332,7 +332,14 @@ test("stale /bot after a new game is dropped", async ({ page }) => {
     human: "a",
     botPolicy: "h0",
   });
+  // Let the new game apply its own first /bot so remote is stable, then
+  // release the held reply and observe the drop before any human click.
+  await expect(page.locator("#blueMulliganConfirm")).toBeVisible({ timeout: 15_000 });
+  const remoteBeforeRelease = await page.evaluate(() => window.__arena!.localBot().remote);
   releaseFirst?.({ mulligan: { player: "b", swap: [false, false, false, false] } });
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => window.__arena!.localBot().remote)).toBe(remoteBeforeRelease);
+  expect(pageErrors).toEqual([]);
 
   await confirmMulligans(page);
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", {
@@ -343,6 +350,134 @@ test("stale /bot after a new game is dropped", async ({ page }) => {
   const state = await page.evaluate(() => window.__arena!.localBot());
   expect(state.remote).toBe(later.length);
   await expect(page.locator("#botBackendBadge")).not.toContainText("thinking");
+});
+
+test("three stale /bot drops then a new game do not throw", async ({ page }) => {
+  const pageErrors: string[] = [];
+  page.on("pageerror", (err) => pageErrors.push(String(err)));
+
+  // Hold every main-phase /bot on the first game so we can invalidate
+  // two in-flight replies, then start a new game on the third.
+  let holdMain = false;
+  const held: Array<(action: Record<string, unknown>) => void> = [];
+
+  await page.route("http://127.0.0.1:8765/**", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/health")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: true,
+          strong: "h0:nodes=16000",
+          cpus: 8,
+          version: "test",
+        }),
+      });
+      return;
+    }
+    if (url.includes("/bot")) {
+      const posted = route.request().postDataJSON() as {
+        seed?: string;
+        botSeed?: string;
+        hash?: string;
+      };
+      const phase = await page.evaluate(
+        () => (window.__arena!.full() as { phase?: string }).phase,
+      );
+      if (holdMain && phase === "main") {
+        const action = await new Promise<Record<string, unknown>>((resolve) => {
+          held.push(resolve);
+        });
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            action,
+            policy: "h0:nodes=16000",
+            ms: 1,
+            hash: posted.hash ?? "",
+          }),
+        });
+        return;
+      }
+      const actionJson = await page.evaluate(
+        (s) => window.__arena!.botAction("h0", s),
+        posted.botSeed ?? "1",
+      );
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          action: JSON.parse(actionJson),
+          policy: "h0:nodes=16000",
+          ms: 1,
+          hash: posted.hash ?? "",
+        }),
+      });
+      return;
+    }
+    await route.fallback();
+  });
+
+  await boot(page);
+  // Human first so the bot is second (2 PP) and two in-flight commits
+  // can move the position without ending the turn.
+  await startGame(page, {
+    mode: "vs-bot",
+    seed: "6",
+    first: "a",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+    human: "a",
+    botPolicy: "h0",
+  });
+  await confirmMulligans(page);
+  await expect(page.locator("#endTurnBlue")).toBeVisible({ timeout: 15_000 });
+  holdMain = true;
+  await page.locator("#endTurnBlue").click();
+
+  const dummy = { end_turn: { player: "b" } };
+
+  const commitInFlight = async () => {
+    await expect.poll(() => held.length).toBe(1);
+    const step = await page.evaluate(() => {
+      const legal = window.__arena!.legal() as Array<Record<string, unknown>>;
+      const act = legal.find((a) => !("end_turn" in a)) ?? null;
+      const full = window.__arena!.full() as {
+        players: { b: { field: Array<unknown | null> } };
+      };
+      const slot = full.players.b.field.findIndex((x) => x != null);
+      return { act, slot };
+    });
+    if (step.act) {
+      await page.evaluate((a) => window.__arena!.apply(a), step.act);
+    } else if (step.slot >= 0) {
+      await page.evaluate((s) => window.__arena!.debugGrantCantAttackLeader("b", s), step.slot);
+    } else {
+      throw new Error("no in-flight commit that keeps the bot acting");
+    }
+    await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b");
+    held.shift()?.(dummy);
+  };
+
+  await commitInFlight();
+  await commitInFlight();
+
+  await expect.poll(() => held.length).toBe(1);
+  holdMain = false;
+  await startGame(page, {
+    mode: "vs-bot",
+    seed: "99",
+    first: "b",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+    human: "a",
+    botPolicy: "h0",
+  });
+  held.shift()?.(dummy);
+  await page.waitForTimeout(400);
+  expect(pageErrors).toEqual([]);
 });
 
 test("stale /bot after undo is dropped", async ({ page }) => {
@@ -432,6 +567,73 @@ test("stale /bot after undo is dropped", async ({ page }) => {
   expect(await page.evaluate(() => window.__arena!.actions().length)).toBe(afterUndo);
   expect(pageErrors).toEqual([]);
   await expect(page.locator("#botBackendBadge")).not.toContainText("thinking");
+});
+
+test("confirm while /bot is in flight does not start a second loop", async ({ page }) => {
+  const pageErrors: string[] = [];
+  page.on("pageerror", (err) => pageErrors.push(String(err)));
+
+  let botRequests = 0;
+  await page.route("http://127.0.0.1:8765/**", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/health")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: true,
+          strong: "h0:nodes=16000",
+          cpus: 8,
+          version: "test",
+        }),
+      });
+      return;
+    }
+    if (url.includes("/bot")) {
+      botRequests += 1;
+      const posted = route.request().postDataJSON() as { botSeed?: string; hash?: string };
+      const seed = posted.botSeed ?? "1";
+      await new Promise((r) => setTimeout(r, 400));
+      const actionJson = await page.evaluate(
+        (s) => window.__arena!.botAction("h0", s),
+        seed,
+      );
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          action: JSON.parse(actionJson),
+          policy: "h0:nodes=16000",
+          ms: 1,
+          hash: posted.hash ?? "",
+        }),
+      });
+      return;
+    }
+    await route.fallback();
+  });
+
+  await boot(page);
+  await startGame(page, {
+    mode: "vs-bot",
+    seed: "1",
+    first: "b",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+    human: "a",
+    botPolicy: "h0",
+  });
+  // Human confirm is the commit that used to spawn a second loop while
+  // the bot's delayed /bot (≈ 400 ms) is still in flight.
+  await confirmMulligans(page);
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", {
+    timeout: 15_000,
+  });
+  expect(pageErrors).toEqual([]);
+  const state = await page.evaluate(() => window.__arena!.localBot());
+  expect(state.remote).toBe(botRequests);
+  const botSeq = Number(await page.locator("#turnCounter").getAttribute("data-bot-seq"));
+  expect(botSeq).toBeLessThanOrEqual(botRequests + 2);
 });
 
 test("first-legal vs-bot policy never POSTs /bot", async ({ page }) => {

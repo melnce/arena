@@ -60,6 +60,8 @@ let localBot: LocalBotHealth | null = null;
 let localBotGameError: string | null = null;
 let localBotRemoteCount = 0;
 let localBotThinking = false;
+/** The vs-bot loop that currently owns `session`, or null. */
+let botLoopSession: Session | null = null;
 let watchTimer = 0;
 let paintQueued = 0;
 const importedDecks = new Map<string, { label: string; cards: Record<string, number> }>();
@@ -481,6 +483,7 @@ async function startFromForm(): Promise<void> {
 
 function startSession(cfg: SessionConfig): void {
   watchPlaying = false;
+  botLoopSession = null;
   localBotGameError = null;
   localBotRemoteCount = 0;
   localBotThinking = false;
@@ -653,36 +656,54 @@ async function maybeBots(): Promise<void> {
     if (watchPlaying) scheduleWatch();
     return;
   }
+  if (botLoopSession === session) return;
   const s = session;
-  // vs-bot — one engine action per beat so the human can follow.
-  let guard = 0;
-  while (session === s && !isHumanActing(s) && s.game.phase() !== "terminal" && guard < 80) {
-    const useLocal = shouldUseLocalBot(s);
-    if (useLocal) {
-      localBotThinking = true;
-      refreshBotBackendBadge();
-    }
-    const events = useLocal
-      ? await botStepRemote(s, `${LOCAL_BOT_HOST}/bot`, { isCurrent: () => session === s })
-      : botStep(s);
-    if (useLocal) {
-      const meta = lastLocalBotStepMeta();
-      if (meta.stale) {
-        localBotThinking = false;
+  botLoopSession = s;
+  try {
+    // vs-bot — one engine action per beat so the human can follow.
+    let guard = 0;
+    let staleRuns = 0;
+    while (session === s && !isHumanActing(s) && s.game.phase() !== "terminal" && guard < 80) {
+      const useLocal = shouldUseLocalBot(s);
+      if (useLocal) {
+        localBotThinking = true;
         refreshBotBackendBadge();
-        guard += 1;
-        continue;
       }
-      localBotThinking = false;
-      if (meta.usedRemote) localBotRemoteCount += 1;
-      if (meta.error) localBotGameError = meta.error;
-      refreshBotBackendBadge();
+      let events = useLocal
+        ? await botStepRemote(s, `${LOCAL_BOT_HOST}/bot`, { isCurrent: () => session === s })
+        : botStep(s);
+      if (session !== s) break;
+      if (useLocal) {
+        const meta = lastLocalBotStepMeta();
+        if (meta.stale) {
+          staleRuns += 1;
+          localBotThinking = false;
+          refreshBotBackendBadge();
+          guard += 1;
+          if (staleRuns >= 3) {
+            events = botStep(s);
+            staleRuns = 0;
+            showCombat(events);
+            await new Promise<void>((r) => window.setTimeout(r, 280));
+            continue;
+          }
+          await new Promise<void>((r) => window.setTimeout(r, 280));
+          continue;
+        }
+        staleRuns = 0;
+        localBotThinking = false;
+        if (meta.usedRemote) localBotRemoteCount += 1;
+        if (meta.error) localBotGameError = meta.error;
+        refreshBotBackendBadge();
+      }
+      guard += 1;
+      showCombat(events);
+      await new Promise<void>((r) => window.setTimeout(r, 280));
     }
-    guard += 1;
-    showCombat(events);
-    await new Promise<void>((r) => window.setTimeout(r, 280));
+    if (session === s) paint();
+  } finally {
+    if (botLoopSession === s) botLoopSession = null;
   }
-  if (session === s) paint();
 }
 
 /** Geometric watch delay: v1 = 3000 ms … v19 = 16 ms, v20 = 0 (unthrottled). */
