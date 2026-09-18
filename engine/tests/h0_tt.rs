@@ -10,6 +10,15 @@ mod common;
 use common::*;
 
 fn collect_states(db: &CardDb, n: usize, midgame_only: bool) -> Vec<arena_engine::State> {
+    collect_states_from(db, n, midgame_only, 1)
+}
+
+fn collect_states_from(
+    db: &CardDb,
+    n: usize,
+    midgame_only: bool,
+    start_seed: u64,
+) -> Vec<arena_engine::State> {
     let dir = repo_root().join("oracle/decks");
     let mut decks: Vec<Vec<CardId>> = std::fs::read_dir(&dir)
         .expect("oracle/decks")
@@ -26,7 +35,7 @@ fn collect_states(db: &CardDb, n: usize, midgame_only: bool) -> Vec<arena_engine
         "need at least one oracle deck of 40 cards"
     );
     let mut out = Vec::with_capacity(n);
-    let mut seed = 1u64;
+    let mut seed = start_seed;
     while out.len() < n {
         let da = &decks[seed as usize % decks.len()];
         let dbk = &decks[(seed as usize / 3) % decks.len()];
@@ -278,6 +287,57 @@ fn table_does_work_smoke() {
 #[cfg_attr(debug_assertions, ignore)]
 fn table_does_work_200_midgame() {
     check_table_does_work(200);
+}
+
+/// Re-derive the hit_decisions spread that justifies the ≥1/3 floor.
+/// Prints seeds 1/17/42 × {n=200, n=400} on the `h0:value=v0,alloc=fair`
+/// pair. Print-only — does not retarget the floor or the cap_hit_rate
+/// inequality (seed 42 / n=200 ties at 0.1150). Slow; lives in the
+/// `slow` workflow via `--include-ignored`.
+#[test]
+#[ignore]
+fn table_hit_floor_seed_spread() {
+    let db = load_db();
+    let off_spec = "h0:value=v0,alloc=fair,tt=0";
+    let on_spec = "h0:value=v0,alloc=fair";
+    for start_seed in [1u64, 17, 42] {
+        for n in [200usize, 400] {
+            let states = collect_states_from(&db, n, true, start_seed);
+            assert_eq!(
+                states.len(),
+                n,
+                "could not reach {n} mid-game states from start_seed {start_seed}"
+            );
+            let mut off = parse_h0(off_spec);
+            let mut on = parse_h0(on_spec);
+            let mut hit_decisions = 0u32;
+            let mut searched = 0u32;
+            for (i, state) in states.iter().enumerate() {
+                let legal = legal_actions(&db, state);
+                if legal.is_empty() {
+                    continue;
+                }
+                let seed = 20260913u64.wrapping_add(i as u64);
+                let hits_before = on.stats.tt_hits;
+                let _ = pick(&mut off, &db, state, seed);
+                let _ = pick(&mut on, &db, state, seed);
+                searched += 1;
+                if on.stats.tt_hits > hits_before {
+                    hit_decisions += 1;
+                }
+            }
+            assert!(searched > 0);
+            let off_rate = off.stats.cap_hits as f64 / off.stats.decisions as f64;
+            let on_rate = on.stats.cap_hits as f64 / on.stats.decisions as f64;
+            eprintln!(
+                "seed_spread start_seed={start_seed} n={n} {on_spec}: \
+                 hit_decisions={hit_decisions}/{searched} \
+                 cap_hit_rate tt=0={off_rate:.4} tt=1={on_rate:.4} \
+                 tt_hits={} tt_stores={}",
+                on.stats.tt_hits, on.stats.tt_stores
+            );
+        }
+    }
 }
 
 fn play_pair_spec(
