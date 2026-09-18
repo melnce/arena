@@ -6,7 +6,11 @@ node that carries `printed` — abilities, modes, and clause roots — emit
 (normalized phrase, construction shape, file, JSON path).
 
   python3 tools/phrase_index.py --write   regenerate docs/phrase-index.md
-  python3 tools/phrase_index.py --check   exit 1 on unlisted divergence or stale doc
+  python3 tools/phrase_index.py --check   exit 1 on unlisted divergence, stale doc,
+                                          or unprinted `did` nesting
+  python3 tools/phrase_index.py --check-unprinted-nesting
+      exit 1 if an ability nests under cond.did without a printed
+      selection-succeeded marker (the Aristocrat defect)
 """
 
 from __future__ import annotations
@@ -429,7 +433,60 @@ def cmd_write() -> int:
     return 0
 
 
-def cmd_check(*, divergences: bool, doc: bool) -> int:
+# Selection-*succeeded* markers that authorize `cond.did`.
+# Derived from cards/official/catalog.json (measured 2026-09-18):
+#   "If you selected one" — 4 printings (10653110, 10753110, and two
+#     Unlimited cards outside the rotation pool)
+#   "if you did so" — 0 printings; kept for the 2026-09-08 ruling's wording
+#   "If you do" as a new sentence — 0 printings; kept for the same ruling
+# "If you selected a spell" / "If you selected an allied amulet" are
+# type/side checks (`countAtLeast` / `boundHas`), not `did`. Using them
+# to authorize `did` is the Aristocrat defect: restore 3 is its own
+# sentence and must not sit under "did the discard happen".
+_DID_MARKERS = (
+    re.compile(r"if you selected one\b", re.I),
+    re.compile(r"if you did so\b", re.I),
+    re.compile(r"(?:^|[.\n]\s+)if you do\b", re.I),
+)
+
+
+def printed_authorizes_did(printed: str) -> bool:
+    return any(rx.search(printed) for rx in _DID_MARKERS)
+
+
+def iter_unprinted_did(obj, path: str = "$", printed: str | None = None):
+    """Yield (path, printed) for `if`/`did` nodes whose printed has no marker."""
+    if isinstance(obj, dict):
+        current = obj["printed"] if isinstance(obj.get("printed"), str) else printed
+        if obj.get("op") == "if" and isinstance(obj.get("cond"), dict) and "did" in obj["cond"]:
+            text = current or ""
+            if not printed_authorizes_did(text):
+                yield path, text
+        for k, v in obj.items():
+            yield from iter_unprinted_did(v, json_path_join(path, k), current)
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            yield from iter_unprinted_did(v, json_path_join(path, i), printed)
+
+
+def check_unprinted_nesting() -> list[str]:
+    errors: list[str] = []
+    for path in walk_json_files(CARDS):
+        data = json.loads(path.read_text())
+        cid = file_id(data, path)
+        for jpath, printed in iter_unprinted_did(data):
+            snippet = re.sub(r"\s+", " ", printed).strip()
+            if len(snippet) > 160:
+                snippet = snippet[:157] + "..."
+            errors.append(
+                f"unprinted nesting: {cid} {jpath} nests under cond.did "
+                f"but printed has no selection-succeeded marker"
+                + (f" ({snippet})" if snippet else " (no printed)")
+            )
+    return errors
+
+
+def cmd_check(*, divergences: bool, doc: bool, nesting: bool) -> int:
     rows, grouped, exceptions = build()
     errors: list[str] = []
     div = divergent_phrases(grouped)
@@ -443,6 +500,8 @@ def cmd_check(*, divergences: bool, doc: bool) -> int:
             errors.append(
                 f"{DOC.relative_to(ROOT)} differs from --write; run python3 tools/phrase_index.py --write"
             )
+    if nesting:
+        errors.extend(check_unprinted_nesting())
     if errors:
         for e in errors:
             print(e, file=sys.stderr)
@@ -450,9 +509,11 @@ def cmd_check(*, divergences: bool, doc: bool) -> int:
         return 1
     n_phrases = len({r["phrase"] for r in rows})
     n_div_phrases = len({k.partition("|")[2] for k, s in grouped.items() if len(s) > 1})
+    extra = ", unprinted-nesting clear" if nesting else ""
     print(
         f"ok: {len(rows)} rows, {n_phrases} phrases, "
-        f"{n_phrases - n_div_phrases} one-shape, {n_div_phrases} divergent (excepted), doc current"
+        f"{n_phrases - n_div_phrases} one-shape, {n_div_phrases} divergent (excepted), "
+        f"doc current{extra}"
     )
     return 0
 
@@ -465,11 +526,22 @@ def main(argv: list[str]) -> int:
     if cmd == "--write":
         return cmd_write()
     if cmd == "--check":
-        return cmd_check(divergences=True, doc=True)
+        return cmd_check(divergences=True, doc=True, nesting=True)
     if cmd == "--check-divergences":
-        return cmd_check(divergences=True, doc=False)
+        # Nesting rides along so CI (`--check-divergences`) gates it without
+        # a workflow edit (another agent owns .github/workflows).
+        return cmd_check(divergences=True, doc=False, nesting=True)
     if cmd == "--check-doc":
-        return cmd_check(divergences=False, doc=True)
+        return cmd_check(divergences=False, doc=True, nesting=False)
+    if cmd == "--check-unprinted-nesting":
+        errors = check_unprinted_nesting()
+        if errors:
+            for e in errors:
+                print(e, file=sys.stderr)
+            print(f"\n{len(errors)} unprinted-nesting error(s)", file=sys.stderr)
+            return 1
+        print("ok: unprinted-nesting clear")
+        return 0
     print(f"unknown command: {cmd}", file=sys.stderr)
     return 2
 
