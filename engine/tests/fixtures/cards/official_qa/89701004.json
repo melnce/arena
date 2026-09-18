@@ -1,0 +1,60 @@
+{
+  "id": "89701004",
+  "name": "QA Ralmia select as many as you can",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89700,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "attack": 1,
+  "defense": 1,
+  "text": "Fanfare: Select 3 Artifact followers in your hand that cost 5 or less and summon an exact copy of each.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select 3 Artifact followers in your hand that cost 5 or less and summon an exact copy of each.",
+      "effects": [
+        {
+          "printed": "Select 3 Artifact followers in your hand that cost 5 or less and summon an exact copy of each.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "select",
+              "select": {
+                "pick": "choose",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "follower",
+                "count": 3,
+                "filter": {
+                  "all": [
+                    {
+                      "tribe": "artifact"
+                    },
+                    {
+                      "costLte": 5
+                    }
+                  ]
+                }
+              },
+              "as": "a"
+            },
+            {
+              "op": "summon",
+              "card": {
+                "copyOf": {
+                  "pick": "bound",
+                  "ref": "a"
+                },
+                "exact": true
+              },
+              "count": 3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

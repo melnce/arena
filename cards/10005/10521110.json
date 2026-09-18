@@ -32,47 +32,39 @@
             {
               "op": "if",
               "cond": {
-                "did": "d"
+                "countAtLeast": {
+                  "select": {
+                    "pick": "bound",
+                    "ref": "d"
+                  },
+                  "n": 1,
+                  "filter": {
+                    "kind": "spell"
+                  }
+                }
               },
               "then": [
                 {
-                  "op": "if",
-                  "cond": {
-                    "countAtLeast": {
-                      "select": {
-                        "pick": "bound",
-                        "ref": "d"
-                      },
-                      "n": 1,
-                      "filter": {
-                        "kind": "spell"
-                      }
-                    }
+                  "op": "restore",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "leader",
+                    "kind": "leader"
                   },
-                  "then": [
-                    {
-                      "op": "restore",
-                      "select": {
-                        "pick": "all",
-                        "side": "ally",
-                        "zone": "leader",
-                        "kind": "leader"
-                      },
-                      "amount": 6
-                    }
-                  ],
-                  "else": [
-                    {
-                      "op": "restore",
-                      "select": {
-                        "pick": "all",
-                        "side": "ally",
-                        "zone": "leader",
-                        "kind": "leader"
-                      },
-                      "amount": 3
-                    }
-                  ]
+                  "amount": 6
+                }
+              ],
+              "else": [
+                {
+                  "op": "restore",
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "amount": 3
                 }
               ]
             }
