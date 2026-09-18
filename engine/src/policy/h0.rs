@@ -231,7 +231,7 @@ impl Default for H0 {
             beam: 4,
             determinizations: 4,
             node_cap: 2000,
-            alloc: Alloc::Root,
+            alloc: Alloc::Fair,
             value: ValueVersion::Net,
             weights: Weights::default(),
             odepth: 0,

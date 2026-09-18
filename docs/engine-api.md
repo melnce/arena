@@ -379,15 +379,16 @@ default `3`; hard stop is `osteps+3`),
 `wv=<f32>` (root-level terminal stand-in; default `80`),
 `tt=0|1` (per-decision transposition table; default `1`),
 `alloc=root|fair` (how the node cap is spent across `(root, candidate)`
-pairs; default `root` = today's root-major spend),
+pairs; default `fair` = per-pair share; `alloc=root` restores the
+pre-#46 root-major spend),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
 is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
 `value=v1` or `value=net,net=<path>` — the built-in net is not printed,
 non-default `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
-non-default `wv`, `tt=0` when the table is off, `alloc=fair` when the
-per-pair share is on, and any
+non-default `wv`, `tt=0` when the table is off, `alloc=root` when the
+allocator is the pre-#46 root-major spend, and any
 non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
@@ -430,7 +431,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `osteps` | 3 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 6) |
 | `wv` | 80 | root-level finite stand-in for a terminal when averaging K roots |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
-| `alloc` | `root` | budget spend across `(root, candidate)` pairs; `root` = root-major (later pairs skipped when the cap binds — today); `fair` = per-pair share so every candidate is scored on every determinization |
+| `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
 
 H0 builds `K = max(1, determinizations)` search roots via
 `determinize(state, me, seed)` (which reseeds the game RNG) from the
@@ -491,30 +492,44 @@ roots. This PR does not flip the default.
 
 `choose` spends the node cap root by root and candidate by candidate
 (`for root in roots { for candidate in subset { … search_own } }`).
-With `alloc=root` (default) a single candidate's subtree can consume
+With `alloc=root` a single candidate's subtree can consume
 thousands of applies at depth 6 / beam 4, so when the cap binds the
 later candidates on that root are never evaluated (`n[j] == 0` → they
 cannot be chosen) and later determinizations are skipped. `alloc=fair`
-keeps the same pair order but gives each remaining pair a share of the
-leftover budget: `share = max(24, remaining / pairs_left)`,
+(the default) keeps the same pair order but gives each remaining pair a
+share of the leftover budget: `share = max(24, remaining / pairs_left)`,
 `pair_cap = min(node_cap, nodes + share)`. A pair that finishes under
 its share hands the rest to the following pairs; a pair that would
 exceed it is cut inside `search_own` exactly as the global cap cuts
 today. Only when the global budget is exhausted is a pair skipped.
-`H0::default()` stays `alloc=root` bit for bit; the owner's 4 096-game
-yardstick decides any flip. Measured on this box (200 mid-game states,
-`nodes=2000`): `root` skipped 3 182 pairs, `fair` skipped 0; node totals
-270 854 vs 265 257 (within 5 %). 50-game abyss-p8rfn `--stats`:
+`alloc=root` restores the pre-#46 root-major spend.
+
+The owner's standing 4 096-game yardstick (`results` branch,
+`sweep4/SUMMARY.md`, seed 4, engine `a17c6c0`, 16 oracle decks, wall
+2 h 03) flipped the default:
+
+| candidate | main (4 096 games) | reverse (2 048) | throughput vs `h0` |
+|---|---|---|---|
+| `h0:alloc=fair` | **0.563 [0.548, 0.579]** | **0.538 [0.516, 0.559]** | **2.89 vs 2.53 g/s** |
+| `h0:alloc=fair,nodes=6000` | 0.583 [0.568, 0.598] | 0.552 [0.531, 0.574] | 1.31 g/s |
+| `h0:alloc=fair,depth=4` (screen) | 0.560 [0.529, 0.590] | — | 3.05 g/s |
+| `h0:alloc=fair,k=8` (screen) | 0.560 [0.529, 0.590] | — | 2.46 g/s |
+
+`alloc=fair` is better by the standing rule on both seats (+6.3 pt)
+and 14 % faster than `alloc=root`, because per-pair caps cut subtrees
+earlier. The desktop `h0 (strong)` option (`h0:nodes=6000`) and
+`py/serve.py --strong` (`h0:nodes=16000`) inherit the new default
+automatically; no client edit.
+
+Measured on this box (200 mid-game states, `nodes=2000`): `root`
+skipped 3 182 pairs, `fair` skipped 0; node totals 270 854 vs 265 257
+(within 5 %). 50-game abyss-p8rfn `--stats`:
 `pairs_skipped/decision` 10.53 (`root`) vs 0.04 (`fair`),
-`cap_hit_rate` 0.418 vs 0.144. Yardstick (16 decks, `first=alternate`,
-seed 1, `nproc=4`): `h0:alloc=fair` vs `h0` 0.568 [0.525, 0.611] over
-512 games; reverse seats 0.438 [0.378, 0.499] (fair as B = 0.562
-[0.501, 0.622]). At `nodes=6000` the edge shrinks to 0.547 [0.486, 0.607]
-/ reverse 0.504 [0.443, 0.565]. Throughput C vs C 1.02 g/s vs B vs B
-0.94 g/s. `MIN_SHARE` floors the pair share at 24 when every remaining
-pair can still receive it; otherwise the leftover is split evenly so
-later pairs still get a search. Decisions where `consensus_lethal`
-already spent the cap are not counted — neither allocator had a budget.
+`cap_hit_rate` 0.418 vs 0.144. `MIN_SHARE` floors the pair share at 24
+when every remaining pair can still receive it; otherwise the leftover
+is split evenly so later pairs still get a search. Decisions where
+`consensus_lethal` already spent the cap are not counted — neither
+allocator had a budget.
 
 When `tt=1`, each `choose` builds an empty
 `HashMap<(u64, u8, bool), f32>` keyed by
