@@ -1,0 +1,56 @@
+{
+  "id": "89701001",
+  "name": "QA Burnite hand-discard then X",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89700,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "attack": 1,
+  "defense": 1,
+  "text": "Fanfare: Select a card in your hand and discard it. Deal X damage to all enemy followers. X is the cost of the selected card.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and discard it. Deal X damage to all enemy followers. X is the cost of the selected card.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it. Deal X damage to all enemy followers. X is the cost of the selected card.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "discard",
+              "select": {
+                "pick": "choose",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "card"
+              },
+              "as": "d"
+            },
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": {
+                "stat": {
+                  "of": {
+                    "pick": "bound",
+                    "ref": "d"
+                  },
+                  "which": "cost"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

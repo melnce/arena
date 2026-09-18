@@ -1,0 +1,47 @@
+{
+  "id": "89701002",
+  "name": "QA Rodeo hand-discard then summon",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89700,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "attack": 1,
+  "defense": 1,
+  "text": "Fanfare: Select a card in your hand and discard it. Summon 3 random differently named amulets that cost 3 or less from your deck.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a card in your hand and discard it. Summon 3 random differently named amulets that cost 3 or less from your deck.",
+      "effects": [
+        {
+          "printed": "Select a card in your hand and discard it. Summon 3 random differently named amulets that cost 3 or less from your deck.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "discard",
+              "select": {
+                "pick": "choose",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "card"
+              }
+            },
+            {
+              "op": "summon",
+              "card": {
+                "randomFrom": {
+                  "kind": "amulet",
+                  "costLte": 3
+                }
+              },
+              "count": 3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
