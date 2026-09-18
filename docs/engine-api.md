@@ -656,6 +656,7 @@ a request whose `Origin` is not on the list is served but gets no
 |---|---|---|
 | `GET /health` | — | `{"ok": true, "strong": "<spec>", "cpus": <os.cpu_count()>, "version": "<git short HEAD or 'dev'>"}` |
 | `POST /bot` | see below | `200 {"action": NeutralAction, "policy": "<effective spec>", "ms": <decision>, "hash": "<hash before the action>"}` |
+| `POST /game` | position log + `winner` | `200 {"ok": true, "game_id": "<seed>-<8 hex>"}` |
 
 `POST /bot` JSON:
 
@@ -682,7 +683,23 @@ compared to `str(game.hash())` before the decision; mismatch →
 `409 {"error": "state hash mismatch", "server": "…", "client": "…"}`.
 Other client errors → `400 {"error": "…"}`; unexpected → `500`. One
 decision at a time (a lock); a second concurrent request waits. One
-stdout line per `/bot`: policy, turn, ms, hash-ok.
+stdout line per `/bot`: policy, turn, ms, hash-ok, `game=<game_id>`.
+
+`--games-dir` (default `results/games`) writes each vs-bot game as it
+is played. `game_id` is `f"{seed}-{sha1(deckA|deckB|first)[:8]}"` over
+the canonical decoded decks. On every successful `/bot` the server
+writes `<games-dir>/<game_id>.json` with `v, game_id, seed, decks,
+first, actions, policy, strong, engine, updated, final=false`, but
+only overwrites when the incoming `actions` list is longer than the
+stored one. `--no-games` disables this. IO errors are logged and
+swallowed so a capture failure never breaks a bot reply.
+
+`POST /game` is the finished-game counterpart (same CORS allow-list
+and lock as `/bot`). The client posts `toPositionLog` plus
+`{"winner":"a"|"b"|null}`. The same file is written with
+`"final": true`, `"winner"`, and `"finished"` when the log is at least
+as long as the stored one. Without it, capture would stop at the last
+bot decision.
 
 Client (`ui/src/main.ts` + `botStepRemote` in `session.ts`): on load and
 when the mode becomes vs-bot, `GET http://127.0.0.1:8765/health` with
@@ -705,6 +722,14 @@ JSON, or `applyAction` throwing illegal) the client falls back to wasm
 one-seed-per-decision, logs one `console.warn`, and pins the badge to
 `bot: browser (server error: …)` for the rest of the game. Watch mode,
 the watch step button, hotseat, undo/redo/reroll are untouched.
+
+When a vs-bot session reaches `phase() === "terminal"` and the local
+server is in use (toggle on, not `?localbot=0`, health probe succeeded),
+the client POSTs `toPositionLog(session)` plus `winner` to
+`http://127.0.0.1:8765/game`, fire-and-forget (`AbortSignal.timeout(2000)`,
+failures swallowed with one `console.debug`). Exactly once per session
+(`reportedGameFor` guard, reset in `startSession`). With no server or
+the toggle off, nothing is sent.
 
 With no server reachable the client is unchanged: the same wasm
 `botAction` calls, the same seeds, the same rng consumption. Existing
@@ -731,6 +756,8 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | `Game.hash() -> int` | FNV-1a 64 of the canonical snapshot JSON. |
 | `Game.phase` / `active` / `turn` / `winner` / `terminal` | `"mulligan"\|"main"\|"choice"\|"end"\|"terminal"`; `"a"/"b"`; `winner` is `str \| None`. |
 | `Game.clone() -> Game` | Deep copy of `State` (search). |
+| `Game.bot_action(policy, seed) -> dict` | One NeutralAction for the acting player (`by_name` + `policy_rng` + `choose`). |
+| `Game.bot_action_value(policy, seed) -> dict` | Same decision as `bot_action`, plus `{"action": NeutralAction, "value": float \| None}` where `value` is the policy's `last_value()` after `choose` (`None` for policies that do not search, e.g. `random`). |
 | `arena.play_random(db, seed, deck_a, deck_b, first="coin") -> dict` | `{winner, turns, actions, first}`. Random-legal + `policy_rng`. |
 | `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False, export=None, export_epsilon=0.0) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)`; both seats share `policy_rng(game seed)` as the bench does. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. `export=None` (default) is byte-identical to today — no extra files, no `"export"` key. `export=<dir>` writes training-sample shards (see Training samples (M5b)) and adds `"export": {dir, samples, games}`; `export_epsilon` is ε-greedy exploration on those games (inner policy still asked first). |
 | `py/stats.py::wilson(k, n, z=1.96) -> (lo, hi)` | Wilson score interval for `k` successes in `n` trials, clipped to `[0, 1]`. `n == 0` → `(0.0, 1.0)`. |
@@ -1021,3 +1048,56 @@ rate, or `best: none` when there is no finalist.
 `py/runlib.py` is the shared home of the helpers both drivers import
 (`verdict`, `format_verdict_line`, `reverse_candidate`, the tee runner,
 the matchup caller, Wilson/rate formatting, and publish / worktree).
+
+## Blunder review (`py/review.py`)
+
+```
+python py/review.py --games results/games --tag review1
+```
+
+Replays captured vs-bot games (`py/serve.py --games-dir`) against a
+deep reference and ranks the analysed seat's mistakes. A **blunder**
+here is a decision, at a non-mulligan position with more than one
+legal action, whose reference value is worse than the reference's own
+choice:
+
+```
+cost = max(0, v_best − v_played)
+```
+
+`v_best` is `Game.bot_action_value(ref, seed_for(game_id, ply))["value"]`
+— the K-root search value of the reference's chosen action, from the
+acting player's perspective. `v_played` is that same reference's value
+after the recorded action (terminal → `±wv`, default 80; otherwise the
+reference value on the resulting position, negated when the acting
+player changed so the number stays in the analysed player's frame).
+Search noise can make `v_best − v_played` slightly negative; those
+are clamped to 0 and counted (a large count means the reference is too
+shallow to be a reference).
+
+The default `--ref` is `h0:nodes=200000,k=16`. `k=16` is four times
+H0's usual determinizations: hidden information is where a shallow
+read goes wrong. `--side bot|human|both` (default `bot` = seat B
+unless the log sets `humanSide`). `--threads` parallelises across
+decisions (each rebuilds from the log). Seeds are
+`seed_for(game_id, ply[, extra])` so a rerun is byte-identical.
+`--only`, `--force`, `--cards`, `--top` (default 25), `--out`
+(default `results/<tag>`).
+
+Outputs under `results/<tag>/` (resumable per game; skip unless
+`--force`):
+
+| file | what |
+|---|---|
+| `<game_id>.json` | full decision list (`ply, turn, phase, acting, played, reference, v_played, v_best, cost, bot_value, position`) |
+| `REVIEW.md` | per-game header + value trace (reference value at the start of each analysed turn), then the top-N blunders, then aggregates by turn band (1–3 / 4–6 / 7–9 / 10+), action kind (play / attack / evolve / end-turn / ability), and side, plus the clamped-negative count and the reference's mean decision time |
+| `RUN.json` | `runlib` record (argv, engine SHA, stage times) |
+
+Card names in `REVIEW.md` come from the card JSON `name` field under
+`cards/` (plus `full()` instance names); ids when a name is missing.
+
+`--publish` pushes the tag directory to the orphan `results` branch
+with the same worktree / `--publish-remote` / `--publish-branch` /
+`--publish-dir` mechanics as `sweep.py`. `REVIEW.md` is copied in
+addition to the `.json` / `.txt` files `copy_tag_artifacts` already
+takes. The main working tree is never touched.

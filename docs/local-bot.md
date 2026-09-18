@@ -75,12 +75,33 @@ python py/serve.py --strong "h0:nodes=32000"
 Each decision prints one stdout line:
 
 ```
-bot policy=h0:nodes=16000 turn=3 ms=412.0 hash=ok
+bot policy=h0:nodes=16000 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
 ```
 
 `hash=ok` means the client's `Game.hash()` matched the replayed
 position. `hash=mismatch` is a 409 (the UI then falls back to wasm for
-the rest of that game).
+the rest of that game). `game=` is the capture id (`seed` plus an
+8-hex digest of the decks and first player).
+
+## Your games are recorded
+
+Every successful `/bot` writes the position log to
+`results/games/<game_id>.json` (`--games-dir` to change that). A stale
+or out-of-order request cannot truncate a file: the server only
+overwrites when the incoming `actions` list is longer. When the vs-bot
+game ends, the client POSTs the finished log plus the winner to
+`/game` (fire-and-forget; failures are a single `console.debug`). That
+sets `"final": true` and records who won, including the human's last
+turns after the bot's last decision.
+
+`--no-games` switches capture off. A write failure is logged and
+never breaks a bot reply.
+
+To rank the bot's mistakes against a deep reference:
+
+```
+python py/review.py --games results/games --tag review1
+```
 
 ## Expected decision time
 
