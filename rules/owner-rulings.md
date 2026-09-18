@@ -820,6 +820,28 @@ The general rule behind it is **E40**: a queued triggered ability does not resol
 
 Official glossary (Evolution): "An evolved follower can't be evolved again." `legal_actions` offers no super-evolve on a normally evolved follower. An effect-evolve on an already-evolved follower is a no-op.
 
+## Extravagance of the Goldbloom (`10521310`) stays unplayable with no spell in hand — 2026-09-18
+
+<!-- rulebook: pending — Extravagance / one-unsatisfiable-selection playability not written through as its own rulebook bullet; the general spell-selection gate is already under #targeting-rules -->
+
+A spell is unplayable when a selection in its body cannot be satisfied. **One** unsatisfiable selection is enough; it does not matter that a later sentence is not a selection.
+
+Printed (`10521310` Extravagance of the Goldbloom): _"Select a spell in your hand and discard it. Do this 2 times: 'Deal 3 damage to a random enemy follower.'"_ With no spell in hand (empty hand, or a follower-only hand) the card stays unplayable, even though the second sentence is not a selection.
+
+Follows the official Cygames Q&A for `10642310` Spilling Red — _"Can I play Spilling Red if I can select a card in my hand but not an enemy follower on the field, or vice versa?"_ _"No, you can't."_ — and `10172320` Doomwright Resurgence — _"Can I play Doomwright Resurgence even if I don't have 2 Artifact followers in my hand that cost 5 or less?"_ _"No, you can't."_
+
+Current behaviour confirmed correct by measurement in PR #50; no code or data change. Pinned by `extravagance_no_spell_in_hand_stays_unplayable`.
+
+## Goddess of Starlight (`10502110`) selects as many as it can — 2026-09-18
+
+<!-- rulebook: pending — "Select N, take as many as you can" not written through to rulebook -->
+
+Evolve, _"Select 3 cards in your hand and discard them…"_ with fewer than 3 cards in hand: **n=0** fizzles with no choice node; **n=1** and **n=2** open a choice for as many cards as there are.
+
+Follows the official Cygames Q&A for `10174130` Ralmia, Sonic Boom — _"Will Ralmia's Fanfare ability activate even if I don't have 3 Artifact followers in my hand that cost 5 or less?"_ _"Yes. It will let you select as many as you can and summon an exact copy of each."_
+
+Current behaviour confirmed correct by measurement in PR #50; no code or data change. Pinned by `goddess_evolve_fewer_than_three_matches_main`.
+
 ---
 
 ## Still open — Chris will test in game
