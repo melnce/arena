@@ -123,7 +123,8 @@ impl AnyPolicy {
     /// terminal stand-in; default `80`), `tt=0|1` (per-decision
     /// transposition table; default `1`), `alloc=root|fair` (how the
     /// node cap is spent across `(root, candidate)` pairs; default
-    /// `root` = today's root-major spend), and `w_shadows=`, `w_earth=`,
+    /// `fair` = per-pair share; `alloc=root` restores the pre-#46
+    /// root-major spend), and `w_shadows=`, `w_earth=`,
     /// `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`, `w_lw=` (f32; only
     /// meaningful with `value=v1`).
     ///
@@ -146,8 +147,8 @@ impl AnyPolicy {
     /// `value=net,net=<path>` (the built-in net is the default and is not
     /// printed), non-default
     /// `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
-    /// non-default `wv`, `tt=0` when the table is off, `alloc=fair`
-    /// when the per-pair share is on, and any
+    /// non-default `wv`, `tt=0` when the table is off, `alloc=root`
+    /// when the allocator is the pre-#46 root-major spend, and any
     /// non-default weight.
     /// `"h0"` still round-trips to `"h0"`.
     pub fn spec(&self) -> String {
@@ -206,8 +207,8 @@ fn h0_spec(h: &H0) -> String {
     if !h.tt {
         parts.push("tt=0".to_string());
     }
-    if h.alloc != Alloc::Root {
-        parts.push("alloc=fair".to_string());
+    if h.alloc != Alloc::Fair {
+        parts.push("alloc=root".to_string());
     }
     let w = &h.weights;
     let dw = Weights::default();

@@ -1,5 +1,5 @@
-//! H0 budget allocation: alloc=root identity, unbounded-cap agreement,
-//! fair-share mechanism, determinism.
+//! H0 budget allocation: alloc=fair identity, unbounded-cap agreement,
+//! fair-share mechanism, determinism. `alloc=root` stays reachable.
 
 use arena_engine::{
     apply, legal_actions, new_game, play_game, policy_rng, Action, AnyPolicy, CardDb, CardId,
@@ -90,19 +90,17 @@ fn pick(h: &mut H0, db: &CardDb, state: &arena_engine::State, seed: u64) -> (usi
     (i, legal[i].clone())
 }
 
-fn check_root_identity(n: usize) {
+fn check_fair_identity(n: usize) {
     let db = load_db();
     let states = collect_states(&db, n, false);
     assert_eq!(states.len(), n, "could not reach {n} states");
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:alloc=root").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:alloc=fair").unwrap().spec(), "h0");
     assert_eq!(
-        AnyPolicy::parse_spec("h0:alloc=fair").unwrap().spec(),
-        "h0:alloc=fair"
+        AnyPolicy::parse_spec("h0:alloc=root").unwrap().spec(),
+        "h0:alloc=root"
     );
     assert_eq!(AnyPolicy::parse_spec("h0-fast").unwrap().spec(), "h0-fast");
-    let fair = AnyPolicy::parse_spec("h0:alloc=fair").unwrap();
-    assert!(fair.spec().contains("alloc=fair"), "{}", fair.spec());
     let e = AnyPolicy::parse_spec("h0:alloc=x").unwrap_err();
     assert!(e.contains("alloc"), "{e}");
     assert!(e.contains("x"), "{e}");
@@ -114,28 +112,82 @@ fn check_root_identity(n: usize) {
         let seed = 20260917u64.wrapping_add(i as u64);
         let mut main = H0::default();
         let mut named = parse_h0("h0");
-        let mut root = parse_h0("h0:alloc=root");
+        let mut fair = parse_h0("h0:alloc=fair");
         let mut rng_m = policy_rng(seed);
         let mut rng_n = policy_rng(seed);
-        let mut rng_r = policy_rng(seed);
+        let mut rng_f = policy_rng(seed);
         let im = main.choose(&db, state, &legal, &mut rng_m);
         let inn = named.choose(&db, state, &legal, &mut rng_n);
-        let ir = root.choose(&db, state, &legal, &mut rng_r);
+        let iff = fair.choose(&db, state, &legal, &mut rng_f);
         assert_eq!(im, inn, "h0 vs H0::default at state {i}");
-        assert_eq!(im, ir, "h0 vs h0:alloc=root at state {i}");
+        assert_eq!(im, iff, "h0 vs h0:alloc=fair at state {i}");
         assert!(im < legal.len());
     }
 }
 
 #[test]
-fn alloc_root_identity_smoke() {
-    check_root_identity(8);
+fn alloc_fair_identity_smoke() {
+    check_fair_identity(8);
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn alloc_root_identity_200() {
-    check_root_identity(200);
+fn alloc_fair_identity_200() {
+    check_fair_identity(200);
+}
+
+/// `alloc=root` is still a reachable, deterministic policy and still
+/// differs from the default on at least one of the identity states.
+fn check_root_reachable(n: usize) {
+    let db = load_db();
+    let states = collect_states(&db, n, false);
+    assert_eq!(states.len(), n, "could not reach {n} states");
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:alloc=root").unwrap().spec(),
+        "h0:alloc=root"
+    );
+    let mut differ = 0u32;
+    let mut compared = 0u32;
+    for (i, state) in states.iter().enumerate() {
+        let legal = legal_actions(&db, state);
+        if legal.is_empty() {
+            continue;
+        }
+        let seed = 20260917u64.wrapping_add(i as u64);
+        let mut def = H0::default();
+        let mut root = parse_h0("h0:alloc=root");
+        let mut root_again = parse_h0("h0:alloc=root");
+        let mut rng_d = policy_rng(seed);
+        let mut rng_r = policy_rng(seed);
+        let mut rng_r2 = policy_rng(seed);
+        let id = def.choose(&db, state, &legal, &mut rng_d);
+        let ir = root.choose(&db, state, &legal, &mut rng_r);
+        let ir2 = root_again.choose(&db, state, &legal, &mut rng_r2);
+        assert_eq!(ir, ir2, "h0:alloc=root must be deterministic at state {i}");
+        assert!(ir < legal.len());
+        compared += 1;
+        if id != ir {
+            differ += 1;
+        }
+    }
+    assert!(compared > 0, "no comparable states");
+    if n >= 200 {
+        assert!(
+            differ >= 1,
+            "h0:alloc=root must differ from the default on ≥ 1 of {compared} states"
+        );
+    }
+}
+
+#[test]
+fn alloc_root_reachable_smoke() {
+    check_root_reachable(8);
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn alloc_root_reachable_200() {
+    check_root_reachable(200);
 }
 
 fn check_unbounded_identity(n: usize, spec_root: &str, spec_fair: &str) {
@@ -212,7 +264,8 @@ fn check_fair_mechanism(n: usize) {
         fair.stats.nodes,
         fair.stats.decisions
     );
-    // 200 mid-game, this box: root pairs_skipped=3182, fair=0.
+    // The flip's whole point: default (`fair`) skips ~0 pairs; `alloc=root`
+    // skips thousands. 200 mid-game, this box: root pairs_skipped=3182, fair=0.
     if n >= 200 {
         assert!(
             root.stats.pairs_skipped > 0,
@@ -321,15 +374,15 @@ fn alloc_fair_determinism_20_games() {
 #[test]
 fn spec_alloc() {
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:alloc=root").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:alloc=fair").unwrap().spec(), "h0");
     assert_eq!(
-        AnyPolicy::parse_spec("h0:alloc=fair").unwrap().spec(),
-        "h0:alloc=fair"
+        AnyPolicy::parse_spec("h0:alloc=root").unwrap().spec(),
+        "h0:alloc=root"
     );
     assert_eq!(AnyPolicy::parse_spec("h0-fast").unwrap().spec(), "h0-fast");
-    let again = AnyPolicy::parse_spec("h0:alloc=fair").unwrap();
+    let again = AnyPolicy::parse_spec("h0:alloc=root").unwrap();
     assert_eq!(AnyPolicy::parse_spec(&again.spec()).unwrap(), again);
-    assert!(again.spec().contains("alloc=fair"), "{}", again.spec());
+    assert_eq!(again.spec(), "h0:alloc=root");
     let e = AnyPolicy::parse_spec("h0:alloc=x").unwrap_err();
     assert!(e.contains("alloc"), "{e}");
     let e = AnyPolicy::parse_spec("h0:alloc=2").unwrap_err();
