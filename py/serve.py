@@ -123,17 +123,61 @@ def _actions_len(payload: dict[str, Any]) -> int:
     return len(actions) if isinstance(actions, list) else 0
 
 
+def _load_game_file(path: Path) -> dict[str, Any] | None:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _game_path(games_dir: Path, game_id: str, n: int) -> Path:
+    if n <= 1:
+        return games_dir / f"{game_id}.json"
+    return games_dir / f"{game_id}-{n}.json"
+
+
+def _existing_game_paths(games_dir: Path, game_id: str) -> list[Path]:
+    paths: list[Path] = []
+    n = 1
+    while True:
+        path = _game_path(games_dir, game_id, n)
+        if not path.is_file():
+            break
+        paths.append(path)
+        n += 1
+    return paths
+
+
+def _next_free_game_path(games_dir: Path, game_id: str) -> Path:
+    n = 1
+    while _game_path(games_dir, game_id, n).is_file():
+        n += 1
+    return _game_path(games_dir, game_id, n)
+
+
+def _highest_open_game_path(games_dir: Path, game_id: str) -> Path | None:
+    for path in reversed(_existing_game_paths(games_dir, game_id)):
+        stored = _load_game_file(path)
+        if stored is not None and not stored.get("final"):
+            return path
+    return None
+
+
 def maybe_write_game(
     games_dir: Path | None,
     record: dict[str, Any],
     *,
     allow_equal: bool,
 ) -> None:
-    """Write `<games-dir>/<game_id>.json` if the incoming log is long enough.
+    """Write the capture file for `game_id` if the incoming log is long enough.
 
     `/bot` overwrites only when the new actions list is strictly longer.
-    `/game` overwrites when it is at least as long. IO errors are logged
-    and swallowed so a capture failure never breaks a reply.
+    `/game` overwrites when it is at least as long. A stored `"final": true`
+    plus a non-final write rolls over to `<game_id>-2.json`, `-3.json`, …
+    without comparing lengths. `/game` finalises the highest-numbered file
+    that is not yet final (creating one if none exists). IO errors are
+    logged and swallowed so a capture failure never breaks a reply.
     """
     if games_dir is None:
         return
@@ -142,14 +186,29 @@ def maybe_write_game(
         return
     try:
         games_dir.mkdir(parents=True, exist_ok=True)
-        path = games_dir / f"{game_id}.json"
+        incoming_final = bool(record.get("final"))
         incoming = _actions_len(record)
+        if incoming_final:
+            path = _highest_open_game_path(games_dir, game_id)
+            if path is None:
+                path = _next_free_game_path(games_dir, game_id)
+                path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+                return
+        else:
+            existing = _existing_game_paths(games_dir, game_id)
+            if not existing:
+                path = _game_path(games_dir, game_id, 1)
+            else:
+                latest = existing[-1]
+                stored = _load_game_file(latest)
+                if stored is not None and stored.get("final"):
+                    path = _next_free_game_path(games_dir, game_id)
+                    path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+                    return
+                path = latest
         if path.is_file():
-            try:
-                stored = json.loads(path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                stored = None
-            if isinstance(stored, dict):
+            stored = _load_game_file(path)
+            if stored is not None:
                 have = _actions_len(stored)
                 if allow_equal:
                     if incoming < have:

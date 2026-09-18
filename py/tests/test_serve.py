@@ -449,6 +449,143 @@ def test_no_games_writes_nothing(db, root: Path, tmp_path: Path) -> None:
         _stop_server(httpd, thread)
 
 
+def test_bot_after_final_rolls_over_and_keeps_winner(db, root: Path, tmp_path: Path) -> None:
+    games = tmp_path / "games"
+    httpd, thread, url = _start_server(db, root, ["--games-dir", str(games)])
+    try:
+        game, actions, deck_a, deck_b = _play_plies(db, root, plies=3)
+        gid = serve.make_game_id(1, deck_a, deck_b, "a")
+        _request(
+            f"{url}/bot",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": actions[:2],
+                "policy": "first-legal",
+                "botSeed": "3",
+            },
+        )
+        _request(
+            f"{url}/game",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": actions,
+                "winner": "a",
+            },
+        )
+        first_path = games / f"{gid}.json"
+        first = json.loads(first_path.read_text())
+        assert first["final"] is True
+        assert first["winner"] == "a"
+        first_text = first_path.read_text()
+        rematch, rematch_actions, _, _ = _play_plies(db, root, plies=2)
+        status, payload, _ = _request(
+            f"{url}/bot",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": rematch_actions,
+                "policy": "first-legal",
+                "botSeed": "9",
+                "hash": str(rematch.hash()),
+            },
+        )
+        assert status == 200, payload
+        second = games / f"{gid}-2.json"
+        assert second.is_file()
+        rec2 = json.loads(second.read_text())
+        assert rec2["final"] is False
+        assert rec2["actions"] == rematch_actions
+        assert rec2["game_id"] == gid
+        assert first_path.read_text() == first_text
+        assert json.loads(first_path.read_text())["winner"] == "a"
+        assert not (games / f"{gid}-3.json").exists()
+    finally:
+        _stop_server(httpd, thread)
+
+
+def test_game_after_rollover_finalises_second_file(db, root: Path, tmp_path: Path) -> None:
+    games = tmp_path / "games"
+    httpd, thread, url = _start_server(db, root, ["--games-dir", str(games)])
+    try:
+        game, actions, deck_a, deck_b = _play_plies(db, root, plies=3)
+        gid = serve.make_game_id(1, deck_a, deck_b, "a")
+        _request(
+            f"{url}/bot",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": actions[:2],
+                "policy": "first-legal",
+                "botSeed": "3",
+            },
+        )
+        _request(
+            f"{url}/game",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": actions,
+                "winner": "b",
+            },
+        )
+        rematch, rematch_actions, _, _ = _play_plies(db, root, plies=4)
+        _request(
+            f"{url}/bot",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": rematch_actions[:2],
+                "policy": "first-legal",
+                "botSeed": "11",
+            },
+        )
+        status, payload, _ = _request(
+            f"{url}/game",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": rematch_actions,
+                "winner": "a",
+            },
+        )
+        assert status == 200, payload
+        first = json.loads((games / f"{gid}.json").read_text())
+        second = json.loads((games / f"{gid}-2.json").read_text())
+        assert first["final"] is True
+        assert first["winner"] == "b"
+        assert first["actions"] == actions
+        assert second["final"] is True
+        assert second["winner"] == "a"
+        assert second["actions"] == rematch_actions
+        assert second["finished"]
+        assert payload["game_id"] == gid
+    finally:
+        _stop_server(httpd, thread)
+
+
 def test_games_dir_write_failure_still_replies(db, root: Path, tmp_path: Path) -> None:
     blocked = tmp_path / "not-a-dir"
     blocked.write_text("file", encoding="utf-8")
