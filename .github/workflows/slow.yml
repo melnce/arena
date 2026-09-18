@@ -1,0 +1,67 @@
+name: slow
+
+on:
+  # 07:00 UTC = midnight Pacific. Owner activity on this repo clusters
+  # 16:00–01:30 UTC; this is after that window and before weekday EU/US morning.
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+  push:
+    # `main` is the standing trigger. `cursor/slow-suite-split` is a
+    # one-time registration so `workflow_dispatch` can target this branch
+    # before the file exists on default; dropped in a follow-up commit.
+    branches: [main, cursor/slow-suite-split]
+
+# Cancel stacked merge-to-main runs. workflow_dispatch / schedule keep
+# their own group so a manual rerun does not kill a nightly, and a
+# nightly does not kill a dispatch the owner just started.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+
+jobs:
+  slow:
+    runs-on: ubuntu-latest
+    # Seven binaries measured 46:40 on the #52 runner (head e7868d8).
+    # `table_hit_floor_seed_spread` adds a few minutes on top of h0_tt.
+    # 65 = ~15 min headroom over ~50 min expected.
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: h0 transposition table (release, including ignored)
+        run: cargo test --release --test h0_tt -- --include-ignored --nocapture
+
+      - name: h0 alloc (release, including ignored)
+        run: cargo test --release --test h0_alloc -- --include-ignored --nocapture
+
+      - name: h0 olethal (release, including ignored)
+        run: cargo test --release --test h0_olethal -- --include-ignored --nocapture
+
+      - name: h0 opponent model (release, including ignored)
+        run: cargo test --release --test h0_opp -- --include-ignored --nocapture
+
+      - name: h0 wv (release, including ignored)
+        run: cargo test --release --test h0_wv -- --include-ignored --nocapture
+
+      - name: value net (release, including ignored)
+        run: cargo test --release --test net -- --include-ignored --nocapture
+
+      - name: self-play recorder (release, including ignored)
+        run: cargo test --release --test record -- --include-ignored --nocapture
