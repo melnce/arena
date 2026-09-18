@@ -60,9 +60,15 @@ async function confirmMulligans(page: Page) {
 async function mockLocalBot(
   page: Page,
   opts?: { failBotOnce?: boolean; onBot?: () => void },
-): Promise<{ botRequests: () => number }> {
+): Promise<{
+  botRequests: () => number;
+  lastBotBody: () => { actions?: unknown[] } | null;
+  gamePosts: () => Array<{ winner?: unknown; actions?: unknown[] }>;
+}> {
   let botRequests = 0;
   let failed = false;
+  let lastBotBody: { actions?: unknown[] } | null = null;
+  const gamePosts: Array<{ winner?: unknown; actions?: unknown[] }> = [];
   await page.route("http://127.0.0.1:8765/**", async (route) => {
     const url = route.request().url();
     if (url.includes("/health")) {
@@ -78,6 +84,15 @@ async function mockLocalBot(
       });
       return;
     }
+    if (url.includes("/game")) {
+      gamePosts.push(route.request().postDataJSON() as { winner?: unknown; actions?: unknown[] });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true, game_id: "test" }),
+      });
+      return;
+    }
     if (url.includes("/bot")) {
       botRequests += 1;
       opts?.onBot?.();
@@ -90,7 +105,12 @@ async function mockLocalBot(
         });
         return;
       }
-      const posted = route.request().postDataJSON() as { botSeed?: string; hash?: string };
+      const posted = route.request().postDataJSON() as {
+        botSeed?: string;
+        hash?: string;
+        actions?: unknown[];
+      };
+      lastBotBody = posted;
       const seed = posted.botSeed ?? "1";
       const actionJson = await page.evaluate(
         (s) => window.__arena!.botAction("h0", s),
@@ -110,7 +130,11 @@ async function mockLocalBot(
     }
     await route.fallback();
   });
-  return { botRequests: () => botRequests };
+  return {
+    botRequests: () => botRequests,
+    lastBotBody: () => lastBotBody,
+    gamePosts: () => gamePosts,
+  };
 }
 
 test("no server: badge is browser and vs-bot still plays", async ({ page }) => {
@@ -659,4 +683,69 @@ test("first-legal vs-bot policy never POSTs /bot", async ({ page }) => {
     timeout: 15_000,
   });
   expect(mock.botRequests()).toBe(0);
+});
+
+test("finished vs-bot game POSTs /game once; toggle off sends none", async ({ page }) => {
+  const mock = await mockLocalBot(page);
+  await boot(page);
+  await startGame(page, {
+    mode: "vs-bot",
+    seed: "1",
+    first: "b",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+    human: "a",
+    botPolicy: "h0",
+  });
+  await confirmMulligans(page);
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", {
+    timeout: 15_000,
+  });
+  const driveToTerminal = async () => {
+    const info = await page.evaluate(() => {
+      const a = window.__arena!;
+      let guard = 0;
+      let lastErr: string | null = null;
+      while ((a.full() as { phase?: string } | null)?.phase !== "terminal" && guard++ < 400) {
+        try {
+          const action = JSON.parse(a.botAction("random", String(10_000 + guard))) as Record<
+            string,
+            unknown
+          >;
+          a.apply(action);
+        } catch (err) {
+          lastErr = String(err);
+          break;
+        }
+      }
+      const full = a.full() as { phase?: string; winner?: string | null };
+      return { phase: full?.phase, winner: full?.winner ?? null, guard, lastErr };
+    });
+    expect(info.lastErr, JSON.stringify(info)).toBeNull();
+    expect(info.phase, JSON.stringify(info)).toBe("terminal");
+  };
+
+  await driveToTerminal();
+  await expect.poll(() => mock.gamePosts().length).toBe(1);
+  const posted = mock.gamePosts()[0]!;
+  expect(posted.winner === "a" || posted.winner === "b" || posted.winner == null).toBe(true);
+  const lastBot = mock.lastBotBody();
+  expect(Array.isArray(posted.actions)).toBe(true);
+  expect((posted.actions ?? []).length).toBeGreaterThanOrEqual((lastBot?.actions ?? []).length);
+
+  await openSettings(page);
+  await page.locator("#localBotToggle").uncheck();
+  await startGame(page, {
+    mode: "vs-bot",
+    seed: "2",
+    first: "b",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+    human: "a",
+    botPolicy: "h0",
+  });
+  await confirmMulligans(page);
+  await driveToTerminal();
+  await page.waitForTimeout(300);
+  expect(mock.gamePosts().length).toBe(1);
 });
