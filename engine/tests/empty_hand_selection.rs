@@ -241,22 +241,28 @@ fn extravagance_no_spell_in_hand_stays_unplayable() {
     );
 }
 
-/// Open question — Goddess of Starlight `10502110` Evolve with fewer than
-/// 3 cards: main opens a choice for as many as it can (0 → no node).
+/// Owner ruling 2026-09-18 — Goddess of Starlight `10502110` Evolve with
+/// fewer than 3 cards: n=0 fizzles with no choice node; n=1 and n=2 open
+/// a choice for as many as there are (Ralmia Q&A). Drive the choice
+/// through and pin the whole resolution, including the second sentence
+/// ("Add an exact copy each of the 3 leftmost cards in your hand…").
 #[test]
 fn goddess_evolve_fewer_than_three_matches_main() {
     let db = load_db();
     let me = PlayerId::A;
-    for n in [0usize, 1, 2] {
+    const OTHER: &str = "88001120";
+
+    // n=0: selection fizzles, no node. Second sentence reads the empty
+    // post-fizzle hand and adds nothing.
+    {
         let mut st = started(&db, 28);
         set_round(&mut st, me, 5);
         st.player_mut(me).ep = 1;
         st.player_mut(me).field = Default::default();
         let slot = put_field(&db, &mut st, me, "10502110");
         clear_hand(&mut st, me);
-        for _ in 0..n {
-            put_hand(&db, &mut st, me, VANILLA);
-        }
+        let shadows0 = st.player(me).shadows;
+        let cem0 = st.player(me).cemetery.len();
         apply(
             &db,
             &mut st,
@@ -266,16 +272,128 @@ fn goddess_evolve_fewer_than_three_matches_main() {
             },
         )
         .expect("evolve goddess");
-        if n == 0 {
-            assert!(
-                !matches!(st.phase, Phase::Choice { .. }),
-                "empty hand: selection fizzles, no node"
-            );
-        } else {
-            assert!(
-                matches!(st.phase, Phase::Choice { .. }),
-                "n={n}: main offers as many as it can"
-            );
-        }
+        assert!(
+            !matches!(st.phase, Phase::Choice { .. }),
+            "empty hand: selection fizzles, no node"
+        );
+        assert_eq!(st.player(me).hand.len(), 0, "n=0: no copies added");
+        assert_eq!(st.player(me).shadows, shadows0, "n=0: nothing discarded");
+        assert_eq!(
+            st.player(me).cemetery.len(),
+            cem0,
+            "n=0: cemetery unchanged"
+        );
+    }
+
+    // n=1: one choose, that card is discarded, hand is then empty, so
+    // "3 leftmost cards in your hand" copies nothing.
+    {
+        let mut st = started(&db, 28);
+        set_round(&mut st, me, 5);
+        st.player_mut(me).ep = 1;
+        st.player_mut(me).field = Default::default();
+        let slot = put_field(&db, &mut st, me, "10502110");
+        clear_hand(&mut st, me);
+        put_hand(&db, &mut st, me, VANILLA);
+        let shadows0 = st.player(me).shadows;
+        apply(
+            &db,
+            &mut st,
+            Action::Evolve {
+                slot: Slot(slot),
+                super_evolve: false,
+            },
+        )
+        .expect("evolve goddess");
+        assert!(
+            matches!(st.phase, Phase::Choice { .. }),
+            "n=1: main offers as many as it can"
+        );
+        choose(&db, &mut st, 0);
+        assert!(
+            !matches!(st.phase, Phase::Choice { .. }),
+            "n=1: a single pick exhausts the selection"
+        );
+        assert_eq!(
+            st.player(me).hand.len(),
+            0,
+            "n=1: discarded the only card; second sentence adds 0 copies from an empty hand"
+        );
+        assert!(
+            !hand_has(&st, me, VANILLA),
+            "n=1: the selected card was discarded, not copied back"
+        );
+        assert_eq!(
+            st.player(me).shadows,
+            shadows0 + 1,
+            "n=1: exactly one discard"
+        );
+        assert_eq!(
+            st.player(me)
+                .cemetery
+                .iter()
+                .filter(|c| c.card.as_str() == VANILLA)
+                .count(),
+            1,
+            "n=1: the discarded vanilla is in the cemetery"
+        );
+    }
+
+    // n=2: two sequential picks, both discarded, hand then empty, 0 copies.
+    {
+        let mut st = started(&db, 28);
+        set_round(&mut st, me, 5);
+        st.player_mut(me).ep = 1;
+        st.player_mut(me).field = Default::default();
+        let slot = put_field(&db, &mut st, me, "10502110");
+        clear_hand(&mut st, me);
+        put_hand(&db, &mut st, me, VANILLA);
+        put_hand(&db, &mut st, me, OTHER);
+        let shadows0 = st.player(me).shadows;
+        apply(
+            &db,
+            &mut st,
+            Action::Evolve {
+                slot: Slot(slot),
+                super_evolve: false,
+            },
+        )
+        .expect("evolve goddess");
+        assert!(
+            matches!(st.phase, Phase::Choice { .. }),
+            "n=2: main offers as many as it can"
+        );
+        choose(&db, &mut st, 0);
+        assert!(
+            matches!(st.phase, Phase::Choice { .. }),
+            "n=2: a second pick remains after the first"
+        );
+        choose(&db, &mut st, 0);
+        assert!(
+            !matches!(st.phase, Phase::Choice { .. }),
+            "n=2: two picks exhaust the selection"
+        );
+        assert_eq!(
+            st.player(me).hand.len(),
+            0,
+            "n=2: both cards discarded; second sentence adds 0 copies from an empty hand"
+        );
+        assert!(!hand_has(&st, me, VANILLA));
+        assert!(!hand_has(&st, me, OTHER));
+        assert_eq!(
+            st.player(me).shadows,
+            shadows0 + 2,
+            "n=2: exactly two discards"
+        );
+        let cem: Vec<String> = st
+            .player(me)
+            .cemetery
+            .iter()
+            .map(|c| c.card.as_str())
+            .collect();
+        assert!(
+            cem.iter().any(|id| id == VANILLA) && cem.iter().any(|id| id == OTHER),
+            "n=2: both selected cards are in the cemetery, got {cem:?}"
+        );
     }
 }
