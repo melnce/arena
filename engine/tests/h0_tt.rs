@@ -195,9 +195,28 @@ fn check_table_does_work(n: usize) {
     let db = load_db();
     let states = collect_states(&db, n, true);
     assert_eq!(states.len(), n, "could not reach {n} mid-game states");
-    // Pre-TK leaf keeps the ≥-half pin. The net leaf still hits and still
-    // lowers cap_hit_rate (98/200 on this box — just under half).
-    check_table_pair(&db, &states, n, "h0:value=v0,tt=0", "h0:value=v0", true);
+    // c42163b flipped the H0 default to alloc=fair. The ≥-half pin was
+    // calibrated on the root-major spend (`100/200` hit_decisions,
+    // cap_hit_rate 0.585/0.575, tt_hits=2461). Fair-share gives each
+    // (root, candidate) pair a slice of `node_cap`, so trees are shallower:
+    // more stores, fewer intra-decision revisits, and the table is
+    // consulted on 81/200 midgame decisions at collect seed 1 — still
+    // hits, still lowers cap_hit_rate (0.1450 → 0.1400), just not on
+    // half the corpus. Pin: consulted on at least one third of midgame
+    // decisions. Headroom is 7 pp below the pinned corpus (81/200) and
+    // 5 pp below the worst of three collect seeds × {n=200, n=400}
+    // (38.75%–50.5%). 80/200 would be today's figure minus one and is
+    // not a pin. `alloc=fair` is named so a later default flip cannot
+    // silently retarget this assertion. The net leaf is still checked
+    // only for cap_hit_rate (it was already 98/200 under root-major).
+    check_table_pair(
+        &db,
+        &states,
+        n,
+        "h0:value=v0,alloc=fair,tt=0",
+        "h0:value=v0,alloc=fair",
+        true,
+    );
     check_table_pair(&db, &states, n, "h0:tt=0", "h0", false);
 }
 
@@ -207,7 +226,7 @@ fn check_table_pair(
     n: usize,
     off_spec: &str,
     on_spec: &str,
-    require_half: bool,
+    require_hit_floor: bool,
 ) {
     let mut off = parse_h0(off_spec);
     let mut on = parse_h0(on_spec);
@@ -237,10 +256,10 @@ fn check_table_pair(
         on.stats.tt_hits, on.stats.tt_stores
     );
     if n >= 200 {
-        if require_half {
+        if require_hit_floor {
             assert!(
-                hit_decisions * 2 >= searched,
-                "tt_hits > 0 on {hit_decisions}/{searched} decisions (want ≥ half)"
+                hit_decisions * 3 >= searched,
+                "tt_hits > 0 on {hit_decisions}/{searched} decisions (want ≥ 1/3)"
             );
         }
         assert!(
