@@ -7,6 +7,8 @@ Stdlib only. Bind 127.0.0.1 by default. See docs/local-bot.md.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
+import hashlib
 import json
 import os
 import subprocess
@@ -21,6 +23,7 @@ from urllib.parse import urlparse
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 DEFAULT_STRONG = "h0:nodes=16000"
+DEFAULT_GAMES_DIR = "results/games"
 DEFAULT_ORIGINS = (
     "https://arena-nu-one.vercel.app,"
     "http://localhost:5173,"
@@ -92,6 +95,134 @@ def parse_origins(raw: str) -> list[str]:
     return [part.strip() for part in raw.split(",") if part.strip()]
 
 
+def utc_now() -> str:
+    return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def canonical_deck_json(deck: dict[str, int]) -> str:
+    return json.dumps(deck, sort_keys=True, separators=(",", ":"))
+
+
+def make_game_id(seed: int, deck_a: dict[str, int], deck_b: dict[str, int], first: str) -> str:
+    blob = f"{canonical_deck_json(deck_a)}|{canonical_deck_json(deck_b)}|{first}"
+    digest = hashlib.sha1(blob.encode("utf-8")).hexdigest()[:8]
+    return f"{seed}-{digest}"
+
+
+def resolve_games_dir(raw: str | None, disabled: bool, root: Path) -> Path | None:
+    if disabled or raw is None:
+        return None
+    path = Path(raw)
+    if not path.is_absolute():
+        path = root / path
+    return path
+
+
+def _actions_len(payload: dict[str, Any]) -> int:
+    actions = payload.get("actions")
+    return len(actions) if isinstance(actions, list) else 0
+
+
+def _load_game_file(path: Path) -> dict[str, Any] | None:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _game_path(games_dir: Path, game_id: str, n: int) -> Path:
+    if n <= 1:
+        return games_dir / f"{game_id}.json"
+    return games_dir / f"{game_id}-{n}.json"
+
+
+def _existing_game_paths(games_dir: Path, game_id: str) -> list[Path]:
+    paths: list[Path] = []
+    n = 1
+    while True:
+        path = _game_path(games_dir, game_id, n)
+        if not path.is_file():
+            break
+        paths.append(path)
+        n += 1
+    return paths
+
+
+def _next_free_game_path(games_dir: Path, game_id: str) -> Path:
+    n = 1
+    while _game_path(games_dir, game_id, n).is_file():
+        n += 1
+    return _game_path(games_dir, game_id, n)
+
+
+def _highest_open_game_path(games_dir: Path, game_id: str) -> Path | None:
+    for path in reversed(_existing_game_paths(games_dir, game_id)):
+        stored = _load_game_file(path)
+        if stored is not None and not stored.get("final"):
+            return path
+    return None
+
+
+def maybe_write_game(
+    games_dir: Path | None,
+    record: dict[str, Any],
+    *,
+    allow_equal: bool,
+) -> None:
+    """Write the capture file for `game_id` if the incoming log is long enough.
+
+    `/bot` overwrites only when the new actions list is strictly longer.
+    `/game` overwrites when it is at least as long. A stored `"final": true`
+    plus a non-final write rolls over to `<game_id>-2.json`, `-3.json`, …
+    without comparing lengths. `/game` finalises the highest-numbered file
+    that is not yet final (creating one if none exists). IO errors are
+    logged and swallowed so a capture failure never breaks a reply.
+    """
+    if games_dir is None:
+        return
+    game_id = str(record.get("game_id") or "")
+    if not game_id:
+        return
+    try:
+        games_dir.mkdir(parents=True, exist_ok=True)
+        incoming_final = bool(record.get("final"))
+        incoming = _actions_len(record)
+        if incoming_final:
+            path = _highest_open_game_path(games_dir, game_id)
+            if path is None:
+                path = _next_free_game_path(games_dir, game_id)
+                path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+                return
+        else:
+            existing = _existing_game_paths(games_dir, game_id)
+            if not existing:
+                path = _game_path(games_dir, game_id, 1)
+            else:
+                latest = existing[-1]
+                stored = _load_game_file(latest)
+                if stored is not None and stored.get("final"):
+                    path = _next_free_game_path(games_dir, game_id)
+                    path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+                    return
+                path = latest
+        if path.is_file():
+            stored = _load_game_file(path)
+            if stored is not None:
+                have = _actions_len(stored)
+                if allow_equal:
+                    if incoming < have:
+                        return
+                elif incoming <= have:
+                    return
+                for key in ("policy", "strong", "engine"):
+                    if not record.get(key) and stored.get(key):
+                        record[key] = stored[key]
+        path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    except OSError as e:
+        print(f"games write failed: {e}", flush=True)
+
+
 class ServerContext:
     def __init__(
         self,
@@ -99,11 +230,13 @@ class ServerContext:
         strong: str,
         origins: list[str],
         version: str,
+        games_dir: Path | None = None,
     ) -> None:
         self.db = db
         self.strong = strong
         self.origins = set(origins)
         self.version = version
+        self.games_dir = games_dir
         self.lock = threading.Lock()
 
 
@@ -163,7 +296,7 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
 
         def do_POST(self) -> None:  # noqa: N802
             path = urlparse(self.path).path
-            if path != "/bot":
+            if path not in ("/bot", "/game"):
                 self._error(404, "not found")
                 return
             try:
@@ -181,11 +314,29 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                 self._error(400, "body must be a JSON object")
                 return
             with ctx.lock:
-                self._handle_bot(body)
+                if path == "/bot":
+                    self._handle_bot(body)
+                else:
+                    self._handle_game(body)
+
+        def _bot_line(
+            self,
+            policy: str,
+            turn: int,
+            t_ms: float,
+            hash_ok: str,
+            game_id: str | None,
+        ) -> None:
+            extra = f" game={game_id}" if game_id else ""
+            print(
+                f"bot policy={policy} turn={turn} ms={t_ms:.1f} hash={hash_ok}{extra}",
+                flush=True,
+            )
 
         def _handle_bot(self, body: dict[str, Any]) -> None:
             import arena
 
+            game_id: str | None = None
             try:
                 seed = int(body["seed"])
                 bot_seed = int(body["botSeed"])
@@ -200,12 +351,17 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                 return
 
             policy = effective_policy(requested, ctx.strong)
+            game_id = make_game_id(seed, deck_a, deck_b, first)
+            actions = body.get("actions") or []
+            if not isinstance(actions, list):
+                self._error(400, "actions must be a list")
+                return
             hash_ok = "n/a"
             t_ms = 0.0
             turn = 0
             try:
                 game = arena.Game(ctx.db, seed, deck_a, deck_b, first)
-                for i, step in enumerate(body.get("actions") or []):
+                for i, step in enumerate(actions):
                     if not isinstance(step, dict):
                         raise ValueError(f"actions[{i}] must be an object")
                     if "reseed" in step:
@@ -217,10 +373,7 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                 client_hash = body.get("hash")
                 if client_hash is not None and str(client_hash) != server_hash:
                     hash_ok = "mismatch"
-                    print(
-                        f"bot policy={policy} turn={turn} ms=0 hash={hash_ok}",
-                        flush=True,
-                    )
+                    self._bot_line(policy, turn, 0.0, hash_ok, game_id)
                     self._write_json(
                         409,
                         {
@@ -235,31 +388,37 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                 action = game.bot_action(policy, bot_seed)
                 t_ms = (time.perf_counter() - t0) * 1000.0
             except arena.Illegal as e:
-                print(
-                    f"bot policy={policy} turn={turn} ms={t_ms:.1f} hash={hash_ok}",
-                    flush=True,
-                )
+                self._bot_line(policy, turn, t_ms, hash_ok, game_id)
                 self._error(400, str(e))
                 return
             except ValueError as e:
-                print(
-                    f"bot policy={policy} turn={turn} ms={t_ms:.1f} hash={hash_ok}",
-                    flush=True,
-                )
+                self._bot_line(policy, turn, t_ms, hash_ok, game_id)
                 self._error(400, str(e))
                 return
             except Exception as e:  # noqa: BLE001
-                print(
-                    f"bot policy={policy} turn={turn} ms={t_ms:.1f} hash={hash_ok}",
-                    flush=True,
-                )
+                self._bot_line(policy, turn, t_ms, hash_ok, game_id)
                 self._error(500, str(e))
                 return
 
-            print(
-                f"bot policy={policy} turn={turn} ms={t_ms:.1f} hash={hash_ok}",
-                flush=True,
+            maybe_write_game(
+                ctx.games_dir,
+                {
+                    "v": 1,
+                    "game_id": game_id,
+                    "seed": seed,
+                    "deckA": deck_a,
+                    "deckB": deck_b,
+                    "first": first,
+                    "actions": actions,
+                    "policy": policy,
+                    "strong": ctx.strong,
+                    "engine": ctx.version,
+                    "updated": utc_now(),
+                    "final": False,
+                },
+                allow_equal=False,
             )
+            self._bot_line(policy, turn, t_ms, hash_ok, game_id)
             self._write_json(
                 200,
                 {
@@ -269,6 +428,49 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                     "hash": server_hash,
                 },
             )
+
+        def _handle_game(self, body: dict[str, Any]) -> None:
+            try:
+                seed = int(body["seed"])
+                first = str(body.get("first") or "coin")
+                deck_a = decode_deck(body["deckA"])
+                deck_b = decode_deck(body["deckB"])
+            except (KeyError, TypeError, ValueError) as e:
+                self._error(400, str(e))
+                return
+            actions = body.get("actions") or []
+            if not isinstance(actions, list):
+                self._error(400, "actions must be a list")
+                return
+            winner = body.get("winner")
+            if winner not in ("a", "b", None):
+                self._error(400, "winner must be \"a\", \"b\", or null")
+                return
+            game_id = make_game_id(seed, deck_a, deck_b, first)
+            requested = str(body.get("policy") or "")
+            policy = effective_policy(requested, ctx.strong) if requested else ""
+            finished = utc_now()
+            maybe_write_game(
+                ctx.games_dir,
+                {
+                    "v": 1,
+                    "game_id": game_id,
+                    "seed": seed,
+                    "deckA": deck_a,
+                    "deckB": deck_b,
+                    "first": first,
+                    "actions": actions,
+                    "policy": policy,
+                    "strong": ctx.strong,
+                    "engine": ctx.version,
+                    "updated": finished,
+                    "final": True,
+                    "winner": winner,
+                    "finished": finished,
+                },
+                allow_equal=True,
+            )
+            self._write_json(200, {"ok": True, "game_id": game_id})
 
     return Handler
 
@@ -281,11 +483,18 @@ def make_server(args: argparse.Namespace, db: Any | None = None) -> ThreadingHTT
 
         db = arena.load_cards(str(cards))
     origins = parse_origins(args.origins)
+    games_dir = resolve_games_dir(args.games_dir, args.no_games, root)
+    if games_dir is not None:
+        try:
+            games_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            print(f"games-dir: {e}", flush=True)
     ctx = ServerContext(
         db=db,
         strong=args.strong,
         origins=origins,
         version=git_version(root),
+        games_dir=games_dir,
     )
     handler = make_handler(ctx)
     httpd = ThreadingHTTPServer((args.host, int(args.port)), handler)
@@ -322,6 +531,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="cards/ directory or repo root (default: repo cards/ as matchup.py finds it)",
     )
+    p.add_argument(
+        "--games-dir",
+        default=DEFAULT_GAMES_DIR,
+        help=f"directory for captured vs-bot games (default: {DEFAULT_GAMES_DIR})",
+    )
+    p.add_argument(
+        "--no-games",
+        action="store_true",
+        help="do not write captured games",
+    )
     return p.parse_args(argv)
 
 
@@ -337,6 +556,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"arena local bot server")
     print(f"  strong:   {args.strong}")
     print(f"  origins:  {', '.join(origins)}")
+    games = "off" if args.no_games else args.games_dir
+    print(f"  games:    {games}")
     print(f"  listening http://{host}:{port}/")
     print(
         "  Open the site in the same browser session. "

@@ -163,6 +163,38 @@ impl PyGame {
         value_to_py(py, &val)
     }
 
+    /// Same decision as [`Self::bot_action`], plus the policy's `last_value`
+    /// after `choose` (`None` when the policy did not search).
+    fn bot_action_value<'py>(
+        &self,
+        py: Python<'py>,
+        policy: &str,
+        seed: u64,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let legal = legal_actions(&self.db, &self.state);
+        if legal.is_empty() {
+            return Err(py_err_msg("no legal actions"));
+        }
+        let available = serde_json::to_string(names()).unwrap_or_else(|_| "[]".into());
+        let mut boxed = by_name(policy, seed)
+            .ok_or_else(|| py_err_msg(format!("unknown policy {policy}; available {available}")))?;
+        let mut rng = policy_rng(seed);
+        let idx = boxed.choose(&self.db, &self.state, &legal, &mut rng);
+        if idx >= legal.len() {
+            return Err(py_err_msg(format!(
+                "policy {policy} chose {idx} past legal_len={}",
+                legal.len()
+            )));
+        }
+        let chosen = to_neutral(&self.state, &legal[idx]);
+        let val = serde_json::to_value(&chosen).unwrap_or(serde_json::Value::Null);
+        let value = boxed
+            .last_value()
+            .map(serde_json::Value::from)
+            .unwrap_or(serde_json::Value::Null);
+        value_to_py(py, &serde_json::json!({"action": val, "value": value}))
+    }
+
     #[getter]
     fn phase(&self) -> &'static str {
         phase_str(&self.state.phase)

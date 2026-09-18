@@ -62,6 +62,8 @@ let localBotRemoteCount = 0;
 let localBotThinking = false;
 /** The vs-bot loop that currently owns `session`, or null. */
 let botLoopSession: Session | null = null;
+/** Session already POSTed to `/game`, or null. Reset in `startSession`. */
+let reportedGameFor: Session | null = null;
 let watchTimer = 0;
 let paintQueued = 0;
 const importedDecks = new Map<string, { label: string; cards: Record<string, number> }>();
@@ -335,6 +337,27 @@ function floatingTextOn(): boolean {
   return box ? box.checked : true;
 }
 
+function shouldReportFinishedGame(): boolean {
+  return !localBotQueryOff() && localBotToggleOn() && !!localBot;
+}
+
+function reportFinishedGame(s: Session): void {
+  if (reportedGameFor === s) return;
+  if (s.cfg.mode !== "vs-bot") return;
+  if (s.game.phase() !== "terminal") return;
+  if (!shouldReportFinishedGame()) return;
+  reportedGameFor = s;
+  const winner = (s.game.winner() as "a" | "b" | null) ?? null;
+  void fetch(`${LOCAL_BOT_HOST}/game`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ ...toPositionLog(s), winner }),
+    signal: AbortSignal.timeout(2000),
+  }).catch((err) => {
+    console.debug("local bot /game", err);
+  });
+}
+
 function showCombat(events: EngineEvent[]): void {
   if (!session) return;
   const show = !session.suppressFloater && floatingTextOn();
@@ -343,6 +366,9 @@ function showCombat(events: EngineEvent[]): void {
   if (show) spawnFloaters(events, true);
   paint();
   if (show) reflashDamage(events);
+  if (session.cfg.mode === "vs-bot" && session.game.phase() === "terminal") {
+    reportFinishedGame(session);
+  }
 }
 
 function toast(msg: string): void {
@@ -484,6 +510,7 @@ async function startFromForm(): Promise<void> {
 function startSession(cfg: SessionConfig): void {
   watchPlaying = false;
   botLoopSession = null;
+  reportedGameFor = null;
   localBotGameError = null;
   localBotRemoteCount = 0;
   localBotThinking = false;
@@ -650,7 +677,10 @@ function shouldUseLocalBot(s: Session): boolean {
 
 async function maybeBots(): Promise<void> {
   if (!session) return;
-  if (session.game.phase() === "terminal") return;
+  if (session.game.phase() === "terminal") {
+    reportFinishedGame(session);
+    return;
+  }
   if (session.cfg.mode === "hotseat") return;
   if (session.cfg.mode === "watch") {
     if (watchPlaying) scheduleWatch();
