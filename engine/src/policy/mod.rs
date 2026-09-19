@@ -120,7 +120,8 @@ impl AnyPolicy {
     /// opponent-lethal sweep on the greedy path; default `1`; `olethal=0`
     /// restores the pre-flip greedy path; ignored when
     /// `odepth≥1`), `oevo=0|1` (extend that sweep with one evolve;
-    /// default `0`; only meaningful with `olethal=1` and `odepth=0`;
+    /// default `1` is the sweep-8b flip; `oevo=0` restores the pre-flip
+    /// glance path; only meaningful with `olethal=1` and `odepth=0`;
     /// no hard error for other combinations), `osteps=<u32>` (greedy
     /// forced-`EndTurn` step; default `6`;
     /// hard stop is `osteps+3`), `wv=<f32>` (saturation bound on every
@@ -131,9 +132,11 @@ impl AnyPolicy {
     /// node cap is spent across `(root, candidate)` pairs; default
     /// `fair` = per-pair share; `alloc=root` restores the pre-#46
     /// root-major spend), `info=fair|draws|all` (what the search is
-    /// allowed to know; default `draws` = own draw order exact, opponent
-    /// resampled; `fair` also resamples own deck; `all` is the true
-    /// state and builds one root regardless of `k`), and `w_shadows=`,
+    /// allowed to know; default `fair` = own deck resampled (hand
+    /// untouched), opponent resampled — a human with open decklists;
+    /// `draws` restores the pre-flip path (own draw order exact);
+    /// `all` is the true state and builds one root regardless of `k`),
+    /// and `w_shadows=`,
     /// `w_earth=`, `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`,
     /// `w_lw=` (f32; only meaningful with `value=v1`).
     ///
@@ -156,11 +159,11 @@ impl AnyPolicy {
     /// `value=net,net=<path>` (the built-in net is the default and is not
     /// printed), non-default
     /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
-    /// `oevo=1` when the evolve branch is on, non-default `wv`,
+    /// `oevo=0` when the evolve branch is off, non-default `wv`,
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
-    /// when the allocator is the pre-#46 root-major spend, `info=fair`
+    /// when the allocator is the pre-#46 root-major spend, `info=draws`
     /// / `info=all` when the information regime is not the default
-    /// `draws`, and any non-default weight.
+    /// `fair`, and any non-default weight.
     /// `"h0"` still round-trips to `"h0"`.
     pub fn spec(&self) -> String {
         match self {
@@ -209,8 +212,8 @@ fn h0_spec(h: &H0) -> String {
     if !h.olethal {
         parts.push("olethal=0".to_string());
     }
-    if h.oevo {
-        parts.push("oevo=1".to_string());
+    if !h.oevo {
+        parts.push("oevo=0".to_string());
     }
     if h.osteps != def.osteps {
         parts.push(format!("osteps={}", h.osteps));
@@ -227,11 +230,11 @@ fn h0_spec(h: &H0) -> String {
     if h.alloc != Alloc::Fair {
         parts.push("alloc=root".to_string());
     }
-    if h.info != Info::Draws {
+    if h.info != Info::Fair {
         parts.push(match h.info {
-            Info::Fair => "info=fair".to_string(),
+            Info::Draws => "info=draws".to_string(),
             Info::All => "info=all".to_string(),
-            Info::Draws => unreachable!(),
+            Info::Fair => unreachable!(),
         });
     }
     let w = &h.weights;

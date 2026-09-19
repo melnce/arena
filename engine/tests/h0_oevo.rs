@@ -1,7 +1,6 @@
-//! H0 opponent-lethal evolve glance (`oevo`): identity at the default,
-//! spec round-trip, the play-then-evolve Storm fixture, no false
-//! positive, and determinism. Default behaviour is bit-identical; the
-//! yardstick decides any flip.
+//! H0 opponent-lethal evolve glance (`oevo`): identity at the default
+//! (`oevo=1`), spec round-trip, the play-then-evolve Storm fixture, no
+//! false positive, and determinism. `oevo=0` is the pre-flip glance path.
 
 use arena_engine::{
     apply, legal_actions, new_game, play_game, policy_rng, Action, AnyPolicy, CardDb, CardId,
@@ -161,12 +160,12 @@ fn no_lethal_opp_state(db: &CardDb) -> arena_engine::State {
     st
 }
 
-fn check_oevo0_identity(n: usize) {
+fn check_oevo1_identity(n: usize) {
     let db = load_db();
     let states = collect_states(&db, n, true);
     assert_eq!(states.len(), n, "could not reach {n} mid-game states");
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:oevo=0").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:oevo=1").unwrap().spec(), "h0");
     assert_eq!(AnyPolicy::parse_spec("h0-fast").unwrap().spec(), "h0-fast");
     for (i, state) in states.iter().enumerate() {
         let legal = legal_actions(&db, state);
@@ -176,40 +175,40 @@ fn check_oevo0_identity(n: usize) {
         let seed = 20260919u64.wrapping_add(i as u64);
         let mut main = H0::default();
         let mut named = parse_h0("h0");
-        let mut off = parse_h0("h0:oevo=0");
+        let mut on = parse_h0("h0:oevo=1");
         let mut rng_m = policy_rng(seed);
         let mut rng_n = policy_rng(seed);
         let mut rng_o = policy_rng(seed);
         let im = main.choose(&db, state, &legal, &mut rng_m);
         let inn = named.choose(&db, state, &legal, &mut rng_n);
-        let io = off.choose(&db, state, &legal, &mut rng_o);
+        let io = on.choose(&db, state, &legal, &mut rng_o);
         assert_eq!(im, inn, "h0 vs H0::default at state {i}");
-        assert_eq!(im, io, "h0 vs h0:oevo=0 at state {i}");
+        assert_eq!(im, io, "h0 vs h0:oevo=1 at state {i}");
         assert!(im < legal.len());
     }
 }
 
 #[test]
-fn oevo0_identity_smoke() {
-    check_oevo0_identity(8);
+fn oevo1_identity_smoke() {
+    check_oevo1_identity(8);
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn oevo0_identity_200_midgame() {
-    check_oevo0_identity(200);
+fn oevo1_identity_200_midgame() {
+    check_oevo1_identity(200);
 }
 
 #[test]
 fn spec_oevo() {
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:oevo=0").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:oevo=1").unwrap().spec(), "h0");
     assert_eq!(
-        AnyPolicy::parse_spec("h0:oevo=1").unwrap().spec(),
-        "h0:oevo=1"
+        AnyPolicy::parse_spec("h0:oevo=0").unwrap().spec(),
+        "h0:oevo=0"
     );
     assert_eq!(AnyPolicy::parse_spec("h0-fast").unwrap().spec(), "h0-fast");
-    let again = AnyPolicy::parse_spec("h0:oevo=1").unwrap();
+    let again = AnyPolicy::parse_spec("h0:oevo=0").unwrap();
     assert_eq!(AnyPolicy::parse_spec(&again.spec()).unwrap(), again);
     for bad in ["h0:oevo=2", "h0:oevo=x"] {
         let e = AnyPolicy::parse_spec(bad).unwrap_err();

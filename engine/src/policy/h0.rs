@@ -219,8 +219,10 @@ pub struct H0 {
     /// How the node cap is split across `(root, candidate)` pairs.
     /// Default [`Alloc::Fair`] is today's per-pair budget share (`c42163b`).
     pub alloc: Alloc,
-    /// What the search is allowed to know. Default [`Info::Draws`] is
-    /// today's path: own draw order is exact, opponent is resampled.
+    /// What the search is allowed to know. Default [`Info::Fair`] is the
+    /// sweep-8b flip: own deck order is resampled (hand untouched),
+    /// opponent is resampled — the same information a human with open
+    /// decklists has. `info=draws` restores the pre-flip path.
     pub info: Info,
     pub value: ValueVersion,
     pub weights: Weights,
@@ -240,8 +242,8 @@ pub struct H0 {
     /// Default `true` is the sweep-5 flip; `olethal=0` restores the pre-flip greedy path.
     pub olethal: bool,
     /// Extend that sweep with at most one `Evolve` / `super_evolve` per
-    /// leaf (`olethal=1`, `odepth=0` only). Default `false` — off; a flip
-    /// needs the owner's yardstick.
+    /// leaf (`olethal=1`, `odepth=0` only). Default `true` is the sweep-8b
+    /// flip; `oevo=0` restores the pre-flip glance path.
     pub oevo: bool,
     /// Greedy-line steps before a forced `EndTurn`. Default `6` is the sweep-5
     /// flip; the hard stop is `osteps + 3` (today: 9).
@@ -264,7 +266,7 @@ impl Default for H0 {
             determinizations: 4,
             node_cap: 2000,
             alloc: Alloc::Fair,
-            info: Info::Draws,
+            info: Info::Fair,
             value: ValueVersion::Net,
             weights: Weights::default(),
             odepth: 0,
@@ -273,7 +275,7 @@ impl Default for H0 {
             pess: 0.0,
             tt: true,
             olethal: true,
-            oevo: false,
+            oevo: true,
             osteps: 6,
             net: Some(builtin_net()),
             net_path: None,
@@ -1198,11 +1200,11 @@ fn greedy_until_end(
 /// Applies spent by one opponent-lethal sweep, charged through [`try_apply`].
 /// Tight for the attack-only + play-then-attack loop; do not raise.
 const OPP_LETHAL_APPLY_CAP: u32 = 40;
-/// Same sweep when `oevo=1`. Play loop plus at most one evolve per leaf
-/// (and the face line after it). 120 is the worst-case envelope — a
-/// wide hand of opening plays, each trying several evolve slots × a
-/// short face line, plus the standalone pass — not the mean. The
-/// 50-game abyss-p8rfn mirror measured 8.2 applies/sweep (`oevo=1`)
+/// Same sweep when `oevo=1` (the default). Play loop plus at most one
+/// evolve per leaf (and the face line after it). 120 is the worst-case
+/// envelope — a wide hand of opening plays, each trying several evolve
+/// slots × a short face line, plus the standalone pass — not the mean.
+/// The 50-game abyss-p8rfn mirror measured 8.2 applies/sweep (`oevo=1`)
 /// vs 6.1 (`oevo=0`); the play-then-evolve fixture spends 7.
 const OPP_LETHAL_EVO_APPLY_CAP: u32 = 120;
 
@@ -1451,10 +1453,11 @@ fn standalone_evolve_kills(
 
 /// Glance-level opponent lethal: face attacks, then each `Play` (plus its
 /// `Choose`/`Confirm`) and a face line when that play opened one. With
-/// `oevo=1`, a play that opened a line but missed face then tries each
-/// legal evolve (just-played slot first), and a standalone evolve pass
-/// runs if those also miss. Caps at [`OPP_LETHAL_APPLY_CAP`] (`oevo=0`)
-/// or [`OPP_LETHAL_EVO_APPLY_CAP`] (`oevo=1`), all charged to `nodes`.
+/// `oevo=1` (the default), a play that opened a line but missed face then
+/// tries each legal evolve (just-played slot first), and a standalone
+/// evolve pass runs if those also miss. Caps at [`OPP_LETHAL_APPLY_CAP`]
+/// (`oevo=0`) or [`OPP_LETHAL_EVO_APPLY_CAP`] (`oevo=1`), all charged to
+/// `nodes`.
 #[allow(clippy::too_many_arguments)]
 fn opp_lethal_sweep(
     db: &CardDb,

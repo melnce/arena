@@ -215,8 +215,10 @@ fn check_table_does_work(n: usize) {
     // corpus (81/200) and 5 pp below the worst of three collect seeds ×
     // {n=200, n=400} (38.75%–50.5%). 80/200 would be today's figure
     // minus one and is not a pin. Every knob this measurement depends
-    // on is named (`alloc=fair,olethal=0,osteps=3`) so a later default
-    // flip cannot silently retarget this assertion.
+    // on is named (`alloc=fair,olethal=0,osteps=3,info=draws`) so a
+    // later default flip cannot silently retarget this assertion.
+    // `info` changes determinization and therefore every search; `oevo`
+    // is inert here because `olethal=0` disables the sweep.
     //
     // cap_hit_rate tt=1 < tt=0 is not a property. `table_hit_floor_seed_spread`
     // on seeds {1, 17, 42} × {n=200, n=400} ties exactly on two of six
@@ -229,8 +231,8 @@ fn check_table_does_work(n: usize) {
         &db,
         &states,
         n,
-        "h0:value=v0,alloc=fair,olethal=0,osteps=3,tt=0",
-        "h0:value=v0,alloc=fair,olethal=0,osteps=3",
+        "h0:value=v0,alloc=fair,olethal=0,osteps=3,info=draws,tt=0",
+        "h0:value=v0,alloc=fair,olethal=0,osteps=3,info=draws",
         true,
     );
     check_table_pair(&db, &states, n, "h0:tt=0", "h0", false);
@@ -294,17 +296,17 @@ fn table_does_work_200_midgame() {
 
 /// Re-derive the hit_decisions spread that justifies the ≥1/3 floor.
 /// Prints seeds 1/17/42 × {n=200, n=400} on the
-/// `h0:value=v0,alloc=fair,olethal=0,osteps=3` pair — the same named
-/// search as the pin it justifies. Print-only — does not retarget the
-/// floor. The cap_hit_rate inequality was deleted after this table
-/// showed exact ties on seed 42 (n=200 and n=400). Slow; lives in the
-/// `slow` workflow via `--include-ignored`.
+/// `h0:value=v0,alloc=fair,olethal=0,osteps=3,info=draws` pair — the
+/// same named search as the pin it justifies. Print-only — does not
+/// retarget the floor. The cap_hit_rate inequality was deleted after
+/// this table showed exact ties on seed 42 (n=200 and n=400). Slow;
+/// lives in the `slow` workflow via `--include-ignored`.
 #[test]
 #[ignore]
 fn table_hit_floor_seed_spread() {
     let db = load_db();
-    let off_spec = "h0:value=v0,alloc=fair,olethal=0,osteps=3,tt=0";
-    let on_spec = "h0:value=v0,alloc=fair,olethal=0,osteps=3";
+    let off_spec = "h0:value=v0,alloc=fair,olethal=0,osteps=3,info=draws,tt=0";
+    let on_spec = "h0:value=v0,alloc=fair,olethal=0,osteps=3,info=draws";
     for start_seed in [1u64, 17, 42] {
         for n in [200usize, 400] {
             let states = collect_states_from(&db, n, true, start_seed);
