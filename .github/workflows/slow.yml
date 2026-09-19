@@ -93,7 +93,6 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
           SHA: ${{ github.sha }}
-          WAS_CANCELLED: ${{ cancelled() }}
         run: |
           set -euo pipefail
 
@@ -147,10 +146,13 @@ jobs:
           # timeout-minutes on this job is 65. A hang that hits that
           # ceiling is a cancel, and the jobs API has no step with
           # conclusion: failure — do not report that as unresolved.
+          # cancelled() is only legal in `if:`; infer cancel/timeout from
+          # the jobs API. A hang that hits timeout-minutes is a cancel
+          # with no step conclusion: failure — do not call that unresolved.
           timed_out=false
           if [ "${job_conclusion}" = "timed_out" ]; then
             timed_out=true
-          elif [ "${WAS_CANCELLED}" = "true" ] && [ -n "${started_at}" ]; then
+          elif [ -n "${started_at}" ]; then
             elapsed=$(( $(date +%s) - $(date -d "${started_at}" +%s) ))
             if [ "${elapsed}" -ge $((65 * 60 - 30)) ]; then
               timed_out=true
@@ -164,13 +166,11 @@ jobs:
             if [ -n "${cancelled_steps}" ]; then
               headline="${headline} Last step running: **${cancelled_steps}**."
             fi
-          elif [ "${WAS_CANCELLED}" = "true" ]; then
+          else
             headline="Job was **cancelled** (not a step failure)."
             if [ -n "${cancelled_steps}" ]; then
               headline="${headline} Last step running: **${cancelled_steps}**."
             fi
-          else
-            headline="Failed step: **(unresolved — see the run log)**"
           fi
 
           body="$(printf '%s\n\nRun: %s\n\nEvent: `%s` on `%s` (`%s`).\n' \
