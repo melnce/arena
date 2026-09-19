@@ -87,9 +87,9 @@ pub fn builtin_net() -> Arc<ValueNet> {
 }
 
 /// Leaf evaluator plus the root-level terminal stand-in (`wv`) and the
-/// cheap opponent-model knobs (`olethal`, `osteps`). `wv` is carried here
-/// (not as a sibling of `odepth`/`obeam`) so `finite`, `one_ply`, and the
-/// opponent lethal short-circuit share one value.
+/// cheap opponent-model knobs (`olethal`, `oevo`, `osteps`). `wv` is carried
+/// here (not as a sibling of `odepth`/`obeam`) so `finite`, `one_ply`, and
+/// the opponent lethal short-circuit share one value.
 #[derive(Clone, Copy)]
 struct Evaluator<'a> {
     needs: &'a NeedsTable,
@@ -97,6 +97,7 @@ struct Evaluator<'a> {
     weights: &'a Weights,
     wv: f32,
     olethal: bool,
+    oevo: bool,
     osteps: u32,
     net: Option<&'a ValueNet>,
     vocab: &'a [CardId],
@@ -141,6 +142,10 @@ pub struct SearchStats {
     pub opp_lethal_checks: u64,
     /// Sweeps that found a glance-level opponent lethal.
     pub opp_lethal_found: u64,
+    /// Sweeps that found lethal only through an evolve branch (`oevo=1`):
+    /// attack-only and play-then-attack both missed, then play-then-evolve
+    /// or standalone-evolve succeeded.
+    pub opp_lethal_evo_found: u64,
     /// `apply`s spent inside lethal sweeps.
     pub opp_lethal_nodes: u64,
     /// Searched decisions whose chosen candidate had a determinization
@@ -173,6 +178,7 @@ impl SearchStats {
         self.opp_cap_hits += other.opp_cap_hits;
         self.opp_lethal_checks += other.opp_lethal_checks;
         self.opp_lethal_found += other.opp_lethal_found;
+        self.opp_lethal_evo_found += other.opp_lethal_evo_found;
         self.opp_lethal_nodes += other.opp_lethal_nodes;
         self.chose_with_lethal_root += other.chose_with_lethal_root;
         self.cands_with_lethal_root += other.cands_with_lethal_root;
@@ -224,6 +230,10 @@ pub struct H0 {
     /// Bounded opponent-lethal sweep before the greedy line (`odepth=0` only).
     /// Default `true` is the sweep-5 flip; `olethal=0` restores the pre-flip greedy path.
     pub olethal: bool,
+    /// Extend that sweep with at most one `Evolve` / `super_evolve` per
+    /// leaf (`olethal=1`, `odepth=0` only). Default `false` — off; a flip
+    /// needs the owner's yardstick.
+    pub oevo: bool,
     /// Greedy-line steps before a forced `EndTurn`. Default `6` is the sweep-5
     /// flip; the hard stop is `osteps + 3` (today: 9).
     pub osteps: u32,
@@ -253,6 +263,7 @@ impl Default for H0 {
             pess: 0.0,
             tt: true,
             olethal: true,
+            oevo: false,
             osteps: 6,
             net: Some(builtin_net()),
             net_path: None,
@@ -276,6 +287,7 @@ impl H0 {
             // Fixed test baseline: olethal/osteps are reachable at depth 2
             // (unlike alloc); inheriting would spend the 80-node cap on the sweep.
             olethal: false,
+            oevo: false,
             osteps: 3,
             pess: 0.0,
             ..Self::default()
@@ -293,6 +305,7 @@ impl H0 {
             weights: &self.weights,
             wv: self.wv,
             olethal: self.olethal,
+            oevo: self.oevo,
             osteps: self.osteps,
             net: self.net.as_deref(),
             vocab: root_vocab,
@@ -912,7 +925,7 @@ fn opponent_reply(
     if odepth == 0 {
         if eval.olethal
             && acting_player(state) == me.opponent()
-            && opp_lethal_sweep(db, state, me, nodes, cap, line, stats)
+            && opp_lethal_sweep(db, state, me, nodes, cap, line, eval.oevo, stats)
         {
             stats.opp_leaves += 1;
             return -eval.wv;
@@ -1170,7 +1183,15 @@ fn greedy_until_end(
 }
 
 /// Applies spent by one opponent-lethal sweep, charged through [`try_apply`].
+/// Tight for the attack-only + play-then-attack loop; do not raise.
 const OPP_LETHAL_APPLY_CAP: u32 = 40;
+/// Same sweep when `oevo=1`. Play loop plus at most one evolve per leaf
+/// (and the face line after it). 120 is the worst-case envelope — a
+/// wide hand of opening plays, each trying several evolve slots × a
+/// short face line, plus the standalone pass — not the mean. The
+/// 50-game abyss-p8rfn mirror measured 8.2 applies/sweep (`oevo=1`)
+/// vs 6.1 (`oevo=0`); the play-then-evolve fixture spends 7.
+const OPP_LETHAL_EVO_APPLY_CAP: u32 = 120;
 
 fn leader_attackers(db: &CardDb, state: &State) -> Vec<u8> {
     legal_actions(db, state)
@@ -1230,7 +1251,8 @@ fn face_line_kills(
 
 /// Depth-first resolve of a play: pending `Choose` in index order, then any
 /// required `Confirm`. Then a face line only if the play added a leader
-/// attack or lowered my defense.
+/// attack or lowered my defense. With `oevo`, a miss on that face line
+/// tries each legal evolve before giving up.
 #[allow(clippy::too_many_arguments)]
 fn resolve_play_line(
     db: &CardDb,
@@ -1241,6 +1263,8 @@ fn resolve_play_line(
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
+    oevo: bool,
+    evo_found: &mut bool,
 ) -> bool {
     let opp = me.opponent();
     if state.winner == Some(opp) {
@@ -1266,7 +1290,18 @@ fn resolve_play_line(
             };
             let mut next_line = line.to_vec();
             next_line.push(search_key(&s));
-            if resolve_play_line(db, &s, me, origin_def, origin_faces, nodes, cap, &next_line) {
+            if resolve_play_line(
+                db,
+                &s,
+                me,
+                origin_def,
+                origin_faces,
+                nodes,
+                cap,
+                &next_line,
+                oevo,
+                evo_found,
+            ) {
                 return true;
             }
         }
@@ -1286,6 +1321,8 @@ fn resolve_play_line(
                     nodes,
                     cap,
                     &next_line,
+                    oevo,
+                    evo_found,
                 );
             }
         }
@@ -1301,12 +1338,111 @@ fn resolve_play_line(
     if !(new_face || lowered) {
         return false;
     }
-    face_line_kills(db, state, me, nodes, cap, line)
+    if face_line_kills(db, state, me, nodes, cap, line) {
+        return true;
+    }
+    if oevo {
+        let just_played: Vec<u8> = now_faces
+            .iter()
+            .copied()
+            .filter(|slot| !origin_faces.contains(slot))
+            .collect();
+        if evolve_then_face(db, state, me, nodes, cap, line, &just_played, &now_faces) {
+            *evo_found = true;
+            return true;
+        }
+    }
+    false
+}
+
+/// Legal `Evolve` / `super_evolve` actions, cheapest-and-highest-yield first:
+/// the just-played slot, then other current face attackers, then the rest.
+/// `super_evolve` variants stay in the list; they are not special-cased.
+fn ordered_evolves(db: &CardDb, state: &State, prefer: &[u8], faces: &[u8]) -> Vec<Action> {
+    let mut evos: Vec<Action> = legal_actions(db, state)
+        .into_iter()
+        .filter(|a| matches!(a, Action::Evolve { .. }))
+        .collect();
+    evos.sort_by_key(|a| match a {
+        Action::Evolve { slot, super_evolve } => {
+            let s = slot.0;
+            let pri = if prefer.contains(&s) {
+                0u8
+            } else if faces.contains(&s) {
+                1
+            } else {
+                2
+            };
+            (pri, s, *super_evolve)
+        }
+        _ => (3, 0, false),
+    });
+    evos
+}
+
+#[allow(clippy::too_many_arguments)]
+fn evolve_then_face(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    prefer: &[u8],
+    faces: &[u8],
+) -> bool {
+    for a in ordered_evolves(db, state, prefer, faces) {
+        if *nodes >= cap {
+            return false;
+        }
+        let Some(s) = try_apply(db, state, &a, nodes, cap, line) else {
+            continue;
+        };
+        let mut next_line = line.to_vec();
+        next_line.push(search_key(&s));
+        if face_line_kills(db, &s, me, nodes, cap, &next_line) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Standalone evolve — no play. Covers "+2 face from an on-board attacker".
+fn standalone_evolve_kills(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+) -> bool {
+    let legal = legal_actions(db, state);
+    for a in &legal {
+        if *nodes >= cap {
+            return false;
+        }
+        if !matches!(a, Action::Evolve { .. }) {
+            continue;
+        }
+        let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+            continue;
+        };
+        let mut next_line = line.to_vec();
+        next_line.push(search_key(&s));
+        if face_line_kills(db, &s, me, nodes, cap, &next_line) {
+            return true;
+        }
+    }
+    false
 }
 
 /// Glance-level opponent lethal: face attacks, then each `Play` (plus its
-/// `Choose`/`Confirm`) and a face line when that play opened one. Caps at
-/// [`OPP_LETHAL_APPLY_CAP`] applies, all charged to `nodes`.
+/// `Choose`/`Confirm`) and a face line when that play opened one. With
+/// `oevo=1`, a play that opened a line but missed face then tries each
+/// legal evolve (just-played slot first), and a standalone evolve pass
+/// runs if those also miss. Caps at [`OPP_LETHAL_APPLY_CAP`] (`oevo=0`)
+/// or [`OPP_LETHAL_EVO_APPLY_CAP`] (`oevo=1`), all charged to `nodes`.
+#[allow(clippy::too_many_arguments)]
 fn opp_lethal_sweep(
     db: &CardDb,
     state: &State,
@@ -1314,11 +1450,18 @@ fn opp_lethal_sweep(
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
+    oevo: bool,
     stats: &mut SearchStats,
 ) -> bool {
     stats.opp_lethal_checks += 1;
     let start = *nodes;
-    let sweep_cap = nodes.saturating_add(OPP_LETHAL_APPLY_CAP).min(cap);
+    let apply_limit = if oevo {
+        OPP_LETHAL_EVO_APPLY_CAP
+    } else {
+        OPP_LETHAL_APPLY_CAP
+    };
+    let sweep_cap = nodes.saturating_add(apply_limit).min(cap);
+    let mut evo_found = false;
     let found = face_line_kills(db, state, me, nodes, sweep_cap, line) || {
         let origin_def = state.player(me).leader_defense;
         let origin_faces = leader_attackers(db, state);
@@ -1345,16 +1488,28 @@ fn opp_lethal_sweep(
                 nodes,
                 sweep_cap,
                 &next_line,
+                oevo,
+                &mut evo_found,
             ) {
                 hit = true;
                 break;
             }
         }
-        hit
+        if hit {
+            true
+        } else if oevo && standalone_evolve_kills(db, state, me, nodes, sweep_cap, line) {
+            evo_found = true;
+            true
+        } else {
+            false
+        }
     };
     stats.opp_lethal_nodes += u64::from(*nodes - start);
     if found {
         stats.opp_lethal_found += 1;
+        if evo_found {
+            stats.opp_lethal_evo_found += 1;
+        }
     }
     found
 }

@@ -375,6 +375,9 @@ hand-written leaf the bot used before this default), `net=<path>`
 may not contain commas), `odepth=` / `obeam=` (opponent model; defaults `0` / `3`),
 `olethal=0|1` (cheap opponent-lethal sweep on the greedy path; default `1`;
 `olethal=0` restores the pre-flip greedy path; ignored when `odepth≥1`),
+`oevo=0|1` (extend that sweep with one evolve; default `0`; only
+meaningful with `olethal=1` and `odepth=0`; no hard error for other
+combinations),
 `osteps=<u32>` (greedy forced-`EndTurn` step;
 default `6`; hard stop is `osteps+3`),
 `wv=<f32>` (saturation bound on every accumulated value; default `80`),
@@ -390,7 +393,7 @@ and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
 `value=v1` or `value=net,net=<path>` — the built-in net is not printed,
 non-default `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
-non-default `wv`, non-default `pess`, `tt=0` when the table is off, `alloc=root` when the
+`oevo=1` when the evolve branch is on, non-default `wv`, non-default `pess`, `tt=0` when the table is off, `alloc=root` when the
 allocator is the pre-#46 root-major spend, and any
 non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
@@ -431,6 +434,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `odepth` | 0 | opponent-model action depth; `0` = greedy line |
 | `obeam` | 3 | opponent beam (plus `EndTurn` always) |
 | `olethal` | 1 | glance-level opponent-lethal sweep before the greedy line; `0` restores the pre-flip greedy path. Ignored when `odepth≥1` |
+| `oevo` | 0 | extend that sweep with at most one `Evolve` / `super_evolve` per leaf. Only meaningful with `olethal=1` and `odepth=0`. No default changed; a flip needs the owner's yardstick |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
@@ -483,13 +487,29 @@ apply it, depth-first branch any pending `Choose` in index order, apply
 any required `Confirm`, and if my leader died that is lethal; otherwise
 run the face line from there only if the play produced a new legal
 leader attack or lowered my leader defense. `Evolve`, `Engage`, `Fuse`,
-and `BonusPp` lines are skipped (rare lethal sources; the greedy line
-still uses them). The whole sweep spends at most 40 `apply`s per leaf,
-all charged to `nodes` through `try_apply`, and stops early at the cap
-(cycle guard as today). If it finds lethal the leaf is `-wv` and the
-greedy line is skipped; otherwise the greedy line runs with the remaining
-budget. `olethal=0` restores the pre-flip greedy path. `odepth≥1` ignores
-`olethal` — the beam search is the opponent model.
+and `BonusPp` lines are skipped when `oevo=0` (rare lethal sources; the
+greedy line still uses them). The whole sweep spends at most 40 `apply`s
+per leaf when `oevo=0`, all charged to `nodes` through `try_apply`, and
+stops early at the cap (cycle guard as today). If it finds lethal the
+leaf is `-wv` and the greedy line is skipped; otherwise the greedy line
+runs with the remaining budget. `olethal=0` restores the pre-flip greedy
+path. `odepth≥1` ignores `olethal` — the beam search is the opponent
+model.
+
+When `oevo=1` (off by default) and the sweep is running (`olethal=1`,
+`odepth=0`), two extra branches sit after those glance lines. At most
+one evolve is legal per turn (`evolved_this_turn` / `ep`), so the
+branching is small; `super_evolve` variants are legal actions like any
+other and are not special-cased. (1) **play-then-evolve** — after a play
+that already passed the new-face-attacker / lowered-defence test, if the
+face line missed, try each legal `Evolve` in the post-play state,
+starting with the slot of the follower just played, then the other face
+attackers, and run the face line after each; (2) **standalone evolve** —
+with no play, for each legal `Evolve`, apply and run the face line.
+This is the owner's missed line: play a Storm, evolve it (+2 and any
+`Evolve:` ability), attack with it and an existing body. The apply cap
+is 120 when `oevo=1` and stays 40 when `oevo=0`. No default changed; a
+flip needs the owner's yardstick.
 
 The owner's standing yardstick (`results` branch, `sweep5/SUMMARY.md`,
 `b79421a`, engine `f7b0a61`, data seed 6, 16 oracle decks, wall 3 h 38)
@@ -589,7 +609,7 @@ is the default. `tt=0` restores the pre-#32 search.
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
@@ -601,8 +621,10 @@ legal actions kept after the Bonus-PP filter; `pairs_skipped` is
 `opp_cap_hit_rate` describe the opponent model; `tt_hits` / `tt_stores`
 are transposition-table lookups that returned a value and writes
 (`0` when `tt=0`); `opp_lethal_checks` / `opp_lethal_found` /
-`opp_lethal_nodes` are sweeps run, lethals found, and applies spent by
-the `olethal` sweep (`0` when `olethal=0`; the default is `olethal=1`).
+`opp_lethal_evo_found` / `opp_lethal_nodes` are sweeps run, lethals
+found, lethals found *only* through an evolve branch, and applies spent
+by the `olethal` sweep (`0` when `olethal=0`; the default is `olethal=1`;
+`opp_lethal_evo_found` stays 0 unless `oevo=1`).
 `chose_with_lethal_root` is the fraction of searched decisions whose
 chosen candidate had at least one determinization at exactly `-wv`
 (the clamp floor; compared with a small epsilon).
