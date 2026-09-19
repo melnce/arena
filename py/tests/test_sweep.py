@@ -307,13 +307,10 @@ def test_bad_spec_stops_before_matchup(tmp_path: Path) -> None:
 
 def test_pair_count_matches_matchup() -> None:
     """Pair count is n * n (mirrors included), same as matchup.py."""
-    decks = sweep.load_sweep_decks(_REPO, None)
-    assert len(decks) == sweep.YARDSTICK_DECKS == 16
-    # matchup.py: n_pairs = len(names) * len(names)
-    assert len(decks) * len(decks) == sweep.YARDSTICK_PAIRS == 256
-    seven = sweep.load_sweep_decks(_REPO, SWEEP8_DECKS)
+    _, seven = sweep.load_sweep_decks(_REPO, SWEEP8_DECKS)
     assert list(seven) == SWEEP8_DECKS
     assert len(seven) * len(seven) == 49
+    assert sweep.YARDSTICK_DECKS * sweep.YARDSTICK_DECKS == sweep.YARDSTICK_PAIRS == 256
 
 
 def test_defaults_16_decks_are_calibrated_totals() -> None:
