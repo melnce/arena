@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,6 +15,7 @@ _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
+from matchup import load_deck_files, load_extra_deck_files  # noqa: E402
 from runlib import (  # noqa: E402
     flag_given,
     format_verdict_line,
@@ -39,6 +41,24 @@ from runlib import (  # noqa: E402
 STAGES = ("screen", "final", "summary", "publish")
 HALF = 0.5
 FAST = "h0:depth=2,beam=2,k=1,nodes=80,value=v0,tt=0"
+
+# Per-pair defaults. --target-games scales the 1024 / 4096 / 2048 / 256
+# totals from these ratios (not a second copy of those totals).
+DEFAULT_SCREEN_GAMES = 4
+DEFAULT_FINAL_GAMES = 16
+DEFAULT_FINAL_REVERSE = 8
+DEFAULT_TP_GAMES = 1
+
+# Standing yardstick pool: 16 on-disk oracle/decks, ordered pairs = n * n
+# (mirrors included), matching matchup.py. Floors are half those totals.
+YARDSTICK_DECKS = 16
+YARDSTICK_PAIRS = YARDSTICK_DECKS * YARDSTICK_DECKS
+FLOOR_SCREEN = DEFAULT_SCREEN_GAMES * YARDSTICK_PAIRS // 2  # 512
+FLOOR_FINAL = DEFAULT_FINAL_GAMES * YARDSTICK_PAIRS // 2  # 2048
+FLOOR_REVERSE = DEFAULT_FINAL_REVERSE * YARDSTICK_PAIRS // 2  # 1024
+
+PER_PAIR_FLAGS = ("--screen-games", "--final-games", "--final-reverse", "--tp-games")
+GAME_STAGE_ORDER = ("screen", "final", "reverse", "tp")
 
 
 @dataclass(frozen=True)
@@ -105,6 +125,241 @@ def format_best_line(picks: list[BestPick]) -> str:
     return f"best: {winner.spec} ({winner.word})"
 
 
+@dataclass(frozen=True)
+class StageSize:
+    name: str
+    games_per_pair: int
+    pairs: int
+
+    @property
+    def total(self) -> int:
+        return self.games_per_pair * self.pairs
+
+
+@dataclass(frozen=True)
+class SweepSizing:
+    names: tuple[str, ...]
+    n_decks: int
+    pairs: int
+    screen: StageSize
+    final: StageSize
+    reverse: StageSize
+    tp: StageSize
+    target_games: int | None
+
+    def stage(self, name: str) -> StageSize:
+        return {
+            "screen": self.screen,
+            "final": self.final,
+            "reverse": self.reverse,
+            "tp": self.tp,
+        }[name]
+
+
+def calibrated_target_games() -> int:
+    """Final-stage total the standing yardstick is calibrated on (16 × 16 × 16)."""
+    return DEFAULT_FINAL_GAMES * YARDSTICK_PAIRS
+
+
+def load_sweep_decks(repo: Path, restrict: list[str] | None) -> dict[str, dict[str, int]]:
+    """Same composition as ``matchup.main``: oracle/decks, then extra files.
+
+    Sweep has no ``--deck-file``, so the extra list is empty; the call is
+    still the matchup path so pair counting cannot drift.
+    """
+    decks = load_deck_files(repo / "oracle" / "decks", restrict)
+    decks.update(load_extra_deck_files([]))
+    return decks
+
+
+def _stage_total_target(target_games: int, default_per_pair: int) -> int:
+    return math.ceil(target_games * default_per_pair / DEFAULT_FINAL_GAMES)
+
+
+def _per_pair(total_target: int, pairs: int) -> int:
+    return max(1, math.ceil(total_target / pairs))
+
+
+def compute_sizing(
+    args: argparse.Namespace,
+    n_decks: int,
+    names: list[str] | tuple[str, ...] | None = None,
+) -> SweepSizing:
+    """Connect per-pair flags to the totals every runbook quotes.
+
+    ``sweep.py`` takes games *per ordered deck pair*. Every runbook and
+    every results summary quotes *totals*. Nothing used to join the two,
+    so a smaller ``--decks`` pool silently inherited the 16-deck
+    per-pair defaults and ran a fraction of the games the standing
+    yardstick is calibrated on.
+
+    That calibration is 16 decks → 16 × 16 = 256 ordered pairs (mirrors
+    included, same ``n * n`` as ``matchup.py``) × the default 4 / 16 / 8
+    / 1 per-pair flags → 1 024 / 4 096 / 2 048 / 256 games.
+    ``results/sweep8/`` restricted the pool to the seven real decks,
+    kept those defaults, and got 49 pairs → 196 / 784 / 392 — the same
+    ~4 games per cell and 5.2× fewer games overall. Every candidate
+    came back a coin flip at roughly ±0.07 and the run was unreadable.
+    The reverse arm is the sharpest edge: ``--final-reverse`` is
+    independent of ``--final-games`` and defaults to 8, so a raised
+    main arm with a forgotten reverse flag makes every candidate
+    ``unclear (reverse)``. That is a silent wrong answer, not a crash.
+
+    ``--target-games N`` derives the per-pair counts from the resolved
+    pair count so one flag reproduces that shape at any pool size. The
+    ratios come from the current defaults (screen:final:reverse:tp =
+    4:16:8:1), not a second hardcoded copy of 1024 / 4096 / 2048 / 256.
+    Totals below half the calibrated figures refuse unless
+    ``--allow-small`` or ``--smoke``.
+    """
+    if n_decks < 1:
+        raise SystemExit("no decks selected")
+    resolved = tuple(names) if names is not None else ()
+    if resolved and len(resolved) != n_decks:
+        raise SystemExit(f"deck count {n_decks} != names {len(resolved)}")
+    pairs = n_decks * n_decks
+    if getattr(args, "target_games", None) is not None:
+        target = int(args.target_games)
+        if target < 1:
+            raise SystemExit("--target-games must be a positive integer")
+        args.screen_games = _per_pair(_stage_total_target(target, DEFAULT_SCREEN_GAMES), pairs)
+        args.final_games = _per_pair(target, pairs)
+        args.final_reverse = _per_pair(_stage_total_target(target, DEFAULT_FINAL_REVERSE), pairs)
+        args.tp_games = _per_pair(_stage_total_target(target, DEFAULT_TP_GAMES), pairs)
+        target_games: int | None = target
+    else:
+        target_games = None
+    return SweepSizing(
+        names=resolved,
+        n_decks=n_decks,
+        pairs=pairs,
+        screen=StageSize("screen", int(args.screen_games), pairs),
+        final=StageSize("final", int(args.final_games), pairs),
+        reverse=StageSize("reverse", int(args.final_reverse), pairs),
+        tp=StageSize("tp", int(args.tp_games), pairs),
+        target_games=target_games,
+    )
+
+
+def running_game_stages(wanted: list[str] | None) -> tuple[str, ...]:
+    """Game-count stages implied by ``requested_stages`` (tp ⊂ screen, reverse ⊂ final)."""
+    if wanted is None:
+        return GAME_STAGE_ORDER
+    out: list[str] = []
+    if "screen" in wanted:
+        out.extend(["screen", "tp"])
+    if "final" in wanted:
+        out.extend(["final", "reverse"])
+    return tuple(out)
+
+
+def format_sizing_block(sizing: SweepSizing, running: tuple[str, ...] | None = None) -> str:
+    shown = GAME_STAGE_ORDER if running is None else running
+    if sizing.names:
+        decks_line = f"decks: {sizing.n_decks} ({', '.join(sizing.names)})"
+    else:
+        decks_line = f"decks: {sizing.n_decks}"
+    lines = [
+        decks_line,
+        f"pairs: {sizing.pairs} ({sizing.n_decks} x {sizing.n_decks}, mirrors included)",
+    ]
+    for name in GAME_STAGE_ORDER:
+        if name not in shown:
+            continue
+        st = sizing.stage(name)
+        lines.append(f"{name:<7} {st.games_per_pair:>3} games/pair x {st.pairs} = {st.total:>5}")
+    return "\n".join(lines)
+
+
+def sizing_metadata(sizing: SweepSizing, block: str) -> dict[str, Any]:
+    return {
+        "decks": list(sizing.names),
+        "n_decks": sizing.n_decks,
+        "pairs": sizing.pairs,
+        "games_per_pair": {
+            "screen": sizing.screen.games_per_pair,
+            "final": sizing.final.games_per_pair,
+            "reverse": sizing.reverse.games_per_pair,
+            "tp": sizing.tp.games_per_pair,
+        },
+        "totals": {
+            "screen": sizing.screen.total,
+            "final": sizing.final.total,
+            "reverse": sizing.reverse.total,
+            "tp": sizing.tp.total,
+        },
+        "target_games": sizing.target_games,
+        "block": block,
+    }
+
+
+def check_sizing(
+    args: argparse.Namespace,
+    sizing: SweepSizing,
+    wanted: list[str] | None = None,
+) -> None:
+    """Refuse an undersized run. ``wanted`` is ``requested_stages``; None checks all."""
+    raw = list(getattr(args, "_argv", []))
+    running = running_game_stages(wanted)
+    allow_small = bool(getattr(args, "allow_small", False))
+    smoke = bool(getattr(args, "smoke", False))
+
+    # Independent of the floor: a raised --final-games with the default
+    # reverse 8 is the sweep-8 near-miss (392 vs 4116). --smoke does not
+    # bypass this; --allow-small does.
+    if (
+        "reverse" in running
+        and not allow_small
+        and flag_given(raw, "--final-games")
+        and not flag_given(raw, "--final-reverse")
+    ):
+        raise SystemExit(
+            f"reverse-arm: --final-games {args.final_games} was given but "
+            f"--final-reverse was not; reverse would run at the default "
+            f"{DEFAULT_FINAL_REVERSE} against a {args.final_games}-game main arm. "
+            f"Pass --final-reverse or --allow-small."
+        )
+
+    if smoke or allow_small:
+        return
+
+    floors = {
+        "screen": FLOOR_SCREEN,
+        "final": FLOOR_FINAL,
+        "reverse": FLOOR_REVERSE,
+    }
+    failed: list[str] = []
+    for name, floor in floors.items():
+        if name not in running:
+            continue
+        st = sizing.stage(name)
+        if st.total < floor:
+            failed.append(
+                f"{name} total {st.total} < floor {floor} "
+                f"({st.games_per_pair} games/pair x {st.pairs})"
+            )
+    if failed:
+        hint = calibrated_target_games()
+        raise SystemExit(
+            "sizing: "
+            + "; ".join(failed)
+            + f". Use --target-games {hint} to keep the calibrated totals "
+            f"at this pool size, or --allow-small to bypass."
+        )
+
+
+def apply_sizing(
+    args: argparse.Namespace,
+    n_decks: int,
+    names: list[str] | tuple[str, ...] | None = None,
+    *,
+    wanted: list[str] | None = None,
+) -> SweepSizing:
+    sizing = compute_sizing(args, n_decks, names)
+    check_sizing(args, sizing, wanted)
+    return sizing
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     raw = list(sys.argv[1:] if argv is None else argv)
     p = argparse.ArgumentParser(description=__doc__)
@@ -120,15 +375,45 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--root", default=None, help="results root (default: <repo>/results)")
     p.add_argument("--decks", nargs="*", default=None, help="restrict matchup decks (passed through)")
     p.add_argument("--threads", type=int, default=None)
-    p.add_argument("--screen-games", type=int, default=4, help="games per pair on the screen (default: 4)")
-    p.add_argument("--final-games", type=int, default=16, help="games per pair on the final (default: 16)")
+    p.add_argument(
+        "--screen-games",
+        type=int,
+        default=DEFAULT_SCREEN_GAMES,
+        help=f"games per pair on the screen (default: {DEFAULT_SCREEN_GAMES})",
+    )
+    p.add_argument(
+        "--final-games",
+        type=int,
+        default=DEFAULT_FINAL_GAMES,
+        help=f"games per pair on the final (default: {DEFAULT_FINAL_GAMES})",
+    )
     p.add_argument(
         "--final-reverse",
         type=int,
-        default=8,
-        help="games per pair on the reverse seat (default: 8)",
+        default=DEFAULT_FINAL_REVERSE,
+        help=f"games per pair on the reverse seat (default: {DEFAULT_FINAL_REVERSE})",
     )
-    p.add_argument("--tp-games", type=int, default=1, help="throughput games per pair (default: 1)")
+    p.add_argument(
+        "--tp-games",
+        type=int,
+        default=DEFAULT_TP_GAMES,
+        help=f"throughput games per pair (default: {DEFAULT_TP_GAMES})",
+    )
+    p.add_argument(
+        "--target-games",
+        type=int,
+        default=None,
+        help=(
+            "derive per-pair counts from the resolved deck pool so the "
+            "final-stage total matches this value (mutually exclusive with "
+            "--screen-games / --final-games / --final-reverse / --tp-games)"
+        ),
+    )
+    p.add_argument(
+        "--allow-small",
+        action="store_true",
+        help="bypass the totals floor and the reverse-arm consistency check",
+    )
     p.add_argument(
         "--finalists",
         type=int,
@@ -161,17 +446,27 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     args = p.parse_args(raw)
     args._argv = raw
+    if flag_given(raw, "--target-games"):
+        conflicted = [f for f in PER_PAIR_FLAGS if flag_given(raw, f)]
+        if conflicted:
+            raise SystemExit(
+                f"--target-games cannot be combined with {', '.join(conflicted)}"
+            )
+        if args.target_games is not None and args.target_games < 1:
+            raise SystemExit("--target-games must be a positive integer")
     if args.smoke:
         if not flag_given(raw, "--decks"):
             args.decks = ["basic-forest", "basic-rune"]
-        if not flag_given(raw, "--screen-games"):
-            args.screen_games = 1
-        if not flag_given(raw, "--final-games"):
-            args.final_games = 1
-        if not flag_given(raw, "--final-reverse"):
-            args.final_reverse = 1
-        if not flag_given(raw, "--tp-games"):
-            args.tp_games = 1
+        # --target-games owns the per-pair counts when both are given.
+        if not flag_given(raw, "--target-games"):
+            if not flag_given(raw, "--screen-games"):
+                args.screen_games = 1
+            if not flag_given(raw, "--final-games"):
+                args.final_games = 1
+            if not flag_given(raw, "--final-reverse"):
+                args.final_reverse = 1
+            if not flag_given(raw, "--tp-games"):
+                args.tp_games = 1
         if not flag_given(raw, "--finalists"):
             args.finalists = 1
         if not flag_given(raw, "--baseline"):
@@ -567,7 +862,20 @@ class Runner:
             raise
         self.mark_end("publish")
 
+    def apply_and_record_sizing(self) -> None:
+        """Print and persist the pool arithmetic before any stage runs."""
+        decks = load_sweep_decks(self.repo, self.args.decks)
+        names = list(decks.keys())
+        wanted = requested_stages(self.args)
+        sizing = compute_sizing(self.args, len(names), names)
+        running = running_game_stages(wanted)
+        block = format_sizing_block(sizing, running)
+        print(block, flush=True)
+        self.run["sizing"] = sizing_metadata(sizing, block)
+        check_sizing(self.args, sizing, wanted)
+
     def go(self) -> int:
+        self.apply_and_record_sizing()
         self.validate_all()
         self.write_candidates()
         self.save_run()
