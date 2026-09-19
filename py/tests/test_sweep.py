@@ -155,8 +155,10 @@ def test_smoke_end_to_end(smoke) -> None:
     )
 
     summary = (tag / "SUMMARY.md").read_text()
+    assert "| index | spec | main | reverse | pooled |" in summary
     verdict_lines = [ln for ln in summary.splitlines() if ln.startswith("verdict:")]
     assert len(verdict_lines) == 1, summary
+    assert "pooled" in verdict_lines[0] and "(not gated)" in verdict_lines[0], verdict_lines[0]
     best_lines = [ln for ln in summary.splitlines() if ln.startswith("best:")]
     assert len(best_lines) == 1, summary
     assert best_lines[0] != "best: none"
