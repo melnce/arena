@@ -377,7 +377,9 @@ may not contain commas), `odepth=` / `obeam=` (opponent model; defaults `0` / `3
 `olethal=0` restores the pre-flip greedy path; ignored when `odepth≥1`),
 `osteps=<u32>` (greedy forced-`EndTurn` step;
 default `6`; hard stop is `osteps+3`),
-`wv=<f32>` (root-level terminal stand-in; default `80`),
+`wv=<f32>` (saturation bound on every accumulated value; default `80`),
+`pess=<f32>` (pessimism weight on the root mean, in `[0, 1]`; default `0`
+is today's mean; `1` is the worst determinization),
 `tt=0|1` (per-decision transposition table; default `1`),
 `alloc=root|fair` (how the node cap is spent across `(root, candidate)`
 pairs; default `fair` = per-pair share; `alloc=root` restores the
@@ -388,7 +390,7 @@ and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
 `value=v1` or `value=net,net=<path>` — the built-in net is not printed,
 non-default `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
-non-default `wv`, `tt=0` when the table is off, `alloc=root` when the
+non-default `wv`, non-default `pess`, `tt=0` when the table is off, `alloc=root` when the
 allocator is the pre-#46 root-major spend, and any
 non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
@@ -430,7 +432,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `obeam` | 3 | opponent beam (plus `EndTurn` always) |
 | `olethal` | 1 | glance-level opponent-lethal sweep before the greedy line; `0` restores the pre-flip greedy path. Ignored when `odepth≥1` |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
-| `wv` | 80 | root-level finite stand-in for a terminal when averaging K roots |
+| `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
+| `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
 
@@ -439,7 +442,16 @@ H0 builds `K = max(1, determinizations)` search roots via
 policy rng. Own-turn search, lethal, and the opponent model all
 run on those roots — the true hidden hand and live game RNG are never
 read. A lethal is taken only when every root agrees (a random lethal is
-a bet, not a lethal). Candidate values are averaged over the K roots.
+a bet, not a lethal). Candidate values are the mean over the K
+determinizations (`acc[j] / n[j]`). `pess` blends that mean with the
+worst `finite` sample: `v = (1-pess)*mean + pess*worst`. At `pess=0`
+(the default) the blend is not taken — the expression is still
+`acc[j] / n[j]`, bit-identical to today. A detected opponent lethal
+is pinned at `-wv` (the clamp floor) and can be averaged away: with
+`k=4` and `wv=80`, one dead root and three +60 samples score
+`(−80+180)/4 = +25`, which beats a safe +10. `pess` is the knob that
+weights the dead sample harder. This PR does not flip the default;
+a flip would need the owner's yardstick.
 The node cap is global. `H0::fast()` uses `K = 1` and a 1-ply value
 on that root (no depth-2 consensus-lethal walk). `h0-fast` keeps `tt=0`,
 `value=v0`, `olethal=0`, and `osteps=3` so the cheap test baseline stays
@@ -503,18 +515,22 @@ option (`ui/src/main.ts` `STRONG_H0 = "h0:nodes=6000"`) and
 `py/serve.py --strong` (`h0:nodes=16000`) inherit the new default
 automatically; no client edit.
 
-`wv` is the finite stand-in for a terminal when the K root values are
-averaged (`finite(v)` clamps every root value to ±`wv`). The in-search
-terminal stays ±`INF` (`1e9`); only the number that reaches the root
-average changes. Default `wv=80` is today's clamp — it sits *inside* the
-reachable live range of `value_v0` (`4.5 ×` leader-defense difference is
-already ±90, plus `board_score` of every follower). A live position at
-−95 (behind on life and board, but alive) therefore clamps to −80, the
-same score as a lost root, so "I survive this turn at 3 life" and "I am
-dead" are indistinguishable, and a sure next-turn win (+95) equals a
-lucky lethal (+80). Candidates: `wv=300` sits just above the live range;
-`wv=1000` makes one lethal root out of four outvote three bad live
-roots. This PR does not flip the default.
+`wv` is the saturation bound on **every** accumulated value, not only a
+root-level terminal stand-in: `finite(v, wv)` is `v.clamp(-wv, wv)`,
+and both the pair loop and `one_ply` add that clamped number into
+`acc[j]`. A detected opponent lethal returns exactly `-wv` and
+propagates unchanged, so "dead" is pinned to the floor of the scale.
+The in-search terminal stays ±`INF` (`1e9`); only the number that
+reaches the root average is clamped. Default `wv=80` is today's clamp
+— it sits *inside* the reachable live range of `value_v0` (`4.5 ×`
+leader-defense difference is already ±90, plus `board_score` of every
+follower). A live position at −95 (behind on life and board, but
+alive) therefore clamps to −80, the same score as a lost root, so "I
+survive this turn at 3 life" and "I am dead" are indistinguishable,
+and a sure next-turn win (+95) equals a lucky lethal (+80).
+Candidates: `wv=300` sits just above the live range; `wv=1000` makes
+one lethal root out of four outvote three bad live roots. This PR
+does not flip the default.
 
 `choose` spends the node cap root by root and candidate by candidate
 (`for root in roots { for candidate in subset { … search_own } }`).
@@ -573,7 +589,7 @@ is the default. `tt=0` restores the pre-#32 search.
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_nodes/decision=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
@@ -586,7 +602,14 @@ legal actions kept after the Bonus-PP filter; `pairs_skipped` is
 are transposition-table lookups that returned a value and writes
 (`0` when `tt=0`); `opp_lethal_checks` / `opp_lethal_found` /
 `opp_lethal_nodes` are sweeps run, lethals found, and applies spent by
-the `olethal` sweep (`0` when `olethal=0`; the default is `olethal=1`). Non-H0 seats print
+the `olethal` sweep (`0` when `olethal=0`; the default is `olethal=1`).
+`chose_with_lethal_root` is the fraction of searched decisions whose
+chosen candidate had at least one determinization at exactly `-wv`
+(the clamp floor; compared with a small epsilon).
+`cands_with_lethal_root` is the same test summed over every candidate
+offered at that decision, so the chosen-vs-available ratio is readable.
+Both stay 0 on the `one_ply` / consensus-lethal / no-search paths.
+Non-H0 seats print
 `decisions=0`.
 
 `BonusPp` is considered only in the **activate** direction

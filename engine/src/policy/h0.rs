@@ -116,8 +116,8 @@ impl Evaluator<'_> {
 }
 
 const INF: f32 = 1.0e9;
-/// Default root-level stand-in for a terminal (`wv`). 80 is today's clamp;
-/// it sits inside the reachable live range of [`value_v0`].
+/// Default saturation bound (`wv`) on every accumulated value. 80 is
+/// today's clamp; it sits inside the reachable live range of [`value_v0`].
 const DEFAULT_WV: f32 = 80.0;
 
 /// Per-decision search counters, accumulated across [`H0::choose`] calls.
@@ -143,6 +143,11 @@ pub struct SearchStats {
     pub opp_lethal_found: u64,
     /// `apply`s spent inside lethal sweeps.
     pub opp_lethal_nodes: u64,
+    /// Searched decisions whose chosen candidate had a determinization
+    /// pinned at the clamp floor (`-wv`).
+    pub chose_with_lethal_root: u64,
+    /// Same test, summed over every candidate offered at that decision.
+    pub cands_with_lethal_root: u64,
     /// TT lookups that returned a value (`tt=1` only).
     pub tt_hits: u64,
     /// Values written to the per-decision table (`tt=1` only).
@@ -169,6 +174,8 @@ impl SearchStats {
         self.opp_lethal_checks += other.opp_lethal_checks;
         self.opp_lethal_found += other.opp_lethal_found;
         self.opp_lethal_nodes += other.opp_lethal_nodes;
+        self.chose_with_lethal_root += other.chose_with_lethal_root;
+        self.cands_with_lethal_root += other.cands_with_lethal_root;
         self.tt_hits += other.tt_hits;
         self.tt_stores += other.tt_stores;
         self.pairs_skipped += other.pairs_skipped;
@@ -204,9 +211,14 @@ pub struct H0 {
     pub weights: Weights,
     pub odepth: u32,
     pub obeam: usize,
-    /// Root-level finite stand-in for a terminal when averaging across
-    /// roots (`wv`). Default `80` is today's clamp.
+    /// Saturation bound on every accumulated value (`wv`). Default `80`
+    /// is today's clamp — the same floor a detected opponent lethal
+    /// returns (`-wv`).
     pub wv: f32,
+    /// Pessimism weight on the root aggregation, in `[0, 1]`. `0` is
+    /// today's mean over determinizations; `1` is the worst sample.
+    /// Default `0` — the blend is not taken on that path.
+    pub pess: f32,
     /// Per-decision transposition table. On by default (`tt=1`).
     pub tt: bool,
     /// Bounded opponent-lethal sweep before the greedy line (`odepth=0` only).
@@ -238,6 +250,7 @@ impl Default for H0 {
             odepth: 0,
             obeam: 3,
             wv: DEFAULT_WV,
+            pess: 0.0,
             tt: true,
             olethal: true,
             osteps: 6,
@@ -264,6 +277,7 @@ impl H0 {
             // (unlike alloc); inheriting would spend the 80-node cap on the sweep.
             olethal: false,
             osteps: 3,
+            pess: 0.0,
             ..Self::default()
         }
     }
@@ -408,7 +422,16 @@ impl Policy for H0 {
         // apply) was the 8× regression vs pre-R2 greedy. Immediate wins are
         // still taken; constructed lethals use `H0::default()`.
         let pick = if self.depth <= 2 {
-            let (j, v) = one_ply(&roots, db, &subset, me, &mut nodes, self.node_cap, eval);
+            let (j, v) = one_ply(
+                &roots,
+                db,
+                &subset,
+                me,
+                &mut nodes,
+                self.node_cap,
+                eval,
+                self.pess,
+            );
             self.last_value = Some(v);
             cand[j]
         } else if let Some(j) =
@@ -419,6 +442,7 @@ impl Policy for H0 {
         } else {
             let mut acc = vec![0.0f32; subset.len()];
             let mut n = vec![0u32; subset.len()];
+            let mut worst = vec![f32::INFINITY; subset.len()];
             let total_pairs = u64::from(k) * subset.len() as u64;
             let mut attempted = 0u64;
             let nodes_after_lethal = nodes;
@@ -472,7 +496,11 @@ impl Policy for H0 {
                             table.as_mut(),
                         )
                     };
-                    acc[j] += finite(v, eval.wv);
+                    let fv = finite(v, eval.wv);
+                    acc[j] += fv;
+                    if fv < worst[j] {
+                        worst[j] = fv;
+                    }
                     n[j] += 1;
                 }
             }
@@ -485,14 +513,30 @@ impl Policy for H0 {
 
             let mut best_i = 0usize;
             let mut best_v = f32::NEG_INFINITY;
+            let mut any_scored = false;
             for (j, &c) in n.iter().enumerate() {
                 if c == 0 {
                     continue;
                 }
-                let v = acc[j] / c as f32;
+                any_scored = true;
+                let v = root_agg(acc[j], c, worst[j], self.pess);
                 if v > best_v {
                     best_v = v;
                     best_i = j;
+                }
+            }
+            if any_scored {
+                const LETHAL_EPS: f32 = 1e-3;
+                for (j, &c) in n.iter().enumerate() {
+                    if c == 0 {
+                        continue;
+                    }
+                    if worst[j] <= -self.wv + LETHAL_EPS {
+                        dec_stats.cands_with_lethal_root += 1;
+                        if j == best_i {
+                            dec_stats.chose_with_lethal_root += 1;
+                        }
+                    }
                 }
             }
             self.last_value = Some(finite(best_v, self.wv));
@@ -539,6 +583,18 @@ fn finite(v: f32, wv: f32) -> f32 {
         0.0
     } else {
         v.clamp(-wv, wv)
+    }
+}
+
+/// Root aggregation over the determinizations that scored candidate `j`.
+/// `pess == 0.0` is today's mean, written as the existing expression so
+/// the default path cannot drift.
+fn root_agg(acc: f32, n: u32, worst: f32, pess: f32) -> f32 {
+    if pess == 0.0 {
+        acc / n as f32
+    } else {
+        let mean = acc / n as f32;
+        (1.0 - pess) * mean + pess * worst
     }
 }
 
@@ -636,6 +692,7 @@ fn is_lethal(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn one_ply(
     roots: &[State],
     db: &CardDb,
@@ -644,9 +701,11 @@ fn one_ply(
     nodes: &mut u32,
     cap: u32,
     eval: Evaluator<'_>,
+    pess: f32,
 ) -> (usize, f32) {
     let mut acc = vec![0.0f32; subset.len()];
     let mut n = vec![0u32; subset.len()];
+    let mut worst = vec![f32::INFINITY; subset.len()];
     for root in roots {
         for (j, a) in subset.iter().enumerate() {
             if *nodes >= cap {
@@ -671,7 +730,11 @@ fn one_ply(
             ) {
                 v += 3.0;
             }
-            acc[j] += finite(v, eval.wv);
+            let fv = finite(v, eval.wv);
+            acc[j] += fv;
+            if fv < worst[j] {
+                worst[j] = fv;
+            }
             n[j] += 1;
         }
     }
@@ -681,7 +744,7 @@ fn one_ply(
         if c == 0 {
             continue;
         }
-        let v = acc[j] / c as f32;
+        let v = root_agg(acc[j], c, worst[j], pess);
         if v > best_v {
             best_v = v;
             best_i = j;
