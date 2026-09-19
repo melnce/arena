@@ -16,6 +16,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'push' }}
 
+# Least privilege. contents:read is enough for checkout on a public
+# repo; issues:write is the only extra the tracking-issue steps need.
+# Cache uses the runner's ACTIONS_RUNTIME_TOKEN, not this grant.
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   slow:
     runs-on: ubuntu-latest
@@ -62,3 +69,88 @@ jobs:
 
       - name: self-play recorder (release, including ignored)
         run: cargo test --release --test record -- --include-ignored --nocapture
+
+      # One open issue <=> the slow suite is currently red. Keyed on the
+      # exact title "slow suite is red" (unique, survives a label edit).
+      # The `slow-suite` label is the lookup index so we do not wait on
+      # GitHub search, which can lag a just-created issue.
+      - name: Open or update slow-suite tracking issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ISSUE_TITLE: slow suite is red
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          # `gh issue create --label` fails if the label is missing, and
+          # that failure would be silent inside `if: failure()`.
+          gh label create slow-suite \
+            --description "The nightly slow workflow is currently failing" \
+            --color B60205 \
+            --force
+
+          failed_steps=""
+          if jobs_json="$(curl -fsS \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs")"; then
+            failed_steps="$(
+              printf '%s' "${jobs_json}" | jq -r --arg job "${GITHUB_JOB}" '
+                .jobs[]
+                | select(.name == $job)
+                | .steps[]
+                | select(.conclusion == "failure")
+                | select(.name | test("tracking issue") | not)
+                | .name
+              ' | paste -sd '; ' - || true
+            )"
+          fi
+          if [ -z "${failed_steps}" ]; then
+            failed_steps="(unresolved — see the run log)"
+          fi
+
+          body="$(printf 'Failed step: **%s**\n\nRun: %s\n\nEvent: `%s` on `%s` (`%s`).\n' \
+            "${failed_steps}" "${RUN_URL}" "${EVENT_NAME}" "${REF_NAME}" "${SHA}")"
+
+          existing="$(
+            gh issue list --state all --label slow-suite --limit 50 \
+              --json number,title,state \
+              --jq '[.[] | select(.title == env.ISSUE_TITLE)] | first | .number // empty'
+          )"
+
+          if [ -n "${existing}" ]; then
+            gh issue comment "${existing}" --body "${body}"
+            state="$(gh issue view "${existing}" --json state --jq .state)"
+            if [ "${state}" = "CLOSED" ]; then
+              gh issue reopen "${existing}"
+            fi
+          else
+            gh issue create --title "${ISSUE_TITLE}" --label slow-suite --body "${body}"
+          fi
+
+      - name: Close slow-suite tracking issue
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ISSUE_TITLE: slow suite is red
+        run: |
+          set -euo pipefail
+
+          existing="$(
+            gh issue list --state open --label slow-suite --limit 50 \
+              --json number,title,state \
+              --jq '[.[] | select(.title == env.ISSUE_TITLE)] | first | .number // empty'
+          )"
+          if [ -z "${existing}" ]; then
+            echo "No open tracking issue; slow suite is already green."
+            exit 0
+          fi
+
+          body="$(printf 'slow suite is green again.\n\nRun: %s\n' "${RUN_URL}")"
+          gh issue comment "${existing}" --body "${body}"
+          gh issue close "${existing}" --reason completed
