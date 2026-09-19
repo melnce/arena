@@ -120,8 +120,10 @@ impl AnyPolicy {
     /// opponent-lethal sweep on the greedy path; default `1`; `olethal=0`
     /// restores the pre-flip greedy path; ignored when
     /// `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step; default `6`;
-    /// hard stop is `osteps+3`), `wv=<f32>` (root-level
-    /// terminal stand-in; default `80`), `tt=0|1` (per-decision
+    /// hard stop is `osteps+3`), `wv=<f32>` (saturation bound on every
+    /// accumulated value; default `80`), `pess=<f32>` (pessimism weight
+    /// on the root mean, in `[0, 1]`; default `0` is today's mean;
+    /// `1` is the worst determinization), `tt=0|1` (per-decision
     /// transposition table; default `1`), `alloc=root|fair` (how the
     /// node cap is spent across `(root, candidate)` pairs; default
     /// `fair` = per-pair share; `alloc=root` restores the pre-#46
@@ -148,7 +150,7 @@ impl AnyPolicy {
     /// `value=net,net=<path>` (the built-in net is the default and is not
     /// printed), non-default
     /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
-    /// non-default `wv`, `tt=0` when the table is off, `alloc=root`
+    /// non-default `wv`, non-default `pess`, `tt=0` when the table is off, `alloc=root`
     /// when the allocator is the pre-#46 root-major spend, and any
     /// non-default weight.
     /// `"h0"` still round-trips to `"h0"`.
@@ -205,6 +207,9 @@ fn h0_spec(h: &H0) -> String {
     if h.wv != def.wv {
         parts.push(format!("wv={}", h.wv));
     }
+    if h.pess != def.pess {
+        parts.push(format!("pess={}", h.pess));
+    }
     if !h.tt {
         parts.push("tt=0".to_string());
     }
@@ -248,6 +253,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.olethal == b.olethal
         && a.osteps == b.osteps
         && a.wv == b.wv
+        && a.pess == b.pess
         && a.tt == b.tt
         && a.alloc == b.alloc
         && a.net_path == b.net_path
@@ -317,6 +323,13 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                 }
             }
             "wv" => h.wv = parse_num(val)?,
+            "pess" => {
+                let v: f32 = val.parse().map_err(|_| format!("bad pess '{val}'"))?;
+                if !(0.0..=1.0).contains(&v) {
+                    return Err(format!("pess out of range '{val}'"));
+                }
+                h.pess = v;
+            }
             "tt" => {
                 h.tt = match val {
                     "0" => false,
