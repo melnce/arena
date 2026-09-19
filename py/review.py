@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 """Replay captured vs-bot games against a deep reference and rank blunders.
 
-A blunder is a decision whose reference value is worse than the reference's
-own choice at that position: cost = max(0, v_best − v_played). Hidden
-information is where a shallow read goes wrong, so the default reference
-uses four times H0's usual determinizations (`k=16`).
+For actions that keep the turn, a blunder is a decision whose reference
+value is worse than the reference's own choice: cost = max(0, delta)
+where delta = v_best − v_played (signed; search noise goes both ways).
+
+Turn-passing actions (end_turn, or anything that hands the seat to the
+opponent) do not get a `cost`. Both searches flatter the side to move, so
+v_best − v_played is not a mistake score — it is the bot's end-of-turn
+valuation minus a real search from the opponent's seat. That quantity is
+emitted as `optimism` and kept out of the blunder ranking and every cost
+aggregate.
+
+Hidden information is where a shallow read goes wrong, so the default
+reference uses four times H0's usual determinizations (`k=16`).
 """
 
 from __future__ import annotations
@@ -14,6 +23,7 @@ import hashlib
 import json
 import os
 import shutil
+import statistics
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -45,6 +55,10 @@ HUMAN_SEAT = "a"
 BOT_SEAT = "b"
 TURN_BANDS = ("1-3", "4-6", "7-9", "10+")
 KIND_ORDER = ("play", "attack", "evolve", "end-turn", "ability")
+COST_KIND_ORDER = ("play", "attack", "evolve", "ability")
+LETHAL_EPS = 1e-6
+HUMAN_SIDE_WARN = "no humanSide in capture; assuming human = seat a"
+ACTION_META_KEYS = frozenset({"value", "bot_value"})
 
 
 def seed_for(game_id: str, ply: int, extra: int = 0) -> int:
@@ -110,7 +124,134 @@ def apply_step(game: Any, step: dict[str, Any]) -> None:
     if "reseed" in step:
         game.reseed(int(step["reseed"]))
         return
+    if any(k in step for k in ACTION_META_KEYS):
+        step = {k: v for k, v in step.items() if k not in ACTION_META_KEYS}
     game.apply(step)
+
+
+def passes_turn(played: Any, *, seat_changed: bool | None = None) -> bool:
+    """True for end_turn, or when the caller saw the acting seat change."""
+    if seat_changed is True:
+        return True
+    return isinstance(played, dict) and "end_turn" in played
+
+
+def action_body(step: Any) -> Any:
+    if not isinstance(step, dict):
+        return step
+    return {k: v for k, v in step.items() if k not in ACTION_META_KEYS}
+
+
+def actions_equal(a: Any, b: Any) -> bool:
+    return json.dumps(action_body(a), sort_keys=True, separators=(",", ":")) == json.dumps(
+        action_body(b), sort_keys=True, separators=(",", ":")
+    )
+
+
+def recorded_human_side(log: dict[str, Any]) -> str | None:
+    human = log.get("humanSide") or log.get("human")
+    return human if human in ("a", "b") else None
+
+
+def decorate_decision(
+    rec: dict[str, Any],
+    *,
+    turn_passing: bool | None = None,
+) -> dict[str, Any]:
+    """Attach signed `delta` / `optimism`; drop `cost` on turn-passing actions."""
+    out = dict(rec)
+    passing = passes_turn(out.get("played"), seat_changed=turn_passing)
+    v_best = float(out["v_best"])
+    v_played = float(out["v_played"])
+    delta = v_best - v_played
+    out.pop("clamped_negative", None)
+    if passing:
+        out["optimism"] = delta
+        out.pop("cost", None)
+        out.pop("delta", None)
+    else:
+        out["delta"] = delta
+        out["cost"] = 0.0 if delta < 0 else delta
+        out.pop("optimism", None)
+    return out
+
+
+def is_analysis(data: dict[str, Any]) -> bool:
+    dec = data.get("decisions")
+    if not isinstance(dec, list) or not dec:
+        return False
+    first = dec[0]
+    return isinstance(first, dict) and "v_best" in first and "v_played" in first
+
+
+def refresh_analysis(data: dict[str, Any], *, ref: str) -> dict[str, Any]:
+    """Re-decorate a previously analysed game without re-searching."""
+    out = dict(data)
+    decisions = [
+        decorate_decision(d) for d in (data.get("decisions") or []) if isinstance(d, dict)
+    ]
+    out["decisions"] = [
+        {k: v for k, v in d.items() if k not in ("clamped_negative", "ms", "kind")}
+        for d in decisions
+    ]
+    out["clamped_negative"] = sum(
+        1 for d in decisions if isinstance(d.get("delta"), (int, float)) and float(d["delta"]) < 0
+    )
+    out.setdefault("ref", ref)
+    return out
+
+
+def decision_delta(d: dict[str, Any]) -> float:
+    if "delta" in d:
+        return float(d["delta"])
+    if "optimism" in d:
+        return float(d["optimism"])
+    return float(d["v_best"]) - float(d["v_played"])
+
+
+def clamped_cost(d: dict[str, Any]) -> float:
+    if "cost" in d:
+        return float(d["cost"])
+    raw = decision_delta(d)
+    return 0.0 if raw < 0 else raw
+
+
+def review_stats(
+    games: list[dict[str, Any]],
+    *,
+    wv: float,
+    mean_ms: float,
+    clamped_total: int,
+) -> dict[str, Any]:
+    decisions = [d for g in games for d in (g.get("decisions") or [])]
+    end_turns = [d for d in decisions if passes_turn(d.get("played"))]
+    lethal = [
+        d for d in end_turns if float(d.get("v_played") or 0) <= -wv + LETHAL_EPS
+    ]
+    opts = [decision_delta(d) for d in end_turns]
+    n_games = len(games)
+    same = [
+        d
+        for d in decisions
+        if actions_equal(d.get("played"), d.get("reference"))
+        and not passes_turn(d.get("played"))
+    ]
+    noise = [clamped_cost(d) for d in same]
+    return {
+        "games": n_games,
+        "analysed_end_turns": len(end_turns),
+        "lethal_walks": len(lethal),
+        "mean_optimism": mean(opts),
+        "end_turns_per_game": (len(end_turns) / n_games) if n_games else 0.0,
+        "lethal_per_game": (len(lethal) / n_games) if n_games else 0.0,
+        "noise_n": len(same),
+        "noise_mean": mean(noise),
+        "noise_std": statistics.stdev(noise) if len(noise) > 1 else 0.0,
+        "noise_max": max(noise) if noise else 0.0,
+        "clamped_total": clamped_total,
+        "mean_ms": mean_ms,
+        "wv": wv,
+    }
 
 
 def rebuild_to(db: Any, log: dict[str, Any], ply: int) -> Any:
@@ -171,9 +312,7 @@ def load_card_names(cards_root: Path) -> dict[str, str]:
 
 
 def seats_for(side: str, log: dict[str, Any]) -> set[str]:
-    human = log.get("humanSide") or log.get("human") or HUMAN_SEAT
-    if human not in ("a", "b"):
-        human = HUMAN_SEAT
+    human = recorded_human_side(log) or HUMAN_SEAT
     bot = "b" if human == "a" else "a"
     if side == "bot":
         return {bot}
@@ -206,18 +345,31 @@ def collect_game_paths(items: list[Path]) -> list[Path]:
     return out
 
 
-def load_game_log(path: Path) -> dict[str, Any] | None:
+def load_input(path: Path) -> tuple[str, dict[str, Any]] | None:
+    """Load a raw capture or a previously written per-game analysis."""
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return None
     if not isinstance(data, dict):
         return None
+    if is_analysis(data):
+        if not data.get("game_id"):
+            data["game_id"] = path.stem
+        return ("analysis", data)
     if "actions" not in data or "deckA" not in data or "deckB" not in data:
         return None
     if not data.get("game_id"):
         data["game_id"] = path.stem
-    return data
+    return ("capture", data)
+
+
+def load_game_log(path: Path) -> dict[str, Any] | None:
+    loaded = load_input(path)
+    if loaded is None:
+        return None
+    kind, data = loaded
+    return data if kind == "capture" else None
 
 
 def analyse_decision(
@@ -245,7 +397,7 @@ def analyse_decision(
     best_action = ref_out["action"]
     v_best = ref_out["value"]
     clone = game.clone()
-    clone.apply(step)
+    clone.apply(action_body(step))
     played_ms = 0.0
     if clone.terminal:
         winner = clone.winner
@@ -270,31 +422,30 @@ def analyse_decision(
         return None
     v_best_f = float(v_best)
     v_played_f = float(v_played)
-    raw = v_best_f - v_played_f
-    clamped = raw < 0
-    cost = 0.0 if clamped else raw
+    turn_passing = (not clone.terminal and acting_of(clone) != acting) or (
+        "end_turn" in step
+    )
     full = game.full()
     bot_value = None
     if isinstance(step.get("value"), (int, float)):
         bot_value = float(step["value"])
     elif isinstance(step.get("bot_value"), (int, float)):
         bot_value = float(step["bot_value"])
-    return {
+    rec = {
         "ply": ply,
         "turn": int(game.turn),
         "phase": str(game.phase),
         "acting": acting,
-        "played": step,
+        "played": action_body(step),
         "reference": best_action,
         "v_played": v_played_f,
         "v_best": v_best_f,
-        "cost": cost,
         "bot_value": bot_value,
         "position": position_summary(full),
-        "clamped_negative": clamped,
         "ms": best_ms + played_ms,
         "kind": action_kind(step),
     }
+    return decorate_decision(rec, turn_passing=turn_passing)
 
 
 def analyse_game(
@@ -338,7 +489,9 @@ def analyse_game(
                     decisions.append(rec)
         decisions.sort(key=lambda r: int(r["ply"]))
 
-    clamped = sum(1 for d in decisions if d.get("clamped_negative"))
+    clamped = sum(
+        1 for d in decisions if isinstance(d.get("delta"), (int, float)) and float(d["delta"]) < 0
+    )
     times = [float(d["ms"]) for d in decisions if "ms" in d]
     winner = log.get("winner")
     if winner not in ("a", "b", None):
@@ -461,13 +614,36 @@ def build_review_md(
     clamped_total: int,
     mean_ms: float,
 ) -> str:
+    wv = parse_wv(ref)
+    if games:
+        wv = parse_wv(str(games[0].get("ref") or ref))
+    stats = review_stats(games, wv=wv, mean_ms=mean_ms, clamped_total=clamped_total)
+    two_sigma = 2.0 * float(stats["noise_std"])
     lines: list[str] = []
     lines.append("# Game review")
     lines.append("")
     lines.append(f"- games: {len(games)}")
     lines.append(f"- reference: `{ref}`")
     lines.append(f"- card names: {name_source}")
-    lines.append(f"- clamped-negative (search noise): {clamped_total}")
+    lines.append(
+        f"- lethal-walk end-turns: {stats['lethal_walks']} / {stats['analysed_end_turns']} "
+        f"({stats['lethal_per_game']:.2f} per game; "
+        f"{stats['end_turns_per_game']:.2f} analysed end-turns/game)"
+    )
+    lines.append(
+        f"- mean end-of-turn optimism: {stats['mean_optimism']:.1f} "
+        f"(n={stats['analysed_end_turns']}; "
+        f"{stats['end_turns_per_game']:.2f} analysed end-turns/game)"
+    )
+    lines.append(
+        f"- noise floor (same-action, true cost 0): n={stats['noise_n']} "
+        f"mean={stats['noise_mean']:.2f} σ={stats['noise_std']:.2f} "
+        f"max={stats['noise_max']:.1f}"
+    )
+    lines.append(
+        f"- any single cost below roughly {two_sigma:.1f} (2σ) is "
+        "indistinguishable from measurement noise"
+    )
     lines.append(f"- reference mean decision time: {mean_ms:.1f} ms")
     lines.append("")
 
@@ -494,9 +670,17 @@ def build_review_md(
     blunders: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for g in games:
         for d in g.get("decisions") or []:
+            if "cost" not in d:
+                continue
             blunders.append((g, d))
     blunders.sort(key=lambda pair: (-float(pair[1].get("cost") or 0), int(pair[1].get("ply") or 0)))
     lines.append(f"## Top {top} blunders")
+    lines.append("")
+    lines.append(
+        "Turn-passing actions are omitted (they have `optimism`, not `cost`). "
+        f"Any single cost below roughly {two_sigma:.1f} (2σ of the same-action "
+        "noise floor) is indistinguishable from measurement noise."
+    )
     lines.append("")
     if not blunders:
         lines.append("None.")
@@ -504,11 +688,13 @@ def build_review_md(
     for i, (g, d) in enumerate(blunders[:top], 1):
         played = render_action(d.get("played"), names)
         ref_act = render_action(d.get("reference"), names)
+        delta = float(d.get("delta") if d.get("delta") is not None else decision_delta(d))
         lines.append(
             f"{i}. `{g.get('game_id')}` turn {d.get('turn')} {d.get('phase')} "
             f"({d.get('acting')}): played {played}, reference says {ref_act}. "
             f"v_played={float(d.get('v_played') or 0):.3f} "
             f"v_best={float(d.get('v_best') or 0):.3f} "
+            f"delta={delta:.3f} "
             f"cost={float(d.get('cost') or 0):.3f}. "
             f"{render_position(d.get('position') or {})}"
         )
@@ -517,24 +703,62 @@ def build_review_md(
 
     lines.append("## Aggregate")
     lines.append("")
+    lines.append(
+        "Turn-passing actions are excluded. `delta` is signed (`v_best − v_played`); "
+        "it is not clamped, so search noise in both directions cancels in the mean."
+    )
+    lines.append("")
+
+    def costed_rows() -> list[dict[str, Any]]:
+        return [
+            d
+            for g in games
+            for d in (g.get("decisions") or [])
+            if "delta" in d or "cost" in d
+        ]
 
     def bucket_lines(title: str, keys: list[str], key_of) -> None:
         lines.append(f"### {title}")
         lines.append("")
-        lines.append("| bucket | n | mean cost | total cost |")
+        lines.append("| bucket | n | mean delta | total delta |")
         lines.append("|---|---:|---:|---:|")
+        pool = costed_rows()
         for key in keys:
-            rows = [d for g in games for d in (g.get("decisions") or []) if key_of(d) == key]
-            costs = [float(d.get("cost") or 0) for d in rows]
+            rows = [d for d in pool if key_of(d) == key]
+            deltas = [decision_delta(d) for d in rows]
             lines.append(
-                f"| {key} | {len(rows)} | {mean(costs):.3f} | {sum(costs):.3f} |"
+                f"| {key} | {len(rows)} | {mean(deltas):.3f} | {sum(deltas):.3f} |"
             )
         lines.append("")
 
     bucket_lines("by turn band", list(TURN_BANDS), lambda d: turn_band(int(d.get("turn") or 0)))
-    bucket_lines("by action kind", list(KIND_ORDER), lambda d: action_kind(d.get("played") or {}))
+    bucket_lines("by action kind", list(COST_KIND_ORDER), lambda d: action_kind(d.get("played") or {}))
     bucket_lines("by side", ["a", "b"], lambda d: d.get("acting"))
-    lines.append(f"clamped-negative count: {clamped_total}")
+
+    lines.append("### end-of-turn")
+    lines.append("")
+    lines.append(
+        f"- turns ended with the opponent holding lethal "
+        f"(v_played ≤ −{stats['wv']:g}): "
+        f"{stats['lethal_walks']} / {stats['analysed_end_turns']} "
+        f"({stats['lethal_per_game']:.2f} per game; "
+        f"{stats['end_turns_per_game']:.2f} analysed end-turns/game)"
+    )
+    lines.append(
+        f"- mean end-of-turn optimism: {stats['mean_optimism']:.1f} "
+        f"(n={stats['analysed_end_turns']}; "
+        f"{stats['end_turns_per_game']:.2f} analysed end-turns/game)"
+    )
+    lines.append(
+        "- `optimism` is the bot's own end-of-turn valuation minus a real "
+        "search from the opponent's seat — not a blunder score."
+    )
+    lines.append("")
+    lines.append(
+        f"noise floor (same-action): n={stats['noise_n']} "
+        f"mean={stats['noise_mean']:.2f} σ={stats['noise_std']:.2f} "
+        f"max={stats['noise_max']:.1f}"
+    )
     lines.append(f"reference mean decision time: {mean_ms:.1f} ms")
     lines.append("")
     return "\n".join(lines)
@@ -546,8 +770,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         prog="py/review.py",
         description=(
             "Replay captured vs-bot games against a deep reference search and "
-            "rank the bot's blunders. A blunder is cost = max(0, v_best − v_played) "
-            "in the analysed player's frame."
+            "rank the bot's blunders. A blunder is cost = max(0, delta) for "
+            "actions that keep the turn (delta = v_best − v_played, signed). "
+            "Turn-passing actions emit optimism instead of cost."
         ),
     )
     p.add_argument(
@@ -629,6 +854,7 @@ class Runner:
             else "ids (card db names unavailable); full() instance names when present"
         )
         self.threads = args.threads if args.threads and args.threads > 0 else (os.cpu_count() or 1)
+        self.human_side_assumed = False
 
     def _argv_list(self) -> list[str]:
         return [sys.executable, str(Path(__file__).resolve()), *self.args._argv]
@@ -653,33 +879,47 @@ class Runner:
     def analyse(self) -> list[dict[str, Any]]:
         import arena
 
-        db = arena.load_cards(str(self.cards))
+        db = None
         self.mark_start("analyse")
         outputs: list[dict[str, Any]] = []
+        warned = False
         for path in self.game_inputs():
-            log = load_game_log(path)
-            if log is None:
+            loaded = load_input(path)
+            if loaded is None:
                 continue
-            gid = str(log["game_id"])
+            kind, data = loaded
+            gid = str(data.get("game_id") or path.stem)
             if self.args.only and gid != self.args.only and path.stem != self.args.only:
                 continue
             dest = self.tag_dir / f"{gid}.json"
-            if dest.is_file() and not self.args.force:
+            if kind == "capture" and recorded_human_side(data) is None:
+                if not warned:
+                    print(HUMAN_SIDE_WARN, flush=True)
+                    warned = True
+                self.human_side_assumed = True
+            if dest.is_file() and not self.args.force and kind != "analysis":
                 print(f"skip: {gid}", flush=True)
                 try:
-                    outputs.append(json.loads(dest.read_text(encoding="utf-8")))
+                    prev = json.loads(dest.read_text(encoding="utf-8"))
+                    outputs.append(refresh_analysis(prev, ref=self.args.ref))
                 except (OSError, json.JSONDecodeError):
                     pass
                 continue
-            print(f"review {gid}", flush=True)
-            result = analyse_game(
-                db,
-                log,
-                ref=self.args.ref,
-                side=self.args.side,
-                threads=self.threads,
-                names=self.names,
-            )
+            if kind == "analysis":
+                print(f"refresh {gid}", flush=True)
+                result = refresh_analysis(data, ref=self.args.ref)
+            else:
+                if db is None:
+                    db = arena.load_cards(str(self.cards))
+                print(f"review {gid}", flush=True)
+                result = analyse_game(
+                    db,
+                    data,
+                    ref=self.args.ref,
+                    side=self.args.side,
+                    threads=self.threads,
+                    names=self.names,
+                )
             written = {k: v for k, v in result.items() if k not in ("mean_ms", "decision_ms")}
             dest.write_text(dumps(written), encoding="utf-8")
             outputs.append(result)
@@ -707,6 +947,11 @@ class Runner:
         )
         (self.tag_dir / "REVIEW.md").write_text(text, encoding="utf-8")
         print(text, flush=True)
+        wv = parse_wv(self.args.ref)
+        if games:
+            wv = parse_wv(str(games[0].get("ref") or self.args.ref))
+        stats = review_stats(games, wv=wv, mean_ms=mean(times), clamped_total=clamped)
+        self.run["human_side_assumed"] = bool(self.human_side_assumed)
         self.run["review"] = {
             "games": len(games),
             "clamped_negative": clamped,
@@ -714,6 +959,14 @@ class Runner:
             "ref": self.args.ref,
             "side": self.args.side,
             "engine": git_head(self.repo),
+            "human_side_assumed": bool(self.human_side_assumed),
+            "lethal_walks": stats["lethal_walks"],
+            "analysed_end_turns": stats["analysed_end_turns"],
+            "mean_optimism": stats["mean_optimism"],
+            "noise_n": stats["noise_n"],
+            "noise_mean": stats["noise_mean"],
+            "noise_std": stats["noise_std"],
+            "noise_max": stats["noise_max"],
         }
         self.save_run()
         self.mark_end("summary")
