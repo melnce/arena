@@ -1,16 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ART, artShot } from "./helpers.ts";
+import { ART, artShot, openSettings } from "./helpers.ts";
 
 const FOREST_ONLY = ["10011110", "10011120", "10011130", "10011210", "10012110", "10012120", "10012310"];
 const RUNE_ONLY = ["10031110", "10031210", "10031310", "10031320", "10032110", "10032120", "10032310"];
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
 
 async function boot(page: Page) {
   await page.goto("/");

@@ -1,16 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ART, artShot } from "./helpers.ts";
+import { ART, artShot, openSettings } from "./helpers.ts";
 
 const TIKOH = "10463110";
 const FIGHTER = "10001110";
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
 
 async function boot(page: Page) {
   await page.goto("/");

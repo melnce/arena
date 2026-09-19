@@ -1,14 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
-import { ART, artShot, assertGlow, waitCardSizeStable } from "./helpers.ts";
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
+import { ART, artShot, assertGlow, openSettings, waitCardSizeStable, waitEnterAnimation } from "./helpers.ts";
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -286,6 +278,9 @@ test("board occupied slots are centred (1 / 2 / 3 followers)", async ({ page }) 
   async function shot(n: number) {
     const board = page.locator("#blueBoard");
     await expect(board.locator(".card")).toHaveCount(n, { timeout: 5000 });
+    const cards = board.locator(".card");
+    const nCards = await cards.count();
+    for (let i = 0; i < nCards; i++) await waitEnterAnimation(cards.nth(i));
     await expect(board.locator(".empty-slot, .board-slot:not(:has(.card))")).toHaveCount(0);
     const geom = await board.evaluate((el) => {
       const cards = [...el.querySelectorAll<HTMLElement>(".card")];

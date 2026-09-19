@@ -1,19 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ART, artShot, YELLOW } from "./helpers.ts";
+import { ART, artShot, YELLOW, openSettings } from "./helpers.ts";
 
 const LEONA = "10871120";
 const HAIKUMASTER = "10532120";
 const REAPERS_DUE = "10953310";
 const FANFARE_LAST_WORDS = "10641110";
 const FILLER = "10622310";
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
 
 async function boot(page: Page) {
   await page.goto("/");

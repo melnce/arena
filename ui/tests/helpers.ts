@@ -5,19 +5,107 @@ import { copyFile, mkdir as mkdirP } from "node:fs/promises";
 
 export const ART = "/opt/cursor/artifacts";
 
+const TRANSIENT_ANIMS = [
+  "card-enter",
+  "barrier-flash-kf",
+  "floating-combat-card-flash",
+  "stat-flash",
+];
+
 /** Wait until a `.card-enter` animation has finished (class may remain). */
 export async function waitEnterAnimation(card: Locator): Promise<void> {
-  await card.evaluate(async (el) => {
-    if (!el.classList.contains("card-enter")) return;
+  await waitAnimationEnd(card, "card-enter");
+}
+
+/** Wait for a finite CSS animation to finish. Looping or already-done animations return immediately. */
+export async function waitAnimationEnd(el: Locator, name?: string): Promise<void> {
+  await el.evaluate(async (node, animName) => {
+    const active = (node.getAnimations?.() ?? []).filter((a) => {
+      if (a.constructor.name !== "CSSAnimation") return false;
+      const n = (a as unknown as { animationName?: string }).animationName ?? "";
+      if (animName && !n.includes(animName)) return false;
+      return a.playState === "running" || a.playState === "pending";
+    });
+    if (active.length === 0) return;
+    const infinite = active.some((a) => {
+      const effect = a.effect as { getTiming?: () => { iterations?: number } } | null;
+      return effect?.getTiming?.().iterations === Infinity;
+    });
+    if (infinite) return;
+    await Promise.race([
+      Promise.all(active.map((a) => a.finished.catch(() => undefined))),
+      new Promise<void>((resolve) => window.setTimeout(resolve, 800)),
+    ]);
+  }, name);
+}
+
+/** Wait for a CSS transition on `property` to finish, or return if none is running. */
+export async function waitTransitionEnd(el: Locator, property?: string): Promise<void> {
+  await el.evaluate(async (node, prop) => {
+    const running = (node.getAnimations?.() ?? []).some((a) => {
+      if (a.constructor.name !== "CSSTransition") return false;
+      const t = a as unknown as { transitionProperty?: string };
+      return !prop || t.transitionProperty === prop;
+    });
+    if (!running) return;
+    const style = getComputedStyle(node);
+    const durs = style.transitionDuration.split(",").map((d) => {
+      const n = parseFloat(d);
+      return d.includes("ms") ? n : n * 1000;
+    });
+    const maxMs = Math.max(80, ...durs) + 80;
     await Promise.race([
       new Promise<void>((resolve) => {
-        el.addEventListener("animationend", () => resolve(), { once: true });
+        const onEnd = (e: TransitionEvent) => {
+          if (!prop || e.propertyName === prop) {
+            node.removeEventListener("transitionend", onEnd);
+            resolve();
+          }
+        };
+        node.addEventListener("transitionend", onEnd);
       }),
-      new Promise<void>((resolve) => {
-        window.setTimeout(resolve, 250);
-      }),
+      new Promise<void>((resolve) => window.setTimeout(resolve, maxMs)),
     ]);
-  });
+  }, property);
+}
+
+/**
+ * Wait out one-shot card animations (enter / barrier-flash / FCT flash).
+ * Does not wait for looping pulses (playPulse, barrier-pulse, keyword swap).
+ */
+export async function waitTransientCardAnimations(card: Locator): Promise<void> {
+  await card.evaluate(async (el, transients: string[]) => {
+    const active = () =>
+      (el.getAnimations?.() ?? []).filter((a) => {
+        if (a.constructor.name !== "CSSAnimation") return false;
+        const n = (a as unknown as { animationName?: string }).animationName ?? "";
+        if (!transients.some((t) => n.includes(t))) return false;
+        return a.playState === "running" || a.playState === "pending";
+      });
+    const now = active();
+    if (now.length === 0) return;
+    await Promise.race([
+      Promise.all(now.map((a) => a.finished.catch(() => undefined))),
+      new Promise<void>((resolve) => window.setTimeout(resolve, 800)),
+    ]);
+  }, TRANSIENT_ANIMS);
+}
+
+/**
+ * Open the settings drawer and wait for its 0.18s transform to settle.
+ * Retries the toggle click if a reload/bind race swallows the first one
+ * (`toPass` re-evaluates one assertion — not a test-level retry).
+ */
+export async function openSettings(page: Page): Promise<void> {
+  const drawer = page.locator("#settingsDrawer");
+  const toggle = page.locator("#settingsToggle");
+  await expect(toggle).toBeVisible();
+  await expect(async () => {
+    const already = await drawer.evaluate((el) => el.classList.contains("open"));
+    if (!already) await toggle.click();
+    await expect(drawer).toHaveClass(/open/, { timeout: 1500 });
+  }).toPass({ timeout: 10_000 });
+  await waitTransitionEnd(drawer, "transform");
 }
 
 /** Hover a history row and wait for the preview `<img>` to load or error. */
@@ -68,12 +156,42 @@ export async function wrapperOutline(card: Locator): Promise<string> {
 }
 
 export async function assertGlow(card: Locator, kind: "yellow" | "green" | "none"): Promise<void> {
-  const color = await wrapperOutline(card);
   if (kind === "none") {
-    expect(color === "none" || color === "rgba(0, 0, 0, 0)" || color === "transparent").toBeTruthy();
+    await expect
+      .poll(async () => {
+        const color = await wrapperOutline(card);
+        return color === "none" || color === "rgba(0, 0, 0, 0)" || color === "transparent";
+      })
+      .toBeTruthy();
     return;
   }
-  expect(color).toBe(kind === "yellow" ? YELLOW : GREEN);
+  await expect.poll(() => wrapperOutline(card)).toBe(kind === "yellow" ? YELLOW : GREEN);
+}
+
+export function sampleColor(
+  path: string,
+  pred: (r: number, g: number, b: number, a: number) => boolean,
+): number {
+  const img = pngRgba(readFileSync(path));
+  let hits = 0;
+  for (let i = 0; i < img.data.length; i += 4) {
+    if (pred(img.data[i], img.data[i + 1], img.data[i + 2], img.data[i + 3])) hits += 1;
+  }
+  return hits;
+}
+
+/** Screenshot + count matching pixels, re-trying until the sample holds. */
+export async function expectPngHits(
+  target: { screenshot: (opts: { path: string; fullPage?: boolean }) => Promise<Buffer> },
+  path: string,
+  pred: (r: number, g: number, b: number, a: number) => boolean,
+  min: number,
+  label: string,
+): Promise<void> {
+  await expect(async () => {
+    const shot = await artShot(target, path);
+    expect(sampleColor(shot, pred), label).toBeGreaterThan(min);
+  }).toPass({ timeout: 8_000 });
 }
 
 function paeth(a: number, b: number, c: number): number {
@@ -224,13 +342,16 @@ export function assertPngLeftEdge(path: string, kind: "yellow" | "green"): void 
 }
 
 export async function waitCardSizeStable(page: Page): Promise<void> {
-  await page.waitForTimeout(250);
+  const red = page.locator("#redHand .card").first();
+  const blue = page.locator("#blueHand .card").first();
+  if (await red.count()) await waitEnterAnimation(red);
+  if (await blue.count()) await waitEnterAnimation(blue);
   let prev: { red: number; blue: number } | null = null;
   for (let i = 0; i < 20; i++) {
     const m = await page.evaluate(() => {
-      const red = document.querySelector("#redHand .card")?.getBoundingClientRect().height ?? 0;
-      const blue = document.querySelector("#blueHand .card")?.getBoundingClientRect().height ?? 0;
-      return { red, blue };
+      const redH = document.querySelector("#redHand .card")?.getBoundingClientRect().height ?? 0;
+      const blueH = document.querySelector("#blueHand .card")?.getBoundingClientRect().height ?? 0;
+      return { red: redH, blue: blueH };
     });
     if (
       prev &&

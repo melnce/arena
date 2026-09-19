@@ -6,18 +6,11 @@ import {
   assertOuterCardNotDashedGreen,
   assertPngExclusiveRing,
   assertPngLeftEdge,
+  openSettings,
 } from "./helpers.ts";
 
 const FIGHTER = "10001110";
 const LEAH = "10001120";
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -134,10 +127,9 @@ test("plain follower: green when it can hit the leader, yellow with a printed lo
   const them = await importDeck(page, "glow-plain-b.json", { [FIGHTER]: 40 });
   const card = await readyFighter(page, me, them);
   await expect(card).toHaveClass(/can-attack/);
-  let g = await wrapperGlow(card);
-  expect(g.color).toBe("rgb(57, 217, 138)");
-  expect(g.width).toBe("4px");
-  expect(g.animation.toLowerCase()).toContain("playpulse");
+  await expect.poll(async () => (await wrapperGlow(card)).color).toBe("rgb(57, 217, 138)");
+  await expect.poll(async () => (await wrapperGlow(card)).width).toBe("4px");
+  await expect.poll(async () => (await wrapperGlow(card)).animation.toLowerCase()).toContain("playpulse");
   await assertGlow(card, "green");
   await assertOuterCardNotDashedGreen(card);
   const greenPath = await artShot(card, `${ART}/glow_matrix_plain_green.png`);
@@ -150,10 +142,9 @@ test("plain follower: green when it can hit the leader, yellow with a printed lo
   });
   await page.evaluate((s) => window.__arena!.debugGrantCantAttackLeader("a", s), slot);
   await expect(card).toHaveClass(/rush-glow/);
-  g = await wrapperGlow(card);
-  expect(g.color).toBe("rgb(255, 212, 0)");
-  expect(g.width).toBe("4px");
-  expect(g.animation.toLowerCase()).toContain("enhpulse");
+  await expect.poll(async () => (await wrapperGlow(card)).color).toBe("rgb(255, 212, 0)");
+  await expect.poll(async () => (await wrapperGlow(card)).width).toBe("4px");
+  await expect.poll(async () => (await wrapperGlow(card)).animation.toLowerCase()).toContain("enhpulse");
   await assertGlow(card, "yellow");
   await assertOuterCardNotDashedGreen(card);
   const yellowPath = await artShot(card, `${ART}/glow_matrix_plain_yellow.png`);
@@ -219,10 +210,9 @@ test("evolved follower keeps the attack ring over the E badge", async ({ page })
 
   const card = page.locator("#blueBoard .card.evolved[data-card='10001110']").first();
   await expect(card).toHaveClass(/rush-glow/);
-  let g = await wrapperGlow(card);
-  expect(g.color).toBe("rgb(255, 212, 0)");
-  expect(g.width).toBe("4px");
-  expect(g.animation.toLowerCase()).toContain("enhpulse");
+  await expect.poll(async () => (await wrapperGlow(card)).color).toBe("rgb(255, 212, 0)");
+  await expect.poll(async () => (await wrapperGlow(card)).width).toBe("4px");
+  await expect.poll(async () => (await wrapperGlow(card)).animation.toLowerCase()).toContain("enhpulse");
   await assertGlow(card, "yellow");
   await assertOuterCardNotDashedGreen(card);
   const evoYellow = await artShot(card, `${ART}/glow_matrix_evolved_yellow.png`);
@@ -231,10 +221,9 @@ test("evolved follower keeps the attack ring over the E badge", async ({ page })
   await applyFirst(page, "end_turn");
   await applyFirst(page, "end_turn");
   await expect(card).toHaveClass(/can-attack/);
-  g = await wrapperGlow(card);
-  expect(g.color).toBe("rgb(57, 217, 138)");
-  expect(g.width).toBe("4px");
-  expect(g.animation.toLowerCase()).toContain("playpulse");
+  await expect.poll(async () => (await wrapperGlow(card)).color).toBe("rgb(57, 217, 138)");
+  await expect.poll(async () => (await wrapperGlow(card)).width).toBe("4px");
+  await expect.poll(async () => (await wrapperGlow(card)).animation.toLowerCase()).toContain("playpulse");
   await assertGlow(card, "green");
   await assertOuterCardNotDashedGreen(card);
   const path = await artShot(card, `${ART}/glow_matrix_evolved_green.png`);
@@ -300,10 +289,9 @@ test("super-evolved follower keeps the attack ring over the purple SE chrome", a
   const card = page.locator("#blueBoard .card.super-evo[data-card='10001110']").first();
   await expect(card).toHaveClass(/super-evo/);
   await expect(card).toHaveClass(/rush-glow/);
-  let g = await wrapperGlow(card);
-  expect(g.color).toBe("rgb(255, 212, 0)");
-  expect(g.width).toBe("4px");
-  expect(g.animation.toLowerCase()).toContain("enhpulse");
+  await expect.poll(async () => (await wrapperGlow(card)).color).toBe("rgb(255, 212, 0)");
+  await expect.poll(async () => (await wrapperGlow(card)).width).toBe("4px");
+  await expect.poll(async () => (await wrapperGlow(card)).animation.toLowerCase()).toContain("enhpulse");
   await assertGlow(card, "yellow");
   await assertOuterCardNotDashedGreen(card);
   const seYellow = await artShot(card, `${ART}/glow_matrix_super_yellow.png`);
@@ -316,10 +304,9 @@ test("super-evolved follower keeps the attack ring over the purple SE chrome", a
 
   await applyFirst(page, "end_turn");
   await expect(card).toHaveClass(/can-attack/);
-  g = await wrapperGlow(card);
-  expect(g.color).toBe("rgb(57, 217, 138)");
-  expect(g.width).toBe("4px");
-  expect(g.animation.toLowerCase()).toContain("playpulse");
+  await expect.poll(async () => (await wrapperGlow(card)).color).toBe("rgb(57, 217, 138)");
+  await expect.poll(async () => (await wrapperGlow(card)).width).toBe("4px");
+  await expect.poll(async () => (await wrapperGlow(card)).animation.toLowerCase()).toContain("playpulse");
   await assertGlow(card, "green");
   await assertOuterCardNotDashedGreen(card);
   const path = await artShot(card, `${ART}/glow_matrix_super_green.png`);

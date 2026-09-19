@@ -1,20 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
 import {
   ART,
   artShot,
-  pngRgba,
+  expectPngHits,
+  openSettings,
   waitEnterAnimation,
   waitHistoryPreview,
+  waitTransientCardAnimations,
+  waitTransitionEnd,
 } from "./helpers.ts";
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -112,15 +106,6 @@ async function playCard(page: Page, card: string) {
   expect(ok, `expected play ${card}`).toBeTruthy();
 }
 
-function sampleColor(path: string, pred: (r: number, g: number, b: number, a: number) => boolean): number {
-  const img = pngRgba(readFileSync(path));
-  let hits = 0;
-  for (let i = 0; i < img.data.length; i += 4) {
-    if (pred(img.data[i], img.data[i + 1], img.data[i + 2], img.data[i + 3])) hits += 1;
-  }
-  return hits;
-}
-
 async function startMono(page: Page, file: string, card: string, seed = "1") {
   const id = await importDeck(page, file, { [card]: 40 });
   await startGame(page, { seed, first: "a", deckA: id, deckB: id });
@@ -169,8 +154,13 @@ test("#5 #10 tooltip order, extras, smart anchor, live refresh, drag-pin", async
       expect(await line.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(255, 136, 136)");
     }
   }
-  const shot = await artShot(tip, `${ART}/p1_tooltip_stack.png`);
-  expect(sampleColor(shot, (r, g, b, a) => a > 80 && r > 80 && g > 140 && b > 200)).toBeGreaterThan(4);
+  await expectPngHits(
+    tip,
+    `${ART}/p1_tooltip_stack.png`,
+    (r, g, b, a) => a > 80 && r > 80 && g > 140 && b > 200,
+    4,
+    "tooltip extras should sample blue",
+  );
 
   const bottomY = box!.y + box!.height - 4;
   await page.mouse.move(box!.x + box!.width / 2, bottomY);
@@ -327,6 +317,36 @@ test("#11 FCT cap, stack, flash, persist", async ({ page }) => {
   await playCard(page, "10464110");
   await endTurnApply(page);
   await playCard(page, "10631110");
+  const flashStarted = page.evaluate(() => {
+    return new Promise<string>((resolve) => {
+      const hit = () => {
+        const el = document.querySelector(".card.floating-combat-flash");
+        return el ? getComputedStyle(el).animationName : "";
+      };
+      const now = hit();
+      if (/floating-combat-card-flash/.test(now)) {
+        resolve(now);
+        return;
+      }
+      const obs = new MutationObserver(() => {
+        const name = hit();
+        if (/floating-combat-card-flash/.test(name)) {
+          obs.disconnect();
+          resolve(name);
+        }
+      });
+      obs.observe(document.body, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+      window.setTimeout(() => {
+        obs.disconnect();
+        resolve(hit());
+      }, 2000);
+    });
+  });
   await page.evaluate(() => {
     const legal = window.__arena!.legal() as Array<{
       attack?: { target: { slot?: number } | "leader" };
@@ -334,14 +354,14 @@ test("#11 FCT cap, stack, flash, persist", async ({ page }) => {
     const act = legal.find((a) => a.attack && a.attack.target !== "leader");
     if (act) window.__arena!.apply(act);
   });
+  expect(await flashStarted).toMatch(/floating-combat-card-flash/);
   const floater = page.locator(".floating-combat-text").first();
   await expect(floater).toBeVisible({ timeout: 4000 });
-  const idx = await floater.evaluate((el) => getComputedStyle(el).getPropertyValue("--float-stack-index").trim());
-  expect(idx === "0" || idx === "").toBeTruthy();
-  const flash = page.locator(".card.floating-combat-flash").first();
-  await expect(flash).toBeVisible({ timeout: 2000 });
-  const anim = await flash.evaluate((el) => getComputedStyle(el).animationName);
-  expect(anim).toMatch(/floating-combat-card-flash/);
+  await expect
+    .poll(async () =>
+      floater.evaluate((el) => getComputedStyle(el).getPropertyValue("--float-stack-index").trim()),
+    )
+    .toMatch(/^0$|^$/);
   await artShot(page, `${ART}/p1_fct_flash.png`);
 
   await openSettings(page);
@@ -378,8 +398,13 @@ test("#12 selected checkmark on mulligan", async ({ page }) => {
   expect(style.shadow).toMatch(/rgb\(0, 0, 0\)|rgba\(0, 0, 0/);
   const ring = await card.evaluate((el) => getComputedStyle(el).outlineColor);
   expect(ring).toBe("rgb(57, 217, 138)");
-  const shot = await artShot(card, `${ART}/p1_selected_check.png`);
-  expect(sampleColor(shot, (r, g, b, a) => a > 80 && r < 80 && g > 160 && b < 140)).toBeGreaterThan(4);
+  await expectPngHits(
+    card,
+    `${ART}/p1_selected_check.png`,
+    (r, g, b, a) => a > 80 && r < 80 && g > 160 && b < 140,
+    4,
+    "selected check should sample green",
+  );
 });
 
 test("#13 history rows grouped with cost, set, and hover art", async ({ page }) => {
@@ -390,6 +415,7 @@ test("#13 history rows grouped with cost, set, and hover art", async ({ page }) 
   await playCard(page, "10001110");
   await page.locator("#historyToggle").click();
   await expect(page.locator("#historyDrawer")).toHaveClass(/open/);
+  await waitTransitionEnd(page.locator("#historyDrawer"), "transform");
   const row = page.locator("#bluePlayedList .hist-item").first();
   await expect(row).toBeVisible();
   await expect(row.locator(".cost-badge")).toHaveText("2");
@@ -459,15 +485,18 @@ test("#22 can't-attack overlay on printed lock (Galleon)", async ({ page }) => {
     return info[0]?.cannot_attack_reason ?? null;
   });
   expect(reason).toBeTruthy();
+  const locked = page.locator("#blueBoard .card").first();
+  await waitTransientCardAnimations(locked);
   const overlay = page.locator("#blueBoard .cant_attack-overlay");
   await expect(overlay).toBeVisible();
-  const op = await overlay.evaluate((el) => getComputedStyle(el).opacity);
-  expect(Number(op)).toBeGreaterThan(0);
-  const shot = await artShot(page.locator("#blueBoard .card").first(), `${ART}/p1_cant_attack.png`);
-  expect(
-    sampleColor(shot, (r, g, b, a) => a > 80 && r > 200 && g > 200 && b > 200),
+  await expect.poll(async () => Number(await overlay.evaluate((el) => getComputedStyle(el).opacity))).toBeGreaterThan(0);
+  await expectPngHits(
+    locked,
+    `${ART}/p1_cant_attack.png`,
+    (r, g, b, a) => a > 80 && r > 200 && g > 200 && b > 200,
+    40,
     "crossed-chain overlay should paint light links",
-  ).toBeGreaterThan(40);
+  );
 });
 
 test("#23 keyword swap-2 on Bane+Drain; Ongoing asset present", async ({ page }) => {
@@ -561,8 +590,13 @@ test("#24 spellboost badge under the cost", async ({ page }) => {
   });
   expect(style.color).toBe("rgb(255, 255, 255)");
   expect(style.radius).toBe("50%");
-  const shot = await artShot(boost, `${ART}/p1_spellboost.png`);
-  expect(sampleColor(shot, (r, g, b, a) => a > 80 && b > 140 && b > r && b > g)).toBeGreaterThan(4);
+  await expectPngHits(
+    boost,
+    `${ART}/p1_spellboost.png`,
+    (r, g, b, a) => a > 80 && b > 140 && b > r && b > g,
+    4,
+    "spellboost badge should sample blue",
+  );
 });
 
 test("#25 leader barrier ring after Zooey Enhance 10", async ({ page }) => {
@@ -583,10 +617,16 @@ test("#25 leader barrier ring after Zooey Enhance 10", async ({ page }) => {
   ).toBeTruthy();
   const leader = page.locator("#blueLeader");
   await expect(leader).toHaveClass(/has-leader-barrier/);
-  const border = await leader.evaluate((el) => getComputedStyle(el, "::before").borderColor);
-  expect(border).toMatch(/120,\s*220,\s*255|rgb\(120, 220, 255\)/);
-  const shot = await artShot(leader, `${ART}/p1_leader_barrier.png`);
-  expect(sampleColor(shot, (r, g, b, a) => a > 40 && b > 180 && g > 160 && r < 180)).toBeGreaterThan(4);
+  await expect
+    .poll(async () => leader.evaluate((el) => getComputedStyle(el, "::before").borderColor))
+    .toMatch(/120,\s*220,\s*255|rgb\(120, 220, 255\)/);
+  await expectPngHits(
+    leader,
+    `${ART}/p1_leader_barrier.png`,
+    (r, g, b, a) => a > 40 && b > 180 && g > 160 && r < 180,
+    4,
+    "leader barrier ring should sample cyan",
+  );
 });
 
 test("#26 Escape closes the history drawer", async ({ page }) => {
@@ -601,10 +641,12 @@ test("#26 Escape closes the history drawer", async ({ page }) => {
   await page.locator("#historyToggle").click();
   const drawer = page.locator("#historyDrawer");
   await expect(drawer).toHaveClass(/open/);
+  await waitTransitionEnd(drawer, "transform");
   const ms = await drawer.evaluate((el) => getComputedStyle(el).transitionDuration);
   expect(ms).toMatch(/0\.18s|0.18s/);
   await page.keyboard.press("Escape");
   await expect(drawer).not.toHaveClass(/open/);
+  await waitTransitionEnd(drawer, "transform");
   await expect(page.locator("#historyScrim")).not.toHaveClass(/show/);
   await artShot(page, `${ART}/p1_history_closed.png`);
 });

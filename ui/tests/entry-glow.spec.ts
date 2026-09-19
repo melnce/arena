@@ -1,19 +1,11 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { ART, artShot, assertGlow, assertPngLeftEdge } from "./helpers.ts";
+import { ART, artShot, assertGlow, assertPngLeftEdge, openSettings, waitEnterAnimation } from "./helpers.ts";
 
 const RUSH = "10631110";
 const RUSH_2_2 = "10621110";
 const FIGHTER = "10001110";
 const LEAH = "10001120";
 const TIKOH = "10463110";
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -133,6 +125,7 @@ test("evolved-this-turn follower glows yellow only, then green next turn", async
   await expect(card).toHaveClass(/evolved/);
   await expect(card).toHaveClass(/rush-glow/);
   await expect(card).not.toHaveClass(/can-attack/);
+  await waitEnterAnimation(card);
   await assertGlow(card, "yellow");
   const outline = await card.locator(".card-image-wrapper").evaluate((el) => getComputedStyle(el).outlineColor);
   expect(outline).toBe("rgb(255, 212, 0)");
@@ -195,6 +188,7 @@ test("rush follower is yellow, then no glow on the opponent's turn, then green",
   const card = page.locator("#blueBoard .card[data-card='10631110']").first();
   await expect(card).toHaveClass(/rush-glow/);
   await expect(card).not.toHaveClass(/can-attack/);
+  await waitEnterAnimation(card);
   await assertGlow(card, "yellow");
   await artShot(card, `${ART}/rush_glow_entry_yellow.png`);
   const entryReason = await page.evaluate(() => {

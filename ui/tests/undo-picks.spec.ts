@@ -1,15 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
+import { openSettings } from "./helpers.ts";
 
 const FIGHTER = "10001110";
 const SOUL_TUNING = "10751310";
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
 
 async function boot(page: Page) {
   await page.goto("/");
