@@ -1,8 +1,7 @@
-//! H0 information regime (`info`): identity at the default (`draws`),
+//! H0 information regime (`info`): identity at the default (`fair`),
 //! per-mode determinize unit tests, Fair seed-stability and variation,
-//! spec round-trip, and play determinism. Default behaviour is
-//! bit-identical; the yardstick can price the advantage but cannot
-//! decide which regime should ship.
+//! spec round-trip, and play determinism. `info=draws` and `info=all`
+//! remain available as explicit spec keys; `all` is hard-mode sparring.
 
 use std::collections::BTreeMap;
 
@@ -122,12 +121,12 @@ fn mixed_info_state(db: &CardDb) -> arena_engine::State {
     st
 }
 
-fn check_draws_identity(n: usize) {
+fn check_fair_identity(n: usize) {
     let db = load_db();
     let states = collect_states(&db, n, true);
     assert_eq!(states.len(), n, "could not reach {n} mid-game states");
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:info=draws").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:info=fair").unwrap().spec(), "h0");
     for (i, state) in states.iter().enumerate() {
         let legal = legal_actions(&db, state);
         if legal.is_empty() {
@@ -136,28 +135,28 @@ fn check_draws_identity(n: usize) {
         let seed = 20260919u64.wrapping_add(i as u64);
         let mut main = H0::default();
         let mut named = parse_h0("h0");
-        let mut draws = parse_h0("h0:info=draws");
+        let mut fair = parse_h0("h0:info=fair");
         let mut rng_m = policy_rng(seed);
         let mut rng_n = policy_rng(seed);
         let mut rng_d = policy_rng(seed);
         let im = main.choose(&db, state, &legal, &mut rng_m);
         let inn = named.choose(&db, state, &legal, &mut rng_n);
-        let idr = draws.choose(&db, state, &legal, &mut rng_d);
+        let idr = fair.choose(&db, state, &legal, &mut rng_d);
         assert_eq!(im, inn, "h0 vs H0::default at state {i}");
-        assert_eq!(im, idr, "h0 vs h0:info=draws at state {i}");
+        assert_eq!(im, idr, "h0 vs h0:info=fair at state {i}");
         assert!(im < legal.len());
     }
 }
 
 #[test]
-fn draws_identity_smoke() {
-    check_draws_identity(8);
+fn fair_identity_smoke() {
+    check_fair_identity(8);
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn draws_identity_200_midgame() {
-    check_draws_identity(200);
+fn fair_identity_200_midgame() {
+    check_fair_identity(200);
 }
 
 #[test]
@@ -305,17 +304,17 @@ fn fair_varies_own_future_across_seeds() {
 #[test]
 fn spec_info_round_trips() {
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:info=draws").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:info=fair").unwrap().spec(), "h0");
     assert_eq!(
-        AnyPolicy::parse_spec("h0:info=fair").unwrap().spec(),
-        "h0:info=fair"
+        AnyPolicy::parse_spec("h0:info=draws").unwrap().spec(),
+        "h0:info=draws"
     );
     assert_eq!(
         AnyPolicy::parse_spec("h0:info=all").unwrap().spec(),
         "h0:info=all"
     );
     assert_eq!(AnyPolicy::parse_spec("h0-fast").unwrap().spec(), "h0-fast");
-    let again = AnyPolicy::parse_spec("h0:info=fair").unwrap();
+    let again = AnyPolicy::parse_spec("h0:info=draws").unwrap();
     assert_eq!(AnyPolicy::parse_spec(&again.spec()).unwrap(), again);
     let e = AnyPolicy::parse_spec("h0:info=bogus").unwrap_err();
     assert!(e.contains("info"), "info=bogus → {e}");
@@ -336,10 +335,10 @@ fn all_builds_one_root() {
     let mut rng = policy_rng(1);
     all.choose(&db, &st, &legal, &mut rng);
     assert_eq!(all.stats.roots, 1, "info=all must build one root");
-    let mut draws = parse_h0("h0");
+    let mut draws = parse_h0("h0:info=draws");
     let mut rng = policy_rng(1);
     draws.choose(&db, &st, &legal, &mut rng);
-    assert_eq!(draws.stats.roots, 4, "default still builds k roots");
+    assert_eq!(draws.stats.roots, 4, "info=draws still builds k roots");
 }
 
 fn play_pair_spec(
