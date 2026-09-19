@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ART, artShot } from "./helpers.ts";
+import { ART, artShot, openSettings } from "./helpers.ts";
 
 const MAJESTIC = "10622310";
 const CRESCENT = "10441310";
@@ -16,14 +16,6 @@ const ICON_W = 56;
 
 function normWs(text: string): string {
   return text.replace(/\s+/g, " ").trim();
-}
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
 }
 
 async function boot(page: Page) {

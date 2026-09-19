@@ -1,13 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ART, artShot } from "./helpers.ts";
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
+import { ART, artShot, openSettings, waitEnterAnimation } from "./helpers.ts";
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -101,9 +93,11 @@ test("vs-bot hidden hand matches engine count and stays leak-free", async ({ pag
   expect(after.engine).toBeGreaterThan(0);
 
   const zone = page.locator("#redHand");
+  const back = zone.locator(".card.card-back").first();
+  await waitEnterAnimation(back);
   await artShot(zone, `${ART}/hidden_hand.png`);
   await artShot(zone, "/tmp/hidden_hand.png");
-  const colors = await zone.locator(".card.card-back").first().evaluate((el) => {
+  const colors = await back.evaluate((el) => {
     const zoneEl = el.parentElement as HTMLElement;
     return {
       border: getComputedStyle(el).borderColor,

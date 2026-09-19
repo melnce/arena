@@ -1,14 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { ART, artShot, pngRgba } from "./helpers.ts";
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
+import { ART, artShot, expectPngHits, openSettings, waitTransientCardAnimations } from "./helpers.ts";
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -120,18 +112,6 @@ async function startMono(page: Page, file: string, card: string, seed = "1") {
   return id;
 }
 
-function sampleColor(
-  path: string,
-  pred: (r: number, g: number, b: number, a: number) => boolean,
-): number {
-  const img = pngRgba(readFileSync(path));
-  let hits = 0;
-  for (let i = 0; i < img.data.length; i += 4) {
-    if (pred(img.data[i], img.data[i + 1], img.data[i + 2], img.data[i + 3])) hits += 1;
-  }
-  return hits;
-}
-
 function uniqueDeck(): Record<string, number> {
   const catalog = JSON.parse(
     readFileSync(new URL("../public/catalog-images.json", import.meta.url), "utf8"),
@@ -155,24 +135,58 @@ test("#30 Barrier overlay + flash on gain + pop on loss", async ({ page }) => {
   await skipToPp(page, 1);
   await playWhenLegal(page, "10001110");
   await skipToPp(page, 5);
+  const flashStarted = page.evaluate(() => {
+    return new Promise<boolean>((resolve) => {
+      const board = document.getElementById("blueBoard");
+      if (!board) {
+        resolve(false);
+        return;
+      }
+      const hit = () => {
+        const el = board.querySelector(".card.has-barrier");
+        if (!el) return false;
+        const anim = getComputedStyle(el).animationName;
+        return el.classList.contains("barrier-flash") || anim.includes("barrier-flash");
+      };
+      if (hit()) {
+        resolve(true);
+        return;
+      }
+      const obs = new MutationObserver(() => {
+        if (hit()) {
+          obs.disconnect();
+          resolve(true);
+        }
+      });
+      obs.observe(board, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+      window.setTimeout(() => {
+        obs.disconnect();
+        resolve(hit());
+      }, 2000);
+    });
+  });
   await playWhenLegal(page, "10412120");
+  expect(await flashStarted, "gain must start the 250ms barrier-flash").toBeTruthy();
   const card = page.locator("#blueBoard .card.has-barrier").first();
   await expect(card).toBeVisible({ timeout: 10_000 });
   await expect(card.locator(".barrier-overlay")).toHaveCount(1);
   await expect(card.locator(".barrier-particle")).toHaveCount(5);
-  const flash = await card.evaluate((el) => {
-    const anim = getComputedStyle(el).animationName;
-    return anim.includes("barrier-flash") || el.classList.contains("barrier-flash");
-  });
-  expect(flash, "gain must start the 250ms barrier-flash").toBeTruthy();
-  const glow = await card.evaluate((el) => getComputedStyle(el).boxShadow);
-  expect(glow).toMatch(/50,\s*140,\s*255|32,\s*8c,\s*ff|rgba?\(50/);
-  const shot = await artShot(card, `${ART}/p2_barrier_overlay.png`);
-  const cyan = sampleColor(
-    shot,
+  await waitTransientCardAnimations(card);
+  await expect
+    .poll(async () => card.evaluate((el) => getComputedStyle(el).boxShadow))
+    .toMatch(/50,\s*140,\s*255|32,\s*8c,\s*ff|rgba?\(50/);
+  await expectPngHits(
+    card,
+    `${ART}/p2_barrier_overlay.png`,
     (r, g, b, a) => a > 40 && b > 160 && g > 140 && r < 220 && b > r,
+    8,
+    "barrier overlay should sample cyan",
   );
-  expect(cyan, "barrier overlay should sample cyan").toBeGreaterThan(8);
 
   await endTurnApply(page);
   await playWhenLegal(page, "10001110");
@@ -214,16 +228,19 @@ test("#31 Can't-be-destroyed overlay + 5 gold particles", async ({ page }) => {
   expect(traits).toContain("cantBeDestroyedByAbilities");
   await expect(card.locator(".cant-be-destroyed-overlay")).toHaveCount(1);
   await expect(card.locator(".cant-be-destroyed-particle")).toHaveCount(5);
-  const goldBg = await card.locator(".cant-be-destroyed-particle").first().evaluate((el) => {
-    return getComputedStyle(el).backgroundColor;
-  });
-  expect(goldBg).toMatch(/255,\s*215,\s*0/);
-  const shot = await artShot(card, `${ART}/p2_cant_be_destroyed.png`);
-  const gold = sampleColor(
-    shot,
+  await waitTransientCardAnimations(card);
+  await expect
+    .poll(async () =>
+      card.locator(".cant-be-destroyed-particle").first().evaluate((el) => getComputedStyle(el).backgroundColor),
+    )
+    .toMatch(/255,\s*215,\s*0/);
+  await expectPngHits(
+    card,
+    `${ART}/p2_cant_be_destroyed.png`,
     (r, g, b, a) => a > 40 && r > 180 && g > 140 && b < 120 && r > b,
+    8,
+    "CBD overlay should sample gold",
   );
-  expect(gold, "CBD overlay should sample gold").toBeGreaterThan(8);
 });
 
 test("#33 Amulet named-counter badge is first of X, then Y, then Z", async ({ page }) => {
@@ -272,20 +289,14 @@ test("#34 .spell-cast on the leaving hand card", async ({ page }) => {
   });
   const clone = page.locator(".card.spell-cast").first();
   await expect(clone).toBeVisible({ timeout: 2000 });
-  const style = await clone.evaluate((el) => {
-    const s = getComputedStyle(el);
-    return {
-      anim: s.animationName,
-      duration: s.animationDuration,
-      timing: s.animationTimingFunction,
-      filter: s.filter,
-      shadow: s.boxShadow,
-      transform: s.transform,
-    };
-  });
-  expect(style.anim).toMatch(/spell-cast/);
-  expect(style.duration).toMatch(/0\.5s|500ms/);
-  expect(style.timing).toMatch(/ease-out/);
+  await expect
+    .poll(async () =>
+      clone.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return `${s.animationName}|${s.animationDuration}|${s.animationTimingFunction}`;
+      }),
+    )
+    .toMatch(/spell-cast.*(?:0\.5s|500ms).*ease-out/);
   await playing;
   await artShot(page, `${ART}/p2_spell_cast.png`);
 });

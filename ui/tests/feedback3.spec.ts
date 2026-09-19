@@ -6,16 +6,9 @@ import {
   assertGlow,
   assertPngLeftEdge,
   assertPromptClearsCards,
+  openSettings,
   waitCardSizeStable,
 } from "./helpers.ts";
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -628,7 +621,9 @@ test("B7 follower floating combat text", async ({ page }) => {
     return window.__arena!.apply(act) as unknown[];
   });
   expect(events.some((e) => e && typeof e === "object" && "damage" in e)).toBeTruthy();
-  await expect(page.locator(".floating-combat-text")).toHaveCount(1, { timeout: 4000 });
+  const floater = page.locator(".floating-combat-text");
+  await expect(floater).toHaveCount(1, { timeout: 4000 });
+  await expect(floater).toBeVisible();
   await artShot(page, `${ART}/b7_follower_fct.png`);
 });
 

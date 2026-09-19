@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ART, artShot } from "./helpers.ts";
+import { ART, artShot, openSettings } from "./helpers.ts";
 
 const TIES = "10922310";
 const QUICK = "10021110";
@@ -7,14 +7,6 @@ const REAPER = "10953310";
 
 type PlayerId = "a" | "b";
 type TargetOpt = { slot: number; player: PlayerId };
-
-async function openSettings(page: Page) {
-  const drawer = page.locator("#settingsDrawer");
-  if (!(await drawer.evaluate((el) => el.classList.contains("open")))) {
-    await page.locator("#settingsToggle").click();
-  }
-  await expect(drawer).toHaveClass(/open/);
-}
 
 async function boot(page: Page) {
   await page.goto("/");
