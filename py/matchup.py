@@ -12,6 +12,15 @@ from pathlib import Path
 
 from stats import wilson
 
+_HERE = Path(__file__).resolve().parent
+if str(_HERE) not in sys.path:
+    sys.path.insert(0, str(_HERE))
+
+from runlib import flag_given  # noqa: E402
+
+SIDECAR_STEMS = frozenset({"POOLS", "meta-pool"})
+DEFAULT_POOL = "meta"
+
 
 def repo_root() -> Path:
     here = Path(__file__).resolve().parent
@@ -43,10 +52,45 @@ def parse_deck_json(raw: object) -> dict[str, int]:
     raise SystemExit("deck JSON must be {id: count} or [ids]")
 
 
+def is_deck_path(path: Path) -> bool:
+    return path.suffix == ".json" and path.stem not in SIDECAR_STEMS
+
+
+def load_pools(decks_dir: Path) -> dict[str, list[str]]:
+    path = decks_dir / "POOLS.json"
+    if not path.is_file():
+        raise SystemExit(f"missing {path}")
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise SystemExit("POOLS.json must be a map of pool name → deck stems")
+    out: dict[str, list[str]] = {}
+    for name, stems in raw.items():
+        if not isinstance(stems, list) or not all(isinstance(s, str) for s in stems):
+            raise SystemExit(f"POOLS.json[{name!r}] must be a list of stems")
+        out[str(name)] = [str(s) for s in stems]
+    return out
+
+
+def resolve_deck_stems(
+    decks_dir: Path,
+    pool: str | None,
+    restrict: list[str] | None,
+) -> tuple[str, list[str]]:
+    """Return ``(pool_name, stems)``. Default pool is ``meta``."""
+    if restrict is not None:
+        return "--decks", list(restrict)
+    name = pool if pool is not None else DEFAULT_POOL
+    pools = load_pools(decks_dir)
+    if name not in pools:
+        known = ", ".join(sorted(pools))
+        raise SystemExit(f"unknown --pool {name!r} (have {known})")
+    return name, list(pools[name])
+
+
 def load_deck_files(decks_dir: Path, restrict: list[str] | None) -> dict[str, dict[str, int]]:
     names = restrict
     out: dict[str, dict[str, int]] = {}
-    files = sorted(decks_dir.glob("*.json"))
+    files = sorted(p for p in decks_dir.glob("*.json") if is_deck_path(p))
     if not files:
         raise SystemExit(f"no decks in {decks_dir}")
     wanted = set(names) if names else None
@@ -64,6 +108,37 @@ def load_deck_files(decks_dir: Path, restrict: list[str] | None) -> dict[str, di
     if not out:
         raise SystemExit("no decks selected")
     return out
+
+
+def resolve_selected_decks(
+    decks_dir: Path,
+    pool: str | None,
+    restrict: list[str] | None,
+) -> tuple[str, dict[str, dict[str, int]]]:
+    pool_name, stems = resolve_deck_stems(decks_dir, pool, restrict)
+    return pool_name, load_deck_files(decks_dir, stems)
+
+
+def format_matchup_sizing(
+    pool_name: str,
+    names: list[str],
+    games_per_pair: int,
+) -> str:
+    n = len(names)
+    pairs = n * n
+    total = pairs * games_per_pair
+    if names:
+        decks_line = f"decks: {n} ({', '.join(names)})"
+    else:
+        decks_line = f"decks: {n}"
+    return "\n".join(
+        [
+            f"pool: {pool_name}",
+            decks_line,
+            f"pairs: {pairs} ({n} x {n}, mirrors included)",
+            f"games   {games_per_pair:>3} games/pair x {pairs} = {total:>5}",
+        ]
+    )
 
 
 def load_extra_deck_files(paths: list[str]) -> dict[str, dict[str, int]]:
@@ -238,11 +313,17 @@ def add_wilson95(matrix: dict[str, dict[str, dict]], names: list[str]) -> None:
             matrix[a][b]["wr_decisive"] = wr
 
 
-def main(argv: list[str] | None = None) -> int:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    raw = list(sys.argv[1:] if argv is None else argv)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--games", type=int, default=200)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--decks", nargs="*", default=None, help="restrict to these deck stems")
+    parser.add_argument(
+        "--pool",
+        default=None,
+        help="named pool from oracle/decks/POOLS.json (default: meta)",
+    )
     parser.add_argument(
         "--deck-file",
         nargs="*",
@@ -274,20 +355,34 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--out", default="matchup.json")
     parser.add_argument("--cards", default=None, help="cards/ or repo root (default: repo cards/)")
-    args = parser.parse_args(argv)
+    args = parser.parse_args(raw)
+    args._argv = raw
+    if flag_given(raw, "--pool") and flag_given(raw, "--decks"):
+        raise SystemExit("--pool cannot be combined with --decks")
+    if not flag_given(raw, "--pool") and not flag_given(raw, "--decks"):
+        args.pool = DEFAULT_POOL
+    return args
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
 
     import arena
 
     root = repo_root()
     cards = args.cards or str(root / "cards")
     db = arena.load_cards(cards)
-    decks = load_deck_files(root / "oracle" / "decks", args.decks)
+    pool_name, decks = resolve_selected_decks(
+        root / "oracle" / "decks", args.pool, args.decks
+    )
     decks.update(load_extra_deck_files(args.deck_file))
     names = list(decks.keys())
     n_pairs = len(names) * len(names)
     total = n_pairs * args.games
     policy_a = args.policy_a if args.policy_a is not None else args.policy
     policy_b = args.policy_b if args.policy_b is not None else args.policy
+    block = format_matchup_sizing(pool_name, names, args.games)
+    print(block, flush=True)
     print(
         f"matchup: {len(names)} decks × {args.games} games = {total} games "
         f"(seed={args.seed}, policy_a={policy_a}, policy_b={policy_b}, "

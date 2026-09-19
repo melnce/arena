@@ -15,7 +15,11 @@ _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
-from matchup import load_deck_files, load_extra_deck_files  # noqa: E402
+from matchup import (  # noqa: E402
+    DEFAULT_POOL,
+    load_extra_deck_files,
+    resolve_selected_decks,
+)
 from runlib import (  # noqa: E402
     flag_given,
     format_verdict_line,
@@ -49,8 +53,8 @@ DEFAULT_FINAL_GAMES = 16
 DEFAULT_FINAL_REVERSE = 8
 DEFAULT_TP_GAMES = 1
 
-# Standing yardstick pool: 16 on-disk oracle/decks, ordered pairs = n * n
-# (mirrors included), matching matchup.py. Floors are half those totals.
+# Historical 16-deck calibration (the on-disk set before named pools).
+# Floors stay those totals; the live default pool is ``meta``.
 YARDSTICK_DECKS = 16
 YARDSTICK_PAIRS = YARDSTICK_DECKS * YARDSTICK_DECKS
 FLOOR_SCREEN = DEFAULT_SCREEN_GAMES * YARDSTICK_PAIRS // 2  # 512
@@ -146,6 +150,7 @@ class SweepSizing:
     reverse: StageSize
     tp: StageSize
     target_games: int | None
+    pool: str | None = None
 
     def stage(self, name: str) -> StageSize:
         return {
@@ -161,15 +166,21 @@ def calibrated_target_games() -> int:
     return DEFAULT_FINAL_GAMES * YARDSTICK_PAIRS
 
 
-def load_sweep_decks(repo: Path, restrict: list[str] | None) -> dict[str, dict[str, int]]:
-    """Same composition as ``matchup.main``: oracle/decks, then extra files.
+def load_sweep_decks(
+    repo: Path,
+    restrict: list[str] | None,
+    pool: str | None = None,
+) -> tuple[str, dict[str, dict[str, int]]]:
+    """Same composition as ``matchup.main``: named pool or --decks, then extras.
 
     Sweep has no ``--deck-file``, so the extra list is empty; the call is
     still the matchup path so pair counting cannot drift.
     """
-    decks = load_deck_files(repo / "oracle" / "decks", restrict)
+    pool_name, decks = resolve_selected_decks(
+        repo / "oracle" / "decks", pool, restrict
+    )
     decks.update(load_extra_deck_files([]))
-    return decks
+    return pool_name, decks
 
 
 def _stage_total_target(target_games: int, default_per_pair: int) -> int:
@@ -184,6 +195,7 @@ def compute_sizing(
     args: argparse.Namespace,
     n_decks: int,
     names: list[str] | tuple[str, ...] | None = None,
+    pool: str | None = None,
 ) -> SweepSizing:
     """Connect per-pair flags to the totals every runbook quotes.
 
@@ -238,6 +250,7 @@ def compute_sizing(
         reverse=StageSize("reverse", int(args.final_reverse), pairs),
         tp=StageSize("tp", int(args.tp_games), pairs),
         target_games=target_games,
+        pool=pool,
     )
 
 
@@ -259,10 +272,15 @@ def format_sizing_block(sizing: SweepSizing, running: tuple[str, ...] | None = N
         decks_line = f"decks: {sizing.n_decks} ({', '.join(sizing.names)})"
     else:
         decks_line = f"decks: {sizing.n_decks}"
-    lines = [
-        decks_line,
-        f"pairs: {sizing.pairs} ({sizing.n_decks} x {sizing.n_decks}, mirrors included)",
-    ]
+    lines = []
+    if sizing.pool:
+        lines.append(f"pool: {sizing.pool}")
+    lines.extend(
+        [
+            decks_line,
+            f"pairs: {sizing.pairs} ({sizing.n_decks} x {sizing.n_decks}, mirrors included)",
+        ]
+    )
     for name in GAME_STAGE_ORDER:
         if name not in shown:
             continue
@@ -273,6 +291,7 @@ def format_sizing_block(sizing: SweepSizing, running: tuple[str, ...] | None = N
 
 def sizing_metadata(sizing: SweepSizing, block: str) -> dict[str, Any]:
     return {
+        "pool": sizing.pool,
         "decks": list(sizing.names),
         "n_decks": sizing.n_decks,
         "pairs": sizing.pairs,
@@ -354,8 +373,9 @@ def apply_sizing(
     names: list[str] | tuple[str, ...] | None = None,
     *,
     wanted: list[str] | None = None,
+    pool: str | None = None,
 ) -> SweepSizing:
-    sizing = compute_sizing(args, n_decks, names)
+    sizing = compute_sizing(args, n_decks, names, pool)
     check_sizing(args, sizing, wanted)
     return sizing
 
@@ -374,6 +394,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--seed", type=int, default=1, help="matchup seed (default: 1)")
     p.add_argument("--root", default=None, help="results root (default: <repo>/results)")
     p.add_argument("--decks", nargs="*", default=None, help="restrict matchup decks (passed through)")
+    p.add_argument(
+        "--pool",
+        default=None,
+        help="named pool from oracle/decks/POOLS.json (default: meta)",
+    )
     p.add_argument("--threads", type=int, default=None)
     p.add_argument(
         "--screen-games",
@@ -454,8 +479,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             )
         if args.target_games is not None and args.target_games < 1:
             raise SystemExit("--target-games must be a positive integer")
+    if flag_given(raw, "--pool") and flag_given(raw, "--decks"):
+        raise SystemExit("--pool cannot be combined with --decks")
     if args.smoke:
-        if not flag_given(raw, "--decks"):
+        if not flag_given(raw, "--decks") and not flag_given(raw, "--pool"):
             args.decks = ["basic-forest", "basic-rune"]
         # --target-games owns the per-pair counts when both are given.
         if not flag_given(raw, "--target-games"):
@@ -471,6 +498,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             args.finalists = 1
         if not flag_given(raw, "--baseline"):
             args.baseline = FAST
+    if not flag_given(raw, "--pool") and not flag_given(raw, "--decks") and not args.decks:
+        args.pool = DEFAULT_POOL
     return args
 
 
@@ -551,6 +580,8 @@ class Runner:
     def add_decks(self, cmd: list[str]) -> None:
         if self.args.decks:
             cmd.extend(["--decks", *self.args.decks])
+        elif self.args.pool:
+            cmd.extend(["--pool", self.args.pool])
 
     def write_candidates(self) -> None:
         payload = [{"index": c.index, "spec": c.spec} for c in self.candidates]
@@ -864,10 +895,12 @@ class Runner:
 
     def apply_and_record_sizing(self) -> None:
         """Print and persist the pool arithmetic before any stage runs."""
-        decks = load_sweep_decks(self.repo, self.args.decks)
+        pool_name, decks = load_sweep_decks(
+            self.repo, self.args.decks, self.args.pool
+        )
         names = list(decks.keys())
         wanted = requested_stages(self.args)
-        sizing = compute_sizing(self.args, len(names), names)
+        sizing = compute_sizing(self.args, len(names), names, pool_name)
         running = running_game_stages(wanted)
         block = format_sizing_block(sizing, running)
         print(block, flush=True)
