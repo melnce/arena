@@ -11,6 +11,12 @@ import sys
 from pathlib import Path
 from typing import Any, Callable
 
+_HERE = Path(__file__).resolve().parent
+if str(_HERE) not in sys.path:
+    sys.path.insert(0, str(_HERE))
+
+from stats import wilson  # noqa: E402
+
 
 HALF = 0.5
 
@@ -84,13 +90,21 @@ def format_verdict_line(
     main_ci: tuple[float, float],
     rev_rate: float,
     rev_ci: tuple[float, float],
+    pooled_rate: float | None = None,
+    pooled_ci: tuple[float, float] | None = None,
 ) -> str:
     word = verdict(main_rate, main_ci, rev_rate, rev_ci)
-    return (
+    line = (
         f"verdict: {model} {word} — "
         f"main {main_rate:.3f} [{main_ci[0]:.3f}, {main_ci[1]:.3f}], "
         f"reverse {rev_rate:.3f} [{rev_ci[0]:.3f}, {rev_ci[1]:.3f}]"
     )
+    if pooled_rate is not None and pooled_ci is not None:
+        line += (
+            f", pooled {pooled_rate:.3f} "
+            f"[{pooled_ci[0]:.3f}, {pooled_ci[1]:.3f}] (not gated)"
+        )
+    return line
 
 
 def reverse_candidate(summary: dict[str, Any]) -> tuple[float, tuple[float, float]]:
@@ -98,6 +112,97 @@ def reverse_candidate(summary: dict[str, Any]) -> tuple[float, tuple[float, floa
     a_rate = float(summary["policy_a_win_rate"])
     lo, hi = summary["wilson95"]
     return 1.0 - a_rate, (1.0 - float(hi), 1.0 - float(lo))
+
+
+def _summary_and_matrix(
+    doc: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """Accept a full matchup JSON or a bare summary dict."""
+    inner = doc.get("summary")
+    if isinstance(inner, dict) and "policy_a_win_rate" in inner:
+        matrix = doc.get("matrix")
+        return inner, matrix if isinstance(matrix, dict) else None
+    matrix = doc.get("matrix")
+    return doc, matrix if isinstance(matrix, dict) else None
+
+
+def _matrix_a_counts(matrix: dict[str, Any]) -> tuple[int, int] | None:
+    """Sum per-cell a_wins and decisive games (games − draws)."""
+    a_wins = 0
+    decisive = 0
+    cells = 0
+    for row in matrix.values():
+        if not isinstance(row, dict):
+            continue
+        for cell in row.values():
+            if not isinstance(cell, dict) or "a_wins" not in cell:
+                continue
+            cells += 1
+            a_wins += int(cell["a_wins"])
+            games = int(cell["games"])
+            draws = int(cell.get("draws", 0))
+            decisive += games - draws
+    if cells == 0:
+        return None
+    return a_wins, decisive
+
+
+def _a_decisive_counts(doc: dict[str, Any], tag: str) -> tuple[int, int]:
+    """A's decisive wins and decisive games, matrix preferred, rate as fallback."""
+    summary, matrix = _summary_and_matrix(doc)
+    n = int(summary["decisive"])
+    w_rate = int(round(float(summary["policy_a_win_rate"]) * n))
+    if matrix is None:
+        return w_rate, n
+    counted = _matrix_a_counts(matrix)
+    if counted is None:
+        return w_rate, n
+    w_mat, n_mat = counted
+    if abs(w_mat - w_rate) > 1 or abs(n_mat - n) > 1:
+        name = tag or str(summary.get("policy_a") or "?")
+        raise ValueError(
+            f"{name}: matrix counts (a_wins={w_mat}, decisive={n_mat}) "
+            f"disagree with rate-derived (a_wins={w_rate}, decisive={n})"
+        )
+    return w_mat, n_mat
+
+
+def pooled_candidate(
+    main: dict[str, Any],
+    reverse: dict[str, Any],
+    tag: str = "",
+) -> tuple[float, tuple[float, float]]:
+    """Candidate's pooled rate and Wilson interval across main and reverse.
+
+    Pooling is a fixed-effects combination that assumes a common rate
+    across seats, and is therefore exactly the thing that hides seat
+    asymmetry — which is why it is reported and not gated on.
+
+    Counts, not rates. Main: the candidate is seat A (A's decisive wins).
+    Reverse: the candidate is seat B; the seat flip is the same convention
+    as ``reverse_candidate`` (candidate wins = decisive − A's wins). Prefer
+    exact integer counts summed from the matchup JSON's per-cell ``a_wins``
+    / ``games`` / ``draws`` where available, and fall back to
+    ``round(policy_a_win_rate * decisive)`` only when the matrix is absent.
+    The two must agree to within one game or this raises, naming ``tag``.
+    """
+    w_main, n_main = _a_decisive_counts(main, tag)
+    w_a_rev, n_rev = _a_decisive_counts(reverse, tag)
+    # Integer form of reverse_candidate's 1 − A-rate flip.
+    rev_summary, _ = _summary_and_matrix(reverse)
+    rev_rate, _ = reverse_candidate(rev_summary)
+    w_rev = n_rev - w_a_rev
+    w_rev_rate = int(round(rev_rate * n_rev))
+    if abs(w_rev - w_rev_rate) > 1:
+        name = tag or str(rev_summary.get("policy_b") or "?")
+        raise ValueError(
+            f"{name}: reverse seat-flip counts disagree "
+            f"(n-a_wins={w_rev}, reverse_candidate={w_rev_rate})"
+        )
+    w = w_main + w_rev
+    n = n_main + n_rev
+    rate = w / n if n else 0.0
+    return rate, wilson(w, n)
 
 
 def rate_ci(rate: float, ci: tuple[float, float]) -> str:
