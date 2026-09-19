@@ -351,7 +351,11 @@ function reportFinishedGame(s: Session): void {
   void fetch(`${LOCAL_BOT_HOST}/game`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ ...toPositionLog(s), winner }),
+    body: JSON.stringify({
+      ...toPositionLog(s),
+      winner,
+      humanSide: s.cfg.humanSide,
+    }),
     signal: AbortSignal.timeout(2000),
   }).catch((err) => {
     console.debug("local bot /game", err);
