@@ -210,9 +210,10 @@ pub struct H0 {
     /// Per-decision transposition table. On by default (`tt=1`).
     pub tt: bool,
     /// Bounded opponent-lethal sweep before the greedy line (`odepth=0` only).
+    /// Default `true` is the sweep-5 flip; `olethal=0` restores the pre-flip greedy path.
     pub olethal: bool,
-    /// Greedy-line steps before a forced `EndTurn`. Default `3` is today's cutoff;
-    /// the hard stop is `osteps + 3` (today: 6).
+    /// Greedy-line steps before a forced `EndTurn`. Default `6` is the sweep-5
+    /// flip; the hard stop is `osteps + 3` (today: 9).
     pub osteps: u32,
     /// Learned leaf (`value=net`). `None` when the leaf is v0/v1.
     pub net: Option<Arc<ValueNet>>,
@@ -238,8 +239,8 @@ impl Default for H0 {
             obeam: 3,
             wv: DEFAULT_WV,
             tt: true,
-            olethal: false,
-            osteps: 3,
+            olethal: true,
+            osteps: 6,
             net: Some(builtin_net()),
             net_path: None,
             stats: SearchStats::default(),
@@ -259,6 +260,10 @@ impl H0 {
             tt: false,
             value: ValueVersion::V0,
             net: None,
+            // Fixed test baseline: olethal/osteps are reachable at depth 2
+            // (unlike alloc); inheriting would spend the 80-node cap on the sweep.
+            olethal: false,
+            osteps: 3,
             ..Self::default()
         }
     }

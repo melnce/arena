@@ -263,7 +263,9 @@ fn four_attacker_ward_candidate_plays_ward() {
     // search does Ward then attack). The lure is therefore a 3-cost 10-atk
     // Storm that spends the same 3 PP as the Ward line.
     let st = four_attacker_state(&db, 12);
-    let mut greedy = parse_h0("h0");
+    // Pre-flip greedy: default `h0` now runs olethal=1,osteps=6 and would
+    // play the Ward itself (see h0_olethal::four_attacker_olethal_plays_ward).
+    let mut greedy = parse_h0("h0:olethal=0,osteps=3");
     let mut cand = parse_h0("h0:odepth=5,obeam=3");
     let (gi, ga) = pick(&mut greedy, &db, &st, 7);
     let (ci, ca) = pick(&mut cand, &db, &st, 7);
@@ -348,7 +350,9 @@ fn storm_lethal_opp_state(db: &CardDb) -> arena_engine::State {
 fn play_then_attack_opp_lethal_values() {
     let db = load_db();
     let st = storm_lethal_opp_state(&db);
-    let mut greedy = parse_h0("h0");
+    // Pre-flip greedy: default `h0` now runs olethal=1 and would also
+    // see the play-then-face lethal.
+    let mut greedy = parse_h0("h0:olethal=0,osteps=3");
     let mut cand = parse_h0("h0:odepth=5,obeam=3");
     let gv = greedy.opponent_value(&db, &st, PlayerId::A);
     let cv = cand.opponent_value(&db, &st, PlayerId::A);
