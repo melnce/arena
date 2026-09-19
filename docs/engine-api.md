@@ -373,9 +373,10 @@ hand-written leaf the bot used before this default), `net=<path>`
 (overrides the built-in; only meaningful with `value=net`;
 `h0:net=<path>` alone means `h0:value=net,net=<path>`; the path
 may not contain commas), `odepth=` / `obeam=` (opponent model; defaults `0` / `3`),
-`olethal=0|1` (cheap opponent-lethal sweep on the greedy path; default `0`;
-ignored when `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step;
-default `3`; hard stop is `osteps+3`),
+`olethal=0|1` (cheap opponent-lethal sweep on the greedy path; default `1`;
+`olethal=0` restores the pre-flip greedy path; ignored when `odepth≥1`),
+`osteps=<u32>` (greedy forced-`EndTurn` step;
+default `6`; hard stop is `osteps+3`),
 `wv=<f32>` (root-level terminal stand-in; default `80`),
 `tt=0|1` (per-decision transposition table; default `1`),
 `alloc=root|fair` (how the node cap is spent across `(root, candidate)`
@@ -386,7 +387,7 @@ and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
 is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
 `value=v1` or `value=net,net=<path>` — the built-in net is not printed,
-non-default `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
+non-default `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
 non-default `wv`, `tt=0` when the table is off, `alloc=root` when the
 allocator is the pre-#46 root-major spend, and any
 non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
@@ -427,8 +428,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `w_lw` | 0.80 | v1: Last Words followers on the field |
 | `odepth` | 0 | opponent-model action depth; `0` = greedy line |
 | `obeam` | 3 | opponent beam (plus `EndTurn` always) |
-| `olethal` | 0 | glance-level opponent-lethal sweep before the greedy line; `1` = on. Ignored when `odepth≥1` |
-| `osteps` | 3 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 6) |
+| `olethal` | 1 | glance-level opponent-lethal sweep before the greedy line; `0` restores the pre-flip greedy path. Ignored when `odepth≥1` |
+| `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | root-level finite stand-in for a terminal when averaging K roots |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
@@ -440,13 +441,14 @@ run on those roots — the true hidden hand and live game RNG are never
 read. A lethal is taken only when every root agrees (a random lethal is
 a bet, not a lethal). Candidate values are averaged over the K roots.
 The node cap is global. `H0::fast()` uses `K = 1` and a 1-ply value
-on that root (no depth-2 consensus-lethal walk). `h0-fast` keeps `tt=0`
-and `value=v0` so the client's cheap bot stays byte-identical to the
-pre-flip search (the TE precedent: `h0-fast` keeps `tt=0`).
+on that root (no depth-2 consensus-lethal walk). `h0-fast` keeps `tt=0`,
+`value=v0`, `olethal=0`, and `osteps=3` so the cheap test baseline stays
+byte-identical to the pre-flip search (the TE precedent: `h0-fast` keeps
+`tt=0`; unlike `alloc`, `olethal` / `osteps` are reachable at depth 2).
 
 The opponent model is a switch. `odepth=0` (default) is the historical
-greedy line: at most `osteps+3` steps (default six), and **EndTurn after
-`osteps`** (default three) whenever `EndTurn` is legal. `odepth≥1` replaces that with a depth-limited beam
+greedy line: at most `osteps+3` steps (default nine), and **EndTurn after
+`osteps`** (default six) whenever `EndTurn` is legal. `odepth≥1` replaces that with a depth-limited beam
 over the opponent's actions, ranked by the opponent's leaf value (the
 value is antisymmetric, so maximising theirs minimises mine). Each ply
 keeps the `obeam` best actions **and always `EndTurn`**, so "do nothing
@@ -457,7 +459,7 @@ A mid-turn choice handed to me is resolved with a 1-ply greedy pick from
 my perspective, then the opponent's line continues. The node cap is
 shared with the own-turn search and is not raised by this switch.
 
-When `olethal=1` and `odepth=0`, `opponent_reply` runs a bounded lethal
+When `olethal=1` (the default) and `odepth=0`, `opponent_reply` runs a bounded lethal
 sweep from the opponent's side *before* the greedy line. The sweep asks
 one question — can the opponent kill my leader this turn with lines a
 human would see at a glance — and does it with few applies: (1) a **face
@@ -474,8 +476,32 @@ still uses them). The whole sweep spends at most 40 `apply`s per leaf,
 all charged to `nodes` through `try_apply`, and stops early at the cap
 (cycle guard as today). If it finds lethal the leaf is `-wv` and the
 greedy line is skipped; otherwise the greedy line runs with the remaining
-budget. `odepth≥1` ignores `olethal` — the beam search is the opponent
-model.
+budget. `olethal=0` restores the pre-flip greedy path. `odepth≥1` ignores
+`olethal` — the beam search is the opponent model.
+
+The owner's standing yardstick (`results` branch, `sweep5/SUMMARY.md`,
+`b79421a`, engine `f7b0a61`, data seed 6, 16 oracle decks, wall 3 h 38)
+flipped the default to the pair:
+
+| candidate | main (4 096) | reverse (2 048) | verdict |
+|---|---|---|---|
+| **`h0:olethal=1,osteps=6`** | **0.526 [0.511, 0.541]** | **0.538 [0.516, 0.559]** | **better** |
+| `h0:olethal=1` | 0.512 [0.497, 0.527] | 0.512 [0.491, 0.534] | coin flip |
+| `h0:osteps=6` | 0.517 [0.486, 0.547] screen only | — | not a finalist |
+| `h0:odepth=1` / `odepth=1,obeam=5` / `odepth=2,obeam=3` | 0.366 / 0.357 / 0.373 screen | — | skipped |
+
+`olethal=1` alone is noise and `osteps=6` alone is slow and no better;
+the pair clears the bar on both seats. Throughput (mirrors, same policy
+on both seats): `sweep5/tp-baseline.json` 2.897 g/s vs
+`sweep5/tp-c02.json` 2.401 g/s — a clean **1.21× wall-clock per game**,
+paid by every future sweep, training round, and yardstick. Scaling from
+sweep 4 (`alloc=fair` 0.563 → `alloc=fair,nodes=6000` 0.583, i.e. ≈ +14
+Elo for 3× nodes), an equal-wall-clock baseline would recover only
+≈ 3 Elo of the flip's ≈ 18–26 Elo — **that is an estimate** across two
+sweeps with different seeds and engines. The desktop `h0 (strong)`
+option (`ui/src/main.ts` `STRONG_H0 = "h0:nodes=6000"`) and
+`py/serve.py --strong` (`h0:nodes=16000`) inherit the new default
+automatically; no client edit.
 
 `wv` is the finite stand-in for a terminal when the K root values are
 averaged (`finite(v)` clamps every root value to ±`wv`). The in-search
@@ -560,7 +586,7 @@ legal actions kept after the Bonus-PP filter; `pairs_skipped` is
 are transposition-table lookups that returned a value and writes
 (`0` when `tt=0`); `opp_lethal_checks` / `opp_lethal_found` /
 `opp_lethal_nodes` are sweeps run, lethals found, and applies spent by
-the `olethal` sweep (`0` when `olethal=0`). Non-H0 seats print
+the `olethal` sweep (`0` when `olethal=0`; the default is `olethal=1`). Non-H0 seats print
 `decisions=0`.
 
 `BonusPp` is considered only in the **activate** direction
@@ -826,8 +852,8 @@ and the immutability rule live in `engine/models/README.md`: model files
 are measured artifacts — a retrained model is a new file with a new name
 and becomes the default only after it beats the current default on the
 4 096-game yardstick. The search, the determinization, and the opponent
-model stay exactly as they are (`value=v1`, `tt`, `wv`, `odepth`,
-`olethal`, `osteps` untouched). `value=v0` is the hand-written leaf the
+model stay exactly as they are (`value=v1`, `tt`, `wv`, `odepth`
+untouched; `olethal` / `osteps` later flipped to `1` / `6`). `value=v0` is the hand-written leaf the
 bot used before this default and is byte-identical to that arithmetic.
 `h0:value=net` (no path) keeps the built-in — it is the same as `"h0"`.
 `net=<path>` overrides the built-in (`h0:net=<path>` alone means

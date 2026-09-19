@@ -117,8 +117,9 @@ impl AnyPolicy {
     /// missing file is a parse error naming the path),
     /// `odepth=` / `obeam=`
     /// (opponent model; `odepth=0` is the greedy line), `olethal=0|1` (cheap
-    /// opponent-lethal sweep on the greedy path; default `0`; ignored when
-    /// `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step; default `3`;
+    /// opponent-lethal sweep on the greedy path; default `1`; `olethal=0`
+    /// restores the pre-flip greedy path; ignored when
+    /// `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step; default `6`;
     /// hard stop is `osteps+3`), `wv=<f32>` (root-level
     /// terminal stand-in; default `80`), `tt=0|1` (per-decision
     /// transposition table; default `1`), `alloc=root|fair` (how the
@@ -146,7 +147,7 @@ impl AnyPolicy {
     /// `"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` / `value=v1` or
     /// `value=net,net=<path>` (the built-in net is the default and is not
     /// printed), non-default
-    /// `odepth` / `obeam`, `olethal=1` / non-default `osteps` when set,
+    /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
     /// non-default `wv`, `tt=0` when the table is off, `alloc=root`
     /// when the allocator is the pre-#46 root-major spend, and any
     /// non-default weight.
@@ -195,8 +196,8 @@ fn h0_spec(h: &H0) -> String {
     if h.obeam != def.obeam {
         parts.push(format!("obeam={}", h.obeam));
     }
-    if h.olethal {
-        parts.push("olethal=1".to_string());
+    if !h.olethal {
+        parts.push("olethal=0".to_string());
     }
     if h.osteps != def.osteps {
         parts.push(format!("osteps={}", h.osteps));

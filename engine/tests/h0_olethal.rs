@@ -1,7 +1,8 @@
 //! H0 cheap opponent model: `olethal=1` glance-level lethal sweep and
-//! `osteps=N` greedy cutoff. Identity at the defaults; fixtures for the
-//! four-attacker Ward, play-then-face Storm, no false positive, and the
-//! fourth-attack `osteps` line.
+//! `osteps=N` greedy cutoff. Identity at the sweep-5 defaults
+//! (`olethal=1,osteps=6`); the pre-flip pair stays reachable. Fixtures
+//! for the four-attacker Ward, play-then-face Storm, no false positive,
+//! and the fourth-attack `osteps` line.
 
 use arena_engine::{
     acting_player, apply, legal_actions, new_game, play_game, policy_rng, Action, AnyPolicy,
@@ -202,13 +203,18 @@ fn no_lethal_opp_state(db: &CardDb) -> arena_engine::State {
     st
 }
 
-fn check_olethal0_osteps3_identity(n: usize) {
+fn check_olethal1_osteps6_identity(n: usize) {
     let db = load_db();
     let states = collect_states(&db, n, true);
     assert_eq!(states.len(), n, "could not reach {n} mid-game states");
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:olethal=0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:osteps=3").unwrap().spec(), "h0");
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:olethal=1,osteps=6")
+            .unwrap()
+            .spec(),
+        "h0"
+    );
+    assert_eq!(AnyPolicy::parse_spec("h0-fast").unwrap().spec(), "h0-fast");
     for (i, state) in states.iter().enumerate() {
         let legal = legal_actions(&db, state);
         if legal.is_empty() {
@@ -216,40 +222,119 @@ fn check_olethal0_osteps3_identity(n: usize) {
         }
         let seed = 20260914u64.wrapping_add(i as u64);
         let mut main = H0::default();
-        let mut olethal0 = parse_h0("h0:olethal=0");
-        let mut osteps3 = parse_h0("h0:osteps=3");
+        let mut named = parse_h0("h0");
+        let mut pair = parse_h0("h0:olethal=1,osteps=6");
         let mut rng_m = policy_rng(seed);
-        let mut rng_o = policy_rng(seed);
-        let mut rng_s = policy_rng(seed);
+        let mut rng_n = policy_rng(seed);
+        let mut rng_p = policy_rng(seed);
         let im = main.choose(&db, state, &legal, &mut rng_m);
-        let io = olethal0.choose(&db, state, &legal, &mut rng_o);
-        let is = osteps3.choose(&db, state, &legal, &mut rng_s);
-        assert_eq!(im, io, "h0 vs h0:olethal=0 at state {i}");
-        assert_eq!(im, is, "h0 vs h0:osteps=3 at state {i}");
+        let inn = named.choose(&db, state, &legal, &mut rng_n);
+        let ip = pair.choose(&db, state, &legal, &mut rng_p);
+        assert_eq!(im, inn, "h0 vs H0::default at state {i}");
+        assert_eq!(im, ip, "h0 vs h0:olethal=1,osteps=6 at state {i}");
         assert!(im < legal.len());
     }
 }
 
 #[test]
-fn olethal0_osteps3_identity_smoke() {
+fn olethal1_osteps6_identity_smoke() {
     // 8, not 20: a 20-state default-H0 walk is ~50s in CI debug and the
     // `ci` job is a hard 10-minute timeout. Release still covers 200.
-    check_olethal0_osteps3_identity(8);
+    check_olethal1_osteps6_identity(8);
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn olethal0_osteps3_identity_200_midgame() {
-    check_olethal0_osteps3_identity(200);
+fn olethal1_osteps6_identity_200_midgame() {
+    check_olethal1_osteps6_identity(200);
+}
+
+/// `h0:olethal=0,osteps=3` is still a reachable, deterministic policy
+/// and still differs from the default on at least one of the identity
+/// states.
+fn check_preflip_reachable(n: usize) {
+    let db = load_db();
+    let states = collect_states(&db, n, true);
+    assert_eq!(states.len(), n, "could not reach {n} mid-game states");
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:olethal=0,osteps=3")
+            .unwrap()
+            .spec(),
+        "h0:olethal=0,osteps=3"
+    );
+    let mut differ = 0u32;
+    let mut compared = 0u32;
+    for (i, state) in states.iter().enumerate() {
+        let legal = legal_actions(&db, state);
+        if legal.is_empty() {
+            continue;
+        }
+        let seed = 20260914u64.wrapping_add(i as u64);
+        let mut def = H0::default();
+        let mut pre = parse_h0("h0:olethal=0,osteps=3");
+        let mut pre_again = parse_h0("h0:olethal=0,osteps=3");
+        let mut rng_d = policy_rng(seed);
+        let mut rng_p = policy_rng(seed);
+        let mut rng_p2 = policy_rng(seed);
+        let id = def.choose(&db, state, &legal, &mut rng_d);
+        let ip = pre.choose(&db, state, &legal, &mut rng_p);
+        let ip2 = pre_again.choose(&db, state, &legal, &mut rng_p2);
+        assert_eq!(
+            ip, ip2,
+            "h0:olethal=0,osteps=3 must be deterministic at state {i}"
+        );
+        assert!(ip < legal.len());
+        compared += 1;
+        if id != ip {
+            differ += 1;
+        }
+    }
+    assert!(compared > 0, "no comparable states");
+    if n >= 200 {
+        assert!(
+            differ >= 1,
+            "h0:olethal=0,osteps=3 must differ from the default on ≥ 1 of {compared} states"
+        );
+    }
+}
+
+#[test]
+fn olethal0_osteps3_reachable_smoke() {
+    check_preflip_reachable(8);
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn olethal0_osteps3_reachable_200_midgame() {
+    check_preflip_reachable(200);
 }
 
 #[test]
 fn spec_olethal_osteps() {
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:olethal=0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:osteps=3").unwrap().spec(), "h0");
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:olethal=1,osteps=6")
+            .unwrap()
+            .spec(),
+        "h0"
+    );
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:olethal=0,osteps=3")
+            .unwrap()
+            .spec(),
+        "h0:olethal=0,osteps=3"
+    );
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:olethal=0").unwrap().spec(),
+        "h0:olethal=0"
+    );
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:osteps=3").unwrap().spec(),
+        "h0:osteps=3"
+    );
+    assert_eq!(AnyPolicy::parse_spec("h0-fast").unwrap().spec(), "h0-fast");
     let both = AnyPolicy::parse_spec("h0:olethal=1,osteps=6").unwrap();
-    assert_eq!(both.spec(), "h0:olethal=1,osteps=6");
+    assert_eq!(both.spec(), "h0");
     assert_eq!(AnyPolicy::parse_spec(&both.spec()).unwrap(), both);
     let e = AnyPolicy::parse_spec("h0:olethal=2").unwrap_err();
     assert!(e.contains("2"), "{e}");
@@ -314,8 +399,9 @@ fn four_attacker_olethal_plays_ward() {
     let tall = four_attacker_state(&db, 12);
     let bodies = four_attacker_normal_ward_bodies(&db);
     for (label, st) in [("1/15-Ward", &tall), ("1/3-Ward-3/11", &bodies)] {
+        // `olethal=1` is now the default; named so the fixture stays explicit.
         let mut sweep = parse_h0("h0:olethal=1,wv=300");
-        let mut greedy = parse_h0("h0:wv=300");
+        let mut greedy = parse_h0("h0:olethal=0,osteps=3,wv=300");
         let (si, sa) = pick(&mut sweep, &db, st, 7);
         let (gi, ga) = pick(&mut greedy, &db, st, 7);
         eprintln!("{label} olethal={sa:?} idx={si}  greedy={ga:?} idx={gi}");
@@ -330,8 +416,9 @@ fn four_attacker_olethal_plays_ward() {
 fn play_then_attack_olethal_sees_storm() {
     let db = load_db();
     let st = storm_lethal_opp_state(&db);
+    // `olethal=1` is now the default; named so the fixture stays explicit.
     let mut sweep = parse_h0("h0:olethal=1,wv=300");
-    let mut greedy = parse_h0("h0:wv=300");
+    let mut greedy = parse_h0("h0:olethal=0,osteps=3,wv=300");
     let sv = sweep.opponent_value(&db, &st, PlayerId::A);
     let gv = greedy.opponent_value(&db, &st, PlayerId::A);
     eprintln!("play-then-attack olethal={sv} greedy={gv}");
@@ -350,8 +437,9 @@ fn play_then_attack_olethal_sees_storm() {
 fn no_false_positive_empty_hand_two_bodies() {
     let db = load_db();
     let st = no_lethal_opp_state(&db);
+    // `olethal=1` is now the default; named so the fixture stays explicit.
     let mut with = parse_h0("h0:olethal=1");
-    let mut without = parse_h0("h0");
+    let mut without = parse_h0("h0:olethal=0,osteps=3");
     let a = with.opponent_value(&db, &st, PlayerId::A);
     let b = without.opponent_value(&db, &st, PlayerId::A);
     eprintln!(
@@ -370,6 +458,7 @@ fn no_false_positive_empty_hand_two_bodies() {
 fn osteps6_reaches_fourth_attack() {
     let db = load_db();
     let st = four_attacker_state(&db, 12);
+    // `osteps=6` is now the default; named so the fixture stays explicit.
     let mut long = parse_h0("h0:osteps=6,wv=300");
     let mut short = parse_h0("h0:osteps=3,wv=300");
     let (li, la) = pick(&mut long, &db, &st, 7);
@@ -437,11 +526,13 @@ fn check_determinism(spec: &str, n: u32) {
 
 #[test]
 fn olethal_osteps_determinism_smoke() {
+    // `olethal=1,osteps=6` is now the default; named so the fixture stays explicit.
     check_determinism("h0:olethal=1,osteps=6,depth=2,nodes=200", 2);
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn olethal_osteps_determinism_20_games() {
+    // `olethal=1,osteps=6` is now the default; named so the fixture stays explicit.
     check_determinism("h0:olethal=1,osteps=6", 20);
 }
