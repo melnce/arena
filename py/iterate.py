@@ -24,6 +24,7 @@ from runlib import (  # noqa: E402
     mark_start as runlib_mark_start,
     matchup_argv,
     new_run,
+    pooled_candidate,
     publish_output_exist,
     publish_tag,
     rate_ci as _rate_ci,
@@ -478,7 +479,7 @@ class Runner:
 
         lines.append("## yardstick")
         lines.append("")
-        header = ["model", "main", "reverse", "sanity", "g/s vs h0"]
+        header = ["model", "main", "reverse", "pooled", "sanity", "g/s vs h0"]
         header.extend(self.args.mirrors)
         lines.append("| " + " | ".join(header) + " |")
         lines.append("|" + "|".join("---" if i == 0 else "---:" for i in range(len(header))) + "|")
@@ -486,13 +487,16 @@ class Runner:
         base_gps = float(tp_h0.get("summary", {}).get("games_per_second", 0.0))
         verdicts: list[str] = []
         for m in models:
-            main_s = self.load_json(f"main-{m}.json")["summary"]
-            rev_s = self.load_json(f"reverse-{m}.json")["summary"]
+            main_doc = self.load_json(f"main-{m}.json")
+            rev_doc = self.load_json(f"reverse-{m}.json")
+            main_s = main_doc["summary"]
+            rev_s = rev_doc["summary"]
             san_s = self.load_json(f"sanity-{m}.json")["summary"]
             tp_s = self.load_json(f"tp-{m}.json")["summary"]
             main_rate = float(main_s["policy_a_win_rate"])
             main_ci = (float(main_s["wilson95"][0]), float(main_s["wilson95"][1]))
             rev_rate, rev_ci = reverse_candidate(rev_s)
+            pool_rate, pool_ci = pooled_candidate(main_doc, rev_doc, tag=m)
             san_rate = float(san_s["policy_a_win_rate"])
             san_ci = (float(san_s["wilson95"][0]), float(san_s["wilson95"][1]))
             gps = float(tp_s.get("games_per_second", 0.0))
@@ -501,6 +505,7 @@ class Runner:
                 m,
                 _rate_ci(main_rate, main_ci),
                 _rate_ci(rev_rate, rev_ci),
+                _rate_ci(pool_rate, pool_ci),
                 _rate_ci(san_rate, san_ci),
                 vs,
             ]
@@ -513,7 +518,11 @@ class Runner:
                     )
                 )
             lines.append("| " + " | ".join(cells) + " |")
-            verdicts.append(format_verdict_line(m, main_rate, main_ci, rev_rate, rev_ci))
+            verdicts.append(
+                format_verdict_line(
+                    m, main_rate, main_ci, rev_rate, rev_ci, pool_rate, pool_ci
+                )
+            )
         lines.append("")
         lines.append("## verdict")
         lines.append("")

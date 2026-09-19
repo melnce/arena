@@ -164,10 +164,12 @@ def test_smoke_end_to_end(smoke, db, root: Path) -> None:
     assert json.loads((tag / "data-e0.json").read_text())["seed"] == 7
 
     summary = (tag / "SUMMARY.md").read_text()
+    assert "| model | main | reverse | pooled | sanity | g/s vs h0 |" in summary
     verdict_lines = [ln for ln in summary.splitlines() if ln.startswith("verdict: linear")]
     assert verdict_lines, summary
     words = ("better", "worse", "coin flip", "unclear")
     assert any(w in verdict_lines[0] for w in words), verdict_lines[0]
+    assert "pooled" in verdict_lines[0] and "(not gated)" in verdict_lines[0], verdict_lines[0]
 
     run = json.loads((tag / "RUN.json").read_text())
     for stage in ("data", "train", "yard", "summary", "publish"):

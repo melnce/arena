@@ -23,6 +23,7 @@ from runlib import (  # noqa: E402
     mark_start as runlib_mark_start,
     matchup_argv,
     new_run,
+    pooled_candidate,
     publish_output_exist,
     publish_tag,
     rate_ci,
@@ -491,23 +492,27 @@ class Runner:
         lines.append("")
         lines.append("## final")
         lines.append("")
-        header = ["index", "spec", "main", "reverse"]
+        header = ["index", "spec", "main", "reverse", "pooled"]
         header.extend(self.args.mirrors)
         lines.append("| " + " | ".join(header) + " |")
         lines.append("|" + "|".join("---" if i <= 1 else "---:" for i in range(len(header))) + "|")
         picks: list[BestPick] = []
         verdicts: list[str] = []
         for c in self.finalists():
-            main_s = self.load_json(f"{c.stem}-final.json")["summary"]
-            rev_s = self.load_json(f"{c.stem}-reverse.json")["summary"]
+            main_doc = self.load_json(f"{c.stem}-final.json")
+            rev_doc = self.load_json(f"{c.stem}-reverse.json")
+            main_s = main_doc["summary"]
+            rev_s = rev_doc["summary"]
             main_rate = float(main_s["policy_a_win_rate"])
             main_ci = (float(main_s["wilson95"][0]), float(main_s["wilson95"][1]))
             rev_rate, rev_ci = reverse_candidate(rev_s)
+            pool_rate, pool_ci = pooled_candidate(main_doc, rev_doc, tag=c.spec)
             cells = [
                 str(c.index),
                 f"`{c.spec}`",
                 rate_ci(main_rate, main_ci),
                 rate_ci(rev_rate, rev_ci),
+                rate_ci(pool_rate, pool_ci),
             ]
             for deck in self.args.mirrors:
                 ms = self.load_json(f"{c.stem}-mirror-{deck}.json")["summary"]
@@ -520,7 +525,11 @@ class Runner:
             lines.append("| " + " | ".join(cells) + " |")
             word = verdict(main_rate, main_ci, rev_rate, rev_ci)
             picks.append(BestPick(c.index, c.spec, main_rate, word))
-            verdicts.append(format_verdict_line(c.spec, main_rate, main_ci, rev_rate, rev_ci))
+            verdicts.append(
+                format_verdict_line(
+                    c.spec, main_rate, main_ci, rev_rate, rev_ci, pool_rate, pool_ci
+                )
+            )
         lines.append("")
         lines.extend(verdicts)
         if verdicts:
