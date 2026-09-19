@@ -7,7 +7,7 @@ on:
     - cron: "0 7 * * *"
   workflow_dispatch:
   push:
-    branches: [main, cursor/slow-failure-issue]
+    branches: [main]
 
 # Queue, do not kill. workflow_dispatch / schedule keep their own
 # group so a manual rerun does not share a slot with a nightly, and
@@ -21,7 +21,7 @@ on:
 # A superseded *pending* run is still dropped; a running one finishes.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 # Least privilege. contents:read is enough for checkout on a public
 # repo; issues:write is the only extra the tracking-issue steps need.
@@ -40,17 +40,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: TEMP proof — wait for the cancelled run's opener
-        run: sleep 45
-
       - name: Rust toolchain
-        if: false
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
 
       - name: Cache cargo
-        if: false
         uses: actions/cache@v4
         with:
           path: |
@@ -62,31 +57,24 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: h0 transposition table (release, including ignored)
-        if: false
         run: cargo test --release --test h0_tt -- --include-ignored --nocapture
 
       - name: h0 alloc (release, including ignored)
-        if: false
         run: cargo test --release --test h0_alloc -- --include-ignored --nocapture
 
       - name: h0 olethal (release, including ignored)
-        if: false
         run: cargo test --release --test h0_olethal -- --include-ignored --nocapture
 
       - name: h0 opponent model (release, including ignored)
-        if: false
         run: cargo test --release --test h0_opp -- --include-ignored --nocapture
 
       - name: h0 wv (release, including ignored)
-        if: false
         run: cargo test --release --test h0_wv -- --include-ignored --nocapture
 
       - name: value net (release, including ignored)
-        if: false
         run: cargo test --release --test net -- --include-ignored --nocapture
 
       - name: self-play recorder (release, including ignored)
-        if: false
         run: cargo test --release --test record -- --include-ignored --nocapture
 
       # One open issue <=> the slow suite is currently red. Keyed on the
@@ -155,9 +143,8 @@ jobs:
           # timeout-minutes on this job is 65. A hang that hits that
           # ceiling is a cancel, and the jobs API has no step with
           # conclusion: failure — do not report that as unresolved.
-          # cancelled() is only legal in `if:`; infer cancel/timeout from
-          # the jobs API. A hang that hits timeout-minutes is a cancel
-          # with no step conclusion: failure — do not call that unresolved.
+          # cancelled() is only legal in `if:`; infer cancel/timeout
+          # from the jobs API.
           timed_out=false
           if [ "${job_conclusion}" = "timed_out" ]; then
             timed_out=true
