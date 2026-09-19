@@ -13,7 +13,7 @@ mod needs;
 mod net;
 mod record;
 
-pub use h0::{builtin_net, Alloc, SearchStats, ValueVersion, Weights, BUILTIN_NET_NAME, H0};
+pub use h0::{builtin_net, Alloc, Info, SearchStats, ValueVersion, Weights, BUILTIN_NET_NAME, H0};
 pub use needs::{CardNeeds, NeedsTable, SkippedAmount};
 pub use net::{NetArch, ValueNet};
 pub use record::{Recorder, Sample};
@@ -130,9 +130,12 @@ impl AnyPolicy {
     /// transposition table; default `1`), `alloc=root|fair` (how the
     /// node cap is spent across `(root, candidate)` pairs; default
     /// `fair` = per-pair share; `alloc=root` restores the pre-#46
-    /// root-major spend), and `w_shadows=`, `w_earth=`,
-    /// `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`, `w_lw=` (f32; only
-    /// meaningful with `value=v1`).
+    /// root-major spend), `info=fair|draws|all` (what the search is
+    /// allowed to know; default `draws` = own draw order exact, opponent
+    /// resampled; `fair` also resamples own deck; `all` is the true
+    /// state and builds one root regardless of `k`), and `w_shadows=`,
+    /// `w_earth=`, `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`,
+    /// `w_lw=` (f32; only meaningful with `value=v1`).
     ///
     /// `Err` names the offending token: unknown policy, unknown key, or bad
     /// number.
@@ -155,8 +158,9 @@ impl AnyPolicy {
     /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
     /// `oevo=1` when the evolve branch is on, non-default `wv`,
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
-    /// when the allocator is the pre-#46 root-major spend, and any
-    /// non-default weight.
+    /// when the allocator is the pre-#46 root-major spend, `info=fair`
+    /// / `info=all` when the information regime is not the default
+    /// `draws`, and any non-default weight.
     /// `"h0"` still round-trips to `"h0"`.
     pub fn spec(&self) -> String {
         match self {
@@ -223,6 +227,13 @@ fn h0_spec(h: &H0) -> String {
     if h.alloc != Alloc::Fair {
         parts.push("alloc=root".to_string());
     }
+    if h.info != Info::Draws {
+        parts.push(match h.info {
+            Info::Fair => "info=fair".to_string(),
+            Info::All => "info=all".to_string(),
+            Info::Draws => unreachable!(),
+        });
+    }
     let w = &h.weights;
     let dw = Weights::default();
     if w.shadows != dw.shadows {
@@ -264,6 +275,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.pess == b.pess
         && a.tt == b.tt
         && a.alloc == b.alloc
+        && a.info == b.info
         && a.net_path == b.net_path
         && weights_eq(&a.weights, &b.weights)
 }
@@ -357,6 +369,14 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     "root" => Alloc::Root,
                     "fair" => Alloc::Fair,
                     other => return Err(format!("unknown alloc '{other}'")),
+                }
+            }
+            "info" => {
+                h.info = match val {
+                    "fair" => Info::Fair,
+                    "draws" => Info::Draws,
+                    "all" => Info::All,
+                    other => return Err(format!("unknown info '{other}' (fair|draws|all)")),
                 }
             }
             other => return Err(format!("unknown key '{other}'")),

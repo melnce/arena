@@ -232,6 +232,7 @@ fn snapshot(state: &State) -> CanonicalState;   // docs/trace-format.md
 fn encode(state: &State, perspective: PlayerId) -> Observation;
 fn search_key(state: &State) -> u64;
 fn determinize(state: &State, perspective: PlayerId, seed: u64) -> State;
+fn determinize_with(state: &State, perspective: PlayerId, seed: u64, info: Info) -> State;
 ```
 
 The engine stays perfect-information. `encode` masks. The bot is given the
@@ -325,11 +326,24 @@ actor differ; clones match; RNG-only reseeds match. Not interchangeable with
 
 ## determinize (M5)
 
-`determinize(state, perspective, seed) -> State` clones, reseeds `rng` from
-`seed`, and resamples the opponent's hand and deck from their known remaining
-pool: hand size preserved, public tokens kept in hand, the rest drawn
-uniformly, leftover pool becomes the deck. Own side is untouched.
+`determinize(state, perspective, seed) -> State` is the default
+(`Info::Draws`) path: clone, reseed `rng` from `seed`, and resample the
+opponent's hand and deck from their known remaining pool: hand size
+preserved, public tokens kept in hand, the rest drawn uniformly,
+leftover pool becomes the deck. Own side is untouched.
 `encode(determinize(s), p) == encode(s, p)`.
+
+`determinize_with(state, perspective, seed, info)` is the same entry
+point with an explicit information regime. `info` governs what the
+**search** simulates, not what the **leaf** observes: `encode` is
+unchanged and still masks the opponent's hand. That separation is
+deliberate.
+
+| `info` | own deck | opponent hand/deck | who has this |
+|---|---|---|---|
+| `fair` | resampled (hand untouched) | resampled | a human with open decklists |
+| `draws` *(default)* | exact order known | resampled | today's path — nobody, really |
+| `all` | exact order known | not resampled | a hard-mode sparring bot |
 
 ## Policy (M5)
 
@@ -387,6 +401,12 @@ is today's mean; `1` is the worst determinization),
 `alloc=root|fair` (how the node cap is spent across `(root, candidate)`
 pairs; default `fair` = per-pair share; `alloc=root` restores the
 pre-#46 root-major spend),
+`info=fair|draws|all` (what the search is allowed to know; default
+`draws` = own draw order exact, opponent resampled; `fair` also
+resamples the perspective player's own deck, not their hand; `all`
+is the true state — no resampling — and builds one root regardless
+of `k`; any other value is a parse error naming `info` and listing
+the three),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
@@ -394,7 +414,9 @@ is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0`
 `value=v1` or `value=net,net=<path>` — the built-in net is not printed,
 non-default `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
 `oevo=1` when the evolve branch is on, non-default `wv`, non-default `pess`, `tt=0` when the table is off, `alloc=root` when the
-allocator is the pre-#46 root-major spend, and any
+allocator is the pre-#46 root-major spend, `info=fair` / `info=all`
+when the information regime is not the default `draws` (same shape as
+`alloc=root`), and any
 non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
@@ -440,12 +462,17 @@ streams and output as before). `H0` is a determinized search bot:
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
+| `info` | `draws` | what the search is allowed to know. `draws` (default) = own draw order exact, opponent hand/deck resampled. `fair` = also resample the perspective player's own deck (hand untouched) — a human with open decklists. `all` = no resampling; the search rolls out against the opponent's real hand. Under `all`, H0 builds **one** root regardless of `k` (every determinization would be identical). `info` is a search-time knob; `encode` still masks the opponent's hand at the leaf. No default changed |
 
 H0 builds `K = max(1, determinizations)` search roots via
-`determinize(state, me, seed)` (which reseeds the game RNG) from the
-policy rng. Own-turn search, lethal, and the opponent model all
-run on those roots — the true hidden hand and live game RNG are never
-read. A lethal is taken only when every root agrees (a random lethal is
+`determinize_with(state, me, seed, info)` (which reseeds the game RNG)
+from the policy rng. Under `info=all` every root would be identical,
+so K is 1 regardless of `determinizations` — do not silently do
+`k` times the work for one tree. Own-turn search, lethal, and the
+opponent model all run on those roots — the true hidden hand and live
+game RNG are never read, except under `info=all` where the opponent
+hand *is* the true hand. `encode` is unchanged and still masks the
+opponent's hand; `info` governs the search, not the leaf. A lethal is taken only when every root agrees (a random lethal is
 a bet, not a lethal). Candidate values are the mean over the K
 determinizations (`acc[j] / n[j]`). `pess` blends that mean with the
 worst `finite` sample: `v = (1-pess)*mean + pess*worst`. At `pess=0`
