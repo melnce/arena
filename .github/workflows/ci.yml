@@ -7,7 +7,10 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    # Remaining steps measured 13:17 on the #52 runner after the seven
+    # slow binaries moved to `slow.yml`. 20 is the pre-#52 ceiling
+    # (~7 min headroom).
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -57,27 +60,6 @@ jobs:
 
       - name: m5a fixtures (release, including ignored)
         run: cargo test --release --test m5a -- --include-ignored --nocapture
-
-      - name: h0 transposition table (release, including ignored)
-        run: cargo test --release --test h0_tt -- --include-ignored --nocapture
-
-      - name: h0 alloc (release, including ignored)
-        run: cargo test --release --test h0_alloc -- --include-ignored --nocapture
-
-      - name: h0 olethal (release, including ignored)
-        run: cargo test --release --test h0_olethal -- --include-ignored --nocapture
-
-      - name: h0 opponent model (release, including ignored)
-        run: cargo test --release --test h0_opp -- --include-ignored --nocapture
-
-      - name: h0 wv (release, including ignored)
-        run: cargo test --release --test h0_wv -- --include-ignored --nocapture
-
-      - name: value net (release, including ignored)
-        run: cargo test --release --test net -- --include-ignored --nocapture
-
-      - name: self-play recorder (release, including ignored)
-        run: cargo test --release --test record -- --include-ignored --nocapture
 
       - name: engine crate has no web/wasm deps
         run: |

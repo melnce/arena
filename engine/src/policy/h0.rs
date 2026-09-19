@@ -198,7 +198,7 @@ pub struct H0 {
     pub determinizations: u32,
     pub node_cap: u32,
     /// How the node cap is split across `(root, candidate)` pairs.
-    /// Default [`Alloc::Root`] is today's root-major spend.
+    /// Default [`Alloc::Fair`] is today's per-pair budget share (`c42163b`).
     pub alloc: Alloc,
     pub value: ValueVersion,
     pub weights: Weights,
