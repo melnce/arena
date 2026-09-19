@@ -119,7 +119,10 @@ impl AnyPolicy {
     /// (opponent model; `odepth=0` is the greedy line), `olethal=0|1` (cheap
     /// opponent-lethal sweep on the greedy path; default `1`; `olethal=0`
     /// restores the pre-flip greedy path; ignored when
-    /// `odepth≥1`), `osteps=<u32>` (greedy forced-`EndTurn` step; default `6`;
+    /// `odepth≥1`), `oevo=0|1` (extend that sweep with one evolve;
+    /// default `0`; only meaningful with `olethal=1` and `odepth=0`;
+    /// no hard error for other combinations), `osteps=<u32>` (greedy
+    /// forced-`EndTurn` step; default `6`;
     /// hard stop is `osteps+3`), `wv=<f32>` (saturation bound on every
     /// accumulated value; default `80`), `pess=<f32>` (pessimism weight
     /// on the root mean, in `[0, 1]`; default `0` is today's mean;
@@ -150,7 +153,8 @@ impl AnyPolicy {
     /// `value=net,net=<path>` (the built-in net is the default and is not
     /// printed), non-default
     /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
-    /// non-default `wv`, non-default `pess`, `tt=0` when the table is off, `alloc=root`
+    /// `oevo=1` when the evolve branch is on, non-default `wv`,
+    /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
     /// when the allocator is the pre-#46 root-major spend, and any
     /// non-default weight.
     /// `"h0"` still round-trips to `"h0"`.
@@ -200,6 +204,9 @@ fn h0_spec(h: &H0) -> String {
     }
     if !h.olethal {
         parts.push("olethal=0".to_string());
+    }
+    if h.oevo {
+        parts.push("oevo=1".to_string());
     }
     if h.osteps != def.osteps {
         parts.push(format!("osteps={}", h.osteps));
@@ -251,6 +258,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.odepth == b.odepth
         && a.obeam == b.obeam
         && a.olethal == b.olethal
+        && a.oevo == b.oevo
         && a.osteps == b.osteps
         && a.wv == b.wv
         && a.pess == b.pess
@@ -320,6 +328,13 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     "0" => false,
                     "1" => true,
                     other => return Err(format!("unknown value '{other}'")),
+                }
+            }
+            "oevo" => {
+                h.oevo = match val {
+                    "0" => false,
+                    "1" => true,
+                    other => return Err(format!("unknown oevo '{other}'")),
                 }
             }
             "wv" => h.wv = parse_num(val)?,
