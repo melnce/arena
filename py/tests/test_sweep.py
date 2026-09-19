@@ -12,8 +12,6 @@ from pathlib import Path
 
 import pytest
 
-pytest.importorskip("arena")
-
 _SWEEP = Path(__file__).resolve().parents[1] / "sweep.py"
 _spec = importlib.util.spec_from_file_location("arena_sweep", _SWEEP)
 assert _spec and _spec.loader
@@ -72,8 +70,25 @@ def _cleanup_results_worktree(repo: Path, wt: Path, existed: bool) -> None:
         )
 
 
+# The seven real decks from results/sweep8/. 7 × 7 = 49 pairs.
+SWEEP8_DECKS = [
+    "abyss-p8rfn",
+    "afnm-minatodao",
+    "elf-neanisu2",
+    "ramp-37772",
+    "ramp-claywies",
+    "royal-nattui",
+    "rune-mach15",
+]
+
+
+def _parse(*extra: str):
+    return sweep.parse_args(["--tag", "t", "--candidates", "h0", *extra])
+
+
 @pytest.fixture(scope="module")
 def smoke(tmp_path_factory: pytest.TempPathFactory):
+    pytest.importorskip("arena")
     tmp = tmp_path_factory.mktemp("sweep")
     bare = tmp / "remote.git"
     subprocess.run(["git", "init", "--bare", str(bare)], check=True, capture_output=True)
@@ -136,6 +151,8 @@ def test_smoke_end_to_end(smoke) -> None:
         print(first.stderr, file=sys.stderr)
     assert first.returncode == 0, first.stderr or first.stdout
     assert smoke["before"] == smoke["after"]
+    assert "pairs: 4 (2 x 2, mirrors included)" in first.stdout
+    assert "1 games/pair x 4 =     4" in first.stdout
 
     cands = json.loads((tag / "candidates.json").read_text())
     assert cands == [
@@ -167,6 +184,16 @@ def test_smoke_end_to_end(smoke) -> None:
     decisions = run["finalist_decisions"]
     assert len(decisions) == 2
     assert sum(1 for d in decisions if d["decision"] == "finalist") == 1
+    sizing = run["sizing"]
+    assert sizing["n_decks"] == 2
+    assert sizing["pairs"] == 4
+    assert sizing["games_per_pair"] == {
+        "screen": 1,
+        "final": 1,
+        "reverse": 1,
+        "tp": 1,
+    }
+    assert "pairs: 4 (2 x 2, mirrors included)" in sizing["block"]
 
     branches = subprocess.run(
         ["git", "-C", str(smoke["bare"]), "branch"],
@@ -258,6 +285,7 @@ def test_finalist_rule() -> None:
 
 
 def test_bad_spec_stops_before_matchup(tmp_path: Path) -> None:
+    pytest.importorskip("arena")
     root = tmp_path / "results"
     r = _run_sweep(
         [
@@ -275,3 +303,153 @@ def test_bad_spec_stops_before_matchup(tmp_path: Path) -> None:
     assert r.returncode != 0
     assert "depht" in text
     assert not (root / "bad" / "c01-screen.json").exists()
+
+
+def test_pair_count_matches_matchup() -> None:
+    """Pair count is n * n (mirrors included), same as matchup.py."""
+    decks = sweep.load_sweep_decks(_REPO, None)
+    assert len(decks) == sweep.YARDSTICK_DECKS == 16
+    # matchup.py: n_pairs = len(names) * len(names)
+    assert len(decks) * len(decks) == sweep.YARDSTICK_PAIRS == 256
+    seven = sweep.load_sweep_decks(_REPO, SWEEP8_DECKS)
+    assert list(seven) == SWEEP8_DECKS
+    assert len(seven) * len(seven) == 49
+
+
+def test_defaults_16_decks_are_calibrated_totals() -> None:
+    args = _parse()
+    assert args.screen_games == 4
+    assert args.final_games == 16
+    assert args.final_reverse == 8
+    assert args.tp_games == 1
+    sizing = sweep.apply_sizing(args, 16)
+    assert sizing.screen.total == 1024
+    assert sizing.final.total == 4096
+    assert sizing.reverse.total == 2048
+    assert sizing.tp.total == 256
+    # Explicit today's flags stay byte-identical (no mutation, no refuse).
+    explicit = _parse(
+        "--screen-games",
+        "4",
+        "--final-games",
+        "16",
+        "--final-reverse",
+        "8",
+        "--tp-games",
+        "1",
+    )
+    after = sweep.apply_sizing(explicit, 16)
+    assert explicit.screen_games == 4
+    assert explicit.final_games == 16
+    assert explicit.final_reverse == 8
+    assert explicit.tp_games == 1
+    assert after.screen.total == 1024
+    assert after.final.total == 4096
+    assert after.reverse.total == 2048
+
+
+def test_sweep8_defaults_refused() -> None:
+    """results/sweep8/ numbers: 7 decks, defaults → 196 / 784 / 392."""
+    args = _parse()
+    sizing = sweep.compute_sizing(args, 7, SWEEP8_DECKS)
+    assert sizing.pairs == 49
+    assert sizing.screen.total == 196
+    assert sizing.final.total == 784
+    assert sizing.reverse.total == 392
+    with pytest.raises(SystemExit) as exc:
+        sweep.apply_sizing(args, 7, SWEEP8_DECKS)
+    msg = str(exc.value)
+    assert "196" in msg
+    assert "784" in msg
+    assert "392" in msg
+    assert "--target-games" in msg
+
+
+def test_target_games_7_decks() -> None:
+    args = _parse("--target-games", "4096")
+    sizing = sweep.apply_sizing(args, 7, SWEEP8_DECKS)
+    assert args.screen_games == 21
+    assert args.final_games == 84
+    assert args.final_reverse == 42
+    assert sizing.screen.total >= 1029
+    assert sizing.final.total >= 4116
+    assert sizing.reverse.total >= 2058
+    assert sizing.screen.total == 21 * 49
+    assert sizing.final.total == 84 * 49
+    assert sizing.reverse.total == 42 * 49
+
+
+def test_target_games_conflicts_with_final_games() -> None:
+    with pytest.raises(SystemExit) as exc:
+        _parse("--target-games", "4096", "--final-games", "16")
+    msg = str(exc.value)
+    assert "--target-games" in msg
+    assert "--final-games" in msg
+
+
+def test_final_games_without_reverse_refused() -> None:
+    args = _parse("--final-games", "84")
+    assert args.final_reverse == 8
+    with pytest.raises(SystemExit) as exc:
+        sweep.apply_sizing(args, 7, SWEEP8_DECKS)
+    msg = str(exc.value)
+    assert "84" in msg
+    assert "8" in msg
+    assert "reverse" in msg.lower()
+
+
+def test_allow_small_bypasses_floor() -> None:
+    args = _parse("--allow-small")
+    sizing = sweep.apply_sizing(args, 7, SWEEP8_DECKS)
+    assert sizing.screen.total == 196
+    assert sizing.final.total == 784
+    assert sizing.reverse.total == 392
+
+
+def test_allow_small_bypasses_reverse_arm() -> None:
+    args = _parse("--final-games", "84", "--allow-small")
+    sizing = sweep.apply_sizing(args, 7, SWEEP8_DECKS)
+    assert sizing.final.games_per_pair == 84
+    assert sizing.reverse.games_per_pair == 8
+
+
+def test_smoke_bypasses_floor() -> None:
+    args = _parse("--smoke")
+    assert args.decks == ["basic-forest", "basic-rune"]
+    assert args.screen_games == 1
+    sizing = sweep.apply_sizing(args, 2, args.decks)
+    assert sizing.pairs == 4
+    assert sizing.screen.total == 4
+    assert sizing.final.total == 4
+    assert sizing.reverse.total == 4
+
+
+def test_target_games_uneven_pool_ceils() -> None:
+    args = _parse("--target-games", "4096")
+    sizing = sweep.apply_sizing(args, 5)
+    assert sizing.pairs == 25
+    assert sizing.screen.games_per_pair == 41  # ceil(1024 / 25)
+    assert sizing.final.games_per_pair == 164  # ceil(4096 / 25)
+    assert sizing.reverse.games_per_pair == 82  # ceil(2048 / 25)
+    assert sizing.screen.total >= 1024
+    assert sizing.final.total >= 4096
+    assert sizing.reverse.total >= 2048
+    assert sizing.screen.total == 41 * 25
+    assert sizing.final.total == 164 * 25
+    assert sizing.reverse.total == 82 * 25
+
+
+def test_sizing_block_lists_running_stages() -> None:
+    args = _parse("--target-games", "4096")
+    sizing = sweep.compute_sizing(args, 7, SWEEP8_DECKS)
+    block = sweep.format_sizing_block(sizing)
+    assert "decks: 7 (abyss-p8rfn, afnm-minatodao, elf-neanisu2, ramp-37772, ramp-claywies, royal-nattui, rune-mach15)" in block
+    assert "pairs: 49 (7 x 7, mirrors included)" in block
+    assert "21 games/pair x 49 =  1029" in block
+    assert "84 games/pair x 49 =  4116" in block
+    assert "42 games/pair x 49 =  2058" in block
+    only_screen = sweep.format_sizing_block(sizing, sweep.running_game_stages(["screen"]))
+    assert "screen" in only_screen
+    assert "tp" in only_screen
+    assert "final" not in only_screen
+    assert "reverse" not in only_screen
