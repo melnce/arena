@@ -1,0 +1,70 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\sweep.py",
+    "--tag",
+    "sweep8",
+    "--seed",
+    "9",
+    "--baseline",
+    "h0:olethal=1,osteps=6",
+    "--candidates",
+    "h0:olethal=1,osteps=6,oevo=1",
+    "h0:olethal=1,osteps=6,info=fair",
+    "h0:olethal=1,osteps=6,info=all",
+    "h0:olethal=1,osteps=6,info=fair,k=8",
+    "--decks",
+    "abyss-p8rfn",
+    "afnm-minatodao",
+    "elf-neanisu2",
+    "ramp-37772",
+    "ramp-claywies",
+    "royal-nattui",
+    "rune-mach15",
+    "--finalists",
+    "2",
+    "--publish"
+  ],
+  "git": "414df531475fdda8b4465b5b6817d96a8e2792f4",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "screen": {
+      "start": "2026-09-19T15:45:38.188961+00:00",
+      "end": "2026-09-19T15:57:46.759385+00:00"
+    },
+    "final": {
+      "start": "2026-09-19T15:57:46.787054+00:00",
+      "end": "2026-09-19T16:21:21.154060+00:00"
+    },
+    "summary": {
+      "start": "2026-09-19T16:21:21.179590+00:00",
+      "end": "2026-09-19T16:21:21.205924+00:00"
+    },
+    "publish": {
+      "start": "2026-09-19T16:21:21.247914+00:00"
+    }
+  },
+  "finalist_decisions": [
+    {
+      "index": 1,
+      "spec": "h0:olethal=1,osteps=6,oevo=1",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 2,
+      "spec": "h0:olethal=1,osteps=6,info=fair",
+      "decision": "finalist"
+    },
+    {
+      "index": 3,
+      "spec": "h0:olethal=1,osteps=6,info=all",
+      "decision": "finalist"
+    },
+    {
+      "index": 4,
+      "spec": "h0:olethal=1,osteps=6,info=fair,k=8",
+      "decision": "not in top 2"
+    }
+  ]
+}

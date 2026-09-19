@@ -1,0 +1,50 @@
+matchup: 7 decks × 8 games = 392 games (seed=9, policy_a=h0:olethal=1,osteps=6, policy_b=h0:olethal=1,osteps=6,info=all, first=alternate, threads=None)
+Win rate (row = A, col = B; cell = A's win rate)
+                           abyss-p8rfn          afnm-minatodao            elf-neanisu2              ramp-37772           ramp-claywies            royal-nattui             rune-mach15
+abyss-p8rfn                      0.375                   0.750                   0.625                   0.875                   0.875                   0.625                   1.000
+afnm-minatodao                   0.500                   0.500                   0.625                   0.875                   0.625                   0.625                   0.750
+elf-neanisu2                     0.250                   0.250                   0.250                   0.625                   0.875                   0.500                   0.875
+ramp-37772                       0.250                   0.625                   0.250                   0.625                   0.500                   0.625                   0.750
+ramp-claywies                    0.375                   0.375                   0.375                   0.375                   0.625                   0.500                   0.625
+royal-nattui                     0.250                   0.250                   0.500                   0.500                   0.500                   0.750                   0.750
+rune-mach15                      0.000                   0.000                   0.250                   0.125                   0.375                   0.375                   0.500
+
+First-player win rate / mean turns
+                           abyss-p8rfn          afnm-minatodao            elf-neanisu2              ramp-37772           ramp-claywies            royal-nattui             rune-mach15
+abyss-p8rfn              0.375 /   8.5           0.500 /   8.0           0.625 /   8.9           0.625 /   8.0           0.625 /   8.0           0.875 /   8.2           0.500 /   9.5
+afnm-minatodao           0.750 /   8.5           0.750 /   8.4           0.625 /   8.9           0.625 /   8.8           0.375 /   9.1           0.875 /   9.1           0.500 /   8.8
+elf-neanisu2             0.500 /   8.5           0.750 /   9.0           0.750 /   9.8           0.375 /   9.4           0.625 /   7.8           0.750 /   9.2           0.625 /   8.9
+ramp-37772               0.500 /   9.2           0.375 /   9.6           0.750 /   8.5           0.625 /   7.9           0.250 /   9.9           0.625 /   9.5           0.750 /   9.8
+ramp-claywies            0.625 /   8.1           0.875 /   8.1           0.625 /   8.4           0.375 /  10.2           0.625 /  10.9           0.500 /  10.2           0.375 /   9.6
+royal-nattui             0.500 /   7.9           0.500 /   8.1           0.500 /   8.6           0.750 /   7.6           0.500 /   9.8           0.750 /   8.8           0.250 /   7.9
+rune-mach15              0.500 /   7.2           0.500 /   8.5           0.250 /   9.5           0.375 /   9.8           0.125 /   8.8           0.375 /   9.0           0.750 /   8.1
+
+A win rate over decisive games, Wilson 95% [lo, hi]
+                           abyss-p8rfn          afnm-minatodao            elf-neanisu2              ramp-37772           ramp-claywies            royal-nattui             rune-mach15
+abyss-p8rfn       0.375 [0.137, 0.694]    0.750 [0.409, 0.929]    0.625 [0.306, 0.863]    0.875 [0.529, 0.978]    0.875 [0.529, 0.978]    0.625 [0.306, 0.863]    1.000 [0.676, 1.000]
+afnm-minatodao    0.500 [0.215, 0.785]    0.500 [0.215, 0.785]    0.625 [0.306, 0.863]    0.875 [0.529, 0.978]    0.625 [0.306, 0.863]    0.625 [0.306, 0.863]    0.750 [0.409, 0.929]
+elf-neanisu2      0.250 [0.071, 0.591]    0.250 [0.071, 0.591]    0.250 [0.071, 0.591]    0.625 [0.306, 0.863]    0.875 [0.529, 0.978]    0.500 [0.215, 0.785]    0.875 [0.529, 0.978]
+ramp-37772        0.250 [0.071, 0.591]    0.625 [0.306, 0.863]    0.250 [0.071, 0.591]    0.625 [0.306, 0.863]    0.500 [0.215, 0.785]    0.625 [0.306, 0.863]    0.750 [0.409, 0.929]
+ramp-claywies     0.375 [0.137, 0.694]    0.375 [0.137, 0.694]    0.375 [0.137, 0.694]    0.375 [0.137, 0.694]    0.625 [0.306, 0.863]    0.500 [0.215, 0.785]    0.625 [0.306, 0.863]
+royal-nattui      0.250 [0.071, 0.591]    0.250 [0.071, 0.591]    0.500 [0.215, 0.785]    0.500 [0.215, 0.785]    0.500 [0.215, 0.785]    0.750 [0.409, 0.929]    0.750 [0.409, 0.929]
+rune-mach15       0.000 [0.000, 0.324]    0.000 [0.000, 0.324]    0.250 [0.071, 0.591]    0.125 [0.022, 0.471]    0.375 [0.137, 0.694]    0.375 [0.137, 0.694]    0.500 [0.215, 0.785]
+
+=== summary ===
+h0:olethal=1,osteps=6 vs h0:olethal=1,osteps=6,info=all
+games: 392  decisive: 392  draws: 0
+policy_a win rate: 0.515 [0.466, 0.564]
+first-player win rate: 0.561
+mean turns: 8.83  mean actions: 86.28
+end: lethal=392 deckout=0 turn_cap=0 action_cap=0 no_legal=0 illegal=0
+218.964s  1.79 games/s  cpus=28
+per deck:
+  abyss-p8rfn: policy_a (row) 0.732  policy_b (col) 0.714
+  afnm-minatodao: policy_a (row) 0.643  policy_b (col) 0.607
+  elf-neanisu2: policy_a (row) 0.518  policy_b (col) 0.589
+  ramp-37772: policy_a (row) 0.518  policy_b (col) 0.429
+  ramp-claywies: policy_a (row) 0.464  policy_b (col) 0.375
+  royal-nattui: policy_a (row) 0.500  policy_b (col) 0.429
+  rune-mach15: policy_a (row) 0.232  policy_b (col) 0.250
+
+392 games in 218.964s (1.8 games/s)
+wrote C:\Users\agban\projects\arena\results\sweep8\c03-reverse.json
