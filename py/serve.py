@@ -164,6 +164,39 @@ def _highest_open_game_path(games_dir: Path, game_id: str) -> Path | None:
     return None
 
 
+def recorded_human_side(body: dict[str, Any]) -> str | None:
+    human = body.get("humanSide") or body.get("human")
+    return human if human in ("a", "b") else None
+
+
+def _actions_match(a: Any, b: Any) -> bool:
+    return json.dumps(a, sort_keys=True, separators=(",", ":")) == json.dumps(
+        b, sort_keys=True, separators=(",", ":")
+    )
+
+
+def annotate_bot_values(
+    record: dict[str, Any],
+    pending: list[tuple[Any, float]],
+) -> None:
+    """Attach stored bot root values to matching actions in the capture."""
+    actions = record.get("actions")
+    if not isinstance(actions, list) or not pending:
+        return
+    idx = 0
+    for step in actions:
+        if idx >= len(pending):
+            break
+        if not isinstance(step, dict):
+            continue
+        act, val = pending[idx]
+        body = {k: v for k, v in step.items() if k not in ("value", "bot_value")}
+        if _actions_match(body, act):
+            if "bot_value" not in step and "value" not in step:
+                step["bot_value"] = val
+            idx += 1
+
+
 def maybe_write_game(
     games_dir: Path | None,
     record: dict[str, Any],
@@ -215,7 +248,7 @@ def maybe_write_game(
                         return
                 elif incoming <= have:
                     return
-                for key in ("policy", "strong", "engine"):
+                for key in ("policy", "strong", "engine", "humanSide"):
                     if not record.get(key) and stored.get(key):
                         record[key] = stored[key]
         path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
@@ -238,6 +271,7 @@ class ServerContext:
         self.version = version
         self.games_dir = games_dir
         self.lock = threading.Lock()
+        self.bot_values: dict[str, list[tuple[Any, float]]] = {}
 
 
 def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
@@ -359,6 +393,7 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
             hash_ok = "n/a"
             t_ms = 0.0
             turn = 0
+            root_value: float | None = None
             try:
                 game = arena.Game(ctx.db, seed, deck_a, deck_b, first)
                 for i, step in enumerate(actions):
@@ -367,7 +402,12 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                     if "reseed" in step:
                         game.reseed(int(step["reseed"]))
                     else:
-                        game.apply(step)
+                        apply_body = {
+                            k: v
+                            for k, v in step.items()
+                            if k not in ("value", "bot_value")
+                        }
+                        game.apply(apply_body)
                 turn = int(game.turn)
                 server_hash = str(game.hash())
                 client_hash = body.get("hash")
@@ -385,8 +425,18 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                     return
                 hash_ok = "ok"
                 t0 = time.perf_counter()
-                action = game.bot_action(policy, bot_seed)
+                decided = game.bot_action_value(policy, bot_seed)
                 t_ms = (time.perf_counter() - t0) * 1000.0
+                if isinstance(decided, dict) and "action" in decided:
+                    action = decided["action"]
+                    root_value = decided.get("value")
+                else:
+                    action = decided
+                    root_value = None
+                if isinstance(root_value, (int, float)):
+                    ctx.bot_values.setdefault(game_id, []).append(
+                        (action, float(root_value))
+                    )
             except arena.Illegal as e:
                 self._bot_line(policy, turn, t_ms, hash_ok, game_id)
                 self._error(400, str(e))
@@ -400,34 +450,39 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                 self._error(500, str(e))
                 return
 
+            capture: dict[str, Any] = {
+                "v": 1,
+                "game_id": game_id,
+                "seed": seed,
+                "deckA": deck_a,
+                "deckB": deck_b,
+                "first": first,
+                "actions": actions,
+                "policy": policy,
+                "strong": ctx.strong,
+                "engine": ctx.version,
+                "updated": utc_now(),
+                "final": False,
+            }
+            human_side = recorded_human_side(body)
+            if human_side:
+                capture["humanSide"] = human_side
+            annotate_bot_values(capture, ctx.bot_values.get(game_id) or [])
             maybe_write_game(
                 ctx.games_dir,
-                {
-                    "v": 1,
-                    "game_id": game_id,
-                    "seed": seed,
-                    "deckA": deck_a,
-                    "deckB": deck_b,
-                    "first": first,
-                    "actions": actions,
-                    "policy": policy,
-                    "strong": ctx.strong,
-                    "engine": ctx.version,
-                    "updated": utc_now(),
-                    "final": False,
-                },
+                capture,
                 allow_equal=False,
             )
             self._bot_line(policy, turn, t_ms, hash_ok, game_id)
-            self._write_json(
-                200,
-                {
-                    "action": action,
-                    "policy": policy,
-                    "ms": t_ms,
-                    "hash": server_hash,
-                },
-            )
+            reply: dict[str, Any] = {
+                "action": action,
+                "policy": policy,
+                "ms": t_ms,
+                "hash": server_hash,
+            }
+            if isinstance(root_value, (int, float)):
+                reply["value"] = float(root_value)
+            self._write_json(200, reply)
 
         def _handle_game(self, body: dict[str, Any]) -> None:
             try:
@@ -450,24 +505,29 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
             requested = str(body.get("policy") or "")
             policy = effective_policy(requested, ctx.strong) if requested else ""
             finished = utc_now()
+            capture: dict[str, Any] = {
+                "v": 1,
+                "game_id": game_id,
+                "seed": seed,
+                "deckA": deck_a,
+                "deckB": deck_b,
+                "first": first,
+                "actions": actions,
+                "policy": policy,
+                "strong": ctx.strong,
+                "engine": ctx.version,
+                "updated": finished,
+                "final": True,
+                "winner": winner,
+                "finished": finished,
+            }
+            human_side = recorded_human_side(body)
+            if human_side:
+                capture["humanSide"] = human_side
+            annotate_bot_values(capture, ctx.bot_values.get(game_id) or [])
             maybe_write_game(
                 ctx.games_dir,
-                {
-                    "v": 1,
-                    "game_id": game_id,
-                    "seed": seed,
-                    "deckA": deck_a,
-                    "deckB": deck_b,
-                    "first": first,
-                    "actions": actions,
-                    "policy": policy,
-                    "strong": ctx.strong,
-                    "engine": ctx.version,
-                    "updated": finished,
-                    "final": True,
-                    "winner": winner,
-                    "finished": finished,
-                },
+                capture,
                 allow_equal=True,
             )
             self._write_json(200, {"ok": True, "game_id": game_id})

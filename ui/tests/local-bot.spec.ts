@@ -63,12 +63,12 @@ async function mockLocalBot(
 ): Promise<{
   botRequests: () => number;
   lastBotBody: () => { actions?: unknown[] } | null;
-  gamePosts: () => Array<{ winner?: unknown; actions?: unknown[] }>;
+  gamePosts: () => Array<{ winner?: unknown; actions?: unknown[]; humanSide?: unknown }>;
 }> {
   let botRequests = 0;
   let failed = false;
   let lastBotBody: { actions?: unknown[] } | null = null;
-  const gamePosts: Array<{ winner?: unknown; actions?: unknown[] }> = [];
+  const gamePosts: Array<{ winner?: unknown; actions?: unknown[]; humanSide?: unknown }> = [];
   await page.route("http://127.0.0.1:8765/**", async (route) => {
     const url = route.request().url();
     if (url.includes("/health")) {
@@ -85,7 +85,13 @@ async function mockLocalBot(
       return;
     }
     if (url.includes("/game")) {
-      gamePosts.push(route.request().postDataJSON() as { winner?: unknown; actions?: unknown[] });
+      gamePosts.push(
+        route.request().postDataJSON() as {
+          winner?: unknown;
+          actions?: unknown[];
+          humanSide?: unknown;
+        },
+      );
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -729,6 +735,7 @@ test("finished vs-bot game POSTs /game once; toggle off sends none", async ({ pa
   await expect.poll(() => mock.gamePosts().length).toBe(1);
   const posted = mock.gamePosts()[0]!;
   expect(posted.winner === "a" || posted.winner === "b" || posted.winner == null).toBe(true);
+  expect(posted.humanSide).toBe("a");
   const lastBot = mock.lastBotBody();
   expect(Array.isArray(posted.actions)).toBe(true);
   expect((posted.actions ?? []).length).toBeGreaterThanOrEqual((lastBot?.actions ?? []).length);

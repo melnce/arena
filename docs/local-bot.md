@@ -92,7 +92,9 @@ overwrites when the incoming `actions` list is longer. When the vs-bot
 game ends, the client POSTs the finished log plus the winner to
 `/game` (fire-and-forget; failures are a single `console.debug`). That
 sets `"final": true` and records who won, including the human's last
-turns after the bot's last decision. A repeated seed rolls over to
+turns after the bot's last decision. The finished POST also includes
+`humanSide` so `review.py` scores the bot's seat, not the human's. A
+repeated seed rolls over to
 `-2`, `-3`, so replaying the same seed does not overwrite an earlier
 game.
 
