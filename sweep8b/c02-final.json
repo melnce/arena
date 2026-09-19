@@ -1,0 +1,1267 @@
+{
+  "decks": [
+    "abyss-p8rfn",
+    "afnm-minatodao",
+    "elf-neanisu2",
+    "ramp-37772",
+    "ramp-claywies",
+    "royal-nattui",
+    "rune-mach15"
+  ],
+  "first": "alternate",
+  "games": 84,
+  "games_per_second": 1.6036427508412947,
+  "matrix": {
+    "abyss-p8rfn": {
+      "abyss-p8rfn": {
+        "a_games_as_first": 42,
+        "a_wins": 44,
+        "a_wins_as_first": 26,
+        "b_wins": 40,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 50,
+        "games": 84,
+        "mean_actions": 82.42857142857143,
+        "mean_turns": 8.630952380952381,
+        "wilson95": [
+          0.41831918439941584,
+          0.6272173267752441
+        ],
+        "wr_decisive": 0.5238095238095238
+      },
+      "afnm-minatodao": {
+        "a_games_as_first": 42,
+        "a_wins": 39,
+        "a_wins_as_first": 23,
+        "b_wins": 45,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 49,
+        "games": 84,
+        "mean_actions": 82.64285714285714,
+        "mean_turns": 8.511904761904763,
+        "wilson95": [
+          0.36154050446577934,
+          0.5701547287722308
+        ],
+        "wr_decisive": 0.4642857142857143
+      },
+      "elf-neanisu2": {
+        "a_games_as_first": 42,
+        "a_wins": 54,
+        "a_wins_as_first": 28,
+        "b_wins": 30,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 44,
+        "games": 84,
+        "mean_actions": 91.70238095238095,
+        "mean_turns": 8.833333333333334,
+        "wilson95": [
+          0.5362111603479548,
+          0.7370079067000043
+        ],
+        "wr_decisive": 0.6428571428571429
+      },
+      "ramp-37772": {
+        "a_games_as_first": 42,
+        "a_wins": 53,
+        "a_wins_as_first": 30,
+        "b_wins": 31,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 49,
+        "games": 84,
+        "mean_actions": 70.76190476190476,
+        "mean_turns": 8.547619047619047,
+        "wilson95": [
+          0.5241504160580661,
+          0.7263003954025629
+        ],
+        "wr_decisive": 0.6309523809523809
+      },
+      "ramp-claywies": {
+        "a_games_as_first": 42,
+        "a_wins": 66,
+        "a_wins_as_first": 37,
+        "b_wins": 18,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 50,
+        "games": 84,
+        "mean_actions": 75.82142857142857,
+        "mean_turns": 8.642857142857142,
+        "wilson95": [
+          0.6865046833134146,
+          0.8599334507825035
+        ],
+        "wr_decisive": 0.7857142857142857
+      },
+      "royal-nattui": {
+        "a_games_as_first": 42,
+        "a_wins": 59,
+        "a_wins_as_first": 32,
+        "b_wins": 25,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 47,
+        "games": 84,
+        "mean_actions": 79.83333333333333,
+        "mean_turns": 8.154761904761905,
+        "wilson95": [
+          0.5975071368472344,
+          0.7895532081373742
+        ],
+        "wr_decisive": 0.7023809523809523
+      },
+      "rune-mach15": {
+        "a_games_as_first": 42,
+        "a_wins": 81,
+        "a_wins_as_first": 40,
+        "b_wins": 3,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 41,
+        "games": 84,
+        "mean_actions": 86.67857142857143,
+        "mean_turns": 8.154761904761905,
+        "wilson95": [
+          0.900181415678933,
+          0.9877805522269338
+        ],
+        "wr_decisive": 0.9642857142857143
+      }
+    },
+    "afnm-minatodao": {
+      "abyss-p8rfn": {
+        "a_games_as_first": 42,
+        "a_wins": 40,
+        "a_wins_as_first": 21,
+        "b_wins": 44,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 44,
+        "games": 84,
+        "mean_actions": 89.63095238095238,
+        "mean_turns": 9.05952380952381,
+        "wilson95": [
+          0.3727826732247559,
+          0.5816808156005842
+        ],
+        "wr_decisive": 0.47619047619047616
+      },
+      "afnm-minatodao": {
+        "a_games_as_first": 42,
+        "a_wins": 44,
+        "a_wins_as_first": 30,
+        "b_wins": 40,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 58,
+        "games": 84,
+        "mean_actions": 89.96428571428571,
+        "mean_turns": 8.797619047619047,
+        "wilson95": [
+          0.41831918439941584,
+          0.6272173267752441
+        ],
+        "wr_decisive": 0.5238095238095238
+      },
+      "elf-neanisu2": {
+        "a_games_as_first": 42,
+        "a_wins": 65,
+        "a_wins_as_first": 36,
+        "b_wins": 19,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 49,
+        "games": 84,
+        "mean_actions": 87.75,
+        "mean_turns": 8.369047619047619,
+        "wilson95": [
+          0.6735289274916636,
+          0.8501409510169247
+        ],
+        "wr_decisive": 0.7738095238095238
+      },
+      "ramp-37772": {
+        "a_games_as_first": 42,
+        "a_wins": 63,
+        "a_wins_as_first": 32,
+        "b_wins": 21,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 43,
+        "games": 84,
+        "mean_actions": 73.13095238095238,
+        "mean_turns": 8.261904761904763,
+        "wilson95": [
+          0.6478552553489343,
+          0.830278111984994
+        ],
+        "wr_decisive": 0.75
+      },
+      "ramp-claywies": {
+        "a_games_as_first": 42,
+        "a_wins": 64,
+        "a_wins_as_first": 32,
+        "b_wins": 20,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 42,
+        "games": 84,
+        "mean_actions": 73.29761904761905,
+        "mean_turns": 8.047619047619047,
+        "wilson95": [
+          0.6606473307381485,
+          0.8402542921831097
+        ],
+        "wr_decisive": 0.7619047619047619
+      },
+      "royal-nattui": {
+        "a_games_as_first": 42,
+        "a_wins": 61,
+        "a_wins_as_first": 33,
+        "b_wins": 23,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 47,
+        "games": 84,
+        "mean_actions": 85.47619047619048,
+        "mean_turns": 8.369047619047619,
+        "wilson95": [
+          0.6225237946430133,
+          0.810073061516255
+        ],
+        "wr_decisive": 0.7261904761904762
+      },
+      "rune-mach15": {
+        "a_games_as_first": 42,
+        "a_wins": 73,
+        "a_wins_as_first": 39,
+        "b_wins": 11,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 47,
+        "games": 84,
+        "mean_actions": 90.23809523809524,
+        "mean_turns": 8.238095238095237,
+        "wilson95": [
+          0.7805373686566762,
+          0.9252785545505514
+        ],
+        "wr_decisive": 0.8690476190476191
+      }
+    },
+    "elf-neanisu2": {
+      "abyss-p8rfn": {
+        "a_games_as_first": 42,
+        "a_wins": 20,
+        "a_wins_as_first": 11,
+        "b_wins": 64,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 44,
+        "games": 84,
+        "mean_actions": 88.23809523809524,
+        "mean_turns": 8.571428571428571,
+        "wilson95": [
+          0.15974570781689024,
+          0.3393526692618514
+        ],
+        "wr_decisive": 0.23809523809523808
+      },
+      "afnm-minatodao": {
+        "a_games_as_first": 42,
+        "a_wins": 21,
+        "a_wins_as_first": 13,
+        "b_wins": 63,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 47,
+        "games": 84,
+        "mean_actions": 90.9047619047619,
+        "mean_turns": 8.619047619047619,
+        "wilson95": [
+          0.16972188801500593,
+          0.35214474465106566
+        ],
+        "wr_decisive": 0.25
+      },
+      "elf-neanisu2": {
+        "a_games_as_first": 42,
+        "a_wins": 38,
+        "a_wins_as_first": 19,
+        "b_wins": 46,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 42,
+        "games": 84,
+        "mean_actions": 93.41666666666667,
+        "mean_turns": 8.476190476190476,
+        "wilson95": [
+          0.3503554445205683,
+          0.5585715331301119
+        ],
+        "wr_decisive": 0.4523809523809524
+      },
+      "ramp-37772": {
+        "a_games_as_first": 42,
+        "a_wins": 46,
+        "a_wins_as_first": 25,
+        "b_wins": 38,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 46,
+        "games": 84,
+        "mean_actions": 84.36904761904762,
+        "mean_turns": 9.119047619047619,
+        "wilson95": [
+          0.44142846686988807,
+          0.6496445554794317
+        ],
+        "wr_decisive": 0.5476190476190477
+      },
+      "ramp-claywies": {
+        "a_games_as_first": 42,
+        "a_wins": 65,
+        "a_wins_as_first": 34,
+        "b_wins": 19,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 1,
+          "illegal": 0,
+          "lethal": 83,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 45,
+        "games": 84,
+        "mean_actions": 73.44047619047619,
+        "mean_turns": 7.964285714285714,
+        "wilson95": [
+          0.6735289274916636,
+          0.8501409510169247
+        ],
+        "wr_decisive": 0.7738095238095238
+      },
+      "royal-nattui": {
+        "a_games_as_first": 42,
+        "a_wins": 39,
+        "a_wins_as_first": 28,
+        "b_wins": 45,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 59,
+        "games": 84,
+        "mean_actions": 95.25,
+        "mean_turns": 9.011904761904763,
+        "wilson95": [
+          0.36154050446577934,
+          0.5701547287722308
+        ],
+        "wr_decisive": 0.4642857142857143
+      },
+      "rune-mach15": {
+        "a_games_as_first": 42,
+        "a_wins": 55,
+        "a_wins_as_first": 31,
+        "b_wins": 29,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 49,
+        "games": 84,
+        "mean_actions": 101.27380952380952,
+        "mean_turns": 8.821428571428571,
+        "wilson95": [
+          0.5483359511039806,
+          0.7476513715313083
+        ],
+        "wr_decisive": 0.6547619047619048
+      }
+    },
+    "ramp-37772": {
+      "abyss-p8rfn": {
+        "a_games_as_first": 42,
+        "a_wins": 25,
+        "a_wins_as_first": 15,
+        "b_wins": 59,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 47,
+        "games": 84,
+        "mean_actions": 70.45238095238095,
+        "mean_turns": 8.44047619047619,
+        "wilson95": [
+          0.21044679186262583,
+          0.40249286315276545
+        ],
+        "wr_decisive": 0.2976190476190476
+      },
+      "afnm-minatodao": {
+        "a_games_as_first": 42,
+        "a_wins": 26,
+        "a_wins_as_first": 18,
+        "b_wins": 58,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 52,
+        "games": 84,
+        "mean_actions": 78.21428571428571,
+        "mean_turns": 8.964285714285714,
+        "wilson95": [
+          0.22081781137605916,
+          0.4148900992266621
+        ],
+        "wr_decisive": 0.30952380952380953
+      },
+      "elf-neanisu2": {
+        "a_games_as_first": 42,
+        "a_wins": 34,
+        "a_wins_as_first": 18,
+        "b_wins": 50,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 44,
+        "games": 84,
+        "mean_actions": 86.63095238095238,
+        "mean_turns": 9.321428571428571,
+        "wilson95": [
+          0.3061943608400985,
+          0.511659594461262
+        ],
+        "wr_decisive": 0.40476190476190477
+      },
+      "ramp-37772": {
+        "a_games_as_first": 42,
+        "a_wins": 50,
+        "a_wins_as_first": 32,
+        "b_wins": 34,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 56,
+        "games": 84,
+        "mean_actions": 73.66666666666667,
+        "mean_turns": 9.630952380952381,
+        "wilson95": [
+          0.4883404055387379,
+          0.6938056391599015
+        ],
+        "wr_decisive": 0.5952380952380952
+      },
+      "ramp-claywies": {
+        "a_games_as_first": 42,
+        "a_wins": 40,
+        "a_wins_as_first": 23,
+        "b_wins": 44,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 48,
+        "games": 84,
+        "mean_actions": 79.97619047619048,
+        "mean_turns": 10.023809523809524,
+        "wilson95": [
+          0.3727826732247559,
+          0.5816808156005842
+        ],
+        "wr_decisive": 0.47619047619047616
+      },
+      "royal-nattui": {
+        "a_games_as_first": 42,
+        "a_wins": 32,
+        "a_wins_as_first": 19,
+        "b_wins": 52,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 48,
+        "games": 84,
+        "mean_actions": 81.69047619047619,
+        "mean_turns": 8.928571428571429,
+        "wilson95": [
+          0.28446988389716343,
+          0.48784756022953724
+        ],
+        "wr_decisive": 0.38095238095238093
+      },
+      "rune-mach15": {
+        "a_games_as_first": 42,
+        "a_wins": 67,
+        "a_wins_as_first": 31,
+        "b_wins": 17,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 37,
+        "games": 84,
+        "mean_actions": 89.23809523809524,
+        "mean_turns": 9.44047619047619,
+        "wilson95": [
+          0.6995798859846238,
+          0.8696265036986242
+        ],
+        "wr_decisive": 0.7976190476190477
+      }
+    },
+    "ramp-claywies": {
+      "abyss-p8rfn": {
+        "a_games_as_first": 42,
+        "a_wins": 28,
+        "a_wins_as_first": 14,
+        "b_wins": 56,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 42,
+        "games": 84,
+        "mean_actions": 73.55952380952381,
+        "mean_turns": 8.44047619047619,
+        "wilson95": [
+          0.24177064973177223,
+          0.4394737720456088
+        ],
+        "wr_decisive": 0.3333333333333333
+      },
+      "afnm-minatodao": {
+        "a_games_as_first": 42,
+        "a_wins": 19,
+        "a_wins_as_first": 11,
+        "b_wins": 65,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 45,
+        "games": 84,
+        "mean_actions": 76.67857142857143,
+        "mean_turns": 8.404761904761905,
+        "wilson95": [
+          0.14985904898307534,
+          0.32647107250833646
+        ],
+        "wr_decisive": 0.2261904761904762
+      },
+      "elf-neanisu2": {
+        "a_games_as_first": 42,
+        "a_wins": 30,
+        "a_wins_as_first": 16,
+        "b_wins": 54,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 44,
+        "games": 84,
+        "mean_actions": 85.70238095238095,
+        "mean_turns": 8.904761904761905,
+        "wilson95": [
+          0.2629920932999957,
+          0.46378883965204515
+        ],
+        "wr_decisive": 0.35714285714285715
+      },
+      "ramp-37772": {
+        "a_games_as_first": 42,
+        "a_wins": 47,
+        "a_wins_as_first": 30,
+        "b_wins": 37,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 55,
+        "games": 84,
+        "mean_actions": 80.3452380952381,
+        "mean_turns": 9.964285714285714,
+        "wilson95": [
+          0.4530690997323842,
+          0.6607721782042654
+        ],
+        "wr_decisive": 0.5595238095238095
+      },
+      "ramp-claywies": {
+        "a_games_as_first": 42,
+        "a_wins": 49,
+        "a_wins_as_first": 27,
+        "b_wins": 35,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 47,
+        "games": 84,
+        "mean_actions": 91.03571428571429,
+        "mean_turns": 10.880952380952381,
+        "wilson95": [
+          0.4765244867612664,
+          0.6828533023500432
+        ],
+        "wr_decisive": 0.5833333333333334
+      },
+      "royal-nattui": {
+        "a_games_as_first": 42,
+        "a_wins": 36,
+        "a_wins_as_first": 24,
+        "b_wins": 48,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 54,
+        "games": 84,
+        "mean_actions": 81.98809523809524,
+        "mean_turns": 8.654761904761905,
+        "wilson95": [
+          0.32815806317877516,
+          0.5352324032972452
+        ],
+        "wr_decisive": 0.42857142857142855
+      },
+      "rune-mach15": {
+        "a_games_as_first": 42,
+        "a_wins": 54,
+        "a_wins_as_first": 25,
+        "b_wins": 30,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 38,
+        "games": 84,
+        "mean_actions": 89.22619047619048,
+        "mean_turns": 8.988095238095237,
+        "wilson95": [
+          0.5362111603479548,
+          0.7370079067000043
+        ],
+        "wr_decisive": 0.6428571428571429
+      }
+    },
+    "royal-nattui": {
+      "abyss-p8rfn": {
+        "a_games_as_first": 42,
+        "a_wins": 30,
+        "a_wins_as_first": 15,
+        "b_wins": 54,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 42,
+        "games": 84,
+        "mean_actions": 78.82142857142857,
+        "mean_turns": 7.976190476190476,
+        "wilson95": [
+          0.2629920932999957,
+          0.46378883965204515
+        ],
+        "wr_decisive": 0.35714285714285715
+      },
+      "afnm-minatodao": {
+        "a_games_as_first": 42,
+        "a_wins": 28,
+        "a_wins_as_first": 19,
+        "b_wins": 56,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 52,
+        "games": 84,
+        "mean_actions": 88.22619047619048,
+        "mean_turns": 8.619047619047619,
+        "wilson95": [
+          0.24177064973177223,
+          0.4394737720456088
+        ],
+        "wr_decisive": 0.3333333333333333
+      },
+      "elf-neanisu2": {
+        "a_games_as_first": 42,
+        "a_wins": 45,
+        "a_wins_as_first": 31,
+        "b_wins": 39,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 59,
+        "games": 84,
+        "mean_actions": 97.25,
+        "mean_turns": 9.05952380952381,
+        "wilson95": [
+          0.42984527122776917,
+          0.6384594955342207
+        ],
+        "wr_decisive": 0.5357142857142857
+      },
+      "ramp-37772": {
+        "a_games_as_first": 42,
+        "a_wins": 51,
+        "a_wins_as_first": 31,
+        "b_wins": 33,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 53,
+        "games": 84,
+        "mean_actions": 81.88095238095238,
+        "mean_turns": 8.880952380952381,
+        "wilson95": [
+          0.5002161009140969,
+          0.7046981993718724
+        ],
+        "wr_decisive": 0.6071428571428571
+      },
+      "ramp-claywies": {
+        "a_games_as_first": 42,
+        "a_wins": 52,
+        "a_wins_as_first": 29,
+        "b_wins": 32,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 48,
+        "games": 84,
+        "mean_actions": 84.26190476190476,
+        "mean_turns": 8.869047619047619,
+        "wilson95": [
+          0.5121524397704628,
+          0.7155301161028366
+        ],
+        "wr_decisive": 0.6190476190476191
+      },
+      "royal-nattui": {
+        "a_games_as_first": 42,
+        "a_wins": 51,
+        "a_wins_as_first": 31,
+        "b_wins": 33,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 53,
+        "games": 84,
+        "mean_actions": 83.91666666666667,
+        "mean_turns": 8.476190476190476,
+        "wilson95": [
+          0.5002161009140969,
+          0.7046981993718724
+        ],
+        "wr_decisive": 0.6071428571428571
+      },
+      "rune-mach15": {
+        "a_games_as_first": 42,
+        "a_wins": 58,
+        "a_wins_as_first": 36,
+        "b_wins": 26,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 56,
+        "games": 84,
+        "mean_actions": 91.16666666666667,
+        "mean_turns": 8.55952380952381,
+        "wilson95": [
+          0.5851099007733379,
+          0.7791821886239408
+        ],
+        "wr_decisive": 0.6904761904761905
+      }
+    },
+    "rune-mach15": {
+      "abyss-p8rfn": {
+        "a_games_as_first": 42,
+        "a_wins": 7,
+        "a_wins_as_first": 4,
+        "b_wins": 77,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 43,
+        "games": 84,
+        "mean_actions": 86.0,
+        "mean_turns": 8.05952380952381,
+        "wilson95": [
+          0.04095202982832852,
+          0.16215902461512421
+        ],
+        "wr_decisive": 0.08333333333333333
+      },
+      "afnm-minatodao": {
+        "a_games_as_first": 42,
+        "a_wins": 12,
+        "a_wins_as_first": 9,
+        "b_wins": 72,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 48,
+        "games": 84,
+        "mean_actions": 88.51190476190476,
+        "mean_turns": 8.261904761904763,
+        "wilson95": [
+          0.08364938218850576,
+          0.23330295019159658
+        ],
+        "wr_decisive": 0.14285714285714285
+      },
+      "elf-neanisu2": {
+        "a_games_as_first": 42,
+        "a_wins": 31,
+        "a_wins_as_first": 22,
+        "b_wins": 53,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 55,
+        "games": 84,
+        "mean_actions": 95.39285714285714,
+        "mean_turns": 8.452380952380953,
+        "wilson95": [
+          0.2736996045974371,
+          0.4758495839419337
+        ],
+        "wr_decisive": 0.36904761904761907
+      },
+      "ramp-37772": {
+        "a_games_as_first": 42,
+        "a_wins": 27,
+        "a_wins_as_first": 23,
+        "b_wins": 57,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 61,
+        "games": 84,
+        "mean_actions": 89.51190476190476,
+        "mean_turns": 9.476190476190476,
+        "wilson95": [
+          0.23125977350162447,
+          0.42721639268842665
+        ],
+        "wr_decisive": 0.32142857142857145
+      },
+      "ramp-claywies": {
+        "a_games_as_first": 42,
+        "a_wins": 30,
+        "a_wins_as_first": 15,
+        "b_wins": 54,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 42,
+        "games": 84,
+        "mean_actions": 91.4047619047619,
+        "mean_turns": 9.166666666666666,
+        "wilson95": [
+          0.2629920932999957,
+          0.46378883965204515
+        ],
+        "wr_decisive": 0.35714285714285715
+      },
+      "royal-nattui": {
+        "a_games_as_first": 42,
+        "a_wins": 25,
+        "a_wins_as_first": 14,
+        "b_wins": 59,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 45,
+        "games": 84,
+        "mean_actions": 93.13095238095238,
+        "mean_turns": 8.535714285714286,
+        "wilson95": [
+          0.21044679186262583,
+          0.40249286315276545
+        ],
+        "wr_decisive": 0.2976190476190476
+      },
+      "rune-mach15": {
+        "a_games_as_first": 42,
+        "a_wins": 48,
+        "a_wins_as_first": 29,
+        "b_wins": 36,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 84,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 52,
+        "games": 84,
+        "mean_actions": 105.80952380952381,
+        "mean_turns": 9.19047619047619,
+        "wilson95": [
+          0.4647675967027547,
+          0.6718419368212247
+        ],
+        "wr_decisive": 0.5714285714285714
+      }
+    }
+  },
+  "policy_a": "h0:olethal=1,osteps=6,info=fair",
+  "policy_b": "h0:olethal=1,osteps=6",
+  "seconds": 2566.6564438000205,
+  "seed": 9,
+  "summary": {
+    "cpu_count": 28,
+    "decisive": 4116,
+    "draws": 0,
+    "end": {
+      "action_cap": 0,
+      "deckout": 1,
+      "illegal": 0,
+      "lethal": 4115,
+      "no_legal": 0,
+      "turn_cap": 0
+    },
+    "first_player_win_rate": 0.5728862973760933,
+    "games": 4116,
+    "games_per_second": 1.6036427508412947,
+    "mean_actions": 85.30490767735665,
+    "mean_turns": 8.77089407191448,
+    "per_deck": {
+      "abyss-p8rfn": {
+        "policy_a_as_row": 0.673469387755102,
+        "policy_b_as_col": 0.6700680272108843
+      },
+      "afnm-minatodao": {
+        "policy_a_as_row": 0.6972789115646258,
+        "policy_b_as_col": 0.6785714285714286
+      },
+      "elf-neanisu2": {
+        "policy_a_as_row": 0.48299319727891155,
+        "policy_b_as_col": 0.49489795918367346
+      },
+      "ramp-37772": {
+        "policy_a_as_row": 0.46598639455782315,
+        "policy_b_as_col": 0.4268707482993197
+      },
+      "ramp-claywies": {
+        "policy_a_as_row": 0.44727891156462585,
+        "policy_b_as_col": 0.37755102040816324
+      },
+      "royal-nattui": {
+        "policy_a_as_row": 0.5357142857142857,
+        "policy_b_as_col": 0.4846938775510204
+      },
+      "rune-mach15": {
+        "policy_a_as_row": 0.30612244897959184,
+        "policy_b_as_col": 0.2585034013605442
+      }
+    },
+    "policy_a": "h0:olethal=1,osteps=6,info=fair",
+    "policy_a_win_rate": 0.5155490767735665,
+    "policy_b": "h0:olethal=1,osteps=6",
+    "seconds": 2566.6564438000205,
+    "wilson95": [
+      0.5002738267477573,
+      0.5307953289207519
+    ]
+  },
+  "threads": 28
+}

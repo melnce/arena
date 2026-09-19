@@ -1,0 +1,18 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:olethal=1,osteps=6,oevo=1"
+  },
+  {
+    "index": 2,
+    "spec": "h0:olethal=1,osteps=6,info=fair"
+  },
+  {
+    "index": 3,
+    "spec": "h0:olethal=1,osteps=6,info=all"
+  },
+  {
+    "index": 4,
+    "spec": "h0:olethal=1,osteps=6,info=fair,k=8"
+  }
+]
