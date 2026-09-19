@@ -1,0 +1,5 @@
+From https://github.com/melnce/arena
+ * [new branch]      cursor/h0-info -> origin/cursor/h0-info
+ * [new branch]      cursor/h0-oevo -> origin/cursor/h0-oevo
+   737dbf8..5592b1f  main           -> origin/main
+Already up to date.

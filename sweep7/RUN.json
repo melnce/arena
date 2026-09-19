@@ -1,0 +1,68 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\sweep.py",
+    "--tag",
+    "sweep7",
+    "--seed",
+    "8",
+    "--baseline",
+    "h0:olethal=1,osteps=6",
+    "--candidates",
+    "h0:olethal=1,osteps=6,wv=60",
+    "h0:olethal=1,osteps=6,wv=40",
+    "h0:olethal=1,osteps=6,wv=20",
+    "h0:olethal=1,osteps=6,pess=0.5",
+    "h0:olethal=1,osteps=6,nodes=6000",
+    "--finalists",
+    "2",
+    "--publish"
+  ],
+  "git": "737dbf8232afc16f06d16299bc5cfa5995d0ba30",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "screen": {
+      "start": "2026-09-19T09:21:21.837173+00:00",
+      "end": "2026-09-19T10:49:07.852931+00:00"
+    },
+    "final": {
+      "start": "2026-09-19T10:49:07.883216+00:00",
+      "end": "2026-09-19T14:40:30.713941+00:00"
+    },
+    "summary": {
+      "start": "2026-09-19T14:40:30.747001+00:00",
+      "end": "2026-09-19T14:40:30.776939+00:00"
+    },
+    "publish": {
+      "start": "2026-09-19T14:40:30.844678+00:00"
+    }
+  },
+  "finalist_decisions": [
+    {
+      "index": 1,
+      "spec": "h0:olethal=1,osteps=6,wv=60",
+      "decision": "finalist"
+    },
+    {
+      "index": 2,
+      "spec": "h0:olethal=1,osteps=6,wv=40",
+      "decision": "skipped: interval high 0.45 < 0.50"
+    },
+    {
+      "index": 3,
+      "spec": "h0:olethal=1,osteps=6,wv=20",
+      "decision": "skipped: interval high 0.38 < 0.50"
+    },
+    {
+      "index": 4,
+      "spec": "h0:olethal=1,osteps=6,pess=0.5",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 5,
+      "spec": "h0:olethal=1,osteps=6,nodes=6000",
+      "decision": "finalist"
+    }
+  ]
+}
