@@ -7,7 +7,7 @@ on:
     - cron: "0 7 * * *"
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, cursor/slow-failure-issue]
 
 # Queue, do not kill. workflow_dispatch / schedule keep their own
 # group so a manual rerun does not share a slot with a nightly, and
@@ -39,6 +39,9 @@ jobs:
     timeout-minutes: 65
     steps:
       - uses: actions/checkout@v4
+
+      - name: TEMP proof — sleep so the run can be cancelled
+        run: sleep 3600
 
       - name: Rust toolchain
         uses: dtolnay/rust-toolchain@stable
