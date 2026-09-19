@@ -71,14 +71,19 @@ def _assert_decision_shape(d: dict) -> None:
         "reference",
         "v_played",
         "v_best",
-        "cost",
         "bot_value",
         "position",
     ):
         assert key in d, key
     assert d["v_played"] is not None
     assert d["v_best"] is not None
-    assert float(d["cost"]) >= 0
+    if review.passes_turn(d.get("played")):
+        assert "optimism" in d
+        assert "cost" not in d
+    else:
+        assert "cost" in d
+        assert "delta" in d
+        assert float(d["cost"]) >= 0
 
 
 def test_seed_for_is_deterministic() -> None:
@@ -129,8 +134,13 @@ def test_review_synthetic_game(db, root: Path, tmp_path: Path) -> None:
     for d in payload["decisions"]:
         _assert_decision_shape(d)
         assert d["acting"] == "b"
-        assert float(d["cost"]) >= 0
+        if "cost" in d:
+            assert float(d["cost"]) >= 0
+        else:
+            assert "optimism" in d
     assert payload["clamped_negative"] >= 0
+    run = json.loads((out / "RUN.json").read_text())
+    assert run["human_side_assumed"] is True
 
     rc = review.main(
         [
@@ -218,6 +228,8 @@ def test_worst_legal_has_positive_cost(db, root: Path) -> None:
                     worst = act
             if worst is None or worst == ref["action"]:
                 continue
+            if review.passes_turn(worst):
+                continue
             if float(ref["value"]) - worst_v <= 0:
                 continue
             new_actions = actions[:ply] + [worst]
@@ -296,3 +308,125 @@ def test_rerun_skips_unless_force(db, root: Path, tmp_path: Path) -> None:
     assert review.main([*argv, "--force"]) == 0
     assert dest.stat().st_mtime_ns >= stamp
     assert json.loads(dest.read_text())["decisions"]
+
+
+def test_turn_passing_emits_optimism_and_no_cost() -> None:
+    out = review.decorate_decision(
+        {
+            "ply": 3,
+            "turn": 2,
+            "phase": "main",
+            "acting": "b",
+            "played": {"end_turn": {"player": "b"}},
+            "reference": {"play": {"card": "x", "player": "b", "hand_pos": 0}},
+            "v_best": 10.0,
+            "v_played": -27.2,
+        }
+    )
+    assert "cost" not in out
+    assert out["optimism"] == pytest.approx(37.2)
+
+
+def test_same_action_contributes_to_noise_floor() -> None:
+    same = review.decorate_decision(
+        {
+            "ply": 1,
+            "turn": 1,
+            "played": {"play": {"card": "x", "player": "b", "hand_pos": 0}},
+            "reference": {"play": {"card": "x", "player": "b", "hand_pos": 0}},
+            "v_best": 5.0,
+            "v_played": 3.0,
+        }
+    )
+    end = review.decorate_decision(
+        {
+            "ply": 2,
+            "turn": 1,
+            "played": {"end_turn": {"player": "b"}},
+            "reference": {"end_turn": {"player": "b"}},
+            "v_best": 40.0,
+            "v_played": 0.0,
+        }
+    )
+    other = review.decorate_decision(
+        {
+            "ply": 3,
+            "turn": 1,
+            "played": {"play": {"card": "y", "player": "b", "hand_pos": 1}},
+            "reference": {"play": {"card": "z", "player": "b", "hand_pos": 1}},
+            "v_best": 8.0,
+            "v_played": 1.0,
+        }
+    )
+    stats = review.review_stats(
+        [{"decisions": [same, end, other]}],
+        wv=80.0,
+        mean_ms=0.0,
+        clamped_total=0,
+    )
+    assert stats["noise_n"] == 1
+    assert stats["noise_mean"] == pytest.approx(2.0)
+    assert stats["analysed_end_turns"] == 1
+    assert "cost" not in end
+    md = review.build_review_md(
+        [{"game_id": "g", "decisions": [same, end, other], "ref": "h0:wv=80"}],
+        ref="h0:wv=80",
+        top=5,
+        names={},
+        name_source="ids",
+        clamped_total=0,
+        mean_ms=0.0,
+    )
+    assert "mean end-of-turn optimism" in md
+    assert "noise floor" in md
+    for ln in md.splitlines():
+        if ln[:2].rstrip(".").isdigit() or (len(ln) > 2 and ln[0].isdigit() and ln[1] == "."):
+            assert "played end-turn" not in ln
+            if "cost=" in ln:
+                assert "end-turn" not in ln
+
+
+def test_human_side_b_scores_seat_a_as_bot(db, root: Path) -> None:
+    deck_a, deck_b = _decks(root)
+    game, actions = _play_first_legal(db, deck_a, deck_b, seed=5, plies=18)
+    log = _capture(
+        "5-side-b", 5, deck_a, deck_b, actions, winner=game.winner, humanSide="b"
+    )
+    bot = review.analyse_game(db, log, ref=TINY_REF, side="bot", threads=1, names={})
+    assert bot["decisions"]
+    assert {d["acting"] for d in bot["decisions"]} == {"a"}
+
+
+def test_missing_human_side_warns_and_sets_assumed(
+    db, root: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    deck_a, deck_b = _decks(root)
+    game, actions = _play_first_legal(db, deck_a, deck_b, seed=4, plies=14)
+    gid = "4-assume"
+    log = _capture(gid, 4, deck_a, deck_b, actions, winner=game.winner)
+    games_dir = tmp_path / "games"
+    games_dir.mkdir()
+    (games_dir / f"{gid}.json").write_text(json.dumps(log) + "\n")
+    out = tmp_path / "out"
+    rc = review.main(
+        [
+            "--games",
+            str(games_dir),
+            "--ref",
+            TINY_REF,
+            "--tag",
+            "assume",
+            "--out",
+            str(out),
+            "--threads",
+            "1",
+            "--cards",
+            str(root / "cards"),
+        ]
+    )
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert review.HUMAN_SIDE_WARN in captured.out
+    run = json.loads((out / "RUN.json").read_text())
+    assert run["human_side_assumed"] is True
+    assert run["review"]["human_side_assumed"] is True

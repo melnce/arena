@@ -392,6 +392,7 @@ def test_post_game_sets_final_and_winner(db, root: Path, tmp_path: Path) -> None
         assert rec["winner"] == "a"
         assert rec["finished"]
         assert rec["actions"] == actions
+        assert rec.get("humanSide") is None
         stale = _request(
             f"{url}/game",
             method="POST",
@@ -608,5 +609,86 @@ def test_games_dir_write_failure_still_replies(db, root: Path, tmp_path: Path) -
         )
         assert status == 200, payload
         assert payload["action"]
+    finally:
+        _stop_server(httpd, thread)
+
+
+def test_game_persists_human_side(db, root: Path, tmp_path: Path) -> None:
+    games = tmp_path / "games"
+    httpd, thread, url = _start_server(db, root, ["--games-dir", str(games)])
+    try:
+        game, actions, deck_a, deck_b = _play_plies(db, root, plies=3)
+        gid = serve.make_game_id(1, deck_a, deck_b, "a")
+        status, payload, _ = _request(
+            f"{url}/game",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": actions,
+                "winner": "b",
+                "humanSide": "b",
+            },
+        )
+        assert status == 200, payload
+        rec = json.loads((games / f"{gid}.json").read_text())
+        assert rec["humanSide"] == "b"
+        assert rec["winner"] == "b"
+    finally:
+        _stop_server(httpd, thread)
+
+
+def test_bot_records_root_value_on_next_capture(db, root: Path, tmp_path: Path) -> None:
+    games = tmp_path / "games"
+    httpd, thread, url = _start_server(db, root, ["--games-dir", str(games)])
+    try:
+        game, actions, deck_a, deck_b = _play_plies(db, root, plies=2)
+        gid = serve.make_game_id(1, deck_a, deck_b, "a")
+        status, payload, _ = _request(
+            f"{url}/bot",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": actions,
+                "policy": "h0",
+                "botSeed": "99",
+                "hash": str(game.hash()),
+                "humanSide": "a",
+            },
+        )
+        assert status == 200, payload
+        action = payload["action"]
+        assert action
+        if "value" in payload:
+            assert isinstance(payload["value"], (int, float))
+        first = json.loads((games / f"{gid}.json").read_text())
+        assert first["humanSide"] == "a"
+        game.apply(action)
+        longer = [*actions, action]
+        status, payload2, _ = _request(
+            f"{url}/bot",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": longer,
+                "policy": "h0",
+                "botSeed": "100",
+                "hash": str(game.hash()),
+                "humanSide": "a",
+            },
+        )
+        assert status == 200, payload2
+        rec = json.loads((games / f"{gid}.json").read_text())
+        stored = rec["actions"][-1]
+        if "value" in payload:
+            assert stored.get("bot_value") == payload["value"]
     finally:
         _stop_server(httpd, thread)
