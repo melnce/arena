@@ -210,15 +210,21 @@ fn check_table_does_work(n: usize) {
     // (root, candidate) pair a slice of `node_cap`, so trees are shallower:
     // more stores, fewer intra-decision revisits, and the table is
     // consulted on 81/200 midgame decisions at collect seed 1 — still
-    // hits, still lowers cap_hit_rate (0.1450 → 0.1400), just not on
-    // half the corpus. Pin: consulted on at least one third of midgame
-    // decisions. Headroom is 7 pp below the pinned corpus (81/200) and
-    // 5 pp below the worst of three collect seeds × {n=200, n=400}
-    // (38.75%–50.5%). 80/200 would be today's figure minus one and is
-    // not a pin. Every knob this measurement depends on is named
-    // (`alloc=fair,olethal=0,osteps=3`) so a later default flip cannot
-    // silently retarget this assertion. The net leaf is still checked
-    // only for cap_hit_rate (it was already 98/200 under root-major).
+    // hits, just not on half the corpus. Pin: consulted on at least
+    // one third of midgame decisions. Headroom is 7 pp below the pinned
+    // corpus (81/200) and 5 pp below the worst of three collect seeds ×
+    // {n=200, n=400} (38.75%–50.5%). 80/200 would be today's figure
+    // minus one and is not a pin. Every knob this measurement depends
+    // on is named (`alloc=fair,olethal=0,osteps=3`) so a later default
+    // flip cannot silently retarget this assertion.
+    //
+    // cap_hit_rate tt=1 < tt=0 is not a property. `table_hit_floor_seed_spread`
+    // on seeds {1, 17, 42} × {n=200, n=400} ties exactly on two of six
+    // corpora (seed 42 / n=200: 0.1150/0.1150; seed 42 / n=400:
+    // 0.1400/0.1400) and the smallest non-tie delta is 0.005. An
+    // inequality that is false on a third of the committed start seeds
+    // is a false alarm, not a pin. The hit_decisions floor already
+    // proves the table is consulted. Rates stay on the eprintln.
     check_table_pair(
         &db,
         &states,
@@ -265,18 +271,14 @@ fn check_table_pair(
          tt_hits={} tt_stores={}",
         on.stats.tt_hits, on.stats.tt_stores
     );
-    if n >= 200 {
-        if require_hit_floor {
-            assert!(
-                hit_decisions * 3 >= searched,
-                "tt_hits > 0 on {hit_decisions}/{searched} decisions (want ≥ 1/3)"
-            );
-        }
+    if n >= 200 && require_hit_floor {
         assert!(
-            on_rate < off_rate,
-            "cap_hit_rate tt=1 ({on_rate:.4}) should be < tt=0 ({off_rate:.4})"
+            hit_decisions * 3 >= searched,
+            "tt_hits > 0 on {hit_decisions}/{searched} decisions (want ≥ 1/3)"
         );
     }
+    // cap_hit_rate tt=1 < tt=0 deleted: exact tie on seed 42 at
+    // n=200 and n=400. See table_hit_floor_seed_spread.
 }
 
 #[test]
@@ -294,8 +296,9 @@ fn table_does_work_200_midgame() {
 /// Prints seeds 1/17/42 × {n=200, n=400} on the
 /// `h0:value=v0,alloc=fair,olethal=0,osteps=3` pair — the same named
 /// search as the pin it justifies. Print-only — does not retarget the
-/// floor or the cap_hit_rate inequality (seed 42 / n=200 ties at
-/// 0.1150). Slow; lives in the `slow` workflow via `--include-ignored`.
+/// floor. The cap_hit_rate inequality was deleted after this table
+/// showed exact ties on seed 42 (n=200 and n=400). Slow; lives in the
+/// `slow` workflow via `--include-ignored`.
 #[test]
 #[ignore]
 fn table_hit_floor_seed_spread() {
