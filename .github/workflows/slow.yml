@@ -7,7 +7,7 @@ on:
     - cron: "0 7 * * *"
   workflow_dispatch:
   push:
-    branches: [main, cursor/slow-failure-issue]
+    branches: [main]
 
 # Cancel stacked merge-to-main runs. workflow_dispatch / schedule keep
 # their own group so a manual rerun does not kill a nightly, and a
@@ -33,17 +33,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: TEMP proof — succeed without the seven binaries
-        run: echo "proof pass; skipping the seven binaries"
-
       - name: Rust toolchain
-        if: false
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
 
       - name: Cache cargo
-        if: false
         uses: actions/cache@v4
         with:
           path: |
@@ -55,31 +50,24 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: h0 transposition table (release, including ignored)
-        if: false
         run: cargo test --release --test h0_tt -- --include-ignored --nocapture
 
       - name: h0 alloc (release, including ignored)
-        if: false
         run: cargo test --release --test h0_alloc -- --include-ignored --nocapture
 
       - name: h0 olethal (release, including ignored)
-        if: false
         run: cargo test --release --test h0_olethal -- --include-ignored --nocapture
 
       - name: h0 opponent model (release, including ignored)
-        if: false
         run: cargo test --release --test h0_opp -- --include-ignored --nocapture
 
       - name: h0 wv (release, including ignored)
-        if: false
         run: cargo test --release --test h0_wv -- --include-ignored --nocapture
 
       - name: value net (release, including ignored)
-        if: false
         run: cargo test --release --test net -- --include-ignored --nocapture
 
       - name: self-play recorder (release, including ignored)
-        if: false
         run: cargo test --release --test record -- --include-ignored --nocapture
 
       # One open issue <=> the slow suite is currently red. Keyed on the
