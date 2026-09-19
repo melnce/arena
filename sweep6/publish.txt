@@ -1,0 +1,8 @@
+From https://github.com/melnce/arena
+   83a3b7e..dcb9802  cursor/ci-single-trigger -> origin/cursor/ci-single-trigger
+ * [new branch]      cursor/h0-olethal-default -> origin/cursor/h0-olethal-default
+ * [new branch]      cursor/h0-pess          -> origin/cursor/h0-pess
+ * [new branch]      cursor/review-soundness -> origin/cursor/review-soundness
+   0bce2b6..bbcd108  cursor/slow-failure-issue -> origin/cursor/slow-failure-issue
+   c913b40..1fcb7b2  main                    -> origin/main
+Already up to date.
