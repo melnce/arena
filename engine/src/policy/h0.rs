@@ -3,10 +3,14 @@
 //! arithmetic. [`H0::fast`] keeps `value=v0` and `tt=0`.
 //!
 //! Search starts from `K = max(1, determinizations)` roots produced by
-//! `determinize(state, me, seed)` (which reseeds the game RNG). Own-turn
-//! search, lethal, and the opponent reply all run on those roots — the
-//! true hidden hand and live game RNG are never consulted. A lethal is
-//! taken only when every root agrees. The node cap is global.
+//! `determinize_with(state, me, seed, info)` (which reseeds the game RNG).
+//! Under [`Info::All`] every root would be identical, so K is 1 regardless
+//! of `determinizations`. Own-turn search, lethal, and the opponent reply
+//! all run on those roots — the true hidden hand and live game RNG are
+//! never consulted (except under `info=all`, where the opponent hand *is*
+//! the true hand). A lethal is taken only when every root agrees. The
+//! node cap is global. `encode` still masks the opponent's hand at the
+//! leaf; `info` is a search-time knob only.
 
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
@@ -15,7 +19,9 @@ use crate::action::{acting_player, Action};
 use crate::apply::{apply, legal_actions};
 use crate::card::{CardId, CardKind};
 use crate::db::CardDb;
-use crate::determinize::determinize;
+use crate::determinize::determinize_with;
+
+pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab};
 use crate::ids::{AttackTarget, PlayerId};
 use crate::limits::MAX_TURNS;
@@ -213,6 +219,9 @@ pub struct H0 {
     /// How the node cap is split across `(root, candidate)` pairs.
     /// Default [`Alloc::Fair`] is today's per-pair budget share (`c42163b`).
     pub alloc: Alloc,
+    /// What the search is allowed to know. Default [`Info::Draws`] is
+    /// today's path: own draw order is exact, opponent is resampled.
+    pub info: Info,
     pub value: ValueVersion,
     pub weights: Weights,
     pub odepth: u32,
@@ -255,6 +264,7 @@ impl Default for H0 {
             determinizations: 4,
             node_cap: 2000,
             alloc: Alloc::Fair,
+            info: Info::Draws,
             value: ValueVersion::Net,
             weights: Weights::default(),
             odepth: 0,
@@ -290,6 +300,7 @@ impl H0 {
             oevo: false,
             osteps: 3,
             pess: 0.0,
+            info: Info::Draws,
             ..Self::default()
         }
     }
@@ -418,10 +429,12 @@ impl Policy for H0 {
         }
         let subset: Vec<Action> = cand.iter().map(|&i| legal[i].clone()).collect();
         let mut nodes = 0u32;
-        let k = self.k();
+        // `info=all` makes every determinization identical; do not spend
+        // `k` copies of the same tree.
+        let k = if self.info == Info::All { 1 } else { self.k() };
         let mut roots = Vec::with_capacity(k as usize);
         for _ in 0..k {
-            roots.push(determinize(state, me, rng.next_u64()));
+            roots.push(determinize_with(state, me, rng.next_u64(), self.info));
         }
         self.stats.roots += u64::from(k);
         let root_vocab = self.root_vocab(state);
