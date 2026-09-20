@@ -237,6 +237,16 @@ impl PyGame {
     }
 }
 
+impl PyGame {
+    pub(crate) fn engine_db(&self) -> &arena_engine::CardDb {
+        &self.db
+    }
+
+    pub(crate) fn engine_state(&self) -> &arena_engine::State {
+        &self.state
+    }
+}
+
 fn picks_from_py(obj: &Bound<'_, PyAny>) -> PyResult<Vec<Pick>> {
     let v = py_to_value(obj)?;
     Ok(arena_engine::picks_from_trace_rng(&v))
