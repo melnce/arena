@@ -7,29 +7,15 @@ use std::collections::BTreeMap;
 
 use arena_engine::determinize::{determinize, determinize_with, Info};
 use arena_engine::{
-    apply, legal_actions, new_game, play_game, policy_rng, search_key, AnyPolicy, CardDb, CardId,
-    First, GameConfig, Phase, PlayerId, Policy, H0, MAX_ACTIONS, MAX_TURNS,
+    apply, legal_actions, new_game, play_game, policy_rng, search_key, AnyPolicy, CardDb, First,
+    GameConfig, Phase, PlayerId, Policy, H0, MAX_ACTIONS, MAX_TURNS,
 };
 
 mod common;
 use common::*;
 
 fn collect_states(db: &CardDb, n: usize, midgame_only: bool) -> Vec<arena_engine::State> {
-    let dir = repo_root().join("oracle/decks");
-    let mut decks: Vec<Vec<CardId>> = std::fs::read_dir(&dir)
-        .expect("oracle/decks")
-        .filter_map(|e| {
-            let p = e.ok()?.path();
-            (p.extension()? == "json").then_some(p)
-        })
-        .map(load_deck_file)
-        .filter(|d| deck_ready(db, d) && d.len() == 40)
-        .collect();
-    decks.sort_by_key(|d| d.iter().map(|c| c.0).collect::<Vec<_>>());
-    assert!(
-        !decks.is_empty(),
-        "need at least one oracle deck of 40 cards"
-    );
+    let decks = load_pinned_corpus_decks_sorted(db);
     let mut out = Vec::with_capacity(n);
     let mut seed = 1u64;
     while out.len() < n {
