@@ -13,6 +13,7 @@ pub mod error;
 pub mod event;
 pub mod ids;
 pub mod info;
+pub mod lethal;
 pub mod limits;
 pub mod oracle;
 pub mod play;
@@ -36,6 +37,7 @@ pub use ids::{AttackTarget, First, PlayerId, Slot};
 pub use info::{
     board_info, hand_info, player_info, BoardCardInfo, GateInfo, HandCardInfo, PlayerInfo,
 };
+pub use lethal::{forced_lethal, lethal_action_kind, LethalActionKind, LethalVerdict};
 pub use limits::{MAX_ACTIONS, MAX_TURNS};
 pub use play::{play_game, End, Outcome};
 pub use policy::{

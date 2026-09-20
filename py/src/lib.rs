@@ -4,10 +4,12 @@ use pyo3::prelude::*;
 
 mod convert;
 mod game;
+mod lethal;
 mod matchup;
 mod play;
 
 use game::{load_cards, play_random, PyCardDb, PyGame};
+use lethal::py_forced_lethal;
 use matchup::py_matchup;
 
 pyo3::create_exception!(arena, Illegal, pyo3::exceptions::PyException);
@@ -24,5 +26,6 @@ fn arena(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(load_cards, m)?)?;
     m.add_function(wrap_pyfunction!(play_random, m)?)?;
     m.add_function(wrap_pyfunction!(py_matchup, m)?)?;
+    m.add_function(wrap_pyfunction!(py_forced_lethal, m)?)?;
     Ok(())
 }
