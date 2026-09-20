@@ -159,6 +159,102 @@ pub fn skip_to_player_turn(db: &CardDb, state: &mut State, who: PlayerId, turns:
     }
 }
 
+/// Named, fixed state-corpus stems. Exactly `POOLS.json`'s `real` (7) plus
+/// `synthetic` (9) — the sixteen decks that existed before PR #64, which
+/// is the set every pinned number in this suite was calibrated on.
+///
+/// Why this is pinned: `collect_states` used to `std::fs::read_dir` every
+/// `oracle/decks/*.json`. PR #64 added 17 meta decks, so the 200 mid-game
+/// states were drawn from a 33-deck pool instead of 16. That moved
+/// `max_legal_pairs` 80 → 76 and broke a guard in
+/// `h0_alloc::fair_mechanism_200_midgame` (`MIN_SHARE(24) × max_pairs > 2000`
+/// flipped from true to false; the assertion then demanded
+/// `fair pairs_skipped == 0` where it was 5). A test that never mentioned
+/// decks was retargeted by a data-file addition. Do not "simplify" this
+/// back to a directory glob. Adding, renaming, or removing a deck file
+/// must not change which decks these tests use.
+pub const PINNED_CORPUS_STEMS: &[&str] = &[
+    "abyss-p8rfn",
+    "abyss-pool",
+    "afnm-minatodao",
+    "basic-forest",
+    "basic-portal",
+    "basic-rune",
+    "dragon-pool",
+    "elf-neanisu2",
+    "forest-pool",
+    "portal-pool",
+    "ramp-37772",
+    "ramp-claywies",
+    "royal-nattui",
+    "rune-mach15",
+    "rune-pool",
+    "sword-pool",
+];
+
+/// Paths of the pinned corpus. Independent of directory contents: extra
+/// `*.json` files are ignored. A missing named stem fails loudly so a
+/// deletion is caught as a deletion rather than silently shrinking the
+/// corpus.
+pub fn pinned_corpus_paths() -> Vec<PathBuf> {
+    let dir = repo_root().join("oracle/decks");
+    let mut missing = Vec::new();
+    let mut paths = Vec::with_capacity(PINNED_CORPUS_STEMS.len());
+    for stem in PINNED_CORPUS_STEMS {
+        let path = dir.join(format!("{stem}.json"));
+        if path.is_file() {
+            paths.push(path);
+        } else {
+            missing.push(*stem);
+        }
+    }
+    assert!(
+        missing.is_empty(),
+        "pinned corpus stem(s) missing from oracle/decks/: {missing:?} \
+         — a deletion must fail as a deletion, not silently shrink the corpus"
+    );
+    paths.sort();
+    paths
+}
+
+/// Load the pinned sixteen decks. Each stem must exist and be a ready
+/// 40-card deck; a hole fails as a hole, not as a smaller pool.
+pub fn load_pinned_corpus_decks(db: &CardDb) -> Vec<Vec<CardId>> {
+    let paths = pinned_corpus_paths();
+    let mut decks = Vec::with_capacity(paths.len());
+    let mut bad = Vec::new();
+    for path in &paths {
+        let d = load_deck_file(path);
+        if deck_ready(db, &d) && d.len() == 40 {
+            decks.push(d);
+        } else {
+            bad.push(
+                path.file_stem()
+                    .map(|s| s.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| path.display().to_string()),
+            );
+        }
+    }
+    assert!(
+        bad.is_empty(),
+        "pinned corpus stem(s) not a ready 40-card deck: {bad:?}"
+    );
+    assert_eq!(
+        decks.len(),
+        PINNED_CORPUS_STEMS.len(),
+        "pinned corpus must stay the sixteen pre-#64 decks"
+    );
+    decks
+}
+
+/// Same decks as [`load_pinned_corpus_decks`], ordered by card-id sequence
+/// — the sort `collect_states` applied after the old directory glob.
+pub fn load_pinned_corpus_decks_sorted(db: &CardDb) -> Vec<Vec<CardId>> {
+    let mut decks = load_pinned_corpus_decks(db);
+    decks.sort_by_key(|d| d.iter().map(|c| c.0).collect::<Vec<_>>());
+    decks
+}
+
 pub fn load_deck_file(path: impl AsRef<Path>) -> Vec<CardId> {
     let p = path.as_ref();
     let p = if p.is_absolute() {

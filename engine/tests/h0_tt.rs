@@ -2,8 +2,8 @@
 //! agreement, hits at the real cap, determinism.
 
 use arena_engine::{
-    apply, legal_actions, new_game, play_game, policy_rng, Action, AnyPolicy, CardDb, CardId,
-    First, GameConfig, Phase, PlayerId, Policy, H0, MAX_ACTIONS, MAX_TURNS,
+    apply, legal_actions, new_game, play_game, policy_rng, Action, AnyPolicy, CardDb, First,
+    GameConfig, Phase, PlayerId, Policy, H0, MAX_ACTIONS, MAX_TURNS,
 };
 
 mod common;
@@ -19,21 +19,7 @@ fn collect_states_from(
     midgame_only: bool,
     start_seed: u64,
 ) -> Vec<arena_engine::State> {
-    let dir = repo_root().join("oracle/decks");
-    let mut decks: Vec<Vec<CardId>> = std::fs::read_dir(&dir)
-        .expect("oracle/decks")
-        .filter_map(|e| {
-            let p = e.ok()?.path();
-            (p.extension()? == "json").then_some(p)
-        })
-        .map(load_deck_file)
-        .filter(|d| deck_ready(db, d) && d.len() == 40)
-        .collect();
-    decks.sort_by_key(|d| d.iter().map(|c| c.0).collect::<Vec<_>>());
-    assert!(
-        !decks.is_empty(),
-        "need at least one oracle deck of 40 cards"
-    );
+    let decks = load_pinned_corpus_decks_sorted(db);
     let mut out = Vec::with_capacity(n);
     let mut seed = start_seed;
     while out.len() < n {

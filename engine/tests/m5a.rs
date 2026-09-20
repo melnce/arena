@@ -21,14 +21,7 @@ fn counts(ids: &[CardId]) -> std::collections::BTreeMap<CardId, u32> {
 }
 
 fn oracle_decks() -> Vec<PathBuf> {
-    let dir = repo_root().join("oracle/decks");
-    let mut v: Vec<PathBuf> = std::fs::read_dir(&dir)
-        .expect("oracle/decks")
-        .filter_map(|e| {
-            let p = e.ok()?.path();
-            (p.extension()? == "json").then_some(p)
-        })
-        .collect();
+    let mut v = pinned_corpus_paths();
     v.sort();
     v
 }
