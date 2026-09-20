@@ -1,0 +1,101 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\sweep.py",
+    "--tag",
+    "sweep9",
+    "--seed",
+    "1",
+    "--pool",
+    "meta",
+    "--target-games",
+    "4096",
+    "--baseline",
+    "h0",
+    "--candidates",
+    "h0:oevo=0,info=draws",
+    "h0:oevo=0",
+    "h0:info=draws",
+    "h0:odepth=1",
+    "--publish"
+  ],
+  "git": "81c8d37f2a58308d14ad1ccf11460312b0da0960",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "screen": {
+      "start": "2026-09-20T00:42:15.108842+00:00",
+      "end": "2026-09-20T01:28:26.934177+00:00"
+    },
+    "final": {
+      "start": "2026-09-20T01:28:26.951818+00:00",
+      "end": "2026-09-20T03:12:10.156501+00:00"
+    },
+    "summary": {
+      "start": "2026-09-20T03:12:10.177230+00:00",
+      "end": "2026-09-20T03:12:10.194744+00:00"
+    },
+    "publish": {
+      "start": "2026-09-20T03:12:10.258240+00:00"
+    }
+  },
+  "sizing": {
+    "pool": "meta",
+    "decks": [
+      "meta-abyss-aggro",
+      "meta-abyss-midrange",
+      "meta-dragon-aggro",
+      "meta-dragon-ramp",
+      "meta-forest-combo",
+      "meta-haven-amulet",
+      "meta-haven-evo",
+      "meta-haven-kukishiro",
+      "meta-portal-af",
+      "meta-portal-cutthroat",
+      "meta-portal-evo",
+      "meta-rune-crystal",
+      "meta-rune-spell",
+      "meta-rune-test-subject",
+      "meta-sword-loot",
+      "meta-sword-rally"
+    ],
+    "n_decks": 16,
+    "pairs": 256,
+    "games_per_pair": {
+      "screen": 4,
+      "final": 16,
+      "reverse": 8,
+      "tp": 1
+    },
+    "totals": {
+      "screen": 1024,
+      "final": 4096,
+      "reverse": 2048,
+      "tp": 256
+    },
+    "target_games": 4096,
+    "block": "pool: meta\ndecks: 16 (meta-abyss-aggro, meta-abyss-midrange, meta-dragon-aggro, meta-dragon-ramp, meta-forest-combo, meta-haven-amulet, meta-haven-evo, meta-haven-kukishiro, meta-portal-af, meta-portal-cutthroat, meta-portal-evo, meta-rune-crystal, meta-rune-spell, meta-rune-test-subject, meta-sword-loot, meta-sword-rally)\npairs: 256 (16 x 16, mirrors included)\nscreen    4 games/pair x 256 =  1024\nfinal    16 games/pair x 256 =  4096\nreverse   8 games/pair x 256 =  2048\ntp        1 games/pair x 256 =   256"
+  },
+  "finalist_decisions": [
+    {
+      "index": 1,
+      "spec": "h0:oevo=0,info=draws",
+      "decision": "not in top 2"
+    },
+    {
+      "index": 2,
+      "spec": "h0:oevo=0",
+      "decision": "finalist"
+    },
+    {
+      "index": 3,
+      "spec": "h0:info=draws",
+      "decision": "finalist"
+    },
+    {
+      "index": 4,
+      "spec": "h0:odepth=1",
+      "decision": "skipped: interval high 0.37 < 0.50"
+    }
+  ]
+}

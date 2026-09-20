@@ -1,0 +1,6 @@
+From https://github.com/melnce/arena
+ * [new branch]      cursor/lethal-solver   -> origin/cursor/lethal-solver
+ * [new branch]      cursor/pin-test-corpus -> origin/cursor/pin-test-corpus
+ * [new branch]      cursor/toolchain-and-warm-workspace -> origin/cursor/toolchain-and-warm-workspace
+   81c8d37..af91ee0  main                   -> origin/main
+Already up to date.
