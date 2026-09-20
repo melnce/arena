@@ -110,6 +110,16 @@ impl Xoshiro256ss {
             }
         }
     }
+
+    /// Stable mix of the four words. Used as a transposition key, not as
+    /// a stream output.
+    pub fn fingerprint(&self) -> u64 {
+        let mut h = self.s[0];
+        h ^= self.s[1].rotate_left(17);
+        h ^= self.s[2].rotate_left(31);
+        h ^= self.s[3].rotate_left(47);
+        h
+    }
 }
 
 /// Live generator or a scripted replay of recorded outcomes.
@@ -143,6 +153,21 @@ impl GameRng {
 
     pub fn is_scripted(&self) -> bool {
         matches!(self, GameRng::Scripted { .. })
+    }
+
+    /// Identity of the live/scripted generator, excluding recorded pick
+    /// payloads. Two states with the same board and this fingerprint will
+    /// draw the same next roll.
+    pub fn fingerprint(&self) -> u64 {
+        match self {
+            GameRng::Live(g) => g.fingerprint(),
+            GameRng::Scripted {
+                index, fallback, ..
+            } => fallback
+                .fingerprint()
+                .wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                .wrapping_add(*index as u64),
+        }
     }
 
     pub fn peek_what(&self) -> Option<PickWhat> {
