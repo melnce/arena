@@ -427,7 +427,7 @@ def test_legacy_alternate_schedule_unbalanced(root: Path) -> None:
     unbalanced = sum(
         1 for firsts in pair_first.values() if firsts.count("a") != firsts.count("b")
     )
-    assert unbalanced > 0
+    assert unbalanced == 256
 
 
 def test_first_modes_a_b_coin_unchanged(root: Path) -> None:
@@ -438,14 +438,40 @@ def test_first_modes_a_b_coin_unchanged(root: Path) -> None:
         assert old == new
 
 
-def test_unbalanced_stderr_line(root: Path, capsys) -> None:
+def test_unbalanced_stderr_line(root: Path, tmp_path: Path, capsys) -> None:
     names = _meta_names(root)
     assert audit.count_unbalanced_pairs(names, 300, "alternate") == 212
     assert audit.count_unbalanced_pairs(names, 512, "alternate") == 0
-    audit.main(["--pool", "meta", "--games", "300", "--no-decisions", "--budget", "1"])
+    audit.main(
+        [
+            "--decks",
+            "basic-forest",
+            "basic-rune",
+            "--games",
+            "6",
+            "--no-decisions",
+            "--budget",
+            "1",
+            "--out",
+            str(tmp_path / "unbal.json"),
+        ]
+    )
     err = capsys.readouterr().err
-    assert "212 ordered pair(s) unbalanced" in err
-    audit.main(["--pool", "meta", "--games", "512", "--no-decisions", "--budget", "1"])
+    assert "2 ordered pair(s) unbalanced" in err
+    audit.main(
+        [
+            "--decks",
+            "basic-forest",
+            "basic-rune",
+            "--games",
+            "8",
+            "--no-decisions",
+            "--budget",
+            "1",
+            "--out",
+            str(tmp_path / "bal.json"),
+        ]
+    )
     err = capsys.readouterr().err
     assert "unbalanced" not in err
 
@@ -518,23 +544,14 @@ def test_resolve_first_coin_matches_fixed_modes(db, root: Path) -> None:
     deck_a, deck_b = _decks(root)
     for mode in ("a", "b"):
         rec = audit.play_one(db, 5, deck_a, deck_b, mode, "h0-fast", "h0-fast")
-        assert audit.resolve_first(rec) == mode
+        assert audit.resolve_first(dict(rec, first="coin")) == mode
     coin_rec = audit.play_one(db, 6, deck_a, deck_b, "coin", "h0-fast", "h0-fast")
     assert audit.resolve_first(coin_rec) in ("a", "b")
 
 
 def test_line_len_on_lethal_verdict(db, root: Path) -> None:
-    import arena
-
     deck_a, deck_b = _decks(root)
-    game = arena.Game(db, 1, deck_a, deck_b, "a")
-    for _ in range(4):
-        if game.phase != "mulligan":
-            break
-        game.apply(game.bot_action("first-legal", 1))
-    verdict = arena.forced_lethal(game, 2_000)
-    if verdict["verdict"] != "lethal":
-        pytest.skip("fixture position did not return lethal at budget 2000")
+    # Seed 1: h0-fast forest/rune reaches a kill with lethal verdicts at budget 2000.
     rec = audit.play_one(db, 1, deck_a, deck_b, "a", "h0-fast", "h0-fast")
     row = audit.audit_game(db, rec, budget=2_000, seats=("a", "b"))
     lethal = [
