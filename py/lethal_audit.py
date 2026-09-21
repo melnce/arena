@@ -22,7 +22,16 @@ Per-decision records are persisted (``--decisions``, default on) so a later
 question is a re-read, not a re-run. Each record carries the snapshot-derived
 board at the moment the solver was asked: both players' ``leader_defense``,
 follower count, and board attack, plus the defense and board-attack deficits
-(opponent minus auditee). The motivating result is the per-deck audit's
+(opponent minus auditee).
+
+``--first alternate`` alternates the first player within each ordered pair
+(same semantics as ``matchup.rs``). Runs before this change used the global
+game index instead, which biased first-player assignment on even-sized pools.
+Those old results are reproduced exactly by running with ``--first a`` on
+games with even ``n`` and ``--first b`` on games with odd ``n``, using the
+same ``--seed`` and ``--games``.
+
+The motivating result is the per-deck audit's
 ``handed_lethal`` vs win-rate correlation of r = −0.748 across the 16 meta
 decks — the bottom decks hand over lethal 1.72× as often as the top ones.
 That number is confounded by construction: handing over lethal is also what
@@ -531,6 +540,78 @@ def first_for(mode: str, game_index: int) -> str:
     return mode
 
 
+def schedule(
+    names: list[str], games: int, first_mode: str
+) -> list[tuple[str, str, str]]:
+    """One ``(deck_a, deck_b, first)`` per game index."""
+    pairs = [(da, dbk) for da in names for dbk in names]
+    if not pairs:
+        return []
+    out: list[tuple[str, str, str]] = []
+    n_pairs = len(pairs)
+    for n in range(max(1, games)):
+        da, dbk = pairs[n % n_pairs]
+        if first_mode == "alternate":
+            g = n // n_pairs
+            first = "a" if g % 2 == 0 else "b"
+        else:
+            first = first_for(first_mode, n)
+        out.append((da, dbk, first))
+    return out
+
+
+def count_unbalanced_pairs(names: list[str], games: int, first_mode: str) -> int:
+    if first_mode != "alternate":
+        return 0
+    pairs = [(da, dbk) for da in names for dbk in names]
+    if not pairs:
+        return 0
+    if games % (2 * len(pairs)) == 0:
+        return 0
+    a_first: dict[tuple[str, str], int] = defaultdict(int)
+    b_first: dict[tuple[str, str], int] = defaultdict(int)
+    for da, dbk, first in schedule(names, games, first_mode):
+        key = (da, dbk)
+        if first == "a":
+            a_first[key] += 1
+        else:
+            b_first[key] += 1
+    return sum(1 for key in pairs if a_first[key] != b_first[key])
+
+
+def resolve_first(log: dict[str, Any]) -> str:
+    raw = str(log.get("first") or "coin")
+    if raw in ("a", "b"):
+        return raw
+    for step in log.get("actions") or []:
+        if not isinstance(step, dict) or "reseed" in step or is_mulligan(step):
+            continue
+        who = action_player(step)
+        if who in ("a", "b"):
+            return who
+    return raw
+
+
+def first_balanced_per_pair(games: list[dict[str, Any]]) -> bool:
+    a_first: dict[tuple[str, str], int] = defaultdict(int)
+    b_first: dict[tuple[str, str], int] = defaultdict(int)
+    for g in games:
+        da = g.get("deck_a") or g.get("deck_a_name")
+        dbk = g.get("deck_b") or g.get("deck_b_name")
+        if not isinstance(da, str) or not isinstance(dbk, str):
+            continue
+        key = (da, dbk)
+        first = g.get("first")
+        if first == "a":
+            a_first[key] += 1
+        elif first == "b":
+            b_first[key] += 1
+    keys = set(a_first) | set(b_first)
+    if not keys:
+        return True
+    return all(a_first[k] == b_first[k] for k in keys)
+
+
 def deck_label(log: dict[str, Any], seat: str, fallback: str) -> str:
     name = log.get("deck_a_name") if seat == "a" else log.get("deck_b_name")
     if isinstance(name, str) and name:
@@ -597,6 +678,12 @@ def audit_game(
                 "hit": hit,
                 "ms": dt,
             }
+            if str(verdict.get("verdict")) == "lethal":
+                line = verdict.get("line")
+                rec["line"] = line
+                rec["line_len"] = len(line) if isinstance(line, list) else None
+            else:
+                rec["line_len"] = None
             rec.update(board_at_decision(snap, acting))
             decisions.append(rec)
         apply_step(game, step)
@@ -621,6 +708,12 @@ def audit_game(
                 "hit": hit,
                 "ms": dt,
             }
+            if str(verdict.get("verdict")) == "lethal":
+                line = verdict.get("line")
+                rec["line"] = line
+                rec["line_len"] = len(line) if isinstance(line, list) else None
+            else:
+                rec["line_len"] = None
             rec.update(board_at_decision(snap, acting))
             decisions.append(rec)
 
@@ -723,11 +816,15 @@ def main(argv: list[str] | None = None) -> int:
         names = list(decks.keys())
         if not names:
             raise SystemExit("no decks selected")
+        unbalanced = count_unbalanced_pairs(names, args.games, args.first)
+        if unbalanced:
+            print(
+                f"lethal_audit: {unbalanced} ordered pair(s) unbalanced for "
+                f"--first alternate with --games {args.games}",
+                file=sys.stderr,
+            )
         logs = []
-        pairs = [(da, dbk) for da in names for dbk in names]
-        for n in range(max(1, args.games)):
-            da, dbk = pairs[n % len(pairs)]
-            first = first_for(args.first, n)
+        for n, (da, dbk, first) in enumerate(schedule(names, args.games, args.first)):
             rec = play_one(
                 db,
                 args.seed + n,
@@ -753,6 +850,10 @@ def main(argv: list[str] | None = None) -> int:
         row["bot_deck"] = rec.get("bot_deck") or "unknown"
         row["deck_a_name"] = rec.get("deck_a_name")
         row["deck_b_name"] = rec.get("deck_b_name")
+        row["seed"] = rec.get("seed")
+        row["first"] = resolve_first(rec)
+        row["deck_a"] = rec.get("deck_a_name")
+        row["deck_b"] = rec.get("deck_b_name")
         audited.append(row)
 
     summary = summarize(
@@ -763,6 +864,10 @@ def main(argv: list[str] | None = None) -> int:
         policy_b=policy_b,
         bot_seat=args.bot_seat,
     )
+    summary["seed"] = args.seed
+    summary["first"] = args.first
+    summary["games"] = len(audited)
+    summary["first_balanced_per_pair"] = first_balanced_per_pair(audited)
     if args.by_deficit:
         summary["by_deficit"] = by_deficit_report(audited)
     records = []
@@ -771,6 +876,10 @@ def main(argv: list[str] | None = None) -> int:
             "game_id": g.get("game_id"),
             "bot_deck": g.get("bot_deck"),
             "winner": g.get("winner"),
+            "seed": g.get("seed"),
+            "first": g.get("first"),
+            "deck_a": g.get("deck_a"),
+            "deck_b": g.get("deck_b"),
             "missed_lethal": rate_block(g["missed"]),
             "handed_lethal": rate_block(g["handed"]),
         }
