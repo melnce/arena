@@ -17,6 +17,19 @@ make visible.
 RNG-dependent kills (a line that consumed ``state.rng``) are counted in
 the headline and also broken out: they are real misses, but a weaker
 indictment than a deterministic line.
+
+Per-decision records are persisted (``--decisions``, default on) so a later
+question is a re-read, not a re-run. Each record carries the snapshot-derived
+board at the moment the solver was asked: both players' ``leader_defense``,
+follower count, and board attack, plus the defense and board-attack deficits
+(opponent minus auditee). The motivating result is the per-deck audit's
+``handed_lethal`` vs win-rate correlation of r = −0.748 across the 16 meta
+decks — the bottom decks hand over lethal 1.72× as often as the top ones.
+That number is confounded by construction: handing over lethal is also what
+losing looks like. Stratifying ``handed_lethal`` by the defense deficit at
+EndTurn (``--by-deficit``) is the discriminating test. Equal rates at equal
+deficit means the correlation was the confound (planning); a leftover gap
+at equal deficit is tactics.
 """
 
 from __future__ import annotations
@@ -50,6 +63,19 @@ DEFAULT_POLICY = "h0-fast"
 ACTION_META_KEYS = frozenset({"value", "bot_value"})
 MULLIGAN_KEY = "mulligan"
 END_TURN_KEY = "end_turn"
+
+# Defense-deficit buckets for ``--by-deficit``. Chosen to split the
+# confound-relevant axis: 0 is even life; ±1..4 is a small swing (a few
+# points of chip / one typical follower); ±5+ is a large life gap — the
+# region where "behind on life" predicts handed_lethal regardless of
+# tactics. The cuts partition every integer.
+DEFICIT_BUCKETS = ("<= -5", "-4..-1", "0", "1..4", ">= 5")
+DEFICIT_BUCKET_RULE = (
+    "defense_deficit = opp.leader_defense - auditee.leader_defense at EndTurn. "
+    "0 is even life; ±1..4 is a small swing; ±5+ is a large life gap "
+    "(the confound region). Cuts taken from the brief's suggested partition "
+    "because they split even / small / large without fitting the data."
+)
 
 
 def action_player(step: dict[str, Any]) -> str | None:
@@ -101,6 +127,156 @@ def is_mulligan(step: dict[str, Any]) -> bool:
 
 def is_end_turn(step: dict[str, Any]) -> bool:
     return END_TURN_KEY in step
+
+
+def field_cards(player: dict[str, Any]) -> list[dict[str, Any]]:
+    field = player.get("field") or []
+    return [c for c in field if isinstance(c, dict)]
+
+
+def side_state(player: dict[str, Any]) -> dict[str, int]:
+    """Snapshot-derived board for one seat.
+
+    CanonicalState names leader life ``leader_defense`` — there is no player
+    ``defense`` key. Field slots have no ``kind``; follower count is occupied
+    slots with ``max_defense`` > 0, the snapshot-visible HP that amulets
+    (Earth Sigil is 0/0) do not carry. Board attack sums ``attack`` on every
+    occupied slot.
+    """
+    cards = field_cards(player)
+    return {
+        "leader_defense": int(player.get("leader_defense") or 0),
+        "followers": sum(1 for c in cards if int(c.get("max_defense") or 0) > 0),
+        "board_attack": sum(int(c.get("attack") or 0) for c in cards),
+    }
+
+
+def board_at_decision(snap: dict[str, Any], auditee: str) -> dict[str, Any]:
+    opp = "b" if auditee == "a" else "a"
+    players = snap.get("players") or {}
+    mine = side_state(players.get(auditee) or {})
+    theirs = side_state(players.get(opp) or {})
+    return {
+        "auditee": auditee,
+        "auditee_state": mine,
+        "opp_state": theirs,
+        "defense_deficit": theirs["leader_defense"] - mine["leader_defense"],
+        "board_attack_deficit": theirs["board_attack"] - mine["board_attack"],
+    }
+
+
+def deficit_bucket(defense_deficit: int) -> str:
+    if defense_deficit <= -5:
+        return "<= -5"
+    if defense_deficit <= -1:
+        return "-4..-1"
+    if defense_deficit == 0:
+        return "0"
+    if defense_deficit <= 4:
+        return "1..4"
+    return ">= 5"
+
+
+def deck_name_of(game: dict[str, Any], seat: str) -> str:
+    key = "deck_a_name" if seat == "a" else "deck_b_name"
+    name = game.get(key)
+    if isinstance(name, str) and name:
+        return name
+    fallback = game.get("bot_deck")
+    if isinstance(fallback, str) and fallback and "/" not in fallback:
+        return fallback
+    return "unknown"
+
+
+def buckets_from_decisions(
+    decisions: list[dict[str, Any]],
+    seat: str | None = None,
+) -> dict[str, dict[str, int]]:
+    missed = empty_bucket()
+    handed = empty_bucket()
+    for rec in decisions:
+        if seat is not None and rec.get("auditee") != seat:
+            continue
+        verdict = {
+            "verdict": rec.get("verdict"),
+            "nodes": rec.get("nodes"),
+            "rng_dependent": rec.get("rng_dependent"),
+        }
+        hit = bool(rec.get("hit"))
+        if rec.get("kind") == "missed_lethal":
+            note_verdict(missed, verdict, hit=hit)
+        elif rec.get("kind") == "handed_lethal":
+            note_verdict(handed, verdict, hit=hit)
+    return {"missed": missed, "handed": handed}
+
+
+def by_deficit_report(games: list[dict[str, Any]]) -> dict[str, Any]:
+    """``handed_lethal`` per deck, bucketed by defense deficit at EndTurn."""
+    per_deck: dict[str, dict[str, dict[str, int]]] = defaultdict(
+        lambda: {label: empty_bucket() for label in DEFICIT_BUCKETS}
+    )
+    shares_n: dict[str, dict[str, int]] = defaultdict(
+        lambda: {label: 0 for label in DEFICIT_BUCKETS}
+    )
+    for g in games:
+        for rec in g.get("decisions") or []:
+            if rec.get("kind") != "handed_lethal":
+                continue
+            seat = str(rec.get("auditee") or "")
+            deck = deck_name_of(g, seat) if seat in ("a", "b") else "unknown"
+            label = deficit_bucket(int(rec.get("defense_deficit") or 0))
+            verdict = {
+                "verdict": rec.get("verdict"),
+                "nodes": rec.get("nodes"),
+                "rng_dependent": rec.get("rng_dependent"),
+            }
+            note_verdict(per_deck[deck][label], verdict, hit=bool(rec.get("hit")))
+            shares_n[deck][label] += 1
+    out: dict[str, Any] = {}
+    for name in sorted(set(per_deck) | set(shares_n)):
+        total = sum(shares_n[name].values())
+        out[name] = {
+            "handed_lethal": {
+                label: rate_block(per_deck[name][label]) for label in DEFICIT_BUCKETS
+            },
+            "bucket_share": {
+                label: (shares_n[name][label] / total) if total else None
+                for label in DEFICIT_BUCKETS
+            },
+            "end_turn_decisions": total,
+        }
+    return {
+        "kind": "handed_lethal",
+        "on": "defense_deficit",
+        "buckets": list(DEFICIT_BUCKETS),
+        "bucket_rule": DEFICIT_BUCKET_RULE,
+        "per_deck": out,
+    }
+
+
+def format_by_deficit(report: dict[str, Any]) -> str:
+    lines = [
+        "handed_lethal by defense deficit at EndTurn",
+        report["bucket_rule"],
+        "",
+    ]
+    header = f"{'deck':<22}" + "".join(f"{b:>16}" for b in DEFICIT_BUCKETS)
+    lines.append(header)
+    for name, row in report["per_deck"].items():
+        cells = []
+        for label in DEFICIT_BUCKETS:
+            block = row["handed_lethal"][label]
+            rate = block["rate"]
+            rate_s = "—" if rate is None else f"{rate:.3f}"
+            cells.append(f"{block['n']}/{block['decisions_with_a_verdict']} {rate_s}")
+        lines.append(f"{name:<22}" + "".join(f"{c:>16}" for c in cells))
+        share_cells = []
+        for label in DEFICIT_BUCKETS:
+            share = row["bucket_share"][label]
+            share_s = "—" if share is None else f"{share:.0%}"
+            share_cells.append(f"share {share_s}")
+        lines.append(f"{'':<22}" + "".join(f"{c:>16}" for c in share_cells))
+    return "\n".join(lines)
 
 
 def bot_converts_this_turn(
@@ -244,6 +420,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     p.add_argument("--cards", default=None)
     p.add_argument("--out", default=None, help="write JSON here (also printed)")
+    p.add_argument(
+        "--decisions",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="include per-decision records in each game (default: on)",
+    )
+    p.add_argument(
+        "--by-deficit",
+        action="store_true",
+        default=False,
+        help=(
+            "add handed_lethal stratified by defense deficit at EndTurn "
+            "(also printed to stderr)"
+        ),
+    )
     args = p.parse_args(raw)
     args._argv = raw
     if flag_given(raw, "--pool") and flag_given(raw, "--decks"):
@@ -384,6 +575,7 @@ def audit_game(
             continue
         acting = acting_of(game)
         if acting in seats:
+            snap = game.snapshot()
             t0 = time.perf_counter()
             verdict = arena.forced_lethal(game, budget)
             dt = (time.perf_counter() - t0) * 1000.0
@@ -405,9 +597,11 @@ def audit_game(
                 "hit": hit,
                 "ms": dt,
             }
+            rec.update(board_at_decision(snap, acting))
             decisions.append(rec)
         apply_step(game, step)
         if is_end_turn(step) and acting in seats and not game.terminal:
+            snap = game.snapshot()
             t0 = time.perf_counter()
             verdict = arena.forced_lethal(game, budget)
             dt = (time.perf_counter() - t0) * 1000.0
@@ -416,19 +610,19 @@ def audit_game(
             handed["ms"] += int(dt)
             hit = str(verdict.get("verdict")) == "lethal"
             note_verdict(handed, verdict, hit=hit)
-            decisions.append(
-                {
-                    "ply": ply,
-                    "turn": int(game.turn),
-                    "acting": acting_of(game),
-                    "kind": "handed_lethal",
-                    "verdict": verdict.get("verdict"),
-                    "nodes": verdict.get("nodes"),
-                    "rng_dependent": verdict.get("rng_dependent"),
-                    "hit": hit,
-                    "ms": dt,
-                }
-            )
+            rec = {
+                "ply": ply,
+                "turn": int(game.turn),
+                "acting": acting_of(game),
+                "kind": "handed_lethal",
+                "verdict": verdict.get("verdict"),
+                "nodes": verdict.get("nodes"),
+                "rng_dependent": verdict.get("rng_dependent"),
+                "hit": hit,
+                "ms": dt,
+            }
+            rec.update(board_at_decision(snap, acting))
+            decisions.append(rec)
 
     return {
         "game_id": log.get("game_id"),
@@ -467,9 +661,16 @@ def summarize(
         merge_bucket(handed, g["handed"])
         ms += float(g.get("ms_per_decision") or 0.0) * int(g.get("timed") or 0)
         timed += int(g.get("timed") or 0)
-        deck = str(g.get("bot_deck") or "unknown")
-        merge_bucket(per_deck[deck]["missed"], g["missed"])
-        merge_bucket(per_deck[deck]["handed"], g["handed"])
+        if bot_seat == "both":
+            for seat in ("a", "b"):
+                name = deck_name_of(g, seat)
+                split = buckets_from_decisions(g.get("decisions") or [], seat)
+                merge_bucket(per_deck[name]["missed"], split["missed"])
+                merge_bucket(per_deck[name]["handed"], split["handed"])
+        else:
+            deck = str(g.get("bot_deck") or "unknown")
+            merge_bucket(per_deck[deck]["missed"], g["missed"])
+            merge_bucket(per_deck[deck]["handed"], g["handed"])
     return {
         "budget": budget,
         "pool": pool,
@@ -506,7 +707,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.records:
         logs = load_record_files(args.records)
         for rec in logs:
-            rec.setdefault("bot_deck", deck_label(rec, seats[0], "records"))
+            rec.setdefault("deck_a_name", deck_label(rec, "a", "records"))
+            rec.setdefault("deck_b_name", deck_label(rec, "b", "records"))
+            if args.bot_seat == "a":
+                rec.setdefault("bot_deck", rec["deck_a_name"])
+            elif args.bot_seat == "b":
+                rec.setdefault("bot_deck", rec["deck_b_name"])
+            else:
+                rec.setdefault(
+                    "bot_deck", f"{rec['deck_a_name']}/{rec['deck_b_name']}"
+                )
     else:
         _, decks = resolve_selected_decks(root / "oracle" / "decks", args.pool, args.decks)
         decks.update(load_extra_deck_files(args.deck_file))
@@ -541,6 +751,8 @@ def main(argv: list[str] | None = None) -> int:
     for rec in logs:
         row = audit_game(db, rec, budget=args.budget, seats=seats)
         row["bot_deck"] = rec.get("bot_deck") or "unknown"
+        row["deck_a_name"] = rec.get("deck_a_name")
+        row["deck_b_name"] = rec.get("deck_b_name")
         audited.append(row)
 
     summary = summarize(
@@ -551,18 +763,25 @@ def main(argv: list[str] | None = None) -> int:
         policy_b=policy_b,
         bot_seat=args.bot_seat,
     )
-    summary["records"] = [
-        {
+    if args.by_deficit:
+        summary["by_deficit"] = by_deficit_report(audited)
+    records = []
+    for g in audited:
+        rec = {
             "game_id": g.get("game_id"),
             "bot_deck": g.get("bot_deck"),
             "winner": g.get("winner"),
             "missed_lethal": rate_block(g["missed"]),
             "handed_lethal": rate_block(g["handed"]),
         }
-        for g in audited
-    ]
+        if args.decisions:
+            rec["decisions"] = g.get("decisions") or []
+        records.append(rec)
+    summary["records"] = records
     text = json.dumps(summary, indent=2, sort_keys=True)
     print(text)
+    if args.by_deficit:
+        print(format_by_deficit(summary["by_deficit"]), file=sys.stderr)
     if args.out:
         Path(args.out).write_text(text + "\n", encoding="utf-8")
     return 0
