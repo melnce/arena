@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 import pytest
@@ -297,7 +298,23 @@ def _run_audit_cli(out: Path, extra: list[str]) -> dict:
     return json.loads(out.read_text())
 
 
-def test_decisions_off_rate_blocks_byte_identical(tmp_path: Path) -> None:
+def _legacy_schedule(
+    names: list[str], games: int, first_mode: str
+) -> list[tuple[str, str, str]]:
+    """Pre-fix schedule: alternate used the global game index ``n``."""
+    pairs = [(da, dbk) for da in names for dbk in names]
+    if not pairs:
+        return []
+    out: list[tuple[str, str, str]] = []
+    for n in range(max(1, games)):
+        da, dbk = pairs[n % len(pairs)]
+        first = audit.first_for(first_mode, n)
+        out.append((da, dbk, first))
+    return out
+
+
+def test_decisions_off_rate_blocks_byte_identical(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(audit, "schedule", _legacy_schedule)
     off = _run_audit_cli(tmp_path / "off.json", ["--no-decisions"])
     on = _run_audit_cli(tmp_path / "on.json", ["--decisions"])
     assert "decisions" not in off["records"][0]
@@ -310,9 +327,13 @@ def test_decisions_off_rate_blocks_byte_identical(tmp_path: Path) -> None:
     record_keys = set(off["records"][0])
     assert record_keys == {
         "bot_deck",
+        "deck_a",
+        "deck_b",
+        "first",
         "game_id",
         "handed_lethal",
         "missed_lethal",
+        "seed",
         "winner",
     }
 
@@ -366,6 +387,170 @@ def test_both_seat_per_deck_equals_sum_of_a_and_b(tmp_path: Path) -> None:
             for key in int_keys:
                 s = int(left[key] if left else 0) + int(right[key] if right else 0)
                 assert got[key] == s, f"{deck} {kind} {key}: {got[key]} != {s}"
+
+
+def _meta_names(root: Path) -> list[str]:
+    _, decks = audit.resolve_selected_decks(root / "oracle" / "decks", "meta", None)
+    return list(decks.keys())
+
+
+def test_alternate_schedule_balanced_per_pair(root: Path) -> None:
+    names = _meta_names(root)
+    assert len(names) == 16
+    sched = audit.schedule(names, 512, "alternate")
+    assert len(sched) == 512
+    pair_first: dict[tuple[str, str], list[str]] = defaultdict(list)
+    for da, dbk, first in sched:
+        pair_first[(da, dbk)].append(first)
+    for key, firsts in pair_first.items():
+        assert firsts.count("a") == 1, key
+        assert firsts.count("b") == 1, key
+    deck_first: dict[str, int] = defaultdict(int)
+    deck_games: dict[str, int] = defaultdict(int)
+    for da, dbk, first in sched:
+        deck_games[da] += 1
+        deck_games[dbk] += 1
+        if first == "a":
+            deck_first[da] += 1
+        else:
+            deck_first[dbk] += 1
+    for deck in names:
+        assert deck_first[deck] == deck_games[deck] // 2, deck
+
+
+def test_legacy_alternate_schedule_unbalanced(root: Path) -> None:
+    names = _meta_names(root)
+    sched = _legacy_schedule(names, 512, "alternate")
+    pair_first: dict[tuple[str, str], list[str]] = defaultdict(list)
+    for da, dbk, first in sched:
+        pair_first[(da, dbk)].append(first)
+    unbalanced = sum(
+        1 for firsts in pair_first.values() if firsts.count("a") != firsts.count("b")
+    )
+    assert unbalanced > 0
+
+
+def test_first_modes_a_b_coin_unchanged(root: Path) -> None:
+    names = _meta_names(root)
+    for mode in ("a", "b", "coin"):
+        old = _legacy_schedule(names, 600, mode)
+        new = audit.schedule(names, 600, mode)
+        assert old == new
+
+
+def test_unbalanced_stderr_line(root: Path, capsys) -> None:
+    names = _meta_names(root)
+    assert audit.count_unbalanced_pairs(names, 300, "alternate") == 212
+    assert audit.count_unbalanced_pairs(names, 512, "alternate") == 0
+    audit.main(["--pool", "meta", "--games", "300", "--no-decisions", "--budget", "1"])
+    err = capsys.readouterr().err
+    assert "212 ordered pair(s) unbalanced" in err
+    audit.main(["--pool", "meta", "--games", "512", "--no-decisions", "--budget", "1"])
+    err = capsys.readouterr().err
+    assert "unbalanced" not in err
+
+
+def test_self_describing_output(tmp_path: Path) -> None:
+    out = tmp_path / "desc.json"
+    audit.main(
+        [
+            "--decks",
+            "basic-forest",
+            "basic-rune",
+            "--games",
+            "8",
+            "--seed",
+            "99",
+            "--first",
+            "alternate",
+            "--policy",
+            "h0-fast",
+            "--budget",
+            "80",
+            "--no-decisions",
+            "--out",
+            str(out),
+        ]
+    )
+    summary = json.loads(out.read_text())
+    assert summary["seed"] == 99
+    assert summary["first"] == "alternate"
+    assert summary["games"] == 8
+    assert summary["first_balanced_per_pair"] is True
+    rec = summary["records"][0]
+    assert rec["seed"] == 99
+    assert rec["first"] in ("a", "b")
+    assert "deck_a" in rec and "deck_b" in rec
+    matchup = next(
+        r
+        for r in summary["records"]
+        if r["deck_a"] == "basic-forest" and r["deck_b"] == "basic-rune"
+    )
+    assert matchup["first"] in ("a", "b")
+    assert matchup["seed"] == 100
+
+    out_a = tmp_path / "a.json"
+    audit.main(
+        [
+            "--decks",
+            "basic-forest",
+            "basic-rune",
+            "--games",
+            "2",
+            "--seed",
+            "99",
+            "--first",
+            "a",
+            "--policy",
+            "h0-fast",
+            "--budget",
+            "80",
+            "--no-decisions",
+            "--out",
+            str(out_a),
+        ]
+    )
+    summary_a = json.loads(out_a.read_text())
+    assert summary_a["first_balanced_per_pair"] is False
+
+
+def test_resolve_first_coin_matches_fixed_modes(db, root: Path) -> None:
+    deck_a, deck_b = _decks(root)
+    for mode in ("a", "b"):
+        rec = audit.play_one(db, 5, deck_a, deck_b, mode, "h0-fast", "h0-fast")
+        assert audit.resolve_first(rec) == mode
+    coin_rec = audit.play_one(db, 6, deck_a, deck_b, "coin", "h0-fast", "h0-fast")
+    assert audit.resolve_first(coin_rec) in ("a", "b")
+
+
+def test_line_len_on_lethal_verdict(db, root: Path) -> None:
+    import arena
+
+    deck_a, deck_b = _decks(root)
+    game = arena.Game(db, 1, deck_a, deck_b, "a")
+    for _ in range(4):
+        if game.phase != "mulligan":
+            break
+        game.apply(game.bot_action("first-legal", 1))
+    verdict = arena.forced_lethal(game, 2_000)
+    if verdict["verdict"] != "lethal":
+        pytest.skip("fixture position did not return lethal at budget 2000")
+    rec = audit.play_one(db, 1, deck_a, deck_b, "a", "h0-fast", "h0-fast")
+    row = audit.audit_game(db, rec, budget=2_000, seats=("a", "b"))
+    lethal = [
+        d
+        for d in row["decisions"]
+        if d.get("verdict") == "lethal"
+        and d.get("kind") in ("missed_lethal", "handed_lethal")
+    ]
+    assert lethal, "expected a lethal verdict in audited decisions"
+    d = lethal[0]
+    assert "line" in d
+    assert d["line_len"] == len(d["line"])
+    none = [x for x in row["decisions"] if x.get("verdict") == "none"]
+    assert none, "expected a none verdict for contrast"
+    assert "line" not in none[0]
+    assert none[0]["line_len"] is None
 
 
 def test_by_deficit_report_populated(db, root: Path) -> None:
