@@ -98,10 +98,15 @@ fn choose_on_states(spec: &str, states: &[arena_engine::State]) -> (u64, u64) {
     (unscored, lethal_nodes)
 }
 
-fn count_unscored_via_explain(spec: &str, states: &[arena_engine::State]) -> u64 {
+fn count_unscored_unarmed(spec: &str, states: &[arena_engine::State]) -> u64 {
+    let (unscored, _) = choose_on_states(spec, states);
+    unscored
+}
+
+fn cross_check_unscored_stats_vs_explain(spec: &str, states: &[arena_engine::State]) {
     let db = load_db();
     let mut h0 = parse_h0(spec);
-    let mut n = 0u64;
+    let mut explain_unscored = 0u64;
     for (i, state) in states.iter().enumerate() {
         let legal = legal_actions(&db, state);
         if legal.is_empty() {
@@ -114,13 +119,17 @@ fn count_unscored_via_explain(spec: &str, states: &[arena_engine::State]) -> u64
         let _ = h0.choose(&db, state, &legal, &mut rng);
         let rec = h0.take_explain().expect("explain");
         if rec.path == ChoosePath::Unscored {
-            n += 1;
+            explain_unscored += 1;
             assert_eq!(h0.stats.unscored, 1, "stats counter at state {i}");
         } else {
             assert_eq!(h0.stats.unscored, 0, "stats counter at state {i}");
         }
     }
-    n
+    let stats_unscored = count_unscored_unarmed(spec, states);
+    assert_eq!(
+        stats_unscored, explain_unscored,
+        "{spec}: unarmed stats vs explain"
+    );
 }
 
 #[test]
@@ -129,11 +138,12 @@ fn lcap_default_has_unscored_midgame() {
     let db = load_db();
     let states = collect_states(&db, 200, true);
     assert_eq!(states.len(), 200, "could not reach 200 mid-game states");
-    let unscored = count_unscored_via_explain("h0", &states);
+    let unscored = count_unscored_unarmed("h0", &states);
     assert!(
         unscored >= 1,
         "expected at least one unscored decision with default h0"
     );
+    cross_check_unscored_stats_vs_explain("h0", &states);
 }
 
 #[test]
@@ -143,9 +153,9 @@ fn lcap_fraction_eliminates_unscored() {
     let states = collect_states(&db, 200, true);
     assert_eq!(states.len(), 200);
     for spec in ["h0:lcap=0.5", "h0:lcap=0.25"] {
-        let unscored = count_unscored_via_explain(spec, &states);
+        let unscored = count_unscored_unarmed(spec, &states);
         assert_eq!(unscored, 0, "{spec} should have zero unscored");
-        let (_, _) = choose_on_states(spec, &states);
+        cross_check_unscored_stats_vs_explain(spec, &states);
     }
 }
 
@@ -270,6 +280,13 @@ fn spec_round_trips_lcap_clip() {
     assert!(e.contains("clip"), "{e}");
     let e = AnyPolicy::parse_spec("h0:lcap=x").unwrap_err();
     assert!(e.contains("x"), "{e}");
+    for bad in ["h0:lcap=NaN", "h0:clip=NaN", "h0:clip=inf"] {
+        let e = AnyPolicy::parse_spec(bad).unwrap_err();
+        assert!(
+            e.contains("out of range") || e.contains("bad"),
+            "{bad}: {e}"
+        );
+    }
 }
 
 #[test]

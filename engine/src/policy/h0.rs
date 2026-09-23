@@ -771,12 +771,14 @@ impl Policy for H0 {
                     }
                 }
                 self.last_value = Some(finite(best_v, self.wv));
+                if !any_scored {
+                    self.stats.unscored += 1;
+                }
                 if let Some(rec) = &mut explain_rec {
                     rec.chosen_index = cand[best_i];
                     if any_scored {
                         rec.tie_set = tie_set_search(&n, &acc, &worst, self.pess, best_v, &cand);
                     } else {
-                        self.stats.unscored += 1;
                         rec.path = ChoosePath::Unscored;
                         rec.tie_set = cand.clone();
                     }
