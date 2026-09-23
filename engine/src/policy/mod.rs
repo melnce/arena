@@ -15,7 +15,10 @@ mod net;
 mod record;
 
 pub use explain::{CandidateRecord, ChoosePath, ExplainRecord, PvEnd, PvLeaf, WorldRecord};
-pub use h0::{builtin_net, Alloc, Info, SearchStats, ValueVersion, Weights, BUILTIN_NET_NAME, H0};
+pub use h0::{
+    builtin_net, fuse_completion_partner_sets, Alloc, Info, SearchStats, ValueVersion, Weights,
+    BUILTIN_NET_NAME, H0,
+};
 pub use needs::{CardNeeds, NeedsTable, SkippedAmount};
 pub use net::{NetArch, ValueNet};
 pub use record::{Recorder, Sample};
@@ -244,6 +247,9 @@ fn h0_spec(h: &H0) -> String {
             Info::Fair => unreachable!(),
         });
     }
+    if h.fusemacro {
+        parts.push("fusemacro=1".to_string());
+    }
     let w = &h.weights;
     let dw = Weights::default();
     if w.shadows != dw.shadows {
@@ -292,6 +298,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.tt == b.tt
         && a.alloc == b.alloc
         && a.info == b.info
+        && a.fusemacro == b.fusemacro
         && a.net_path == b.net_path
         && a.lcap == b.lcap
         && a.clip == b.clip
@@ -399,7 +406,7 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             }
             "lcap" => {
                 let v: f32 = val.parse().map_err(|_| format!("bad lcap '{val}'"))?;
-                if !v.is_finite() || !(v > 0.0 && v <= 1.0) {
+                if !(v.is_finite() && v > 0.0 && v <= 1.0) {
                     return Err(format!("lcap out of range '{val}'"));
                 }
                 h.lcap = v;
@@ -410,6 +417,13 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     return Err(format!("clip out of range '{val}'"));
                 }
                 h.clip = v;
+            }
+            "fusemacro" => {
+                h.fusemacro = match val {
+                    "0" => false,
+                    "1" => true,
+                    other => return Err(format!("unknown fusemacro '{other}'")),
+                }
             }
             other => return Err(format!("unknown key '{other}'")),
         }
