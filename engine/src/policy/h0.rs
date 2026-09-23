@@ -1133,16 +1133,73 @@ fn distinct_unpicked_partner_cards(
     out
 }
 
+fn unpicked_partner_positions(options: &[u8], picked: &[u8]) -> Vec<u8> {
+    options
+        .iter()
+        .filter(|pos| !picked.contains(pos))
+        .copied()
+        .collect()
+}
+
+fn single_completion_value(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    partner: CardId,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    stats: &mut SearchStats,
+) -> f32 {
+    let completion = FuseCompletion {
+        partners: vec![partner],
+    };
+    let mut nodes = 0u32;
+    if let Some((s, _)) = apply_fuse_completion(
+        db,
+        state,
+        &completion,
+        &mut nodes,
+        u32::MAX,
+        line,
+        false,
+        stats,
+    ) {
+        eval.value(&s, me)
+    } else {
+        f32::NEG_INFINITY
+    }
+}
+
 /// Partner-card sets for each fuse completion (`fusemacro=1`). Exposed for tests.
 #[doc(hidden)]
 pub fn fuse_completion_partner_sets(db: &CardDb, state: &State, me: PlayerId) -> Vec<Vec<CardId>> {
-    fuse_completions(db, state, me)
+    let weights = Weights::default();
+    let eval = Evaluator {
+        needs: db.needs(),
+        version: ValueVersion::V0,
+        weights: &weights,
+        wv: DEFAULT_WV,
+        olethal: false,
+        oevo: false,
+        osteps: 6,
+        net: None,
+        vocab: &[],
+    };
+    let mut stats = SearchStats::default();
+    fuse_completions(db, state, me, &[], eval, &mut stats)
         .into_iter()
         .map(|c| c.partners)
         .collect()
 }
 
-fn fuse_completions(db: &CardDb, state: &State, me: PlayerId) -> Vec<FuseCompletion> {
+fn fuse_completions(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    stats: &mut SearchStats,
+) -> Vec<FuseCompletion> {
     let Some((host, options, picked)) = own_fuse_partners(state, me) else {
         return Vec::new();
     };
@@ -1153,12 +1210,10 @@ fn fuse_completions(db: &CardDb, state: &State, me: PlayerId) -> Vec<FuseComplet
         out.push(FuseCompletion {
             partners: Vec::new(),
         });
-        if has_recipes {
-            for card in distinct {
-                out.push(FuseCompletion {
-                    partners: vec![card],
-                });
-            }
+        for card in distinct {
+            out.push(FuseCompletion {
+                partners: vec![card],
+            });
         }
     } else {
         for card in &distinct {
@@ -1173,6 +1228,34 @@ fn fuse_completions(db: &CardDb, state: &State, me: PlayerId) -> Vec<FuseComplet
                         partners: vec![distinct[i], distinct[j]],
                     });
                 }
+            }
+        } else {
+            let positions = unpicked_partner_positions(&options, &picked);
+            let mut ranked: Vec<(CardId, f32)> = positions
+                .iter()
+                .filter_map(|&pos| {
+                    state
+                        .player(me)
+                        .hand
+                        .get(pos as usize)
+                        .map(|inst| inst.card)
+                })
+                .map(|card| {
+                    let v = single_completion_value(db, state, me, card, line, eval, stats);
+                    (card, v)
+                })
+                .collect();
+            ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+            let ordered: Vec<CardId> = ranked.iter().map(|(card, _)| *card).collect();
+            if ordered.len() >= 2 {
+                out.push(FuseCompletion {
+                    partners: ordered[..2].to_vec(),
+                });
+            }
+            if ordered.len() >= 3 {
+                out.push(FuseCompletion {
+                    partners: ordered[..3].to_vec(),
+                });
             }
         }
     }
@@ -1338,7 +1421,7 @@ fn search_own_fuse_choice(
         }
         return v;
     }
-    let completions = fuse_completions(db, state, me);
+    let completions = fuse_completions(db, state, me, line, eval, stats);
     if completions.is_empty() {
         return fuse_overshoot_score(
             db,
@@ -1538,7 +1621,7 @@ fn search_own(
                 tt_put(tt, state, depth, true, INF, stats);
                 return INF;
             }
-            for completion in fuse_completions(db, &after_fuse, me) {
+            for completion in fuse_completions(db, &after_fuse, me, line, eval, stats) {
                 if *nodes >= cap {
                     break;
                 }

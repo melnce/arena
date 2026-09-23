@@ -97,8 +97,60 @@ fn collect_sephie_fuse_positions(db: &CardDb, games: u32) -> Vec<arena_engine::S
     out
 }
 
+fn apply_single_fuse_partner(
+    db: &CardDb,
+    st: &arena_engine::State,
+    card: arena_engine::CardId,
+) -> arena_engine::State {
+    let mut s = st.clone();
+    let choose = legal_actions(db, &s)
+        .into_iter()
+        .find(|a| {
+            matches!(a, Action::Choose(_))
+                && matches!(
+                    &arena_engine::to_neutral(&s, a),
+                    arena_engine::NeutralAction::Choose {
+                        option: arena_engine::trace::ChooseOptionJson::Card { card: id },
+                        ..
+                    } if arena_engine::CardId::parse(id) == Some(card)
+                )
+        })
+        .expect("choose");
+    apply(db, &mut s, choose).expect("choose");
+    apply(db, &mut s, Action::Confirm).expect("confirm");
+    s
+}
+
+fn rank_non_recipe_partner_cards(
+    db: &CardDb,
+    st: &arena_engine::State,
+    me: PlayerId,
+) -> Vec<arena_engine::CardId> {
+    let Phase::Choice {
+        node: ChoiceNode::FusePartners {
+            options, picked, ..
+        },
+        ..
+    } = &st.phase
+    else {
+        panic!("fuse choice");
+    };
+    let h0 = parse_h0("h0:value=v0");
+    let mut ranked: Vec<(arena_engine::CardId, f32)> = options
+        .iter()
+        .filter(|pos| !picked.contains(pos))
+        .map(|&pos| {
+            let card = st.player(me).hand[pos as usize].card;
+            let after = apply_single_fuse_partner(db, st, card);
+            (card, h0.evaluate(db, &after, me))
+        })
+        .collect();
+    ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    ranked.into_iter().map(|(card, _)| card).collect()
+}
+
 #[test]
-fn fuse_completions_sephie_three_singles() {
+fn fuse_completions_sephie_singles_plus_nested_multi() {
     let db = load_db();
     let mut st = started(&db, 11);
     let me = PlayerId::A;
@@ -110,8 +162,17 @@ fn fuse_completions_sephie_three_singles() {
     put_hand(&db, &mut st, me, "88001110");
     apply(&db, &mut st, Action::Fuse { host }).expect("fuse");
     let sets = fuse_completion_partner_sets(&db, &st, me);
-    assert_eq!(sets.len(), 3, "three [Choose, Confirm] completions");
-    assert!(sets.iter().all(|s| s.len() == 1));
+    assert_eq!(
+        sets.len(),
+        5,
+        "three singles plus one 2-card and one 3-card completion"
+    );
+    assert_eq!(sets.iter().filter(|s| s.len() == 1).count(), 3);
+    assert_eq!(sets.iter().filter(|s| s.len() == 2).count(), 1);
+    assert_eq!(sets.iter().filter(|s| s.len() == 3).count(), 1);
+    let ranked = rank_non_recipe_partner_cards(&db, &st, me);
+    assert_eq!(sets.iter().find(|s| s.len() == 2).unwrap(), &ranked[..2]);
+    assert_eq!(sets.iter().find(|s| s.len() == 3).unwrap(), &ranked[..3]);
 }
 
 #[test]
@@ -132,18 +193,100 @@ fn fuse_completions_recipe_host_singles_and_pairs() {
 }
 
 #[test]
-fn fuse_completions_non_recipe_picked_only_confirm() {
+fn fuse_completions_non_recipe_picked_confirm_and_extensions() {
     let db = load_db();
     let mut st = started(&db, 13);
     let me = PlayerId::A;
     clear_hand(&mut st, me);
     let host = put_hand(&db, &mut st, me, SEPHIE);
     put_hand(&db, &mut st, me, "88001110");
+    put_hand(&db, &mut st, me, "10932310");
     apply(&db, &mut st, Action::Fuse { host }).expect("fuse");
     apply(&db, &mut st, Action::Choose(0)).expect("choose");
     let sets = fuse_completion_partner_sets(&db, &st, me);
-    assert_eq!(sets.len(), 1);
-    assert!(sets[0].is_empty());
+    assert_eq!(sets.len(), 2, "[Confirm] plus one [Choose, Confirm]");
+    assert!(sets.iter().any(|s| s.is_empty()));
+    assert_eq!(sets.iter().filter(|s| s.len() == 1).count(), 1);
+}
+
+/// Prints the v0 leaf after the best-ranked 2-card Scholar fuse completion.
+#[test]
+#[ignore]
+fn show_scholar_two_card_fuse_score() {
+    const SCHOLAR: &str = "10933110";
+    let db = load_db();
+    let mut st = started(&db, 21);
+    let me = PlayerId::A;
+    clear_hand(&mut st, me);
+    let host = put_hand(&db, &mut st, me, SCHOLAR);
+    for id in [
+        "88001110",
+        "10932310",
+        "10513110",
+        "10513110",
+        "10931110",
+        "10513110",
+        "88001110",
+        "10932310",
+    ] {
+        put_hand(&db, &mut st, me, id);
+    }
+    give_pp(&mut st, me, 5, 10);
+    apply(&db, &mut st, Action::Fuse { host }).expect("fuse");
+    let sets = fuse_completion_partner_sets(&db, &st, me);
+    let two = sets.iter().find(|s| s.len() == 2).expect("2-card completion");
+    let mut after = st.clone();
+    for &card in two {
+        let choose = legal_actions(&db, &after)
+            .into_iter()
+            .find(|a| {
+                matches!(a, Action::Choose(_))
+                    && matches!(
+                        &arena_engine::to_neutral(&after, a),
+                        arena_engine::NeutralAction::Choose {
+                            option: arena_engine::trace::ChooseOptionJson::Card { card: id },
+                            ..
+                        } if arena_engine::CardId::parse(id) == Some(card)
+                    )
+            })
+            .expect("choose");
+        apply(&db, &mut after, choose).expect("choose");
+    }
+    apply(&db, &mut after, Action::Confirm).expect("confirm");
+    let v = parse_h0("h0:value=v0").evaluate(&db, &after, me);
+    eprintln!(
+        "Scholar 9-card @5pp: 2-card fuse completion partners={:?} v0 leaf={}",
+        two,
+        v
+    );
+}
+
+#[test]
+fn ecstatic_scholar_nine_card_hand_has_two_card_fuse_completion() {
+    const SCHOLAR: &str = "10933110";
+    let db = load_db();
+    let mut st = started(&db, 21);
+    let me = PlayerId::A;
+    clear_hand(&mut st, me);
+    let host = put_hand(&db, &mut st, me, SCHOLAR);
+    for id in [
+        "88001110", "10932310", "10513110", "10513110", "10931110", "10513110", "88001110",
+        "10932310",
+    ] {
+        put_hand(&db, &mut st, me, id);
+    }
+    assert_eq!(st.player(me).hand.len(), 9);
+    give_pp(&mut st, me, 5, 10);
+    assert!(
+        !hand_has(&st, me, SEPHIE),
+        "position must not include Sephie"
+    );
+    apply(&db, &mut st, Action::Fuse { host }).expect("fuse");
+    let sets = fuse_completion_partner_sets(&db, &st, me);
+    assert!(
+        sets.iter().any(|s| s.len() == 2),
+        "2-card fuse completion must be among Scholar fuse children"
+    );
 }
 
 fn replay_world(
@@ -298,6 +441,8 @@ fn show_it_sephie_fuse_reasks() {
     ];
     let mut decisions = 0u32;
     let mut still = [0u32; 4];
+    let mut multi2 = 0u32;
+    let mut multi3 = 0u32;
     eprintln!("| game | seed | still_fuses default | fusemacro | v0 wide | v0+fusemacro | fuse raw/end/pv | best other root_agg |");
     eprintln!("| --- | --- | --- | --- | --- | --- | --- | --- |");
     for g in 0..60u32 {
@@ -346,9 +491,28 @@ fn show_it_sephie_fuse_reasks() {
                                 matches!(c.action, arena_engine::NeutralAction::Fuse { .. })
                             }) {
                                 if let Some(w) = cand.worlds.first() {
+                                    let partners = w
+                                        .pv
+                                        .iter()
+                                        .skip(1)
+                                        .take_while(|a| {
+                                            !matches!(
+                                                a,
+                                                arena_engine::NeutralAction::Confirm { .. }
+                                            )
+                                        })
+                                        .filter(|a| {
+                                            matches!(a, arena_engine::NeutralAction::Choose { .. })
+                                        })
+                                        .count();
+                                    if partners == 2 {
+                                        multi2 += 1;
+                                    } else if partners >= 3 {
+                                        multi3 += 1;
+                                    }
                                     row.push_str(&format!(
-                                        "raw={:.1} end={:?} pv_len={} | ",
-                                        w.raw, w.end, w.pv_len
+                                        "raw={:.1} end={:?} pv_len={} partners={} | ",
+                                        w.raw, w.end, w.pv_len, partners
                                     ));
                                 }
                                 let best_other = rec
@@ -381,5 +545,9 @@ fn show_it_sephie_fuse_reasks() {
     eprintln!(
         "decisions={} still_fuses: default=all; fusemacro={}; v0={}; v0+fusemacro={}",
         decisions, still[1], still[2], still[3]
+    );
+    eprintln!(
+        "h0:fusemacro=1 multi-card fuses over 60 games: 2-card={} 3-card={}",
+        multi2, multi3
     );
 }
