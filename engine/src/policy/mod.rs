@@ -406,7 +406,7 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             }
             "lcap" => {
                 let v: f32 = val.parse().map_err(|_| format!("bad lcap '{val}'"))?;
-                if !v.is_finite() || !(v > 0.0 && v <= 1.0) {
+                if !(v.is_finite() && v > 0.0 && v <= 1.0) {
                     return Err(format!("lcap out of range '{val}'"));
                 }
                 h.lcap = v;
