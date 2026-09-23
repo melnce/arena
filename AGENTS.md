@@ -41,3 +41,5 @@ python -c "import arena"
 ```
 
 A pytest run where `arena` tests are skipped is **not** a successful test run.
+
+`test_train_value.py` also needs `torch` and skips without it; install into the venv (`pip install torch --index-url https://download.pytorch.org/whl/cpu`) only when working on training.
