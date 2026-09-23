@@ -1282,23 +1282,67 @@ fn fuse_overshoot_score(
     let singles = fuse_single_partner_completions(state, me);
     let mut best = f32::NEG_INFINITY;
     let mut best_state = state.clone();
+    let mut best_actions = Vec::new();
     for completion in singles {
-        if let Some((s, _)) =
+        if let Some((s, actions)) =
             apply_fuse_completion(db, state, &completion, &mut 0, u32::MAX, line, false, stats)
         {
             let v = eval.value(&s, me);
             if v > best {
                 best = v;
                 best_state = s;
+                best_actions = actions;
             }
         }
     }
     if !best.is_finite() {
         best = eval.value(state, me);
         best_state = state.clone();
+        best_actions.clear();
     }
     if let Some(t) = track {
+        let plen = t.path_len();
+        for a in &best_actions {
+            t.push(a.clone());
+        }
         t.set_leaf(best, end, &best_state);
+        t.pop_to(plen);
+    }
+    best
+}
+
+/// At a Main node, score every fuse completion but return only the best by
+/// immediate leaf value (ties keep completion order).
+#[allow(clippy::too_many_arguments)]
+fn best_fuse_main_child(
+    db: &CardDb,
+    state: &State,
+    fuse_action: &Action,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    stats: &mut SearchStats,
+) -> Option<(f32, State, u64, Vec<Action>)> {
+    let after_fuse = try_apply(db, state, fuse_action, nodes, cap, line)?;
+    let mut best: Option<(f32, State, u64, Vec<Action>)> = None;
+    for completion in fuse_completions(db, &after_fuse, me) {
+        if *nodes >= cap {
+            break;
+        }
+        let Some((s, tail)) =
+            apply_fuse_completion(db, &after_fuse, &completion, nodes, cap, line, true, stats)
+        else {
+            continue;
+        };
+        let v = eval.value(&s, me);
+        if best.as_ref().is_none_or(|(bv, _, _, _)| v > *bv) {
+            let mut prefix = vec![fuse_action.clone()];
+            prefix.extend(tail);
+            let key = search_key(&s);
+            best = Some((v, s, key, prefix));
+        }
     }
     best
 }
@@ -1527,38 +1571,22 @@ fn search_own(
             continue;
         }
         if fusemacro && matches!(a, Action::Fuse { .. }) {
-            let Some(after_fuse) = try_apply(db, state, a, nodes, cap, line) else {
+            let Some((v, s, k, prefix)) =
+                best_fuse_main_child(db, state, a, me, nodes, cap, line, eval, stats)
+            else {
                 continue;
             };
-            if after_fuse.winner == Some(me) {
+            if s.winner == Some(me) {
                 if let Some(t) = track.as_deref_mut() {
-                    t.push(a.clone());
-                    t.set_leaf(INF, PvEnd::Terminal, &after_fuse);
+                    for act in prefix {
+                        t.push(act);
+                    }
+                    t.set_leaf(INF, PvEnd::Terminal, &s);
                 }
                 tt_put(tt, state, depth, true, INF, stats);
                 return INF;
             }
-            for completion in fuse_completions(db, &after_fuse, me) {
-                if *nodes >= cap {
-                    break;
-                }
-                let Some((s, tail)) = apply_fuse_completion(
-                    db,
-                    &after_fuse,
-                    &completion,
-                    nodes,
-                    cap,
-                    line,
-                    true,
-                    stats,
-                ) else {
-                    continue;
-                };
-                let k = search_key(&s);
-                let mut prefix = vec![a.clone()];
-                prefix.extend(tail);
-                scored.push((eval.value(&s, me), s, k, prefix));
-            }
+            scored.push((v, s, k, prefix));
             continue;
         }
         let Some(s) = try_apply(db, state, a, nodes, cap, line) else {

@@ -233,6 +233,61 @@ fn no_leaf_inside_partner_choice_with_fusemacro() {
     );
 }
 
+fn pv_contains_fuse(pv: &[arena_engine::NeutralAction]) -> bool {
+    pv.iter()
+        .any(|a| matches!(a, arena_engine::NeutralAction::Fuse { .. }))
+}
+
+#[test]
+fn fusemacro_main_node_keeps_attack_without_fuse_line() {
+    let db = load_db();
+    let mut st = started(&db, 30);
+    let me = PlayerId::A;
+    clear_hand(&mut st, me);
+    let _sephie = put_hand(&db, &mut st, me, SEPHIE);
+    for id in [
+        "88001110", "10932310", "10513110", "88001110", "10931110", "10513110",
+    ] {
+        put_hand(&db, &mut st, me, id);
+    }
+    put_field(&db, &mut st, me, "10931110");
+    give_pp(&mut st, me, 0, 10);
+    let legal = legal_actions(&db, &st);
+    assert!(
+        legal.iter().any(|a| matches!(a, Action::Fuse { .. })),
+        "fuse must be legal"
+    );
+    assert!(
+        legal.iter().any(|a| matches!(a, Action::Attack { .. })),
+        "attack must be legal"
+    );
+    assert!(
+        st.player(me).hand.len() >= 6,
+        "need 5+ partners besides Sephie"
+    );
+    let mut h0 = parse_h0("h0:fusemacro=1,depth=6,nodes=8000,k=1,tt=0,value=v0,olethal=0,osteps=0");
+    h0.arm_explain();
+    let mut rng = policy_rng(70_001);
+    let _ = h0.choose(&db, &st, &legal, &mut rng);
+    let rec = h0.take_explain().expect("explain");
+    assert_eq!(rec.path, ChoosePath::Search);
+    let attack_cand = rec
+        .candidates
+        .iter()
+        .find(|c| matches!(c.action, arena_engine::NeutralAction::Attack { .. }))
+        .expect("attack candidate");
+    let world = attack_cand
+        .worlds
+        .iter()
+        .find(|w| !w.skipped && !w.pv.is_empty())
+        .expect("scored attack world");
+    assert!(
+        !pv_contains_fuse(&world.pv),
+        "attack best line must not fuse: pv={:?}",
+        world.pv
+    );
+}
+
 #[test]
 fn fusemacro_one_ply_same_depth_as_play() {
     let db = load_db();
@@ -298,8 +353,14 @@ fn show_it_sephie_fuse_reasks() {
     ];
     let mut decisions = 0u32;
     let mut still = [0u32; 4];
-    eprintln!("| game | seed | still_fuses default | fusemacro | v0 wide | v0+fusemacro | fuse raw/end/pv | best other root_agg |");
-    eprintln!("| --- | --- | --- | --- | --- | --- | --- | --- |");
+    let mut hand_le8 = 0u32;
+    let mut hand_eq9 = 0u32;
+    let mut still_v0fm_le8 = 0u32;
+    let mut total_v0fm_le8 = 0u32;
+    let mut still_v0fm_eq9 = 0u32;
+    let mut total_v0fm_eq9 = 0u32;
+    eprintln!("| game | seed | hand | still_fuses default | fusemacro | v0 wide | v0+fusemacro | fuse raw/end/pv | best other root_agg |");
+    eprintln!("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
     for g in 0..60u32 {
         let seed = 900u64 + g as u64;
         let deck_b = load_deck_file(format!("oracle/decks/{}.json", META_DECKS[g as usize % 6]));
@@ -331,7 +392,13 @@ fn show_it_sephie_fuse_reasks() {
                 let pick = h0.choose(&db, &state, &legal, &mut rng);
                 if matches!(legal[pick], Action::Fuse { .. }) {
                     decisions += 1;
-                    let mut row = format!("| {g} | {seed} | yes | ");
+                    let hand = state.player(PlayerId::A).hand.len();
+                    if hand <= 8 {
+                        hand_le8 += 1;
+                    } else {
+                        hand_eq9 += 1;
+                    }
+                    let mut row = format!("| {g} | {seed} | {hand} | yes | ");
                     for (si, (spec, _)) in specs.iter().enumerate().skip(1) {
                         let mut bot = parse_h0(spec);
                         bot.arm_explain();
@@ -339,6 +406,15 @@ fn show_it_sephie_fuse_reasks() {
                         let re = bot.choose(&db, &state, &legal, &mut r);
                         let fuses = matches!(legal[re], Action::Fuse { .. });
                         still[si] += u32::from(fuses);
+                        if si == 3 {
+                            if hand <= 8 {
+                                total_v0fm_le8 += 1;
+                                still_v0fm_le8 += u32::from(fuses);
+                            } else {
+                                total_v0fm_eq9 += 1;
+                                still_v0fm_eq9 += u32::from(fuses);
+                            }
+                        }
                         row.push_str(if fuses { "yes | " } else { "no | " });
                         if si == 1 && fuses {
                             let rec = bot.take_explain().expect("explain");
@@ -379,7 +455,16 @@ fn show_it_sephie_fuse_reasks() {
         }
     }
     eprintln!(
-        "decisions={} still_fuses: default=all; fusemacro={}; v0={}; v0+fusemacro={}",
-        decisions, still[1], still[2], still[3]
+        "decisions={} hand<=8={} hand==9={} still_fuses: default=all; fusemacro={}; v0={}; v0+fusemacro={}",
+        decisions,
+        hand_le8,
+        hand_eq9,
+        still[1],
+        still[2],
+        still[3]
+    );
+    eprintln!(
+        "v0+fusemacro hand<=8: {}/{} still fuse; hand==9: {}/{}",
+        still_v0fm_le8, total_v0fm_le8, still_v0fm_eq9, total_v0fm_eq9
     );
 }
