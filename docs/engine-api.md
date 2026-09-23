@@ -858,6 +858,7 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | `Game.clone() -> Game` | Deep copy of `State` (search). |
 | `Game.bot_action(policy, seed) -> dict` | One NeutralAction for the acting player (`by_name` + `policy_rng` + `choose`). |
 | `Game.bot_action_value(policy, seed) -> dict` | Same decision as `bot_action`, plus `{"action": NeutralAction, "value": float \| None}` where `value` is the policy's `last_value()` after `choose` (`None` for policies that do not search, e.g. `random`). |
+| `Game.bot_action_explain(policy, seed) -> dict` | Same decision as `bot_action_value` for `h0` specs, plus a per-candidate explain record (see below). Non-`h0` policies return `{"chosen": NeutralAction, "path": "opaque"}`. Recording does not change the chosen action or node count. |
 | `arena.play_random(db, seed, deck_a, deck_b, first="coin") -> dict` | `{winner, turns, actions, first}`. Random-legal + `policy_rng`. |
 | `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False, export=None, export_epsilon=0.0) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)`; both seats share `policy_rng(game seed)` as the bench does. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. `export=None` (default) is byte-identical to today — no extra files, no `"export"` key. `export=<dir>` writes training-sample shards (see Training samples (M5b)) and adds `"export": {dir, samples, games}`; `export_epsilon` is ε-greedy exploration on those games (inner policy still asked first). |
 | `py/stats.py::wilson(k, n, z=1.96) -> (lo, hi)` | Wilson score interval for `k` successes in `n` trials, clipped to `[0, 1]`. `n == 0` → `(0.0, 1.0)`. |
@@ -871,6 +872,52 @@ games/s, `os.cpu_count()`, per-deck row/column rates). `--policy-a` /
 `--export <dir>` / `--export-epsilon <f>` (default 0) forward to `matchup`;
 the summary prints `samples: N (k per game)` when exporting.
 `matchup.json` also stores `wilson95` per cell and `summary`.
+
+## H0 explain (`bot_action_explain`)
+
+`Game.bot_action_explain(policy, seed)` returns the same `chosen` and `value`
+as `bot_action_value` for `h0` specs. The sink is armed only for that call;
+when not used, search behaviour and node accounting are unchanged.
+
+For `h0`, the dict also carries:
+
+| key | type | meaning |
+|---|---|---|
+| `path` | str | Which `H0::choose` branch decided: `single_legal`, `mulligan`, `one_ply`, `consensus_lethal`, or `search`. |
+| `k` | int | Determinized roots (`1` under `info=all`). |
+| `node_cap` | int | Global node cap for the decision. |
+| `alloc` | str | `fair` or `root`. |
+| `nodes` | int | Total `apply`s spent. |
+| `candidates` | list | One entry per root candidate, in candidate order. |
+| `chosen_index` | int | Index in `legal` of the chosen action. |
+| `tie_set` | list[int] | Every candidate whose aggregated value equals the maximum; the chosen index is the lowest. |
+
+Each candidate entry:
+
+| key | type | meaning |
+|---|---|---|
+| `legal_index` | int | Index in `legal`. |
+| `action` | NeutralAction | That candidate. |
+| `worlds` | list | Per determinized root `r`. |
+| `root_agg` | float | Aggregated value over scored worlds. |
+| `worst` | float | Worst clamped sample. |
+| `n` | int | Worlds that scored this candidate. |
+
+Each world entry:
+
+| key | type | meaning |
+|---|---|---|
+| `raw` | float | `search_own` return before `finite`. |
+| `clamped` | float | After `finite`. |
+| `node_cap` | int | Cap for this `(root, candidate)` pair. |
+| `nodes` | int | Nodes spent on this pair. |
+| `hit_cap` | bool | Pair reached its cap. |
+| `skipped` | bool | Pair never searched (global cap already spent). |
+| `pv` | list[NeutralAction] | Principal variation (up to 12 actions) of the line that produced the value. |
+| `end` | str \| null | `depth`, `cap`, `terminal`, `opp_reply`, or `opp_lethal`. |
+| `leaf` | object \| null | `{value, phase, turn, active}` at the line end. |
+
+Non-`h0` policies return only `{"chosen": NeutralAction, "path": "opaque"}`.
 
 ## Training samples (M5b)
 
