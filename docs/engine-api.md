@@ -461,6 +461,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
+| `lcap` | 1 | in `(0, 1]`: the consensus-lethal check before the search may spend at most `floor(lcap × node_cap)` nodes; running out counts as "no consensus lethal", and the search gets what is left |
+| `clip` | 0 | `≥ 0`: clamp each standardised input of the learned leaf to `[−clip, clip]`; `0` is off. Accepted and ignored with `value=v0` / `value=v1` |
 | `fusemacro` | 0 | when `1`, on the bot's own turn only: expand each `Fuse` into partner-choice completions (one search ply per completion) and never score a leaf inside the bot's own `FusePartners` choice |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
@@ -639,7 +641,7 @@ is the default. `tt=0` restores the pre-#32 search.
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
@@ -647,6 +649,11 @@ the fraction of decisions that exhausted `node_cap`; `candidates` are
 legal actions kept after the Bonus-PP filter; `pairs_skipped` is
 `k × |subset| − attempted` (pairs never given a search after
 `consensus_lethal` left leftover budget) per decision;
+`lethal_nodes` are nodes spent by the consensus-lethal check;
+`unscored` counts search-path decisions where no candidate was scored
+(the bot then plays the first candidate unevaluated);
+`fuse_overshoot` counts uncharged applies used to finish a partner
+choice at a leaf (`fusemacro=1` only);
 `opp_leaves` /
 `opp_cap_hit_rate` describe the opponent model; `tt_hits` / `tt_stores`
 are transposition-table lookups that returned a value and writes
