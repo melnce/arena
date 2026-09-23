@@ -108,6 +108,7 @@ struct Evaluator<'a> {
     osteps: u32,
     net: Option<&'a ValueNet>,
     vocab: &'a [CardId],
+    clip: f32,
 }
 
 impl Evaluator<'_> {
@@ -115,10 +116,15 @@ impl Evaluator<'_> {
         match self.version {
             ValueVersion::V0 => value(state, me),
             ValueVersion::V1 => value_v1(state, me, self.needs, self.weights),
-            ValueVersion::Net => self
-                .net
-                .expect("value=net requires a loaded net")
-                .value(&encode_with_vocab(state, me, self.vocab)),
+            ValueVersion::Net => {
+                let obs = encode_with_vocab(state, me, self.vocab);
+                let net = self.net.expect("value=net requires a loaded net");
+                if self.clip > 0.0 {
+                    net.value_clipped(&obs, self.clip)
+                } else {
+                    net.value(&obs)
+                }
+            }
         }
     }
 }
@@ -168,6 +174,10 @@ pub struct SearchStats {
     /// `consensus_lethal` left leftover budget:
     /// `k × |subset| − attempted` per searched decision.
     pub pairs_skipped: u64,
+    /// `apply`s spent in the consensus-lethal check before search.
+    pub lethal_nodes: u64,
+    /// Search-path decisions where no candidate was scored.
+    pub unscored: u64,
 }
 
 impl SearchStats {
@@ -192,6 +202,8 @@ impl SearchStats {
         self.tt_hits += other.tt_hits;
         self.tt_stores += other.tt_stores;
         self.pairs_skipped += other.pairs_skipped;
+        self.lethal_nodes += other.lethal_nodes;
+        self.unscored += other.unscored;
     }
 }
 
@@ -251,6 +263,12 @@ pub struct H0 {
     pub osteps: u32,
     /// Learned leaf (`value=net`). `None` when the leaf is v0/v1.
     pub net: Option<Arc<ValueNet>>,
+    /// Consensus-lethal node budget as a fraction of `node_cap`, in `(0, 1]`.
+    /// Default `1.0` is today's behaviour (the whole cap).
+    pub lcap: f32,
+    /// Standardised-input clamp for the learned leaf; `0` is off. Ignored
+    /// with `value=v0` / `value=v1`.
+    pub clip: f32,
     /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
     pub net_path: Option<String>,
     pub stats: SearchStats,
@@ -285,6 +303,8 @@ impl Default for H0 {
             oevo: true,
             osteps: 6,
             net: Some(builtin_net()),
+            lcap: 1.0,
+            clip: 0.0,
             net_path: None,
             stats: SearchStats::default(),
             last_value: None,
@@ -331,7 +351,13 @@ impl H0 {
             osteps: self.osteps,
             net: self.net.as_deref(),
             vocab: root_vocab,
+            clip: self.clip,
         }
+    }
+
+    fn lethal_cap(&self, nodes: u32) -> u32 {
+        let budget = (self.lcap * self.node_cap as f32).floor() as u32;
+        nodes.saturating_add(budget).min(self.node_cap)
     }
 
     fn root_vocab(&self, state: &State) -> Vec<CardId> {
@@ -549,6 +575,7 @@ impl Policy for H0 {
         // lethal walk (every legal × every reply, plus `search_key` on each
         // apply) was the 8× regression vs pre-R2 greedy. Immediate wins are
         // still taken; constructed lethals use `H0::default()`.
+        let mut lethal_spent = None;
         let pick = if self.depth <= 2 {
             if let Some(rec) = &mut explain_rec {
                 rec.path = ChoosePath::OnePly;
@@ -577,7 +604,9 @@ impl Policy for H0 {
             cand[j]
         } else {
             let nodes_before_lethal = nodes;
-            let lethal = consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, self.node_cap);
+            let lethal_cap = self.lethal_cap(nodes);
+            let lethal = consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, lethal_cap);
+            lethal_spent = Some(nodes - nodes_before_lethal);
             if let Some(j) = lethal {
                 if let Some(rec) = &mut explain_rec {
                     rec.path = ChoosePath::ConsensusLethal;
@@ -747,6 +776,7 @@ impl Policy for H0 {
                     if any_scored {
                         rec.tie_set = tie_set_search(&n, &acc, &worst, self.pess, best_v, &cand);
                     } else {
+                        self.stats.unscored += 1;
                         rec.path = ChoosePath::Unscored;
                         rec.tie_set = cand.clone();
                     }
@@ -758,6 +788,9 @@ impl Policy for H0 {
         self.stats.nodes += u64::from(nodes);
         if nodes >= self.node_cap {
             self.stats.cap_hits += 1;
+        }
+        if let Some(spent) = lethal_spent {
+            self.stats.lethal_nodes += u64::from(spent);
         }
         self.stats.accum(&dec_stats);
         if let Some(mut rec) = explain_rec {
