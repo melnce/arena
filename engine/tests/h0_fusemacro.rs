@@ -290,10 +290,7 @@ fn show_it_sephie_fuse_reasks() {
     let specs = [
         ("h0", "default h0"),
         ("h0:fusemacro=1", "h0:fusemacro=1"),
-        (
-            "h0:value=v0,osteps=0,olethal=0,nodes=200000",
-            "v0 wide",
-        ),
+        ("h0:value=v0,osteps=0,olethal=0,nodes=200000", "v0 wide"),
         (
             "h0:value=v0,osteps=0,olethal=0,nodes=200000,fusemacro=1",
             "v0 wide + fusemacro",
@@ -305,10 +302,7 @@ fn show_it_sephie_fuse_reasks() {
     eprintln!("| --- | --- | --- | --- | --- | --- | --- | --- |");
     for g in 0..60u32 {
         let seed = 900u64 + g as u64;
-        let deck_b = load_deck_file(format!(
-            "oracle/decks/{}.json",
-            META_DECKS[g as usize % 6]
-        ));
+        let deck_b = load_deck_file(format!("oracle/decks/{}.json", META_DECKS[g as usize % 6]));
         let first = if g % 2 == 0 { First::A } else { First::B };
         let Ok(mut state) = new_game(
             &db,
@@ -354,16 +348,17 @@ fn show_it_sephie_fuse_reasks() {
                                 if let Some(w) = cand.worlds.first() {
                                     row.push_str(&format!(
                                         "raw={:.1} end={:?} pv_len={} | ",
-                                        w.raw,
-                                        w.end,
-                                        w.pv_len
+                                        w.raw, w.end, w.pv_len
                                     ));
                                 }
                                 let best_other = rec
                                     .candidates
                                     .iter()
                                     .filter(|c| {
-                                        !matches!(c.action, arena_engine::NeutralAction::Fuse { .. })
+                                        !matches!(
+                                            c.action,
+                                            arena_engine::NeutralAction::Fuse { .. }
+                                        )
                                     })
                                     .map(|c| c.root_agg)
                                     .max_by(|a, b| a.partial_cmp(b).unwrap())
@@ -385,9 +380,6 @@ fn show_it_sephie_fuse_reasks() {
     }
     eprintln!(
         "decisions={} still_fuses: default=all; fusemacro={}; v0={}; v0+fusemacro={}",
-        decisions,
-        still[1],
-        still[2],
-        still[3]
+        decisions, still[1], still[2], still[3]
     );
 }
