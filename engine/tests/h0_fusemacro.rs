@@ -304,7 +304,7 @@ fn show_it_sephie_fuse_reasks() {
     eprintln!("| game | seed | still_fuses default | fusemacro | v0 wide | v0+fusemacro | fuse raw/end/pv | best other root_agg |");
     eprintln!("| --- | --- | --- | --- | --- | --- | --- | --- |");
     for g in 0..60u32 {
-        let seed = 900 + g;
+        let seed = 900u64 + g as u64;
         let deck_b = load_deck_file(format!(
             "oracle/decks/{}.json",
             META_DECKS[g as usize % 6]
