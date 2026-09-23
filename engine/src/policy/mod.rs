@@ -140,7 +140,11 @@ impl AnyPolicy {
     /// `all` is the true state and builds one root regardless of `k`),
     /// and `w_shadows=`,
     /// `w_earth=`, `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`,
-    /// `w_lw=` (f32; only meaningful with `value=v1`).
+    /// `w_lw=` (f32; only meaningful with `value=v1`),
+    /// `lcap=<f>` (consensus-lethal node budget as a fraction of `node_cap`,
+    /// in `(0, 1]`; default `1.0` is today's behaviour), and `clip=<c>`
+    /// (`c ≥ 0`; standardised-input clamp for the learned leaf; default `0`
+    /// is off; ignored with `value=v0` / `value=v1`).
     ///
     /// `Err` names the offending token: unknown policy, unknown key, or bad
     /// number.
@@ -165,7 +169,8 @@ impl AnyPolicy {
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
     /// when the allocator is the pre-#46 root-major spend, `info=draws`
     /// / `info=all` when the information regime is not the default
-    /// `fair`, and any non-default weight.
+    /// `fair`, any non-default weight, non-default `lcap`, and non-default
+    /// `clip`.
     /// `"h0"` still round-trips to `"h0"`.
     pub fn spec(&self) -> String {
         match self {
@@ -262,6 +267,12 @@ fn h0_spec(h: &H0) -> String {
     if w.last_words != dw.last_words {
         parts.push(format!("w_lw={}", w.last_words));
     }
+    if h.lcap != def.lcap {
+        parts.push(format!("lcap={}", h.lcap));
+    }
+    if h.clip != def.clip {
+        parts.push(format!("clip={}", h.clip));
+    }
     format!("h0:{}", parts.join(","))
 }
 
@@ -282,6 +293,8 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.alloc == b.alloc
         && a.info == b.info
         && a.net_path == b.net_path
+        && a.lcap == b.lcap
+        && a.clip == b.clip
         && weights_eq(&a.weights, &b.weights)
 }
 
@@ -383,6 +396,20 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     "all" => Info::All,
                     other => return Err(format!("unknown info '{other}' (fair|draws|all)")),
                 }
+            }
+            "lcap" => {
+                let v: f32 = val.parse().map_err(|_| format!("bad lcap '{val}'"))?;
+                if !v.is_finite() || !(v > 0.0 && v <= 1.0) {
+                    return Err(format!("lcap out of range '{val}'"));
+                }
+                h.lcap = v;
+            }
+            "clip" => {
+                let v: f32 = val.parse().map_err(|_| format!("bad clip '{val}'"))?;
+                if !v.is_finite() || v < 0.0 {
+                    return Err(format!("clip out of range '{val}'"));
+                }
+                h.clip = v;
             }
             other => return Err(format!("unknown key '{other}'")),
         }

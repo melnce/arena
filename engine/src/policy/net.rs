@@ -222,6 +222,22 @@ impl ValueNet {
         out
     }
 
+    fn standardize(&self, obs: &Observation, clip: f32) -> Vec<f32> {
+        (0..self.feature_len)
+            .map(|i| {
+                let f = obs.features.get(i).copied().unwrap_or(0.0);
+                let mean = self.feat_mean.get(i).copied().unwrap_or(0.0);
+                let std = self.feat_std.get(i).copied().unwrap_or(1.0);
+                let x = (f - mean) / std;
+                if clip > 0.0 {
+                    x.clamp(-clip, clip)
+                } else {
+                    x
+                }
+            })
+            .collect()
+    }
+
     /// `scale × tanh(pre-activation)` on the standardized observation.
     pub fn value(&self, obs: &Observation) -> f32 {
         let x: Vec<f32> = (0..self.feature_len)
@@ -232,6 +248,17 @@ impl ValueNet {
                 (f - mean) / std
             })
             .collect();
+        self.forward(&x, obs)
+    }
+
+    /// Like [`value`], but clamps each standardised input to `[-clip, clip]`
+    /// before the forward pass when `clip > 0`.
+    pub fn value_clipped(&self, obs: &Observation, clip: f32) -> f32 {
+        let x = self.standardize(obs, clip);
+        self.forward(&x, obs)
+    }
+
+    fn forward(&self, x: &[f32], obs: &Observation) -> f32 {
         let pre = match self.arch {
             NetArch::Linear => {
                 let lin = self.linear.as_ref().expect("linear weights");
