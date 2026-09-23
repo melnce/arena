@@ -246,6 +246,7 @@ impl PyGame {
                         "node_cap": explain_json.get("node_cap"),
                         "alloc": explain_json.get("alloc"),
                         "nodes": explain_json.get("nodes"),
+                        "nodes_lethal": explain_json.get("nodes_lethal"),
                         "candidates": explain_json.get("candidates"),
                         "chosen_index": explain_json.get("chosen_index"),
                         "tie_set": explain_json.get("tie_set"),

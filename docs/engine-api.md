@@ -883,14 +883,15 @@ For `h0`, the dict also carries:
 
 | key | type | meaning |
 |---|---|---|
-| `path` | str | Which `H0::choose` branch decided: `single_legal`, `mulligan`, `one_ply`, `consensus_lethal`, or `search`. |
+| `path` | str | Which `H0::choose` branch decided: `single_legal`, `mulligan`, `one_ply`, `consensus_lethal`, `search`, or `unscored` (search entered but no `(root, candidate)` pair scored, e.g. the consensus-lethal check spent the entire node cap). |
 | `k` | int | Determinized roots (`1` under `info=all`). |
 | `node_cap` | int | Global node cap for the decision. |
 | `alloc` | str | `fair` or `root`. |
 | `nodes` | int | Total `apply`s spent. |
+| `nodes_lethal` | int | Nodes spent on the consensus-lethal check before search (0 on other paths). |
 | `candidates` | list | One entry per root candidate, in candidate order. |
 | `chosen_index` | int | Index in `legal` of the chosen action. |
-| `tie_set` | list[int] | Every candidate whose aggregated value equals the maximum; the chosen index is the lowest. |
+| `tie_set` | list[int] | Every candidate whose aggregated value equals the maximum; the chosen index is the lowest. On `unscored`, every candidate. |
 
 Each candidate entry:
 
@@ -898,7 +899,7 @@ Each candidate entry:
 |---|---|---|
 | `legal_index` | int | Index in `legal`. |
 | `action` | NeutralAction | That candidate. |
-| `worlds` | list | Per determinized root `r`. |
+| `worlds` | list | One entry per determinized root `r` (exactly `k` worlds per candidate). |
 | `root_agg` | float | Aggregated value over scored worlds. |
 | `worst` | float | Worst clamped sample. |
 | `n` | int | Worlds that scored this candidate. |
@@ -907,15 +908,19 @@ Each world entry:
 
 | key | type | meaning |
 |---|---|---|
+| `r` | int | Determinized root index (`0 .. k-1`). |
 | `raw` | float | `search_own` return before `finite`. |
 | `clamped` | float | After `finite`. |
 | `node_cap` | int | Cap for this `(root, candidate)` pair. |
 | `nodes` | int | Nodes spent on this pair. |
 | `hit_cap` | bool | Pair reached its cap. |
-| `skipped` | bool | Pair never searched (global cap already spent). |
-| `pv` | list[NeutralAction] | Principal variation (up to 12 actions) of the line that produced the value. |
-| `end` | str \| null | `depth`, `cap`, `terminal`, `opp_reply`, or `opp_lethal`. |
-| `leaf` | object \| null | `{value, phase, turn, active}` at the line end. |
+| `skipped` | bool | Pair never searched (global cap already spent, or `try_apply` failed at the root). |
+| `pv` | list[NeutralAction] | Principal variation (first 12 actions of the line that produced the value). |
+| `pv_len` | int | Full PV length in actions (may exceed `len(pv)`). |
+| `end` | str \| null | `depth`, `cap`, `terminal`, `opp_reply`, `opp_lethal`, `opp_search` (opponent beam search leaf), or `tt` (transposition-table hit — no line behind it). |
+| `leaf` | object \| null | `{value, phase, turn, active}` at the line end. **Invariant:** for scored worlds, `leaf.value == raw` (within float tolerance); it is the value the search returned, not a replay of `pv`. |
+
+Replay check (tests): for worlds whose `end` is `depth`, `cap`, or `opp_reply` with `pv_len ≤ 12` and `tt` off, replaying `pv` from that world's determinized root under `value=v0` evaluates to `raw`.
 
 Non-`h0` policies return only `{"chosen": NeutralAction, "path": "opaque"}`.
 

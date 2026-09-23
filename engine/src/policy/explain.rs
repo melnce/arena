@@ -18,6 +18,9 @@ pub enum ChoosePath {
     OnePly,
     ConsensusLethal,
     Search,
+    /// Search entered but no `(root, candidate)` pair scored (e.g. the
+    /// consensus-lethal check spent the entire node cap).
+    Unscored,
 }
 
 /// How a principal-variation line ended.
@@ -29,6 +32,8 @@ pub enum PvEnd {
     Terminal,
     OppReply,
     OppLethal,
+    OppSearch,
+    Tt,
 }
 
 /// Leaf snapshot at the end of a principal-variation line.
@@ -40,9 +45,22 @@ pub struct PvLeaf {
     pub active: String,
 }
 
+/// Principal variation returned from a search subtree.
+#[derive(Debug, Clone)]
+pub(crate) struct Line {
+    pub actions: Vec<Action>,
+    pub len: usize,
+    pub end: PvEnd,
+    pub value: f32,
+    pub phase: String,
+    pub turn: u32,
+    pub active: String,
+}
+
 /// One world determinization's search result for a root candidate.
 #[derive(Debug, Clone, Serialize)]
 pub struct WorldRecord {
+    pub r: u32,
     pub raw: f32,
     pub clamped: f32,
     pub node_cap: u32,
@@ -50,6 +68,7 @@ pub struct WorldRecord {
     pub hit_cap: bool,
     pub skipped: bool,
     pub pv: Vec<NeutralAction>,
+    pub pv_len: u32,
     pub end: Option<PvEnd>,
     pub leaf: Option<PvLeaf>,
 }
@@ -73,6 +92,7 @@ pub struct ExplainRecord {
     pub node_cap: u32,
     pub alloc: String,
     pub nodes: u32,
+    pub nodes_lethal: u32,
     pub candidates: Vec<CandidateRecord>,
     pub chosen_index: usize,
     pub tie_set: Vec<usize>,
@@ -86,6 +106,7 @@ impl ExplainRecord {
             node_cap,
             alloc: alloc.to_string(),
             nodes: 0,
+            nodes_lethal: 0,
             candidates: Vec::new(),
             chosen_index: 0,
             tie_set: Vec::new(),
@@ -106,49 +127,39 @@ fn phase_str(p: &Phase) -> String {
 /// Tracks the principal variation for one `(root, candidate)` pair.
 pub(crate) struct PvTracker {
     path: Vec<Action>,
-    best_actions: Vec<Action>,
-    best_end: Option<PvEnd>,
-    best_leaf_value: f32,
-    best_phase: String,
-    best_turn: u32,
-    best_active: String,
+    path_len: usize,
+    last: Option<Line>,
     cap: u32,
-    start_nodes: u32,
     hit_cap: bool,
 }
 
 impl PvTracker {
-    pub(crate) fn new(start_nodes: u32, cap: u32) -> Self {
+    pub(crate) fn new(cap: u32) -> Self {
         Self {
             path: Vec::new(),
-            best_actions: Vec::new(),
-            best_end: None,
-            best_leaf_value: f32::NAN,
-            best_phase: String::new(),
-            best_turn: 0,
-            best_active: String::new(),
+            path_len: 0,
+            last: None,
             cap,
-            start_nodes,
             hit_cap: false,
         }
     }
 
     pub(crate) fn push(&mut self, a: Action) {
+        self.path_len += 1;
         if self.path.len() < 12 {
             self.path.push(a);
         }
     }
 
     pub(crate) fn pop_to(&mut self, len: usize) {
-        self.path.truncate(len);
+        self.path_len = len;
+        if self.path.len() > len {
+            self.path.truncate(len);
+        }
     }
 
     pub(crate) fn path_len(&self) -> usize {
-        self.path.len()
-    }
-
-    pub(crate) fn best_actions(&self) -> &[Action] {
-        &self.best_actions
+        self.path_len
     }
 
     pub(crate) fn note_nodes(&mut self, nodes: u32) {
@@ -157,103 +168,91 @@ impl PvTracker {
         }
     }
 
-    pub(crate) fn note_leaf(&mut self, v: f32, end: PvEnd, state: &State) {
-        self.note_end(v, end, state);
-        self.capture_path(v);
+    pub(crate) fn set_leaf(&mut self, v: f32, end: PvEnd, state: &State) {
+        self.last = Some(self.make_line(v, end, state));
     }
 
-    pub(crate) fn note_end(&mut self, v: f32, end: PvEnd, state: &State) {
-        self.best_end = Some(end);
-        self.best_leaf_value = v;
-        self.best_phase = phase_str(&state.phase);
-        self.best_turn = state.turn;
-        self.best_active = player_str(state.active);
+    pub(crate) fn set_tt(&mut self, v: f32, state: &State) {
+        self.last = Some(self.make_line(v, PvEnd::Tt, state));
     }
 
-    pub(crate) fn commit_if_better(&mut self, v: f32) {
-        if self.best_actions.is_empty() || v > self.best_leaf_value {
-            self.capture_path(v);
+    pub(crate) fn take_last(&mut self) -> Option<Line> {
+        self.last.take()
+    }
+
+    pub(crate) fn restore_last(&mut self, line: Option<Line>) {
+        self.last = line;
+    }
+
+    fn make_line(&self, v: f32, end: PvEnd, state: &State) -> Line {
+        Line {
+            actions: self.path.clone(),
+            len: self.path_len,
+            end,
+            value: v,
+            phase: phase_str(&state.phase),
+            turn: state.turn,
+            active: player_str(state.active),
         }
     }
 
-    pub(crate) fn commit_if_worse(&mut self, v: f32) {
-        if self.best_actions.is_empty() || v < self.best_leaf_value {
-            self.capture_path(v);
+    pub(crate) fn skipped_world(r: u32, cap: u32) -> WorldRecord {
+        WorldRecord {
+            r,
+            raw: 0.0,
+            clamped: 0.0,
+            node_cap: cap,
+            nodes: 0,
+            hit_cap: false,
+            skipped: true,
+            pv: Vec::new(),
+            pv_len: 0,
+            end: None,
+            leaf: None,
         }
     }
 
-    fn capture_path(&mut self, v: f32) {
-        self.best_actions = self.path.clone();
-        if self.best_actions.len() > 12 {
-            self.best_actions.truncate(12);
-        }
-        self.best_leaf_value = v;
-    }
-
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn into_world(
         self,
+        r: u32,
         raw: f32,
         clamped: f32,
         skipped: bool,
+        nodes_spent: u32,
         db: &CardDb,
         root: &State,
     ) -> WorldRecord {
-        let nodes = self.start_nodes; // filled by caller
-        let pv = actions_to_neutral(db, root, &self.best_actions);
-        let leaf = if self.best_end.is_some() {
-            Some(PvLeaf {
-                value: self.best_leaf_value,
-                phase: self.best_phase.clone(),
-                turn: self.best_turn,
-                active: self.best_active.clone(),
-            })
+        if skipped {
+            return Self::skipped_world(r, self.cap);
+        }
+        let line = self.last;
+        let (pv, pv_len, end, leaf) = if let Some(line) = line {
+            let pv = actions_to_neutral(db, root, &line.actions);
+            let leaf = PvLeaf {
+                value: line.value,
+                phase: line.phase,
+                turn: line.turn,
+                active: line.active,
+            };
+            (pv, line.len as u32, Some(line.end), Some(leaf))
         } else {
-            None
+            (Vec::new(), 0, None, None)
         };
         WorldRecord {
+            r,
             raw,
             clamped,
             node_cap: self.cap,
-            nodes,
+            nodes: nodes_spent,
             hit_cap: self.hit_cap,
-            skipped,
+            skipped: false,
             pv,
-            end: self.best_end,
+            pv_len,
+            end,
             leaf,
         }
     }
-}
-
-pub(crate) fn finish_world(
-    tracker: PvTracker,
-    raw: f32,
-    clamped: f32,
-    skipped: bool,
-    nodes_spent: u32,
-    db: &CardDb,
-    root: &State,
-) -> WorldRecord {
-    let mut w = tracker.into_world(raw, clamped, skipped, db, root);
-    w.nodes = nodes_spent;
-    w
-}
-
-pub(crate) fn leaf_after_pv(
-    db: &CardDb,
-    root: &State,
-    actions: &[Action],
-    value: impl Fn(&State) -> f32,
-) -> Option<(f32, String, u32, String)> {
-    if actions.is_empty() {
-        return None;
-    }
-    let mut s = root.clone();
-    for a in actions {
-        if apply(db, &mut s, a.clone()).is_err() {
-            return None;
-        }
-    }
-    Some((value(&s), phase_str(&s.phase), s.turn, player_str(s.active)))
 }
 
 fn actions_to_neutral(db: &CardDb, root: &State, actions: &[Action]) -> Vec<NeutralAction> {
