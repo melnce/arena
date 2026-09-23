@@ -15,12 +15,14 @@ const SPECS: &[&str] = &[
     "h0:nodes=6000",
     "h0:k=1",
     "h0:info=all",
+    "h0:fusemacro=1",
 ];
 
 const REPLAY_SPECS: &[&str] = &[
     "h0:value=v0,olethal=0,osteps=0,tt=0",
     "h0:value=v0,olethal=0,osteps=0,tt=1",
     "h0:k=1,info=all,value=v0,olethal=0,osteps=0,odepth=0,tt=0",
+    "h0:value=v0,olethal=0,osteps=0,tt=0,fusemacro=1",
 ];
 
 fn collect_states(db: &CardDb, n: usize, midgame_only: bool) -> Vec<arena_engine::State> {

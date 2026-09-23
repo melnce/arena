@@ -15,7 +15,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
-use crate::action::{acting_player, Action};
+use crate::action::{acting_player, to_neutral, Action};
 use crate::apply::{apply, legal_actions};
 use crate::card::{CardId, CardKind};
 use crate::db::CardDb;
@@ -27,7 +27,8 @@ use crate::ids::{AttackTarget, PlayerId};
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
 use crate::search_key::search_key;
-use crate::state::{Phase, PlayerState, State};
+use crate::state::{ChoiceNode, Phase, PlayerState, State};
+use crate::trace::{ChooseOptionJson, NeutralAction};
 
 use super::explain::{CandidateRecord, ChoosePath, ExplainRecord, Line, PvEnd, PvTracker};
 use super::needs::NeedsTable;
@@ -178,6 +179,9 @@ pub struct SearchStats {
     pub lethal_nodes: u64,
     /// Search-path decisions where no candidate was scored.
     pub unscored: u64,
+    /// Uncharged `apply`s used to finish a fuse partner choice at a leaf
+    /// (`fusemacro=1` only).
+    pub fuse_overshoot: u64,
 }
 
 impl SearchStats {
@@ -204,6 +208,7 @@ impl SearchStats {
         self.pairs_skipped += other.pairs_skipped;
         self.lethal_nodes += other.lethal_nodes;
         self.unscored += other.unscored;
+        self.fuse_overshoot += other.fuse_overshoot;
     }
 }
 
@@ -261,6 +266,9 @@ pub struct H0 {
     /// Greedy-line steps before a forced `EndTurn`. Default `6` is the sweep-5
     /// flip; the hard stop is `osteps + 3` (today: 9).
     pub osteps: u32,
+    /// Treat a fuse as one search ply by expanding partner-choice completions
+    /// (`fusemacro=1`). Default `false` is today's step-by-step fuse search.
+    pub fusemacro: bool,
     /// Learned leaf (`value=net`). `None` when the leaf is v0/v1.
     pub net: Option<Arc<ValueNet>>,
     /// Consensus-lethal node budget as a fraction of `node_cap`, in `(0, 1]`.
@@ -302,6 +310,7 @@ impl Default for H0 {
             olethal: true,
             oevo: true,
             osteps: 6,
+            fusemacro: false,
             net: Some(builtin_net()),
             lcap: 1.0,
             clip: 0.0,
@@ -690,11 +699,18 @@ impl Policy for H0 {
                             eval.wv
                         } else {
                             let line = vec![root_key, search_key(&s)];
+                            let at_fuse_choice =
+                                self.fusemacro && own_fuse_partners(&s, me).is_some();
+                            let search_depth = if at_fuse_choice {
+                                self.depth
+                            } else {
+                                self.depth.saturating_sub(1)
+                            };
                             search_own(
                                 db,
                                 &s,
                                 me,
-                                self.depth.saturating_sub(1),
+                                search_depth,
                                 self.beam,
                                 &mut nodes,
                                 cap,
@@ -705,6 +721,7 @@ impl Policy for H0 {
                                 &mut dec_stats,
                                 table.as_mut(),
                                 tracker.as_mut(),
+                                self.fusemacro,
                             )
                         };
                         if let Some(t) = tracker.as_mut() {
@@ -1062,6 +1079,345 @@ fn greedy_index(
     best_i
 }
 
+/// Partner cards to pick for one fuse completion (`fusemacro=1`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct FuseCompletion {
+    partners: Vec<CardId>,
+}
+
+fn own_fuse_partners(state: &State, me: PlayerId) -> Option<(u8, Vec<u8>, Vec<u8>)> {
+    match &state.phase {
+        Phase::Choice {
+            player,
+            node:
+                ChoiceNode::FusePartners {
+                    host,
+                    options,
+                    picked,
+                },
+        } if *player == me => Some((*host, options.clone(), picked.clone())),
+        _ => None,
+    }
+}
+
+fn fuse_host_has_recipes(db: &CardDb, state: &State, me: PlayerId, host: u8) -> bool {
+    state
+        .player(me)
+        .hand
+        .get(host as usize)
+        .and_then(|inst| db.card(inst.card).ok())
+        .and_then(|card| card.fuse())
+        .is_some_and(|f| f.recipes.is_some())
+}
+
+fn distinct_unpicked_partner_cards(
+    state: &State,
+    me: PlayerId,
+    options: &[u8],
+    picked: &[u8],
+) -> Vec<CardId> {
+    let mut seen = Vec::new();
+    let mut out = Vec::new();
+    for &pos in options {
+        if picked.contains(&pos) {
+            continue;
+        }
+        let Some(inst) = state.player(me).hand.get(pos as usize) else {
+            continue;
+        };
+        if !seen.contains(&inst.card) {
+            seen.push(inst.card);
+            out.push(inst.card);
+        }
+    }
+    out
+}
+
+/// Partner-card sets for each fuse completion (`fusemacro=1`). Exposed for tests.
+#[doc(hidden)]
+pub fn fuse_completion_partner_sets(db: &CardDb, state: &State, me: PlayerId) -> Vec<Vec<CardId>> {
+    fuse_completions(db, state, me)
+        .into_iter()
+        .map(|c| c.partners)
+        .collect()
+}
+
+fn fuse_completions(db: &CardDb, state: &State, me: PlayerId) -> Vec<FuseCompletion> {
+    let Some((host, options, picked)) = own_fuse_partners(state, me) else {
+        return Vec::new();
+    };
+    let has_recipes = fuse_host_has_recipes(db, state, me, host);
+    let distinct = distinct_unpicked_partner_cards(state, me, &options, &picked);
+    let mut out = Vec::new();
+    if !picked.is_empty() {
+        out.push(FuseCompletion {
+            partners: Vec::new(),
+        });
+        if has_recipes {
+            for card in distinct {
+                out.push(FuseCompletion {
+                    partners: vec![card],
+                });
+            }
+        }
+    } else {
+        for card in &distinct {
+            out.push(FuseCompletion {
+                partners: vec![*card],
+            });
+        }
+        if has_recipes {
+            for i in 0..distinct.len() {
+                for j in (i + 1)..distinct.len() {
+                    out.push(FuseCompletion {
+                        partners: vec![distinct[i], distinct[j]],
+                    });
+                }
+            }
+        }
+    }
+    out
+}
+
+fn fuse_single_partner_completions(state: &State, me: PlayerId) -> Vec<FuseCompletion> {
+    let Some((_, options, picked)) = own_fuse_partners(state, me) else {
+        return Vec::new();
+    };
+    if !picked.is_empty() {
+        return vec![FuseCompletion {
+            partners: Vec::new(),
+        }];
+    }
+    distinct_unpicked_partner_cards(state, me, &options, &picked)
+        .into_iter()
+        .map(|card| FuseCompletion {
+            partners: vec![card],
+        })
+        .collect()
+}
+
+fn choose_targets_card(state: &State, action: &Action, card: CardId) -> bool {
+    if !matches!(action, Action::Choose(_)) {
+        return false;
+    }
+    match &to_neutral(state, action) {
+        NeutralAction::Choose {
+            option: ChooseOptionJson::Card { card: id },
+            ..
+        } => CardId::parse(id) == Some(card),
+        _ => false,
+    }
+}
+
+fn find_choose_for_card(db: &CardDb, state: &State, card: CardId) -> Option<Action> {
+    legal_actions(db, state)
+        .into_iter()
+        .find(|a| choose_targets_card(state, a, card))
+}
+
+fn try_apply_uncharged(
+    db: &CardDb,
+    state: &State,
+    action: &Action,
+    line: &[u64],
+    stats: &mut SearchStats,
+) -> Option<State> {
+    let mut s = state.clone();
+    stats.fuse_overshoot += 1;
+    if apply(db, &mut s, action.clone()).is_err() {
+        return None;
+    }
+    let k = search_key(&s);
+    if line.contains(&k) {
+        return None;
+    }
+    Some(s)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn apply_fuse_completion(
+    db: &CardDb,
+    state: &State,
+    completion: &FuseCompletion,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    charge: bool,
+    stats: &mut SearchStats,
+) -> Option<(State, Vec<Action>)> {
+    let mut s = state.clone();
+    let mut actions = Vec::new();
+    let mut cur_line = line.to_vec();
+    for &card in &completion.partners {
+        let action = find_choose_for_card(db, &s, card)?;
+        actions.push(action.clone());
+        s = if charge {
+            try_apply(db, &s, &action, nodes, cap, &cur_line)?
+        } else {
+            try_apply_uncharged(db, &s, &action, &cur_line, stats)?
+        };
+        cur_line.push(search_key(&s));
+    }
+    let confirm = Action::Confirm;
+    actions.push(confirm.clone());
+    s = if charge {
+        try_apply(db, &s, &confirm, nodes, cap, &cur_line)?
+    } else {
+        try_apply_uncharged(db, &s, &confirm, &cur_line, stats)?
+    };
+    Some((s, actions))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn fuse_overshoot_score(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    stats: &mut SearchStats,
+    track: Option<&mut PvTracker>,
+    end: PvEnd,
+) -> f32 {
+    let singles = fuse_single_partner_completions(state, me);
+    let mut best = f32::NEG_INFINITY;
+    let mut best_state = state.clone();
+    for completion in singles {
+        if let Some((s, _)) =
+            apply_fuse_completion(db, state, &completion, &mut 0, u32::MAX, line, false, stats)
+        {
+            let v = eval.value(&s, me);
+            if v > best {
+                best = v;
+                best_state = s;
+            }
+        }
+    }
+    if !best.is_finite() {
+        best = eval.value(state, me);
+        best_state = state.clone();
+    }
+    if let Some(t) = track {
+        t.set_leaf(best, end, &best_state);
+    }
+    best
+}
+
+#[allow(clippy::too_many_arguments, clippy::needless_option_as_deref)]
+fn search_own_fuse_choice(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    depth: u32,
+    beam: usize,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    odepth: u32,
+    obeam: usize,
+    stats: &mut SearchStats,
+    mut tt: Option<&mut Tt>,
+    mut track: Option<&mut PvTracker>,
+) -> f32 {
+    if depth == 0 || *nodes >= cap {
+        return fuse_overshoot_score(
+            db,
+            state,
+            me,
+            line,
+            eval,
+            stats,
+            track.as_deref_mut(),
+            if depth == 0 { PvEnd::Depth } else { PvEnd::Cap },
+        );
+    }
+    if let Some(v) = tt_get(tt.as_deref(), state, depth, true, stats) {
+        if let Some(t) = track.as_deref_mut() {
+            t.set_tt(v, state);
+        }
+        return v;
+    }
+    let completions = fuse_completions(db, state, me);
+    if completions.is_empty() {
+        return fuse_overshoot_score(
+            db,
+            state,
+            me,
+            line,
+            eval,
+            stats,
+            track.as_deref_mut(),
+            PvEnd::Cap,
+        );
+    }
+    let mut best = f32::NEG_INFINITY;
+    let mut best_line: Option<Line> = None;
+    for completion in completions {
+        if *nodes >= cap {
+            break;
+        }
+        let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
+        let Some((s, tail)) =
+            apply_fuse_completion(db, state, &completion, nodes, cap, line, true, stats)
+        else {
+            continue;
+        };
+        if let Some(t) = track.as_deref_mut() {
+            for a in tail {
+                t.push(a);
+            }
+        }
+        let mut next_line = line.to_vec();
+        next_line.push(search_key(&s));
+        let v = search_own(
+            db,
+            &s,
+            me,
+            depth.saturating_sub(1),
+            beam,
+            nodes,
+            cap,
+            &next_line,
+            eval,
+            odepth,
+            obeam,
+            stats,
+            tt.as_deref_mut(),
+            track.as_deref_mut(),
+            true,
+        );
+        if v > best {
+            best = v;
+            if let Some(t) = track.as_deref_mut() {
+                best_line = t.take_last();
+            }
+        }
+        if let Some(t) = track.as_deref_mut() {
+            t.pop_to(plen);
+        }
+    }
+    if !best.is_finite() {
+        let v = fuse_overshoot_score(
+            db,
+            state,
+            me,
+            line,
+            eval,
+            stats,
+            track.as_deref_mut(),
+            PvEnd::Cap,
+        );
+        tt_put(tt, state, depth, true, v, stats);
+        return v;
+    }
+    if let Some(t) = track.as_deref_mut() {
+        t.restore_last(best_line);
+    }
+    tt_put(tt, state, depth, true, best, stats);
+    best
+}
+
 #[allow(clippy::too_many_arguments, clippy::needless_option_as_deref)]
 fn search_own(
     db: &CardDb,
@@ -1078,6 +1434,7 @@ fn search_own(
     stats: &mut SearchStats,
     mut tt: Option<&mut Tt>,
     mut track: Option<&mut PvTracker>,
+    fusemacro: bool,
 ) -> f32 {
     if state.winner == Some(me) {
         if let Some(t) = track.as_deref_mut() {
@@ -1092,6 +1449,18 @@ fn search_own(
         return -INF;
     }
     if *nodes >= cap {
+        if fusemacro && own_fuse_partners(state, me).is_some() {
+            return fuse_overshoot_score(
+                db,
+                state,
+                me,
+                line,
+                eval,
+                stats,
+                track.as_deref_mut(),
+                PvEnd::Cap,
+            );
+        }
         let v = eval.value(state, me);
         if let Some(t) = track.as_deref_mut() {
             t.set_leaf(v, PvEnd::Cap, state);
@@ -1122,6 +1491,11 @@ fn search_own(
         tt_put(tt, state, depth, false, v, stats);
         return v;
     }
+    if fusemacro && own_fuse_partners(state, me).is_some() {
+        return search_own_fuse_choice(
+            db, state, me, depth, beam, nodes, cap, line, eval, odepth, obeam, stats, tt, track,
+        );
+    }
     if depth == 0 {
         let v = eval.value(state, me);
         if let Some(t) = track.as_deref_mut() {
@@ -1144,12 +1518,47 @@ fn search_own(
         return v;
     }
 
-    let mut scored: Vec<(f32, State, u64, Action)> = Vec::with_capacity(legal.len());
+    let mut scored: Vec<(f32, State, u64, Vec<Action>)> = Vec::with_capacity(legal.len());
     for a in &legal {
         if *nodes >= cap {
             break;
         }
         if !useful_action(state, me, a) {
+            continue;
+        }
+        if fusemacro && matches!(a, Action::Fuse { .. }) {
+            let Some(after_fuse) = try_apply(db, state, a, nodes, cap, line) else {
+                continue;
+            };
+            if after_fuse.winner == Some(me) {
+                if let Some(t) = track.as_deref_mut() {
+                    t.push(a.clone());
+                    t.set_leaf(INF, PvEnd::Terminal, &after_fuse);
+                }
+                tt_put(tt, state, depth, true, INF, stats);
+                return INF;
+            }
+            for completion in fuse_completions(db, &after_fuse, me) {
+                if *nodes >= cap {
+                    break;
+                }
+                let Some((s, tail)) = apply_fuse_completion(
+                    db,
+                    &after_fuse,
+                    &completion,
+                    nodes,
+                    cap,
+                    line,
+                    true,
+                    stats,
+                ) else {
+                    continue;
+                };
+                let k = search_key(&s);
+                let mut prefix = vec![a.clone()];
+                prefix.extend(tail);
+                scored.push((eval.value(&s, me), s, k, prefix));
+            }
             continue;
         }
         let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
@@ -1164,17 +1573,19 @@ fn search_own(
             return INF;
         }
         let k = search_key(&s);
-        scored.push((eval.value(&s, me), s, k, a.clone()));
+        scored.push((eval.value(&s, me), s, k, vec![a.clone()]));
     }
     scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
     scored.truncate(beam.max(1));
 
     let mut best = f32::NEG_INFINITY;
     let mut best_line: Option<Line> = None;
-    for (_, s, k, a) in scored {
+    for (_, s, k, prefix) in scored {
         let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
         if let Some(t) = track.as_deref_mut() {
-            t.push(a);
+            for a in prefix {
+                t.push(a);
+            }
         }
         let mut next_line = line.to_vec();
         next_line.push(k);
@@ -1193,6 +1604,7 @@ fn search_own(
             stats,
             tt.as_deref_mut(),
             track.as_deref_mut(),
+            fusemacro,
         );
         if v > best {
             best = v;
