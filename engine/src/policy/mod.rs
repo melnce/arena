@@ -8,11 +8,13 @@
 //! from wasm (it compiles on wasm32). The node cap is the only search
 //! budget. `Policy` is object-safe so WASM can hold `Box<dyn Policy>`.
 
+mod explain;
 mod h0;
 mod needs;
 mod net;
 mod record;
 
+pub use explain::{CandidateRecord, ChoosePath, ExplainRecord, PvEnd, PvLeaf, WorldRecord};
 pub use h0::{builtin_net, Alloc, Info, SearchStats, ValueVersion, Weights, BUILTIN_NET_NAME, H0};
 pub use needs::{CardNeeds, NeedsTable, SkippedAmount};
 pub use net::{NetArch, ValueNet};

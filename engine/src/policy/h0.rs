@@ -29,6 +29,7 @@ use crate::rng::Xoshiro256ss;
 use crate::search_key::search_key;
 use crate::state::{Phase, PlayerState, State};
 
+use super::explain::{CandidateRecord, ChoosePath, ExplainRecord, Line, PvEnd, PvTracker};
 use super::needs::NeedsTable;
 use super::net::ValueNet;
 use super::Policy;
@@ -256,6 +257,12 @@ pub struct H0 {
     /// Root value of the most recent [`Policy::choose`]. Reset every
     /// `choose`; ignored by `h0_fields_eq` and `spec()`.
     pub last_value: Option<f32>,
+    /// When set before [`Policy::choose`], the next decision is recorded
+    /// into [`explain`]. Ignored by `h0_fields_eq` and `spec()`.
+    pub explain_armed: bool,
+    /// Per-decision explain record. Populated when [`explain_armed`] was
+    /// set; take with [`take_explain`].
+    pub explain: Option<ExplainRecord>,
 }
 
 impl Default for H0 {
@@ -281,6 +288,8 @@ impl Default for H0 {
             net_path: None,
             stats: SearchStats::default(),
             last_value: None,
+            explain_armed: false,
+            explain: None,
         }
     }
 }
@@ -333,6 +342,25 @@ impl H0 {
         }
     }
 
+    /// Arm the explain sink for the next [`Policy::choose`]. When not armed,
+    /// search behaviour and node accounting are unchanged.
+    pub fn arm_explain(&mut self) {
+        self.explain_armed = true;
+    }
+
+    /// Take the explain record from the most recent armed `choose`.
+    pub fn take_explain(&mut self) -> Option<ExplainRecord> {
+        self.explain_armed = false;
+        self.explain.take()
+    }
+
+    fn alloc_label(&self) -> &'static str {
+        match self.alloc {
+            Alloc::Root => "root",
+            Alloc::Fair => "fair",
+        }
+    }
+
     /// Leaf value under this spec (`v0` is the historical arithmetic).
     pub fn evaluate(&self, db: &CardDb, state: &State, me: PlayerId) -> f32 {
         let root_vocab = self.root_vocab(state);
@@ -359,6 +387,7 @@ impl H0 {
             self.odepth,
             self.obeam,
             &mut stats,
+            None,
             None,
         );
         self.stats.nodes += u64::from(nodes);
@@ -407,12 +436,35 @@ impl Policy for H0 {
     ) -> usize {
         self.last_value = None;
         self.stats.decisions += 1;
+        let recording = self.explain_armed;
+        if recording {
+            self.explain = None;
+        }
         let mut table = self.tt.then(HashMap::new);
         if legal.len() <= 1 {
+            if recording {
+                let mut rec = ExplainRecord::new(
+                    ChoosePath::SingleLegal,
+                    0,
+                    self.node_cap,
+                    self.alloc_label(),
+                );
+                rec.chosen_index = 0;
+                rec.tie_set = vec![0];
+                self.explain = Some(rec);
+            }
             return 0;
         }
         if matches!(state.phase, Phase::Mulligan { .. }) {
-            return mulligan_index(state, legal);
+            let idx = mulligan_index(state, legal);
+            if recording {
+                let mut rec =
+                    ExplainRecord::new(ChoosePath::Mulligan, 0, self.node_cap, self.alloc_label());
+                rec.chosen_index = idx;
+                rec.tie_set = vec![idx];
+                self.explain = Some(rec);
+            }
+            return idx;
         }
 
         let me = acting_player(state);
@@ -424,9 +476,31 @@ impl Policy for H0 {
             .collect();
         self.stats.candidates += cand.len() as u64;
         if cand.is_empty() {
+            if recording {
+                let mut rec = ExplainRecord::new(
+                    ChoosePath::SingleLegal,
+                    0,
+                    self.node_cap,
+                    self.alloc_label(),
+                );
+                rec.chosen_index = 0;
+                rec.tie_set = vec![0];
+                self.explain = Some(rec);
+            }
             return 0;
         }
         if cand.len() == 1 {
+            if recording {
+                let mut rec = ExplainRecord::new(
+                    ChoosePath::SingleLegal,
+                    0,
+                    self.node_cap,
+                    self.alloc_label(),
+                );
+                rec.chosen_index = cand[0];
+                rec.tie_set = vec![cand[0]];
+                self.explain = Some(rec);
+            }
             return cand[0];
         }
         let subset: Vec<Action> = cand.iter().map(|&i| legal[i].clone()).collect();
@@ -444,12 +518,42 @@ impl Policy for H0 {
         let odepth = self.odepth;
         let obeam = self.obeam;
         let mut dec_stats = SearchStats::default();
+        let mut explain_rec = if recording {
+            Some(ExplainRecord::new(
+                ChoosePath::Search,
+                k,
+                self.node_cap,
+                self.alloc_label(),
+            ))
+        } else {
+            None
+        };
+        let mut explain_cands: Vec<CandidateRecord> = if recording {
+            subset
+                .iter()
+                .enumerate()
+                .map(|(j, a)| CandidateRecord {
+                    legal_index: cand[j],
+                    action: crate::action::to_neutral(state, a),
+                    worlds: Vec::new(),
+                    root_agg: 0.0,
+                    worst: f32::INFINITY,
+                    n: 0,
+                })
+                .collect()
+        } else {
+            Vec::new()
+        };
 
         // `fast()` is 1-ply on the determinized root: a depth-2 consensus
         // lethal walk (every legal × every reply, plus `search_key` on each
         // apply) was the 8× regression vs pre-R2 greedy. Immediate wins are
         // still taken; constructed lethals use `H0::default()`.
         let pick = if self.depth <= 2 {
+            if let Some(rec) = &mut explain_rec {
+                rec.path = ChoosePath::OnePly;
+            }
+            let mut tie_set = Vec::new();
             let (j, v) = one_ply(
                 &roots,
                 db,
@@ -459,122 +563,207 @@ impl Policy for H0 {
                 self.node_cap,
                 eval,
                 self.pess,
+                if recording {
+                    Some((&cand, &mut tie_set))
+                } else {
+                    None
+                },
             );
             self.last_value = Some(v);
-            cand[j]
-        } else if let Some(j) =
-            consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, self.node_cap)
-        {
-            self.last_value = Some(self.wv);
+            if let Some(rec) = &mut explain_rec {
+                rec.chosen_index = cand[j];
+                rec.tie_set = tie_set;
+            }
             cand[j]
         } else {
-            let mut acc = vec![0.0f32; subset.len()];
-            let mut n = vec![0u32; subset.len()];
-            let mut worst = vec![f32::INFINITY; subset.len()];
-            let total_pairs = u64::from(k) * subset.len() as u64;
-            let mut attempted = 0u64;
-            let nodes_after_lethal = nodes;
-            for (r, root) in roots.iter().enumerate() {
-                let root_key = search_key(root);
-                for (j, a) in subset.iter().enumerate() {
-                    if nodes >= self.node_cap {
+            let nodes_before_lethal = nodes;
+            let lethal = consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, self.node_cap);
+            if let Some(j) = lethal {
+                if let Some(rec) = &mut explain_rec {
+                    rec.path = ChoosePath::ConsensusLethal;
+                    rec.nodes_lethal = nodes - nodes_before_lethal;
+                    rec.chosen_index = cand[j];
+                    rec.tie_set = vec![cand[j]];
+                }
+                self.last_value = Some(self.wv);
+                cand[j]
+            } else {
+                if let Some(rec) = &mut explain_rec {
+                    rec.path = ChoosePath::Search;
+                    rec.nodes_lethal = nodes - nodes_before_lethal;
+                }
+                let mut acc = vec![0.0f32; subset.len()];
+                let mut n = vec![0u32; subset.len()];
+                let mut worst = vec![f32::INFINITY; subset.len()];
+                let total_pairs = u64::from(k) * subset.len() as u64;
+                let mut attempted = 0u64;
+                let nodes_after_lethal = nodes;
+                let mut cap_exhausted = false;
+                for (r, root) in roots.iter().enumerate() {
+                    let root_key = search_key(root);
+                    for (j, a) in subset.iter().enumerate() {
+                        if nodes >= self.node_cap {
+                            if recording {
+                                for explain_cand in explain_cands.iter_mut().skip(j) {
+                                    explain_cand
+                                        .worlds
+                                        .push(PvTracker::skipped_world(r as u32, 0));
+                                }
+                                for rr in (r + 1)..roots.len() {
+                                    for explain_cand in explain_cands.iter_mut() {
+                                        explain_cand
+                                            .worlds
+                                            .push(PvTracker::skipped_world(rr as u32, 0));
+                                    }
+                                }
+                            }
+                            cap_exhausted = true;
+                            break;
+                        }
+                        attempted += 1;
+                        let cap = match self.alloc {
+                            Alloc::Root => self.node_cap,
+                            Alloc::Fair => {
+                                const MIN_SHARE: u32 = 24;
+                                let pairs_left = (k as usize - r) * subset.len() - j;
+                                let remaining = self.node_cap - nodes;
+                                let even = remaining / pairs_left as u32;
+                                let share =
+                                    if remaining >= MIN_SHARE.saturating_mul(pairs_left as u32) {
+                                        even.max(MIN_SHARE)
+                                    } else {
+                                        even.max(1)
+                                    };
+                                nodes.saturating_add(share).min(self.node_cap)
+                            }
+                        };
+                        let pair_nodes_start = nodes;
+                        let mut tracker = if recording {
+                            Some(PvTracker::new(cap))
+                        } else {
+                            None
+                        };
+                        let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key]) else {
+                            if recording {
+                                explain_cands[j]
+                                    .worlds
+                                    .push(PvTracker::skipped_world(r as u32, cap));
+                            }
+                            continue;
+                        };
+                        if let Some(t) = tracker.as_mut() {
+                            t.push(a.clone());
+                        }
+                        let v = if s.winner == Some(me) {
+                            if let Some(t) = tracker.as_mut() {
+                                t.set_leaf(eval.wv, PvEnd::Terminal, &s);
+                            }
+                            eval.wv
+                        } else {
+                            let line = vec![root_key, search_key(&s)];
+                            search_own(
+                                db,
+                                &s,
+                                me,
+                                self.depth.saturating_sub(1),
+                                self.beam,
+                                &mut nodes,
+                                cap,
+                                &line,
+                                eval,
+                                odepth,
+                                obeam,
+                                &mut dec_stats,
+                                table.as_mut(),
+                                tracker.as_mut(),
+                            )
+                        };
+                        if let Some(t) = tracker.as_mut() {
+                            t.note_nodes(nodes);
+                        }
+                        let fv = finite(v, eval.wv);
+                        if recording {
+                            let tracker = tracker.unwrap_or_else(|| PvTracker::new(cap));
+                            explain_cands[j].worlds.push(tracker.into_world(
+                                r as u32,
+                                v,
+                                fv,
+                                false,
+                                nodes - pair_nodes_start,
+                                db,
+                                root,
+                            ));
+                        }
+                        acc[j] += fv;
+                        if fv < worst[j] {
+                            worst[j] = fv;
+                        }
+                        n[j] += 1;
+                    }
+                    if cap_exhausted {
                         break;
                     }
-                    attempted += 1;
-                    let cap = match self.alloc {
-                        Alloc::Root => self.node_cap,
-                        Alloc::Fair => {
-                            const MIN_SHARE: u32 = 24;
-                            let pairs_left = (k as usize - r) * subset.len() - j;
-                            let remaining = self.node_cap - nodes;
-                            let even = remaining / pairs_left as u32;
-                            // Floor at MIN_SHARE only when every remaining pair
-                            // can still receive it. Otherwise split evenly —
-                            // later pairs still get a search; depth is what
-                            // the leftover budget affords.
-                            let share = if remaining >= MIN_SHARE.saturating_mul(pairs_left as u32)
-                            {
-                                even.max(MIN_SHARE)
-                            } else {
-                                even.max(1)
-                            };
-                            nodes.saturating_add(share).min(self.node_cap)
-                        }
-                    };
-                    let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key]) else {
-                        continue;
-                    };
-                    let v = if s.winner == Some(me) {
-                        eval.wv
-                    } else {
-                        let line = vec![root_key, search_key(&s)];
-                        search_own(
-                            db,
-                            &s,
-                            me,
-                            self.depth.saturating_sub(1),
-                            self.beam,
-                            &mut nodes,
-                            cap,
-                            &line,
-                            eval,
-                            odepth,
-                            obeam,
-                            &mut dec_stats,
-                            table.as_mut(),
-                        )
-                    };
-                    let fv = finite(v, eval.wv);
-                    acc[j] += fv;
-                    if fv < worst[j] {
-                        worst[j] = fv;
-                    }
-                    n[j] += 1;
                 }
-            }
-            // Lethal may already have spent the cap; those pairs were never
-            // offered to either allocator. Count only skips after search
-            // had leftover budget (`k × |subset| − attempted`).
-            if nodes_after_lethal < self.node_cap {
-                self.stats.pairs_skipped += total_pairs - attempted;
-            }
+                if nodes_after_lethal < self.node_cap {
+                    self.stats.pairs_skipped += total_pairs - attempted;
+                }
 
-            let mut best_i = 0usize;
-            let mut best_v = f32::NEG_INFINITY;
-            let mut any_scored = false;
-            for (j, &c) in n.iter().enumerate() {
-                if c == 0 {
-                    continue;
-                }
-                any_scored = true;
-                let v = root_agg(acc[j], c, worst[j], self.pess);
-                if v > best_v {
-                    best_v = v;
-                    best_i = j;
-                }
-            }
-            if any_scored {
-                const LETHAL_EPS: f32 = 1e-3;
+                let mut best_i = 0usize;
+                let mut best_v = f32::NEG_INFINITY;
+                let mut any_scored = false;
                 for (j, &c) in n.iter().enumerate() {
                     if c == 0 {
                         continue;
                     }
-                    if worst[j] <= -self.wv + LETHAL_EPS {
-                        dec_stats.cands_with_lethal_root += 1;
-                        if j == best_i {
-                            dec_stats.chose_with_lethal_root += 1;
+                    any_scored = true;
+                    let v = root_agg(acc[j], c, worst[j], self.pess);
+                    if recording {
+                        explain_cands[j].root_agg = v;
+                        explain_cands[j].worst = worst[j];
+                        explain_cands[j].n = c;
+                    }
+                    if v > best_v {
+                        best_v = v;
+                        best_i = j;
+                    }
+                }
+                if any_scored {
+                    const LETHAL_EPS: f32 = 1e-3;
+                    for (j, &c) in n.iter().enumerate() {
+                        if c == 0 {
+                            continue;
+                        }
+                        if worst[j] <= -self.wv + LETHAL_EPS {
+                            dec_stats.cands_with_lethal_root += 1;
+                            if j == best_i {
+                                dec_stats.chose_with_lethal_root += 1;
+                            }
                         }
                     }
                 }
+                self.last_value = Some(finite(best_v, self.wv));
+                if let Some(rec) = &mut explain_rec {
+                    rec.chosen_index = cand[best_i];
+                    if any_scored {
+                        rec.tie_set = tie_set_search(&n, &acc, &worst, self.pess, best_v, &cand);
+                    } else {
+                        rec.path = ChoosePath::Unscored;
+                        rec.tie_set = cand.clone();
+                    }
+                    rec.candidates = explain_cands;
+                }
+                cand[best_i]
             }
-            self.last_value = Some(finite(best_v, self.wv));
-            cand[best_i]
         };
         self.stats.nodes += u64::from(nodes);
         if nodes >= self.node_cap {
             self.stats.cap_hits += 1;
         }
         self.stats.accum(&dec_stats);
+        if let Some(mut rec) = explain_rec {
+            rec.nodes = nodes;
+            self.explain = Some(rec);
+        }
         pick
     }
 
@@ -624,6 +813,26 @@ fn root_agg(acc: f32, n: u32, worst: f32, pess: f32) -> f32 {
         let mean = acc / n as f32;
         (1.0 - pess) * mean + pess * worst
     }
+}
+
+fn tie_set_search(
+    n: &[u32],
+    acc: &[f32],
+    worst: &[f32],
+    pess: f32,
+    best_v: f32,
+    cand: &[usize],
+) -> Vec<usize> {
+    let mut out = Vec::new();
+    for (j, &c) in n.iter().enumerate() {
+        if c == 0 {
+            continue;
+        }
+        if root_agg(acc[j], c, worst[j], pess) == best_v {
+            out.push(cand[j]);
+        }
+    }
+    out
 }
 
 fn try_apply(
@@ -730,6 +939,7 @@ fn one_ply(
     cap: u32,
     eval: Evaluator<'_>,
     pess: f32,
+    tie_out: Option<(&[usize], &mut Vec<usize>)>,
 ) -> (usize, f32) {
     let mut acc = vec![0.0f32; subset.len()];
     let mut n = vec![0u32; subset.len()];
@@ -778,7 +988,11 @@ fn one_ply(
             best_i = j;
         }
     }
-    (best_i, finite(best_v, eval.wv))
+    let best_v = finite(best_v, eval.wv);
+    if let Some((cand, out)) = tie_out {
+        *out = tie_set_search(&n, &acc, &worst, pess, best_v, cand);
+    }
+    (best_i, best_v)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -813,7 +1027,7 @@ fn greedy_index(
     best_i
 }
 
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::needless_option_as_deref)]
 fn search_own(
     db: &CardDb,
     state: &State,
@@ -828,18 +1042,32 @@ fn search_own(
     obeam: usize,
     stats: &mut SearchStats,
     mut tt: Option<&mut Tt>,
+    mut track: Option<&mut PvTracker>,
 ) -> f32 {
     if state.winner == Some(me) {
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(INF, PvEnd::Terminal, state);
+        }
         return INF;
     }
     if state.winner == Some(me.opponent()) {
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(-INF, PvEnd::Terminal, state);
+        }
         return -INF;
     }
     if *nodes >= cap {
-        return eval.value(state, me);
+        let v = eval.value(state, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::Cap, state);
+        }
+        return v;
     }
     if acting_player(state) != me || matches!(state.phase, Phase::Terminal) {
         if let Some(v) = tt_get(tt.as_deref(), state, depth, false, stats) {
+            if let Some(t) = track.as_deref_mut() {
+                t.set_tt(v, state);
+            }
             return v;
         }
         let v = opponent_reply(
@@ -854,22 +1082,34 @@ fn search_own(
             obeam,
             stats,
             tt.as_deref_mut(),
+            track.as_deref_mut(),
         );
         tt_put(tt, state, depth, false, v, stats);
         return v;
     }
     if depth == 0 {
-        return eval.value(state, me);
+        let v = eval.value(state, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::Depth, state);
+        }
+        return v;
     }
     if let Some(v) = tt_get(tt.as_deref(), state, depth, true, stats) {
+        if let Some(t) = track.as_deref_mut() {
+            t.set_tt(v, state);
+        }
         return v;
     }
     let legal = legal_actions(db, state);
     if legal.is_empty() {
-        return eval.value(state, me);
+        let v = eval.value(state, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::Terminal, state);
+        }
+        return v;
     }
 
-    let mut scored: Vec<(f32, State, u64)> = Vec::with_capacity(legal.len());
+    let mut scored: Vec<(f32, State, u64, Action)> = Vec::with_capacity(legal.len());
     for a in &legal {
         if *nodes >= cap {
             break;
@@ -881,17 +1121,26 @@ fn search_own(
             continue;
         };
         if s.winner == Some(me) {
+            if let Some(t) = track.as_deref_mut() {
+                t.push(a.clone());
+                t.set_leaf(INF, PvEnd::Terminal, &s);
+            }
             tt_put(tt, state, depth, true, INF, stats);
             return INF;
         }
         let k = search_key(&s);
-        scored.push((eval.value(&s, me), s, k));
+        scored.push((eval.value(&s, me), s, k, a.clone()));
     }
     scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
     scored.truncate(beam.max(1));
 
     let mut best = f32::NEG_INFINITY;
-    for (_, s, k) in scored {
+    let mut best_line: Option<Line> = None;
+    for (_, s, k, a) in scored {
+        let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
+        if let Some(t) = track.as_deref_mut() {
+            t.push(a);
+        }
         let mut next_line = line.to_vec();
         next_line.push(k);
         let v = search_own(
@@ -908,16 +1157,26 @@ fn search_own(
             obeam,
             stats,
             tt.as_deref_mut(),
+            track.as_deref_mut(),
         );
         if v > best {
             best = v;
+            if let Some(t) = track.as_deref_mut() {
+                best_line = t.take_last();
+            }
         }
+        if let Some(t) = track.as_deref_mut() {
+            t.pop_to(plen);
+        }
+    }
+    if let Some(t) = track.as_deref_mut() {
+        t.restore_last(best_line);
     }
     tt_put(tt, state, depth, true, best, stats);
     best
 }
 
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::needless_option_as_deref)]
 fn opponent_reply(
     db: &CardDb,
     state: &State,
@@ -930,11 +1189,18 @@ fn opponent_reply(
     obeam: usize,
     stats: &mut SearchStats,
     tt: Option<&mut Tt>,
+    mut track: Option<&mut PvTracker>,
 ) -> f32 {
     if state.winner == Some(me) {
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(INF, PvEnd::Terminal, state);
+        }
         return INF;
     }
     if state.winner == Some(me.opponent()) {
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(-eval.wv, PvEnd::Terminal, state);
+        }
         return -eval.wv;
     }
     if odepth == 0 {
@@ -943,15 +1209,31 @@ fn opponent_reply(
             && opp_lethal_sweep(db, state, me, nodes, cap, line, eval.oevo, stats)
         {
             stats.opp_leaves += 1;
+            if let Some(t) = track.as_deref_mut() {
+                t.set_leaf(-eval.wv, PvEnd::OppLethal, state);
+            }
             return -eval.wv;
         }
         let mut s = state.clone();
-        greedy_until_end(db, &mut s, me.opponent(), nodes, cap, line, eval);
+        greedy_until_end(
+            db,
+            &mut s,
+            me.opponent(),
+            nodes,
+            cap,
+            line,
+            eval,
+            track.as_deref_mut(),
+        );
         if *nodes >= cap {
             stats.opp_cap_hits += 1;
         }
         stats.opp_leaves += 1;
-        return eval.value(&s, me);
+        let v = eval.value(&s, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::OppReply, &s);
+        }
+        return v;
     }
     let mut truncated = false;
     let v = search_opp(
@@ -967,6 +1249,7 @@ fn opponent_reply(
         stats,
         &mut truncated,
         tt,
+        track.as_deref_mut(),
     );
     if truncated {
         stats.opp_cap_hits += 1;
@@ -976,7 +1259,7 @@ fn opponent_reply(
 
 /// Maximising `eval.value(s, opp)` is minimising `eval.value(s, me)`: the
 /// leaf value is antisymmetric term by term (`value(s, A) == -value(s, B)`).
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::needless_option_as_deref)]
 fn search_opp(
     db: &CardDb,
     state: &State,
@@ -990,26 +1273,44 @@ fn search_opp(
     stats: &mut SearchStats,
     truncated: &mut bool,
     mut tt: Option<&mut Tt>,
+    mut track: Option<&mut PvTracker>,
 ) -> f32 {
     let opp = me.opponent();
     if state.winner == Some(me) {
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(INF, PvEnd::Terminal, state);
+        }
         return INF;
     }
     if state.winner == Some(opp) {
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(-eval.wv, PvEnd::Terminal, state);
+        }
         return -eval.wv;
     }
     if matches!(state.phase, Phase::Terminal) || state.turn > MAX_TURNS {
         stats.opp_leaves += 1;
-        return eval.value(state, me);
+        let v = eval.value(state, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::OppSearch, state);
+        }
+        return v;
     }
     if *nodes >= cap {
         *truncated = true;
         stats.opp_leaves += 1;
-        return eval.value(state, me);
+        let v = eval.value(state, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::Cap, state);
+        }
+        return v;
     }
 
     let me_to_move = acting_player(state) == me;
     if let Some(v) = tt_get(tt.as_deref(), state, depth, me_to_move, stats) {
+        if let Some(t) = track.as_deref_mut() {
+            t.set_tt(v, state);
+        }
         return v;
     }
 
@@ -1026,12 +1327,13 @@ fn search_opp(
         stats,
         truncated,
         tt.as_deref_mut(),
+        track.as_deref_mut(),
     );
     tt_put(tt, state, depth, me_to_move, v, stats);
     v
 }
 
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::needless_option_as_deref)]
 fn search_opp_expand(
     db: &CardDb,
     state: &State,
@@ -1045,6 +1347,7 @@ fn search_opp_expand(
     stats: &mut SearchStats,
     truncated: &mut bool,
     mut tt: Option<&mut Tt>,
+    mut track: Option<&mut PvTracker>,
 ) -> f32 {
     let opp = me.opponent();
 
@@ -1053,40 +1356,83 @@ fn search_opp_expand(
         let legal = legal_actions(db, state);
         if legal.is_empty() {
             stats.opp_leaves += 1;
-            return eval.value(state, me);
+            let v = eval.value(state, me);
+            if let Some(t) = track.as_deref_mut() {
+                t.set_leaf(v, PvEnd::OppSearch, state);
+            }
+            return v;
         }
         let i = greedy_index(db, state, &legal, me, nodes, cap, line, eval);
+        let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
+        if let Some(t) = track.as_deref_mut() {
+            t.push(legal[i].clone());
+        }
         let Some(s) = try_apply(db, state, &legal[i], nodes, cap, line) else {
+            if let Some(t) = track.as_deref_mut() {
+                t.pop_to(plen);
+            }
             if *nodes >= cap {
                 *truncated = true;
             }
             stats.opp_leaves += 1;
-            return eval.value(state, me);
+            let v = eval.value(state, me);
+            if let Some(t) = track.as_deref_mut() {
+                t.set_leaf(v, PvEnd::OppSearch, state);
+            }
+            return v;
         };
         let mut next_line = line.to_vec();
         next_line.push(search_key(&s));
-        return search_opp(
-            db, &s, me, depth, beam, nodes, cap, &next_line, eval, stats, truncated, tt,
+        let v = search_opp(
+            db,
+            &s,
+            me,
+            depth,
+            beam,
+            nodes,
+            cap,
+            &next_line,
+            eval,
+            stats,
+            truncated,
+            tt.as_deref_mut(),
+            track.as_deref_mut(),
         );
+        if let Some(t) = track.as_deref_mut() {
+            t.pop_to(plen);
+        }
+        return v;
     }
 
     if acting_player(state) != opp {
         stats.opp_leaves += 1;
-        return eval.value(state, me);
+        let v = eval.value(state, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::OppSearch, state);
+        }
+        return v;
     }
     if depth == 0 {
         stats.opp_leaves += 1;
-        return eval.value(state, me);
+        let v = eval.value(state, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::OppSearch, state);
+        }
+        return v;
     }
 
     let legal = legal_actions(db, state);
     if legal.is_empty() {
         stats.opp_leaves += 1;
-        return eval.value(state, me);
+        let v = eval.value(state, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::OppSearch, state);
+        }
+        return v;
     }
 
-    let mut scored: Vec<(f32, State, u64)> = Vec::new();
-    let mut end_turn: Option<(State, u64)> = None;
+    let mut scored: Vec<(f32, State, u64, Action)> = Vec::new();
+    let mut end_turn: Option<(State, u64, Action)> = None;
     for a in &legal {
         if *nodes >= cap {
             *truncated = true;
@@ -1102,29 +1448,44 @@ fn search_opp_expand(
             continue;
         };
         if s.winner == Some(opp) {
+            if let Some(t) = track.as_deref_mut() {
+                let plen = t.path_len();
+                t.push(a.clone());
+                t.set_leaf(-eval.wv, PvEnd::Terminal, &s);
+                t.pop_to(plen);
+            }
             return -eval.wv;
         }
         let k = search_key(&s);
         if matches!(a, Action::EndTurn) {
-            end_turn = Some((s, k));
+            end_turn = Some((s, k, a.clone()));
         } else {
-            scored.push((eval.value(&s, opp), s, k));
+            scored.push((eval.value(&s, opp), s, k, a.clone()));
         }
     }
     scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
     scored.truncate(beam.max(1));
     // EndTurn is always kept so "do nothing more" is a considered line — that
     // is what removes the greedy 3-step cutoff honestly.
-    if let Some((s, k)) = end_turn {
-        scored.push((0.0, s, k));
+    if let Some((s, k, a)) = end_turn {
+        scored.push((0.0, s, k, a));
     }
     if scored.is_empty() {
         stats.opp_leaves += 1;
-        return eval.value(state, me);
+        let v = eval.value(state, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::OppSearch, state);
+        }
+        return v;
     }
 
     let mut worst = f32::INFINITY;
-    for (_, s, k) in scored {
+    let mut worst_line: Option<Line> = None;
+    for (_, s, k, a) in scored {
+        let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
+        if let Some(t) = track.as_deref_mut() {
+            t.push(a);
+        }
         let mut next_line = line.to_vec();
         next_line.push(k);
         let v = search_opp(
@@ -1140,19 +1501,33 @@ fn search_opp_expand(
             stats,
             truncated,
             tt.as_deref_mut(),
+            track.as_deref_mut(),
         );
+        if let Some(t) = track.as_deref_mut() {
+            t.pop_to(plen);
+        }
         if v == -eval.wv {
             return -eval.wv;
         }
         if v < worst {
             worst = v;
+            if let Some(t) = track.as_deref_mut() {
+                worst_line = t.take_last();
+            }
         }
     }
     if worst.is_finite() {
+        if let Some(t) = track.as_deref_mut() {
+            t.restore_last(worst_line);
+        }
         worst
     } else {
         stats.opp_leaves += 1;
-        eval.value(state, me)
+        let v = eval.value(state, me);
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(v, PvEnd::OppSearch, state);
+        }
+        v
     }
 }
 
@@ -1165,6 +1540,7 @@ fn greedy_until_end(
     cap: u32,
     line: &[u64],
     eval: Evaluator<'_>,
+    mut track: Option<&mut PvTracker>,
 ) {
     let mut steps = 0u32;
     let mut line = line.to_vec();
@@ -1182,6 +1558,9 @@ fn greedy_until_end(
         if let Some(end) = legal.iter().position(|a| matches!(a, Action::EndTurn)) {
             if steps >= eval.osteps {
                 if let Some(next) = try_apply(db, state, &legal[end], nodes, cap, &line) {
+                    if let Some(t) = track.as_deref_mut() {
+                        t.push(legal[end].clone());
+                    }
                     *state = next;
                 }
                 break;
@@ -1191,6 +1570,9 @@ fn greedy_until_end(
         let Some(next) = try_apply(db, state, &legal[i], nodes, cap, &line) else {
             break;
         };
+        if let Some(t) = track.as_deref_mut() {
+            t.push(legal[i].clone());
+        }
         line.push(search_key(&next));
         *state = next;
         steps += 1;

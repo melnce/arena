@@ -6,7 +6,7 @@ use arena_engine::trace::NeutralAction;
 use arena_engine::trace::Pick;
 use arena_engine::{
     apply_neutral, by_name, legal_actions, legal_actions_neutral, names, new_game, policy_rng,
-    snapshot_json, to_neutral, CardDb, GameConfig, GameRng, Phase,
+    snapshot_json, to_neutral, AnyPolicy, CardDb, GameConfig, GameRng, Phase, Policy,
 };
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
@@ -193,6 +193,83 @@ impl PyGame {
             .map(serde_json::Value::from)
             .unwrap_or(serde_json::Value::Null);
         value_to_py(py, &serde_json::json!({"action": val, "value": value}))
+    }
+
+    /// Same decision as [`Self::bot_action_value`], plus an H0 explain
+    /// record when `policy` parses to `h0`. Non-H0 policies return
+    /// `{"chosen": …, "path": "opaque"}`.
+    fn bot_action_explain<'py>(
+        &self,
+        py: Python<'py>,
+        policy: &str,
+        seed: u64,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let legal = legal_actions(&self.db, &self.state);
+        if legal.is_empty() {
+            return Err(py_err_msg("no legal actions"));
+        }
+        let available = serde_json::to_string(names()).unwrap_or_else(|_| "[]".into());
+        let parsed = AnyPolicy::parse_spec(policy).map_err(|e| {
+            py_err_msg(format!(
+                "unknown policy {policy}; available {available}: {e}"
+            ))
+        })?;
+        let mut rng = policy_rng(seed);
+        match parsed {
+            AnyPolicy::H0(mut h0) => {
+                h0.arm_explain();
+                let idx = h0.choose(&self.db, &self.state, &legal, &mut rng);
+                if idx >= legal.len() {
+                    return Err(py_err_msg(format!(
+                        "policy {policy} chose {idx} past legal_len={}",
+                        legal.len()
+                    )));
+                }
+                let chosen = to_neutral(&self.state, &legal[idx]);
+                let value = h0
+                    .last_value()
+                    .map(serde_json::Value::from)
+                    .unwrap_or(serde_json::Value::Null);
+                let explain = h0
+                    .take_explain()
+                    .ok_or_else(|| py_err_msg("h0 explain record missing"))?;
+                let explain_json =
+                    serde_json::to_value(&explain).unwrap_or(serde_json::Value::Null);
+                let chosen_json = serde_json::to_value(&chosen).unwrap_or(serde_json::Value::Null);
+                value_to_py(
+                    py,
+                    &serde_json::json!({
+                        "chosen": chosen_json,
+                        "value": value,
+                        "path": explain_json.get("path").cloned().unwrap_or(serde_json::Value::Null),
+                        "k": explain_json.get("k"),
+                        "node_cap": explain_json.get("node_cap"),
+                        "alloc": explain_json.get("alloc"),
+                        "nodes": explain_json.get("nodes"),
+                        "nodes_lethal": explain_json.get("nodes_lethal"),
+                        "candidates": explain_json.get("candidates"),
+                        "chosen_index": explain_json.get("chosen_index"),
+                        "tie_set": explain_json.get("tie_set"),
+                    }),
+                )
+            }
+            other => {
+                let mut boxed: Box<dyn Policy> = Box::new(other);
+                let idx = boxed.choose(&self.db, &self.state, &legal, &mut rng);
+                if idx >= legal.len() {
+                    return Err(py_err_msg(format!(
+                        "policy {policy} chose {idx} past legal_len={}",
+                        legal.len()
+                    )));
+                }
+                let chosen = to_neutral(&self.state, &legal[idx]);
+                let chosen_json = serde_json::to_value(&chosen).unwrap_or(serde_json::Value::Null);
+                value_to_py(
+                    py,
+                    &serde_json::json!({"chosen": chosen_json, "path": "opaque"}),
+                )
+            }
+        }
     }
 
     #[getter]
