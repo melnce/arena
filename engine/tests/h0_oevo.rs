@@ -214,8 +214,9 @@ fn play_then_evolve_sees_storm() {
     const WV: f32 = 300.0;
     let lethal = storm_lethal_opp_state(&db, 0);
     let miss = storm_lethal_opp_state(&db, 1);
-    let mut off = parse_h0("h0:olethal=1,oevo=0,wv=300");
-    let mut on = parse_h0("h0:olethal=1,oevo=1,wv=300");
+    // Pre-flip lcap/clip/fusemacro: evolve-lethal corpus calibrated on old defaults.
+    let mut off = parse_h0("h0:olethal=1,oevo=0,wv=300,lcap=1,clip=0,fusemacro=0");
+    let mut on = parse_h0("h0:olethal=1,oevo=1,wv=300,lcap=1,clip=0,fusemacro=0");
     let ov = off.opponent_value(&db, &lethal, PlayerId::A);
     let nv = on.opponent_value(&db, &lethal, PlayerId::A);
     eprintln!(
@@ -242,8 +243,8 @@ fn play_then_evolve_sees_storm() {
     assert_eq!(off.stats.opp_lethal_found, 0);
     assert_eq!(off.stats.opp_lethal_evo_found, 0);
 
-    let mut off_m = parse_h0("h0:olethal=1,oevo=0,wv=300");
-    let mut on_m = parse_h0("h0:olethal=1,oevo=1,wv=300");
+    let mut off_m = parse_h0("h0:olethal=1,oevo=0,wv=300,lcap=1,clip=0,fusemacro=0");
+    let mut on_m = parse_h0("h0:olethal=1,oevo=1,wv=300,lcap=1,clip=0,fusemacro=0");
     let om = off_m.opponent_value(&db, &miss, PlayerId::A);
     let nm = on_m.opponent_value(&db, &miss, PlayerId::A);
     eprintln!("off-by-one oevo=0={om} oevo=1={nm}");
@@ -258,8 +259,8 @@ fn no_false_positive_evolve_available() {
     let db = load_db();
     const WV: f32 = 80.0;
     let st = no_lethal_opp_state(&db);
-    let mut off = parse_h0("h0:olethal=1,oevo=0");
-    let mut on = parse_h0("h0:olethal=1,oevo=1");
+    let mut off = parse_h0("h0:olethal=1,oevo=0,lcap=1,clip=0,fusemacro=0");
+    let mut on = parse_h0("h0:olethal=1,oevo=1,lcap=1,clip=0,fusemacro=0");
     let a = off.opponent_value(&db, &st, PlayerId::A);
     let b = on.opponent_value(&db, &st, PlayerId::A);
     eprintln!(

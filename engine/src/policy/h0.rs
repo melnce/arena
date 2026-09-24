@@ -267,15 +267,16 @@ pub struct H0 {
     /// flip; the hard stop is `osteps + 3` (today: 9).
     pub osteps: u32,
     /// Treat a fuse as one search ply by expanding partner-choice completions
-    /// (`fusemacro=1`). Default `false` is today's step-by-step fuse search.
+    /// (`fusemacro=1`). Default `true` is the sweep-10 flip; `fusemacro=0`
+    /// restores step-by-step fuse search.
     pub fusemacro: bool,
     /// Learned leaf (`value=net`). `None` when the leaf is v0/v1.
     pub net: Option<Arc<ValueNet>>,
     /// Consensus-lethal node budget as a fraction of `node_cap`, in `(0, 1]`.
-    /// Default `1.0` is today's behaviour (the whole cap).
+    /// Default `0.5` is the sweep-10 flip; `lcap=1` restores the whole cap.
     pub lcap: f32,
-    /// Standardised-input clamp for the learned leaf; `0` is off. Ignored
-    /// with `value=v0` / `value=v1`.
+    /// Standardised-input clamp for the learned leaf; `0` is off. Default `5`
+    /// is the sweep-10 flip. Ignored with `value=v0` / `value=v1`.
     pub clip: f32,
     /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
     pub net_path: Option<String>,
@@ -310,10 +311,10 @@ impl Default for H0 {
             olethal: true,
             oevo: true,
             osteps: 6,
-            fusemacro: false,
+            fusemacro: true,
             net: Some(builtin_net()),
-            lcap: 1.0,
-            clip: 0.0,
+            lcap: 0.5,
+            clip: 5.0,
             net_path: None,
             stats: SearchStats::default(),
             last_value: None,
@@ -341,6 +342,12 @@ impl H0 {
             osteps: 3,
             pess: 0.0,
             info: Info::Draws,
+            // Fixed test baseline: lcap/clip/fusemacro are inert at depth 2
+            // (one_ply never runs consensus_lethal or search_own; v0 ignores
+            // clip) but pin the pre-flip defaults so fast() stays field-identical.
+            lcap: 1.0,
+            clip: 0.0,
+            fusemacro: false,
             ..Self::default()
         }
     }

@@ -134,16 +134,16 @@ fn cross_check_unscored_stats_vs_explain(spec: &str, states: &[arena_engine::Sta
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn lcap_default_has_unscored_midgame() {
+fn lcap_one_has_unscored_midgame() {
     let db = load_db();
     let states = collect_states(&db, 200, true);
     assert_eq!(states.len(), 200, "could not reach 200 mid-game states");
-    let unscored = count_unscored_unarmed("h0", &states);
+    let unscored = count_unscored_unarmed("h0:lcap=1", &states);
     assert!(
         unscored >= 1,
-        "expected at least one unscored decision with default h0"
+        "expected at least one unscored decision with h0:lcap=1"
     );
-    cross_check_unscored_stats_vs_explain("h0", &states);
+    cross_check_unscored_stats_vs_explain("h0:lcap=1", &states);
 }
 
 #[test]
@@ -260,17 +260,31 @@ fn clip_limits_choice_indicator_spike() {
 
 #[test]
 fn spec_round_trips_lcap_clip() {
-    for s in ["h0:lcap=0.5", "h0:clip=5", "h0:lcap=0.25,clip=5"] {
+    for s in [
+        "h0",
+        "h0:lcap=1,clip=0,fusemacro=0",
+        "h0:lcap=1",
+        "h0:clip=0",
+        "h0:fusemacro=0",
+        "h0:lcap=0.25,clip=5",
+    ] {
         let parsed = AnyPolicy::parse_spec(s).unwrap_or_else(|e| panic!("{s}: {e}"));
         let again = AnyPolicy::parse_spec(&parsed.spec())
             .unwrap_or_else(|e| panic!("{}: {e}", parsed.spec()));
         assert_eq!(parsed, again, "{s} → {}", parsed.spec());
     }
     assert_eq!(
-        AnyPolicy::parse_spec("h0:lcap=1,clip=0").unwrap().spec(),
+        AnyPolicy::parse_spec("h0:lcap=0.5,clip=5,fusemacro=1")
+            .unwrap()
+            .spec(),
         "h0"
     );
-    assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:lcap=1,clip=0,fusemacro=0")
+            .unwrap()
+            .spec(),
+        "h0:lcap=1,clip=0,fusemacro=0"
+    );
 
     let e = AnyPolicy::parse_spec("h0:lcap=0").unwrap_err();
     assert!(e.contains("lcap"), "{e}");
@@ -290,16 +304,16 @@ fn spec_round_trips_lcap_clip() {
 }
 
 #[test]
-fn fast_keeps_lcap_clip_defaults() {
+fn fast_pins_pre_flip_lcap_clip_fusemacro() {
     let fast = H0::fast();
-    let def = H0::default();
-    assert_eq!(fast.lcap, def.lcap);
-    assert_eq!(fast.clip, def.clip);
+    assert_eq!(fast.lcap, 1.0);
+    assert_eq!(fast.clip, 0.0);
+    assert!(!fast.fusemacro);
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn default_bench_identity_seed5() {
+fn pre_flip_default_bench_identity_seed5() {
     let db = load_db();
     let decks = (
         load_deck_file("oracle/decks/meta-rune-test-subject.json"),
@@ -327,8 +341,9 @@ fn default_bench_identity_seed5() {
         )
         .unwrap();
         let mut rng = policy_rng(s);
-        let mut pol_a = parse_h0("h0");
-        let mut pol_b = parse_h0("h0:value=v0");
+        let mut pol_a = parse_h0("h0:lcap=1,clip=0,fusemacro=0");
+        // Opponent inherits defaults; pin pre-flip keys so seat B matches main h0:value=v0.
+        let mut pol_b = parse_h0("h0:value=v0,lcap=1,clip=0,fusemacro=0");
         let out = arena_engine::play_game(&db, &mut state, &mut pol_a, &mut pol_b, &mut rng);
         stats.add(&pol_a.stats);
         if out.winner == Some(arena_engine::PlayerId::A) {
@@ -368,7 +383,6 @@ fn default_bench_identity_seed5() {
         stats.cands_with_lethal_root, 143,
         "cands_with_lethal_root baseline"
     );
-    // New counters only — must not change play.
     assert_eq!(stats.lethal_nodes, 9_783, "lethal_nodes tally");
     assert_eq!(stats.unscored, 0, "unscored tally");
 }

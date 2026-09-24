@@ -11,11 +11,12 @@ use common::*;
 
 const SPECS: &[&str] = &[
     "h0",
+    "h0:lcap=1,clip=0,fusemacro=0",
     "h0:value=v0",
     "h0:nodes=6000",
     "h0:k=1",
     "h0:info=all",
-    "h0:fusemacro=1",
+    "h0:fusemacro=0",
 ];
 
 const REPLAY_SPECS: &[&str] = &[

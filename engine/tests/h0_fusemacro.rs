@@ -202,16 +202,16 @@ fn no_leaf_inside_partner_choice_with_fusemacro() {
                 }
             }
         }
-        let mut h0 = parse_h0("h0");
-        h0.arm_explain();
+        let mut h0_off = parse_h0("h0:fusemacro=0");
+        h0_off.arm_explain();
         let mut rng = policy_rng(seed);
-        let _ = h0.choose(&db, state, &legal, &mut rng);
-        let rec = h0.take_explain().expect("explain");
+        let _ = h0_off.choose(&db, state, &legal, &mut rng);
+        let rec = h0_off.take_explain().expect("explain");
         if matches!(rec.path, ChoosePath::Search | ChoosePath::Unscored) {
             let roots = {
                 let mut rng_r = policy_rng(seed);
                 (0..rec.k)
-                    .map(|_| determinize_with(state, me, rng_r.next_u64(), h0.info))
+                    .map(|_| determinize_with(state, me, rng_r.next_u64(), h0_off.info))
                     .collect::<Vec<_>>()
             };
             for cand in &rec.candidates {
@@ -343,11 +343,14 @@ fn show_it_sephie_fuse_reasks() {
     let db = load_db();
     let deck_a = load_deck_file("oracle/decks/meta-rune-test-subject.json");
     let specs = [
-        ("h0", "default h0"),
-        ("h0:fusemacro=1", "h0:fusemacro=1"),
-        ("h0:value=v0,osteps=0,olethal=0,nodes=200000", "v0 wide"),
+        ("h0:lcap=1,clip=0,fusemacro=0", "pre-flip default h0"),
+        ("h0", "current default h0"),
         (
-            "h0:value=v0,osteps=0,olethal=0,nodes=200000,fusemacro=1",
+            "h0:value=v0,osteps=0,olethal=0,nodes=200000,lcap=1,fusemacro=0",
+            "v0 wide",
+        ),
+        (
+            "h0:value=v0,osteps=0,olethal=0,nodes=200000,lcap=1,fusemacro=1",
             "v0 wide + fusemacro",
         ),
     ];
@@ -378,7 +381,7 @@ fn show_it_sephie_fuse_reasks() {
             continue;
         };
         let mut rng = policy_rng(seed);
-        let mut h0 = parse_h0("h0");
+        let mut h0 = parse_h0("h0:lcap=1,clip=0,fusemacro=0");
         while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
             let is_decision = state.active == PlayerId::A
                 && matches!(state.phase, Phase::Main)
