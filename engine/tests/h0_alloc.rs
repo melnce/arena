@@ -225,8 +225,9 @@ fn check_fair_mechanism(n: usize) {
     let db = load_db();
     let states = collect_states(&db, n, true);
     assert_eq!(states.len(), n, "could not reach {n} mid-game states");
-    let mut root = parse_h0("h0:alloc=root,nodes=2000");
-    let mut fair = parse_h0("h0:alloc=fair,nodes=2000");
+    // Pre-flip lcap/clip/fusemacro: fair-vs-root mechanism calibrated on old defaults.
+    let mut root = parse_h0("h0:alloc=root,nodes=2000,lcap=1,clip=0,fusemacro=0");
+    let mut fair = parse_h0("h0:alloc=fair,nodes=2000,lcap=1,clip=0,fusemacro=0");
     let mut max_pairs: u32 = 0;
     for (i, state) in states.iter().enumerate() {
         let legal = legal_actions(&db, state);

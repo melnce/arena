@@ -185,8 +185,9 @@ fn dead_is_below_alive() {
     // Default (net) leaf: −wv sentinels and "live does not depend on wv"
     // are leaf-independent. The v0 live-leaf pin and the wv=80 inversion
     // do not hold (net live ≈ −51, so −80 is below live, not above).
-    let mut net80 = parse_h0("h0:wv=80");
-    let mut net300 = parse_h0("h0:wv=300");
+    // Pre-flip lcap/clip/fusemacro: net leaf pins calibrated on old defaults.
+    let mut net80 = parse_h0("h0:wv=80,lcap=1,clip=0,fusemacro=0");
+    let mut net300 = parse_h0("h0:wv=300,lcap=1,clip=0,fusemacro=0");
     let n_dead80 = net80.opponent_value(&db, &dead, PlayerId::A);
     let n_live80 = net80.opponent_value(&db, &live, PlayerId::A);
     let n_leaf = net80.evaluate(&db, &live, PlayerId::A);
