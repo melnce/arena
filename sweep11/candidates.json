@@ -1,0 +1,22 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:lcap=1"
+  },
+  {
+    "index": 2,
+    "spec": "h0:clip=0"
+  },
+  {
+    "index": 3,
+    "spec": "h0:fusemacro=0"
+  },
+  {
+    "index": 4,
+    "spec": "h0:clip=3"
+  },
+  {
+    "index": 5,
+    "spec": "h0:clip=8"
+  }
+]
