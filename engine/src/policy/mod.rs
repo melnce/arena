@@ -145,9 +145,9 @@ impl AnyPolicy {
     /// `w_earth=`, `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`,
     /// `w_lw=` (f32; only meaningful with `value=v1`),
     /// `lcap=<f>` (consensus-lethal node budget as a fraction of `node_cap`,
-    /// in `(0, 1]`; default `1.0` is today's behaviour), and `clip=<c>`
-    /// (`c ≥ 0`; standardised-input clamp for the learned leaf; default `0`
-    /// is off; ignored with `value=v0` / `value=v1`).
+    /// in `(0, 1]`; default `0.5` is the sweep-10 flip), and `clip=<c>`
+    /// (`c ≥ 0`; standardised-input clamp for the learned leaf; default `5`
+    /// is the sweep-10 flip; ignored with `value=v0` / `value=v1`).
     ///
     /// `Err` names the offending token: unknown policy, unknown key, or bad
     /// number.
@@ -247,9 +247,6 @@ fn h0_spec(h: &H0) -> String {
             Info::Fair => unreachable!(),
         });
     }
-    if h.fusemacro {
-        parts.push("fusemacro=1".to_string());
-    }
     let w = &h.weights;
     let dw = Weights::default();
     if w.shadows != dw.shadows {
@@ -278,6 +275,9 @@ fn h0_spec(h: &H0) -> String {
     }
     if h.clip != def.clip {
         parts.push(format!("clip={}", h.clip));
+    }
+    if !h.fusemacro {
+        parts.push("fusemacro=0".to_string());
     }
     format!("h0:{}", parts.join(","))
 }
