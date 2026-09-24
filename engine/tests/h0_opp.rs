@@ -285,8 +285,9 @@ fn four_attacker_normal_ward_wv300_plays_ward() {
             f.max_defense = 11;
         }
     }
-    let mut cand80 = parse_h0("h0:odepth=5,obeam=3");
-    let mut cand300 = parse_h0("h0:odepth=5,obeam=3,wv=300");
+    // Pre-flip lcap/clip/fusemacro: depth-5 search calibrated on the old defaults.
+    let mut cand80 = parse_h0("h0:odepth=5,obeam=3,lcap=1,clip=0,fusemacro=0");
+    let mut cand300 = parse_h0("h0:odepth=5,obeam=3,wv=300,lcap=1,clip=0,fusemacro=0");
     let (i80, a80) = pick(&mut cand80, &db, &st, 7);
     let (i300, a300) = pick(&mut cand300, &db, &st, 7);
     eprintln!("1/3-Ward wv=80={a80:?} idx={i80}  wv=300={a300:?} idx={i300}");
