@@ -1,0 +1,14 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:net=results/net4-meta/linear.json"
+  },
+  {
+    "index": 2,
+    "spec": "h0:net=results/net4-meta/mlp.json"
+  },
+  {
+    "index": 3,
+    "spec": "h0:net=results/net4-meta/linear.json,clip=0"
+  }
+]
