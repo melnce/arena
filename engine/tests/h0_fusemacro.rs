@@ -345,9 +345,12 @@ fn show_it_sephie_fuse_reasks() {
     let specs = [
         ("h0:lcap=1,clip=0,fusemacro=0", "pre-flip default h0"),
         ("h0", "current default h0"),
-        ("h0:value=v0,osteps=0,olethal=0,nodes=200000", "v0 wide"),
         (
-            "h0:value=v0,osteps=0,olethal=0,nodes=200000,fusemacro=1",
+            "h0:value=v0,osteps=0,olethal=0,nodes=200000,lcap=1,fusemacro=0",
+            "v0 wide",
+        ),
+        (
+            "h0:value=v0,osteps=0,olethal=0,nodes=200000,lcap=1,fusemacro=1",
             "v0 wide + fusemacro",
         ),
     ];

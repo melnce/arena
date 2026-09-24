@@ -893,7 +893,7 @@ For `h0`, the dict also carries:
 
 | key | type | meaning |
 |---|---|---|
-| `path` | str | Which `H0::choose` branch decided: `single_legal`, `mulligan`, `one_ply`, `consensus_lethal`, `search`, or `unscored` (search entered but no `(root, candidate)` pair scored, e.g. the consensus-lethal check spent its `lcap` budget and the remaining search budget was exhausted before any candidate scored). |
+| `path` | str | Which `H0::choose` branch decided: `single_legal`, `mulligan`, `one_ply`, `consensus_lethal`, `search`, or `unscored` (search entered but no `(root, candidate)` pair scored, e.g. with `lcap=1`, the consensus-lethal check spent the entire node cap). |
 | `k` | int | Determinized roots (`1` under `info=all`). |
 | `node_cap` | int | Global node cap for the decision. |
 | `alloc` | str | `fair` or `root`. |
