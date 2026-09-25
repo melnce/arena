@@ -289,10 +289,16 @@ fn overflow_destroy(state: &mut State, who: PlayerId, inst: CardInstance, hide: 
     state.player_mut(who).cemetery.push(inst);
 }
 
-/// Whether a discard stays public (opponent learns which card left hand).
-/// Owner ruling 2026-09-25: discards stay public until the rules are updated.
-fn discard_stays_public(_db: &CardDb, _card: CardId) -> bool {
-    true
+/// Owner ruling 2026-09-25: a discard is hidden unless the card has an
+/// on-discard ability (it reveals itself).
+fn discard_is_hidden(db: &CardDb, card: CardId) -> bool {
+    !db.card(card)
+        .map(|c| {
+            c.abilities()
+                .iter()
+                .any(|a| matches!(a, Ability::Discarded { .. }))
+        })
+        .unwrap_or(false)
 }
 
 // =========================================================================
@@ -5410,7 +5416,7 @@ fn discard_opt(
             }
             state.player_mut(*player).shadows += 1;
             state.note_public_removal(*player, inst.card);
-            if !discard_stays_public(db, inst.card) {
+            if discard_is_hidden(db, inst.card) {
                 state.note_hidden_removal(*player, inst.id);
             }
             state.player_mut(*player).cemetery.push(inst);

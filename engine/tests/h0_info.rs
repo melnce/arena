@@ -341,32 +341,18 @@ fn hidden_removals_skips_public_bounce_overflow() {
 }
 
 #[test]
-fn discards_stay_public_for_hidden_removals_and_open_worlds() {
+fn hidden_removals_discard_without_on_discard() {
     let db = load_db();
     let mut st = started(&db, 10);
     let me = PlayerId::A;
     let opp = me.opponent();
     st.player_mut(me).hand.clear();
-    put_hand(&db, &mut st, me, "88001110");
-    put_hand(&db, &mut st, me, "89800012");
+    let silent_pos = put_hand(&db, &mut st, me, "88001110");
+    let silent_id = st.player(me).hand[silent_pos as usize].id;
     let spell_pos = put_hand(&db, &mut st, me, "89200140");
-    assert!(st.player(me).hidden_removals.is_empty());
     give_pp(&mut st, me, 10, 10);
     play(&db, &mut st, spell_pos);
-    assert!(
-        st.player(me).hidden_removals.is_empty(),
-        "discards stay public regardless of Ability::Discarded"
-    );
-
-    assert_eq!(
-        st.player(me)
-            .cemetery
-            .iter()
-            .filter(|c| c.card.as_str() == "88001110" || c.card.as_str() == "89800012")
-            .count(),
-        2,
-        "both discard targets reached cemetery"
-    );
+    assert_eq!(st.player(me).hidden_removals, vec![silent_id]);
 
     let mut open_st = started(&db, 11);
     clear_hand(&mut open_st, opp);
@@ -375,31 +361,72 @@ fn discards_stay_public_for_hidden_removals_and_open_worlds() {
     open_st.player_mut(opp).hidden_removals.clear();
     put_hand(&db, &mut open_st, opp, "10061120");
     put_deck(&db, &mut open_st, opp, "10461110");
-    let mut discarded_ids = Vec::new();
-    for inst in st
-        .player(me)
-        .cemetery
-        .iter()
-        .filter(|c| c.card.as_str() == "88001110" || c.card.as_str() == "89800012")
-    {
-        let mut placed = inst.clone();
-        placed.id = open_st.alloc_id();
-        discarded_ids.push(placed.id);
-        open_st.note_public_removal(opp, placed.card);
-        open_st.player_mut(opp).cemetery.push(placed);
-    }
+    let hidden_id = open_st.alloc_id();
+    let hidden_card = db.card(cid("88001110")).unwrap();
+    let hidden = CardInstance::from_card(hidden_card, hidden_id);
+    open_st.note_public_removal(opp, hidden.card);
+    open_st.player_mut(opp).hidden_removals.push(hidden_id);
+    open_st.player_mut(opp).cemetery.push(hidden);
+    let mut seen = false;
     for seed in 1..=200u64 {
         let w = determinize_with(&open_st, me, seed, Info::Open);
-        for id in &discarded_ids {
-            assert!(
-                !w.player(opp)
-                    .hand
-                    .iter()
-                    .chain(w.player(opp).deck.iter())
-                    .any(|c| c.id == *id),
-                "discarded instance {id} must not reappear in hand/deck at seed {seed}"
-            );
+        if w.player(opp)
+            .hand
+            .iter()
+            .chain(w.player(opp).deck.iter())
+            .any(|c| c.id == hidden_id)
+        {
+            seen = true;
+            break;
         }
+    }
+    assert!(
+        seen,
+        "hidden discard must appear in opponent hand or deck on some seed"
+    );
+}
+
+#[test]
+fn hidden_removals_skip_discard_with_eld_blades() {
+    let db = load_db();
+    let eld = cid("10643310");
+    assert!(db.has_card(eld), "Beheading Eld Blades must be in the db");
+    let mut st = started(&db, 12);
+    let me = PlayerId::A;
+    let opp = me.opponent();
+    st.player_mut(me).hand.clear();
+    let eld_pos = put_hand(&db, &mut st, me, "10643310");
+    let eld_id = st.player(me).hand[eld_pos as usize].id;
+    let spell_pos = put_hand(&db, &mut st, me, "89200140");
+    give_pp(&mut st, me, 10, 10);
+    play(&db, &mut st, spell_pos);
+    assert!(
+        !st.player(me).hidden_removals.contains(&eld_id),
+        "on-discard Eld Blades stays public"
+    );
+
+    let mut open_st = started(&db, 13);
+    clear_hand(&mut open_st, opp);
+    open_st.player_mut(opp).deck.clear();
+    open_st.player_mut(opp).cemetery.clear();
+    open_st.player_mut(opp).hidden_removals.clear();
+    put_hand(&db, &mut open_st, opp, "10061120");
+    put_deck(&db, &mut open_st, opp, "10461110");
+    let public_id = open_st.alloc_id();
+    let eld_card = db.card(eld).unwrap();
+    let public_eld = CardInstance::from_card(eld_card, public_id);
+    open_st.note_public_removal(opp, public_eld.card);
+    open_st.player_mut(opp).cemetery.push(public_eld);
+    for seed in 1..=200u64 {
+        let w = determinize_with(&open_st, me, seed, Info::Open);
+        assert!(
+            !w.player(opp)
+                .hand
+                .iter()
+                .chain(w.player(opp).deck.iter())
+                .any(|c| c.id == public_id),
+            "on-discard Eld Blades must not reappear in hand/deck at seed {seed}"
+        );
     }
 }
 
@@ -464,7 +491,7 @@ fn open_world_fixture(db: &CardDb) -> (arena_engine::State, OpenFixture) {
     let burned_slot = (OpenHiddenZone::Cemetery, 0usize);
 
     let revealed_discard_id = st.alloc_id();
-    let revealed_card = db.card(cid("89800012")).unwrap();
+    let revealed_card = db.card(cid("10643310")).unwrap();
     let revealed = CardInstance::from_card(revealed_card, revealed_discard_id);
     st.note_public_removal(opp, revealed.card);
     st.player_mut(opp).cemetery.push(revealed);
