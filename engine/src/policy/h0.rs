@@ -19,7 +19,7 @@ use crate::action::{acting_player, to_neutral, Action};
 use crate::apply::{apply, legal_actions};
 use crate::card::{CardId, CardKind};
 use crate::db::CardDb;
-use crate::determinize::determinize_with;
+use crate::determinize::{determinize_with, determinize_with_stats, OpenStats};
 
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab};
@@ -199,6 +199,10 @@ pub struct SearchStats {
     pub mull_table: u64,
     /// Table mode, deck fingerprint not found — rule used for the whole hand.
     pub mull_fallback: u64,
+    /// Under `info=open`, privately removed cards dealt into hand or deck.
+    pub open_hidden: u64,
+    /// Under `info=open`, revealed fuse hosts held fixed in the opponent hand.
+    pub open_hosts: u64,
 }
 
 impl SearchStats {
@@ -228,6 +232,8 @@ impl SearchStats {
         self.fuse_overshoot += other.fuse_overshoot;
         self.mull_table += other.mull_table;
         self.mull_fallback += other.mull_fallback;
+        self.open_hidden += other.open_hidden;
+        self.open_hosts += other.open_hosts;
     }
 }
 
@@ -579,7 +585,20 @@ impl Policy for H0 {
         let k = if self.info == Info::All { 1 } else { self.k() };
         let mut roots = Vec::with_capacity(k as usize);
         for _ in 0..k {
-            roots.push(determinize_with(state, me, rng.next_u64(), self.info));
+            if self.info == Info::Open {
+                let mut open = OpenStats::default();
+                roots.push(determinize_with_stats(
+                    state,
+                    me,
+                    rng.next_u64(),
+                    self.info,
+                    Some(&mut open),
+                ));
+                self.stats.open_hidden += u64::from(open.hidden);
+                self.stats.open_hosts += u64::from(open.hosts);
+            } else {
+                roots.push(determinize_with(state, me, rng.next_u64(), self.info));
+            }
         }
         self.stats.roots += u64::from(k);
         let root_vocab = self.root_vocab(state);

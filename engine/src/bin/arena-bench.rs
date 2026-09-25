@@ -159,7 +159,7 @@ fn print_search_stats(seat: &str, spec: &str, s: &SearchStats) {
     }
     let d = s.decisions as f64;
     println!(
-        "search-stats {seat} {spec}: decisions={} nodes/decision={:.2} cap_hit_rate={:.4} candidates/decision={:.2} pairs_skipped/decision={:.2} lethal_nodes/decision={:.2} unscored/decision={:.2} opp_leaves/decision={:.2} opp_cap_hit_rate={:.4} tt_hits/decision={:.2} tt_stores/decision={:.2} opp_lethal_checks/decision={:.2} opp_lethal_found/decision={:.2} opp_lethal_evo_found/decision={:.2} opp_lethal_nodes/decision={:.2} chose_with_lethal_root/decision={:.2} cands_with_lethal_root/decision={:.2} fuse_overshoot/decision={:.2} mull_table/decision={:.2} mull_fallback/decision={:.2}",
+        "search-stats {seat} {spec}: decisions={} nodes/decision={:.2} cap_hit_rate={:.4} candidates/decision={:.2} pairs_skipped/decision={:.2} lethal_nodes/decision={:.2} unscored/decision={:.2} opp_leaves/decision={:.2} opp_cap_hit_rate={:.4} tt_hits/decision={:.2} tt_stores/decision={:.2} opp_lethal_checks/decision={:.2} opp_lethal_found/decision={:.2} opp_lethal_evo_found/decision={:.2} opp_lethal_nodes/decision={:.2} chose_with_lethal_root/decision={:.2} cands_with_lethal_root/decision={:.2} fuse_overshoot/decision={:.2} mull_table/decision={:.2} mull_fallback/decision={:.2} open_hidden/decision={:.2} open_hosts/decision={:.2}",
         s.decisions,
         s.nodes as f64 / d,
         s.cap_hits as f64 / d,
@@ -180,6 +180,8 @@ fn print_search_stats(seat: &str, spec: &str, s: &SearchStats) {
         s.fuse_overshoot as f64 / d,
         s.mull_table as f64 / d,
         s.mull_fallback as f64 / d,
+        s.open_hidden as f64 / d,
+        s.open_hosts as f64 / d,
     );
 }
 

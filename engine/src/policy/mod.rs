@@ -251,6 +251,7 @@ fn h0_spec(h: &H0) -> String {
     }
     if h.info != Info::Fair {
         parts.push(match h.info {
+            Info::Open => "info=open".to_string(),
             Info::Draws => "info=draws".to_string(),
             Info::All => "info=all".to_string(),
             Info::Fair => unreachable!(),
@@ -419,10 +420,11 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             }
             "info" => {
                 h.info = match val {
+                    "open" => Info::Open,
                     "fair" => Info::Fair,
                     "draws" => Info::Draws,
                     "all" => Info::All,
-                    other => return Err(format!("unknown info '{other}' (fair|draws|all)")),
+                    other => return Err(format!("unknown info '{other}' (open|fair|draws|all)")),
                 }
             }
             "lcap" => {
