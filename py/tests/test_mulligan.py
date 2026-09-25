@@ -150,6 +150,119 @@ def test_chi2_sf_known_values() -> None:
     # df=1: sf(3.841)=0.05, sf(6.635)=0.01 (chi-square critical values).
     assert abs(mulligan_mod.chi2_sf(3.841, 1) - 0.05) < 0.01
     assert abs(mulligan_mod.chi2_sf(6.635, 1) - 0.01) < 0.01
+    # df>=2: regularized-gamma / continued-fraction path.
+    assert abs(mulligan_mod.chi2_sf(5.991, 2) - 0.05) < 0.001
+    assert abs(mulligan_mod.chi2_sf(11.345, 3) - 0.01) < 0.001
+    assert abs(mulligan_mod.chi2_sf(16.812, 6) - 0.01) < 0.001
+
+
+def _class_obs(
+    opponent_class: str,
+    kept: bool,
+    won: int,
+    card: str = "10934110",
+) -> mulligan_mod.Observation:
+    filler = ["10001110", "10021120", "10031110"]
+    hand = [card, filler[0], filler[1], filler[2]]
+    swap = [not kept if c == card else False for c in hand]
+    return mulligan_mod.Observation(
+        deck="synthetic",
+        seat="first",
+        opponent_deck="opp",
+        opponent_class=opponent_class,
+        hand=hand,
+        swap=swap,
+        won=won,
+    )
+
+
+def test_class_heterogeneity_requires_both_groups() -> None:
+    """9 kept / 1 sent back must not count toward the chi² class set."""
+    card = "10934110"
+    obs: list[mulligan_mod.Observation] = []
+    for _ in range(9):
+        obs.append(_class_obs("runecraft", kept=True, won=1, card=card))
+    obs.append(_class_obs("runecraft", kept=False, won=0, card=card))
+    for i in range(10):
+        obs.append(_class_obs("swordcraft", kept=True, won=1, card=card))
+    for i in range(10):
+        obs.append(_class_obs("swordcraft", kept=False, won=0, card=card))
+    classes = mulligan_mod.class_effects(obs, "synthetic", card)
+    used = mulligan_mod.heterogeneity_classes(classes, min_n=10)
+    assert "runecraft" not in used
+    assert used == ["swordcraft"]
+
+
+def test_pool_meta_from_run_decks_not_matrix() -> None:
+    run = {
+        "argv": [
+            "mulligan.py",
+            "data",
+            "--decks",
+            "meta-rune-test-subject",
+            "meta-sword-rally",
+            "--games-per-pair",
+            "4",
+        ]
+    }
+    pool = mulligan_mod.pool_meta_from_run(run, ["fallback"])
+    assert pool == ["meta-rune-test-subject", "meta-sword-rally"]
+    assert not isinstance(pool, dict)
+
+
+def test_pool_meta_from_run_pool_name() -> None:
+    run = {"argv": ["mulligan.py", "data", "--pool", "meta", "--games-per-pair", "4"]}
+    assert mulligan_mod.pool_meta_from_run(run, []) == "meta"
+
+
+def test_fit_uses_decks_from_chunks_only(db, arena, tmp_path: Path, root: Path) -> None:
+    tag = "fit-decks-only"
+    tag_dir = tmp_path / tag
+    subprocess.run(
+        [
+            sys.executable,
+            str(_PY / "mulligan.py"),
+            "data",
+            "--tag",
+            tag,
+            "--root",
+            str(tmp_path),
+            "--decks",
+            "meta-rune-test-subject",
+            "meta-sword-rally",
+            "--games-per-pair",
+            "2",
+            "--chunks",
+            "1",
+            "--seed",
+            "42",
+            "--threads",
+            "1",
+        ],
+        check=True,
+        cwd=root,
+    )
+    subprocess.run(
+        [
+            sys.executable,
+            str(_PY / "mulligan.py"),
+            "fit",
+            "--tag",
+            tag,
+            "--root",
+            str(tmp_path),
+            "--min-n",
+            "1",
+        ],
+        check=True,
+        cwd=root,
+    )
+    table = json.loads((tag_dir / "table.json").read_text(encoding="utf-8"))
+    deck_names = {entry["name"] for entry in table["decks"].values()}
+    assert deck_names == {"meta-rune-test-subject", "meta-sword-rally"}
+    pool = table["meta"]["pool"]
+    assert pool == ["meta-rune-test-subject", "meta-sword-rally"]
+    assert not isinstance(pool, dict)
 
 
 def test_data_resume_two_chunks(db, arena, tmp_path: Path, root: Path) -> None:

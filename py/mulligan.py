@@ -21,6 +21,7 @@ if str(_HERE) not in sys.path:
 
 from matchup import (  # noqa: E402
     DEFAULT_POOL,
+    load_deck_files,
     load_extra_deck_files,
     resolve_selected_decks,
 )
@@ -216,6 +217,35 @@ def load_chunks(td: Path) -> list[dict[str, Any]]:
     if not paths:
         raise SystemExit(f"no chunk JSON in {td}")
     return [json.loads(p.read_text(encoding="utf-8")) for p in paths]
+
+
+def decks_in_chunks(chunks: list[dict[str, Any]]) -> list[str]:
+    """Deck stems present in chunk matchup JSON (matrix keys)."""
+    names: set[str] = set()
+    for doc in chunks:
+        matrix = doc.get("matrix") or {}
+        if isinstance(matrix, dict):
+            names.update(matrix.keys())
+    if not names:
+        raise SystemExit("chunks contain no matrix deck names")
+    return sorted(names)
+
+
+def pool_meta_from_run(run: dict[str, Any] | None, deck_names: list[str]) -> str | list[str]:
+    """Pool name or deck list for table meta — from RUN.json argv, not the matrix."""
+    argv = (run or {}).get("argv") or []
+    for i, arg in enumerate(argv):
+        if arg == "--pool" and i + 1 < len(argv):
+            return argv[i + 1]
+        if arg == "--decks":
+            decks: list[str] = []
+            j = i + 1
+            while j < len(argv) and not argv[j].startswith("-"):
+                decks.append(argv[j])
+                j += 1
+            if decks:
+                return decks
+    return deck_names
 
 
 @dataclass
@@ -485,8 +515,8 @@ def class_effects(
     observations: list[Observation],
     deck: str,
     card: str,
-) -> dict[str, tuple[float, float, int]]:
-    """Per opponent class: (effect, se, n_obs)."""
+) -> dict[str, tuple[float, float, int, int]]:
+    """Per opponent class: (effect, se, n_k, n_s)."""
     by_class: dict[str, list[tuple[bool, int]]] = defaultdict(list)
     for obs in observations:
         if obs.deck != deck:
@@ -496,15 +526,27 @@ def class_effects(
             continue
         kept, won = contrib
         by_class[obs.opponent_class].append((kept, won))
-    out: dict[str, tuple[float, float, int]] = {}
+    out: dict[str, tuple[float, float, int, int]] = {}
     for cls, rows in by_class.items():
         n_k = sum(1 for k, _ in rows if k)
         wins_k = sum(w for k, w in rows if k)
         n_s = sum(1 for k, _ in rows if not k)
         wins_s = sum(w for k, w in rows if not k)
         eff, se = effect_se(n_k, wins_k, n_s, wins_s)
-        out[cls] = (eff, se, len(rows))
+        out[cls] = (eff, se, n_k, n_s)
     return out
+
+
+def heterogeneity_classes(
+    classes: dict[str, tuple[float, float, int, int]],
+    min_n: int,
+) -> list[str]:
+    """Classes with enough kept and sent-back observations for the chi² test."""
+    return [
+        cls
+        for cls, (_, _, n_k, n_s) in classes.items()
+        if n_k >= min_n and n_s >= min_n
+    ]
 
 
 def cmd_fit(args: argparse.Namespace) -> None:
@@ -514,8 +556,11 @@ def cmd_fit(args: argparse.Namespace) -> None:
     root = Path(args.root) if args.root else repo / "results"
     td = tag_dir(root, args.tag)
     chunks = load_chunks(td)
+    deck_names = decks_in_chunks(chunks)
     decks_dir = repo / "oracle" / "decks"
-    _, decks = resolve_selected_decks(decks_dir, None, None)
+    decks = load_deck_files(decks_dir, deck_names)
+    run = load_run(td / "RUN.json")
+    pool_meta = pool_meta_from_run(run, deck_names)
     cards = load_card_index(repo)
 
     observations = observations_from_chunks(chunks, decks, cards)
@@ -584,16 +629,21 @@ def cmd_fit(args: argparse.Namespace) -> None:
 
             if pool.n_k >= args.min_n and pool.n_s >= args.min_n:
                 classes = class_effects(observations, deck_name, cid)
-                used = [c for c, (_, _, n) in classes.items() if n >= 10]
+                used = heterogeneity_classes(classes, min_n=10)
                 if len(used) >= 2:
                     chi2 = 0.0
                     for c in used:
-                        e_c, se_c, _ = classes[c]
+                        e_c, se_c, _, _ = classes[c]
                         if se_c > 0:
                             chi2 += ((e_c - peff) / se_c) ** 2
                     pval = chi2_sf(chi2, len(used) - 1)
                     row["class_effects"] = {
-                        c: {"effect": classes[c][0], "se": classes[c][1], "n": classes[c][2]}
+                        c: {
+                            "effect": classes[c][0],
+                            "se": classes[c][1],
+                            "n_k": classes[c][2],
+                            "n_s": classes[c][3],
+                        }
                         for c in sorted(classes)
                     }
                     row["class_chi2_p"] = pval
@@ -620,7 +670,7 @@ def cmd_fit(args: argparse.Namespace) -> None:
             for fp, entry in table_decks.items()
         },
         "meta": {
-            "pool": chunks[0].get("matrix", {}),
+            "pool": pool_meta,
             "policy": policy,
             "games": len(observations) // 2,
             "fit": {"z": args.z, "min_n": args.min_n},
