@@ -347,8 +347,8 @@ deliberate.
 | `all` | exact order known | not resampled | a hard-mode sparring bot |
 
 `PlayerState.hidden_removals` logs instance ids that left hand or deck
-without the opponent learning which card it was (fuse partners, a deck
-draw onto a full hand, and discards that do not reveal themselves).
+without the opponent learning which card it was (fuse partners and a
+deck draw onto a full hand; discards stay public).
 Snapshot-neutral like `public_removals` — not in `CanonicalState`,
 `hash`, or `search_key`. Under `info=open`, those instances join the
 opponent's unknown pool and may be dealt back into hand or deck.

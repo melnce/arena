@@ -341,31 +341,66 @@ fn hidden_removals_skips_public_bounce_overflow() {
 }
 
 #[test]
-fn hidden_removals_discard_without_on_discard() {
+fn discards_stay_public_for_hidden_removals_and_open_worlds() {
     let db = load_db();
     let mut st = started(&db, 10);
     let me = PlayerId::A;
+    let opp = me.opponent();
     st.player_mut(me).hand.clear();
-    let silent_pos = put_hand(&db, &mut st, me, "88001110");
-    let silent_id = st.player(me).hand[silent_pos as usize].id;
+    put_hand(&db, &mut st, me, "88001110");
+    put_hand(&db, &mut st, me, "89800012");
     let spell_pos = put_hand(&db, &mut st, me, "89200140");
+    assert!(st.player(me).hidden_removals.is_empty());
     give_pp(&mut st, me, 10, 10);
     play(&db, &mut st, spell_pos);
-    assert!(st.player(me).hidden_removals.contains(&silent_id));
-}
+    assert!(
+        st.player(me).hidden_removals.is_empty(),
+        "discards stay public regardless of Ability::Discarded"
+    );
 
-#[test]
-fn hidden_removals_skip_discard_with_on_discard() {
-    let db = load_db();
-    let mut st = started(&db, 11);
-    let me = PlayerId::A;
-    st.player_mut(me).hand.clear();
-    let revealed_pos = put_hand(&db, &mut st, me, "89800012");
-    let revealed_id = st.player(me).hand[revealed_pos as usize].id;
-    put_hand(&db, &mut st, me, "89200140");
-    give_pp(&mut st, me, 10, 10);
-    play(&db, &mut st, revealed_pos);
-    assert!(!st.player(me).hidden_removals.contains(&revealed_id));
+    assert_eq!(
+        st.player(me)
+            .cemetery
+            .iter()
+            .filter(|c| c.card.as_str() == "88001110" || c.card.as_str() == "89800012")
+            .count(),
+        2,
+        "both discard targets reached cemetery"
+    );
+
+    let mut open_st = started(&db, 11);
+    clear_hand(&mut open_st, opp);
+    open_st.player_mut(opp).deck.clear();
+    open_st.player_mut(opp).cemetery.clear();
+    open_st.player_mut(opp).hidden_removals.clear();
+    put_hand(&db, &mut open_st, opp, "10061120");
+    put_deck(&db, &mut open_st, opp, "10461110");
+    let mut discarded_ids = Vec::new();
+    for inst in st
+        .player(me)
+        .cemetery
+        .iter()
+        .filter(|c| c.card.as_str() == "88001110" || c.card.as_str() == "89800012")
+    {
+        let mut placed = inst.clone();
+        placed.id = open_st.alloc_id();
+        discarded_ids.push(placed.id);
+        open_st.note_public_removal(opp, placed.card);
+        open_st.player_mut(opp).cemetery.push(placed);
+    }
+    for seed in 1..=200u64 {
+        let w = determinize_with(&open_st, me, seed, Info::Open);
+        for id in &discarded_ids {
+            assert!(
+                !w.player(opp)
+                    .hand
+                    .iter()
+                    .chain(w.player(opp).deck.iter())
+                    .any(|c| c.id == *id),
+                "discarded instance {id} must not reappear in hand/deck at seed {seed}"
+            );
+        }
+    }
 }
 
 #[derive(Clone, Copy)]
