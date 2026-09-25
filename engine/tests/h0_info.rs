@@ -5,10 +5,13 @@
 
 use std::collections::BTreeMap;
 
-use arena_engine::determinize::{determinize, determinize_with, Info};
+use arena_engine::determinize::{
+    determinize, determinize_with, determinize_with_stats, Info, OpenStats,
+};
 use arena_engine::{
-    apply, legal_actions, new_game, play_game, policy_rng, search_key, AnyPolicy, CardDb, First,
-    GameConfig, Phase, PlayerId, Policy, H0, MAX_ACTIONS, MAX_TURNS,
+    apply, legal_actions, new_game, play_game, policy_rng, search_key, Action, AnyPolicy, CardDb,
+    CardId, CardInstance, First, GameConfig, Phase, PlayerId, Policy, State, H0, MAX_ACTIONS,
+    MAX_TURNS,
 };
 
 mod common;
@@ -288,9 +291,289 @@ fn fair_varies_own_future_across_seeds() {
 }
 
 #[test]
+fn hidden_removals_logs_fuse_partners() {
+    let db = load_db();
+    let mut st = started(&db, 5);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    put_hand(&db, &mut st, me, "90071210");
+    let partner_pos = put_hand(&db, &mut st, me, "90071220");
+    let partner_id = st.player(me).hand[partner_pos as usize].id;
+    apply(&db, &mut st, Action::Fuse { host: 0 }).unwrap();
+    choose(&db, &mut st, 0);
+    confirm(&db, &mut st);
+    assert_eq!(st.player(me).hidden_removals, vec![partner_id]);
+}
+
+#[test]
+fn hidden_removals_logs_deck_draw_overflow() {
+    let db = load_db();
+    let mut st = started(&db, 8);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    for _ in 0..9 {
+        put_hand(&db, &mut st, me, "88001110");
+    }
+    put_deck(&db, &mut st, me, "10461110");
+    let burned_id = st.player(me).deck[0].id;
+    st.active = me;
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
+    assert!(st.player(me).hidden_removals.contains(&burned_id));
+}
+
+#[test]
+fn hidden_removals_skips_public_bounce_overflow() {
+    let db = load_db();
+    let mut st = started(&db, 9);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    for _ in 0..8 {
+        put_hand(&db, &mut st, me, "88001110");
+    }
+    let _slot = put_field(&db, &mut st, me, "88001110");
+    give_pp(&mut st, me, 10, 10);
+    put_field(&db, &mut st, PlayerId::B, "88001320");
+    let h = put_hand(&db, &mut st, me, "10012310");
+    play(&db, &mut st, h);
+    choose(&db, &mut st, 0);
+    assert!(st.player(me).hidden_removals.is_empty());
+}
+
+#[test]
+fn hidden_removals_discard_without_on_discard() {
+    let db = load_db();
+    let mut st = started(&db, 10);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    let silent_pos = put_hand(&db, &mut st, me, "88001110");
+    let silent_id = st.player(me).hand[silent_pos as usize].id;
+    let spell_pos = put_hand(&db, &mut st, me, "89200140");
+    give_pp(&mut st, me, 10, 10);
+    play(&db, &mut st, spell_pos);
+    assert!(st.player(me).hidden_removals.contains(&silent_id));
+}
+
+#[test]
+fn hidden_removals_skip_discard_with_on_discard() {
+    let db = load_db();
+    let mut st = started(&db, 11);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    let revealed_pos = put_hand(&db, &mut st, me, "89800012");
+    let revealed_id = st.player(me).hand[revealed_pos as usize].id;
+    put_hand(&db, &mut st, me, "89200140");
+    give_pp(&mut st, me, 10, 10);
+    play(&db, &mut st, revealed_pos);
+    assert!(!st.player(me).hidden_removals.contains(&revealed_id));
+}
+
+#[derive(Clone, Copy)]
+enum OpenHiddenZone {
+    Cemetery,
+    Banished,
+}
+
+struct OpenFixture {
+    me: PlayerId,
+    host_id: u32,
+    partner_id: u32,
+    burned_id: u32,
+    revealed_discard_id: u32,
+    public_card: CardId,
+    /// Recorded `(zone, index)` slots for privately removed cards.
+    r_positions: Vec<(OpenHiddenZone, usize)>,
+}
+
+fn open_world_fixture(db: &CardDb) -> (arena_engine::State, OpenFixture) {
+    let mut st = started(db, 42);
+    let me = PlayerId::A;
+    let opp = me.opponent();
+    clear_hand(&mut st, opp);
+    st.player_mut(opp).deck.clear();
+    st.player_mut(opp).cemetery.clear();
+    st.player_mut(opp).banished.clear();
+    st.player_mut(opp).hidden_removals.clear();
+    st.player_mut(opp).public_hand_additions.clear();
+    st.player_mut(opp).public_removals.clear();
+
+    let public_card = cid("88001110");
+    let pub_inst = CardInstance::from_card(db.card(public_card).unwrap(), st.alloc_id());
+    st.player_mut(opp).hand.push(pub_inst);
+    st.note_public_addition(opp, public_card);
+
+    let host_id = st.alloc_id();
+    let host_card = db.card(cid("90071210")).unwrap();
+    let mut host = CardInstance::from_card(host_card, host_id);
+    host.flags.was_fused = true;
+    st.player_mut(opp).hand.push(host);
+
+    put_hand(db, &mut st, opp, "10061120");
+    put_deck(db, &mut st, opp, "10461110");
+    put_deck(db, &mut st, opp, "10061120");
+
+    let partner_id = st.alloc_id();
+    let partner_card = db.card(cid("90071220")).unwrap();
+    let partner = CardInstance::from_card(partner_card, partner_id);
+    st.note_public_removal(opp, partner.card);
+    st.player_mut(opp).hidden_removals.push(partner_id);
+    st.player_mut(opp).banished.push(partner);
+    let partner_slot = (OpenHiddenZone::Banished, 0usize);
+
+    let burned_id = st.alloc_id();
+    let burned_card = db.card(cid("10461110")).unwrap();
+    let burned = CardInstance::from_card(burned_card, burned_id);
+    st.note_public_removal(opp, burned.card);
+    st.player_mut(opp).hidden_removals.push(burned_id);
+    st.player_mut(opp).cemetery.push(burned);
+    let burned_slot = (OpenHiddenZone::Cemetery, 0usize);
+
+    let revealed_discard_id = st.alloc_id();
+    let revealed_card = db.card(cid("89800012")).unwrap();
+    let revealed = CardInstance::from_card(revealed_card, revealed_discard_id);
+    st.note_public_removal(opp, revealed.card);
+    st.player_mut(opp).cemetery.push(revealed);
+
+    (
+        st,
+        OpenFixture {
+            me,
+            host_id,
+            partner_id,
+            burned_id,
+            revealed_discard_id,
+            public_card,
+            r_positions: vec![burned_slot, partner_slot],
+        },
+    )
+}
+
+fn zone_sizes(st: &State, who: PlayerId) -> (usize, usize, usize, usize) {
+    let p = st.player(who);
+    (
+        p.hand.len(),
+        p.deck.len(),
+        p.cemetery.len(),
+        p.banished.len(),
+    )
+}
+
+fn opp_open_multiset(
+    st: &State,
+    opp: PlayerId,
+    r_positions: &[(OpenHiddenZone, usize)],
+) -> BTreeMap<(u32, u32), u32> {
+    let mut m = zone_multiset(&st.player(opp).hand);
+    for c in &st.player(opp).deck {
+        *m.entry((c.card.0, c.id)).or_insert(0) += 1;
+    }
+    for &(zone, idx) in r_positions {
+        let inst = match zone {
+            OpenHiddenZone::Cemetery => &st.player(opp).cemetery[idx],
+            OpenHiddenZone::Banished => &st.player(opp).banished[idx],
+        };
+        *m.entry((inst.card.0, inst.id)).or_insert(0) += 1;
+    }
+    m
+}
+
+#[test]
+fn open_world_preserves_zones_and_multiset() {
+    let db = load_db();
+    let (st, fx) = open_world_fixture(&db);
+    let opp = fx.me.opponent();
+    let true_sizes = zone_sizes(&st, PlayerId::A);
+    let true_opp = zone_sizes(&st, opp);
+    let true_ms = opp_open_multiset(&st, opp, &fx.r_positions);
+    let mut partner_seen = false;
+    let mut burned_seen = false;
+    for seed in 1..=200u64 {
+        let w = determinize_with(&st, fx.me, seed, Info::Open);
+        assert_eq!(zone_sizes(&w, PlayerId::A), true_sizes, "seed {seed}");
+        assert_eq!(zone_sizes(&w, opp), true_opp, "seed {seed}");
+        assert_eq!(
+            opp_open_multiset(&w, opp, &fx.r_positions),
+            true_ms,
+            "seed {seed}"
+        );
+        assert!(
+            w.player(opp)
+                .hand
+                .iter()
+                .any(|c| c.id == fx.host_id && c.flags.was_fused),
+            "host fixed in hand at seed {seed}"
+        );
+        assert!(
+            w.player(opp).hand.iter().any(|c| c.card == fx.public_card),
+            "public addition stays in hand at seed {seed}"
+        );
+        assert!(
+            !w.player(opp)
+                .hand
+                .iter()
+                .chain(w.player(opp).deck.iter())
+                .any(|c| c.id == fx.revealed_discard_id),
+            "on-discard card never in hand/deck at seed {seed}"
+        );
+        if w.player(opp)
+            .hand
+            .iter()
+            .chain(w.player(opp).deck.iter())
+            .any(|c| c.id == fx.partner_id)
+        {
+            partner_seen = true;
+        }
+        if w.player(opp)
+            .hand
+            .iter()
+            .chain(w.player(opp).deck.iter())
+            .any(|c| c.id == fx.burned_id)
+        {
+            burned_seen = true;
+        }
+        let again = determinize_with(&st, fx.me, seed, Info::Open);
+        assert_eq!(
+            zone_ids(&w.player(opp).hand),
+            zone_ids(&again.player(opp).hand),
+            "seed-stable hand at {seed}"
+        );
+        assert_eq!(
+            zone_ids(&w.player(opp).deck),
+            zone_ids(&again.player(opp).deck),
+            "seed-stable deck at {seed}"
+        );
+    }
+    assert!(
+        partner_seen,
+        "partner must appear in hand or deck on some seed"
+    );
+    assert!(
+        burned_seen,
+        "burned card must appear in hand or deck on some seed"
+    );
+}
+
+#[test]
+fn open_stats_count_hidden_and_hosts() {
+    let db = load_db();
+    let (st, fx) = open_world_fixture(&db);
+    let mut stats = OpenStats::default();
+    determinize_with_stats(&st, fx.me, 7, Info::Open, Some(&mut stats));
+    assert_eq!(stats.hosts, 1);
+    assert!(
+        stats.hidden > 0,
+        "hidden removals should sometimes deal into play"
+    );
+}
+
+#[test]
 fn spec_info_round_trips() {
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
     assert_eq!(AnyPolicy::parse_spec("h0:info=fair").unwrap().spec(), "h0");
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:info=open").unwrap().spec(),
+        "h0:info=open"
+    );
     assert_eq!(
         AnyPolicy::parse_spec("h0:info=draws").unwrap().spec(),
         "h0:info=draws"
@@ -300,13 +583,13 @@ fn spec_info_round_trips() {
         "h0:info=all"
     );
     assert_eq!(AnyPolicy::parse_spec("h0-fast").unwrap().spec(), "h0-fast");
-    let again = AnyPolicy::parse_spec("h0:info=draws").unwrap();
+    let again = AnyPolicy::parse_spec("h0:info=open").unwrap();
     assert_eq!(AnyPolicy::parse_spec(&again.spec()).unwrap(), again);
     let e = AnyPolicy::parse_spec("h0:info=bogus").unwrap_err();
     assert!(e.contains("info"), "info=bogus → {e}");
     assert!(
-        e.contains("fair") && e.contains("draws") && e.contains("all"),
-        "error must list the three values: {e}"
+        e.contains("open") && e.contains("fair") && e.contains("draws") && e.contains("all"),
+        "error must list the values: {e}"
     );
 }
 
