@@ -133,6 +133,7 @@ fn identity_epsilon_zero_h0_fast() {
 }
 
 #[test]
+#[cfg_attr(debug_assertions, ignore)]
 fn identity_epsilon_zero_h0_one() {
     check_identity("h0", [1u64]);
 }
@@ -342,6 +343,7 @@ fn search_v_h0_fast_twenty() {
 }
 
 #[test]
+#[cfg_attr(debug_assertions, ignore)]
 fn search_v_h0_one() {
     check_search_v("h0", [1u64]);
 }

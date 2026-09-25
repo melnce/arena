@@ -299,7 +299,9 @@ fn pv_replay_raw_200_midgame() {
 #[test]
 fn bench_nodes_unchanged_without_sink() {
     let db = load_db();
-    let states = collect_states(&db, 40, true);
+    // Debug CI: eight states (~1 min). Release nightly (slow.yml): full forty-state check.
+    let n = if cfg!(debug_assertions) { 8 } else { 40 };
+    let states = collect_states(&db, n, true);
     for spec in SPECS {
         for (i, state) in states.iter().enumerate() {
             let legal = legal_actions(&db, state);

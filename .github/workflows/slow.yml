@@ -56,6 +56,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      - name: h0 explain bench (release)
+        run: cargo test --release --test h0_explain bench_nodes_unchanged_without_sink -- --nocapture
+
+      - name: h0 fusemacro (release, including ignored)
+        run: cargo test --release --test h0_fusemacro -- --include-ignored --nocapture
+
       - name: h0 transposition table (release, including ignored)
         run: cargo test --release --test h0_tt -- --include-ignored --nocapture
 

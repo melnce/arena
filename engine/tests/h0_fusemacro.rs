@@ -160,6 +160,7 @@ fn replay_world(
 }
 
 #[test]
+#[cfg_attr(debug_assertions, ignore)]
 fn no_leaf_inside_partner_choice_with_fusemacro() {
     let db = load_db();
     let positions = collect_sephie_fuse_positions(&db, 8);
@@ -239,6 +240,7 @@ fn pv_contains_fuse(pv: &[arena_engine::NeutralAction]) -> bool {
 }
 
 #[test]
+#[cfg_attr(debug_assertions, ignore)]
 fn fusemacro_main_node_keeps_attack_without_fuse_line() {
     let db = load_db();
     let mut st = started(&db, 30);
@@ -289,6 +291,7 @@ fn fusemacro_main_node_keeps_attack_without_fuse_line() {
 }
 
 #[test]
+#[cfg_attr(debug_assertions, ignore)]
 fn fusemacro_one_ply_same_depth_as_play() {
     let db = load_db();
     let mut st = started(&db, 20);
