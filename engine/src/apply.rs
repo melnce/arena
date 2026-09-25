@@ -158,7 +158,7 @@ fn deal_opening_hand(state: &mut State, who: PlayerId, ids: &[CardId]) -> Result
                 card: id.as_str(),
             })?;
         let inst = state.player_mut(who).deck.remove(pos);
-        add_to_hand(state, who, inst);
+        add_to_hand(state, who, inst, false);
     }
     Ok(())
 }
@@ -257,25 +257,48 @@ fn draw_one(
     let mut inst = state.player_mut(who).deck.remove(deck_i);
     inst.flags.summoning_sick = false;
     let id = inst.card;
-    add_to_hand(state, who, inst);
+    add_to_hand(state, who, inst, true);
     Ok(Some(id))
 }
 
 /// Hand limit 9; overflow destroys without Last Words.
 /// `HAND_OVERFLOW_RULING`
-fn add_to_hand(state: &mut State, who: PlayerId, inst: CardInstance) {
+///
+/// `hide_deck_draw_overflow`: when true, a card drawn from the deck onto a
+/// full hand is logged in `hidden_removals`; public-effect overflows are not.
+fn add_to_hand(
+    state: &mut State,
+    who: PlayerId,
+    inst: CardInstance,
+    hide_deck_draw_overflow: bool,
+) {
     if state.player(who).hand.len() >= HAND_LIMIT {
-        overflow_destroy(state, who, inst);
+        overflow_destroy(state, who, inst, hide_deck_draw_overflow);
     } else {
         state.player_mut(who).hand.push(inst);
     }
 }
 
-fn overflow_destroy(state: &mut State, who: PlayerId, inst: CardInstance) {
+fn overflow_destroy(state: &mut State, who: PlayerId, inst: CardInstance, hide: bool) {
     // no Last Words — ruling 2026-08-10
     state.note_public_removal(who, inst.card);
+    if hide {
+        state.note_hidden_removal(who, inst.id);
+    }
     state.player_mut(who).shadows += 1;
     state.player_mut(who).cemetery.push(inst);
+}
+
+/// Working rule (owner ruling pending): a discard that triggers
+/// [`Ability::Discarded`] reveals itself; any other discard is hidden.
+fn discard_reveals_self(db: &CardDb, card: CardId) -> bool {
+    db.card(card)
+        .map(|c| {
+            c.abilities()
+                .iter()
+                .any(|a| matches!(a, Ability::Discarded { .. }))
+        })
+        .unwrap_or(false)
 }
 
 // =========================================================================
@@ -1860,6 +1883,7 @@ fn commit_fuse(
     // partners banished — ruling 2026-09-02
     for inst in partners {
         state.note_public_removal(me, inst.card);
+        state.note_hidden_removal(me, inst.id);
         state.player_mut(me).banished.push(inst);
     }
     if let Some(h) = state.player_mut(me).hand.get_mut(host_pos) {
@@ -5294,7 +5318,7 @@ fn bounce_opt(
                 let inst = reset_off_field(db, inst);
                 let card = inst.card;
                 let before = state.player(*player).hand.len();
-                add_to_hand(state, *player, inst);
+                add_to_hand(state, *player, inst, false);
                 if state.player(*player).hand.len() > before {
                     state.note_public_addition(*player, card);
                 }
@@ -5304,7 +5328,7 @@ fn bounce_opt(
             // Search / put-from-deck: the pick (if random) already ran.
             for who in [controller, controller.opponent()] {
                 if let Some(inst) = remove_from_deck_by_id(state, who, *id) {
-                    add_to_hand(state, controller, inst);
+                    add_to_hand(state, controller, inst, false);
                     break;
                 }
             }
@@ -5312,7 +5336,7 @@ fn bounce_opt(
         TargetOpt::Deck { player, id } => {
             if let Some(pos) = state.player(*player).deck.iter().position(|c| c.id == *id) {
                 let inst = state.player_mut(*player).deck.remove(pos);
-                add_to_hand(state, controller, inst);
+                add_to_hand(state, controller, inst, false);
             }
         }
         _ => {}
@@ -5392,6 +5416,9 @@ fn discard_opt(
             }
             state.player_mut(*player).shadows += 1;
             state.note_public_removal(*player, inst.card);
+            if !discard_reveals_self(db, inst.card) {
+                state.note_hidden_removal(*player, inst.id);
+            }
             state.player_mut(*player).cemetery.push(inst);
         }
     }
@@ -5866,7 +5893,7 @@ fn add_source_to_hand(
 fn push_hand_target(state: &mut State, who: PlayerId, inst: CardInstance) -> Option<TargetOpt> {
     let before = state.player(who).hand.len();
     let card = inst.card;
-    add_to_hand(state, who, inst);
+    add_to_hand(state, who, inst, false);
     if state.player(who).hand.len() > before {
         state.note_public_addition(who, card);
         Some(TargetOpt::Hand {

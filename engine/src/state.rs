@@ -298,6 +298,10 @@ pub struct PlayerState {
     /// Cards currently in a public zone that left the hidden pool.
     /// Snapshot-neutral — not in `CanonicalState`.
     pub public_removals: Vec<CardId>,
+    /// Instance ids of cards that left hand or deck without the opponent
+    /// learning which card it was. Snapshot-neutral — not in
+    /// `CanonicalState`, `hash`, or `search_key`.
+    pub hidden_removals: Vec<u32>,
     /// Tokens / returned cards currently in hand or deck that are not
     /// accounted for by `starting_deck − public_removals`. Snapshot-neutral.
     pub public_hand_additions: Vec<CardId>,
@@ -338,6 +342,7 @@ impl PlayerState {
             enter_counts: BTreeMap::new(),
             starting_deck: Vec::new(),
             public_removals: Vec::new(),
+            hidden_removals: Vec::new(),
             public_hand_additions: Vec::new(),
         }
     }
@@ -718,6 +723,10 @@ impl State {
 
     pub fn note_public_removal(&mut self, who: PlayerId, card: crate::card::CardId) {
         self.player_mut(who).public_removals.push(card);
+    }
+
+    pub fn note_hidden_removal(&mut self, who: PlayerId, instance_id: u32) {
+        self.player_mut(who).hidden_removals.push(instance_id);
     }
 
     pub fn note_public_addition(&mut self, who: PlayerId, card: crate::card::CardId) {
