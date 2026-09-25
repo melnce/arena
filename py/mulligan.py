@@ -42,6 +42,22 @@ PUBLISH_FILES = frozenset(
 )
 
 
+def load_card_index(repo: Path) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    cards_dir = repo / "cards"
+    for path in cards_dir.rglob("*.json"):
+        if "official" in path.parts:
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        cid = data.get("id")
+        if isinstance(cid, str):
+            out[cid] = data
+    return out
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     raw = list(sys.argv[1:] if argv is None else argv)
     if not raw or raw[0] not in {"data", "fit"}:
@@ -213,10 +229,10 @@ class Observation:
     won: int
 
 
-def deck_class(db: Any, deck: dict[str, int]) -> str:
+def deck_class(cards: dict[str, dict[str, Any]], deck: dict[str, int]) -> str:
     counts: dict[str, int] = defaultdict(int)
     for cid, n in deck.items():
-        card = db.card(str(cid))
+        card = cards.get(str(cid), {})
         cls = card.get("class")
         if cls and cls != "neutral":
             counts[str(cls)] += int(n)
@@ -228,7 +244,7 @@ def deck_class(db: Any, deck: dict[str, int]) -> str:
 def observations_from_chunks(
     chunks: list[dict[str, Any]],
     decks: dict[str, dict[str, int]],
-    db: Any,
+    cards: dict[str, dict[str, Any]],
 ) -> list[Observation]:
     out: list[Observation] = []
     for doc in chunks:
@@ -250,7 +266,7 @@ def observations_from_chunks(
                         deck=rec[deck_key],
                         seat=seat,
                         opponent_deck=opp,
-                        opponent_class=deck_class(db, decks[opp]),
+                        opponent_class=deck_class(cards, decks[opp]),
                         hand=list(mull["hand"]),
                         swap=[bool(x) for x in mull["swap"]],
                         won=won,
@@ -500,9 +516,9 @@ def cmd_fit(args: argparse.Namespace) -> None:
     chunks = load_chunks(td)
     decks_dir = repo / "oracle" / "decks"
     _, decks = resolve_selected_decks(decks_dir, None, None)
-    db = arena.load_cards(str(repo / "cards"))
+    cards = load_card_index(repo)
 
-    observations = observations_from_chunks(chunks, decks, db)
+    observations = observations_from_chunks(chunks, decks, cards)
     write_observations(td / "observations.csv.gz", observations)
     per_seat, excluded_split = gather_stats(observations)
 
@@ -510,7 +526,7 @@ def cmd_fit(args: argparse.Namespace) -> None:
     for deck_map in decks.values():
         for cid in deck_map:
             if cid not in card_costs:
-                card_costs[cid] = int(db.card(cid)["cost"])
+                card_costs[cid] = int(cards.get(cid, {}).get("cost", 99))
 
     table_decks: dict[str, Any] = {}
     fit_cards: list[dict[str, Any]] = []
