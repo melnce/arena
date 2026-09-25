@@ -515,6 +515,32 @@ fn open_hidden_slots_preserve_public_indices() {
     }
 }
 
+#[test]
+fn open_hidden_removals_dedupes_and_skips_stale_ids() {
+    let db = load_db();
+    let mut st = started(&db, 45);
+    let me = PlayerId::A;
+    let opp = me.opponent();
+    clear_hand(&mut st, opp);
+    st.player_mut(opp).deck.clear();
+    st.player_mut(opp).cemetery.clear();
+    st.player_mut(opp).banished.clear();
+    st.player_mut(opp).hidden_removals.clear();
+    put_hand(&db, &mut st, opp, "10061120");
+    put_deck(&db, &mut st, opp, "10461110");
+
+    let (_, hidden_id) = push_opp_cemetery(&db, &mut st, opp, "88001110", true);
+    st.player_mut(opp).hidden_removals.push(hidden_id);
+    st.player_mut(opp).hidden_removals.push(hidden_id);
+    st.player_mut(opp).hidden_removals.push(999_999);
+
+    let true_sizes = zone_sizes(&st, opp);
+    for seed in 1..=200u64 {
+        let w = determinize_with(&st, me, seed, Info::Open);
+        assert_eq!(zone_sizes(&w, opp), true_sizes, "seed {seed}");
+    }
+}
+
 #[derive(Clone, Copy)]
 enum OpenHiddenZone {
     Cemetery,
