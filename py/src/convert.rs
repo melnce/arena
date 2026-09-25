@@ -50,6 +50,21 @@ pub fn resolve_cards_root(root: &str) -> PathBuf {
     p.to_path_buf()
 }
 
+pub fn deck_counts_from_value(v: &Value) -> PyResult<BTreeMap<arena_engine::CardId, u32>> {
+    let obj = v
+        .as_object()
+        .ok_or_else(|| py_err_msg("deck must be a dict of card id → count"))?;
+    let mut out = BTreeMap::new();
+    for (k, n) in obj {
+        let count = n
+            .as_u64()
+            .ok_or_else(|| py_err_msg(format!("deck count for {k} must be an int")))?;
+        let id = CardId::parse(k).ok_or_else(|| py_err_msg(format!("invalid card id {k}")))?;
+        out.insert(id, count as u32);
+    }
+    Ok(out)
+}
+
 pub fn deck_from_value(v: &Value) -> PyResult<Vec<CardId>> {
     let obj = v
         .as_object()

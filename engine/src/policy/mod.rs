@@ -10,14 +10,18 @@
 
 mod explain;
 mod h0;
+mod mulligan;
 mod needs;
 mod net;
 mod record;
 
 pub use explain::{CandidateRecord, ChoosePath, ExplainRecord, PvEnd, PvLeaf, WorldRecord};
 pub use h0::{
-    builtin_net, fuse_completion_partner_sets, Alloc, Info, SearchStats, ValueVersion, Weights,
-    BUILTIN_NET_NAME, H0,
+    builtin_net, fuse_completion_partner_sets, Alloc, Info, MullMode, SearchStats, ValueVersion,
+    Weights, BUILTIN_NET_NAME, H0,
+};
+pub use mulligan::{
+    deck_fingerprint_counts, deck_fingerprint_player, mulligan_seat, DeckMulligan, MulliganTable,
 };
 pub use needs::{CardNeeds, NeedsTable, SkippedAmount};
 pub use net::{NetArch, ValueNet};
@@ -147,7 +151,12 @@ impl AnyPolicy {
     /// `lcap=<f>` (consensus-lethal node budget as a fraction of `node_cap`,
     /// in `(0, 1]`; default `0.5` is the sweep-10 flip), and `clip=<c>`
     /// (`c ≥ 0`; standardised-input clamp for the learned leaf; default `5`
-    /// is the sweep-10 flip; ignored with `value=v0` / `value=v1`).
+    /// is the sweep-10 flip; ignored with `value=v0` / `value=v1`),
+    /// `mull=rule|random|<path>` (opening keep policy; default `rule` is
+    /// cost ≥ 4 send back; `random` draws one `next_u64()` from the rng
+    /// passed to `choose` and sends back slot `i` iff bit `i` is set,
+    /// `i < hand length`, at most 4 — deterministic for a seed; `<path>`
+    /// loads a keep table at parse time like `net=`).
     ///
     /// `Err` names the offending token: unknown policy, unknown key, or bad
     /// number.
@@ -279,6 +288,15 @@ fn h0_spec(h: &H0) -> String {
     if !h.fusemacro {
         parts.push("fusemacro=0".to_string());
     }
+    match h.mull {
+        MullMode::Rule => {}
+        MullMode::Random => parts.push("mull=random".to_string()),
+        MullMode::Table => {
+            if let Some(path) = &h.mull_path {
+                parts.push(format!("mull={path}"));
+            }
+        }
+    }
     format!("h0:{}", parts.join(","))
 }
 
@@ -302,6 +320,8 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.net_path == b.net_path
         && a.lcap == b.lcap
         && a.clip == b.clip
+        && a.mull == b.mull
+        && a.mull_path == b.mull_path
         && weights_eq(&a.weights, &b.weights)
 }
 
@@ -318,6 +338,7 @@ fn weights_eq(a: &Weights, b: &Weights) -> bool {
 fn parse_h0_params(body: &str) -> Result<H0, String> {
     let mut h = H0::default();
     let mut net_path: Option<String> = None;
+    let mut mull_path: Option<String> = None;
     if body.is_empty() {
         return Ok(h);
     }
@@ -425,8 +446,20 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     other => return Err(format!("unknown fusemacro '{other}'")),
                 }
             }
+            "mull" => match val {
+                "rule" => h.mull = MullMode::Rule,
+                "random" => h.mull = MullMode::Random,
+                "" => return Err("missing key 'mull'".to_string()),
+                other => mull_path = Some(other.to_string()),
+            },
             other => return Err(format!("unknown key '{other}'")),
         }
+    }
+    if let Some(path) = mull_path {
+        let table = mulligan::MulliganTable::load(&path)?;
+        h.mull = MullMode::Table;
+        h.mull_table = Some(table);
+        h.mull_path = Some(path);
     }
     match (h.value, net_path) {
         (ValueVersion::Net, Some(path)) => {

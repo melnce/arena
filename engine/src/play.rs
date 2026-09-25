@@ -3,14 +3,22 @@
 //! This module must compile for `wasm32-unknown-unknown`: no `Instant` /
 //! `SystemTime`, threads, or `std::fs`.
 
-use crate::action::acting_player;
+use crate::action::{acting_player, Action};
 use crate::apply::{apply, legal_actions};
+use crate::card::CardId;
 use crate::db::CardDb;
 use crate::ids::PlayerId;
 use crate::limits::{MAX_ACTIONS, MAX_TURNS};
 use crate::policy::Policy;
 use crate::rng::Xoshiro256ss;
 use crate::state::{Phase, State};
+
+/// Opening hand and swap mask captured immediately before a mulligan confirm.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MulliganRecord {
+    pub hand: Vec<CardId>,
+    pub swap: [bool; 4],
+}
 
 /// Why a driven game stopped.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -37,13 +45,15 @@ impl End {
 }
 
 /// Result of [`play_game`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Outcome {
     pub winner: Option<PlayerId>,
     pub first: PlayerId,
     pub turns: u32,
     pub actions: u32,
     pub end: End,
+    /// Per-player mulligan, indexed by [`PlayerId`] (`A` = 0, `B` = 1).
+    pub mulligans: [Option<MulliganRecord>; 2],
 }
 
 /// Drives `state` to the end with `pol_a` acting for A and `pol_b` for B.
@@ -64,6 +74,7 @@ pub fn play_game(
     let first = state.first;
     let mut actions = 0u32;
     let mut end = End::NoLegal;
+    let mut mulligans: [Option<MulliganRecord>; 2] = [None, None];
     while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
         if state.turn > MAX_TURNS {
             end = End::TurnCap;
@@ -83,6 +94,17 @@ pub fn play_game(
             PlayerId::B => pol_b.choose(db, state, &legal, rng),
         };
         let idx = idx.min(legal.len().saturating_sub(1));
+        if let Action::MulliganConfirm { swap } = &legal[idx] {
+            let me = acting_player(state);
+            let hand: Vec<CardId> = state
+                .player(me)
+                .hand
+                .iter()
+                .take(4)
+                .map(|c| c.card)
+                .collect();
+            mulligans[me.idx()] = Some(MulliganRecord { hand, swap: *swap });
+        }
         if apply(db, state, legal[idx].clone()).is_err() {
             end = End::Illegal;
             break;
@@ -103,5 +125,6 @@ pub fn play_game(
         turns: state.turn,
         actions,
         end,
+        mulligans,
     }
 }

@@ -31,9 +31,22 @@ use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
 
 use super::explain::{CandidateRecord, ChoosePath, ExplainRecord, Line, PvEnd, PvTracker};
+use super::mulligan::{deck_fingerprint_player, mulligan_seat, MulliganTable};
 use super::needs::NeedsTable;
 use super::net::ValueNet;
 use super::Policy;
+
+/// Opening mulligan mode for [`H0`]. Default [`MullMode::Rule`] is cost ≥ 4 send back.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum MullMode {
+    #[default]
+    Rule,
+    /// One `next_u64()` from the rng passed to [`Policy::choose`]; slot `i` is
+    /// sent back iff bit `i` is set (`i < hand length`, at most 4). Deterministic
+    /// for a seed.
+    Random,
+    Table,
+}
 
 /// Per-decision transposition table: (`search_key`, remaining depth, side-to-move-is-me).
 type Tt = HashMap<(u64, u8, bool), f32>;
@@ -182,6 +195,10 @@ pub struct SearchStats {
     /// Uncharged `apply`s used to finish a fuse partner choice at a leaf
     /// (`fusemacro=1` only).
     pub fuse_overshoot: u64,
+    /// Mulligans decided from a found deck entry (`mull=<table>`).
+    pub mull_table: u64,
+    /// Table mode, deck fingerprint not found — rule used for the whole hand.
+    pub mull_fallback: u64,
 }
 
 impl SearchStats {
@@ -209,6 +226,8 @@ impl SearchStats {
         self.lethal_nodes += other.lethal_nodes;
         self.unscored += other.unscored;
         self.fuse_overshoot += other.fuse_overshoot;
+        self.mull_table += other.mull_table;
+        self.mull_fallback += other.mull_fallback;
     }
 }
 
@@ -280,6 +299,11 @@ pub struct H0 {
     pub clip: f32,
     /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
     pub net_path: Option<String>,
+    /// Opening mulligan mode. Default [`MullMode::Rule`].
+    pub mull: MullMode,
+    pub mull_table: Option<Arc<MulliganTable>>,
+    /// Table path compared by `h0_fields_eq` and printed by `spec()`.
+    pub mull_path: Option<String>,
     pub stats: SearchStats,
     /// Root value of the most recent [`Policy::choose`]. Reset every
     /// `choose`; ignored by `h0_fields_eq` and `spec()`.
@@ -316,6 +340,9 @@ impl Default for H0 {
             lcap: 0.5,
             clip: 5.0,
             net_path: None,
+            mull: MullMode::Rule,
+            mull_table: None,
+            mull_path: None,
             stats: SearchStats::default(),
             last_value: None,
             explain_armed: false,
@@ -498,7 +525,7 @@ impl Policy for H0 {
             return 0;
         }
         if matches!(state.phase, Phase::Mulligan { .. }) {
-            let idx = mulligan_index(state, legal);
+            let idx = self.choose_mulligan(db, state, legal, rng);
             if recording {
                 let mut rec =
                     ExplainRecord::new(ChoosePath::Mulligan, 0, self.node_cap, self.alloc_label());
@@ -831,7 +858,23 @@ impl Policy for H0 {
     }
 }
 
-fn mulligan_index(state: &State, legal: &[Action]) -> usize {
+impl H0 {
+    fn choose_mulligan(
+        &mut self,
+        db: &CardDb,
+        state: &State,
+        legal: &[Action],
+        rng: &mut Xoshiro256ss,
+    ) -> usize {
+        match self.mull {
+            MullMode::Rule => mulligan_index(state, legal),
+            MullMode::Random => mulligan_random(state, legal, rng),
+            MullMode::Table => mulligan_table(self, db, state, legal),
+        }
+    }
+}
+
+fn mulligan_rule_mask(state: &State) -> [bool; 4] {
     let me = acting_player(state);
     let hand = &state.player(me).hand;
     let mut want = [false; 4];
@@ -840,10 +883,62 @@ fn mulligan_index(state: &State, legal: &[Action]) -> usize {
             *slot = c.cost >= 4;
         }
     }
+    want
+}
+
+fn mulligan_index(state: &State, legal: &[Action]) -> usize {
+    let want = mulligan_rule_mask(state);
     legal
         .iter()
         .position(|a| matches!(a, Action::MulliganConfirm { swap } if *swap == want))
         .unwrap_or(0)
+}
+
+fn mulligan_random(state: &State, legal: &[Action], rng: &mut Xoshiro256ss) -> usize {
+    let me = acting_player(state);
+    let n = state.player(me).hand.len().min(4);
+    let bits = rng.next_u64();
+    let mut want = [false; 4];
+    for (i, slot) in want.iter_mut().enumerate().take(n) {
+        *slot = (bits >> i) & 1 == 1;
+    }
+    legal
+        .iter()
+        .position(|a| matches!(a, Action::MulliganConfirm { swap } if *swap == want))
+        .unwrap_or_else(|| mulligan_index(state, legal))
+}
+
+fn mulligan_table(h0: &mut H0, _db: &CardDb, state: &State, legal: &[Action]) -> usize {
+    let me = acting_player(state);
+    let fp = deck_fingerprint_player(state.player(me));
+    let table = h0.mull_table.as_ref().expect("mull=table requires a table");
+    let Some(entry) = table.lookup(&fp) else {
+        h0.stats.mull_fallback += 1;
+        return mulligan_index(state, legal);
+    };
+    h0.stats.mull_table += 1;
+    let seat = mulligan_seat(state.first, me);
+    let seat_map = if seat == "first" {
+        &entry.first
+    } else {
+        &entry.second
+    };
+    let hand = &state.player(me).hand;
+    let mut want = [false; 4];
+    for (i, slot) in want.iter_mut().enumerate() {
+        if let Some(c) = hand.get(i) {
+            let id = c.card.to_string();
+            let keep = match seat_map.get(&id) {
+                Some(k) => *k,
+                None => c.cost < 4,
+            };
+            *slot = !keep;
+        }
+    }
+    legal
+        .iter()
+        .position(|a| matches!(a, Action::MulliganConfirm { swap } if *swap == want))
+        .unwrap_or_else(|| mulligan_index(state, legal))
 }
 
 fn useful_action(state: &State, me: PlayerId, a: &Action) -> bool {

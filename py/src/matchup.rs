@@ -6,7 +6,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use arena_engine::{AnyPolicy, CardDb, CardId, End, First, Observation, Outcome, PlayerId, Sample};
+use arena_engine::{
+    AnyPolicy, CardDb, CardId, End, First, MulliganRecord, Observation, Outcome, PlayerId, Sample,
+};
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use rayon::prelude::*;
@@ -282,17 +284,29 @@ pub fn py_matchup<'py>(
         let recs: Vec<serde_json::Value> = rows
             .iter()
             .map(|row| {
-                serde_json::json!({
-                    "a": names[row.i],
-                    "b": names[row.j],
-                    "g": row.g,
-                    "seed": row.seed,
-                    "first": row.out.first.as_str(),
-                    "winner": row.out.winner.map(|w| serde_json::Value::String(w.as_str().into())).unwrap_or(serde_json::Value::Null),
-                    "turns": row.out.turns,
-                    "actions": row.out.actions,
-                    "end": row.out.end.as_str(),
-                })
+                {
+                    let mut rec = serde_json::json!({
+                        "a": names[row.i],
+                        "b": names[row.j],
+                        "g": row.g,
+                        "seed": row.seed,
+                        "first": row.out.first.as_str(),
+                        "winner": row.out.winner.map(|w| serde_json::Value::String(w.as_str().into())).unwrap_or(serde_json::Value::Null),
+                        "turns": row.out.turns,
+                        "actions": row.out.actions,
+                        "end": row.out.end.as_str(),
+                    });
+                    let obj = rec.as_object_mut().expect("object");
+                    obj.insert(
+                        "mull_a".into(),
+                        mulligan_json(row.out.mulligans[PlayerId::A.idx()].clone()),
+                    );
+                    obj.insert(
+                        "mull_b".into(),
+                        mulligan_json(row.out.mulligans[PlayerId::B.idx()].clone()),
+                    );
+                    rec
+                }
             })
             .collect();
         top.as_object_mut()
@@ -311,6 +325,16 @@ pub fn py_matchup<'py>(
     }
 
     value_to_py(py, &top)
+}
+
+fn mulligan_json(rec: Option<MulliganRecord>) -> serde_json::Value {
+    match rec {
+        None => serde_json::Value::Null,
+        Some(m) => serde_json::json!({
+            "hand": m.hand.iter().map(|c| c.to_string()).collect::<Vec<_>>(),
+            "swap": m.swap,
+        }),
+    }
 }
 
 fn num_cpus_hint() -> usize {
