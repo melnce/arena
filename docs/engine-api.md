@@ -357,7 +357,11 @@ fn policy::by_name(name: &str, seed: u64) -> Option<Box<dyn Policy>>;
 fn policy::names() -> &'static [&'static str];   // "random", "first-legal", "h0"
 
 enum End { Lethal, Deckout, TurnCap, ActionCap, NoLegal, Illegal }
-struct Outcome { winner: Option<PlayerId>, first: PlayerId, turns: u32, actions: u32, end: End }
+struct MulliganRecord { hand: Vec<CardId>, swap: [bool; 4] }
+struct Outcome {
+    winner: Option<PlayerId>, first: PlayerId, turns: u32, actions: u32, end: End,
+    mulligans: [Option<MulliganRecord>; 2],  // indexed by PlayerId (A=0, B=1)
+}
 fn play_game(db: &CardDb, state: &mut State, pol_a: &mut dyn Policy, pol_b: &mut dyn Policy, rng: &mut Xoshiro256ss) -> Outcome
 ```
 
@@ -410,7 +414,12 @@ and builds one root regardless of `k`; any other value is a parse
 error naming `info` and listing the three),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
-`0` disables a term). `Err` names the offending token. `AnyPolicy::spec`
+`0` disables a term),
+`mull=rule|random|<path>` (opening keep policy; default `rule` sends back
+cost ≥ 4; `random` draws one `next_u64()` from the rng passed to
+`choose` and sends back slot `i` iff bit `i` is set, `i < hand length`,
+at most 4 — deterministic for a seed; `<path>` loads a keep table at
+parse time like `net=`). `Err` names the offending token. `AnyPolicy::spec`
 is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
 `value=v1` or `value=net,net=<path>` — the built-in net is not printed,
 non-default `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
@@ -464,6 +473,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `lcap` | 0.5 | in `(0, 1]`: the consensus-lethal check before the search may spend at most `floor(lcap × node_cap)` nodes; running out counts as "no consensus lethal", and the search gets what is left. Sweep 10 pooled 0.503 [0.491, 0.516] / +2.1 Elo vs the pre-flip default on the 16-deck meta pool (4 096 + 2 048 games per candidate). Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `clip` | 5 | `≥ 0`: clamp each standardised input of the learned leaf to `[−clip, clip]`; `0` is off. Accepted and ignored with `value=v0` / `value=v1`. Sweep 10 pooled 0.531 [0.519, 0.543] / +21.6 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `fusemacro` | 1 | on the bot's own turn only: at a Main node each `Fuse` contributes one child — its best completion by immediate value (single partners; pairs too for hosts with fuse recipes) — and inside the bot's own `FusePartners` choice every completion is a child with no leaf ever scored inside that choice. Sweep 10 pooled 0.499 [0.486, 0.511] / −1.0 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |
+| `mull` | `rule` | opening mulligan: `rule` = cost ≥ 4 send back (today's default); `random` = uniform random mask; `<path>` = JSON keep table (see below) |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
 | `info` | `fair` | what the search is allowed to know. `fair` (default) = resample the perspective player's own deck (hand untouched) and the opponent's hand/deck — a human with open decklists. `draws` = own draw order exact, opponent resampled (the pre-flip path). `all` = no resampling; the search rolls out against the opponent's real hand. Under `all`, H0 builds **one** root regardless of `k` (every determinization would be identical). `info` is a search-time knob; `encode` still masks the opponent's hand at the leaf. Sweep 8b pooled 0.513 [0.500, 0.525] / +9.0 Elo vs `h0:olethal=1,osteps=6` on the seven real decks (6 174 games). Owner flipped the default on 2026-09-19 |
@@ -641,7 +651,7 @@ is the default. `tt=0` restores the pre-#32 search.
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=… mull_table/decision=… mull_fallback/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
@@ -858,6 +868,7 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | API | Notes |
 |---|---|
 | `arena.load_cards(root: str = "cards") -> CardDb` | Filesystem load, serde-validated. |
+| `arena.deck_fingerprint(deck: dict[str, int]) -> str` | Canonical deck fingerprint: distinct ids sorted ascending as `<id>x<count>`, joined with `,`. Same as the engine's `deck_fingerprint_counts`. |
 | `Game(db, seed, deck_a, deck_b, first="coin", opening_hands=None)` | `deck_*` are `{id: count}`; `opening_hands` is the trace header shape. |
 | `Game.legal() -> list[dict]` | `NeutralAction` dicts, engine order. |
 | `Game.apply(action, rng=None) -> list[dict]` | Event dicts. `rng` is the trace line's pick array (replay). Raises `arena.Illegal(str)`. |
@@ -870,7 +881,7 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | `Game.bot_action_value(policy, seed) -> dict` | Same decision as `bot_action`, plus `{"action": NeutralAction, "value": float \| None}` where `value` is the policy's `last_value()` after `choose` (`None` for policies that do not search, e.g. `random`). |
 | `Game.bot_action_explain(policy, seed) -> dict` | Same decision as `bot_action_value` for `h0` specs, plus a per-candidate explain record (see below). Non-`h0` policies return `{"chosen": NeutralAction, "path": "opaque"}`. Recording does not change the chosen action or node count. |
 | `arena.play_random(db, seed, deck_a, deck_b, first="coin") -> dict` | `{winner, turns, actions, first}`. Random-legal + `policy_rng`. |
-| `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False, export=None, export_epsilon=0.0) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)`; both seats share `policy_rng(game seed)` as the bench does. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. `export=None` (default) is byte-identical to today — no extra files, no `"export"` key. `export=<dir>` writes training-sample shards (see Training samples (M5b)) and adds `"export": {dir, samples, games}`; `export_epsilon` is ε-greedy exploration on those games (inner policy still asked first). |
+| `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False, export=None, export_epsilon=0.0) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)`; both seats share `policy_rng(game seed)` as the bench does. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end, mull_a, mull_b}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). `mull_a` / `mull_b` are each `{"hand": ["<id>", …], "swap": [bool, bool, bool, bool]}` or `null` (pre-mulligan hand in slot order and the confirm mask). With `records=False` the output is byte-identical to before this field was added. Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. `export=None` (default) is byte-identical to today — no extra files, no `"export"` key. `export=<dir>` writes training-sample shards (see Training samples (M5b)) and adds `"export": {dir, samples, games}`; `export_epsilon` is ε-greedy exploration on those games (inner policy still asked first). |
 | `py/stats.py::wilson(k, n, z=1.96) -> (lo, hi)` | Wilson score interval for `k` successes in `n` trials, clipped to `[0, 1]`. `n == 0` → `(0.0, 1.0)`. |
 
 `py/matchup.py` loads `oracle/decks/*.json` (plus `--deck-file` extras in the
@@ -1002,6 +1013,37 @@ unchanged. The linear leaf costs ~6 µs against v0's 0.15 µs (−14 %
 throughput). The model adds ~56 KB to the engine and to the wasm binary;
 `ValueNet::load` is still the only `std::fs` user and is never called
 from wasm.
+
+## Learned mulligan (keep tables)
+
+`mull=rule` (default) is unchanged: send back every opening card with cost ≥
+4. `mull=random` explores uniformly. `mull=<path>` loads a JSON keep table at
+parse time (same path rules as `net=`). At the bot's own mulligan the engine
+computes a **deck fingerprint** — the multiset of card ids in hand plus deck,
+written as sorted `<id>x<count>` pairs joined with `,` — and looks up the deck.
+Seat is `first` when `state.first == me`, else `second`. Table entries are
+`true` = keep, `false` = send back; a missing card falls back to the rule for
+that card. A missing deck uses the rule for the whole hand. `SearchStats` adds
+`mull_table` and `mull_fallback`; `arena-bench --stats` prints them per
+decision. `py/mulligan.py data` collects matchup chunks with mulligan records;
+`py/mulligan.py fit` writes `table.json`, `fit.json`, `FIT.md`, and
+`observations.csv.gz`.
+
+Keep table schema (version 1; extra keys are ignored):
+
+```json
+{
+  "version": 1,
+  "decks": {
+    "<fingerprint>": {
+      "name": "meta-rune-test-subject",
+      "first":  {"10934110": true,  "10031210": false},
+      "second": {"10934110": true,  "10031210": false}
+    }
+  },
+  "meta": {"pool": "meta", "policy": "h0:mull=random", "games": 0, "fit": {}, "created": "…"}
+}
+```
 
 `ValueNet::load(path)` parses `net.json` (`serde_json`; no ONNX runtime).
 `ValueNet::value(&obs)` standardizes the 545 features with the stored
