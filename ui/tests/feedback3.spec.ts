@@ -4,6 +4,7 @@ import {
   ART,
   artShot,
   assertGlow,
+  assertPngExclusiveRing,
   assertPngLeftEdge,
   assertPromptClearsCards,
   openSettings,
@@ -233,7 +234,7 @@ test("A3 rush is yellow the turn played, green next; storm is green", async ({ p
   await expect(barb).not.toHaveClass(/rush-glow/);
   await assertGlow(barb, "green");
   const stormPath = await artShot(barb, `${ART}/a3_storm_green.png`);
-  assertPngLeftEdge(stormPath, "green");
+  assertPngExclusiveRing(stormPath, "green");
 });
 
 test("A4 A5 Slice yellow 2/2 vs green 1/2; no E/A/C badge", async ({ page }) => {

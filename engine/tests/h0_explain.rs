@@ -299,7 +299,8 @@ fn pv_replay_raw_200_midgame() {
 #[test]
 fn bench_nodes_unchanged_without_sink() {
     let db = load_db();
-    let states = collect_states(&db, 40, true);
+    // Eight mid-game states still catch explain-sink node drift; forty was ~4 min in debug CI.
+    let states = collect_states(&db, 8, true);
     for spec in SPECS {
         for (i, state) in states.iter().enumerate() {
             let legal = legal_actions(&db, state);
