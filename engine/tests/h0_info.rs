@@ -430,6 +430,91 @@ fn hidden_removals_skip_discard_with_eld_blades() {
     }
 }
 
+fn push_opp_cemetery(
+    db: &CardDb,
+    st: &mut State,
+    opp: PlayerId,
+    card: &str,
+    hidden: bool,
+) -> (usize, u32) {
+    let index = st.player(opp).cemetery.len();
+    let id = st.alloc_id();
+    let inst = CardInstance::from_card(db.card(cid(card)).unwrap(), id);
+    st.note_public_removal(opp, inst.card);
+    if hidden {
+        st.player_mut(opp).hidden_removals.push(id);
+    }
+    st.player_mut(opp).cemetery.push(inst);
+    (index, id)
+}
+
+fn push_opp_banished(
+    db: &CardDb,
+    st: &mut State,
+    opp: PlayerId,
+    card: &str,
+    hidden: bool,
+) -> (usize, u32) {
+    let index = st.player(opp).banished.len();
+    let id = st.alloc_id();
+    let inst = CardInstance::from_card(db.card(cid(card)).unwrap(), id);
+    st.note_public_removal(opp, inst.card);
+    if hidden {
+        st.player_mut(opp).hidden_removals.push(id);
+    }
+    st.player_mut(opp).banished.push(inst);
+    (index, id)
+}
+
+#[test]
+fn open_hidden_slots_preserve_public_indices() {
+    let db = load_db();
+    let mut st = started(&db, 44);
+    let me = PlayerId::A;
+    let opp = me.opponent();
+    clear_hand(&mut st, opp);
+    st.player_mut(opp).deck.clear();
+    st.player_mut(opp).cemetery.clear();
+    st.player_mut(opp).banished.clear();
+    st.player_mut(opp).hidden_removals.clear();
+    put_hand(&db, &mut st, opp, "10061120");
+    put_deck(&db, &mut st, opp, "10461110");
+    put_deck(&db, &mut st, opp, "10061120");
+
+    let (pub_cem0, pub_cem0_id) = push_opp_cemetery(&db, &mut st, opp, "88001110", false);
+    push_opp_cemetery(&db, &mut st, opp, "10461110", true);
+    let (pub_cem2, pub_cem2_id) = push_opp_cemetery(&db, &mut st, opp, "10061120", false);
+    push_opp_cemetery(&db, &mut st, opp, "88001110", true);
+
+    let (pub_ban0, pub_ban0_id) = push_opp_banished(&db, &mut st, opp, "10461110", false);
+    push_opp_banished(&db, &mut st, opp, "10061120", true);
+
+    let true_sizes = zone_sizes(&st, opp);
+    assert_eq!(pub_cem0, 0);
+    assert_eq!(pub_cem2, 2);
+    assert_eq!(pub_ban0, 0);
+
+    for seed in 1..=200u64 {
+        let w = determinize_with(&st, me, seed, Info::Open);
+        assert_eq!(zone_sizes(&w, opp), true_sizes, "seed {seed}");
+        assert_eq!(
+            w.player(opp).cemetery[pub_cem0].id,
+            pub_cem0_id,
+            "seed {seed}"
+        );
+        assert_eq!(
+            w.player(opp).cemetery[pub_cem2].id,
+            pub_cem2_id,
+            "seed {seed}"
+        );
+        assert_eq!(
+            w.player(opp).banished[pub_ban0].id,
+            pub_ban0_id,
+            "seed {seed}"
+        );
+    }
+}
+
 #[derive(Clone, Copy)]
 enum OpenHiddenZone {
     Cemetery,

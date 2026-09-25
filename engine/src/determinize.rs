@@ -141,27 +141,45 @@ fn determinize_open_opponent(out: &mut State, perspective: PlayerId, seed: u64) 
     let d = deck.len();
 
     let hidden_ids = out.player(opp).hidden_removals.clone();
-    let mut hidden_slots = Vec::new();
+    let mut cemetery_hits: Vec<(usize, u32)> = Vec::new();
+    let mut banished_hits: Vec<(usize, u32)> = Vec::new();
     for &id in &hidden_ids {
-        let cem = &mut out.player_mut(opp).cemetery;
-        if let Some(i) = cem.iter().position(|c| c.id == id) {
-            let inst = cem.remove(i);
-            hidden_slots.push(HiddenSlot {
-                inst,
-                zone: HiddenZone::Cemetery,
-                index: i,
-            });
-            continue;
+        if let Some(i) = out.player(opp).cemetery.iter().position(|c| c.id == id) {
+            cemetery_hits.push((i, id));
+        } else if let Some(i) = out.player(opp).banished.iter().position(|c| c.id == id) {
+            banished_hits.push((i, id));
         }
-        let ban = &mut out.player_mut(opp).banished;
-        if let Some(i) = ban.iter().position(|c| c.id == id) {
-            let inst = ban.remove(i);
-            hidden_slots.push(HiddenSlot {
-                inst,
-                zone: HiddenZone::Banished,
-                index: i,
-            });
-        }
+    }
+    let mut hidden_slots = Vec::new();
+    cemetery_hits.sort_by_key(|hit| std::cmp::Reverse(hit.0));
+    for (index, id) in cemetery_hits {
+        let pos = out
+            .player(opp)
+            .cemetery
+            .iter()
+            .position(|c| c.id == id)
+            .expect("hidden cemetery instance");
+        let inst = out.player_mut(opp).cemetery.remove(pos);
+        hidden_slots.push(HiddenSlot {
+            inst,
+            zone: HiddenZone::Cemetery,
+            index,
+        });
+    }
+    banished_hits.sort_by_key(|hit| std::cmp::Reverse(hit.0));
+    for (index, id) in banished_hits {
+        let pos = out
+            .player(opp)
+            .banished
+            .iter()
+            .position(|c| c.id == id)
+            .expect("hidden banished instance");
+        let inst = out.player_mut(opp).banished.remove(pos);
+        hidden_slots.push(HiddenSlot {
+            inst,
+            zone: HiddenZone::Banished,
+            index,
+        });
     }
 
     let r_ids: BTreeSet<u32> = hidden_slots.iter().map(|s| s.inst.id).collect();
@@ -220,12 +238,10 @@ fn determinize_open_opponent(out: &mut State, perspective: PlayerId, seed: u64) 
     cemetery_restores.sort_by_key(|(i, _)| *i);
     banished_restores.sort_by_key(|(i, _)| *i);
     for (i, inst) in cemetery_restores {
-        let idx = i.min(out.player_mut(opp).cemetery.len());
-        out.player_mut(opp).cemetery.insert(idx, inst);
+        out.player_mut(opp).cemetery.insert(i, inst);
     }
     for (i, inst) in banished_restores {
-        let idx = i.min(out.player_mut(opp).banished.len());
-        out.player_mut(opp).banished.insert(idx, inst);
+        out.player_mut(opp).banished.insert(i, inst);
     }
 
     OpenStats {
