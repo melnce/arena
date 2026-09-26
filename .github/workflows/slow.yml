@@ -158,6 +158,8 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      GH_REPO: ${{ github.repository }}
     steps:
       - name: Report slow suite status
         env:
