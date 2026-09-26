@@ -7,7 +7,8 @@ on:
     - cron: "0 7 * * *"
   workflow_dispatch:
   push:
-    branches: [main]
+    # Gate on cursor/h0-defaults-mull-open; drop after merge.
+    branches: [main, cursor/h0-defaults-mull-open]
 
 # Queue, do not kill. workflow_dispatch / schedule keep their own
 # group so a manual rerun does not share a slot with a nightly, and
