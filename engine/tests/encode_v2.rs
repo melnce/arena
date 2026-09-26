@@ -1,8 +1,8 @@
 //! Encoding version 2: strict pool, zone bonuses, model loading.
 
 use arena_engine::{
-    apply, encode, encode_version, CardInstance, CardKind, EncodingVersion, Observation,
-    PlayerId, ValueNet,
+    apply, encode, encode_version, CardInstance, CardKind, EncodingVersion, Observation, PlayerId,
+    ValueNet,
 };
 
 mod common;
