@@ -39,7 +39,14 @@ fn fixture(name: &str) -> String {
 
 #[test]
 fn mull_spec_round_trips() {
-    assert_eq!(AnyPolicy::parse_spec("h0:mull=rule").unwrap().spec(), "h0");
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:mull=rule").unwrap().spec(),
+        "h0:mull=rule"
+    );
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:mull=builtin").unwrap().spec(),
+        "h0"
+    );
     assert_eq!(
         AnyPolicy::parse_spec("h0:mull=random").unwrap().spec(),
         "h0:mull=random"
@@ -272,7 +279,7 @@ fn load_deck_file(path: &PathBuf) -> Vec<CardId> {
 }
 
 #[test]
-fn mull_rule_equals_default_h0() {
+fn mull_builtin_equals_default_h0() {
     let db = load_db();
     let deck = pad_deck(&["10001110", "10011130"], 40);
     let st = new_game(
@@ -287,12 +294,40 @@ fn mull_rule_equals_default_h0() {
     )
     .unwrap();
     let mut def = H0::default();
-    let mut rule = parse_h0("h0:mull=rule");
-    let mut rng = policy_rng(5);
-    let a = mull_pick(&db, &mut def, &st, &mut rng);
-    let b = mull_pick(&db, &mut rule, &st, &mut policy_rng(5));
+    let mut builtin = parse_h0("h0:mull=builtin");
+    let a = mull_pick(&db, &mut def, &st, &mut policy_rng(5));
+    let b = mull_pick(&db, &mut builtin, &st, &mut policy_rng(5));
     assert_eq!(a, b);
-    assert_eq!(def.mull, MullMode::Rule);
+    assert_eq!(def.mull, MullMode::Table);
+    assert!(def.mull_table.is_some());
+    assert!(def.mull_path.is_none());
+}
+
+#[test]
+fn mull_rule_differs_from_default_on_meta_deck() {
+    let db = load_db();
+    let sephie = cid("10934110");
+    let cheap = cid("10031210");
+    let st = new_game(
+        &db,
+        GameConfig {
+            seed: 1,
+            deck_a: load_deck_file(&oracle_deck("meta-rune-test-subject")),
+            deck_b: pad_deck(&["88001110"], 40),
+            first: First::A,
+            opening_hands: Some(OpeningHands {
+                a: vec![sephie, cheap, cheap, cheap],
+                b: vec![cid("88001110"); 4],
+            }),
+        },
+    )
+    .unwrap();
+    let mut def = H0::default();
+    let mut rule = parse_h0("h0:mull=rule");
+    let def_pick = mull_pick(&db, &mut def, &st, &mut policy_rng(1));
+    let rule_pick = mull_pick(&db, &mut rule, &st, &mut policy_rng(1));
+    assert_ne!(def_pick, rule_pick);
+    assert_eq!(def.stats.mull_table, 1);
 }
 
 #[test]
