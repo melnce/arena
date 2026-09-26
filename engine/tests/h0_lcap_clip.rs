@@ -341,9 +341,9 @@ fn pre_flip_default_bench_identity_seed5() {
         )
         .unwrap();
         let mut rng = policy_rng(s);
-        let mut pol_a = parse_h0("h0:lcap=1,clip=0,fusemacro=0");
+        let mut pol_a = parse_h0("h0:mull=rule,info=fair,lcap=1,clip=0,fusemacro=0");
         // Opponent inherits defaults; pin pre-flip keys so seat B matches main h0:value=v0.
-        let mut pol_b = parse_h0("h0:value=v0,lcap=1,clip=0,fusemacro=0");
+        let mut pol_b = parse_h0("h0:value=v0,mull=rule,info=fair,lcap=1,clip=0,fusemacro=0");
         let out = arena_engine::play_game(&db, &mut state, &mut pol_a, &mut pol_b, &mut rng);
         stats.add(&pol_a.stats);
         if out.winner == Some(arena_engine::PlayerId::A) {

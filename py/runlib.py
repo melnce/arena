@@ -371,8 +371,18 @@ def git_commit_argv(cwd: Path, *commit_args: str) -> list[str]:
     return cmd
 
 
-def copy_tag_artifacts(tag_dir: Path, dest: Path) -> None:
+def copy_tag_artifacts(
+    tag_dir: Path,
+    dest: Path,
+    names: frozenset[str] | None = None,
+) -> None:
     dest.mkdir(parents=True, exist_ok=True)
+    if names is not None:
+        for name in sorted(names):
+            src = tag_dir / name
+            if src.is_file():
+                shutil.copy2(src, dest / name)
+        return
     for p in sorted(tag_dir.iterdir()):
         if not p.is_file():
             continue
@@ -433,12 +443,13 @@ def publish_tag(
     tag: str,
     log: Path,
     tee: TeeFn | None = None,
+    artifact_names: frozenset[str] | None = None,
 ) -> None:
     """Copy tag artifacts into the results worktree and push. Never touches the main tree."""
     do_tee = tee or run_tee
     ensure_worktree(repo, publish_dir, remote, branch, log, tee=do_tee)
     dest = publish_dir / tag
-    copy_tag_artifacts(tag_dir, dest)
+    copy_tag_artifacts(tag_dir, dest, names=artifact_names)
     do_tee(["git", "-C", str(publish_dir), "add", "-A"], log, True)
     status = subprocess.run(
         ["git", "-C", str(publish_dir), "status", "--porcelain"],

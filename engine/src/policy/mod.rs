@@ -17,8 +17,8 @@ mod record;
 
 pub use explain::{CandidateRecord, ChoosePath, ExplainRecord, PvEnd, PvLeaf, WorldRecord};
 pub use h0::{
-    builtin_net, fuse_completion_partner_sets, Alloc, Info, MullMode, SearchStats, ValueVersion,
-    Weights, BUILTIN_NET_NAME, H0,
+    builtin_mulligan, builtin_net, fuse_completion_partner_sets, Alloc, Info, MullMode,
+    SearchStats, ValueVersion, Weights, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0,
 };
 pub use mulligan::{
     deck_fingerprint_counts, deck_fingerprint_player, mulligan_seat, DeckMulligan, MulliganTable,
@@ -140,11 +140,12 @@ impl AnyPolicy {
     /// transposition table; default `1`), `alloc=root|fair` (how the
     /// node cap is spent across `(root, candidate)` pairs; default
     /// `fair` = per-pair share; `alloc=root` restores the pre-#46
-    /// root-major spend), `info=fair|draws|all` (what the search is
-    /// allowed to know; default `fair` = own deck resampled (hand
-    /// untouched), opponent resampled — a human with open decklists;
-    /// `draws` restores the pre-flip path (own draw order exact);
-    /// `all` is the true state and builds one root regardless of `k`),
+    /// root-major spend), `info=open|fair|draws|all` (what the search is
+    /// allowed to know; default `open` = deal the opponent only what the
+    /// bot cannot rule out; `fair` = own deck resampled (hand untouched),
+    /// opponent resampled — a human with open decklists; `draws` restores
+    /// the pre-flip path (own draw order exact); `all` is the true state
+    /// and builds one root regardless of `k`),
     /// and `w_shadows=`,
     /// `w_earth=`, `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`,
     /// `w_lw=` (f32; only meaningful with `value=v1`),
@@ -152,11 +153,12 @@ impl AnyPolicy {
     /// in `(0, 1]`; default `0.5` is the sweep-10 flip), and `clip=<c>`
     /// (`c ≥ 0`; standardised-input clamp for the learned leaf; default `5`
     /// is the sweep-10 flip; ignored with `value=v0` / `value=v1`),
-    /// `mull=rule|random|<path>` (opening keep policy; default `rule` is
-    /// cost ≥ 4 send back; `random` draws one `next_u64()` from the rng
-    /// passed to `choose` and sends back slot `i` iff bit `i` is set,
-    /// `i < hand length`, at most 4 — deterministic for a seed; `<path>`
-    /// loads a keep table at parse time like `net=`).
+    /// `mull=builtin|rule|random|<path>` (opening keep policy; default
+    /// `builtin` is the embedded `mulligan-v1` table; `rule` is cost ≥ 4
+    /// send back; `random` draws one `next_u64()` from the rng passed to
+    /// `choose` and sends back slot `i` iff bit `i` is set, `i < hand
+    /// length`, at most 4 — deterministic for a seed; `<path>` loads a
+    /// keep table at parse time like `net=`).
     ///
     /// `Err` names the offending token: unknown policy, unknown key, or bad
     /// number.
@@ -179,10 +181,11 @@ impl AnyPolicy {
     /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
     /// `oevo=0` when the evolve branch is off, non-default `wv`,
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
-    /// when the allocator is the pre-#46 root-major spend, `info=draws`
-    /// / `info=all` when the information regime is not the default
-    /// `fair`, any non-default weight, non-default `lcap`, and non-default
-    /// `clip`.
+    /// when the allocator is the pre-#46 root-major spend, `info=fair`
+    /// / `info=draws` / `info=all` when the information regime is not the
+    /// default `open`, `mull=rule` / `mull=random` / `mull=<path>` when the
+    /// mulligan mode is not the built-in table, any non-default weight,
+    /// non-default `lcap`, and non-default `clip`.
     /// `"h0"` still round-trips to `"h0"`.
     pub fn spec(&self) -> String {
         match self {
@@ -249,12 +252,12 @@ fn h0_spec(h: &H0) -> String {
     if h.alloc != Alloc::Fair {
         parts.push("alloc=root".to_string());
     }
-    if h.info != Info::Fair {
+    if h.info != Info::Open {
         parts.push(match h.info {
-            Info::Open => "info=open".to_string(),
+            Info::Fair => "info=fair".to_string(),
             Info::Draws => "info=draws".to_string(),
             Info::All => "info=all".to_string(),
-            Info::Fair => unreachable!(),
+            Info::Open => unreachable!(),
         });
     }
     let w = &h.weights;
@@ -290,7 +293,7 @@ fn h0_spec(h: &H0) -> String {
         parts.push("fusemacro=0".to_string());
     }
     match h.mull {
-        MullMode::Rule => {}
+        MullMode::Rule => parts.push("mull=rule".to_string()),
         MullMode::Random => parts.push("mull=random".to_string()),
         MullMode::Table => {
             if let Some(path) = &h.mull_path {
@@ -449,8 +452,21 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                 }
             }
             "mull" => match val {
-                "rule" => h.mull = MullMode::Rule,
-                "random" => h.mull = MullMode::Random,
+                "builtin" => {
+                    h.mull = MullMode::Table;
+                    h.mull_table = Some(crate::policy::h0::builtin_mulligan());
+                    h.mull_path = None;
+                }
+                "rule" => {
+                    h.mull = MullMode::Rule;
+                    h.mull_table = None;
+                    h.mull_path = None;
+                }
+                "random" => {
+                    h.mull = MullMode::Random;
+                    h.mull_table = None;
+                    h.mull_path = None;
+                }
                 "" => return Err("missing key 'mull'".to_string()),
                 other => mull_path = Some(other.to_string()),
             },

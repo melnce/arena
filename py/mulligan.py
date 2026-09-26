@@ -624,8 +624,6 @@ def cmd_fit(args: argparse.Namespace) -> None:
                 rule_diffs.append(f"{deck_name} {cid}")
             first_map[cid] = seat_decisions["first"]
             second_map[cid] = seat_decisions["second"]
-            deck_rows.append(row)
-            fit_cards.append({"deck": deck_name, "card": cid, **row})
 
             if pool.n_k >= args.min_n and pool.n_s >= args.min_n:
                 classes = class_effects(observations, deck_name, cid)
@@ -649,6 +647,9 @@ def cmd_fit(args: argparse.Namespace) -> None:
                     row["class_chi2_p"] = pval
                     if pval < 0.01:
                         class_candidates.append(f"{deck_name} {cid} (p={pval:.4f})")
+
+            deck_rows.append(row)
+            fit_cards.append({"deck": deck_name, "card": cid, **row})
 
         deck_rows.sort(key=lambda r: abs(r["pooled"]["effect"]), reverse=True)
         table_decks[fp] = {
@@ -755,9 +756,10 @@ def publish_mulligan(repo: Path, args: argparse.Namespace, td: Path) -> None:
         publish_dir,
         args.publish_remote,
         args.publish_branch,
-        staging,
+        dest_tag,
         args.tag,
         log,
+        artifact_names=PUBLISH_FILES,
     )
 
 

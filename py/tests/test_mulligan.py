@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import random
 import subprocess
@@ -263,6 +264,130 @@ def test_fit_uses_decks_from_chunks_only(db, arena, tmp_path: Path, root: Path) 
     pool = table["meta"]["pool"]
     assert pool == ["meta-rune-test-subject", "meta-sword-rally"]
     assert not isinstance(pool, dict)
+
+
+def test_fit_json_includes_class_effects(
+    db, arena, tmp_path: Path, root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    card = "10934110"
+    obs: list[mulligan_mod.Observation] = []
+    rng = random.Random(3)
+    for cls, keep_rate in (("runecraft", 0.85), ("swordcraft", 0.15)):
+        for _ in range(80):
+            kept = rng.random() < keep_rate
+            obs.append(_class_obs(cls, kept=kept, won=1 if kept else 0, card=card))
+    tag = "fit-json-class"
+    tag_dir = tmp_path / tag
+    tag_dir.mkdir()
+    (tag_dir / "chunk-0.json").write_text(
+        json.dumps({"policy_a": "h0:mull=random", "matrix": {"synthetic": {}}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        mulligan_mod,
+        "load_deck_files",
+        lambda _decks_dir, names: {n: {card: 3, "10001110": 37} for n in names},
+    )
+    monkeypatch.setattr(mulligan_mod, "observations_from_chunks", lambda *_a, **_k: obs)
+    args = argparse.Namespace(
+        tag=tag,
+        z=1.5,
+        min_n=30,
+        root=str(tmp_path),
+        publish=False,
+        publish_remote="origin",
+        publish_branch="results",
+        publish_dir=None,
+        _argv=["fit"],
+    )
+    mulligan_mod.cmd_fit(args)
+    fit = json.loads((tag_dir / "fit.json").read_text(encoding="utf-8"))
+    sample = next(c for c in fit["cards"] if c["card"] == card)
+    assert "class_effects" in sample
+    assert "class_chi2_p" in sample
+    assert "runecraft" in sample["class_effects"]
+
+
+def test_copy_tag_artifacts_explicit_names(tmp_path: Path) -> None:
+    import gzip
+
+    from runlib import copy_tag_artifacts
+
+    tag_dir = tmp_path / "tag"
+    tag_dir.mkdir()
+    csv_path = tag_dir / "observations.csv.gz"
+    payload = b"deck,seat\nx,first\n"
+    with gzip.open(csv_path, "wb") as f:
+        f.write(payload)
+    for name in ("RUN.json", "FIT.md", "fit.json", "table.json", "extra.bin"):
+        (tag_dir / name).write_text(f"{name}\n", encoding="utf-8")
+
+    dest = tmp_path / "dest"
+    copy_tag_artifacts(tag_dir, dest, names=mulligan_mod.PUBLISH_FILES)
+    for name in sorted(mulligan_mod.PUBLISH_FILES):
+        assert (dest / name).is_file(), f"missing {name}"
+    assert not (dest / "extra.bin").exists()
+    assert (dest / "observations.csv.gz").read_bytes() == csv_path.read_bytes()
+
+
+def test_publish_fit_includes_all_files(tmp_path: Path, root: Path) -> None:
+    import gzip
+    import subprocess as sp
+
+    from runlib import publish_tag
+
+    tag = "pub-test"
+    tag_dir = tmp_path / tag
+    tag_dir.mkdir()
+    csv_path = tag_dir / "observations.csv.gz"
+    payload = b"deck,seat\nx,first\n"
+    with gzip.open(csv_path, "wb") as f:
+        f.write(payload)
+    for name in ("RUN.json", "FIT.md", "fit.json", "table.json"):
+        (tag_dir / name).write_text(f"{name}\n", encoding="utf-8")
+
+    def git_ident(repo: Path) -> None:
+        sp.run(["git", "config", "user.email", "test@example.com"], check=True, cwd=repo)
+        sp.run(["git", "config", "user.name", "test"], check=True, cwd=repo)
+
+    bare = tmp_path / "bare.git"
+    sp.run(["git", "init", "--bare", str(bare)], check=True, cwd=tmp_path)
+    mini = tmp_path / "mini"
+    mini.mkdir()
+    sp.run(["git", "init"], check=True, cwd=mini)
+    git_ident(mini)
+    sp.run(["git", "remote", "add", "origin", str(bare)], check=True, cwd=mini)
+    sp.run(["git", "commit", "--allow-empty", "-m", "init"], check=True, cwd=mini)
+    publish_dir = tmp_path / "results-wt"
+    sp.run(
+        ["git", "clone", str(bare), str(publish_dir)],
+        check=True,
+        cwd=tmp_path,
+    )
+    git_ident(publish_dir)
+    sp.run(["git", "checkout", "--orphan", "results"], check=True, cwd=publish_dir)
+    sp.run(["git", "commit", "--allow-empty", "-m", "init results"], check=True, cwd=publish_dir)
+    sp.run(["git", "push", "-u", "origin", "results"], check=True, cwd=publish_dir)
+    log = tag_dir / "publish.txt"
+    publish_tag(
+        mini,
+        publish_dir,
+        "origin",
+        "results",
+        tag_dir,
+        tag,
+        log,
+        artifact_names=mulligan_mod.PUBLISH_FILES,
+    )
+    sp.run(
+        ["git", "clone", "-b", "results", str(bare), str(tmp_path / "clone")],
+        check=True,
+        cwd=tmp_path,
+    )
+    published = tmp_path / "clone" / tag
+    for name in sorted(mulligan_mod.PUBLISH_FILES):
+        assert (published / name).is_file(), f"missing published file {name}"
+    assert (published / "observations.csv.gz").read_bytes() == csv_path.read_bytes()
 
 
 def test_data_resume_two_chunks(db, arena, tmp_path: Path, root: Path) -> None:
