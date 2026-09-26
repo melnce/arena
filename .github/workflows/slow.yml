@@ -221,7 +221,7 @@ jobs:
                   cancelled_jobs="${cancelled_jobs}${name}; "
                 fi
               fi
-            done < <(printf '%s' "${jobs_json}" | jq -c '.jobs[] | select(.name | startswith("slow (") and .name != "slow (track)")')
+            done < <(printf '%s' "${jobs_json}" | jq -c '.jobs[] | select(.name != "slow (track)" and (.name | startswith("slow (")))')
           fi
 
           failed_jobs="${failed_jobs%; }"
@@ -313,7 +313,7 @@ jobs:
                   cancelled_jobs="${cancelled_jobs}${name}; "
                 fi
               fi
-            done < <(printf '%s' "${jobs_json}" | jq -c '.jobs[] | select(.name | startswith("slow (") and .name != "slow (track)")')
+            done < <(printf '%s' "${jobs_json}" | jq -c '.jobs[] | select(.name != "slow (track)" and (.name | startswith("slow (")))')
           fi
 
           failed_jobs="${failed_jobs%; }"
