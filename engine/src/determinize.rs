@@ -4,6 +4,8 @@
 //! opponent's hand. [`Info`] governs what the **search** simulates, not
 //! what the **leaf** observes. That separation is deliberate.
 
+use std::collections::{BTreeMap, BTreeSet};
+
 use crate::card::CardId;
 use crate::ids::PlayerId;
 use crate::rng::Xoshiro256ss;
@@ -20,6 +22,9 @@ const OWN_DECK_SEED_XOR: u64 = 0x9E37_79B9_7F4A_7C15;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Info {
     /// A human with open decklists: own draw order is resampled, opponent
+    /// hand and deck are resampled under open-information rules.
+    Open,
+    /// A human with open decklists: own draw order is resampled, opponent
     /// hand and deck are resampled. Own hand is untouched.
     Fair,
     /// Today's default: own draw order is exact, opponent is resampled.
@@ -27,6 +32,15 @@ pub enum Info {
     Draws,
     /// Hard-mode sparring: both sides are the true state. No resampling.
     All,
+}
+
+/// Per-root counters for [`Info::Open`].
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct OpenStats {
+    /// Unknown cards dealt from privately removed instances into hand or deck.
+    pub hidden: u32,
+    /// Revealed fuse hosts held fixed in the opponent hand.
+    pub hosts: u32,
 }
 
 /// Clone `state` and resample the opponent's hand and deck from their known
@@ -43,6 +57,18 @@ pub fn determinize(state: &State, perspective: PlayerId, seed: u64) -> State {
 
 /// [`determinize`] with an explicit [`Info`] regime.
 pub fn determinize_with(state: &State, perspective: PlayerId, seed: u64, info: Info) -> State {
+    determinize_with_stats(state, perspective, seed, info, None)
+}
+
+/// Like [`determinize_with`], optionally recording [`OpenStats`] for
+/// [`Info::Open`].
+pub fn determinize_with_stats(
+    state: &State,
+    perspective: PlayerId,
+    seed: u64,
+    info: Info,
+    open_stats: Option<&mut OpenStats>,
+) -> State {
     match info {
         Info::All => {
             let mut out = state.clone();
@@ -55,6 +81,170 @@ pub fn determinize_with(state: &State, perspective: PlayerId, seed: u64, info: I
             resample_own_deck(&mut out, perspective, seed ^ OWN_DECK_SEED_XOR);
             out
         }
+        Info::Open => determinize_open(state, perspective, seed, open_stats),
+    }
+}
+
+fn determinize_open(
+    state: &State,
+    perspective: PlayerId,
+    seed: u64,
+    open_stats: Option<&mut OpenStats>,
+) -> State {
+    let mut out = state.clone();
+    out.rng.reseed(seed);
+    resample_own_deck(&mut out, perspective, seed ^ OWN_DECK_SEED_XOR);
+    let stats = determinize_open_opponent(&mut out, perspective, seed);
+    if let Some(s) = open_stats {
+        *s = stats;
+    }
+    out.rng.reseed(seed);
+    out
+}
+
+#[derive(Clone, Copy)]
+enum HiddenZone {
+    Cemetery,
+    Banished,
+}
+
+#[derive(Clone)]
+struct HiddenSlot {
+    inst: CardInstance,
+    zone: HiddenZone,
+    index: usize,
+}
+
+fn determinize_open_opponent(out: &mut State, perspective: PlayerId, seed: u64) -> OpenStats {
+    let opp = perspective.opponent();
+    let (_, additions) = out.player(opp).derive_public_knowledge();
+    let mut add_left = counts(&additions);
+
+    let hand = std::mem::take(&mut out.player_mut(opp).hand);
+    let deck = std::mem::take(&mut out.player_mut(opp).deck);
+
+    let mut fixed = Vec::new();
+    let mut unknown_hand = Vec::new();
+    let mut hosts = 0u32;
+    for inst in hand {
+        if inst.flags.was_fused {
+            fixed.push(inst);
+            hosts += 1;
+        } else if take_one(&mut add_left, inst.card) {
+            fixed.push(inst);
+        } else {
+            unknown_hand.push(inst);
+        }
+    }
+
+    let h = unknown_hand.len();
+    let d = deck.len();
+
+    let hidden_ids = out.player(opp).hidden_removals.clone();
+    let mut seen_ids = BTreeSet::new();
+    let mut cemetery_hits: Vec<(usize, u32)> = Vec::new();
+    let mut banished_hits: Vec<(usize, u32)> = Vec::new();
+    for &id in &hidden_ids {
+        if !seen_ids.insert(id) {
+            continue;
+        }
+        if let Some(i) = out.player(opp).cemetery.iter().position(|c| c.id == id) {
+            cemetery_hits.push((i, id));
+        } else if let Some(i) = out.player(opp).banished.iter().position(|c| c.id == id) {
+            banished_hits.push((i, id));
+        }
+    }
+    let mut hidden_slots = Vec::new();
+    cemetery_hits.sort_by_key(|hit| std::cmp::Reverse(hit.0));
+    for (index, id) in cemetery_hits {
+        let Some(pos) = out.player(opp).cemetery.iter().position(|c| c.id == id) else {
+            continue;
+        };
+        let inst = out.player_mut(opp).cemetery.remove(pos);
+        hidden_slots.push(HiddenSlot {
+            inst,
+            zone: HiddenZone::Cemetery,
+            index,
+        });
+    }
+    banished_hits.sort_by_key(|hit| std::cmp::Reverse(hit.0));
+    for (index, id) in banished_hits {
+        let Some(pos) = out.player(opp).banished.iter().position(|c| c.id == id) else {
+            continue;
+        };
+        let inst = out.player_mut(opp).banished.remove(pos);
+        hidden_slots.push(HiddenSlot {
+            inst,
+            zone: HiddenZone::Banished,
+            index,
+        });
+    }
+
+    let r_ids: BTreeSet<u32> = hidden_slots.iter().map(|s| s.inst.id).collect();
+    let hidden_meta: Vec<(u32, HiddenZone, usize)> = hidden_slots
+        .iter()
+        .map(|s| (s.inst.id, s.zone, s.index))
+        .collect();
+
+    let mut pool = unknown_hand;
+    pool.extend(deck);
+    for slot in hidden_slots {
+        pool.push(slot.inst);
+    }
+    canon_sort(&mut pool);
+
+    let mut rng = Xoshiro256ss::from_seed(seed);
+    shuffle(&mut pool, &mut rng);
+
+    let mut hidden_drawn = 0u32;
+    for inst in pool.drain(..h.min(pool.len())) {
+        if r_ids.contains(&inst.id) {
+            hidden_drawn += 1;
+        }
+        fixed.push(inst);
+    }
+    out.player_mut(opp).hand = fixed;
+
+    let mut new_deck = Vec::with_capacity(d);
+    for inst in pool.drain(..d.min(pool.len())) {
+        if r_ids.contains(&inst.id) {
+            hidden_drawn += 1;
+        }
+        new_deck.push(inst);
+    }
+    out.player_mut(opp).deck = new_deck;
+
+    let mut slots: Vec<(HiddenZone, usize)> = hidden_meta
+        .iter()
+        .map(|(_, zone, index)| (*zone, *index))
+        .collect();
+    slots.sort_by_key(|(zone, index)| {
+        let z = match zone {
+            HiddenZone::Cemetery => 0u8,
+            HiddenZone::Banished => 1,
+        };
+        (z, *index)
+    });
+    let mut cemetery_restores: Vec<(usize, CardInstance)> = Vec::new();
+    let mut banished_restores: Vec<(usize, CardInstance)> = Vec::new();
+    for (inst, (zone, index)) in pool.into_iter().zip(slots.iter()) {
+        match zone {
+            HiddenZone::Cemetery => cemetery_restores.push((*index, inst)),
+            HiddenZone::Banished => banished_restores.push((*index, inst)),
+        }
+    }
+    cemetery_restores.sort_by_key(|(i, _)| *i);
+    banished_restores.sort_by_key(|(i, _)| *i);
+    for (i, inst) in cemetery_restores {
+        out.player_mut(opp).cemetery.insert(i, inst);
+    }
+    for (i, inst) in banished_restores {
+        out.player_mut(opp).banished.insert(i, inst);
+    }
+
+    OpenStats {
+        hidden: hidden_drawn,
+        hosts,
     }
 }
 
@@ -106,15 +296,15 @@ fn resample_own_deck(out: &mut State, perspective: PlayerId, seed: u64) {
     out.player_mut(perspective).deck = deck;
 }
 
-fn counts(ids: &[CardId]) -> std::collections::BTreeMap<CardId, u32> {
-    let mut m = std::collections::BTreeMap::new();
+fn counts(ids: &[CardId]) -> BTreeMap<CardId, u32> {
+    let mut m = BTreeMap::new();
     for id in ids {
         *m.entry(*id).or_insert(0) += 1;
     }
     m
 }
 
-fn take_one(m: &mut std::collections::BTreeMap<CardId, u32>, id: CardId) -> bool {
+fn take_one(m: &mut BTreeMap<CardId, u32>, id: CardId) -> bool {
     match m.get_mut(&id) {
         Some(n) if *n > 0 => {
             *n -= 1;

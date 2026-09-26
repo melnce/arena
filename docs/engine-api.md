@@ -341,9 +341,17 @@ deliberate.
 
 | `info` | own deck | opponent hand/deck | who has this |
 |---|---|---|---|
+| `open` | resampled (hand untouched) | resampled under open-info rules | a human with open decklists (search) |
 | `fair` *(default)* | resampled (hand untouched) | resampled | a human with open decklists |
 | `draws` | exact order known | resampled | pre-flip path — nobody, really |
 | `all` | exact order known | not resampled | a hard-mode sparring bot |
+
+`PlayerState.hidden_removals` logs instance ids that left hand or deck
+without the opponent learning which card it was (fuse partners, a deck
+draw onto a full hand, and discards without an on-discard ability).
+Snapshot-neutral like `public_removals` — not in `CanonicalState`,
+`hash`, or `search_key`. Under `info=open`, those instances join the
+opponent's unknown pool and may be dealt back into hand or deck.
 
 ## Policy (M5)
 
@@ -406,12 +414,14 @@ is today's mean; `1` is the worst determinization),
 `alloc=root|fair` (how the node cap is spent across `(root, candidate)`
 pairs; default `fair` = per-pair share; `alloc=root` restores the
 pre-#46 root-major spend),
-`info=fair|draws|all` (what the search is allowed to know; default
+`info=open|fair|draws|all` (what the search is allowed to know; default
 `fair` = own deck resampled (hand untouched), opponent resampled —
-a human with open decklists; `draws` restores the pre-flip path
-(own draw order exact); `all` is the true state — no resampling —
-and builds one root regardless of `k`; any other value is a parse
-error naming `info` and listing the three),
+a human with open decklists; `open` uses the same own-side rule and
+open-information opponent resampling (`hidden_removals`, revealed fuse
+hosts); `draws` restores the pre-flip path (own draw order exact);
+`all` is the true state — no resampling — and builds one root
+regardless of `k`; any other value is a parse error naming `info` and
+listing the four),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term),
@@ -651,7 +661,7 @@ is the default. `tt=0` restores the pre-#32 search.
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=… mull_table/decision=… mull_fallback/decision=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=… mull_table/decision=… mull_fallback/decision=… open_hidden/decision=… open_hosts/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
@@ -666,6 +676,9 @@ legal actions kept after the Bonus-PP filter; `pairs_skipped` is
 budget for search; `unscored` remains possible with `lcap=1`;
 `fuse_overshoot` counts uncharged applies used to finish a partner
 choice at a leaf (`fusemacro=1` only);
+`open_hidden` / `open_hosts` (`info=open` only) count privately removed
+cards dealt into the opponent hand or deck and revealed fuse hosts held
+fixed per determinized root;
 `opp_leaves` /
 `opp_cap_hit_rate` describe the opponent model; `tt_hits` / `tt_stores`
 are transposition-table lookups that returned a value and writes
