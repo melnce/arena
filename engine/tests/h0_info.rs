@@ -110,12 +110,12 @@ fn mixed_info_state(db: &CardDb) -> arena_engine::State {
     st
 }
 
-fn check_fair_identity(n: usize) {
+fn check_open_identity(n: usize) {
     let db = load_db();
     let states = collect_states(&db, n, true);
     assert_eq!(states.len(), n, "could not reach {n} mid-game states");
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:info=fair").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:info=open").unwrap().spec(), "h0");
     for (i, state) in states.iter().enumerate() {
         let legal = legal_actions(&db, state);
         if legal.is_empty() {
@@ -124,28 +124,28 @@ fn check_fair_identity(n: usize) {
         let seed = 20260919u64.wrapping_add(i as u64);
         let mut main = H0::default();
         let mut named = parse_h0("h0");
-        let mut fair = parse_h0("h0:info=fair");
+        let mut open = parse_h0("h0:info=open");
         let mut rng_m = policy_rng(seed);
         let mut rng_n = policy_rng(seed);
         let mut rng_d = policy_rng(seed);
         let im = main.choose(&db, state, &legal, &mut rng_m);
         let inn = named.choose(&db, state, &legal, &mut rng_n);
-        let idr = fair.choose(&db, state, &legal, &mut rng_d);
+        let idr = open.choose(&db, state, &legal, &mut rng_d);
         assert_eq!(im, inn, "h0 vs H0::default at state {i}");
-        assert_eq!(im, idr, "h0 vs h0:info=fair at state {i}");
+        assert_eq!(im, idr, "h0 vs h0:info=open at state {i}");
         assert!(im < legal.len());
     }
 }
 
 #[test]
-fn fair_identity_smoke() {
-    check_fair_identity(8);
+fn open_identity_smoke() {
+    check_open_identity(8);
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn fair_identity_200_midgame() {
-    check_fair_identity(200);
+fn open_identity_200_midgame() {
+    check_open_identity(200);
 }
 
 #[test]
@@ -742,10 +742,10 @@ fn open_stats_count_hidden_and_hosts() {
 #[test]
 fn spec_info_round_trips() {
     assert_eq!(AnyPolicy::parse_spec("h0").unwrap().spec(), "h0");
-    assert_eq!(AnyPolicy::parse_spec("h0:info=fair").unwrap().spec(), "h0");
+    assert_eq!(AnyPolicy::parse_spec("h0:info=open").unwrap().spec(), "h0");
     assert_eq!(
-        AnyPolicy::parse_spec("h0:info=open").unwrap().spec(),
-        "h0:info=open"
+        AnyPolicy::parse_spec("h0:info=fair").unwrap().spec(),
+        "h0:info=fair"
     );
     assert_eq!(
         AnyPolicy::parse_spec("h0:info=draws").unwrap().spec(),

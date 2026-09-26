@@ -341,8 +341,8 @@ deliberate.
 
 | `info` | own deck | opponent hand/deck | who has this |
 |---|---|---|---|
-| `open` | resampled (hand untouched) | resampled under open-info rules | a human with open decklists (search) |
-| `fair` *(default)* | resampled (hand untouched) | resampled | a human with open decklists |
+| `open` *(default)* | resampled (hand untouched) | resampled under open-info rules | a human with open decklists (search) |
+| `fair` | resampled (hand untouched) | resampled | a human with open decklists |
 | `draws` | exact order known | resampled | pre-flip path — nobody, really |
 | `all` | exact order known | not resampled | a hard-mode sparring bot |
 
@@ -415,29 +415,30 @@ is today's mean; `1` is the worst determinization),
 pairs; default `fair` = per-pair share; `alloc=root` restores the
 pre-#46 root-major spend),
 `info=open|fair|draws|all` (what the search is allowed to know; default
+`open` = deal the opponent only what the bot cannot rule out;
 `fair` = own deck resampled (hand untouched), opponent resampled —
-a human with open decklists; `open` uses the same own-side rule and
-open-information opponent resampling (`hidden_removals`, revealed fuse
-hosts); `draws` restores the pre-flip path (own draw order exact);
-`all` is the true state — no resampling — and builds one root
-regardless of `k`; any other value is a parse error naming `info` and
-listing the four),
+a human with open decklists; `draws` restores the pre-flip path (own
+draw order exact); `all` is the true state — no resampling — and
+builds one root regardless of `k`; any other value is a parse error
+naming `info` and listing the four),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term),
-`mull=rule|random|<path>` (opening keep policy; default `rule` sends back
-cost ≥ 4; `random` draws one `next_u64()` from the rng passed to
-`choose` and sends back slot `i` iff bit `i` is set, `i < hand length`,
-at most 4 — deterministic for a seed; `<path>` loads a keep table at
-parse time like `net=`). `Err` names the offending token. `AnyPolicy::spec`
-is the canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
+`mull=builtin|rule|random|<path>` (opening keep policy; default `builtin`
+is the embedded `mulligan-v1` table; `rule` sends back cost ≥ 4;
+`random` draws one `next_u64()` from the rng passed to `choose` and
+sends back slot `i` iff bit `i` is set, `i < hand length`, at most 4
+— deterministic for a seed; `<path>` loads a keep table at parse time
+like `net=`). `Err` names the offending token. `AnyPolicy::spec` is the
+canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
 `value=v1` or `value=net,net=<path>` — the built-in net is not printed,
 non-default `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
 `oevo=0` when the evolve branch is off, non-default `wv`, non-default `pess`, `tt=0` when the table is off, `alloc=root` when the
-allocator is the pre-#46 root-major spend, `info=draws` / `info=all`
-when the information regime is not the default `fair` (same shape as
-`alloc=root`), and any
-non-default weight, or the short names). `"h0"` still round-trips to `"h0"`. `by_name` is
+allocator is the pre-#46 root-major spend, `info=fair` / `info=draws`
+/ `info=all` when the information regime is not the default `open`,
+`mull=rule` / `mull=random` / `mull=<path>` when the mulligan mode is
+not the built-in table, and any non-default weight, or the short
+names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
 `["random", "first-legal", "h0"]` so the WASM client's bot list does not
 change. The client's `h0` now plays with the learned leaf.
@@ -483,10 +484,10 @@ streams and output as before). `H0` is a determinized search bot:
 | `lcap` | 0.5 | in `(0, 1]`: the consensus-lethal check before the search may spend at most `floor(lcap × node_cap)` nodes; running out counts as "no consensus lethal", and the search gets what is left. Sweep 10 pooled 0.503 [0.491, 0.516] / +2.1 Elo vs the pre-flip default on the 16-deck meta pool (4 096 + 2 048 games per candidate). Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `clip` | 5 | `≥ 0`: clamp each standardised input of the learned leaf to `[−clip, clip]`; `0` is off. Accepted and ignored with `value=v0` / `value=v1`. Sweep 10 pooled 0.531 [0.519, 0.543] / +21.6 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `fusemacro` | 1 | on the bot's own turn only: at a Main node each `Fuse` contributes one child — its best completion by immediate value (single partners; pairs too for hosts with fuse recipes) — and inside the bot's own `FusePartners` choice every completion is a child with no leaf ever scored inside that choice. Sweep 10 pooled 0.499 [0.486, 0.511] / −1.0 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |
-| `mull` | `rule` | opening mulligan: `rule` = cost ≥ 4 send back (today's default); `random` = uniform random mask; `<path>` = JSON keep table (see below) |
+| `mull` | `builtin` (`mulligan-v1`) | opening mulligan: built-in keep table from sweep 13 pooled 0.521 [0.509, 0.534] / +14.9 Elo vs `mull=rule` on the 16-deck meta pool (6 144 games per candidate). Default since this PR. `rule` = cost ≥ 4 send back; `random` = uniform random mask; `<path>` = JSON keep table (see below) |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
-| `info` | `fair` | what the search is allowed to know. `fair` (default) = resample the perspective player's own deck (hand untouched) and the opponent's hand/deck — a human with open decklists. `draws` = own draw order exact, opponent resampled (the pre-flip path). `all` = no resampling; the search rolls out against the opponent's real hand. Under `all`, H0 builds **one** root regardless of `k` (every determinization would be identical). `info` is a search-time knob; `encode` still masks the opponent's hand at the leaf. Sweep 8b pooled 0.513 [0.500, 0.525] / +9.0 Elo vs `h0:olethal=1,osteps=6` on the seven real decks (6 174 games). Owner flipped the default on 2026-09-19 |
+| `info` | `open` | what the search is allowed to know. `open` (default) = deal the opponent only what the bot cannot rule out. `fair` = resample the perspective player's own deck (hand untouched) and the opponent's hand/deck — a human with open decklists. `draws` = own draw order exact, opponent resampled (the pre-flip path). `all` = no resampling; the search rolls out against the opponent's real hand. Under `all`, H0 builds **one** root regardless of `k` (every determinization would be identical). `info` is a search-time knob; `encode` still masks the opponent's hand at the leaf. Sweep 13 pooled 0.499 [0.486, 0.511] / −0.8 Elo vs `info=fair` on the 16-deck meta pool (6 144 games per candidate). Default since this PR |
 
 H0 builds `K = max(1, determinizations)` search roots via
 `determinize_with(state, me, seed, info)` (which reseeds the game RNG)
@@ -1029,8 +1030,10 @@ from wasm.
 
 ## Learned mulligan (keep tables)
 
-`mull=rule` (default) is unchanged: send back every opening card with cost ≥
-4. `mull=random` explores uniformly. `mull=<path>` loads a JSON keep table at
+The default `h0` uses the built-in `mulligan-v1` table
+(`engine/models/mulligan-v1.json`, embedded like `h0-linear-v1`). `mull=builtin`
+requests it explicitly; `mull=rule` restores cost ≥ 4 send back.
+`mull=random` explores uniformly. `mull=<path>` loads a JSON keep table at
 parse time (same path rules as `net=`). At the bot's own mulligan the engine
 computes a **deck fingerprint** — the multiset of card ids in hand plus deck,
 written as sorted `<id>x<count>` pairs joined with `,` — and looks up the deck.
@@ -1040,7 +1043,10 @@ that card. A missing deck uses the rule for the whole hand. `SearchStats` adds
 `mull_table` and `mull_fallback`; `arena-bench --stats` prints them per
 decision. `py/mulligan.py data` collects matchup chunks with mulligan records;
 `py/mulligan.py fit` writes `table.json`, `fit.json`, `FIT.md`, and
-`observations.csv.gz`.
+`observations.csv.gz`. To ship a new built-in table: `py/mulligan.py data`
+→ `fit` → copy `table.json` to `engine/models/mulligan-v<N>.json` and wire
+it in `engine/src/policy/h0.rs` (same `include_str!` / `OnceLock` pattern as
+the value net).
 
 Keep table schema (version 1; extra keys are ignored):
 

@@ -36,15 +36,16 @@ use super::needs::NeedsTable;
 use super::net::ValueNet;
 use super::Policy;
 
-/// Opening mulligan mode for [`H0`]. Default [`MullMode::Rule`] is cost ≥ 4 send back.
+/// Opening mulligan mode for [`H0`]. Default [`MullMode::Table`] uses the
+/// built-in `mulligan-v1` keep table; [`MullMode::Rule`] is cost ≥ 4 send back.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum MullMode {
-    #[default]
     Rule,
     /// One `next_u64()` from the rng passed to [`Policy::choose`]; slot `i` is
     /// sent back iff bit `i` is set (`i < hand length`, at most 4). Deterministic
     /// for a seed.
     Random,
+    #[default]
     Table,
 }
 
@@ -96,6 +97,11 @@ const BUILTIN_NET_JSON: &str = include_str!("../../models/h0-linear-v1.json");
 pub const BUILTIN_NET_NAME: &str = "h0-linear-v1";
 static BUILTIN_NET: OnceLock<Arc<ValueNet>> = OnceLock::new();
 
+const BUILTIN_MULLIGAN_JSON: &str = include_str!("../../models/mulligan-v1.json");
+/// Committed name of the built-in mulligan table (`engine/models/mulligan-v1.json`).
+pub const BUILTIN_MULLIGAN_NAME: &str = "mulligan-v1";
+static BUILTIN_MULLIGAN: OnceLock<Arc<MulliganTable>> = OnceLock::new();
+
 /// The built-in `h0-linear-v1` model, parsed once. A parse failure is a
 /// build defect.
 pub fn builtin_net() -> Arc<ValueNet> {
@@ -103,6 +109,19 @@ pub fn builtin_net() -> Arc<ValueNet> {
         .get_or_init(|| {
             ValueNet::from_json_named(BUILTIN_NET_NAME, BUILTIN_NET_JSON)
                 .expect("built-in value model parses")
+        })
+        .clone()
+}
+
+/// The built-in `mulligan-v1` keep table, parsed once. A parse failure is a
+/// build defect.
+pub fn builtin_mulligan() -> Arc<MulliganTable> {
+    BUILTIN_MULLIGAN
+        .get_or_init(|| {
+            Arc::new(
+                MulliganTable::from_json_named(BUILTIN_MULLIGAN_NAME, BUILTIN_MULLIGAN_JSON)
+                    .expect("built-in mulligan table parses"),
+            )
         })
         .clone()
 }
@@ -262,10 +281,10 @@ pub struct H0 {
     /// How the node cap is split across `(root, candidate)` pairs.
     /// Default [`Alloc::Fair`] is today's per-pair budget share (`c42163b`).
     pub alloc: Alloc,
-    /// What the search is allowed to know. Default [`Info::Fair`] is the
-    /// sweep-8b flip: own deck order is resampled (hand untouched),
-    /// opponent is resampled — the same information a human with open
-    /// decklists has. `info=draws` restores the pre-flip path.
+    /// What the search is allowed to know. Default [`Info::Open`] deals the
+    /// opponent only what the bot cannot rule out. `info=fair` restores the
+    /// sweep-8b flip (own deck resampled, hand untouched; opponent
+    /// resampled). `info=draws` restores the pre-flip path.
     pub info: Info,
     pub value: ValueVersion,
     pub weights: Weights,
@@ -305,7 +324,7 @@ pub struct H0 {
     pub clip: f32,
     /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
     pub net_path: Option<String>,
-    /// Opening mulligan mode. Default [`MullMode::Rule`].
+    /// Opening mulligan mode. Default [`MullMode::Table`] with [`builtin_mulligan`].
     pub mull: MullMode,
     pub mull_table: Option<Arc<MulliganTable>>,
     /// Table path compared by `h0_fields_eq` and printed by `spec()`.
@@ -330,7 +349,7 @@ impl Default for H0 {
             determinizations: 4,
             node_cap: 2000,
             alloc: Alloc::Fair,
-            info: Info::Fair,
+            info: Info::Open,
             value: ValueVersion::Net,
             weights: Weights::default(),
             odepth: 0,
@@ -346,8 +365,8 @@ impl Default for H0 {
             lcap: 0.5,
             clip: 5.0,
             net_path: None,
-            mull: MullMode::Rule,
-            mull_table: None,
+            mull: MullMode::Table,
+            mull_table: Some(builtin_mulligan()),
             mull_path: None,
             stats: SearchStats::default(),
             last_value: None,
@@ -381,6 +400,12 @@ impl H0 {
             lcap: 1.0,
             clip: 0.0,
             fusemacro: false,
+            // Fixed test baseline: mulligan table is inert when tests use
+            // opening_hands or non-mulligan positions; pin rule mulligan so
+            // fast() stays field-identical.
+            mull: MullMode::Rule,
+            mull_table: None,
+            mull_path: None,
             ..Self::default()
         }
     }
