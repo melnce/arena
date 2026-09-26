@@ -31,12 +31,92 @@ permissions:
   issues: write
 
 jobs:
-  slow:
+  # One suite per job. Measured CI step times on main (run 36240655622,
+  # timed out at 65 min with nine legacy steps sequential): h0_explain
+  # ~2m, h0_fusemacro ~11m, h0_tt ~22m, h0_alloc ~20m, h0_olethal ~5m,
+  # h0_opp ~8.5m (36182245910), h0_wv ~5m, net ~1.5m, record ~1m.
+  # New release-only gates (local release on this branch): h0_defaults
+  # ~2m, h0_info ~3m, h0_lcap_clip ~2m, h0_oevo ~3m, h0_pess ~3m (CI
+  # runners are slower). Each job timeout is chosen so measured CI time
+  # stays under ~two-thirds of timeout-minutes (plus setup/cache).
+  suite:
+    name: slow (${{ matrix.suite }})
     runs-on: ubuntu-latest
-    # Seven binaries measured 46:40 on the #52 runner (head e7868d8).
-    # `table_hit_floor_seed_spread` adds a few minutes on top of h0_tt.
-    # 65 = ~15 min headroom over ~50 min expected.
-    timeout-minutes: 65
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: h0_explain
+            test: h0_explain
+            filter: bench_nodes_unchanged_without_sink
+            ignored: false
+            timeout: 15
+          - suite: h0_fusemacro
+            test: h0_fusemacro
+            filter: ""
+            ignored: true
+            timeout: 25
+          - suite: h0_tt
+            test: h0_tt
+            filter: ""
+            ignored: true
+            timeout: 45
+          - suite: h0_alloc
+            test: h0_alloc
+            filter: ""
+            ignored: true
+            timeout: 40
+          - suite: h0_olethal
+            test: h0_olethal
+            filter: ""
+            ignored: true
+            timeout: 20
+          - suite: h0_opp
+            test: h0_opp
+            filter: ""
+            ignored: true
+            timeout: 25
+          - suite: h0_wv
+            test: h0_wv
+            filter: ""
+            ignored: true
+            timeout: 20
+          - suite: net
+            test: net
+            filter: ""
+            ignored: true
+            timeout: 15
+          - suite: record
+            test: record
+            filter: ""
+            ignored: true
+            timeout: 15
+          - suite: h0_defaults
+            test: h0_defaults
+            filter: ""
+            ignored: true
+            timeout: 20
+          - suite: h0_info
+            test: h0_info
+            filter: ""
+            ignored: true
+            timeout: 25
+          - suite: h0_lcap_clip
+            test: h0_lcap_clip
+            filter: ""
+            ignored: true
+            timeout: 20
+          - suite: h0_oevo
+            test: h0_oevo
+            filter: ""
+            ignored: true
+            timeout: 25
+          - suite: h0_pess
+            test: h0_pess
+            filter: ""
+            ignored: true
+            timeout: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -56,58 +136,119 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: h0 explain bench (release)
-        run: cargo test --release --test h0_explain bench_nodes_unchanged_without_sink -- --nocapture
+      - name: Run suite (release)
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.ignored }}" = "true" ]; then
+            cargo test --release --test ${{ matrix.test }} -- --include-ignored --nocapture
+          elif [ -n "${{ matrix.filter }}" ]; then
+            cargo test --release --test ${{ matrix.test }} ${{ matrix.filter }} -- --nocapture
+          else
+            cargo test --release --test ${{ matrix.test }} -- --nocapture
+          fi
 
-      - name: h0 fusemacro (release, including ignored)
-        run: cargo test --release --test h0_fusemacro -- --include-ignored --nocapture
+  # One open issue <=> the slow suite is currently red. Keyed on the
+  # exact title "slow suite is red" (unique, survives a label edit).
+  # The `slow-suite` label is the lookup index so we do not wait on
+  # GitHub search, which can lag a just-created issue.
+  # Issue open/close runs only on main; other refs just report.
+  track:
+    name: slow (track)
+    needs: suite
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Report slow suite status
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          ON_MAIN: ${{ github.ref == 'refs/heads/main' }}
+          SUITE_RESULT: ${{ needs.suite.result }}
+        run: |
+          set -euo pipefail
 
-      - name: h0 transposition table (release, including ignored)
-        run: cargo test --release --test h0_tt -- --include-ignored --nocapture
+          # Per-suite timeout-minutes (must match the suite matrix above).
+          TIMEOUTS='{
+            "h0_explain": 15,
+            "h0_fusemacro": 25,
+            "h0_tt": 45,
+            "h0_alloc": 40,
+            "h0_olethal": 20,
+            "h0_opp": 25,
+            "h0_wv": 20,
+            "net": 15,
+            "record": 15,
+            "h0_defaults": 20,
+            "h0_info": 25,
+            "h0_lcap_clip": 20,
+            "h0_oevo": 25,
+            "h0_pess": 25
+          }'
 
-      - name: h0 alloc (release, including ignored)
-        run: cargo test --release --test h0_alloc -- --include-ignored --nocapture
+          failed_jobs=""
+          timed_out_jobs=""
+          cancelled_jobs=""
+          jobs_json=""
+          if jobs_json="$(curl -fsS \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs")"; then
+            while IFS= read -r job; do
+              name="$(printf '%s' "${job}" | jq -r '.name')"
+              conclusion="$(printf '%s' "${job}" | jq -r '.conclusion // empty')"
+              started_at="$(printf '%s' "${job}" | jq -r '.started_at // empty')"
+              suite="${name#slow (}"
+              suite="${suite%)}"
+              timeout_minutes="$(printf '%s' "${TIMEOUTS}" | jq -r --arg s "${suite}" '.[$s] // empty')"
+              if [ "${conclusion}" = "failure" ]; then
+                failed_jobs="${failed_jobs}${name}; "
+              elif [ "${conclusion}" = "timed_out" ]; then
+                timed_out_jobs="${timed_out_jobs}${name} (timeout-minutes: ${timeout_minutes}); "
+              elif [ "${conclusion}" = "cancelled" ]; then
+                timed_out=false
+                if [ -n "${started_at}" ] && [ -n "${timeout_minutes}" ]; then
+                  elapsed=$(( $(date +%s) - $(date -d "${started_at}" +%s) ))
+                  if [ "${elapsed}" -ge $((timeout_minutes * 60 - 30)) ]; then
+                    timed_out=true
+                  fi
+                fi
+                if [ "${timed_out}" = "true" ]; then
+                  timed_out_jobs="${timed_out_jobs}${name} (timeout-minutes: ${timeout_minutes}); "
+                else
+                  cancelled_jobs="${cancelled_jobs}${name}; "
+                fi
+              fi
+            done < <(printf '%s' "${jobs_json}" | jq -c '.jobs[] | select(.name | startswith("slow (") and .name != "slow (track)")')
+          fi
 
-      - name: h0 olethal (release, including ignored)
-        run: cargo test --release --test h0_olethal -- --include-ignored --nocapture
+          failed_jobs="${failed_jobs%; }"
+          timed_out_jobs="${timed_out_jobs%; }"
+          cancelled_jobs="${cancelled_jobs%; }"
 
-      - name: h0 opponent model (release, including ignored)
-        run: cargo test --release --test h0_opp -- --include-ignored --nocapture
+          if [ -n "${failed_jobs}" ]; then
+            headline="Failed job(s): **${failed_jobs}**"
+          elif [ -n "${timed_out_jobs}" ]; then
+            headline="Timed out job(s): **${timed_out_jobs}**"
+          elif [ -n "${cancelled_jobs}" ]; then
+            headline="Cancelled job(s): **${cancelled_jobs}**"
+          elif [ "${SUITE_RESULT}" = "success" ]; then
+            headline="All slow suite jobs passed."
+          else
+            headline="Slow suite result: **${SUITE_RESULT}**"
+          fi
 
-      - name: h0 wv (release, including ignored)
-        run: cargo test --release --test h0_wv -- --include-ignored --nocapture
+          printf '%s\n\nRun: %s\n\nEvent: `%s` on `%s` (`%s`).\nMatrix result: `%s`.\n' \
+            "${headline}" "${RUN_URL}" "${EVENT_NAME}" "${REF_NAME}" "${SHA}" "${SUITE_RESULT}"
 
-      - name: value net (release, including ignored)
-        run: cargo test --release --test net -- --include-ignored --nocapture
+          if [ "${ON_MAIN}" != "true" ]; then
+            printf '\nSkipping slow-suite issue tracking (not main).\n'
+          fi
 
-      - name: self-play recorder (release, including ignored)
-        run: cargo test --release --test record -- --include-ignored --nocapture
-
-      # Release-only h0 gate suites (measured locally on this branch):
-      # h0_defaults ~121s, h0_info ~194s, h0_lcap_clip ~102s,
-      # h0_oevo ~192s, h0_pess ~187s (~13 min total). With the steps
-      # above (~47 min on #52) the job stays under timeout-minutes: 65.
-      - name: h0 defaults gate (release, including ignored)
-        run: cargo test --release --test h0_defaults -- --include-ignored --nocapture
-
-      - name: h0 info (release, including ignored)
-        run: cargo test --release --test h0_info -- --include-ignored --nocapture
-
-      - name: h0 lcap clip (release, including ignored)
-        run: cargo test --release --test h0_lcap_clip -- --include-ignored --nocapture
-
-      - name: h0 oevo (release, including ignored)
-        run: cargo test --release --test h0_oevo -- --include-ignored --nocapture
-
-      - name: h0 pess (release, including ignored)
-        run: cargo test --release --test h0_pess -- --include-ignored --nocapture
-
-      # One open issue <=> the slow suite is currently red. Keyed on the
-      # exact title "slow suite is red" (unique, survives a label edit).
-      # The `slow-suite` label is the lookup index so we do not wait on
-      # GitHub search, which can lag a just-created issue.
       - name: Open or update slow-suite tracking issue
-        if: ${{ failure() || cancelled() }}
+        if: ${{ github.ref == 'refs/heads/main' && needs.suite.result != 'success' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -118,80 +259,75 @@ jobs:
         run: |
           set -euo pipefail
 
-          # `gh issue create --label` fails if the label is missing, and
-          # that failure would be silent inside this step's if:.
           gh label create slow-suite \
             --description "The nightly slow workflow is currently failing" \
             --color B60205 \
             --force
 
-          failed_steps=""
-          cancelled_steps=""
-          job_conclusion=""
-          started_at=""
+          TIMEOUTS='{
+            "h0_explain": 15,
+            "h0_fusemacro": 25,
+            "h0_tt": 45,
+            "h0_alloc": 40,
+            "h0_olethal": 20,
+            "h0_opp": 25,
+            "h0_wv": 20,
+            "net": 15,
+            "record": 15,
+            "h0_defaults": 20,
+            "h0_info": 25,
+            "h0_lcap_clip": 20,
+            "h0_oevo": 25,
+            "h0_pess": 25
+          }'
+
+          failed_jobs=""
+          timed_out_jobs=""
+          cancelled_jobs=""
           if jobs_json="$(curl -fsS \
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs")"; then
-            failed_steps="$(
-              printf '%s' "${jobs_json}" | jq -r --arg job "${GITHUB_JOB}" '
-                .jobs[]
-                | select(.name == $job)
-                | .steps[]
-                | select(.conclusion == "failure")
-                | select(.name | test("tracking issue") | not)
-                | .name
-              ' | paste -sd '; ' - || true
-            )"
-            cancelled_steps="$(
-              printf '%s' "${jobs_json}" | jq -r --arg job "${GITHUB_JOB}" '
-                .jobs[]
-                | select(.name == $job)
-                | .steps[]
-                | select(.conclusion == "cancelled")
-                | select(.name | test("tracking issue") | not)
-                | .name
-              ' | paste -sd '; ' - || true
-            )"
-            job_conclusion="$(
-              printf '%s' "${jobs_json}" | jq -r --arg job "${GITHUB_JOB}" '
-                .jobs[] | select(.name == $job) | .conclusion // empty
-              '
-            )"
-            started_at="$(
-              printf '%s' "${jobs_json}" | jq -r --arg job "${GITHUB_JOB}" '
-                .jobs[] | select(.name == $job) | .started_at // empty
-              '
-            )"
+            while IFS= read -r job; do
+              name="$(printf '%s' "${job}" | jq -r '.name')"
+              conclusion="$(printf '%s' "${job}" | jq -r '.conclusion // empty')"
+              started_at="$(printf '%s' "${job}" | jq -r '.started_at // empty')"
+              suite="${name#slow (}"
+              suite="${suite%)}"
+              timeout_minutes="$(printf '%s' "${TIMEOUTS}" | jq -r --arg s "${suite}" '.[$s] // empty')"
+              if [ "${conclusion}" = "failure" ]; then
+                failed_jobs="${failed_jobs}${name}; "
+              elif [ "${conclusion}" = "timed_out" ]; then
+                timed_out_jobs="${timed_out_jobs}${name} (timeout-minutes: ${timeout_minutes}); "
+              elif [ "${conclusion}" = "cancelled" ]; then
+                timed_out=false
+                if [ -n "${started_at}" ] && [ -n "${timeout_minutes}" ]; then
+                  elapsed=$(( $(date +%s) - $(date -d "${started_at}" +%s) ))
+                  if [ "${elapsed}" -ge $((timeout_minutes * 60 - 30)) ]; then
+                    timed_out=true
+                  fi
+                fi
+                if [ "${timed_out}" = "true" ]; then
+                  timed_out_jobs="${timed_out_jobs}${name} (timeout-minutes: ${timeout_minutes}); "
+                else
+                  cancelled_jobs="${cancelled_jobs}${name}; "
+                fi
+              fi
+            done < <(printf '%s' "${jobs_json}" | jq -c '.jobs[] | select(.name | startswith("slow (") and .name != "slow (track)")')
           fi
 
-          # timeout-minutes on this job is 65. A hang that hits that
-          # ceiling is a cancel, and the jobs API has no step with
-          # conclusion: failure — do not report that as unresolved.
-          # cancelled() is only legal in `if:`; infer cancel/timeout
-          # from the jobs API.
-          timed_out=false
-          if [ "${job_conclusion}" = "timed_out" ]; then
-            timed_out=true
-          elif [ -n "${started_at}" ]; then
-            elapsed=$(( $(date +%s) - $(date -d "${started_at}" +%s) ))
-            if [ "${elapsed}" -ge $((65 * 60 - 30)) ]; then
-              timed_out=true
-            fi
-          fi
+          failed_jobs="${failed_jobs%; }"
+          timed_out_jobs="${timed_out_jobs%; }"
+          cancelled_jobs="${cancelled_jobs%; }"
 
-          if [ -n "${failed_steps}" ]; then
-            headline="Failed step: **${failed_steps}**"
-          elif [ "${timed_out}" = "true" ]; then
-            headline="Job **timed out** (timeout-minutes: 65)."
-            if [ -n "${cancelled_steps}" ]; then
-              headline="${headline} Last step running: **${cancelled_steps}**."
-            fi
+          if [ -n "${failed_jobs}" ]; then
+            headline="Failed job(s): **${failed_jobs}**"
+          elif [ -n "${timed_out_jobs}" ]; then
+            headline="Timed out job(s): **${timed_out_jobs}**"
+          elif [ -n "${cancelled_jobs}" ]; then
+            headline="Cancelled job(s): **${cancelled_jobs}**"
           else
-            headline="Job was **cancelled** (not a step failure)."
-            if [ -n "${cancelled_steps}" ]; then
-              headline="${headline} Last step running: **${cancelled_steps}**."
-            fi
+            headline="Slow suite result: **${{ needs.suite.result }}**"
           fi
 
           body="$(printf '%s\n\nRun: %s\n\nEvent: `%s` on `%s` (`%s`).\n' \
@@ -214,7 +350,7 @@ jobs:
           fi
 
       - name: Close slow-suite tracking issue
-        if: success()
+        if: ${{ github.ref == 'refs/heads/main' && needs.suite.result == 'success' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
