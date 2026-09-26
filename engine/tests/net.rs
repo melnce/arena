@@ -167,7 +167,7 @@ fn encode_with_vocab_matches_encode_on_200_states() {
         for me in [PlayerId::A, PlayerId::B] {
             let a = encode(state, me);
             let v = vocab(state);
-            let b = encode_with_vocab(state, me, &v);
+            let b = encode_with_vocab(state, me, &v, arena_engine::EncodingVersion::V1, None);
             assert_eq!(
                 a.features.len(),
                 b.features.len(),

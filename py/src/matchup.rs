@@ -7,7 +7,8 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use arena_engine::{
-    AnyPolicy, CardDb, CardId, End, First, MulliganRecord, Observation, Outcome, PlayerId, Sample,
+    encode::EncodingVersion, AnyPolicy, CardDb, CardId, End, First, MulliganRecord, Observation,
+    Outcome, PlayerId, Sample,
 };
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
@@ -110,6 +111,7 @@ struct GameRow {
         records = false,
         export = None,
         export_epsilon = 0.0,
+        encoding = 1,
     )
 )]
 #[allow(clippy::too_many_arguments)]
@@ -127,7 +129,10 @@ pub fn py_matchup<'py>(
     records: bool,
     export: Option<&str>,
     export_epsilon: f32,
+    encoding: u8,
 ) -> PyResult<Bound<'py, PyAny>> {
+    let encoding = EncodingVersion::parse(encoding)
+        .ok_or_else(|| py_err_msg(format!("encoding must be 1 or 2 (got {encoding})")))?;
     let pol_a = policy_a.unwrap_or(policy);
     let pol_b = policy_b.unwrap_or(policy);
     AnyPolicy::parse_spec(pol_a).map_err(py_err_msg)?;
@@ -178,6 +183,7 @@ pub fn py_matchup<'py>(
             jobs: &jobs,
             sink: sink.clone(),
             epsilon: export_epsilon,
+            encoding,
         })
     })?;
 
@@ -199,6 +205,7 @@ pub fn py_matchup<'py>(
             seed,
             games,
             export_epsilon,
+            encoding,
             &names,
         )
         .map_err(py_err_msg)?;
@@ -356,6 +363,7 @@ struct JobSet<'a> {
     jobs: &'a [(usize, usize, u32)],
     sink: Option<Arc<Mutex<ExportSink>>>,
     epsilon: f32,
+    encoding: EncodingVersion,
 }
 
 fn run_jobs(set: JobSet<'_>) -> PyResult<Vec<GameRow>> {
@@ -375,6 +383,7 @@ fn run_jobs(set: JobSet<'_>) -> PyResult<Vec<GameRow>> {
                 set.pol_a,
                 set.pol_b,
                 set.epsilon,
+                set.encoding,
             )
             .map_err(py_err_msg)?;
             let mut guard = sink
@@ -492,9 +501,10 @@ fn write_meta(
     seed: u64,
     games: u32,
     epsilon: f32,
+    encoding: EncodingVersion,
     decks: &[String],
 ) -> Result<(), String> {
-    let layout: Vec<serde_json::Value> = Observation::LAYOUT
+    let mut layout: Vec<serde_json::Value> = Observation::LAYOUT
         .iter()
         .map(|f| {
             serde_json::json!({
@@ -504,9 +514,20 @@ fn write_meta(
             })
         })
         .collect();
+    if encoding == EncodingVersion::V2 {
+        for f in Observation::LAYOUT_V2_EXTRA {
+            layout.push(serde_json::json!({
+                "name": f.name,
+                "offset": f.offset,
+                "width": f.width,
+            }));
+        }
+    }
+    let feature_len = encoding.feature_len();
     let meta = serde_json::json!({
         "samples": samples,
-        "feature_len": Observation::LEN,
+        "encoding": encoding.as_u8(),
+        "feature_len": feature_len,
         "ids_len": Observation::IDS_LEN,
         "aux_columns": AUX_COLUMNS,
         "layout": layout,

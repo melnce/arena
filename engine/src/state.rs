@@ -376,6 +376,34 @@ impl PlayerState {
         pool
     }
 
+    /// Open-information pool: hidden removals still count as possibly remaining.
+    /// Matches the card multiset [`Info::Open`] resamples from.
+    pub fn strict_remaining_pool(&self) -> BTreeMap<CardId, u32> {
+        let mut pool = self.known_remaining_pool();
+        let mut seen = BTreeSet::new();
+        for &inst_id in &self.hidden_removals {
+            if !seen.insert(inst_id) {
+                continue;
+            }
+            let card_id = self
+                .cemetery
+                .iter()
+                .find(|c| c.id == inst_id)
+                .map(|c| c.card)
+                .or_else(|| {
+                    self.banished
+                        .iter()
+                        .find(|c| c.id == inst_id)
+                        .map(|c| c.card)
+                });
+            if let Some(id) = card_id {
+                *pool.entry(id).or_insert(0) += 1;
+            }
+        }
+        pool.retain(|_, n| *n > 0);
+        pool
+    }
+
     pub fn usable_pp(&self) -> i32 {
         self.pp + i32::from(self.bonus_pp.active)
     }

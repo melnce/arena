@@ -353,6 +353,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=0.0,
         help="ε-greedy exploration on export (default 0; inner policy still asked first)",
     )
+    parser.add_argument(
+        "--encoding",
+        type=int,
+        default=1,
+        choices=(1, 2),
+        help="observation encoding version for export shards (default 1)",
+    )
     parser.add_argument("--out", default="matchup.json")
     parser.add_argument("--cards", default=None, help="cards/ or repo root (default: repo cards/)")
     args = parser.parse_args(raw)
@@ -403,6 +410,7 @@ def main(argv: list[str] | None = None) -> int:
         records=args.records,
         export=args.export,
         export_epsilon=args.export_epsilon,
+        encoding=args.encoding,
     )
     secs = time.perf_counter() - t0
     gps = total / secs if secs > 0 else 0.0

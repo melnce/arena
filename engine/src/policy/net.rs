@@ -11,7 +11,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::encode::{Observation, HIST_WIDTH, LEN};
+use crate::encode::{EncodingVersion, Observation, HIST_WIDTH, LEN};
 
 /// One input zone: a run of id slots, optionally weighted by a histogram.
 #[derive(Debug, Clone)]
@@ -50,6 +50,7 @@ struct Mlp {
 pub struct ValueNet {
     pub arch: NetArch,
     pub feature_len: usize,
+    pub encoding: EncodingVersion,
     feat_mean: Vec<f32>,
     feat_std: Vec<f32>,
     vocab: Vec<u32>,
@@ -65,6 +66,7 @@ impl std::fmt::Debug for ValueNet {
         f.debug_struct("ValueNet")
             .field("arch", &self.arch)
             .field("feature_len", &self.feature_len)
+            .field("encoding", &self.encoding)
             .field("vocab", &self.vocab.len())
             .field("scale", &self.scale)
             .field("path", &self.path)
@@ -104,9 +106,21 @@ impl ValueNet {
             other => return Err(format!("{src}: bad field 'arch' ({other})")),
         };
         let feature_len = req_usize(src, obj, "feature_len")?;
-        if feature_len != LEN {
+        let encoding = match obj.get("encoding") {
+            None | Some(serde_json::Value::Null) => EncodingVersion::V1,
+            Some(v) => {
+                let n = as_u8(v).ok_or_else(|| format!("{src}: bad field 'encoding'"))?;
+                EncodingVersion::parse(n)
+                    .ok_or_else(|| format!("{src}: bad field 'encoding' ({n})"))?
+            }
+        };
+        let want_len = encoding.feature_len();
+        if feature_len != want_len {
             return Err(format!(
-                "{src}: bad field 'feature_len' (want {LEN}, got {feature_len})"
+                "{src}: bad field 'feature_len' (encoding {} wants {}, got {})",
+                encoding.as_u8(),
+                want_len,
+                feature_len
             ));
         }
         let feat_mean = req_f32_vec(src, obj, "feat_mean", feature_len)?;
@@ -168,6 +182,7 @@ impl ValueNet {
         Ok(Arc::new(ValueNet {
             arch,
             feature_len,
+            encoding,
             feat_mean,
             feat_std,
             vocab,
@@ -457,6 +472,16 @@ fn req_zones(
 fn as_f32(v: &serde_json::Value) -> Option<f32> {
     match v {
         serde_json::Value::Number(n) => n.as_f64().map(|x| x as f32),
+        _ => None,
+    }
+}
+
+fn as_u8(v: &serde_json::Value) -> Option<u8> {
+    match v {
+        serde_json::Value::Number(n) => n
+            .as_u64()
+            .map(|x| x as u8)
+            .or_else(|| n.as_i64().map(|x| x as u8)),
         _ => None,
     }
 }

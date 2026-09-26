@@ -22,7 +22,7 @@ use crate::db::CardDb;
 use crate::determinize::{determinize_with, determinize_with_stats, OpenStats};
 
 pub use crate::determinize::Info;
-use crate::encode::{encode_with_vocab, vocab};
+use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
 use crate::ids::{AttackTarget, PlayerId};
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
@@ -132,6 +132,7 @@ pub fn builtin_mulligan() -> Arc<MulliganTable> {
 /// the opponent lethal short-circuit share one value.
 #[derive(Clone, Copy)]
 struct Evaluator<'a> {
+    db: &'a CardDb,
     needs: &'a NeedsTable,
     version: ValueVersion,
     weights: &'a Weights,
@@ -141,6 +142,7 @@ struct Evaluator<'a> {
     osteps: u32,
     net: Option<&'a ValueNet>,
     vocab: &'a [CardId],
+    encoding: EncodingVersion,
     clip: f32,
 }
 
@@ -150,7 +152,7 @@ impl Evaluator<'_> {
             ValueVersion::V0 => value(state, me),
             ValueVersion::V1 => value_v1(state, me, self.needs, self.weights),
             ValueVersion::Net => {
-                let obs = encode_with_vocab(state, me, self.vocab);
+                let obs = encode_with_vocab(state, me, self.vocab, self.encoding, Some(self.db));
                 let net = self.net.expect("value=net requires a loaded net");
                 if self.clip > 0.0 {
                     net.value_clipped(&obs, self.clip)
@@ -416,16 +418,22 @@ impl H0 {
 
     fn evaluator<'a>(&'a self, db: &'a CardDb, root_vocab: &'a [CardId]) -> Evaluator<'a> {
         Evaluator {
+            db,
             needs: db.needs(),
             version: self.value,
             weights: &self.weights,
-            wv: self.wv,
-            olethal: self.olethal,
             oevo: self.oevo,
             osteps: self.osteps,
             net: self.net.as_deref(),
             vocab: root_vocab,
+            encoding: self
+                .net
+                .as_deref()
+                .map(|n| n.encoding)
+                .unwrap_or(EncodingVersion::V1),
             clip: self.clip,
+            wv: self.wv,
+            olethal: self.olethal,
         }
     }
 

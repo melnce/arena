@@ -10,7 +10,8 @@ import time
 from pathlib import Path
 from typing import Any
 
-FEATURE_LEN = 545
+FEATURE_LEN_V1 = 545
+FEATURE_LEN_V2 = 563
 HIST_WIDTH = 96
 IDS_OWN_HAND = 0
 IDS_OWN_DECK = 9
@@ -87,8 +88,21 @@ def load_dirs(dirs: list[str], max_samples: int | None = None) -> dict[str, Any]
     search: list[Any] = []
     has_search_v = False
     offset = 0
+    encoding: int | None = None
+    feature_len: int | None = None
     for d in dirs:
         data = samples.load(d)
+        meta = data["meta"]
+        enc = int(meta.get("encoding", 1))
+        fl = int(meta["feature_len"])
+        if encoding is None:
+            encoding = enc
+            feature_len = fl
+        elif enc != encoding or fl != feature_len:
+            raise SystemExit(
+                f"mixed encoding versions in --data ({encoding} vs {enc} or "
+                f"feature_len {feature_len} vs {fl})"
+            )
         gi = data["aux"][:, 0].astype(np.int64)
         if gi.size:
             mapped = gi + offset
@@ -108,7 +122,9 @@ def load_dirs(dirs: list[str], max_samples: int | None = None) -> dict[str, Any]
         aux.append(data["aux"])
         games.append(mapped)
         search.append(sv)
-    features = np.concatenate(feats, axis=0) if feats else np.zeros((0, FEATURE_LEN), np.float32)
+    fl = feature_len if feature_len is not None else FEATURE_LEN_V1
+    enc = encoding if encoding is not None else 1
+    features = np.concatenate(feats, axis=0) if feats else np.zeros((0, fl), np.float32)
     id_arr = np.concatenate(ids, axis=0) if ids else np.zeros((0, 220), np.uint32)
     lab = np.concatenate(labels, axis=0) if labels else np.zeros((0,), np.float32)
     ax = _pad_aux(aux, np)
@@ -129,6 +145,8 @@ def load_dirs(dirs: list[str], max_samples: int | None = None) -> dict[str, Any]
         "game_index": game_index.astype(np.int64, copy=False),
         "search_v": search_v.astype(np.float32, copy=False),
         "has_search_v": has_search_v,
+        "encoding": enc,
+        "feature_len": fl,
     }
 
 
@@ -445,7 +463,16 @@ def train_torch(
     return model
 
 
-def dump_torch(arch: str, model, mean, std, vocab: list[int], trained_on: dict[str, Any]) -> dict[str, Any]:
+def dump_torch(
+    arch: str,
+    model,
+    mean,
+    std,
+    vocab: list[int],
+    trained_on: dict[str, Any],
+    feature_len: int,
+    encoding: int,
+) -> dict[str, Any]:
     import numpy as np
 
     def to_list(t):
@@ -453,7 +480,8 @@ def dump_torch(arch: str, model, mean, std, vocab: list[int], trained_on: dict[s
 
     out: dict[str, Any] = {
         "arch": arch,
-        "feature_len": FEATURE_LEN,
+        "feature_len": feature_len,
+        "encoding": encoding,
         "feat_mean": np.asarray(mean, dtype=np.float32).tolist(),
         "feat_std": np.asarray(std, dtype=np.float32).tolist(),
         "vocab": vocab,
@@ -496,7 +524,7 @@ def train_linear_numpy(
     import numpy as np
 
     rng = np.random.RandomState(seed)
-    w = np.zeros(FEATURE_LEN, dtype=np.float64)
+    w = np.zeros(x_train.shape[1], dtype=np.float64)
     zone_w = np.zeros((5, n_vocab), dtype=np.float64)
     b = 0.0
     lr = 1e-3
@@ -637,6 +665,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "torch is required for --model mlp (linear can train with numpy gradients)"
         )
     data = load_dirs(args.data, args.max_samples)
+    feature_len = int(data["feature_len"])
+    encoding = int(data["encoding"])
     features = data["features"]
     ids = data["ids"]
     labels = data["labels"]
@@ -677,7 +707,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     mean = feat_tr.mean(axis=0).astype(np.float32)
     std = np.maximum(feat_tr.std(axis=0).astype(np.float32), STD_FLOOR)
     x_tr = (feat_tr - mean) / std
-    x_ho = (feat_ho - mean) / std if feat_ho.size else feat_ho.reshape(0, FEATURE_LEN)
+    x_ho = (feat_ho - mean) / std if feat_ho.size else feat_ho.reshape(0, feature_len)
 
     vocab = build_vocab(ids_tr)
     idx_tr = id_index_table(vocab, ids_tr)
@@ -707,7 +737,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             args.seed,
         )
         trained_on_stub: dict[str, Any] = {}
-        spec = dump_torch(args.model, model, mean, std, vocab, trained_on_stub)
+        spec = dump_torch(
+            args.model, model, mean, std, vocab, trained_on_stub, feature_len, encoding
+        )
     else:
         w, zone_w, b = train_linear_numpy(
             x_tr,
@@ -725,7 +757,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         )
         spec = {
             "arch": "linear",
-            "feature_len": FEATURE_LEN,
+            "feature_len": feature_len,
+            "encoding": encoding,
             "feat_mean": mean.tolist(),
             "feat_std": std.tolist(),
             "vocab": vocab,

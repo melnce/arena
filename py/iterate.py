@@ -54,6 +54,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--bot", default="h0", help="self-play policy (default: h0)")
     p.add_argument("--games", type=int, default=24, help="games per pair for data export (default: 24)")
     p.add_argument("--epsilon", type=float, default=0.1, help="ε-greedy on the second export (default: 0.1)")
+    p.add_argument(
+        "--encoding",
+        type=int,
+        default=1,
+        choices=(1, 2),
+        help="observation encoding for export shards (default 1; forwarded to matchup.py)",
+    )
     p.add_argument("--decks", nargs="*", default=None, help="restrict matchup decks (passed through)")
     p.add_argument(
         "--models",
@@ -307,6 +314,8 @@ class Runner:
             cmd.extend(["--export", str(export)])
             if eps is not None:
                 cmd.extend(["--export-epsilon", str(eps)])
+            if self.args.encoding != 1:
+                cmd.extend(["--encoding", str(self.args.encoding)])
             cmd.extend(["--out", str((self.tag_dir / f"{name}.json").resolve())])
             self.add_threads(cmd)
             self.add_decks(cmd)
