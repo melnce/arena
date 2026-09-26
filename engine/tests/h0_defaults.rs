@@ -1,11 +1,23 @@
 //! Gate tests for the h0 default flip (built-in mulligan table + info=open).
-
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
+//!
+//! ## Legacy fingerprint procedure
+//!
+//! Pinned values in `LEGACY_FINGERPRINTS` were captured on **`main` at commit
+//! `2e40d4d`** with plain `h0` (pre-flip defaults: `mull=rule`, `info=fair`).
+//! Reproduce:
+//!
+//! ```text
+//! git checkout 2e40d4d
+//! # apply this file's FNV-1a `action_fingerprint` helper and run:
+//! cargo test --release --test h0_defaults print_legacy_fingerprints -- --nocapture
+//! ```
+//!
+//! On this branch, `h0:mull=rule,info=fair` must match those pins; bare `h0`
+//! must match `h0:mull=engine/models/mulligan-v1.json,info=open`.
 
 use arena_engine::{
-    apply, legal_actions, new_game, play_game, policy_rng, to_neutral, AnyPolicy, CardDb, First,
-    GameConfig, PlayerId, Policy,
+    apply, legal_actions, new_game, play_game, policy_rng, to_neutral, trace::fnv1a64, AnyPolicy,
+    CardDb, First, GameConfig, PlayerId, Policy,
 };
 
 mod common;
@@ -36,6 +48,7 @@ fn load_meta_deck(stem: &str) -> Vec<arena_engine::CardId> {
     load_deck_file(repo_root().join(format!("oracle/decks/{stem}.json")))
 }
 
+/// FNV-1a 64 over little-endian action count plus each neutral-action JSON blob.
 fn action_fingerprint(db: &CardDb, spec: &str, seed: u64, deck_a: &[arena_engine::CardId]) -> u64 {
     let deck_b = load_meta_deck("meta-sword-rally");
     let mut state = new_game(
@@ -52,7 +65,7 @@ fn action_fingerprint(db: &CardDb, spec: &str, seed: u64, deck_a: &[arena_engine
     let mut a = parse_h0(spec);
     let mut b = parse_h0(spec);
     let mut rng = policy_rng(seed);
-    let mut hasher = DefaultHasher::new();
+    let mut serialized = Vec::new();
     while state.winner.is_none() && !matches!(state.phase, arena_engine::Phase::Terminal) {
         let legal = legal_actions(db, &state);
         if legal.is_empty() {
@@ -64,26 +77,42 @@ fn action_fingerprint(db: &CardDb, spec: &str, seed: u64, deck_a: &[arena_engine
             PlayerId::B => b.choose(db, &state, &legal, &mut rng),
         };
         let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
-        serde_json::to_string(&to_neutral(&state, &action))
-            .unwrap()
-            .hash(&mut hasher);
+        serialized.push(serde_json::to_string(&to_neutral(&state, &action)).unwrap());
         apply(db, &mut state, action).expect("apply");
     }
-    hasher.finish()
+    let count = serialized.len() as u64;
+    let mut bytes = Vec::with_capacity(8 + serialized.iter().map(|s| s.len()).sum::<usize>());
+    bytes.extend_from_slice(&count.to_le_bytes());
+    for s in &serialized {
+        bytes.extend_from_slice(s.as_bytes());
+    }
+    fnv1a64(&bytes)
 }
 
-/// Pre-flip `h0` action fingerprints on eight meta-deck / seed pairs (main).
+/// Pre-flip `h0` action fingerprints on eight meta-deck / seed pairs (`main@2e40d4d`).
 /// `h0:mull=rule,info=fair` must reproduce them exactly.
 const LEGACY_FINGERPRINTS: [u64; 8] = [
-    0x60a2_8ef2_3ae9_4151,
-    0xe2e6_a3d4_f026_736b,
-    0x215f_9ae5_f157_a64d,
-    0x45f7_e40f_d93d_af17,
-    0x6d40_4248_1503_6b46,
-    0xef98_9b44_88c1_f68c,
-    0x997a_3dd8_079b_ecc7,
-    0x65ea_c467_b47b_7819,
+    0x8a3c_ed65_9428_71b4,
+    0xf00a_d8f4_4136_9f74,
+    0xe0ff_3ba0_8237_47ae,
+    0xc4e8_ab63_aec9_6246,
+    0x7404_fbcb_4cae_7f60,
+    0xdfee_fa09_e8aa_3e5c,
+    0x953e_ffd4_7650_d22e,
+    0x48b6_cc9c_3605_0fc5,
 ];
+
+#[test]
+#[ignore]
+fn print_legacy_fingerprints() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    for (i, seed) in GATE_SEEDS.iter().enumerate() {
+        let deck = load_meta_deck(&stems[i]);
+        let fp = action_fingerprint(&db, "h0", *seed, &deck);
+        println!("seed={seed} deck={} fp=0x{:016x}", stems[i], fp);
+    }
+}
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]

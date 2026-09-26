@@ -83,6 +83,25 @@ jobs:
       - name: self-play recorder (release, including ignored)
         run: cargo test --release --test record -- --include-ignored --nocapture
 
+      # Release-only h0 gate suites (measured locally on this branch):
+      # h0_defaults ~121s, h0_info ~194s, h0_lcap_clip ~102s,
+      # h0_oevo ~192s, h0_pess ~187s (~13 min total). With the steps
+      # above (~47 min on #52) the job stays under timeout-minutes: 65.
+      - name: h0 defaults gate (release, including ignored)
+        run: cargo test --release --test h0_defaults -- --include-ignored --nocapture
+
+      - name: h0 info (release, including ignored)
+        run: cargo test --release --test h0_info -- --include-ignored --nocapture
+
+      - name: h0 lcap clip (release, including ignored)
+        run: cargo test --release --test h0_lcap_clip -- --include-ignored --nocapture
+
+      - name: h0 oevo (release, including ignored)
+        run: cargo test --release --test h0_oevo -- --include-ignored --nocapture
+
+      - name: h0 pess (release, including ignored)
+        run: cargo test --release --test h0_pess -- --include-ignored --nocapture
+
       # One open issue <=> the slow suite is currently red. Keyed on the
       # exact title "slow suite is red" (unique, survives a label edit).
       # The `slow-suite` label is the lookup index so we do not wait on

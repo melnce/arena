@@ -955,7 +955,7 @@ fn mulligan_random(state: &State, legal: &[Action], rng: &mut Xoshiro256ss) -> u
 fn mulligan_table(h0: &mut H0, _db: &CardDb, state: &State, legal: &[Action]) -> usize {
     let me = acting_player(state);
     let fp = deck_fingerprint_player(state.player(me));
-    let table = h0.mull_table.as_ref().expect("mull=table requires a table");
+    let table = h0.mull_table.get_or_insert_with(builtin_mulligan);
     let Some(entry) = table.lookup(&fp) else {
         h0.stats.mull_fallback += 1;
         return mulligan_index(state, legal);
