@@ -346,11 +346,16 @@ def test_publish_fit_includes_all_files(tmp_path: Path, root: Path) -> None:
     for name in ("RUN.json", "FIT.md", "fit.json", "table.json"):
         (tag_dir / name).write_text(f"{name}\n", encoding="utf-8")
 
+    def git_ident(repo: Path) -> None:
+        sp.run(["git", "config", "user.email", "test@example.com"], check=True, cwd=repo)
+        sp.run(["git", "config", "user.name", "test"], check=True, cwd=repo)
+
     bare = tmp_path / "bare.git"
     sp.run(["git", "init", "--bare", str(bare)], check=True, cwd=tmp_path)
     mini = tmp_path / "mini"
     mini.mkdir()
     sp.run(["git", "init"], check=True, cwd=mini)
+    git_ident(mini)
     sp.run(["git", "remote", "add", "origin", str(bare)], check=True, cwd=mini)
     sp.run(["git", "commit", "--allow-empty", "-m", "init"], check=True, cwd=mini)
     publish_dir = tmp_path / "results-wt"
@@ -359,6 +364,7 @@ def test_publish_fit_includes_all_files(tmp_path: Path, root: Path) -> None:
         check=True,
         cwd=tmp_path,
     )
+    git_ident(publish_dir)
     sp.run(["git", "checkout", "--orphan", "results"], check=True, cwd=publish_dir)
     sp.run(["git", "commit", "--allow-empty", "-m", "init results"], check=True, cwd=publish_dir)
     sp.run(["git", "push", "-u", "origin", "results"], check=True, cwd=publish_dir)
