@@ -7,8 +7,7 @@ on:
     - cron: "0 7 * * *"
   workflow_dispatch:
   push:
-    # Gate on cursor/h0-defaults-mull-open; drop after merge.
-    branches: [main, cursor/h0-defaults-mull-open]
+    branches: [main]
 
 # Queue, do not kill. workflow_dispatch / schedule keep their own
 # group so a manual rerun does not share a slot with a nightly, and
@@ -32,14 +31,14 @@ permissions:
   issues: write
 
 jobs:
-  # One suite per job. Measured CI step times on main (run 36240655622,
-  # timed out at 65 min with nine legacy steps sequential): h0_explain
-  # ~2m, h0_fusemacro ~11m, h0_tt ~22m, h0_alloc ~20m, h0_olethal ~5m,
-  # h0_opp ~8.5m (36182245910), h0_wv ~5m, net ~1.5m, record ~1m.
-  # New release-only gates (local release on this branch): h0_defaults
-  # ~2m, h0_info ~3m, h0_lcap_clip ~2m, h0_oevo ~3m, h0_pess ~3m (CI
-  # runners are slower). Each job timeout is chosen so measured CI time
-  # stays under ~two-thirds of timeout-minutes (plus setup/cache).
+  # One suite per job (fail-fast: false). Sequential main runs timed out
+  # at 65 min (run 36240655622). Parallel gate on this branch (run
+  # 36266480089, wall ~22 min): h0_explain 1m50s, h0_fusemacro 6m7s,
+  # h0_tt 19m15s, h0_alloc 21m42s, h0_olethal 5m52s, h0_opp 8m53s,
+  # h0_wv 5m45s, net 2m19s, record 1m53s, h0_defaults 3m41s, h0_info
+  # 4m17s, h0_lcap_clip 3m0s, h0_oevo 5m25s, h0_pess 4m21s. Each job
+  # timeout is chosen so measured CI time stays under ~two-thirds of
+  # timeout-minutes (plus setup/cache).
   suite:
     name: slow (${{ matrix.suite }})
     runs-on: ubuntu-latest
