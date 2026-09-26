@@ -121,6 +121,7 @@ fn default_matches_explicit_builtin_table_and_open() {
 }
 
 #[test]
+#[cfg_attr(debug_assertions, ignore)]
 fn default_uses_builtin_mulligan_table_on_meta_decks() {
     let db = load_db();
     let stems = meta_deck_stems();
