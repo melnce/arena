@@ -480,8 +480,8 @@ fn as_u8(v: &serde_json::Value) -> Option<u8> {
     match v {
         serde_json::Value::Number(n) => n
             .as_u64()
-            .map(|x| x as u8)
-            .or_else(|| n.as_i64().map(|x| x as u8)),
+            .and_then(|x| u8::try_from(x).ok())
+            .or_else(|| n.as_i64().and_then(|x| u8::try_from(x).ok())),
         _ => None,
     }
 }

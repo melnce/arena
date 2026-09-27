@@ -283,7 +283,7 @@ fn overflow_destroy(state: &mut State, who: PlayerId, inst: CardInstance, hide: 
     // no Last Words — ruling 2026-08-10
     state.note_public_removal(who, inst.card);
     if hide {
-        state.note_hidden_removal(who, inst.id);
+        state.note_hidden_removal(who, inst.id, inst.card);
     }
     state.player_mut(who).shadows += 1;
     state.player_mut(who).cemetery.push(inst);
@@ -1883,7 +1883,7 @@ fn commit_fuse(
     // partners banished — ruling 2026-09-02
     for inst in partners {
         state.note_public_removal(me, inst.card);
-        state.note_hidden_removal(me, inst.id);
+        state.note_hidden_removal(me, inst.id, inst.card);
         state.player_mut(me).banished.push(inst);
     }
     if let Some(h) = state.player_mut(me).hand.get_mut(host_pos) {
@@ -5417,7 +5417,7 @@ fn discard_opt(
             state.player_mut(*player).shadows += 1;
             state.note_public_removal(*player, inst.card);
             if discard_is_hidden(db, inst.card) {
-                state.note_hidden_removal(*player, inst.id);
+                state.note_hidden_removal(*player, inst.id, inst.card);
             }
             state.player_mut(*player).cemetery.push(inst);
         }

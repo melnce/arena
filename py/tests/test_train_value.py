@@ -318,3 +318,34 @@ def test_target_search_mix_eval_parses(db, root: Path, tmp_path: Path) -> None:
     assert legacy_report["target"] == "search"
     assert legacy_report["search_rows"] == 0
     assert legacy_report["search_v"] is None
+
+
+def test_train_value_refuses_mixed_encoding_shards(db, root: Path, tmp_path: Path) -> None:
+    import arena
+
+    v1_dir = tmp_path / "v1"
+    v2_dir = tmp_path / "v2"
+    arena.matchup(
+        db,
+        _forest(root),
+        1,
+        11,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        threads=1,
+        export=str(v1_dir),
+        encoding=1,
+    )
+    arena.matchup(
+        db,
+        _forest(root),
+        1,
+        12,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        threads=1,
+        export=str(v2_dir),
+        encoding=2,
+    )
+    with pytest.raises(SystemExit, match="mixed encoding"):
+        train_value.load_dirs([str(v1_dir), str(v2_dir)])

@@ -525,7 +525,11 @@ fn strict_pool_hist(p: &PlayerState, vocab: &[CardId]) -> [f32; HIST_WIDTH] {
 fn zone_bonuses(cards: &[CardInstance], db: &CardDb) -> [f32; 9] {
     let mut out = [0.0f32; 9];
     for c in cards {
-        let cost_red = (c.base_cost - c.cost).max(0);
+        let printed_cost = match db.card(c.card) {
+            Ok(card) => card.cost(),
+            Err(_) => c.cost,
+        };
+        let cost_red = (printed_cost - c.cost).max(0);
         out[8] += cost_red as f32;
 
         if c.kind != CardKind::Follower {

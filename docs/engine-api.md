@@ -364,6 +364,12 @@ py/matchup.py --encoding 2 --export /path/to/shards ...
 python py/train_value.py --data /path/to/shards --model linear --out net-v2.json
 ```
 
+One-command retrain through iteration:
+
+```bash
+python py/iterate.py --tag net-v2 --encoding 2 --seed 401 [options]
+```
+
 `train_value.py` reads `feature_len` from the shards, refuses mixed
 encodings, and writes `"encoding"` into the model JSON. Model files may omit
 `encoding` (means 1). `ValueNet` rejects a `feature_len` that does not match

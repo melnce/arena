@@ -302,6 +302,10 @@ pub struct PlayerState {
     /// learning which card it was. Snapshot-neutral — not in
     /// `CanonicalState`, `hash`, or `search_key`.
     pub hidden_removals: Vec<u32>,
+    /// Card id for each `hidden_removals` entry (parallel vec, same index).
+    /// Lets `strict_remaining_pool` add back without looking up cemetery /
+    /// banished — required after `Info::Open` determinization moves instances.
+    pub hidden_removal_cards: Vec<CardId>,
     /// Tokens / returned cards currently in hand or deck that are not
     /// accounted for by `starting_deck − public_removals`. Snapshot-neutral.
     pub public_hand_additions: Vec<CardId>,
@@ -343,6 +347,7 @@ impl PlayerState {
             starting_deck: Vec::new(),
             public_removals: Vec::new(),
             hidden_removals: Vec::new(),
+            hidden_removal_cards: Vec::new(),
             public_hand_additions: Vec::new(),
         }
     }
@@ -381,23 +386,12 @@ impl PlayerState {
     pub fn strict_remaining_pool(&self) -> BTreeMap<CardId, u32> {
         let mut pool = self.known_remaining_pool();
         let mut seen = BTreeSet::new();
-        for &inst_id in &self.hidden_removals {
+        for (idx, &inst_id) in self.hidden_removals.iter().enumerate() {
             if !seen.insert(inst_id) {
                 continue;
             }
-            let card_id = self
-                .cemetery
-                .iter()
-                .find(|c| c.id == inst_id)
-                .map(|c| c.card)
-                .or_else(|| {
-                    self.banished
-                        .iter()
-                        .find(|c| c.id == inst_id)
-                        .map(|c| c.card)
-                });
-            if let Some(id) = card_id {
-                *pool.entry(id).or_insert(0) += 1;
+            if let Some(&card_id) = self.hidden_removal_cards.get(idx) {
+                *pool.entry(card_id).or_insert(0) += 1;
             }
         }
         pool.retain(|_, n| *n > 0);
@@ -753,8 +747,10 @@ impl State {
         self.player_mut(who).public_removals.push(card);
     }
 
-    pub fn note_hidden_removal(&mut self, who: PlayerId, instance_id: u32) {
-        self.player_mut(who).hidden_removals.push(instance_id);
+    pub fn note_hidden_removal(&mut self, who: PlayerId, instance_id: u32, card: CardId) {
+        let p = self.player_mut(who);
+        p.hidden_removals.push(instance_id);
+        p.hidden_removal_cards.push(card);
     }
 
     pub fn note_public_addition(&mut self, who: PlayerId, card: crate::card::CardId) {

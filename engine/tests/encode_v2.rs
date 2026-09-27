@@ -1,12 +1,19 @@
 //! Encoding version 2: strict pool, zone bonuses, model loading.
 
 use arena_engine::{
-    apply, encode, encode_version, CardInstance, CardKind, EncodingVersion, Observation, PlayerId,
-    ValueNet,
+    apply, encode, encode_version, encode_with_vocab, legal_actions, new_game, policy_rng, vocab,
+    Action, EncodingVersion, First, GameConfig, Observation, Phase, PlayerId, ValueNet, Xoshiro256ss,
 };
+use arena_engine::determinize::{determinize_with, Info};
 
 mod common;
 use common::*;
+
+const POOL_OFF: usize = 353 + arena_engine::encode::HIST_WIDTH;
+const POOL_WIDTH: usize = arena_engine::encode::HIST_WIDTH;
+const V2_EXTRA_OFF: usize = arena_engine::encode::LEN_V1;
+const V2_EXTRA_LEN: usize = 18;
+const OPEN_WORLDS: u64 = 8;
 
 fn offset(name: &str) -> usize {
     Observation::LAYOUT_V2_EXTRA
@@ -16,36 +23,82 @@ fn offset(name: &str) -> usize {
         .unwrap_or_else(|| panic!("missing layout field {name}"))
 }
 
+fn thestae_crest() -> arena_engine::state::CrestInstance {
+    arena_engine::state::CrestInstance {
+        id: "crest:10714110".into(),
+        countdown: Some(3),
+        faith: false,
+        once_used: vec![],
+        granted_order: 1,
+        granted: vec![],
+        choose_used: Default::default(),
+    }
+}
+
+fn forest_combo_vs_sword_rally(db: &arena_engine::CardDb, seed: u64) -> arena_engine::State {
+    let mut state = new_game(
+        db,
+        GameConfig {
+            seed,
+            deck_a: load_deck_file("oracle/decks/meta-forest-combo.json"),
+            deck_b: load_deck_file("oracle/decks/meta-sword-rally.json"),
+            first: First::A,
+            opening_hands: None,
+        },
+    )
+    .expect("new_game");
+    apply(db, &mut state, Action::MulliganConfirm { swap: [false; 4] }).expect("mull A");
+    apply(db, &mut state, Action::MulliganConfirm { swap: [false; 4] }).expect("mull B");
+    assert!(matches!(state.phase, Phase::Main));
+    state
+}
+
+fn trigger_thestae_deck_buff(db: &arena_engine::CardDb, st: &mut arena_engine::State) {
+    let me = PlayerId::A;
+    st.player_mut(me).crests.push(thestae_crest());
+    st.player_mut(me).combo = 3;
+    end_turn(db, st);
+}
+
+fn meta_deck_stems() -> Vec<String> {
+    let text =
+        std::fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS.json");
+    let pools: serde_json::Value = serde_json::from_str(&text).expect("pools json");
+    pools["meta"]
+        .as_array()
+        .expect("meta pool")
+        .iter()
+        .map(|v| v.as_str().expect("deck stem").to_string())
+        .collect()
+}
+
+fn play_random_legal(
+    db: &arena_engine::CardDb,
+    st: &mut arena_engine::State,
+    rng: &mut Xoshiro256ss,
+) -> bool {
+    let legal = legal_actions(db, st);
+    if legal.is_empty() {
+        return false;
+    }
+    let idx = rng.gen_range(legal.len() as u32) as usize;
+    apply(db, st, legal[idx].clone()).is_ok()
+}
+
 #[test]
 fn v1_encode_unchanged_on_thestae_crest_buff() {
     let db = load_db();
-    let mut st = started_decks(&db, 103, &["88001110", "88001110"], &["88001110"]);
+    let mut st = forest_combo_vs_sword_rally(&db, 5);
     let me = PlayerId::A;
-    st.player_mut(me)
-        .crests
-        .push(arena_engine::state::CrestInstance {
-            id: "crest:10714110".into(),
-            countdown: Some(3),
-            faith: false,
-            once_used: vec![],
-            granted_order: 1,
-            granted: vec![],
-            choose_used: Default::default(),
-        });
-    st.player_mut(me).combo = 3;
-    for c in &mut st.player_mut(me).deck {
-        if c.kind == CardKind::Follower {
-            c.attack += 1;
-            c.defense += 1;
-            c.max_defense += 1;
-        }
-    }
+    trigger_thestae_deck_buff(&db, &mut st);
     let buffed = encode(&st, me);
     for c in &mut st.player_mut(me).deck {
-        if let Ok(card) = db.card(c.card) {
-            c.attack = card.attack();
-            c.defense = card.defense();
-            c.max_defense = card.defense();
+        if c.kind == arena_engine::CardKind::Follower {
+            if let Ok(card) = db.card(c.card) {
+                c.attack = card.attack();
+                c.defense = card.defense();
+                c.max_defense = card.defense();
+            }
         }
     }
     let unbuffed = encode(&st, me);
@@ -58,117 +111,63 @@ fn v1_encode_unchanged_on_thestae_crest_buff() {
 #[test]
 fn v2_deck_bonuses_rise_on_thestae_crest_buff() {
     let db = load_db();
-    let mut st = started_decks(&db, 103, &["88001110", "88001110"], &["88001110"]);
+    let mut st = forest_combo_vs_sword_rally(&db, 5);
+    trigger_thestae_deck_buff(&db, &mut st);
     let me = PlayerId::A;
-    st.player_mut(me)
-        .crests
-        .push(arena_engine::state::CrestInstance {
-            id: "crest:10714110".into(),
-            countdown: Some(3),
-            faith: false,
-            once_used: vec![],
-            granted_order: 1,
-            granted: vec![],
-            choose_used: Default::default(),
-        });
-    st.player_mut(me).combo = 3;
-    for c in &mut st.player_mut(me).deck {
-        if c.kind == CardKind::Follower {
-            c.attack += 1;
-            c.defense += 1;
-            c.max_defense += 1;
-        }
-    }
-    let v2_after = encode_version(&st, me, EncodingVersion::V2, Some(&db));
-
-    let deck = &st.player(me).deck;
-    let mut le2_atk = 0.0f32;
-    let mut le2_def = 0.0f32;
-    let mut c34_atk = 0.0f32;
-    let mut c34_def = 0.0f32;
-    let mut ge5_atk = 0.0f32;
-    let mut ge5_def = 0.0f32;
-    let mut storm_atk = 0.0f32;
-    let mut storm_def = 0.0f32;
-    let mut followers = 0u32;
-    for c in deck {
-        if c.kind != CardKind::Follower {
-            continue;
-        }
-        followers += 1;
-        let card = db.card(c.card).unwrap();
-        let atk = (c.attack - card.attack()) as f32;
-        let def = (c.max_defense - card.defense()) as f32;
-        let cost = c.cost;
-        if cost <= 2 {
-            le2_atk += atk;
-            le2_def += def;
-        } else if cost <= 4 {
-            c34_atk += atk;
-            c34_def += def;
-        } else {
-            ge5_atk += atk;
-            ge5_def += def;
-        }
-        if c.is_storm() {
-            storm_atk += atk;
-            storm_def += def;
-        }
-    }
-    assert_eq!(v2_after.features[offset("own_deck_atk_bonus_le2")], le2_atk);
+    let v2 = encode_version(&st, me, EncodingVersion::V2, Some(&db));
+    let expected = [17.0, 9.0, 5.0, 3.0, 17.0, 9.0, 5.0, 3.0, 0.0];
+    let got: Vec<f32> = expected
+        .iter()
+        .enumerate()
+        .map(|(i, _)| v2.features[V2_EXTRA_OFF + i])
+        .collect();
     assert_eq!(
-        v2_after.features[offset("own_deck_atk_bonus_cost_3_4")],
-        c34_atk
+        got,
+        expected.to_vec(),
+        "deck atk/def buckets + storm + cost reduction"
     );
-    assert_eq!(
-        v2_after.features[offset("own_deck_atk_bonus_cost_ge5")],
-        ge5_atk
-    );
-    assert_eq!(
-        v2_after.features[offset("own_deck_atk_bonus_storm")],
-        storm_atk
-    );
-    assert_eq!(v2_after.features[offset("own_deck_def_bonus_le2")], le2_def);
-    assert_eq!(
-        v2_after.features[offset("own_deck_def_bonus_cost_3_4")],
-        c34_def
-    );
-    assert_eq!(
-        v2_after.features[offset("own_deck_def_bonus_cost_ge5")],
-        ge5_def
-    );
-    assert_eq!(
-        v2_after.features[offset("own_deck_def_bonus_storm")],
-        storm_def
-    );
-    assert_eq!(
-        followers, le2_atk as u32,
-        "all deck followers are cost <= 2"
-    );
-    assert!(followers > 0);
 }
 
 #[test]
-fn v2_hand_bonuses_see_buffed_follower() {
+fn v2_hand_bonuses_see_drawn_buffed_follower() {
     let db = load_db();
-    let mut st = started(&db, 104);
+    let mut st = forest_combo_vs_sword_rally(&db, 5);
+    trigger_thestae_deck_buff(&db, &mut st);
     let me = PlayerId::A;
-    let card = db.card(cid("88001110")).expect("follower");
-    let mut buffed = CardInstance::from_card(card, st.alloc_id());
-    buffed.attack += 1;
-    buffed.defense += 1;
-    buffed.max_defense += 1;
-    st.player_mut(me).hand.clear();
-    st.player_mut(me).hand.push(buffed);
-    let obs = encode_version(&st, me, EncodingVersion::V2, Some(&db));
-    assert_eq!(obs.features[offset("own_hand_atk_bonus_le2")], 1.0);
-    assert_eq!(obs.features[offset("own_hand_def_bonus_le2")], 1.0);
+    let mut rng = policy_rng(5);
+    let mut drew = false;
+    for _ in 0..200 {
+        if st.winner.is_some() || matches!(st.phase, Phase::Terminal) {
+            break;
+        }
+        if st.active == me && matches!(st.phase, Phase::Main) {
+            let obs = encode_version(&st, me, EncodingVersion::V2, Some(&db));
+            let atk_34 = obs.features[offset("own_hand_atk_bonus_cost_3_4")];
+            let def_34 = obs.features[offset("own_hand_def_bonus_cost_3_4")];
+            let cost_red = obs.features[offset("own_hand_cost_reduction")];
+            if atk_34 >= 1.0 || def_34 >= 1.0 || cost_red >= 1.0 {
+                drew = true;
+                if atk_34 >= 1.0 {
+                    assert_eq!(atk_34, 1.0, "Magachiyo +1 atk in 3-4 bucket");
+                    assert_eq!(def_34, 1.0, "Magachiyo +1 def in 3-4 bucket");
+                }
+                if cost_red >= 1.0 {
+                    assert_eq!(cost_red, 1.0, "Crimson Incense combo-3 cost reduction");
+                }
+                break;
+            }
+        }
+        if !play_random_legal(&db, &mut st, &mut rng) {
+            break;
+        }
+    }
+    assert!(drew, "expected buffed draw or Crimson Incense cost reduction in hand");
 }
 
 #[test]
 fn v2_strict_pool_counts_fuse_partners_as_remaining() {
     let db = load_db();
-    let mut st = started(&db, 5);
+    let mut st = started_decks(&db, 5, &["90071210", "90071220"], &["88001110"]);
     let me = PlayerId::A;
     let opp = PlayerId::B;
     clear_hand(&mut st, me);
@@ -180,25 +179,148 @@ fn v2_strict_pool_counts_fuse_partners_as_remaining() {
     choose(&db, &mut st, 0);
     confirm(&db, &mut st);
     assert!(st.player(me).hidden_removals.contains(&partner_id));
-
-    let known = st.player(me).known_remaining_pool();
-    let strict = st.player(me).strict_remaining_pool();
-    let k = known.get(&partner_card).copied().unwrap_or(0);
-    let s = strict.get(&partner_card).copied().unwrap_or(0);
-    assert!(
-        s > k,
-        "strict pool keeps hidden fuse partner (known={k} strict={s})"
+    assert_eq!(
+        st.player(me).hidden_removal_cards,
+        vec![partner_card],
+        "parallel card-id log"
     );
+
+    let v = vocab(&st);
+    let idx = v
+        .binary_search(&partner_card)
+        .expect("fuse partner is in decklist vocab");
 
     let v1 = encode(&st, opp);
     let v2 = encode_version(&st, opp, EncodingVersion::V2, Some(&db));
-    let pool_off = 353 + arena_engine::encode::HIST_WIDTH;
-    for i in 0..pool_off {
+    let v1_pool = v1.features[POOL_OFF + idx];
+    let v2_pool = v2.features[POOL_OFF + idx];
+    assert_eq!(
+        v2_pool,
+        v1_pool + 1.0,
+        "strict pool adds hidden fuse partner back (v1={v1_pool} v2={v2_pool})"
+    );
+
+    for i in 0..POOL_OFF {
         assert_eq!(v1.features[i], v2.features[i], "feat {i}");
     }
-    for i in pool_off + arena_engine::encode::HIST_WIDTH..Observation::LEN {
+    for i in POOL_OFF + POOL_WIDTH..Observation::LEN {
         assert_eq!(v1.features[i], v2.features[i], "feat {i}");
     }
+}
+
+#[test]
+fn v2_pool_and_zone_bonuses_stable_across_open_worlds() {
+    let db = load_db();
+    let decks: Vec<Vec<arena_engine::CardId>> = meta_deck_stems()
+        .iter()
+        .map(|stem| load_deck_file(format!("oracle/decks/{stem}.json")))
+        .filter(|d| deck_ready(&db, d) && d.len() == 40)
+        .collect();
+    assert_eq!(decks.len(), 16, "sixteen meta decks");
+
+    let mut states_with_hidden = 0usize;
+    let mut worlds_checked = 0usize;
+    let mut mismatches = 0usize;
+    let mut seed = 1u64;
+
+    while states_with_hidden < 500 && seed < 2_000 {
+        let da = &decks[seed as usize % decks.len()];
+        let dbk = &decks[(seed as usize / 3) % decks.len()];
+        let Ok(mut state) = new_game(
+            &db,
+            GameConfig {
+                seed,
+                deck_a: da.clone(),
+                deck_b: dbk.clone(),
+                first: First::A,
+                opening_hands: None,
+            },
+        ) else {
+            seed += 1;
+            continue;
+        };
+        let mut rng = policy_rng(seed);
+        let mut nact = 0u32;
+        while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
+            for me in [PlayerId::A, PlayerId::B] {
+                let opp = me.opponent();
+                if state.player(opp).hidden_removals.is_empty() {
+                    continue;
+                }
+                states_with_hidden += 1;
+                let root_vocab = vocab(&state);
+                let real_v1 = encode_with_vocab(
+                    &state,
+                    me,
+                    &root_vocab,
+                    EncodingVersion::V1,
+                    None,
+                );
+                let real_v2 = encode_with_vocab(
+                    &state,
+                    me,
+                    &root_vocab,
+                    EncodingVersion::V2,
+                    Some(&db),
+                );
+                let ref_v1_pool = &real_v1.features[POOL_OFF..POOL_OFF + POOL_WIDTH];
+                let ref_v2_pool = &real_v2.features[POOL_OFF..POOL_OFF + POOL_WIDTH];
+                let ref_v2_extra = &real_v2.features[V2_EXTRA_OFF..V2_EXTRA_OFF + V2_EXTRA_LEN];
+
+                for w in 0..OPEN_WORLDS {
+                    worlds_checked += 1;
+                    let world = determinize_with(&state, me, seed * 1_000 + w, Info::Open);
+                    let world_v1 = encode_with_vocab(
+                        &world,
+                        me,
+                        &root_vocab,
+                        EncodingVersion::V1,
+                        None,
+                    );
+                    let world_v2 = encode_with_vocab(
+                        &world,
+                        me,
+                        &root_vocab,
+                        EncodingVersion::V2,
+                        Some(&db),
+                    );
+                    let v1_pool = &world_v1.features[POOL_OFF..POOL_OFF + POOL_WIDTH];
+                    let v2_pool = &world_v2.features[POOL_OFF..POOL_OFF + POOL_WIDTH];
+                    let v2_extra = &world_v2.features[V2_EXTRA_OFF..V2_EXTRA_OFF + V2_EXTRA_LEN];
+                    if v1_pool != ref_v1_pool || v2_pool != ref_v2_pool || v2_extra != ref_v2_extra {
+                        mismatches += 1;
+                    }
+                }
+            }
+
+            if state.turn > 30 || nact >= 500 {
+                break;
+            }
+            let legal = legal_actions(&db, &state);
+            if legal.is_empty() {
+                break;
+            }
+            let idx = rng.gen_range(legal.len() as u32) as usize;
+            if apply(&db, &mut state, legal[idx].clone()).is_err() {
+                break;
+            }
+            nact += 1;
+        }
+        seed += 1;
+    }
+
+    assert!(
+        states_with_hidden >= 100,
+        "expected many states with hidden removals, got {states_with_hidden}"
+    );
+    assert_eq!(
+        mismatches, 0,
+        "pool/zone mismatch across {worlds_checked} Open worlds \
+         ({states_with_hidden} states with hidden removals)"
+    );
+    eprintln!(
+        "v2_pool_open_worlds: states={states_with_hidden} worlds={worlds_checked} mismatches={mismatches}"
+    );
 }
 
 #[test]
@@ -258,8 +380,28 @@ fn model_rejects_feature_len_mismatch() {
     assert!(err.contains("feature_len"), "{err}");
 }
 
-fn clear_hand(st: &mut arena_engine::State, who: PlayerId) {
-    st.player_mut(who).hand.clear();
+#[test]
+fn model_rejects_truncated_encoding() {
+    let zone_w: Vec<Vec<f32>> = (0..5).map(|_| vec![0.0]).collect();
+    let json = serde_json::json!({
+        "arch": "linear",
+        "encoding": 258,
+        "feature_len": 563,
+        "feat_mean": vec![0.0; 563],
+        "feat_std": vec![1.0; 563],
+        "vocab": [0u32],
+        "zones": [
+            {"name": "own_hand", "id_offset": 0, "count": 9},
+            {"name": "own_deck", "id_offset": 9, "count": 96, "hist_offset": 353},
+            {"name": "opp_board", "id_offset": 105, "count": 5},
+            {"name": "own_board", "id_offset": 110, "count": 5},
+            {"name": "opp_pool", "id_offset": 115, "count": 96, "hist_offset": 449},
+        ],
+        "scale": 1.0,
+        "linear": {"w": vec![0.0; 563], "zone_w": zone_w, "b": 0.0},
+    });
+    let err = ValueNet::from_json(&json.to_string()).unwrap_err();
+    assert!(err.contains("encoding"), "{err}");
 }
 
 fn choose(db: &arena_engine::CardDb, st: &mut arena_engine::State, idx: u32) {
