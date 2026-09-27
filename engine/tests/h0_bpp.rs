@@ -109,6 +109,26 @@ fn bppv_adds_leaf_value_for_held_charges() {
 }
 
 #[test]
+fn bppv_penalizes_opponent_charges_from_first_player_view() {
+    let db = load_db();
+    let mut st = started(&db, 36);
+    end_turn(&db, &mut st);
+    let first = PlayerId::A;
+    let bare = match AnyPolicy::parse_spec("h0:value=v0").unwrap() {
+        AnyPolicy::H0(h) => h,
+        _ => panic!("H0"),
+    };
+    let prized = match AnyPolicy::parse_spec("h0:value=v0,bppv=10").unwrap() {
+        AnyPolicy::H0(h) => h,
+        _ => panic!("H0"),
+    };
+    let v0 = bare.evaluate(&db, &st, first);
+    let v1 = prized.evaluate(&db, &st, first);
+    assert!(v1 < v0, "bppv should penalize the opponent's held charges");
+    assert!((v0 - v1 - 20.0).abs() < 1e-3, "two usable charges at bppv=10");
+}
+
+#[test]
 fn bppv_changes_turn_1_decision() {
     let db = load_db();
     let mut st = started(&db, 35);

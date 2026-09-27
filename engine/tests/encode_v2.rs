@@ -125,9 +125,13 @@ fn v2_bonus_pp_flags_second_player_start() {
     let obs = encode_version(&st, second, EncodingVersion::V2, Some(&db));
     assert_eq!(obs.features[offset("own_bonus_early")], 1.0);
     assert_eq!(obs.features[offset("own_bonus_late")], 1.0);
+    assert_eq!(obs.features[offset("opp_bonus_early")], 0.0);
+    assert_eq!(obs.features[offset("opp_bonus_late")], 0.0);
     let obs_a = encode_version(&st, PlayerId::A, EncodingVersion::V2, Some(&db));
     assert_eq!(obs_a.features[offset("own_bonus_early")], 0.0);
     assert_eq!(obs_a.features[offset("own_bonus_late")], 0.0);
+    assert_eq!(obs_a.features[offset("opp_bonus_early")], 1.0);
+    assert_eq!(obs_a.features[offset("opp_bonus_late")], 1.0);
 }
 
 #[test]
@@ -146,6 +150,13 @@ fn v2_bonus_pp_flags_after_early_spent() {
     let obs = encode_version(&st, me, EncodingVersion::V2, Some(&db));
     assert_eq!(obs.features[offset("own_bonus_early")], 0.0);
     assert_eq!(obs.features[offset("own_bonus_late")], 1.0);
+    assert_eq!(obs.features[offset("opp_bonus_early")], 0.0);
+    assert_eq!(obs.features[offset("opp_bonus_late")], 0.0);
+    let obs_a = encode_version(&st, PlayerId::A, EncodingVersion::V2, Some(&db));
+    assert_eq!(obs_a.features[offset("own_bonus_early")], 0.0);
+    assert_eq!(obs_a.features[offset("own_bonus_late")], 0.0);
+    assert_eq!(obs_a.features[offset("opp_bonus_early")], 0.0);
+    assert_eq!(obs_a.features[offset("opp_bonus_late")], 1.0);
 }
 
 #[test]
@@ -160,6 +171,13 @@ fn v2_bonus_pp_flags_early_expires_after_turn_5() {
     let obs = encode_version(&st, me, EncodingVersion::V2, Some(&db));
     assert_eq!(obs.features[offset("own_bonus_early")], 0.0);
     assert_eq!(obs.features[offset("own_bonus_late")], 1.0);
+    assert_eq!(obs.features[offset("opp_bonus_early")], 0.0);
+    assert_eq!(obs.features[offset("opp_bonus_late")], 0.0);
+    let obs_a = encode_version(&st, PlayerId::A, EncodingVersion::V2, Some(&db));
+    assert_eq!(obs_a.features[offset("own_bonus_early")], 0.0);
+    assert_eq!(obs_a.features[offset("own_bonus_late")], 0.0);
+    assert_eq!(obs_a.features[offset("opp_bonus_early")], 0.0);
+    assert_eq!(obs_a.features[offset("opp_bonus_late")], 1.0);
 }
 
 #[test]
