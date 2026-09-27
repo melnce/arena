@@ -248,8 +248,9 @@
   pointer-events: none;
 }
 
+/* Top row reversed, bottom row normal — each player's slot 0 at their own left. */
 #redBoard {
-  flex-direction: row;
+  flex-direction: row-reverse;
   background: linear-gradient(
     180deg,
     var(--color-board-red-tint),
@@ -266,6 +267,14 @@
     var(--color-board-surface)
   );
   border-color: var(--color-board-blue-border);
+}
+
+body.active-on-bottom.active-second #redBoard {
+  flex-direction: row;
+}
+
+body.active-on-bottom.active-second #blueBoard {
+  flex-direction: row-reverse;
 }
 
 .board-zone.drag-over {
