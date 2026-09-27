@@ -51,6 +51,9 @@ jobs:
         # CI uses 100 for both.
         run: ARENA_SOAK_GAMES=100 cargo test --release soak -- --nocapture
 
+      - name: meta-deck soak
+        run: ARENA_META_SOAK_GAMES=1 cargo test --release --test meta_soak -- --nocapture
+
       - name: throughput floor
         # Three benches in one binary; run them one at a time so they do not
         # share a CI core and miss the 800 games/s floor.

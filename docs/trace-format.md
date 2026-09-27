@@ -100,7 +100,7 @@ Every random decision, by outcome.
 {"what":"draw","chose":"10131320"}
 {"what":"random_target","among":"enemy_followers","chose":{"slot":2}}
 {"what":"random_card","chose":"10131320"}
-{"what":"random_split","chose":[2,0,1]}   // counts for keys in schema order, e.g. X,Y,Z
+{"what":"random_split","chose":[2,0,1]}   // counts for `keys` in schema order (e.g. X,Y,Z); one independent uniform draw per faith point in live play, recorded as the final bucket counts
 {"what":"coin","chose":"a"}
 {"what":"random_unused","chose":{"mode":1}}
 {"what":"reanimate","chose":"90051140"}
