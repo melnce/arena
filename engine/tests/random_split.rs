@@ -3,8 +3,8 @@
 use std::collections::BTreeMap;
 
 use arena_engine::{
-    apply, from_neutral, legal_actions, new_game, snapshot_json, Action, CardDb, First,
-    GameConfig, GameRng, LoadError, OpeningHands, Phase, PlayerId, Slot,
+    apply, from_neutral, legal_actions, new_game, snapshot_json, Action, CardDb, First, GameConfig,
+    GameRng, LoadError, Phase, PlayerId, Slot,
 };
 
 mod common;
@@ -194,7 +194,11 @@ fn depths_scripted_split_counts() {
     );
     play_depths(&db, &mut st, me);
     assert_eq!(newest_crystalspawn(&st, me), Some((2, 2)));
-    assert_eq!(leader_def(&st, me), 20, "Y=1 restore is capped at max defense");
+    assert_eq!(
+        leader_def(&st, me),
+        20,
+        "Y=1 restore is capped at max defense"
+    );
     assert_eq!(leader_def(&st, PlayerId::B), 19);
 }
 

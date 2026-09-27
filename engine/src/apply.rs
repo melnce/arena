@@ -5526,13 +5526,18 @@ fn random_split_counts(
         return Ok(counts);
     }
     if state.rng.peek_what() == Some(PickWhat::RandomSplit) {
-        counts = state.rng.take_scripted_split().map_err(Illegal::OraclePickNotLegal)?;
+        counts = state
+            .rng
+            .take_scripted_split()
+            .map_err(Illegal::OraclePickNotLegal)?;
         if counts.len() != k {
-            return Err(Illegal::OraclePickNotLegal(crate::error::OraclePickNotLegal {
-                what: PickWhat::RandomSplit,
-                chose: format!("expected {} counts, got {}", k, counts.len()),
-                candidates: vec![],
-            }));
+            return Err(Illegal::OraclePickNotLegal(
+                crate::error::OraclePickNotLegal {
+                    what: PickWhat::RandomSplit,
+                    chose: format!("expected {} counts, got {}", k, counts.len()),
+                    candidates: vec![],
+                },
+            ));
         }
         return Ok(counts);
     }
@@ -5549,12 +5554,7 @@ fn random_split_counts(
     Ok(counts)
 }
 
-fn set_source_vars(
-    state: &mut State,
-    source: SourceRef,
-    keys: &[VarKey],
-    counts: &[i32],
-) {
+fn set_source_vars(state: &mut State, source: SourceRef, keys: &[VarKey], counts: &[i32]) {
     match source {
         SourceRef::Spell { player, card } => {
             if let Some(corpse) = state

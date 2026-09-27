@@ -221,9 +221,7 @@ fn collect_from_effect(e: &Effect, out: &mut Vec<CardId>) {
             }
         }
         Effect::If {
-            then,
-            else_effects,
-            ..
+            then, else_effects, ..
         } => {
             for x in then {
                 collect_from_effect(x, out);
