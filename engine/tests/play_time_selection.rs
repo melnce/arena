@@ -22,6 +22,7 @@ const DRAW_THEN_PICK: &str = "89209990";
 const VANILLA: &str = "88001110";
 const TANK: &str = "89500001";
 const FEARLESS: &str = "10621110";
+const SWEET_ABOMINATION: &str = "10733110";
 
 fn hand_inst_ids(st: &arena_engine::State, who: PlayerId) -> Vec<u32> {
     st.player(who).hand.iter().map(|c| c.id).collect()
@@ -358,6 +359,40 @@ fn play_without_reactions_unchanged_regression() {
     drain_choice(&db, &mut st2);
     assert_eq!(arena_engine::hash(&st), arena_engine::hash(&st2));
     assert_eq!(st.picks.len(), st2.picks.len());
+}
+
+/// Earth Rite pay gates the play-time walk: no sigils → no mode prompt.
+#[test]
+fn sweet_abomination_no_earth_no_play_time_prompt() {
+    let db = load_db();
+    let mut st = started(&db, 920);
+    let me = PlayerId::A;
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    st.player_mut(me).earth = 0;
+    put_hand(&db, &mut st, me, SWEET_ABOMINATION);
+    play(&db, &mut st, 0);
+    assert!(
+        matches!(st.phase, Phase::Main),
+        "unpayable Earth Rite: no play-time mode prompt"
+    );
+    assert_eq!(st.player(me).earth, 0, "earth not spent at play");
+}
+
+/// Payable Earth Rite: mode prompt at play before play reactions.
+#[test]
+fn sweet_abomination_with_earth_mode_at_play_before_reactions() {
+    let db = load_db();
+    let mut st = started(&db, 921);
+    let me = PlayerId::A;
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    st.player_mut(me).earth = 1;
+    put_hand(&db, &mut st, me, SWEET_ABOMINATION);
+    play(&db, &mut st, 0);
+    assert!(matches!(st.phase, Phase::Choice { .. }));
+    assert_eq!(pending_kind(&st), arena_engine::PendingKind::PlaySelect);
+    assert_eq!(st.player(me).earth, 1, "earth spent at resolution, not play");
 }
 
 /// Regression: Engage pick still at resolution.

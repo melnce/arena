@@ -3468,10 +3468,24 @@ fn collect_play_time_steps_rec(
                 }
                 return;
             }
-            Effect::Seq { effects: inner, .. }
-            | Effect::Repeat { effects: inner, .. }
-            | Effect::Pay { effects: inner, .. } => {
+            Effect::Seq { effects: inner, .. } => {
                 collect_play_time_steps_rec(db, state, controller, source, inner, walk_active, out);
+                return;
+            }
+            Effect::Pay {
+                resource,
+                amount,
+                effects: inner,
+                ..
+            } => {
+                let n = eval_amount(db, state, controller, Some(source), amount);
+                if resource_payable(state, controller, *resource, n) {
+                    collect_play_time_steps_rec(
+                        db, state, controller, source, inner, walk_active, out,
+                    );
+                } else {
+                    *walk_active = false;
+                }
                 return;
             }
             Effect::Choose {
@@ -5140,16 +5154,25 @@ fn apply_effect(
     Ok(())
 }
 
+fn resource_payable(state: &State, who: PlayerId, res: PayResource, n: i32) -> bool {
+    let p = state.player(who);
+    match res {
+        PayResource::Shadows => p.shadows >= n,
+        PayResource::Earth => p.earth >= n,
+        PayResource::Pp => p.usable_pp() >= n,
+        PayResource::Faith => p.faith >= n,
+    }
+}
+
 fn pay_resource(state: &mut State, who: PlayerId, res: PayResource, n: i32) -> bool {
+    if !resource_payable(state, who, res, n) {
+        return false;
+    }
     let p = state.player_mut(who);
     match res {
         PayResource::Shadows => {
-            if p.shadows >= n {
-                p.shadows -= n;
-                true
-            } else {
-                false
-            }
+            p.shadows -= n;
+            true
         }
         PayResource::Earth => {
             if p.earth >= n {
@@ -5170,20 +5193,12 @@ fn pay_resource(state: &mut State, who: PlayerId, res: PayResource, n: i32) -> b
             }
         }
         PayResource::Pp => {
-            if p.usable_pp() >= n {
-                p.spend_pp(n);
-                true
-            } else {
-                false
-            }
+            p.spend_pp(n);
+            true
         }
         PayResource::Faith => {
-            if p.faith >= n {
-                p.faith -= n;
-                true
-            } else {
-                false
-            }
+            p.faith -= n;
+            true
         }
     }
 }
