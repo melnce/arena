@@ -187,8 +187,8 @@ def test_export_encoding_v2_metadata(db, root: Path, tmp_path: Path) -> None:
     n = int(result["export"]["samples"])
     meta = samples.load(out)["meta"]
     assert meta["encoding"] == 2
-    assert meta["feature_len"] == 563
-    assert (out / "features.f32le").stat().st_size == n * 563 * 4
+    assert meta["feature_len"] == 567
+    assert (out / "features.f32le").stat().st_size == n * 567 * 4
     names = [f["name"] for f in meta["layout"]]
     assert "own_deck_atk_bonus_le2" in names
     assert "own_hand_cost_reduction" in names
@@ -243,7 +243,7 @@ def test_encoding_v2_export_train_and_play(db, root: Path, tmp_path: Path) -> No
     )
     doc = json.loads(model.read_text())
     assert doc["encoding"] == 2
-    assert doc["feature_len"] == 563
+    assert doc["feature_len"] == 567
     assert report["rows_train"] > 0
 
     for i in range(2):

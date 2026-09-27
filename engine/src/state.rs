@@ -404,6 +404,40 @@ impl PlayerState {
         self.pp + i32::from(self.bonus_pp.active)
     }
 
+    /// Whether the early Bonus PP charge can still be activated.
+    /// `is_own_turn`: during the player's own turn `turns_taken ≤ 5`; otherwise
+    /// `≤ 4` (the window closes after their turn 5 ends).
+    pub fn can_use_bonus_early(&self, is_own_turn: bool) -> bool {
+        if !self.is_second || !self.bonus_pp.early_charge {
+            return false;
+        }
+        if self.bonus_pp.locked && self.turns_taken < 6 {
+            return false;
+        }
+        let limit = if is_own_turn { 5 } else { 4 };
+        self.turns_taken <= limit
+    }
+
+    /// Whether the late Bonus PP charge can still be activated.
+    pub fn can_use_bonus_late(&self) -> bool {
+        if !self.is_second || !self.bonus_pp.late_charge {
+            return false;
+        }
+        !(self.bonus_pp.locked && self.turns_taken >= 6)
+    }
+
+    /// Count of Bonus PP charges this player can still use.
+    pub fn usable_bonus_charges(&self, is_own_turn: bool) -> i32 {
+        let mut n = 0;
+        if self.can_use_bonus_early(is_own_turn) {
+            n += 1;
+        }
+        if self.can_use_bonus_late() {
+            n += 1;
+        }
+        n
+    }
+
     pub fn field_count(&self) -> usize {
         self.field.iter().filter(|s| s.is_some()).count()
     }

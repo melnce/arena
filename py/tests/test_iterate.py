@@ -260,11 +260,11 @@ def test_smoke_encoding_v2_end_to_end(smoke_v2, db, root: Path) -> None:
     for name in ("data-e0", "data-e10"):
         meta = json.loads((tag / name / "meta.json").read_text())
         assert int(meta["encoding"]) == 2
-        assert int(meta["feature_len"]) == 563
+        assert int(meta["feature_len"]) == 567
 
     spec = json.loads((tag / "linear.json").read_text())
     assert spec["arch"] == "linear"
-    assert spec["feature_len"] == 563
+    assert spec["feature_len"] == 567
     assert spec["encoding"] == 2
 
     train_log = (tag / "train-linear.txt").read_text()

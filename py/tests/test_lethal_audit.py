@@ -246,31 +246,31 @@ def _rate_view(summary: dict) -> dict:
     }
 
 
-# Captured on origin/main (af91ee0) before this change, same argv.
+# Captured on cursor/bonus-pp (Bonus PP rule change alters h0-fast game length).
 _MAIN_RATE_BLOCKS = {
     "handed_lethal": {
         "asked": 14,
-        "decisions_with_a_verdict": 6,
-        "lethal": 2,
-        "n": 2,
-        "nodes": 687,
+        "decisions_with_a_verdict": 7,
+        "lethal": 3,
+        "n": 3,
+        "nodes": 628,
         "none": 4,
-        "rate": 0.3333333333333333,
+        "rate": 0.42857142857142855,
         "rng_dependent": 0,
-        "unknown": 8,
-        "unknown_rate": 0.5714285714285714,
+        "unknown": 7,
+        "unknown_rate": 0.5,
     },
     "missed_lethal": {
-        "asked": 69,
-        "decisions_with_a_verdict": 41,
+        "asked": 66,
+        "decisions_with_a_verdict": 42,
         "lethal": 0,
         "n": 0,
-        "nodes": 2762,
-        "none": 41,
+        "nodes": 2390,
+        "none": 42,
         "rate": 0.0,
         "rng_dependent": 0,
-        "unknown": 28,
-        "unknown_rate": 0.4057971014492754,
+        "unknown": 24,
+        "unknown_rate": 0.36363636363636365,
     },
 }
 
