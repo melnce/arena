@@ -409,13 +409,26 @@ struct MetaAccounting {
     skipped_worlds: u64,
 }
 
+fn baseline_skipped(db: &CardDb, nodes: u32, snaps: &[SearchSnapshot]) -> HashMap<u64, u64> {
+    let base = format!("h0:nodes={nodes}");
+    let mut out = HashMap::new();
+    for snap in snaps {
+        let key = search_key(&snap.state) ^ snap.choose_seed;
+        let rec0 = explain_decision(&base, db, &snap.state, snap.choose_seed);
+        if matches!(rec0.path, ChoosePath::Search | ChoosePath::Unscored) {
+            out.insert(key, skipped_worlds(&rec0));
+        }
+    }
+    out
+}
+
 fn audit_horizon_decisions(
     db: &CardDb,
     nodes: u32,
     horizon: u32,
     snaps: &[SearchSnapshot],
+    baseline: &HashMap<u64, u64>,
 ) -> MetaAccounting {
-    let base = format!("h0:nodes={nodes}");
     let hz = format!("h0:nodes={nodes},horizon={horizon}");
     let mut out = MetaAccounting {
         bad_ends: 0,
@@ -424,10 +437,11 @@ fn audit_horizon_decisions(
         skip_mismatch: 0,
         skipped_worlds: 0,
     };
-    let mut baseline: HashMap<u64, u64> = HashMap::new();
     for snap in snaps {
         let key = search_key(&snap.state) ^ snap.choose_seed;
-        let rec0 = explain_decision(&base, db, &snap.state, snap.choose_seed);
+        let Some(base_skipped) = baseline.get(&key) else {
+            continue;
+        };
         let mut h0 = parse_h0(&hz);
         h0.arm_explain();
         let legal = legal_actions(db, &snap.state);
@@ -437,18 +451,15 @@ fn audit_horizon_decisions(
             panic!("horizon decision missing explain at key={key}");
         });
         out.fallback += h0.stats.horizon_fallback;
-        if !matches!(rec0.path, ChoosePath::Search | ChoosePath::Unscored)
-            || !matches!(rec.path, ChoosePath::Search | ChoosePath::Unscored)
-        {
+        if !matches!(rec.path, ChoosePath::Search | ChoosePath::Unscored) {
             continue;
         }
-        baseline.insert(key, skipped_worlds(&rec0));
         if rec.nodes > rec.node_cap {
             out.over_node_cap += 1;
         }
         let skipped = skipped_worlds(&rec);
         out.skipped_worlds += skipped;
-        if baseline.get(&key).copied().unwrap_or(0) != skipped {
+        if *base_skipped != skipped {
             out.skip_mismatch += 1;
         }
         for cand in &rec.candidates {
@@ -472,9 +483,11 @@ fn horizon_accounting_matches_baseline_in_meta_games() {
     let snaps = collect_search_snapshots(&db, 2);
     assert!(!snaps.is_empty(), "need search snapshots");
     for nodes in [2000, 16000] {
+        let baseline = baseline_skipped(&db, nodes, &snaps);
+        assert!(!baseline.is_empty(), "need baseline search decisions");
         for horizon in [1, 2, 3] {
             let spec = format!("h0:nodes={nodes},horizon={horizon}");
-            let audit = audit_horizon_decisions(&db, nodes, horizon, &snaps);
+            let audit = audit_horizon_decisions(&db, nodes, horizon, &snaps, &baseline);
             assert_eq!(
                 audit.over_node_cap, 0,
                 "{spec}: rec.nodes must stay within node_cap"
