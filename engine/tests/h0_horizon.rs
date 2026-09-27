@@ -2,8 +2,8 @@
 
 use arena_engine::policy::ChoosePath;
 use arena_engine::{
-    apply, legal_actions, new_game, policy_rng, search_key, Action, AnyPolicy, CardDb, ExplainRecord,
-    First, GameConfig, Phase, PlayerId, Policy, PvEnd, H0, MAX_ACTIONS, MAX_TURNS,
+    apply, legal_actions, new_game, policy_rng, search_key, Action, AnyPolicy, CardDb,
+    ExplainRecord, First, GameConfig, Phase, PlayerId, Policy, PvEnd, H0, MAX_ACTIONS, MAX_TURNS,
 };
 use std::collections::HashMap;
 
@@ -251,7 +251,10 @@ fn horizon1_finished_turn_under_hres_gets_reserve_reply() {
         .expect("EndTurn candidate")
         .worlds[0];
     assert_eq!(w1.raw, -80.0);
-    assert!(matches!(w1.end, Some(PvEnd::OppLethal) | Some(PvEnd::OppReply)));
+    assert!(matches!(
+        w1.end,
+        Some(PvEnd::OppLethal) | Some(PvEnd::OppReply)
+    ));
     assert!(
         w0.raw > w1.raw,
         "starved at horizon=0: raw={} end={:?}",
