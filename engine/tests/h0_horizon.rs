@@ -2,8 +2,8 @@
 
 use arena_engine::policy::ChoosePath;
 use arena_engine::{
-    apply, legal_actions, new_game, policy_rng, Action, AnyPolicy, CardDb, First,
-    GameConfig, Phase, PlayerId, Policy, PvEnd, H0, MAX_ACTIONS, MAX_TURNS,
+    apply, legal_actions, new_game, policy_rng, Action, AnyPolicy, CardDb, First, GameConfig,
+    Phase, PlayerId, Policy, PvEnd, H0, MAX_ACTIONS, MAX_TURNS,
 };
 
 mod common;
@@ -240,8 +240,8 @@ fn spec_horizon_hres() {
 }
 
 fn meta_deck_stems() -> Vec<String> {
-    let text = std::fs::read_to_string(repo_root().join("oracle/decks/POOLS.json"))
-        .expect("POOLS.json");
+    let text =
+        std::fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS.json");
     let pools: serde_json::Value = serde_json::from_str(&text).expect("pools json");
     pools["meta"]
         .as_array()
