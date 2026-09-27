@@ -16,9 +16,10 @@ _stats = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_stats)
 wilson = _stats.wilson
 
-# Captured on main @ fe63a91 with
+# Captured on cursor/bonus-pp with
 # `arena.matchup(db, {basic-forest, basic-rune}, 4, 42, policy="random", threads=1)`
-# (then First::Coin). Extra pair fields added by this PR are ignored here.
+# (then First::Coin). Bonus PP rule change shortens some second-player games.
+# Extra pair fields added by this PR are ignored here.
 GOLDEN_COIN_MATRIX = {
     "basic-forest": {
         "basic-forest": {
@@ -26,33 +27,33 @@ GOLDEN_COIN_MATRIX = {
             "b_wins": 0,
             "first_player_wins": 3,
             "games": 4,
-            "mean_actions": 91.5,
-            "mean_turns": 10.75,
+            "mean_actions": 71.75,
+            "mean_turns": 9.25,
         },
         "basic-rune": {
-            "a_wins": 1,
-            "b_wins": 3,
-            "first_player_wins": 1,
+            "a_wins": 0,
+            "b_wins": 4,
+            "first_player_wins": 2,
             "games": 4,
-            "mean_actions": 79.25,
-            "mean_turns": 9.25,
+            "mean_actions": 98.75,
+            "mean_turns": 11.5,
         },
     },
     "basic-rune": {
         "basic-forest": {
-            "a_wins": 2,
-            "b_wins": 2,
-            "first_player_wins": 1,
-            "games": 4,
-            "mean_actions": 116.5,
-            "mean_turns": 14.0,
-        },
-        "basic-rune": {
             "a_wins": 1,
             "b_wins": 3,
-            "first_player_wins": 3,
+            "first_player_wins": 2,
             "games": 4,
-            "mean_actions": 88.5,
+            "mean_actions": 110.75,
+            "mean_turns": 13.25,
+        },
+        "basic-rune": {
+            "a_wins": 2,
+            "b_wins": 2,
+            "first_player_wins": 2,
+            "games": 4,
+            "mean_actions": 82.25,
             "mean_turns": 10.75,
         },
     },
