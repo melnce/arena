@@ -812,6 +812,7 @@ The WASM binary `include_str!`s every authored `cards/**/*.json` except `cards/o
 | `bundleInfo()` | string | `{cards, crests, bytes}` |
 | `version()` | string | git SHA baked at build, or `"dev"` |
 | `botPolicies()` | string | JSON array from `engine::policy::names()` — `["random","first-legal","h0"]`. The client lists those plus `h0 (standard)` = `h0` and `h0 (strong)` = `h0:nodes=6000` (desktop default strong, phone default standard, stored as `svwb.botPolicy`). Engine `H0::default()` stays 2 000 nodes: sweep2 measured `h0:nodes=6000` at 0.562 [0.547, 0.577] over 4 096 games (reverse seating 0.553 [0.531, 0.574]; +6.2 pt, both seats) vs current `h0`. |
+| `modeChoiceInfo()` | string | `{source, options}` JSON while a `ChoiceNode::Modes` is open (`options[m]` is the printed label for mode index `m`); `null` otherwise. Not folded into `full()` — the client calls this when painting the mode modal. |
 
 `cardText` on a collectible / token adds two read-only arrays (no existing field changes):
 

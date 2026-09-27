@@ -35,7 +35,8 @@ pub use encode::{encode, encode_version, encode_with_vocab, vocab, EncodingVersi
 pub use error::{Illegal, LoadError, OraclePickNotLegal, ReplayError, Unsupported};
 pub use ids::{AttackTarget, First, PlayerId, Slot};
 pub use info::{
-    board_info, hand_info, player_info, BoardCardInfo, GateInfo, HandCardInfo, PlayerInfo,
+    board_info, hand_info, mode_choice_info, player_info, BoardCardInfo, GateInfo, HandCardInfo,
+    ModeChoiceInfo, PlayerInfo,
 };
 pub use lethal::{forced_lethal, lethal_action_kind, LethalActionKind, LethalVerdict};
 pub use limits::{MAX_ACTIONS, MAX_TURNS};

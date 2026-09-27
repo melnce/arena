@@ -5,6 +5,7 @@ import {
   conditionGateMet,
   sessionBoardInfo,
   sessionHandInfo,
+  sessionModeChoiceInfo,
   sessionPlayerInfo,
   usablePp,
 } from "./info.ts";
@@ -18,6 +19,7 @@ import type {
   FullState,
   GateInfo,
   HandCardInfo,
+  ModeChoiceInfo,
   NeutralAction,
   PlayerId,
   TargetOpt,
@@ -144,7 +146,7 @@ export function render(s: Session, hooks: RenderHooks): void {
   renderEndTurn(full, legal, phase, hooks);
   renderBonus(full, legal);
   renderHistory(s);
-  renderChoice(full, legal, hooks);
+  renderChoice(s, full, legal, hooks);
   renderTerminal(full, hooks);
   renderEventLog(s);
   syncUndoButtons(s);
@@ -824,7 +826,7 @@ function wireHistoryPreview(): void {
 
 let promptPlaceCleanup: (() => void) | null = null;
 
-function renderChoice(full: FullState, legal: NeutralAction[], hooks: RenderHooks): void {
+function renderChoice(s: Session, full: FullState, legal: NeutralAction[], hooks: RenderHooks): void {
   document.querySelector(".choice-modal")?.remove();
   promptPlaceCleanup?.();
   document.querySelector(".choice-prompt-bar")?.remove();
@@ -852,8 +854,9 @@ function renderChoice(full: FullState, legal: NeutralAction[], hooks: RenderHook
   const modal = document.createElement("div");
   modal.className = "choice-modal";
   const title = "modes" in node ? "Choose an effect:" : choicePrompt(node);
+  const modeInfo = sessionModeChoiceInfo(s);
   const buttons = chooses.map((act, i) => {
-    const label = labelChooseAction(act, node, full, acting);
+    const label = labelChooseAction(act, node, modeInfo);
     const earth = /earth rite|sigil/i.test(label)
       ? `<span class="earth-rite-cost">(Consume Earth Sigil)</span>`
       : "";
@@ -1068,15 +1071,13 @@ function choicePrompt(node: ChoiceNode): string {
 function labelChooseAction(
   act: NeutralAction,
   node: ChoiceNode,
-  full: FullState,
-  acting: PlayerId,
+  modeInfo: ModeChoiceInfo | null,
 ): string {
   if (!("choose" in act)) return "Option";
   const o = act.choose.option;
   if (typeof o === "object" && o && "card" in o) return lookupText(o.card).name;
   if (typeof o === "object" && o && "mode" in o) {
-    const last = full.players[acting].played_this_turn?.slice(-1)[0];
-    const printed = last ? lookupText(last).modes?.[o.mode] : undefined;
+    const printed = modeInfo?.options?.[o.mode];
     return printed || `Mode ${o.mode + 1}`;
   }
   if (o === "leader") return "Leader";

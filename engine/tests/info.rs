@@ -3,9 +3,12 @@
 mod common;
 
 use arena_engine::{
-    apply, board_info, hand_info, legal_actions, player_info, Action, PlayerId, Slot,
+    apply, board_info, hand_info, legal_actions, mode_choice_info, player_info, Action, Phase,
+    PlayerId, Slot,
 };
-use common::{end_turn, give_pp, load_db, play_id, put_field, put_hand, started};
+use common::{
+    choose, end_turn, give_pp, load_db, play_id, put_field, put_hand, skip_to_player_turn, started,
+};
 
 #[test]
 fn depths_of_the_eld_sword_enhance_at_8_pp() {
@@ -592,4 +595,128 @@ fn combo_board_gate_does_not_double_count() {
         "board have is combo after the play, not +1 again"
     );
     assert!(combo.met);
+}
+
+const ITSURUGI: &str = "10854110";
+const CRYSTALSPAWN: &str = "10631110";
+const GOLDEN_KNIGHT: &str = "10423110";
+const BITTERSWEET: &str = "10852310";
+
+const ITSURUGI_FANFARE: [&str; 2] = [
+    "1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.",
+    "2. Deal 5 damage to all enemy followers. Recover 1 evolution point.",
+];
+const ITSURUGI_EVOLVE: [&str; 2] = ["1. Draw 2 cards.", "2. Recover 2 play points."];
+const GOLDEN_KNIGHT_FANFARE: [&str; 3] = [
+    "1. Super-evolve this follower.",
+    "2. Deal 4 damage to all enemy followers.",
+    "3. Restore 4 defense to your leader.",
+];
+const BITTERSWEET_OPTIONS: [&str; 4] = [
+    "1. Deal 1 damage to the enemy leader.",
+    "2. Restore 2 defense to your leader.",
+    "3. Deal 3 damage to a random enemy follower.",
+    "4. Gain 4 shadows.",
+];
+
+fn assert_modes_open(st: &arena_engine::State) {
+    assert!(
+        matches!(
+            st.phase,
+            Phase::Choice {
+                node: arena_engine::ChoiceNode::Modes { .. },
+                ..
+            }
+        ),
+        "expected open Modes choice, got {:?}",
+        st.phase
+    );
+}
+
+#[test]
+fn mode_choice_info_itsurugi_fanfare() {
+    let db = load_db();
+    let mut st = started(&db, 1);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    give_pp(&mut st, me, 8, 8);
+    play_id(&db, &mut st, me, ITSURUGI);
+    assert_modes_open(&st);
+    let info = mode_choice_info(&db, &st).expect("fanfare modes");
+    assert_eq!(info.source, ITSURUGI);
+    assert_eq!(info.options.as_slice(), ITSURUGI_FANFARE);
+}
+
+#[test]
+fn mode_choice_info_itsurugi_evolve_after_other_play() {
+    let db = load_db();
+    let mut st = started(&db, 2);
+    let me = PlayerId::A;
+    skip_to_player_turn(&db, &mut st, me, 5);
+    st.player_mut(me).hand.clear();
+    give_pp(&mut st, me, 8, 8);
+    st.player_mut(me).ep = 1;
+    play_id(&db, &mut st, me, ITSURUGI);
+    assert_modes_open(&st);
+    choose(&db, &mut st, 0);
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
+    assert_eq!(st.active, me);
+    give_pp(&mut st, me, 9, 9);
+    play_id(&db, &mut st, me, CRYSTALSPAWN);
+    assert!(
+        matches!(st.phase, Phase::Main),
+        "crystalspawn should not pause: {:?}",
+        st.phase
+    );
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: Slot(0),
+            super_evolve: false,
+        },
+    )
+    .expect("evolve itsurugi");
+    assert_modes_open(&st);
+    let info = mode_choice_info(&db, &st).expect("evolve modes");
+    assert_eq!(info.source, ITSURUGI);
+    assert_eq!(info.options.as_slice(), ITSURUGI_EVOLVE);
+}
+
+#[test]
+fn mode_choice_info_golden_knight_fanfare() {
+    let db = load_db();
+    let mut st = started(&db, 3);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    give_pp(&mut st, me, 7, 7);
+    play_id(&db, &mut st, me, GOLDEN_KNIGHT);
+    assert_modes_open(&st);
+    let info = mode_choice_info(&db, &st).expect("golden knight fanfare");
+    assert_eq!(info.source, GOLDEN_KNIGHT);
+    assert_eq!(info.options.as_slice(), GOLDEN_KNIGHT_FANFARE);
+}
+
+#[test]
+fn mode_choice_info_bittersweet_after_first_pick() {
+    let db = load_db();
+    let mut st = started(&db, 4);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    give_pp(&mut st, me, 3, 3);
+    play_id(&db, &mut st, me, BITTERSWEET);
+    assert_modes_open(&st);
+    choose(&db, &mut st, 3);
+    assert_modes_open(&st);
+    let info = mode_choice_info(&db, &st).expect("second pick still lists all modes");
+    assert_eq!(info.source, BITTERSWEET);
+    assert_eq!(info.options.as_slice(), BITTERSWEET_OPTIONS);
+}
+
+#[test]
+fn mode_choice_info_none_without_modes_node() {
+    let db = load_db();
+    let st = started(&db, 5);
+    assert_eq!(mode_choice_info(&db, &st), None);
 }

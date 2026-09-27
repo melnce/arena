@@ -108,6 +108,12 @@ impl Game {
         self.inner.player_info(&player).map_err(JsValue::from)
     }
 
+    /// `ModeChoiceInfo` JSON while a mode choice is open; `null` otherwise.
+    #[wasm_bindgen(js_name = modeChoiceInfo)]
+    pub fn mode_choice_info(&self) -> Result<String, JsValue> {
+        self.inner.mode_choice_info().map_err(JsValue::from)
+    }
+
     /// Replace the live RNG. Canonical `hash` is unchanged.
     pub fn reseed(&mut self, seed: JsValue) -> Result<(), JsValue> {
         let seed = seed_from_js(&seed)?;

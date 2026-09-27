@@ -65,7 +65,6 @@ export type CardText = {
   cost: number | null;
   attack?: number | null;
   defense?: number | null;
-  modes?: string[];
   crests?: CrestText[];
   forms?: CardForm[];
   grantedBy?: string;
@@ -163,6 +162,11 @@ export type BoardCardInfo = {
   cannot_attack_reason?: string | null;
   /** First of X, then Y, then Z when the amulet has no countdown. */
   named_counter?: number | null;
+};
+
+export type ModeChoiceInfo = {
+  source: string;
+  options: string[];
 };
 
 export type PlayerInfo = {

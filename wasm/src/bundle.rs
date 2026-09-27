@@ -52,7 +52,6 @@ pub fn card_text(id: &str) -> Result<String, String> {
                 "cost": card.cost(),
                 "attack": card.attack(),
                 "defense": card.defense(),
-                "modes": choose_printed(card),
                 "crests": card_crest_entries(db, card),
                 "forms": card_forms(card),
             }))
@@ -132,30 +131,6 @@ fn kind_str(kind: arena_engine::card::CardKind) -> &'static str {
         arena_engine::card::CardKind::Follower => "follower",
         arena_engine::card::CardKind::Spell => "spell",
         arena_engine::card::CardKind::Amulet => "amulet",
-    }
-}
-
-fn choose_printed(card: &Card) -> Vec<String> {
-    let mut out = Vec::new();
-    collect_choose_abilities(card.abilities(), &mut out);
-    for mode in card.modes() {
-        match mode {
-            Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => {
-                collect_choose_effects(effects, &mut out);
-            }
-            Mode::Crystallize { abilities, .. } => {
-                if let Some(abs) = abilities {
-                    collect_choose_abilities(abs, &mut out);
-                }
-            }
-        }
-    }
-    out
-}
-
-fn collect_choose_abilities(abilities: &[Ability], out: &mut Vec<String>) {
-    for a in abilities {
-        collect_choose_effects(a.effects(), out);
     }
 }
 
@@ -287,43 +262,6 @@ fn collect_crest_gains_effects(
                 collect_crest_gains_effects(ability.effects(), ids, seen);
             }
             _ => {}
-        }
-    }
-}
-
-fn collect_choose_effects(effects: &[Effect], out: &mut Vec<String>) {
-    for e in effects {
-        if let Effect::Choose {
-            options: Some(opts),
-            ..
-        } = e
-        {
-            for o in opts {
-                if !out.contains(&o.printed) {
-                    out.push(o.printed.clone());
-                }
-                collect_choose_effects(&o.effects, out);
-            }
-        }
-        if let Effect::Sequence { steps, .. } = e {
-            for s in steps {
-                collect_choose_effects(&s.effects, out);
-            }
-        }
-        if let Effect::If {
-            then, else_effects, ..
-        } = e
-        {
-            collect_choose_effects(then, out);
-            if let Some(els) = else_effects {
-                collect_choose_effects(els, out);
-            }
-        }
-        if let Effect::Seq { effects, .. }
-        | Effect::Repeat { effects, .. }
-        | Effect::Pay { effects, .. } = e
-        {
-            collect_choose_effects(effects, out);
         }
     }
 }

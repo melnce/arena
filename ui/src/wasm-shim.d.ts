@@ -23,6 +23,7 @@ declare module "../pkg/arena_wasm.js" {
     handInfo(player: string): string;
     boardInfo(player: string): string;
     playerInfo(player: string): string;
+    modeChoiceInfo(): string;
     reseed(seed: number | bigint | string): void;
     debugGrantCantAttackLeader(player: string, slot: number): void;
   }

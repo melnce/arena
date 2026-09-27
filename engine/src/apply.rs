@@ -6361,7 +6361,7 @@ fn card_source_choose_pool(src: &CardSource) -> Option<&PoolSelector> {
     }
 }
 
-fn resolve_choose_options(
+pub(crate) fn resolve_choose_options(
     db: &CardDb,
     state: &State,
     source: SourceRef,
@@ -6444,7 +6444,7 @@ fn first_choose_options(effects: &[Effect]) -> Option<Vec<ChooseOption>> {
     None
 }
 
-fn source_card_id(state: &State, source: SourceRef) -> Option<CardId> {
+pub(crate) fn source_card_id(state: &State, source: SourceRef) -> Option<CardId> {
     match source {
         SourceRef::Field { player, id } => state
             .find_field(player, id)
