@@ -4,7 +4,9 @@
 use serde::Serialize;
 
 use crate::action::{acting_player, Action};
-use crate::apply::{eval_cond, legal_actions, resolve_choose_options, resolve_select, source_card_id};
+use crate::apply::{
+    eval_cond, legal_actions, resolve_choose_options, resolve_select, source_card_id,
+};
 use crate::card::{
     Ability, Amount, CardKind, Class, Condition, CounterKey, Effect, FieldHasKind, Filter,
     FilterKind, Mode, NamedCounter, PayResource, Selector, SelectorKind, Side, Tribe, TribeOrList,

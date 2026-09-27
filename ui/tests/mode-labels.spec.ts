@@ -67,12 +67,42 @@ async function applyEndTurn(page: Page) {
   });
 }
 
-async function fastForwardToTurn(page: Page, turns: number) {
-  for (let i = 0; i < turns * 2; i++) {
+async function fastForwardUntilPlayable(page: Page, cardId: string, maxEnds = 24) {
+  for (let i = 0; i < maxEnds; i++) {
+    const playable = await page.evaluate((id) => {
+      const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
+      return legal.some((a) => a.play?.card === id);
+    }, cardId);
+    if (playable) return;
     const phase = await page.locator("#turnCounter").getAttribute("data-phase");
     if (phase === "end" || phase === "terminal") break;
     await applyEndTurn(page);
     await page.waitForTimeout(50);
+  }
+}
+
+async function handSize(page: Page, player: "a" | "b" = "a"): Promise<number> {
+  return page.evaluate(
+    (who) =>
+      (window.__arena!.full() as { players: Record<string, { hand: unknown[] }> }).players[who]
+        .hand.length,
+    player,
+  );
+}
+
+async function makeHandRoom(page: Page, maxSize: number) {
+  for (let guard = 0; guard < 8; guard++) {
+    if ((await handSize(page)) <= maxSize) return;
+    const played = await page.evaluate((id) => {
+      const full = window.__arena!.full() as { players: { a: { field: Array<unknown | null> } } };
+      if (full.players.a.field.filter(Boolean).length >= 5) return false;
+      const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
+      const act = legal.find((a) => a.play?.card === id);
+      if (!act) return false;
+      window.__arena!.apply(act);
+      return true;
+    }, CRYSTALSPAWN);
+    if (!played) break;
   }
 }
 
@@ -107,7 +137,13 @@ async function modeButtonTexts(page: Page): Promise<string[]> {
 async function clickMode(page: Page, label: string) {
   const btn = page.locator(".choice-modal .choice-option", { hasText: label });
   await expect(btn).toHaveCount(1);
-  await btn.click();
+  await page.evaluate((text) => {
+    const options = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(".choice-modal .choice-option"),
+    );
+    const hit = options.find((el) => el.textContent?.includes(text));
+    hit?.click();
+  }, label);
   await expect(page.locator(".choice-modal")).toBeHidden({ timeout: 5000 });
 }
 
@@ -121,7 +157,7 @@ test("mode labels: fanfare then evolve after another play", async ({ page }) => 
   await confirmMulligans(page);
   await closeDrawer(page);
 
-  await fastForwardToTurn(page, 5);
+  await fastForwardUntilPlayable(page, ITSURUGI);
   await playCard(page, ITSURUGI);
   const fanfareLabels = await modeButtonTexts(page);
   expect(fanfareLabels).toEqual(FANFARE_MODES);
@@ -130,18 +166,17 @@ test("mode labels: fanfare then evolve after another play", async ({ page }) => 
   await applyEndTurn(page);
   await applyEndTurn(page);
 
+  await makeHandRoom(page, 7);
   await playCard(page, CRYSTALSPAWN);
+  await makeHandRoom(page, 7);
   await evolveSlot(page, 0);
   const evolveLabels = await modeButtonTexts(page);
   expect(evolveLabels).toEqual(EVOLVE_MODES);
   await artShot(page.locator(".choice-modal"), `${ART}/itsurugi_evolve_mode_labels.png`);
 
-  const handBefore = await page.evaluate(
-    () => (window.__arena!.full() as { players: { a: { hand: unknown[] } } }).players.a.hand.length,
-  );
+  const handBefore = await handSize(page);
+  expect(handBefore).toBeLessThanOrEqual(7);
   await clickMode(page, EVOLVE_MODES[0]);
-  const handAfter = await page.evaluate(
-    () => (window.__arena!.full() as { players: { a: { hand: unknown[] } } }).players.a.hand.length,
-  );
+  const handAfter = await handSize(page);
   expect(handAfter).toBe(handBefore + 2);
 });

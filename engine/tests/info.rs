@@ -606,10 +606,7 @@ const ITSURUGI_FANFARE: [&str; 2] = [
     "1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.",
     "2. Deal 5 damage to all enemy followers. Recover 1 evolution point.",
 ];
-const ITSURUGI_EVOLVE: [&str; 2] = [
-    "1. Draw 2 cards.",
-    "2. Recover 2 play points.",
-];
+const ITSURUGI_EVOLVE: [&str; 2] = ["1. Draw 2 cards.", "2. Recover 2 play points."];
 const GOLDEN_KNIGHT_FANFARE: [&str; 3] = [
     "1. Super-evolve this follower.",
     "2. Deal 4 damage to all enemy followers.",

@@ -7,8 +7,7 @@ use arena_engine::action::acting_player;
 use arena_engine::{
     apply_neutral, board_info, by_name, hand_info, hash, legal_actions, legal_actions_neutral,
     mode_choice_info, names, new_game, player_info, policy_rng, snapshot_json, to_neutral, CardDb,
-    CardId, First,
-    GameConfig, NeutralAction, PlayerId, Policy, State,
+    CardId, First, GameConfig, NeutralAction, PlayerId, Policy, State,
 };
 
 use crate::bundle::card_db;

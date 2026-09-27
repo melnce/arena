@@ -113,10 +113,16 @@ const deckB = fs.readFileSync(deckBPath, "utf8");
 ensureTraces();
 
 function drainToMain(game) {
-  const mull = { mulligan: { player: "a", swap: [false, false, false, false] } };
-  game.apply(JSON.stringify(mull));
-  mull.player = "b";
-  game.apply(JSON.stringify(mull));
+  game.apply(
+    JSON.stringify({
+      mulligan: { player: "a", swap: [false, false, false, false] },
+    }),
+  );
+  game.apply(
+    JSON.stringify({
+      mulligan: { player: "b", swap: [false, false, false, false] },
+    }),
+  );
 }
 
 function applyEndTurn(game) {
@@ -131,9 +137,13 @@ function modeChoiceInfoSmoke() {
   try {
     drainToMain(game);
     assert.equal(game.modeChoiceInfo(), "null");
-    for (let i = 0; i < 10; i++) applyEndTurn(game);
-    const legal = JSON.parse(game.legal());
-    const play = legal.find((a) => a.play?.card === "10854110");
+    let play;
+    for (let i = 0; i < 20; i++) {
+      const legal = JSON.parse(game.legal());
+      play = legal.find((a) => a.play?.card === "10854110");
+      if (play) break;
+      applyEndTurn(game);
+    }
     assert.ok(play, "Itsurugi playable after turn skip");
     game.apply(JSON.stringify(play));
     const info = JSON.parse(game.modeChoiceInfo());
