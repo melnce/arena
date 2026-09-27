@@ -122,6 +122,11 @@ jobs:
             filter: ""
             ignored: true
             timeout: 25
+          - suite: h0_horizon
+            test: h0_horizon
+            filter: ""
+            ignored: true
+            timeout: 45
     steps:
       - uses: actions/checkout@v4
 

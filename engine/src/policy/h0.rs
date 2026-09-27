@@ -31,6 +31,12 @@ use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
 
 use super::explain::{CandidateRecord, ChoosePath, ExplainRecord, Line, PvEnd, PvTracker};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HorizonCutoff {
+    Depth,
+    Cap,
+}
 use super::mulligan::{deck_fingerprint_player, mulligan_seat, MulliganTable};
 use super::needs::NeedsTable;
 use super::net::ValueNet;
@@ -193,6 +199,7 @@ const INF: f32 = 1.0e9;
 /// Default saturation bound (`wv`) on every accumulated value. 80 is
 /// today's clamp; it sits inside the reachable live range of [`value_v0`].
 const DEFAULT_WV: f32 = 80.0;
+const DEFAULT_HRES: u32 = 200;
 
 /// Per-decision search counters, accumulated across [`H0::choose`] calls.
 #[derive(Default, Clone, Debug)]
@@ -241,6 +248,12 @@ pub struct SearchStats {
     /// Uncharged `apply`s used to finish a fuse partner choice at a leaf
     /// (`fusemacro=1` only).
     pub fuse_overshoot: u64,
+    /// Leaves scored through `horizon` finish-and-reply.
+    pub horizon_leaves: u64,
+    /// Reserve nodes spent on those leaves (not charged to the pair budget).
+    pub horizon_nodes: u64,
+    /// Mid-turn horizon finish could not end the turn — bare value used.
+    pub horizon_fallback: u64,
     /// Mulligans decided from a found deck entry (`mull=<table>`).
     pub mull_table: u64,
     /// Table mode, deck fingerprint not found — rule used for the whole hand.
@@ -276,6 +289,9 @@ impl SearchStats {
         self.lethal_nodes += other.lethal_nodes;
         self.unscored += other.unscored;
         self.fuse_overshoot += other.fuse_overshoot;
+        self.horizon_leaves += other.horizon_leaves;
+        self.horizon_nodes += other.horizon_nodes;
+        self.horizon_fallback += other.horizon_fallback;
         self.mull_table += other.mull_table;
         self.mull_fallback += other.mull_fallback;
         self.open_hidden += other.open_hidden;
@@ -375,6 +391,12 @@ pub struct H0 {
     /// Value prior: add `bppv` per usable Bonus PP charge for the evaluated
     /// player, subtract for the opponent (default `0` = today).
     pub bppv: f32,
+    /// Score leaves through the opponent reply after the bot's turn ends.
+    /// `0` = today; `1` = finished turns always answered; `2` = mid-turn
+    /// cut-offs end the turn there; `3` = greedy finish before `EndTurn`.
+    pub horizon: u32,
+    /// Reserve node budget for horizon finish-and-reply (default `200`).
+    pub hres: u32,
 }
 
 impl Default for H0 {
@@ -411,6 +433,8 @@ impl Default for H0 {
             bpp1: 1,
             bpp2: 6,
             bppv: 0.0,
+            horizon: 0,
+            hres: DEFAULT_HRES,
         }
     }
 }
@@ -848,6 +872,8 @@ impl Policy for H0 {
                                 table.as_mut(),
                                 tracker.as_mut(),
                                 self.fusemacro,
+                                self.horizon,
+                                self.hres,
                             )
                         };
                         if let Some(t) = tracker.as_mut() {
@@ -940,6 +966,7 @@ impl Policy for H0 {
         self.stats.accum(&dec_stats);
         if let Some(mut rec) = explain_rec {
             rec.nodes = nodes;
+            rec.horizon_nodes = dec_stats.horizon_nodes as u32;
             self.explain = Some(rec);
         }
         pick
@@ -1552,6 +1579,234 @@ fn best_fuse_main_child(
     best
 }
 
+fn horizon_work_cap(nodes: u32, cap: u32, hres: u32) -> u32 {
+    nodes + cap.saturating_sub(nodes).max(hres)
+}
+
+fn charge_horizon_work(
+    nodes_before: u32,
+    nodes_after: u32,
+    cap: u32,
+    stats: &mut SearchStats,
+    track: Option<&mut PvTracker>,
+) {
+    let charged = nodes_after.min(cap).saturating_sub(nodes_before.min(cap));
+    let total = nodes_after.saturating_sub(nodes_before);
+    let uncharged = total - charged;
+    if uncharged > 0 {
+        stats.horizon_nodes += u64::from(uncharged);
+        if let Some(t) = track {
+            t.add_horizon_nodes(uncharged);
+        }
+    }
+}
+
+fn horizon_reply_end(cutoff: HorizonCutoff) -> PvEnd {
+    match cutoff {
+        HorizonCutoff::Depth => PvEnd::DepthReply,
+        HorizonCutoff::Cap => PvEnd::CapReply,
+    }
+}
+
+fn fix_horizon_pv_end(track: Option<&mut PvTracker>, cutoff: HorizonCutoff) {
+    if let Some(t) = track {
+        if let Some(mut line) = t.take_last() {
+            if line.end != PvEnd::OppLethal {
+                line.end = horizon_reply_end(cutoff);
+            }
+            t.restore_last(Some(line));
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn resolve_bot_choices(
+    db: &CardDb,
+    state: &mut State,
+    me: PlayerId,
+    nodes: &mut u32,
+    work_cap: u32,
+    line: &mut Vec<u64>,
+    eval: Evaluator<'_>,
+    mut track: Option<&mut PvTracker>,
+) -> bool {
+    while matches!(state.phase, Phase::Choice { player, .. } if player == me) {
+        if *nodes >= work_cap {
+            return false;
+        }
+        let legal = legal_actions(db, state);
+        if legal.is_empty() {
+            return false;
+        }
+        let i = greedy_index(db, state, &legal, me, nodes, work_cap, line, eval);
+        let Some(next) = try_apply(db, state, &legal[i], nodes, work_cap, line) else {
+            return false;
+        };
+        if let Some(t) = track.as_deref_mut() {
+            t.push(legal[i].clone());
+        }
+        line.push(search_key(&next));
+        *state = next;
+    }
+    true
+}
+
+#[allow(clippy::too_many_arguments)]
+fn try_bot_end_turn(
+    db: &CardDb,
+    state: &mut State,
+    me: PlayerId,
+    nodes: &mut u32,
+    work_cap: u32,
+    line: &mut Vec<u64>,
+    mut track: Option<&mut PvTracker>,
+) -> bool {
+    if acting_player(state) != me {
+        return true;
+    }
+    if !matches!(state.phase, Phase::Main | Phase::Combat) {
+        return false;
+    }
+    let legal = legal_actions(db, state);
+    let Some(et) = legal.iter().find(|a| matches!(a, Action::EndTurn)) else {
+        return false;
+    };
+    if *nodes >= work_cap {
+        return false;
+    }
+    let Some(next) = try_apply(db, state, et, nodes, work_cap, line) else {
+        return false;
+    };
+    if let Some(t) = track.as_mut() {
+        t.push(et.clone());
+    }
+    line.push(search_key(&next));
+    *state = next;
+    true
+}
+
+fn bot_turn_still_active(state: &State, me: PlayerId) -> bool {
+    acting_player(state) == me
+        && !matches!(state.phase, Phase::Terminal)
+        && matches!(
+            state.phase,
+            Phase::Main | Phase::Combat | Phase::Choice { .. }
+        )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn finish_bot_turn_horizon(
+    db: &CardDb,
+    state: &mut State,
+    me: PlayerId,
+    horizon: u32,
+    nodes: &mut u32,
+    work_cap: u32,
+    line: &mut Vec<u64>,
+    eval: Evaluator<'_>,
+    mut track: Option<&mut PvTracker>,
+) -> bool {
+    if horizon >= 3 {
+        greedy_until_end(
+            db,
+            state,
+            me,
+            nodes,
+            work_cap,
+            line,
+            eval,
+            track.as_deref_mut(),
+        );
+    } else if !resolve_bot_choices(
+        db,
+        state,
+        me,
+        nodes,
+        work_cap,
+        line,
+        eval,
+        track.as_deref_mut(),
+    ) {
+        return false;
+    }
+    if bot_turn_still_active(state, me)
+        && !try_bot_end_turn(db, state, me, nodes, work_cap, line, track)
+    {
+        return false;
+    }
+    !bot_turn_still_active(state, me)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn horizon_score_leaf(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    hres: u32,
+    horizon: u32,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    odepth: u32,
+    obeam: usize,
+    stats: &mut SearchStats,
+    mut track: Option<&mut PvTracker>,
+    cutoff: HorizonCutoff,
+) -> f32 {
+    let nodes_before = *nodes;
+    let work_cap = horizon_work_cap(*nodes, cap, hres);
+    let mut reply_state = state.clone();
+    let mut reply_line = line.to_vec();
+
+    if horizon >= 2
+        && bot_turn_still_active(&reply_state, me)
+        && !finish_bot_turn_horizon(
+            db,
+            &mut reply_state,
+            me,
+            horizon,
+            nodes,
+            work_cap,
+            &mut reply_line,
+            eval,
+            track.as_deref_mut(),
+        )
+    {
+        stats.horizon_fallback += 1;
+        let v = eval.value(state, me);
+        let end = match cutoff {
+            HorizonCutoff::Depth => PvEnd::Depth,
+            HorizonCutoff::Cap => PvEnd::Cap,
+        };
+        if let Some(t) = track.as_mut() {
+            t.set_leaf(v, end, state);
+        }
+        return v;
+    }
+
+    let v = opponent_reply(
+        db,
+        &reply_state,
+        me,
+        nodes,
+        work_cap,
+        &reply_line,
+        eval,
+        odepth,
+        obeam,
+        stats,
+        None,
+        track.as_deref_mut(),
+    );
+    charge_horizon_work(nodes_before, *nodes, cap, stats, track.as_deref_mut());
+    stats.horizon_leaves += 1;
+    if horizon >= 2 || (horizon >= 1 && nodes_before >= cap) {
+        fix_horizon_pv_end(track, cutoff);
+    }
+    v
+}
+
 #[allow(clippy::too_many_arguments, clippy::needless_option_as_deref)]
 fn search_own_fuse_choice(
     db: &CardDb,
@@ -1568,6 +1823,9 @@ fn search_own_fuse_choice(
     stats: &mut SearchStats,
     mut tt: Option<&mut Tt>,
     mut track: Option<&mut PvTracker>,
+    fusemacro: bool,
+    horizon: u32,
+    hres: u32,
 ) -> f32 {
     if depth == 0 || *nodes >= cap {
         return fuse_overshoot_score(
@@ -1634,7 +1892,9 @@ fn search_own_fuse_choice(
             stats,
             tt.as_deref_mut(),
             track.as_deref_mut(),
-            true,
+            fusemacro,
+            horizon,
+            hres,
         );
         if v > best {
             best = v;
@@ -1684,6 +1944,8 @@ fn search_own(
     mut tt: Option<&mut Tt>,
     mut track: Option<&mut PvTracker>,
     fusemacro: bool,
+    horizon: u32,
+    hres: u32,
 ) -> f32 {
     if state.winner == Some(me) {
         if let Some(t) = track.as_deref_mut() {
@@ -1697,6 +1959,27 @@ fn search_own(
         }
         return -INF;
     }
+    if horizon >= 1
+        && *nodes >= cap
+        && (acting_player(state) != me || matches!(state.phase, Phase::Terminal))
+    {
+        return horizon_score_leaf(
+            db,
+            state,
+            me,
+            nodes,
+            cap,
+            hres,
+            horizon,
+            line,
+            eval,
+            odepth,
+            obeam,
+            stats,
+            track.as_deref_mut(),
+            HorizonCutoff::Cap,
+        );
+    }
     if *nodes >= cap {
         if fusemacro && own_fuse_partners(state, me).is_some() {
             return fuse_overshoot_score(
@@ -1708,6 +1991,24 @@ fn search_own(
                 stats,
                 track.as_deref_mut(),
                 PvEnd::Cap,
+            );
+        }
+        if horizon >= 2 && bot_turn_still_active(state, me) {
+            return horizon_score_leaf(
+                db,
+                state,
+                me,
+                nodes,
+                cap,
+                hres,
+                horizon,
+                line,
+                eval,
+                odepth,
+                obeam,
+                stats,
+                track.as_deref_mut(),
+                HorizonCutoff::Cap,
             );
         }
         let v = eval.value(state, me);
@@ -1743,9 +2044,28 @@ fn search_own(
     if fusemacro && own_fuse_partners(state, me).is_some() {
         return search_own_fuse_choice(
             db, state, me, depth, beam, nodes, cap, line, eval, odepth, obeam, stats, tt, track,
+            fusemacro, horizon, hres,
         );
     }
     if depth == 0 {
+        if horizon >= 2 && bot_turn_still_active(state, me) {
+            return horizon_score_leaf(
+                db,
+                state,
+                me,
+                nodes,
+                cap,
+                hres,
+                horizon,
+                line,
+                eval,
+                odepth,
+                obeam,
+                stats,
+                track.as_deref_mut(),
+                HorizonCutoff::Depth,
+            );
+        }
         let v = eval.value(state, me);
         if let Some(t) = track.as_deref_mut() {
             t.set_leaf(v, PvEnd::Depth, state);
@@ -1838,6 +2158,8 @@ fn search_own(
             tt.as_deref_mut(),
             track.as_deref_mut(),
             fusemacro,
+            horizon,
+            hres,
         );
         if v > best {
             best = v;

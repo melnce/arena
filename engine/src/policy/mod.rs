@@ -185,7 +185,8 @@ impl AnyPolicy {
     /// / `info=draws` / `info=all` when the information regime is not the
     /// default `open`, `mull=rule` / `mull=random` / `mull=<path>` when the
     /// mulligan mode is not the built-in table, any non-default weight,
-    /// non-default `lcap`, and non-default `clip`.
+    /// non-default `lcap`, non-default `clip`, non-default `horizon`, and
+    /// non-default `hres`.
     /// `"h0"` still round-trips to `"h0"`.
     pub fn spec(&self) -> String {
         match self {
@@ -301,6 +302,12 @@ fn h0_spec(h: &H0) -> String {
     if h.bppv != def.bppv {
         parts.push(format!("bppv={}", h.bppv));
     }
+    if h.horizon != def.horizon {
+        parts.push(format!("horizon={}", h.horizon));
+    }
+    if h.hres != def.hres {
+        parts.push(format!("hres={}", h.hres));
+    }
     match h.mull {
         MullMode::Rule => parts.push("mull=rule".to_string()),
         MullMode::Random => parts.push("mull=random".to_string()),
@@ -338,6 +345,8 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.bpp1 == b.bpp1
         && a.bpp2 == b.bpp2
         && a.bppv == b.bppv
+        && a.horizon == b.horizon
+        && a.hres == b.hres
         && weights_eq(&a.weights, &b.weights)
 }
 
@@ -483,6 +492,20 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     return Err(format!("bppv out of range '{val}'"));
                 }
                 h.bppv = v;
+            }
+            "horizon" => {
+                let v: u32 = parse_num(val)?;
+                if v > 3 {
+                    return Err(format!("horizon out of range '{val}'"));
+                }
+                h.horizon = v;
+            }
+            "hres" => {
+                let v: u32 = parse_num(val)?;
+                if v < 1 {
+                    return Err(format!("hres out of range '{val}'"));
+                }
+                h.hres = v;
             }
             "mull" => match val {
                 "builtin" => {
