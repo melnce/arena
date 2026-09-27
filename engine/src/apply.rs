@@ -16,8 +16,10 @@ use crate::ids::{AttackTarget, First, PlayerId, Slot};
 use crate::rng::GameRng;
 use crate::state::{
     Aftermath, BoundRef, CardInstance, ChoiceNode, CrestInstance, DestroyedRecord, GameConfig,
-    LeaderMod, PendingChoice, PendingKind, Phase, PlayForm, PlayerState, QueuedTrigger, SourceRef,
-    State, TargetOpt, TempTraitGrant, WorkFrame, CREST_CAP, DECK_SIZE, HAND_LIMIT, PP_CAP,
+    LeaderMod, PendingChoice, PendingKind, PendingPlayChoices, Phase, PlayCapture,
+    PlayCapturedTarget, PlayForm, PlayPickState, PlayPickStep, PlayerState, QueuedTrigger,
+    SourceRef, State, TargetOpt, TempTraitGrant, WorkFrame, CREST_CAP, DECK_SIZE, HAND_LIMIT,
+    PP_CAP,
 };
 use crate::support;
 use crate::trace::{NeutralAction, PickWhat};
@@ -61,6 +63,9 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         suppress_last_words: false,
         bindings: std::collections::BTreeMap::new(),
         pending_play_rally: None,
+        deferred_play_rx: None,
+        play_picks: None,
+        pending_play_choices: None,
         event_subject: None,
         invoked_ids: std::collections::BTreeSet::new(),
         event_base_cost: None,
@@ -1091,6 +1096,8 @@ fn apply_play(
     }
     let play_rx = std::mem::take(&mut state.queue);
     let played_id = inst.id;
+    let (body_src, body_effects) =
+        play_body_effects(db, state, me, kind, inst.card, card, &inst, &effects);
     if kind == CardKind::Spell {
         let src = SourceRef::Spell {
             player: me,
@@ -1117,7 +1124,12 @@ fn apply_play(
             state.event_inst_id = Some(played_id);
         }
     }
-    flush_play_reactions_ahead(state, play_rx);
+    let play_steps = collect_play_time_steps(db, state, me, body_src, &body_effects);
+    if play_steps.is_empty() {
+        flush_play_reactions_ahead(state, play_rx);
+    } else {
+        begin_play_time_choices(db, state, me, body_src, play_rx, play_steps, events)?;
+    }
     Ok(())
 }
 
@@ -1707,9 +1719,14 @@ fn apply_choose(
                     },
                 };
             } else {
-                state.phase = Phase::Main;
-                picked.sort_unstable();
-                resume_modes(db, state, player, &picked, pending, events)?;
+                if pending.kind == PendingKind::PlaySelect {
+                    picked.sort_unstable();
+                    complete_play_pick(db, state, player, PlayCapture::Modes(picked), events)?;
+                } else {
+                    state.phase = Phase::Main;
+                    picked.sort_unstable();
+                    resume_modes(db, state, player, &picked, pending, events)?;
+                }
             }
         }
         ChoiceNode::Targets { options, pending } => {
@@ -1718,13 +1735,35 @@ fn apply_choose(
             // arena-trace → arena-replay keeps hand order.
             let idx = lowest_hand_copy_index(state, &options, i as usize);
             let opt = options.get(idx).cloned().ok_or(Illegal::NotLegal)?;
-            state.phase = Phase::Main;
-            resume_target(db, state, player, opt, pending, events)?;
+            if pending.kind == PendingKind::PlaySelect {
+                let cap = capture_play_target(state, opt.clone());
+                let left = pending.remaining.saturating_sub(1);
+                if left > 0 {
+                    reopen_play_target_pick(db, state, player, cap, pending, events)?;
+                } else {
+                    let cap = finalize_play_step_capture(state, cap)?;
+                    complete_play_pick(db, state, player, cap, events)?;
+                }
+            } else {
+                state.phase = Phase::Main;
+                resume_target(db, state, player, opt, pending, events)?;
+            }
         }
         ChoiceNode::Cards { options, pending } => {
             let card = options.get(i as usize).copied().ok_or(Illegal::NotLegal)?;
-            state.phase = Phase::Main;
-            resume_target(db, state, player, TargetOpt::Card(card), pending, events)?;
+            if pending.kind == PendingKind::PlaySelect {
+                let cap = capture_play_target(state, TargetOpt::Card(card));
+                let left = pending.remaining.saturating_sub(1);
+                if left > 0 {
+                    reopen_play_target_pick(db, state, player, cap, pending, events)?;
+                } else {
+                    let cap = finalize_play_step_capture(state, cap)?;
+                    complete_play_pick(db, state, player, cap, events)?;
+                }
+            } else {
+                state.phase = Phase::Main;
+                resume_target(db, state, player, TargetOpt::Card(card), pending, events)?;
+            }
         }
         ChoiceNode::MultiPick {
             options,
@@ -3133,6 +3172,7 @@ fn drain_until_quiet(
         settle_deaths(db, state, events)?;
         if state.pending_work.is_empty() && state.queue.is_empty() {
             commit_play_rally(state);
+            clear_play_pick_state(state);
             if matches!(state.phase, Phase::Main | Phase::Combat | Phase::End) {
                 state.phase = if state.winner.is_some() {
                     Phase::Terminal
@@ -3306,6 +3346,608 @@ fn trigger_wave_in_flight(state: &State) -> bool {
         .pending_work
         .iter()
         .any(|f| matches!(f, WorkFrame::Aftermath(Aftermath::RestoreBindings(_))))
+}
+
+// =========================================================================
+// Play-time selections (owner 2026-09-27)
+// =========================================================================
+
+fn is_play_time_target_effect(
+    db: &CardDb,
+    state: &State,
+    controller: PlayerId,
+    source: SourceRef,
+    e: &Effect,
+) -> bool {
+    effect_choice_node(db, state, controller, source, e).is_some()
+}
+
+fn play_time_branch_enters(
+    db: &CardDb,
+    state: &State,
+    controller: PlayerId,
+    source: SourceRef,
+    branch: &[Effect],
+) -> bool {
+    let mut i = 0;
+    while i < branch.len() {
+        let e = &branch[i];
+        if let Some(cond) = e.when_cond() {
+            if !eval_cond(db, state, controller, Some(source), cond) {
+                i += 1;
+                continue;
+            }
+        }
+        return match e {
+            Effect::If { .. } => true,
+            Effect::Choose {
+                by: ChooseBy::Player,
+                pick,
+                ..
+            } => !matches!(pick.as_pick(), ChoosePick::All),
+            e if is_play_time_target_effect(db, state, controller, source, e) => true,
+            _ => false,
+        };
+    }
+    true
+}
+
+fn collect_play_time_steps(
+    db: &CardDb,
+    state: &State,
+    controller: PlayerId,
+    source: SourceRef,
+    effects: &[Effect],
+) -> Vec<PlayPickStep> {
+    let mut out = Vec::new();
+    let mut walk_active = true;
+    collect_play_time_steps_rec(
+        db,
+        state,
+        controller,
+        source,
+        effects,
+        &mut walk_active,
+        &mut out,
+    );
+    out
+}
+
+fn collect_play_time_steps_rec(
+    db: &CardDb,
+    state: &State,
+    controller: PlayerId,
+    source: SourceRef,
+    effects: &[Effect],
+    walk_active: &mut bool,
+    out: &mut Vec<PlayPickStep>,
+) {
+    if !*walk_active {
+        return;
+    }
+    for e in effects {
+        if !*walk_active {
+            return;
+        }
+        if let Some(cond) = e.when_cond() {
+            if !eval_cond(db, state, controller, Some(source), cond) {
+                continue;
+            }
+        }
+        match e {
+            Effect::If {
+                cond,
+                then,
+                else_effects,
+                ..
+            } => {
+                let taken = eval_cond(db, state, controller, Some(source), cond);
+                let branch = if taken {
+                    then.as_slice()
+                } else {
+                    else_effects.as_deref().unwrap_or(&[])
+                };
+                if branch.is_empty() {
+                    continue;
+                }
+                if play_time_branch_enters(db, state, controller, source, branch) {
+                    collect_play_time_steps_rec(
+                        db,
+                        state,
+                        controller,
+                        source,
+                        branch,
+                        walk_active,
+                        out,
+                    );
+                } else {
+                    *walk_active = false;
+                }
+                return;
+            }
+            Effect::Seq { effects: inner, .. }
+            | Effect::Repeat { effects: inner, .. }
+            | Effect::Pay { effects: inner, .. } => {
+                collect_play_time_steps_rec(db, state, controller, source, inner, walk_active, out);
+                return;
+            }
+            Effect::Choose {
+                by: ChooseBy::Player,
+                pick,
+                ..
+            } if !matches!(pick.as_pick(), ChoosePick::All) => {
+                out.push(PlayPickStep::Mode(e.clone()));
+                return;
+            }
+            e if is_play_time_target_effect(db, state, controller, source, e) => {
+                out.push(PlayPickStep::Target(e.clone()));
+            }
+            _ => {
+                *walk_active = false;
+                return;
+            }
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn play_body_effects(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    kind: CardKind,
+    card_id: CardId,
+    _card: &Card,
+    inst: &CardInstance,
+    effects: &[Effect],
+) -> (SourceRef, Vec<Effect>) {
+    if kind == CardKind::Spell {
+        (
+            SourceRef::Spell {
+                player: me,
+                card: inst.card,
+            },
+            effects.to_vec(),
+        )
+    } else {
+        let src = SourceRef::Field {
+            player: me,
+            id: inst.id,
+        };
+        (
+            src,
+            gated_fanfare(db, state, me, src, card_id, effects.to_vec()),
+        )
+    }
+}
+
+fn begin_play_time_choices(
+    db: &CardDb,
+    state: &mut State,
+    controller: PlayerId,
+    source: SourceRef,
+    play_rx: Vec<QueuedTrigger>,
+    steps: Vec<PlayPickStep>,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    if steps.is_empty() {
+        flush_play_reactions_ahead(state, play_rx);
+        return Ok(());
+    }
+    state.pending_play_choices = Some(PendingPlayChoices {
+        deferred_rx: play_rx,
+        steps,
+        step_idx: 0,
+        controller,
+        source,
+    });
+    state.play_picks = Some(PlayPickState {
+        captures: Vec::new(),
+        cursor: 0,
+        partial_targets: Vec::new(),
+    });
+    offer_next_play_pick(db, state, events)?;
+    Ok(())
+}
+
+fn offer_next_play_pick(
+    db: &CardDb,
+    state: &mut State,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let pending = state
+        .pending_play_choices
+        .as_ref()
+        .ok_or(Illegal::NotLegal)?;
+    let step = pending
+        .steps
+        .get(pending.step_idx)
+        .ok_or(Illegal::NotLegal)?;
+    let controller = pending.controller;
+    let source = pending.source;
+    let node = match step {
+        PlayPickStep::Target(e) => effect_choice_node(db, state, controller, source, e),
+        PlayPickStep::Mode(e) => effect_choice_node(db, state, controller, source, e),
+    };
+    let node = node.ok_or(Illegal::NotLegal)?;
+    let node = match node {
+        ChoiceNode::Targets { options, pending } => ChoiceNode::Targets {
+            options,
+            pending: PendingChoice {
+                kind: PendingKind::PlaySelect,
+                remaining: pending.remaining,
+            },
+        },
+        ChoiceNode::Modes {
+            options,
+            picked,
+            pending,
+        } => ChoiceNode::Modes {
+            options,
+            pending: PendingChoice {
+                kind: PendingKind::PlaySelect,
+                remaining: pending.remaining,
+            },
+            picked,
+        },
+        ChoiceNode::Cards { options, pending } => ChoiceNode::Cards {
+            options,
+            pending: PendingChoice {
+                kind: PendingKind::PlaySelect,
+                remaining: pending.remaining,
+            },
+        },
+        other => other,
+    };
+    state.phase = Phase::Choice {
+        player: controller,
+        node,
+    };
+    events.push(Event::ChoiceOffered {
+        player: controller,
+        node: state.phase_node(),
+    });
+    Ok(())
+}
+
+fn record_play_pick_capture(state: &mut State, capture: PlayCapture) {
+    if let Some(picks) = &mut state.play_picks {
+        picks.captures.push(capture);
+    }
+}
+
+fn capture_play_target(state: &State, opt: TargetOpt) -> PlayCapture {
+    let fallback = play_captured_from_opt(&opt);
+    match capture_targets(state, &[opt]).into_iter().next() {
+        Some(CapturedTarget::Field { player, id }) => {
+            PlayCapture::Target(PlayCapturedTarget::Field { player, id })
+        }
+        Some(CapturedTarget::Hand { player, id }) => {
+            PlayCapture::Target(PlayCapturedTarget::Hand { player, id })
+        }
+        Some(CapturedTarget::Keep(t)) => PlayCapture::Target(play_captured_from_opt(&t)),
+        None => PlayCapture::Target(fallback),
+    }
+}
+
+fn play_captured_from_opt(t: &TargetOpt) -> PlayCapturedTarget {
+    match t {
+        TargetOpt::Slot { player, slot: _ } => PlayCapturedTarget::Field {
+            player: *player,
+            id: 0, // resolved via slot at apply if id missing
+        },
+        TargetOpt::Hand { player, pos: _ } => PlayCapturedTarget::Hand {
+            player: *player,
+            id: 0,
+        },
+        TargetOpt::Leader { player } => PlayCapturedTarget::Leader { player: *player },
+        TargetOpt::Deck { player, id } => PlayCapturedTarget::Deck {
+            player: *player,
+            id: *id,
+        },
+        TargetOpt::Card(c) => PlayCapturedTarget::Card(*c),
+        TargetOpt::Mode(m) => PlayCapturedTarget::Mode(*m),
+    }
+}
+
+fn live_play_captured(state: &State, cap: &PlayCapturedTarget) -> Option<TargetOpt> {
+    match cap {
+        PlayCapturedTarget::Field { player, id } if *id != 0 => {
+            state.find_field(*player, *id).map(|slot| TargetOpt::Slot {
+                player: *player,
+                slot,
+            })
+        }
+        PlayCapturedTarget::Hand { player, id } if *id != 0 => state
+            .player(*player)
+            .hand
+            .iter()
+            .position(|c| c.id == *id)
+            .map(|pos| TargetOpt::Hand {
+                player: *player,
+                pos: pos as u8,
+            }),
+        PlayCapturedTarget::Leader { player } => Some(TargetOpt::Leader { player: *player }),
+        PlayCapturedTarget::Deck { player, id } => Some(TargetOpt::Deck {
+            player: *player,
+            id: *id,
+        }),
+        PlayCapturedTarget::Card(c) => Some(TargetOpt::Card(*c)),
+        PlayCapturedTarget::Mode(m) => Some(TargetOpt::Mode(*m)),
+        _ => None,
+    }
+}
+
+fn play_captured_matches_opt(state: &State, cap: &PlayCapturedTarget, opt: &TargetOpt) -> bool {
+    match capture_play_target(state, opt.clone()) {
+        PlayCapture::Target(t) => t == *cap,
+        _ => false,
+    }
+}
+
+fn effect_accepts_play_capture(e: &Effect) -> bool {
+    match e {
+        Effect::Choose {
+            by: ChooseBy::Player,
+            pick,
+            ..
+        } => !matches!(pick.as_pick(), ChoosePick::All),
+        Effect::Damage { select, .. }
+        | Effect::Restore { select, .. }
+        | Effect::Buff { select, .. }
+        | Effect::Select { select, .. }
+        | Effect::Destroy { select, .. }
+        | Effect::Banish { select, .. }
+        | Effect::ReturnToHand { select, .. }
+        | Effect::ReturnToDeck { select, .. }
+        | Effect::Discard { select, .. }
+        | Effect::Evolve { select, .. }
+        | Effect::GrantTraits { select, .. }
+        | Effect::RemoveTraits { select, .. }
+        | Effect::GrantAbility { select, .. }
+        | Effect::RemoveAbilities { select, .. }
+        | Effect::Cost { select, .. }
+        | Effect::Countdown { select, .. }
+        | Effect::Transform { select, .. }
+        | Effect::SpellboostHand {
+            select: Some(select),
+            ..
+        } => matches!(select, Selector::Pool(p) if p.pick == PoolPick::Choose),
+        Effect::AddToHand { card, .. } | Effect::Summon { card, .. } => {
+            card_source_choose_pool(card).is_some()
+        }
+        _ => false,
+    }
+}
+
+fn reopen_play_target_pick(
+    db: &CardDb,
+    state: &mut State,
+    player: PlayerId,
+    cap: PlayCapture,
+    pending: PendingChoice,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let PlayCapture::Target(t) = cap else {
+        return Err(Illegal::NotLegal);
+    };
+    let picks = state.play_picks.as_mut().ok_or(Illegal::NotLegal)?;
+    picks.partial_targets.push(t);
+    let partial = picks.partial_targets.clone();
+
+    let pending_play = state
+        .pending_play_choices
+        .as_ref()
+        .ok_or(Illegal::NotLegal)?;
+    let step = pending_play
+        .steps
+        .get(pending_play.step_idx)
+        .ok_or(Illegal::NotLegal)?;
+    let controller = pending_play.controller;
+    let source = pending_play.source;
+    let e = match step {
+        PlayPickStep::Target(e) => e,
+        _ => return Err(Illegal::NotLegal),
+    };
+
+    let node = effect_choice_node(db, state, controller, source, e).ok_or(Illegal::NotLegal)?;
+    let left = pending.remaining.saturating_sub(1);
+    let pending_choice = PendingChoice {
+        kind: PendingKind::PlaySelect,
+        remaining: left,
+    };
+    let node = match node {
+        ChoiceNode::Targets { mut options, .. } => {
+            options.retain(|opt| {
+                !partial
+                    .iter()
+                    .any(|cap| play_captured_matches_opt(state, cap, opt))
+            });
+            ChoiceNode::Targets {
+                options,
+                pending: pending_choice,
+            }
+        }
+        ChoiceNode::Cards { mut options, .. } => {
+            options.retain(|c| {
+                !partial
+                    .iter()
+                    .any(|cap| play_captured_matches_opt(state, cap, &TargetOpt::Card(*c)))
+            });
+            ChoiceNode::Cards {
+                options,
+                pending: pending_choice,
+            }
+        }
+        other => other,
+    };
+    state.phase = Phase::Choice { player, node };
+    events.push(Event::ChoiceOffered {
+        player,
+        node: state.phase_node(),
+    });
+    Ok(())
+}
+
+fn finalize_play_step_capture(
+    state: &mut State,
+    final_cap: PlayCapture,
+) -> Result<PlayCapture, Illegal> {
+    let picks = state.play_picks.as_mut().ok_or(Illegal::NotLegal)?;
+    let PlayCapture::Target(t) = final_cap else {
+        return Err(Illegal::NotLegal);
+    };
+    if picks.partial_targets.is_empty() {
+        return Ok(PlayCapture::Target(t));
+    }
+    picks.partial_targets.push(t);
+    let caps = picks.partial_targets.clone();
+    picks.partial_targets.clear();
+    Ok(PlayCapture::Targets(caps))
+}
+
+fn append_mode_followup_steps(
+    db: &CardDb,
+    state: &State,
+    source: SourceRef,
+    effect: &Effect,
+    mode_idxs: &[u8],
+    pending: &mut PendingPlayChoices,
+) {
+    if let Effect::Choose { .. } = effect {
+        if let Some(opts) = resolve_choose_options(db, state, source, effect) {
+            let mut walk_active = true;
+            let mut extra = Vec::new();
+            for &idx in mode_idxs {
+                if let Some(opt) = opts.get(idx as usize) {
+                    collect_play_time_steps_rec(
+                        db,
+                        state,
+                        pending.controller,
+                        source,
+                        &opt.effects,
+                        &mut walk_active,
+                        &mut extra,
+                    );
+                }
+            }
+            pending
+                .steps
+                .splice(pending.step_idx + 1..pending.step_idx + 1, extra);
+        }
+    }
+}
+
+fn complete_play_pick(
+    db: &CardDb,
+    state: &mut State,
+    player: PlayerId,
+    capture: PlayCapture,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let mut pending = state.pending_play_choices.take().ok_or(Illegal::NotLegal)?;
+    if player != pending.controller {
+        return Err(Illegal::NotLegal);
+    }
+    if let Some(PlayPickStep::Mode(e)) = pending.steps.get(pending.step_idx).cloned() {
+        if let PlayCapture::Modes(idxs) = &capture {
+            append_mode_followup_steps(db, state, pending.source, &e, idxs, &mut pending);
+        }
+    }
+    record_play_pick_capture(state, capture);
+    pending.step_idx += 1;
+    if pending.step_idx >= pending.steps.len() {
+        let play_rx = pending.deferred_rx;
+        state.phase = Phase::Main;
+        flush_play_reactions_ahead(state, play_rx);
+    } else {
+        state.pending_play_choices = Some(pending);
+        offer_next_play_pick(db, state, events)?;
+    }
+    Ok(())
+}
+
+fn take_play_capture(state: &mut State) -> Option<PlayCapture> {
+    let picks = state.play_picks.as_mut()?;
+    if picks.cursor >= picks.captures.len() {
+        return None;
+    }
+    let cap = picks.captures[picks.cursor].clone();
+    picks.cursor += 1;
+    Some(cap)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn apply_play_capture(
+    db: &CardDb,
+    state: &mut State,
+    controller: PlayerId,
+    source: SourceRef,
+    e: &Effect,
+    cap: PlayCapture,
+    effects: Vec<Effect>,
+    index: usize,
+    e40: bool,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    match cap {
+        PlayCapture::Target(cap) => {
+            if let Some(opt) = live_play_captured(state, &cap) {
+                apply_effect_with_targets(db, state, controller, source, e, &[opt], events)?;
+            }
+        }
+        PlayCapture::Targets(caps) => {
+            let opts: Vec<TargetOpt> = caps
+                .iter()
+                .filter_map(|c| live_play_captured(state, c))
+                .collect();
+            if !opts.is_empty() {
+                apply_effect_with_targets(db, state, controller, source, e, &opts, events)?;
+            }
+        }
+        PlayCapture::Modes(idxs) => {
+            if let Effect::Choose { .. } = e {
+                if let Some(opts) = resolve_choose_options(db, state, source, e) {
+                    let mut rest = effects;
+                    rest.remove(index);
+                    push_work(
+                        state,
+                        controller,
+                        source,
+                        rest,
+                        index,
+                        state.event_subject.clone(),
+                        e40,
+                    );
+                    for &idx in idxs.iter().rev() {
+                        if let Some(opt) = opts.get(idx as usize) {
+                            push_effects(state, controller, source, opt.effects.clone());
+                        }
+                    }
+                    return Ok(());
+                }
+            }
+        }
+    }
+    if index + 1 < effects.len() {
+        push_work(
+            state,
+            controller,
+            source,
+            effects,
+            index + 1,
+            state.event_subject.clone(),
+            e40,
+        );
+    }
+    let _ = db;
+    Ok(())
+}
+
+fn clear_play_pick_state(state: &mut State) {
+    state.play_picks = None;
+    state.pending_play_choices = None;
+    state.deferred_play_rx = None;
 }
 
 /// E39: flush `whenever you play` reactions onto `pending_work` above the
@@ -3491,6 +4133,23 @@ fn resolve_effect_list(
                 );
             }
             return Ok(());
+        }
+    }
+    // Play-time picks are replayed from `play_picks` before opening a new
+    // resolution-time prompt (owner 2026-09-27).
+    if state
+        .play_picks
+        .as_ref()
+        .is_some_and(|p| p.cursor < p.captures.len())
+    {
+        let uses_capture = effect_accepts_play_capture(&e);
+        if uses_capture {
+            if let Some(cap) = take_play_capture(state) {
+                apply_play_capture(
+                    db, state, controller, source, &e, cap, effects, index, e40, events,
+                )?;
+                return Ok(());
+            }
         }
     }
     // pause if this effect needs a player choose — do not drain the
@@ -3747,8 +4406,21 @@ fn apply_effect_with_targets(
         }
         Effect::Discard { .. } => {
             bind_discard_as_cards(state, e, targets);
+            let mut hand: Vec<(PlayerId, u8)> = targets
+                .iter()
+                .filter_map(|t| match t {
+                    TargetOpt::Hand { player, pos } => Some((*player, *pos)),
+                    _ => None,
+                })
+                .collect();
+            hand.sort_by_key(|a| std::cmp::Reverse(a.1));
+            for (player, pos) in hand {
+                discard_opt(db, state, &TargetOpt::Hand { player, pos }, events)?;
+            }
             for t in targets {
-                discard_opt(db, state, t, events)?;
+                if !matches!(t, TargetOpt::Hand { .. }) {
+                    discard_opt(db, state, t, events)?;
+                }
             }
             return Ok(());
         }

@@ -2,7 +2,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::card::{Ability, Card, CardId, CardKind, Class, Traits, Tribe, TriggerTag, VarKey};
+use crate::card::{
+    Ability, Card, CardId, CardKind, Class, Effect, Traits, Tribe, TriggerTag, VarKey,
+};
 use crate::ids::{First, PlayerId};
 use crate::rng::GameRng;
 
@@ -497,7 +499,7 @@ pub enum ChoiceNode {
     },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TargetOpt {
     Slot { player: PlayerId, slot: u8 },
     Leader { player: PlayerId },
@@ -523,6 +525,50 @@ pub enum PendingKind {
     ModeSelect,
     DiscardSelect,
     EvolveSelect,
+}
+
+/// One play-time target or mode choice, resolved before play reactions.
+#[derive(Debug, Clone)]
+pub enum PlayPickStep {
+    Target(Effect),
+    Mode(Effect),
+}
+
+/// Targets / modes locked in during the play, applied when the body resolves.
+#[derive(Debug, Clone)]
+pub struct PlayPickState {
+    pub captures: Vec<PlayCapture>,
+    pub cursor: usize,
+    pub partial_targets: Vec<PlayCapturedTarget>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PlayCapture {
+    /// Field / hand target locked by instance id at play time.
+    Target(PlayCapturedTarget),
+    /// Multiple targets locked during one play-time step (count > 1).
+    Targets(Vec<PlayCapturedTarget>),
+    Modes(Vec<u8>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PlayCapturedTarget {
+    Field { player: PlayerId, id: u32 },
+    Hand { player: PlayerId, id: u32 },
+    Leader { player: PlayerId },
+    Deck { player: PlayerId, id: u32 },
+    Card(CardId),
+    Mode(u8),
+}
+
+/// Play-time picks still being offered; reactions wait in `deferred_rx`.
+#[derive(Debug, Clone)]
+pub struct PendingPlayChoices {
+    pub deferred_rx: Vec<QueuedTrigger>,
+    pub steps: Vec<PlayPickStep>,
+    pub step_idx: usize,
+    pub controller: PlayerId,
+    pub source: SourceRef,
 }
 
 #[derive(Debug, Clone)]
@@ -589,6 +635,13 @@ pub struct State {
     /// Played follower: Rally increments when the play sequence (Fanfare)
     /// completes, not at entry. Summons increment at entry.
     pub pending_play_rally: Option<PlayerId>,
+    /// `whenever you play` reactions deferred until play-time picks finish.
+    pub deferred_play_rx: Option<Vec<QueuedTrigger>>,
+    /// Targets / modes captured while playing a card, consumed during Fanfare /
+    /// spell resolution (instance ids, like `capture_targets`).
+    pub play_picks: Option<PlayPickState>,
+    /// In-flight play-time pick chain before reactions flush.
+    pub pending_play_choices: Option<PendingPlayChoices>,
     /// Subject of the current `When` event (`pick: entering`, etc.).
     pub event_subject: Option<TargetOpt>,
     /// Card ids invoked during the current turn-boundary wave. Only one copy

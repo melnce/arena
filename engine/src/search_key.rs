@@ -4,7 +4,8 @@
 use crate::card::{Ability, CardId, Traits, TriggerTag, Until, VarKey};
 use crate::state::{
     BoundRef, CardInstance, ChoiceNode, CrestInstance, DestroyedRecord, InstanceFlags, LeaderMod,
-    PendingChoice, PendingKind, Phase, PlayerState, QueuedTrigger, SourceRef, State, TargetOpt,
+    PendingChoice, PendingKind, PendingPlayChoices, Phase, PlayCapture, PlayCapturedTarget,
+    PlayPickState, PlayPickStep, PlayerState, QueuedTrigger, SourceRef, State, TargetOpt,
     TempTraitGrant, WorkFrame,
 };
 use crate::trace::fnv1a64;
@@ -31,6 +32,30 @@ pub fn search_key(state: &State) -> u64 {
         Some(p) => {
             w.u8(1);
             w.u8(p as u8);
+        }
+        None => w.u8(0),
+    }
+    match &state.deferred_play_rx {
+        Some(rx) => {
+            w.u8(1);
+            w.u32(rx.len() as u32);
+            for q in rx {
+                hash_queued(&mut w, q);
+            }
+        }
+        None => w.u8(0),
+    }
+    match &state.play_picks {
+        Some(picks) => {
+            w.u8(1);
+            hash_play_picks(&mut w, picks);
+        }
+        None => w.u8(0),
+    }
+    match &state.pending_play_choices {
+        Some(p) => {
+            w.u8(1);
+            hash_pending_play_choices(&mut w, p);
         }
         None => w.u8(0),
     }
@@ -621,6 +646,87 @@ fn hash_source(w: &mut Writer, s: &SourceRef) {
         SourceRef::Leader { player } => {
             w.u8(4);
             w.u8(*player as u8);
+        }
+    }
+}
+
+fn hash_play_captured(w: &mut Writer, t: &PlayCapturedTarget) {
+    match t {
+        PlayCapturedTarget::Field { player, id } => {
+            w.u8(0);
+            w.u8(*player as u8);
+            w.u32(*id);
+        }
+        PlayCapturedTarget::Hand { player, id } => {
+            w.u8(1);
+            w.u8(*player as u8);
+            w.u32(*id);
+        }
+        PlayCapturedTarget::Leader { player } => {
+            w.u8(2);
+            w.u8(*player as u8);
+        }
+        PlayCapturedTarget::Deck { player, id } => {
+            w.u8(3);
+            w.u8(*player as u8);
+            w.u32(*id);
+        }
+        PlayCapturedTarget::Card(c) => {
+            w.u8(4);
+            w.card(*c);
+        }
+        PlayCapturedTarget::Mode(m) => {
+            w.u8(5);
+            w.u8(*m);
+        }
+    }
+}
+
+fn hash_play_picks(w: &mut Writer, picks: &PlayPickState) {
+    w.u32(picks.cursor as u32);
+    w.u32(picks.captures.len() as u32);
+    for cap in &picks.captures {
+        match cap {
+            PlayCapture::Target(t) => {
+                w.u8(0);
+                hash_play_captured(w, t);
+            }
+            PlayCapture::Targets(ts) => {
+                w.u8(2);
+                w.u32(ts.len() as u32);
+                for t in ts {
+                    hash_play_captured(w, t);
+                }
+            }
+            PlayCapture::Modes(idxs) => {
+                w.u8(1);
+                w.u32(idxs.len() as u32);
+                for i in idxs {
+                    w.u8(*i);
+                }
+            }
+        }
+    }
+    w.u32(picks.partial_targets.len() as u32);
+    for t in &picks.partial_targets {
+        hash_play_captured(w, t);
+    }
+}
+
+fn hash_pending_play_choices(w: &mut Writer, p: &PendingPlayChoices) {
+    w.u32(p.step_idx as u32);
+    w.u8(p.controller as u8);
+    hash_source(w, &p.source);
+    w.u32(p.deferred_rx.len() as u32);
+    for q in &p.deferred_rx {
+        hash_queued(w, q);
+    }
+    w.u32(p.steps.len() as u32);
+    for step in &p.steps {
+        match step {
+            PlayPickStep::Target(e) | PlayPickStep::Mode(e) => {
+                w.bytes(format!("{e:?}").as_bytes());
+            }
         }
     }
 }
