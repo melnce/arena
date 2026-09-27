@@ -93,6 +93,17 @@ async function playCard(page: Page, card: string) {
   expect(ok, `expected play ${card}`).toBeTruthy();
 }
 
+async function chooseFirst(page: Page) {
+  const ok = await page.evaluate(() => {
+    const legal = window.__arena!.legal() as Array<{ choose?: unknown }>;
+    const act = legal.find((a) => "choose" in a);
+    if (!act) return false;
+    window.__arena!.apply(act);
+    return true;
+  });
+  expect(ok, "expected legal choose").toBeTruthy();
+}
+
 async function endTurnApply(page: Page) {
   await applyFirst(page, "end_turn");
 }
@@ -390,6 +401,7 @@ test("A7 faith badge increments after an Enhanced play", async ({ page }) => {
     await endTurnApply(page);
   }
   await playCard(page, "90024320");
+  await chooseFirst(page);
   await expect(crest).not.toHaveText(String(before), { timeout: 5000 });
   expect(Number(await crest.innerText())).toBeGreaterThan(before);
   await mkdir(ART, { recursive: true });
