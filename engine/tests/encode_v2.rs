@@ -121,10 +121,7 @@ fn v2_hand_bonuses_see_drawn_buffed_follower() {
     let mut st = forest_combo_vs_sword_rally(&db, 5);
     trigger_thestae_deck_buff(&db, &mut st);
     let me = PlayerId::A;
-    while st.active != me
-        || !matches!(st.phase, Phase::Main)
-        || st.player(me).turns_taken < 2
-    {
+    while st.active != me || !matches!(st.phase, Phase::Main) || st.player(me).turns_taken < 2 {
         assert!(
             st.winner.is_none() && !matches!(st.phase, Phase::Terminal),
             "game ended before A turn 2"
