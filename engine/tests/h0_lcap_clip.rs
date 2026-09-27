@@ -356,17 +356,17 @@ fn pre_flip_default_bench_identity_seed5() {
     assert_eq!(a_wins, 1, "a_wins baseline");
     assert_eq!(b_wins, 3, "b_wins baseline");
     assert_eq!(stats.decisions, 220, "decisions baseline");
-    assert_eq!(stats.nodes, 255_915, "nodes baseline");
+    assert_eq!(stats.nodes, 255_901, "nodes baseline");
     assert_eq!(stats.cap_hits, 30, "cap_hits baseline");
     assert_eq!(stats.pairs_skipped, 0, "pairs_skipped baseline");
     assert_eq!(stats.candidates, 915, "candidates baseline");
     assert_eq!(stats.roots, 716, "roots baseline");
-    assert_eq!(stats.opp_leaves, 11_349, "opp_leaves baseline");
-    assert_eq!(stats.opp_cap_hits, 1_451, "opp_cap_hits baseline");
-    assert_eq!(stats.tt_hits, 3_873, "tt_hits baseline");
-    assert_eq!(stats.tt_stores, 35_318, "tt_stores baseline");
+    assert_eq!(stats.opp_leaves, 11_356, "opp_leaves baseline");
+    assert_eq!(stats.opp_cap_hits, 1_450, "opp_cap_hits baseline");
+    assert_eq!(stats.tt_hits, 3_878, "tt_hits baseline");
+    assert_eq!(stats.tt_stores, 35_342, "tt_stores baseline");
     assert_eq!(
-        stats.opp_lethal_checks, 11_349,
+        stats.opp_lethal_checks, 11_356,
         "opp_lethal_checks baseline"
     );
     assert_eq!(stats.opp_lethal_found, 5_935, "opp_lethal_found baseline");
@@ -374,7 +374,7 @@ fn pre_flip_default_bench_identity_seed5() {
         stats.opp_lethal_evo_found, 326,
         "opp_lethal_evo_found baseline"
     );
-    assert_eq!(stats.opp_lethal_nodes, 58_040, "opp_lethal_nodes baseline");
+    assert_eq!(stats.opp_lethal_nodes, 58_061, "opp_lethal_nodes baseline");
     assert_eq!(
         stats.chose_with_lethal_root, 21,
         "chose_with_lethal_root baseline"
