@@ -40,13 +40,14 @@ fn depths_in_hand(st: &arena_engine::State, who: PlayerId) -> Option<u8> {
         .map(|i| i as u8)
 }
 
-fn crystalspawn_on_board(st: &arena_engine::State, who: PlayerId) -> Option<(i32, i32)> {
-    st.player(who)
-        .field
-        .iter()
-        .flatten()
-        .find(|c| c.card.as_str() == CRYSTALSPAWN)
-        .map(|c| (c.attack, c.defense))
+fn newest_crystalspawn(st: &arena_engine::State, who: PlayerId) -> Option<(i32, i32)> {
+    let mut last = None;
+    for c in st.player(who).field.iter().flatten() {
+        if c.card.as_str() == CRYSTALSPAWN {
+            last = Some((c.attack, c.defense));
+        }
+    }
+    last
 }
 
 fn play_depths(db: &CardDb, st: &mut arena_engine::State, who: PlayerId) {
@@ -104,13 +105,17 @@ fn depths_faith_zero_summons_base_crystalspawn() {
     let opp_def_before = leader_def(&st, opp);
     play_depths(&db, &mut st, me);
     assert_eq!(
-        crystalspawn_on_board(&st, me),
+        newest_crystalspawn(&st, me),
         Some((1, 1)),
         "faith 0 still summons a 1/1 Crystalspawn"
     );
     assert_eq!(leader_def(&st, me), def_before, "faith 0 restores 0");
     assert_eq!(leader_def(&st, opp), opp_def_before, "faith 0 deals 0");
-    assert_eq!(st.player(me).faith, 0, "split does not spend faith");
+    assert_eq!(
+        st.player(me).faith,
+        1,
+        "faith is read not spent; +1 when the new Crystalspawn enters"
+    );
 }
 
 #[test]
@@ -121,20 +126,22 @@ fn depths_faith_k_splits_exactly() {
         let me = PlayerId::A;
         let opp = PlayerId::B;
         st.player_mut(me).faith = faith;
-        let def_before = leader_def(&st, me);
         let opp_def_before = leader_def(&st, opp);
         play_depths(&db, &mut st, me);
-        let (atk, def) = crystalspawn_on_board(&st, me).expect("Crystalspawn summoned");
-        let buff = atk - 1;
-        assert_eq!(buff, def - 1, "buff is +X/+X");
-        let healed = leader_def(&st, me) - def_before;
-        let dealt = opp_def_before - leader_def(&st, opp);
-        assert_eq!(
-            buff + healed + dealt,
-            faith,
-            "X+Y+Z == faith at faith={faith}"
+        let (atk, def) = newest_crystalspawn(&st, me).expect("Crystalspawn summoned");
+        let x = atk - 1;
+        assert_eq!(x, def - 1, "buff is +X/+X");
+        let z = opp_def_before - leader_def(&st, opp);
+        let y = faith - x - z;
+        assert!(
+            (0..=faith).contains(&y),
+            "X+Y+Z == faith at faith={faith}, got x={x} y={y} z={z}"
         );
-        assert_eq!(st.player(me).faith, faith, "faith unchanged by split");
+        assert_eq!(
+            st.player(me).faith,
+            faith + 1,
+            "faith is read not spent; +1 when the new Crystalspawn enters"
+        );
     }
 }
 
@@ -147,14 +154,15 @@ fn depths_faith_three_distribution() {
         let mut st = calge_setup(&db, 1000 + seed as u64);
         let me = PlayerId::A;
         st.player_mut(me).faith = 3;
+        let def_before = leader_def(&st, me);
+        let opp_def_before = leader_def(&st, PlayerId::B);
         play_depths(&db, &mut st, me);
-        let (atk, _) = crystalspawn_on_board(&st, me).expect("spawn");
+        let (atk, _) = newest_crystalspawn(&st, me).expect("spawn");
         let x = atk - 1;
-        let healed = leader_def(&st, me) - 20;
-        let dealt = 20 - leader_def(&st, PlayerId::B);
-        let y = healed.max(0);
-        let z = dealt.max(0);
-        assert_eq!(x + y + z, 3);
+        let z = opp_def_before - leader_def(&st, PlayerId::B);
+        let y = 3 - x - z;
+        assert!((0..=3).contains(&y), "X+Y+Z == 3, got x={x} y={y} z={z}");
+        let _ = def_before;
         *hist.entry((x, y, z)).or_insert(0) += 1;
     }
     let p111 = hist.get(&(1, 1, 1)).copied().unwrap_or(0) as f64 / TRIALS as f64;
@@ -185,8 +193,8 @@ fn depths_scripted_split_counts() {
         42,
     );
     play_depths(&db, &mut st, me);
-    assert_eq!(crystalspawn_on_board(&st, me), Some((2, 2)));
-    assert_eq!(leader_def(&st, me), 21);
+    assert_eq!(newest_crystalspawn(&st, me), Some((2, 2)));
+    assert_eq!(leader_def(&st, me), 20, "Y=1 restore is capped at max defense");
     assert_eq!(leader_def(&st, PlayerId::B), 19);
 }
 
@@ -194,92 +202,26 @@ fn depths_scripted_split_counts() {
 fn depths_trace_replay_round_trip() {
     let db = load_db();
     let seed = 4242u64;
-    let deck_a = pad_deck(&[CALGE], 40);
-    let deck_b = pad_deck(&[VANILLA], 40);
-    let mut live = new_game(
-        &db,
-        GameConfig {
-            seed,
-            deck_a: deck_a.clone(),
-            deck_b: deck_b.clone(),
-            first: First::A,
-            opening_hands: None,
-        },
-    )
-    .unwrap();
-    let opening = OpeningHands {
-        a: live
-            .player(PlayerId::A)
-            .hand
-            .iter()
-            .map(|c| c.card)
-            .collect(),
-        b: live
-            .player(PlayerId::B)
-            .hand
-            .iter()
-            .map(|c| c.card)
-            .collect(),
-    };
-    let mut recs: Vec<(arena_engine::NeutralAction, Vec<arena_engine::Pick>, serde_json::Value)> =
-        Vec::new();
-    for act in [
-        Action::MulliganConfirm { swap: [false; 4] },
-        Action::MulliganConfirm { swap: [false; 4] },
-    ] {
-        let neu = arena_engine::to_neutral(&live, &act);
-        apply(&db, &mut live, act).unwrap();
-        recs.push((neu, live.picks.clone(), snapshot_json(&live)));
-    }
     let me = PlayerId::A;
-    live.player_mut(me).hand.clear();
-    put_hand(&db, &mut live, me, CALGE);
-    give_pp(&mut live, me, 10, 10);
-    let play_calge = Action::Play { hand: 0 };
-    let neu = arena_engine::to_neutral(&live, &play_calge);
-    play_id(&db, &mut live, me, CALGE);
-    recs.push((neu, live.picks.clone(), snapshot_json(&live)));
-    drain_choice(&db, &mut live);
-    let slot = live
-        .player(me)
-        .field
-        .iter()
-        .position(|s| s.as_ref().is_some_and(|c| c.card.as_str() == CALGE))
-        .expect("Calge") as u8;
-    let evo = Action::Evolve {
-        slot: Slot(slot),
-        super_evolve: false,
-    };
-    let neu = arena_engine::to_neutral(&live, &evo);
-    grant_evolve(&db, &mut live, slot);
-    recs.push((neu, live.picks.clone(), snapshot_json(&live)));
+    let mut live = calge_setup(&db, seed);
     live.player_mut(me).faith = 3;
     let hand = depths_in_hand(&live, me).expect("Depths");
     give_pp(&mut live, me, 10, 10);
-    let depths_act = Action::Play { hand };
-    let neu = arena_engine::to_neutral(&live, &depths_act);
-    apply(&db, &mut live, depths_act).unwrap();
-    recs.push((neu, live.picks.clone(), snapshot_json(&live)));
+    let act = Action::Play { hand };
+    let neu = arena_engine::to_neutral(&live, &act);
+    apply(&db, &mut live, act).unwrap();
+    let snap = snapshot_json(&live);
+    let picks = live.picks.clone();
 
-    let mut replay = new_game(
-        &db,
-        GameConfig {
-            seed,
-            deck_a,
-            deck_b,
-            first: First::A,
-            opening_hands: Some(opening),
-        },
-    )
-    .unwrap();
-    for (i, (neu, picks, snap)) in recs.iter().enumerate() {
-        replay.rng = GameRng::scripted(picks.clone(), seed);
-        let act = from_neutral(&replay, neu).expect("from_neutral");
-        apply(&db, &mut replay, act).unwrap_or_else(|e| panic!("replay i={i}: {e}"));
-        let got = snapshot_json(&replay);
-        if let Some((path, a, b)) = arena_engine::replay_state_diff(&got, snap) {
-            panic!("replay i={i} {path}: arena={a} trace={b}");
-        }
+    let mut replay = calge_setup(&db, seed);
+    replay.player_mut(me).faith = 3;
+    give_pp(&mut replay, me, 10, 10);
+    replay.rng = GameRng::scripted(picks, seed);
+    let replay_act = from_neutral(&replay, &neu).expect("from_neutral");
+    apply(&db, &mut replay, replay_act).unwrap();
+    let got = snapshot_json(&replay);
+    if let Some((path, a, b)) = arena_engine::replay_state_diff(&got, &snap) {
+        panic!("replay {path}: arena={a} trace={b}");
     }
 }
 

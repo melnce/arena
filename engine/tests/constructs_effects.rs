@@ -439,13 +439,14 @@ fn construct_op_spellboostHand() {
 
 #[test]
 fn construct_op_randomSplit() {
-    // no-op engine: the card would be playable and its inner damage would land
     let (db, mut st) = db_st();
-    assert!(db.require_supported(cid("89200330")).is_err());
+    db.require_supported(cid("89200330")).expect("supported");
     st.player_mut(PlayerId::A).hand.clear();
     put_hand(&db, &mut st, PlayerId::A, "89200330");
     give_pp(&mut st, PlayerId::A, 10, 10);
-    assert!(!play_legal(&db, &st, "89200330"));
+    assert!(play_legal(&db, &st, "89200330"));
+    cast(&db, &mut st, "89200330");
+    assert_eq!(b_hp(&st), 19, "inner damage runs after split");
 }
 
 #[test]
@@ -910,9 +911,8 @@ fn construct_op_choose_pick() {
 
 #[test]
 fn construct_op_randomSplit_keys() {
-    // no-op engine: same as op_randomSplit — honest stub, card is unplayable
     let db = load_db();
-    assert!(db.require_supported(cid("89200330")).is_err());
+    db.require_supported(cid("89200330")).expect("supported");
 }
 
 fn assert_tag_stripped(remover: &str, gone: &str, stays: &str) {
