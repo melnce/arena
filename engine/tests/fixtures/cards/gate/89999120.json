@@ -1,0 +1,26 @@
+{
+  "id": "89999120",
+  "name": "Gate Token",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 89900,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Increase the Skybound Art gauges of all cards in your hand by 1.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Increase the Skybound Art gauges of all cards in your hand by 1.",
+      "effects": [
+        {
+          "op": "counter",
+          "key": "skyboundHand",
+          "how": "add",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}
