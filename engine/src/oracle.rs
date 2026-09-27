@@ -4,7 +4,7 @@
 //! stays in the bin: green → 0, divergence / illegal / header → 2,
 //! unsupported / oracle-pick-not-legal → 3.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::apply::{apply_neutral, new_game};
 use crate::card::CardId;
@@ -20,11 +20,37 @@ use crate::trace::{
     replay_state_diff, NeutralAction, TraceHeader,
 };
 
+/// Replay options. `continue_on_divergence` keeps applying trace actions after
+/// the first state mismatch and records every divergent step (for re-convergence
+/// checks). Env: `ARENA_ORACLE_CONTINUE=1`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct ReplayConfig {
+    pub continue_on_divergence: bool,
+}
+
+impl ReplayConfig {
+    pub fn from_env() -> Self {
+        Self {
+            continue_on_divergence: std::env::var("ARENA_ORACLE_CONTINUE")
+                .ok()
+                .as_deref()
+                == Some("1"),
+        }
+    }
+}
+
 /// Result of a completed replay (parse / load / unsupported stay `ReplayError`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ReplayOutcome {
     Green,
     Divergence(Divergence),
+}
+
+/// Full replay report when `ReplayConfig::continue_on_divergence` is set.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReplayReport {
+    pub divergences: Vec<Divergence>,
+    pub reconverged_after_first: bool,
 }
 
 /// First line that does not match, with enough context to classify it.
@@ -40,7 +66,7 @@ pub struct Divergence {
 }
 
 /// One allowlist row in `oracle/known-divergences.json`.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct KnownDivergence {
     pub trace: String,
@@ -51,7 +77,7 @@ pub struct KnownDivergence {
     pub since: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DivergenceClass {
     OldData,
@@ -92,6 +118,21 @@ impl Divergence {
 
 /// Replay `text` (one JSONL document) against `db`.
 pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayError> {
+    replay_trace_with_config(db, text, ReplayConfig::default()).map(|r| {
+        if r.divergences.is_empty() {
+            ReplayOutcome::Green
+        } else {
+            ReplayOutcome::Divergence(r.divergences[0].clone())
+        }
+    })
+}
+
+/// Replay with optional continue-on-divergence.
+pub fn replay_trace_with_config(
+    db: &CardDb,
+    text: &str,
+    config: ReplayConfig,
+) -> Result<ReplayReport, ReplayError> {
     let mut lines = text.lines().filter(|l| !l.trim().is_empty());
     let header_line = lines
         .next()
@@ -123,6 +164,8 @@ pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayErro
         crate::error::LoadError::Unsupported(u) => ReplayError::Unsupported(u),
         other => ReplayError::Header(other.to_string()),
     })?;
+    let mut divergences = Vec::new();
+    let mut reconverged_after_first = false;
     for (ln, line) in lines.enumerate() {
         let rec: serde_json::Value =
             serde_json::from_str(line).map_err(|source| ReplayError::Parse {
@@ -151,14 +194,18 @@ pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayErro
         let want = rec.get("state").cloned().unwrap_or(serde_json::Value::Null);
         if let Some((path, a, b)) = replay_state_diff(&got, &want) {
             let cards = cards_at_path(db, &path, &got, &want);
-            return Ok(ReplayOutcome::Divergence(Divergence {
+            divergences.push(Divergence {
                 i,
                 path,
                 arena: a,
                 trace: b,
-                action: action_json,
+                action: action_json.clone(),
                 cards,
-            }));
+            });
+            if !config.continue_on_divergence {
+                break;
+            }
+            continue;
         }
         if replay_compare_legal(&got, &want) {
             if let Some(legal) = rec.get("legal") {
@@ -169,19 +216,27 @@ pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayErro
                 theirs.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
                 if ours != theirs {
                     let (arena, trace) = legal_divergence_parts(&ours, &theirs);
-                    return Ok(ReplayOutcome::Divergence(Divergence {
+                    divergences.push(Divergence {
                         i,
                         path: "legal".into(),
                         arena,
                         trace,
-                        action: action_json,
+                        action: action_json.clone(),
                         cards: Vec::new(),
-                    }));
+                    });
+                    if !config.continue_on_divergence {
+                        break;
+                    }
                 }
             }
+        } else if !divergences.is_empty() {
+            reconverged_after_first = true;
         }
     }
-    Ok(ReplayOutcome::Green)
+    Ok(ReplayReport {
+        divergences,
+        reconverged_after_first,
+    })
 }
 
 fn legal_json(db: &CardDb, state: &State) -> String {

@@ -16,10 +16,15 @@ path = "src/bin/arena-replay.rs"
 name = "arena-bench"
 path = "src/bin/arena-bench.rs"
 
+[[bin]]
+name = "arena-oracle-audit"
+path = "src/bin/arena-oracle-audit.rs"
+
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
+flate2 = "1"
 
 [dev-dependencies]
 flate2 = "1"
