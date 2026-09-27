@@ -1,10 +1,11 @@
 //! Encoding version 2: strict pool, zone bonuses, model loading.
 
+use arena_engine::determinize::{determinize_with, Info};
 use arena_engine::{
     apply, encode, encode_version, encode_with_vocab, legal_actions, new_game, policy_rng, vocab,
-    Action, EncodingVersion, First, GameConfig, Observation, Phase, PlayerId, ValueNet, Xoshiro256ss,
+    Action, EncodingVersion, First, GameConfig, Observation, Phase, PlayerId, ValueNet,
+    Xoshiro256ss,
 };
-use arena_engine::determinize::{determinize_with, Info};
 
 mod common;
 use common::*;
@@ -161,7 +162,10 @@ fn v2_hand_bonuses_see_drawn_buffed_follower() {
             break;
         }
     }
-    assert!(drew, "expected buffed draw or Crimson Incense cost reduction in hand");
+    assert!(
+        drew,
+        "expected buffed draw or Crimson Incense cost reduction in hand"
+    );
 }
 
 #[test]
@@ -249,20 +253,9 @@ fn v2_pool_and_zone_bonuses_stable_across_open_worlds() {
                 }
                 states_with_hidden += 1;
                 let root_vocab = vocab(&state);
-                let real_v1 = encode_with_vocab(
-                    &state,
-                    me,
-                    &root_vocab,
-                    EncodingVersion::V1,
-                    None,
-                );
-                let real_v2 = encode_with_vocab(
-                    &state,
-                    me,
-                    &root_vocab,
-                    EncodingVersion::V2,
-                    Some(&db),
-                );
+                let real_v1 = encode_with_vocab(&state, me, &root_vocab, EncodingVersion::V1, None);
+                let real_v2 =
+                    encode_with_vocab(&state, me, &root_vocab, EncodingVersion::V2, Some(&db));
                 let ref_v1_pool = &real_v1.features[POOL_OFF..POOL_OFF + POOL_WIDTH];
                 let ref_v2_pool = &real_v2.features[POOL_OFF..POOL_OFF + POOL_WIDTH];
                 let ref_v2_extra = &real_v2.features[V2_EXTRA_OFF..V2_EXTRA_OFF + V2_EXTRA_LEN];
@@ -270,24 +263,15 @@ fn v2_pool_and_zone_bonuses_stable_across_open_worlds() {
                 for w in 0..OPEN_WORLDS {
                     worlds_checked += 1;
                     let world = determinize_with(&state, me, seed * 1_000 + w, Info::Open);
-                    let world_v1 = encode_with_vocab(
-                        &world,
-                        me,
-                        &root_vocab,
-                        EncodingVersion::V1,
-                        None,
-                    );
-                    let world_v2 = encode_with_vocab(
-                        &world,
-                        me,
-                        &root_vocab,
-                        EncodingVersion::V2,
-                        Some(&db),
-                    );
+                    let world_v1 =
+                        encode_with_vocab(&world, me, &root_vocab, EncodingVersion::V1, None);
+                    let world_v2 =
+                        encode_with_vocab(&world, me, &root_vocab, EncodingVersion::V2, Some(&db));
                     let v1_pool = &world_v1.features[POOL_OFF..POOL_OFF + POOL_WIDTH];
                     let v2_pool = &world_v2.features[POOL_OFF..POOL_OFF + POOL_WIDTH];
                     let v2_extra = &world_v2.features[V2_EXTRA_OFF..V2_EXTRA_OFF + V2_EXTRA_LEN];
-                    if v1_pool != ref_v1_pool || v2_pool != ref_v2_pool || v2_extra != ref_v2_extra {
+                    if v1_pool != ref_v1_pool || v2_pool != ref_v2_pool || v2_extra != ref_v2_extra
+                    {
                         mismatches += 1;
                     }
                 }
