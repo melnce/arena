@@ -175,8 +175,10 @@ function assertRowOrientation(
 async function assertBoardOrientation(
   page: Page,
   entryUids: Record<BoardIds, string[]>,
+  expectedTop: BoardIds,
 ): Promise<void> {
   const { top, bottom } = await readBoardRows(page);
+  expect(top.board).toBe(expectedTop);
   assertRowOrientation(top, entryUids[top.board], "top");
   assertRowOrientation(bottom, entryUids[bottom.board], "bottom");
 }
@@ -205,7 +207,7 @@ test("board rows face each player — slot 0 at own left", async ({ page }) => {
   await closeDrawer(page);
 
   const entryUids = await fillBoards(page, 3);
-  await assertBoardOrientation(page, entryUids);
+  await assertBoardOrientation(page, entryUids, "red");
   await artShot(page.locator("#appRoot"), `${ART}/board_orientation_default.png`);
 
   // A's turn so the bottom row (blue) can attack.
@@ -251,7 +253,7 @@ test("board rows face each player — slot 0 at own left", async ({ page }) => {
   });
   entryUids[targetBoard] = entryUids[targetBoard].filter((u) => u !== targetUid);
   entryUids[attackerBoard] = entryUids[attackerBoard].filter((u) => u !== attackerUid);
-  await assertBoardOrientation(page, entryUids);
+  await assertBoardOrientation(page, entryUids, "red");
 
   // Targeting still keys on data-slot: top row rightmost remains slot 0 when 2+ remain.
   if (entryUids[targetBoard].length >= 2) {
@@ -265,11 +267,11 @@ test("board rows face each player — slot 0 at own left", async ({ page }) => {
   await closeDrawer(page);
   await endTurnApply(page);
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b", { timeout: 5000 });
-  await assertBoardOrientation(page, entryUids);
+  await assertBoardOrientation(page, entryUids, "blue");
   await artShot(page.locator("#appRoot"), `${ART}/board_orientation_flipped.png`);
 
   // Toggle still on, A acting: red top again.
   await endTurnApply(page);
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", { timeout: 5000 });
-  await assertBoardOrientation(page, entryUids);
+  await assertBoardOrientation(page, entryUids, "red");
 });
