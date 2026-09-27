@@ -45,7 +45,7 @@
 //! | seed | deck | main@b5b822c → branch | n | hash@n | hashΔ | reconv | proof |
 //! |------|------|------------------------|---|--------|-------|--------|-------|
 //! | 37 | meta-dragon-aggro | `0xe0ff3ba0823747ae` → `0x0c5e00eb14bdce85` | 88 | match | 79 | 80 | same as default 37 |
-//! | 41 | meta-dragon-ramp | `0xc4e8ab63aec96246` → `0x3207d65c42f589a8` | 51 | match | 52 | 53 | **hashΔ 52:** Lumiore `10844120` discard (`PlaySelect` both); main hash shifts on first discard pick; branch stays at `hash@51`. **reconv 53.** **n 51:** `hash@50` match; main discards `10042310` then `10744110`; branch reverses order. |
+//! | 41 | meta-dragon-ramp | `0xc4e8ab63aec96246` → `0x3207d65c42f589a8` | 51 | match | 52 | 53 | **hashΔ 52:** Lumiore & Argente, Shining Wings `10844120` discard (`PlaySelect` both); main hash shifts on first discard pick; branch stays at `hash@51`. **reconv 53.** **n 51:** `hash@50` match; main discards Dragonsign `10042310` then Burnite, Anathema of Ash `10744110`; branch reverses order. |
 //! | 53 | meta-forest-combo | `0x7404fbcb4cae7f60` → `0x73930e18abe26408` | 86 | match | 37 | 38 | same as default 53 |
 
 use arena_engine::{
