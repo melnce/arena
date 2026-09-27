@@ -289,7 +289,10 @@ fn dump_gate_legal_at() {
         .unwrap_or_else(|_| "20".into())
         .parse()
         .expect("at");
-    let i = GATE_SEEDS.iter().position(|&s| s == seed).expect("gate seed");
+    let i = GATE_SEEDS
+        .iter()
+        .position(|&s| s == seed)
+        .expect("gate seed");
     let deck = load_meta_deck(&stems[i]);
     let deck_b = load_meta_deck("meta-sword-rally");
     let mut state = new_game(
@@ -320,8 +323,11 @@ fn dump_gate_legal_at() {
                 hash(&state),
                 legal.len(),
                 idx,
-                serde_json::to_string(&to_neutral(&state, &legal[idx.min(legal.len().saturating_sub(1))]))
-                    .unwrap()
+                serde_json::to_string(&to_neutral(
+                    &state,
+                    &legal[idx.min(legal.len().saturating_sub(1))]
+                ))
+                .unwrap()
             );
             for (j, act) in legal.iter().enumerate() {
                 println!(

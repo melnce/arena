@@ -404,7 +404,11 @@ fn sweet_abomination_with_earth_mode_at_play_before_reactions() {
     play(&db, &mut st, 0);
     assert!(matches!(st.phase, Phase::Choice { .. }));
     assert_eq!(pending_kind(&st), arena_engine::PendingKind::PlaySelect);
-    assert_eq!(st.player(me).earth, 1, "earth not spent until mode resolves");
+    assert_eq!(
+        st.player(me).earth,
+        1,
+        "earth not spent until mode resolves"
+    );
     assert_eq!(
         wog_countdown(&st, me),
         Some(5),

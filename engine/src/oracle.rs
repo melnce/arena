@@ -31,9 +31,7 @@ pub struct ReplayConfig {
 impl ReplayConfig {
     pub fn from_env() -> Self {
         Self {
-            continue_on_divergence: std::env::var("ARENA_ORACLE_CONTINUE")
-                .ok()
-                .as_deref()
+            continue_on_divergence: std::env::var("ARENA_ORACLE_CONTINUE").ok().as_deref()
                 == Some("1"),
         }
     }
@@ -214,9 +212,12 @@ pub fn replay_trace_stats(
         } else {
             ReplayOutcome::Divergence(r.divergences[0].clone())
         };
-        (out, ReplayStats {
-            compared_lines: r.compared_lines,
-        })
+        (
+            out,
+            ReplayStats {
+                compared_lines: r.compared_lines,
+            },
+        )
     })
 }
 

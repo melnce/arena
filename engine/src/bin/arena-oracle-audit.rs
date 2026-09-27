@@ -108,9 +108,7 @@ fn run() -> Result<(), String> {
         }
     }
 
-    rows.sort_by(|a, b| {
-        (&a.trace, a.i, &a.path).cmp(&(&b.trace, b.i, &b.path))
-    });
+    rows.sort_by(|a, b| (&a.trace, a.i, &a.path).cmp(&(&b.trace, b.i, &b.path)));
 
     let audit_json = serde_json::to_string_pretty(&rows).map_err(|e| e.to_string())?;
     if let Some(path) = audit_out {
@@ -311,7 +309,13 @@ struct TraceCtx<'a> {
 }
 
 impl<'a> TraceCtx<'a> {
-    fn new(db: &'a CardDb, lines: &'a [TraceLine], i: u32, path: &'a str, action: &'a Value) -> Self {
+    fn new(
+        db: &'a CardDb,
+        lines: &'a [TraceLine],
+        i: u32,
+        path: &'a str,
+        action: &'a Value,
+    ) -> Self {
         Self {
             db,
             lines,
@@ -367,10 +371,7 @@ impl<'a> TraceCtx<'a> {
     }
 
     fn cemetery_card_id(&self) -> Option<String> {
-        self.path
-            .split("cemetery.")
-            .nth(1)
-            .map(str::to_string)
+        self.path.split("cemetery.").nth(1).map(str::to_string)
     }
 
     fn countdown_at_path(&self, i: u32) -> Option<String> {
@@ -472,7 +473,12 @@ fn classify(
     Err(format!("unclassified {trace} i={i} {path} action={action}"))
 }
 
-fn classify_error(db: &CardDb, trace: &str, i: u32, trace_val: &str) -> Result<(DivergenceClass, String), String> {
+fn classify_error(
+    db: &CardDb,
+    trace: &str,
+    i: u32,
+    trace_val: &str,
+) -> Result<(DivergenceClass, String), String> {
     if trace_val.contains("multiset_pick") {
         let repeated = trace_val
             .split("candidates: [")
@@ -506,11 +512,13 @@ fn classify_error(db: &CardDb, trace: &str, i: u32, trace_val: &str) -> Result<(
     Err(format!("unclassified error at {trace} i={i}: {trace_val}"))
 }
 
-fn classify_max_defense(_db: &CardDb, trace: &str, cards: &[String], ctx: &TraceCtx<'_>) -> (DivergenceClass, String) {
-    let target = cards
-        .first()
-        .cloned()
-        .unwrap_or_else(|| "follower".into());
+fn classify_max_defense(
+    _db: &CardDb,
+    trace: &str,
+    cards: &[String],
+    ctx: &TraceCtx<'_>,
+) -> (DivergenceClass, String) {
+    let target = cards.first().cloned().unwrap_or_else(|| "follower".into());
     if trace == "ramp-37772-mirror/trace-20260910-2.jsonl" {
         return (
             DivergenceClass::OldRule,
@@ -657,21 +665,18 @@ fn wog_play_window(db: &CardDb, ctx: &TraceCtx<'_>) -> Option<WogPlayWindow> {
             None
         }
     });
-    let cd_before_pick = pick_line
-        .and_then(|pi| parse_cd(&wog_countdown_at(ctx, pi.saturating_sub(1), path)));
+    let cd_before_pick =
+        pick_line.and_then(|pi| parse_cd(&wog_countdown_at(ctx, pi.saturating_sub(1), path)));
     let cd_after_pick = pick_line.and_then(|pi| parse_cd(&wog_countdown_at(ctx, pi, path)));
-    let cd_after_pick_next = pick_line.and_then(|pi| parse_cd(&wog_countdown_at(ctx, pi + 1, path)));
+    let cd_after_pick_next =
+        pick_line.and_then(|pi| parse_cd(&wog_countdown_at(ctx, pi + 1, path)));
     let advance = if !has_pick {
         WogTraceAdvance::NoPick
-    } else if cd_before_play.is_some()
-        && cd_after_play.is_some()
-        && cd_after_play < cd_before_play
+    } else if cd_before_play.is_some() && cd_after_play.is_some() && cd_after_play < cd_before_play
     {
         // Trace countdown dropped on the play line, before the choose at pick_i.
         WogTraceAdvance::BeforePick
-    } else if cd_before_pick.is_some()
-        && cd_after_pick.is_some()
-        && cd_after_pick < cd_before_pick
+    } else if cd_before_pick.is_some() && cd_after_pick.is_some() && cd_after_pick < cd_before_pick
     {
         // Trace countdown dropped on the pick line (i−1 → i).
         WogTraceAdvance::AfterPick
@@ -742,7 +747,8 @@ fn classify_wog_countdown(
     }
 
     if play_id == "10913310" {
-        let cd = w.cd_before_play
+        let cd = w
+            .cd_before_play
             .zip(w.cd_after_play)
             .map(|(a, b)| format!("{a}→{b}"))
             .unwrap_or_else(|| format!("trace={trace_val}"));
@@ -766,7 +772,8 @@ fn classify_wog_countdown(
 
     if w.has_pick && w.advance == WogTraceAdvance::Never {
         let detail = wog_fanfare_detail(&play_id);
-        let cd = w.cd_after_pick
+        let cd = w
+            .cd_after_pick
             .or(w.cd_after_play)
             .map(|c| c.to_string())
             .unwrap_or_else(|| trace_val.to_string());
@@ -780,7 +787,8 @@ fn classify_wog_countdown(
     }
 
     if w.has_pick && w.advance == WogTraceAdvance::BeforePick {
-        let cd = w.cd_before_play
+        let cd = w
+            .cd_before_play
             .zip(w.cd_after_play)
             .map(|(a, b)| format!("{a}→{b}"))
             .unwrap_or_else(|| trace_val.to_string());
@@ -808,13 +816,9 @@ fn classify_countdown(
     trace_val: &str,
     ctx: &TraceCtx<'_>,
 ) -> (DivergenceClass, String) {
-    let slot_card = ctx
-        .field_card_at_path()
-        .unwrap_or_default();
+    let slot_card = ctx.field_card_at_path().unwrap_or_default();
     let slot_name = card_name(db, &slot_card);
-    let (play_id, play_name) = ctx
-        .played_card()
-        .unwrap_or_default();
+    let (play_id, play_name) = ctx.played_card().unwrap_or_default();
 
     if slot_card == "90021210" {
         return (
@@ -928,7 +932,11 @@ fn classify_imari_buddies(_db: &CardDb, ctx: &TraceCtx<'_>) -> (DivergenceClass,
     )
 }
 
-fn classify_exact_copy_attack(_db: &CardDb, cards: &[String], ctx: &TraceCtx<'_>) -> (DivergenceClass, String) {
+fn classify_exact_copy_attack(
+    _db: &CardDb,
+    cards: &[String],
+    ctx: &TraceCtx<'_>,
+) -> (DivergenceClass, String) {
     let target = cards.first().cloned().unwrap_or_else(|| "follower".into());
     let (play_id, _) = ctx.played_card().unwrap_or_default();
     (
@@ -1003,7 +1011,8 @@ fn parse_trace_lines(text: &str) -> Result<Vec<TraceLine>, String> {
         if ln == 0 {
             continue;
         }
-        let v: Value = serde_json::from_str(line).map_err(|e| format!("parse line {}: {e}", ln + 1))?;
+        let v: Value =
+            serde_json::from_str(line).map_err(|e| format!("parse line {}: {e}", ln + 1))?;
         out.push(TraceLine {
             i: v.get("i").and_then(|x| x.as_u64()).unwrap_or(0) as u32,
             action: v.get("action").cloned().unwrap_or(Value::Null),
@@ -1037,8 +1046,7 @@ fn walk_gz(dir: &Path, out: &mut Vec<PathBuf>) {
         if p.is_dir() {
             walk_gz(&p, out);
         } else if p.extension().and_then(|s| s.to_str()) == Some("gz")
-            && p
-                .file_name()
+            && p.file_name()
                 .and_then(|s| s.to_str())
                 .is_some_and(|n| n.ends_with(".jsonl.gz"))
         {
@@ -1077,7 +1085,12 @@ fn print_mechanism_summary(rows: &[KnownDivergence]) {
 fn mechanism_bucket(reason: &str) -> String {
     if reason.contains("Adahime") {
         "Adahime multiset_pick (old-data)".into()
-    } else if reason.contains("Baal") || reason.contains("Virid") || reason.contains("Setus") || reason.contains("Gilded Necklace") || reason.contains("−0/−4") {
+    } else if reason.contains("Baal")
+        || reason.contains("Virid")
+        || reason.contains("Setus")
+        || reason.contains("Gilded Necklace")
+        || reason.contains("−0/−4")
+    {
         "max_defense owner ruling".into()
     } else if reason.contains("Earth Sigil") {
         "Earth Sigil banish".into()
@@ -1127,10 +1140,10 @@ fn removed_notes(
     for r in &removed {
         let cat = removed_category(r);
         let reason = removed_reason(db, traces_dir, r, new);
-        categories
-            .entry(cat)
-            .or_default()
-            .push(format!("- `{}` i={} `{}` — {}", r.trace, r.i, r.path, reason));
+        categories.entry(cat).or_default().push(format!(
+            "- `{}` i={} `{}` — {}",
+            r.trace, r.i, r.path, reason
+        ));
     }
 
     let mut out = String::from("# Removed allowlist rows (main → play-time-selection branch)\n\n");
@@ -1151,7 +1164,12 @@ fn removed_notes(
     out
 }
 
-fn removed_reason(db: &CardDb, traces_dir: &Path, r: &KnownDivergence, new: &[KnownDivergence]) -> String {
+fn removed_reason(
+    db: &CardDb,
+    traces_dir: &Path,
+    r: &KnownDivergence,
+    new: &[KnownDivergence],
+) -> String {
     if r.path.ends_with(".countdown")
         && (r.reason.contains("World of Games") || r.reason.contains("Divine Thunder"))
     {

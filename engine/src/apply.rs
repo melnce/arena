@@ -3486,7 +3486,13 @@ fn collect_play_time_steps_rec(
                 let n = eval_amount(db, state, controller, Some(source), amount);
                 if resource_payable(state, controller, *resource, n) {
                     collect_play_time_steps_rec(
-                        db, state, controller, source, inner, walk_active, out,
+                        db,
+                        state,
+                        controller,
+                        source,
+                        inner,
+                        walk_active,
+                        out,
                     );
                 } else {
                     *walk_active = false;
