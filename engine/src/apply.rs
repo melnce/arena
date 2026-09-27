@@ -7,7 +7,7 @@ use crate::card::{
     EpAction, EventName, FieldHasKind, Filter, FilterKind, FuseResult, MaxDefenseChange, Mode,
     NamedCounter, OptionsFrom, OrderBy, PayResource, PoolPick, PoolSelector, PpAction, RefPick,
     ReplicateKey, Selector, SelectorKind, Side, StatWhich, Traits, TriggerTag, TurnOwner, Until,
-    Whose, Zone,
+    VarKey, Whose, Zone,
 };
 use crate::db::CardDb;
 use crate::error::{Illegal, LoadError, Unsupported};
@@ -22,7 +22,7 @@ use crate::state::{
     PP_CAP,
 };
 use crate::support;
-use crate::trace::{NeutralAction, PickWhat};
+use crate::trace::{NeutralAction, Pick, PickChose, PickWhat};
 
 // Hand overflow: owner-rulings.md — Hand overflow destroys without Last Words — 2026-08-10
 
@@ -43,6 +43,9 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
     }
     for id in cfg.deck_a.iter().chain(cfg.deck_b.iter()) {
         db.require_supported(*id)?;
+        for created in support::named_reachable(db, *id) {
+            db.require_supported(created)?;
+        }
     }
     let mut state = State {
         players: [PlayerState::new(), PlayerState::new()],
@@ -5122,11 +5125,16 @@ fn apply_effect(
             }
             maybe_bind(state, e, &added);
         }
-        Effect::RandomSplit { .. } => {
-            return Err(Illegal::Unsupported(Unsupported {
-                card: format!("{controller:?}"),
-                construct: "op:randomSplit".into(),
-            }));
+        Effect::RandomSplit {
+            keys,
+            times,
+            effects,
+            ..
+        } => {
+            let n = eval_amount(db, state, controller, Some(source), times);
+            let counts = random_split_counts(state, keys, n)?;
+            set_source_vars(state, source, keys, &counts);
+            push_effects(state, controller, source, effects.clone());
         }
     }
     Ok(())
@@ -6177,6 +6185,77 @@ fn settle_deaths(db: &CardDb, state: &mut State, events: &mut Vec<Event>) -> Res
         }
     }
     Ok(())
+}
+
+fn random_split_counts(
+    state: &mut State,
+    keys: &[VarKey],
+    times: i32,
+) -> Result<Vec<i32>, Illegal> {
+    let k = keys.len();
+    let mut counts = vec![0i32; k];
+    if k == 0 {
+        return Ok(counts);
+    }
+    if state.rng.peek_what() == Some(PickWhat::RandomSplit) {
+        counts = state
+            .rng
+            .take_scripted_split()
+            .map_err(Illegal::OraclePickNotLegal)?;
+        if counts.len() != k {
+            return Err(Illegal::OraclePickNotLegal(
+                crate::error::OraclePickNotLegal {
+                    what: PickWhat::RandomSplit,
+                    chose: format!("expected {} counts, got {}", k, counts.len()),
+                    candidates: vec![],
+                },
+            ));
+        }
+        return Ok(counts);
+    }
+    let n = times.max(0);
+    for _ in 0..n {
+        let idx = state.rng.gen_range(k as u32) as usize;
+        counts[idx] += 1;
+    }
+    state.picks.push(Pick {
+        what: PickWhat::RandomSplit,
+        among: None,
+        chose: PickChose::Counts(counts.clone()),
+    });
+    Ok(counts)
+}
+
+fn set_source_vars(state: &mut State, source: SourceRef, keys: &[VarKey], counts: &[i32]) {
+    match source {
+        SourceRef::Spell { player, card } => {
+            if let Some(corpse) = state
+                .player_mut(player)
+                .cemetery
+                .iter_mut()
+                .rev()
+                .find(|c| c.card == card)
+            {
+                for (key, &val) in keys.iter().zip(counts.iter()) {
+                    corpse.vars.insert(*key, val);
+                }
+            }
+        }
+        SourceRef::Field { player, id } | SourceRef::Hand { player, id } => {
+            let p = state.player_mut(player);
+            if let Some(h) = p.hand.iter_mut().find(|c| c.id == id) {
+                for (key, &val) in keys.iter().zip(counts.iter()) {
+                    h.vars.insert(*key, val);
+                }
+            }
+            if let Some(slot) = p.field.iter_mut().flatten().find(|c| c.id == id) {
+                for (key, &val) in keys.iter().zip(counts.iter()) {
+                    slot.vars.insert(*key, val);
+                }
+            }
+        }
+        _ => {}
+    }
 }
 
 fn split_damage(

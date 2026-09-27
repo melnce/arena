@@ -211,7 +211,6 @@ Every `match` on `Effect`, `CardSource`, and `Selector.pick` / `zone` / `kind` t
 
 | site | discarded | why |
 |---|---|---|
-| `apply_effect` `Effect::RandomSplit` | the op | Honest stub: `require_supported` rejects `op:randomSplit`; apply returns `Illegal::Unsupported`. Not a silent no-op. |
 | `apply_counter` `_ => {}` | `skyboundHand` | Honest stub (`op:counter skyboundHand` in `require_supported`). Other `CounterKey`s are handled. |
 | `deal_to_opt` / `restore_opt` `_ => {}` | hand / deck / card / mode | Damage and restore apply to leaders and field slots only. A hand/deck pick is a no-target, not an ignored op. |
 | `remove_abilities_opt` `_ => {}` | leader / card | `removeAbilities` walks field, hand, and deck instances. Leaders have no ability list. |
