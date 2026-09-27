@@ -10,7 +10,7 @@ use crate::apply::{apply_neutral, new_game};
 use crate::card::CardId;
 use crate::db::CardDb;
 use crate::error::{Illegal, ReplayError};
-use crate::ids::First;
+use crate::ids::{First, PlayerId};
 use crate::legal_actions_neutral;
 use crate::rng::GameRng;
 use crate::snapshot::snapshot_json;
@@ -39,6 +39,75 @@ impl ReplayConfig {
     }
 }
 
+/// Owner ruling 2026-09-27: an activated, unspent Bonus PP orb is not consumed at
+/// EOT. While replaying old traces, remember each such EOT for the second player
+/// and ignore `bonus_pp` legal differences for that tier until it ends.
+#[derive(Debug, Clone, Copy)]
+struct BonusPpKeptNorm {
+    second: PlayerId,
+    kept_early: bool,
+    kept_late: bool,
+}
+
+impl BonusPpKeptNorm {
+    fn new(second: PlayerId) -> Self {
+        Self {
+            second,
+            kept_early: false,
+            kept_late: false,
+        }
+    }
+
+    fn note_eot_unspent_orb(&mut self, state: &State) {
+        let p = state.player(self.second);
+        if !p.bonus_pp.active || p.bonus_pp.locked {
+            return;
+        }
+        if p.turns_taken < 6 {
+            self.kept_early = true;
+        } else {
+            self.kept_late = true;
+        }
+    }
+
+    fn note_after_apply(&mut self, state: &State) {
+        let p = state.player(self.second);
+        if p.turns_taken >= 6 {
+            self.kept_early = false;
+        }
+        if !p.bonus_pp.early_charge {
+            self.kept_early = false;
+        }
+        if !p.bonus_pp.late_charge {
+            self.kept_late = false;
+        }
+    }
+
+    fn ignore_bonus_pp_legal(&self, state: &State) -> bool {
+        let p = state.player(self.second);
+        (self.kept_early && p.bonus_pp.early_charge && p.turns_taken < 6)
+            || (self.kept_late && p.bonus_pp.late_charge)
+    }
+}
+
+fn filter_bonus_pp(actions: &mut Vec<NeutralAction>, player: &str) {
+    actions.retain(|a| !matches!(a, NeutralAction::BonusPp { player: p } if p == player));
+}
+
+fn second_player(first: First) -> PlayerId {
+    match first {
+        First::A | First::Coin => PlayerId::B,
+        First::B => PlayerId::A,
+    }
+}
+
+fn player_tag(p: PlayerId) -> &'static str {
+    match p {
+        PlayerId::A => "a",
+        PlayerId::B => "b",
+    }
+}
+
 /// Result of a completed replay (parse / load / unsupported stay `ReplayError`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ReplayOutcome {
@@ -51,6 +120,7 @@ pub enum ReplayOutcome {
 pub struct ReplayReport {
     pub divergences: Vec<Divergence>,
     pub reconverged_after_first: bool,
+    pub compared_lines: u32,
 }
 
 /// First line that does not match, with enough context to classify it.
@@ -116,6 +186,12 @@ impl Divergence {
     }
 }
 
+/// Lines whose `state` (and `legal` when present) were compared during replay.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ReplayStats {
+    pub compared_lines: u32,
+}
+
 /// Replay `text` (one JSONL document) against `db`.
 pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayError> {
     replay_trace_with_config(db, text, ReplayConfig::default()).map(|r| {
@@ -124,6 +200,23 @@ pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayErro
         } else {
             ReplayOutcome::Divergence(r.divergences[0].clone())
         }
+    })
+}
+
+/// Like [`replay_trace`], also returning how many lines were compared.
+pub fn replay_trace_stats(
+    db: &CardDb,
+    text: &str,
+) -> Result<(ReplayOutcome, ReplayStats), ReplayError> {
+    replay_trace_with_config(db, text, ReplayConfig::default()).map(|r| {
+        let out = if r.divergences.is_empty() {
+            ReplayOutcome::Green
+        } else {
+            ReplayOutcome::Divergence(r.divergences[0].clone())
+        };
+        (out, ReplayStats {
+            compared_lines: r.compared_lines,
+        })
     })
 }
 
@@ -164,8 +257,11 @@ pub fn replay_trace_with_config(
         crate::error::LoadError::Unsupported(u) => ReplayError::Unsupported(u),
         other => ReplayError::Header(other.to_string()),
     })?;
+    let mut norm = BonusPpKeptNorm::new(second_player(first));
+    let second_tag = player_tag(norm.second);
     let mut divergences = Vec::new();
     let mut reconverged_after_first = false;
+    let mut compared_lines = 0u32;
     for (ln, line) in lines.enumerate() {
         let rec: serde_json::Value =
             serde_json::from_str(line).map_err(|source| ReplayError::Parse {
@@ -183,6 +279,9 @@ pub fn replay_trace_with_config(
         let action_json = serde_json::to_value(&action).unwrap_or(serde_json::Value::Null);
         let rng = rec.get("rng").map(picks_from_trace_rng).unwrap_or_default();
         state.rng = GameRng::scripted(rng, header.seed);
+        if matches!(action, NeutralAction::EndTurn { ref player } if player == second_tag) {
+            norm.note_eot_unspent_orb(&state);
+        }
         if let Err(e) = apply_neutral(db, &mut state, &action) {
             return Err(match e {
                 Illegal::Unsupported(u) => ReplayError::Unsupported(u),
@@ -190,6 +289,8 @@ pub fn replay_trace_with_config(
                 other => illegal_at(i, &action, &legal_json(db, &state), other),
             });
         }
+        norm.note_after_apply(&state);
+        compared_lines += 1;
         let got = snapshot_json(&state);
         let want = rec.get("state").cloned().unwrap_or(serde_json::Value::Null);
         if let Some((path, a, b)) = replay_state_diff(&got, &want) {
@@ -212,6 +313,10 @@ pub fn replay_trace_with_config(
                 let mut ours: Vec<NeutralAction> = legal_actions_neutral(db, &state);
                 let mut theirs: Vec<NeutralAction> =
                     serde_json::from_value(legal.clone()).unwrap_or_default();
+                if norm.ignore_bonus_pp_legal(&state) {
+                    filter_bonus_pp(&mut ours, second_tag);
+                    filter_bonus_pp(&mut theirs, second_tag);
+                }
                 ours.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
                 theirs.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
                 if ours != theirs {
@@ -227,6 +332,7 @@ pub fn replay_trace_with_config(
                     if !config.continue_on_divergence {
                         break;
                     }
+                    continue;
                 }
             }
         } else if !divergences.is_empty() {
@@ -236,6 +342,7 @@ pub fn replay_trace_with_config(
     Ok(ReplayReport {
         divergences,
         reconverged_after_first,
+        compared_lines,
     })
 }
 

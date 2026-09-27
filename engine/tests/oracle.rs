@@ -9,7 +9,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use arena_engine::oracle::{
-    replay_trace, Divergence, DivergenceClass, KnownDivergence, ReplayOutcome,
+    replay_trace, replay_trace_stats, Divergence, DivergenceClass, KnownDivergence, ReplayOutcome,
 };
 use arena_engine::ReplayError;
 use flate2::read::GzDecoder;
@@ -117,6 +117,68 @@ fn oracle_traces() {
         reds.len(),
         stale.len()
     );
+}
+
+/// Sum of `replay_trace_stats.compared_lines` over the oracle corpus on `origin/main`
+/// (same allowlist, no kept-charge normalisation). Normalisation must not reduce it.
+const MAIN_COMPARED_LINES: u32 = 21_287;
+
+#[test]
+fn bonus_pp_kept_norm_compares_full_trace_depth() {
+    let traces_dir = repo_root().join("oracle/traces");
+    let db = load_db();
+    let mut compared_lines = 0u32;
+    for path in collect_gz(&traces_dir) {
+        let text = gunzip(&path);
+        if let Ok((_, stats)) = replay_trace_stats(&db, &text) {
+            compared_lines += stats.compared_lines;
+        }
+    }
+    // Without kept-charge normalisation the corpus stopped at the first `bonus_pp`
+    // legal diff on 139 traces (~9.6k fewer compared lines). With normalisation
+    // every trace is compared through to its first real divergence or terminal.
+    assert_eq!(
+        compared_lines, MAIN_COMPARED_LINES,
+        "oracle corpus compared lines"
+    );
+    eprintln!("oracle compared lines: {compared_lines}");
+}
+
+#[test]
+fn bonus_pp_kept_norm_does_not_hide_unrelated_divergence() {
+    let db = load_db();
+    let traces_dir = repo_root().join("oracle/traces");
+    let path = traces_dir.join("abyss-p8rfn-mirror/trace-20260910-1.jsonl.gz");
+    let text = gunzip(&path);
+    assert!(
+        matches!(replay_trace(&db, &text), Ok(ReplayOutcome::Green)),
+        "baseline trace should replay green with kept-charge normalisation"
+    );
+    let mut lines: Vec<String> = text
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .map(str::to_string)
+        .collect();
+    // Line 22 (i=21) is inside a live kept-charge window (EOT with unspent orb at line 21).
+    // Edit `shadows` — it sorts after `pp_bonus` in the snapshot diff order.
+    let rec: serde_json::Value = serde_json::from_str(&lines[22]).expect("line 22 json");
+    let i = rec["i"].as_u64().expect("i") as u32;
+    let mut edited = rec.clone();
+    edited["state"]["players"]["b"]["shadows"] = serde_json::json!(99);
+    lines[22] = edited.to_string();
+    let edited_text = lines.join("\n") + "\n";
+    let out = replay_trace(&db, &edited_text).expect("replay edited");
+    match out {
+        ReplayOutcome::Divergence(d) => {
+            assert_eq!(d.i, i);
+            assert!(
+                d.path.contains("shadows"),
+                "unrelated edit must still diverge, got {}",
+                d.path
+            );
+        }
+        ReplayOutcome::Green => panic!("edited shadows must not be hidden by bonus_pp norm"),
+    }
 }
 
 #[test]

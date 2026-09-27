@@ -256,8 +256,9 @@ pub struct BonusPp {
     /// Extra orb is currently on (usable PP may be max+1).
     pub active: bool,
     /// The bonus orb was spent this turn (regular first, orb last).
-    /// Cancel is a no-op; the toggle is not offered again; EOT commits.
-    /// Old engine `bonusPp.ts` / `canToggleSecondPlayerBonusPp`.
+    /// Cancel is a no-op; the toggle is not offered again; EOT consumes the
+    /// charge only when this is set. Old engine `bonusPp.ts` /
+    /// `canToggleSecondPlayerBonusPp`.
     pub locked: bool,
 }
 

@@ -871,3 +871,9 @@ Current behaviour confirmed correct by measurement in PR #50; no code or data ch
 ~~Initiation of Rebirth highest-base-cost ties (assumed, not contested).~~ **Settled 2026-09-02 — randomly among the tied cards.** See **Initiation of Rebirth highest-base-cost ties — 2026-09-02** above.
 
 ~~**Earth Sigil merge: glossary banish vs old-engine cemetery.**~~ **Settled 2026-09-10 — banish, newest survives.** See **Earth Sigil amulets have Aura — 2026-09-10** above. Official glossary plus owner "yes banish them instead": other allied Earth Sigil amulets are banished and their counts move to the new amulet. The old engine's cemetery-and-shadow merge is `old-rule`.
+
+## Bonus PP is consumed only when the orb is spent — 2026-09-27
+
+> "if you leave the extra pp on and dont use it, in the game it doesnt get consumed. only consumed if you actually use the extraPP"
+
+An activated Bonus PP orb that is not spent is **not** consumed at end of turn — only spending the orb uses up the charge. An activated, unspent orb is switched off and the charge stays (within its tier window; the early charge still expires at the start of the player's turn 6). Pinned by `bonus_pp_unspent_orb_not_consumed` in `engine/tests/rulings.rs`.

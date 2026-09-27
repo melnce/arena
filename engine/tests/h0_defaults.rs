@@ -14,34 +14,9 @@
 //!
 //! On this branch, `h0:mull=rule,info=fair` must match those pins; bare `h0`
 //! must match `h0:mull=engine/models/mulligan-v1.json,info=open`.
-//!
-//! `print_legacy_fingerprints` uses `h0:mull=rule,info=fair` (not bare `h0`).
-//! On `main@3ebef26` the helper mistakenly called `action_fingerprint` with
-//! `"h0"`, so legacy pins there were mislabeled; this branch fixes that
-//! copy-paste bug.
-//!
-//! ## Play-time + Effect::Pay re-pins (`main@3ebef26` → branch)
-//!
-//! Proof workflow: `dump_gate_hashes` / `dump_gate_actions` on this branch vs
-//! `git worktree` at `main@3ebef26`; canonical `hash(state)` matches at every
-//! step before the cited `n`, then diverges on a play whose play-time walk
-//! (mode / discard / destroy picks, or `Effect::Pay` gating) locks before play
-//! reactions. When h0's first neutral-action diff is later, it is a search
-//! cascade from that engine step (same pre-hash, different simulated play line).
-//!
-//! | spec | seed | deck | old → new | n | engine hash first diff | play-time step |
-//! |------|------|------|-----------|---|------------------------|----------------|
-//! | default | 37 | meta-dragon-aggro | `0xe0ff…` → `0x0c5e…` | 88 | 79 | Spilling Red `10642310` play + picks before attack |
-//! | default | 41 | meta-dragon-ramp | `0x9e54…` → `0x09d1…` | 47 | 17 | Yidmetra `90024320` faith tick after Enhanced pick; cascade → Burnite `10744110` vs Lyria `10403120` |
-//! | default | 53 | meta-forest-combo | `0x7404…` → `0x7393…` | 86 | 37 | Miroku `10514120` mode pick at play; cascade → attack vs play |
-//! | default | 67 | meta-haven-amulet | `0x50a9…` → `0x3705…` | 20 | 21 | Timepiece `10762210` play vs attack (sim line differs) |
-//! | legacy | 37 | meta-dragon-aggro | `0xe0ff…` → `0x0c5e…` | 88 | 79 | same Spilling Red row |
-//! | legacy | 41 | meta-dragon-ramp | `0xc4e8…` → `0x3207…` | 51 | 52 | Lumiore `10844120` discard pick (`10744110` vs `10042310`) |
-//! | legacy | 53 | meta-forest-combo | `0x7404…` → `0x7393…` | 86 | 37 | same Miroku row |
-//! | legacy | 67 | meta-haven-amulet | `0xdfee…` → `0x00cc…` | 87 | 41 | cascade → Lyanthoth `10664120` play+picks vs engage |
 
 use arena_engine::{
-    apply, hash, legal_actions, new_game, play_game, policy_rng, to_neutral, trace::fnv1a64,
+    apply, legal_actions, new_game, play_game, policy_rng, to_neutral, trace::fnv1a64, Action,
     AnyPolicy, CardDb, First, GameConfig, PlayerId, Policy,
 };
 
@@ -114,36 +89,73 @@ fn action_fingerprint(db: &CardDb, spec: &str, seed: u64, deck_a: &[arena_engine
     fnv1a64(&bytes)
 }
 
-/// Default `h0` action fingerprints on eight meta-deck / seed pairs.
-/// Re-pinned after play-time selection + `Effect::Pay` gating (2026-09-27); see
-/// module docs for per-seed proof (`main@3ebef26` old → branch new, step `n`).
+/// Full neutral-action trace for divergence analysis.
+fn action_trace(
+    db: &CardDb,
+    spec: &str,
+    seed: u64,
+    deck_a: &[arena_engine::CardId],
+) -> Vec<String> {
+    let deck_b = load_meta_deck("meta-sword-rally");
+    let mut state = new_game(
+        db,
+        GameConfig {
+            seed,
+            deck_a: deck_a.to_vec(),
+            deck_b,
+            first: First::A,
+            opening_hands: None,
+        },
+    )
+    .expect("new_game");
+    let mut a = parse_h0(spec);
+    let mut b = parse_h0(spec);
+    let mut rng = policy_rng(seed);
+    let mut serialized = Vec::new();
+    while state.winner.is_none() && !matches!(state.phase, arena_engine::Phase::Terminal) {
+        let legal = legal_actions(db, &state);
+        if legal.is_empty() {
+            break;
+        }
+        let me = arena_engine::acting_player(&state);
+        let idx = match me {
+            PlayerId::A => a.choose(db, &state, &legal, &mut rng),
+            PlayerId::B => b.choose(db, &state, &legal, &mut rng),
+        };
+        let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
+        serialized.push(serde_json::to_string(&to_neutral(&state, &action)).unwrap());
+        apply(db, &mut state, action).expect("apply");
+    }
+    serialized
+}
+
+/// Default `h0` action fingerprints on eight meta-deck / seed pairs (`main@1f8b068`).
+/// Captured before leaf-encoding-v2; bare `h0` must reproduce them exactly.
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0x8cd3_2204_3bbb_ebaf,
-    0x0c5e_00eb_14bd_ce85,
-    0x09d1_f4dd_e963_0cb7,
-    0x7393_0e18_abe2_6408,
-    0x3705_78b3_04cc_e2be,
-    0x2d18_3971_e453_91ae,
-    0x23c5_a1fa_f13b_aff0,
+    0xe0ff_3ba0_8237_47ae,
+    0x9e54_2bf8_f4f4_ba5c,
+    0x7404_fbcb_4cae_7f60,
+    0x50a9_2b69_688f_99c3,
+    0x42fb_d544_e452_ebf0,
+    0x5b5a_5be5_f92e_3c7c,
 ];
 
-/// Pre-flip `h0` action fingerprints (`h0:mull=rule,info=fair`). Re-pinned with
-/// default table where play-time / Pay gating shifts the h0 action stream; see
-/// module docs.
+/// Pre-flip `h0` action fingerprints on eight meta-deck / seed pairs (`main@2e40d4d`).
+/// `h0:mull=rule,info=fair` must reproduce them exactly.
 const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0xf00a_d8f4_4136_9f74,
-    0x0c5e_00eb_14bd_ce85,
-    0x3207_d65c_42f5_89a8,
-    0x7393_0e18_abe2_6408,
-    0x00cc_fe69_8d17_49cf,
+    0xe0ff_3ba0_8237_47ae,
+    0xc4e8_ab63_aec9_6246,
+    0x7404_fbcb_4cae_7f60,
+    0x8fe4_b401_a51d_973b,
     0x953e_ffd4_7650_d22e,
-    0x48b6_cc9c_3605_0fc5,
+    0x5b5a_5be5_f92e_3c7c,
 ];
 
-/// Dump canonical state hash after each h0 decision (ignored). Usage:
-/// `H0_DUMP_SEEDS=41 H0_SPEC=h0 cargo test --release --test h0_defaults dump_gate_hashes -- --ignored --nocapture`
+/// Dump canonical state hash after each h0 decision (ignored).
 #[test]
 #[ignore]
 fn dump_gate_hashes() {
@@ -196,8 +208,7 @@ fn dump_gate_hashes() {
     }
 }
 
-/// Dump neutral actions for gate seeds (ignored). Usage:
-/// `H0_DUMP_SEEDS=41,53,67 H0_SPEC=h0 cargo test --release --test h0_defaults dump_gate_actions -- --ignored --nocapture`
+/// Dump neutral actions for gate seeds (ignored).
 #[test]
 #[ignore]
 fn dump_gate_actions() {
@@ -255,6 +266,81 @@ fn dump_gate_actions() {
 
 #[test]
 #[ignore]
+fn dump_trace_for_diff() {
+    let db = load_db();
+    let cases = [
+        ("h0", 97u64, "meta-haven-kukishiro"),
+        ("h0:mull=rule,info=fair", 67, "meta-haven-amulet"),
+        ("h0:mull=rule,info=fair", 97, "meta-haven-kukishiro"),
+    ];
+    for (spec, seed, stem) in cases {
+        let deck = load_meta_deck(stem);
+        let trace = action_trace(&db, spec, seed, &deck);
+        println!("BEGIN {spec} seed={seed} deck={stem}");
+        for (i, a) in trace.iter().enumerate() {
+            println!("{i}|{a}");
+        }
+        println!("END {spec} seed={seed}");
+    }
+}
+
+#[test]
+#[ignore]
+fn trace_bonus_pp_divergence_cases() {
+    let db = load_db();
+    let cases = [
+        ("h0", 97u64, "meta-haven-kukishiro"),
+        ("h0:mull=rule,info=fair", 67, "meta-haven-amulet"),
+        ("h0:mull=rule,info=fair", 97, "meta-haven-kukishiro"),
+    ];
+    for (spec, seed, stem) in cases {
+        let deck = load_meta_deck(stem);
+        let trace = action_trace(&db, spec, seed, &deck);
+        println!(
+            "=== {spec} seed={seed} deck={stem} actions={} ===",
+            trace.len()
+        );
+        let deck_b = load_meta_deck("meta-sword-rally");
+        let mut state = new_game(
+            &db,
+            GameConfig {
+                seed,
+                deck_a: deck.clone(),
+                deck_b,
+                first: First::A,
+                opening_hands: None,
+            },
+        )
+        .expect("new_game");
+        let mut a = parse_h0(spec);
+        let mut b = parse_h0(spec);
+        let mut rng = policy_rng(seed);
+        for (i, expected) in trace.iter().enumerate() {
+            let me = arena_engine::acting_player(&state);
+            let pre_active = state.player(me).bonus_pp.active;
+            let pre_locked = state.player(me).bonus_pp.locked;
+            let legal = legal_actions(&db, &state);
+            let idx = match me {
+                PlayerId::A => a.choose(&db, &state, &legal, &mut rng),
+                PlayerId::B => b.choose(&db, &state, &legal, &mut rng),
+            };
+            let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
+            let got = serde_json::to_string(&to_neutral(&state, &action)).unwrap();
+            assert_eq!(&got, expected, "action {i}");
+            let is_eot = matches!(action, Action::EndTurn);
+            apply(&db, &mut state, action).expect("apply");
+            if is_eot && pre_active && !pre_locked {
+                println!(
+                    "  EOT turn={} action={i}: player {:?} ended with unspent bonus orb",
+                    state.turn, me
+                );
+            }
+        }
+    }
+}
+
+#[test]
+#[ignore]
 fn print_default_fingerprints() {
     let db = load_db();
     let stems = meta_deck_stems();
@@ -265,7 +351,6 @@ fn print_default_fingerprints() {
     }
 }
 
-/// Capture pre-flip pins. Must pass `h0:mull=rule,info=fair` (not bare `h0`).
 #[test]
 #[ignore]
 fn print_legacy_fingerprints() {

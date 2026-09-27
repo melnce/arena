@@ -72,6 +72,14 @@ If any of those fail, the emitter commit is wrong — do not patch the traces.
 
 The committed M1 sets at `c9c7aad2`, the Abyss set at `2dfd184c`, the Artifact Portal set at `5a6226bf`, the Rune / Elf sets at `4552f1b0`, and Royal / Ramp-Claywies at `bf8a9123` pass all four checks: every game's last line is `phase: "terminal"`.
 
+## Bonus PP kept-charge normalisation (2026-09-27)
+
+Owner ruling: an activated, unspent Bonus PP orb is **not** consumed at end of turn. Old traces were recorded with the previous engine, which consumed the charge whenever the orb was merely switched on.
+
+During replay (`engine/src/oracle.rs`), the harness notes every end of turn where the **second** player's orb was active and unspent. From then until that tier ends (early charge at their turn 6; late charge until spent), it ignores `bonus_pp` in the `legal` comparison for that player. State is compared as usual (`pp_bonus` is only the orb-on flag and cannot diverge under replay).
+
+Everything else is compared to the end of the trace. This replaces hundreds of per-trace `legal` allowlist rows for one root cause. Unrelated divergences after a kept charge are **not** hidden.
+
 ## Allowlist
 
 `oracle/known-divergences.json` is the reasoned skip list for the **first** divergence of a trace. The test passes a red line only when an entry matches the same `trace` (`<set>/<file>.jsonl`, no `.gz`), same `i`, and same `path`. Values are not part of the match. An entry that matches nothing is stale and fails the test — remove it; do not accumulate.
