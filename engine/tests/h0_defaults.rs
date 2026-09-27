@@ -91,26 +91,35 @@ fn action_fingerprint(db: &CardDb, spec: &str, seed: u64, deck_a: &[arena_engine
 
 /// Default `h0` action fingerprints on eight meta-deck / seed pairs (`main@1f8b068`).
 /// Captured before leaf-encoding-v2; bare `h0` must reproduce them exactly.
+///
+/// Play-time selection re-pins (2026-09-27): seed **37** only (`0x0c5e…`, Spilling Red
+/// `10642310` play + cemetery/slot picks before attack at n=88). Seeds **41**, **53**,
+/// **67** intentionally left at `main@3ebef26` pins — fingerprint shifts are cascade
+/// findings (first neutral divergence not at a play-time pick); see PR #86.
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0x8cd3_2204_3bbb_ebaf,
     0x0c5e_00eb_14bd_ce85,
-    0x09d1_f4dd_e963_0cb7,
-    0x7393_0e18_abe2_6408,
-    0x3705_78b3_04cc_e2be,
+    0x9e54_2bf8_f4f4_ba5c,
+    0x7404_fbcb_4cae_7f60,
+    0x50a9_2b69_688f_99c3,
     0x2d18_3971_e453_91ae,
     0x23c5_a1fa_f13b_aff0,
 ];
 
 /// Pre-flip `h0` action fingerprints on eight meta-deck / seed pairs (`main@2e40d4d`).
 /// `h0:mull=rule,info=fair` must reproduce them exactly.
+///
+/// Play-time selection re-pins (2026-09-27): seeds **37** (`0x0c5e…`, same Spilling Red
+/// n=88) and **41** (`0x3207…`, Lumiore `10844120` discard pick at n=51). Seeds **53**
+/// and **67** left at `main@3ebef26` pins — cascade findings; see PR #86.
 const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0xf00a_d8f4_4136_9f74,
     0x0c5e_00eb_14bd_ce85,
     0x3207_d65c_42f5_89a8,
     0x7404_fbcb_4cae_7f60,
-    0x00cc_fe69_8d17_49cf,
+    0xdfee_fa09_e8aa_3e5c,
     0x953e_ffd4_7650_d22e,
     0x48b6_cc9c_3605_0fc5,
 ];
@@ -129,7 +138,10 @@ fn dump_gate_actions() {
         .filter_map(|s| s.trim().parse().ok())
         .collect();
     for seed in seeds {
-        let i = GATE_SEEDS.iter().position(|&s| s == seed).expect("gate seed");
+        let i = GATE_SEEDS
+            .iter()
+            .position(|&s| s == seed)
+            .expect("gate seed");
         let deck = load_meta_deck(&stems[i]);
         let deck_b = load_meta_deck("meta-sword-rally");
         let mut state = new_game(
