@@ -46,6 +46,26 @@ fn spec_round_trips_five_forms() {
 }
 
 #[test]
+fn bpp_keys_parse_and_round_trip() {
+    let p = AnyPolicy::parse_spec("h0:bpp1=4,bpp2=8,bppv=3").unwrap();
+    let AnyPolicy::H0(ref h) = p else {
+        panic!("expected H0");
+    };
+    assert_eq!(h.bpp1, 4);
+    assert_eq!(h.bpp2, 8);
+    assert_eq!(h.bppv, 3.0);
+    let again = AnyPolicy::parse_spec(&p.spec()).unwrap();
+    assert_eq!(p, again);
+}
+
+#[test]
+fn bpp_keys_reject_out_of_range() {
+    assert!(AnyPolicy::parse_spec("h0:bpp1=0").is_err());
+    assert!(AnyPolicy::parse_spec("h0:bpp2=5").is_err());
+    assert!(AnyPolicy::parse_spec("h0:bppv=-1").is_err());
+}
+
+#[test]
 fn parse_spec_errors_name_the_token() {
     let e = AnyPolicy::parse_spec("h0:depht=2").unwrap_err();
     assert!(e.contains("depht"), "{e}");

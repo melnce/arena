@@ -292,6 +292,15 @@ fn h0_spec(h: &H0) -> String {
     if !h.fusemacro {
         parts.push("fusemacro=0".to_string());
     }
+    if h.bpp1 != def.bpp1 {
+        parts.push(format!("bpp1={}", h.bpp1));
+    }
+    if h.bpp2 != def.bpp2 {
+        parts.push(format!("bpp2={}", h.bpp2));
+    }
+    if h.bppv != def.bppv {
+        parts.push(format!("bppv={}", h.bppv));
+    }
     match h.mull {
         MullMode::Rule => parts.push("mull=rule".to_string()),
         MullMode::Random => parts.push("mull=random".to_string()),
@@ -326,6 +335,9 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.clip == b.clip
         && a.mull == b.mull
         && a.mull_path == b.mull_path
+        && a.bpp1 == b.bpp1
+        && a.bpp2 == b.bpp2
+        && a.bppv == b.bppv
         && weights_eq(&a.weights, &b.weights)
 }
 
@@ -450,6 +462,27 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     "1" => true,
                     other => return Err(format!("unknown fusemacro '{other}'")),
                 }
+            }
+            "bpp1" => {
+                let v: u32 = parse_num(val)?;
+                if !(1..=6).contains(&v) {
+                    return Err(format!("bpp1 out of range '{val}'"));
+                }
+                h.bpp1 = v;
+            }
+            "bpp2" => {
+                let v: u32 = parse_num(val)?;
+                if v < 6 {
+                    return Err(format!("bpp2 out of range '{val}'"));
+                }
+                h.bpp2 = v;
+            }
+            "bppv" => {
+                let v: f32 = val.parse().map_err(|_| format!("bad bppv '{val}'"))?;
+                if !v.is_finite() || v < 0.0 {
+                    return Err(format!("bppv out of range '{val}'"));
+                }
+                h.bppv = v;
             }
             "mull" => match val {
                 "builtin" => {
