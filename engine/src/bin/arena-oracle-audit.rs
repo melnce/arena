@@ -374,19 +374,6 @@ impl<'a> TraceCtx<'a> {
         self.path.split("cemetery.").nth(1).map(str::to_string)
     }
 
-    fn countdown_at_path(&self, i: u32) -> Option<String> {
-        wog_countdown_at(self, i, self.path)
-    }
-
-    fn wog_field(&self) -> Option<(String, usize)> {
-        let rest = self.path.strip_prefix("players.")?;
-        let (side, rest) = rest.split_once('.')?;
-        let after = rest.strip_prefix("field[")?;
-        let (idx, _) = after.split_once(']')?;
-        let idx: usize = idx.parse().ok()?;
-        Some((side.to_string(), idx))
-    }
-
     fn recent_evolve(&self) -> Option<String> {
         for back in 0..=8 {
             let idx = self.i.saturating_sub(back);
@@ -413,6 +400,7 @@ impl<'a> TraceCtx<'a> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn classify(
     db: &CardDb,
     trace: &str,
@@ -857,17 +845,13 @@ fn classify_cemetery(
         if cem_id == "90044330" {
             return (
                 DivergenceClass::OldRule,
-                format!(
-                    "owner ruling 2026-09-10: Depths of the Eld Blades 90044330 discarded by Spilling Red 10642310 ('When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader') resolves after the destroy, not before the second selection"
-                ),
+                "owner ruling 2026-09-10: Depths of the Eld Blades 90044330 discarded by Spilling Red 10642310 ('When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader') resolves after the destroy, not before the second selection".into(),
             );
         }
         if cem_id == "10644120" {
             return (
                 DivergenceClass::OldRule,
-                format!(
-                    "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai, Eld Blades 10644120 discarded by Spilling Red 10642310 summons after the destroy, not before the second selection"
-                ),
+                "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai, Eld Blades 10644120 discarded by Spilling Red 10642310 summons after the destroy, not before the second selection".into(),
             );
         }
         return (
