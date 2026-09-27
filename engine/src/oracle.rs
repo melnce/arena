@@ -69,32 +69,6 @@ impl BonusPpKeptNorm {
         (self.kept_early && p.bonus_pp.early_charge && p.turns_taken < 6)
             || (self.kept_late && p.bonus_pp.late_charge)
     }
-
-    fn mask_state_diff(
-        &self,
-        state: &State,
-        diff: Option<(String, String, String)>,
-    ) -> Option<(String, String, String)> {
-        let (path, arena, trace) = diff?;
-        if !self.path_is_kept_bonus_pp(state, &path) {
-            return Some((path, arena, trace));
-        }
-        None
-    }
-
-    fn path_is_kept_bonus_pp(&self, state: &State, path: &str) -> bool {
-        let side = match self.second {
-            PlayerId::A => "a",
-            PlayerId::B => "b",
-        };
-        if !path.starts_with(&format!("players.{side}.")) {
-            return false;
-        }
-        if path == format!("players.{side}.pp_bonus") {
-            return self.ignore_bonus_pp_legal(state);
-        }
-        false
-    }
 }
 
 fn filter_bonus_pp(actions: &mut Vec<NeutralAction>, player: &str) {
@@ -273,7 +247,7 @@ fn replay_trace_inner(
         stats.compared_lines += 1;
         let got = snapshot_json(&state);
         let want = rec.get("state").cloned().unwrap_or(serde_json::Value::Null);
-        if let Some((path, a, b)) = norm.mask_state_diff(&state, replay_state_diff(&got, &want)) {
+        if let Some((path, a, b)) = replay_state_diff(&got, &want) {
             let cards = cards_at_path(db, &path, &got, &want);
             return Ok((
                 ReplayOutcome::Divergence(Divergence {

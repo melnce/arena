@@ -76,10 +76,7 @@ The committed M1 sets at `c9c7aad2`, the Abyss set at `2dfd184c`, the Artifact P
 
 Owner ruling: an activated, unspent Bonus PP orb is **not** consumed at end of turn. Old traces were recorded with the previous engine, which consumed the charge whenever the orb was merely switched on.
 
-During replay (`engine/src/oracle.rs`), the harness notes every end of turn where the **second** player's orb was active and unspent. From then until that tier ends (early charge at their turn 6; late charge until spent), it:
-
-- ignores `bonus_pp` in the `legal` comparison for that player;
-- masks that player's `pp_bonus` field in the `state` comparison when the kept charge is live.
+During replay (`engine/src/oracle.rs`), the harness notes every end of turn where the **second** player's orb was active and unspent. From then until that tier ends (early charge at their turn 6; late charge until spent), it ignores `bonus_pp` in the `legal` comparison for that player. State is compared as usual (`pp_bonus` is only the orb-on flag and cannot diverge under replay).
 
 Everything else is compared to the end of the trace. This replaces hundreds of per-trace `legal` allowlist rows for one root cause. Unrelated divergences after a kept charge are **not** hidden.
 
