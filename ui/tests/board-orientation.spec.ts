@@ -225,8 +225,10 @@ test("board rows face each player — slot 0 at own left", async ({ page }) => {
   await expect(attacker).toBeVisible({ timeout: 10_000 });
   const targetSlot = await topFirst.getAttribute("data-slot");
   const targetUid = await topFirst.getAttribute("data-uid");
+  const attackerUid = await attacker.getAttribute("data-uid");
   expect(targetSlot).toBeTruthy();
   expect(targetUid).toBeTruthy();
+  expect(attackerUid).toBeTruthy();
 
   await attacker.click();
   await topFirst.click();
@@ -244,7 +246,11 @@ test("board rows face each player — slot 0 at own left", async ({ page }) => {
   await expect(page.locator(`#${targetBoard}Board .card[data-uid="${targetUid}"]`)).toHaveCount(0, {
     timeout: 5000,
   });
+  await expect(page.locator(`#${attackerBoard}Board .card[data-uid="${attackerUid}"]`)).toHaveCount(0, {
+    timeout: 5000,
+  });
   entryUids[targetBoard] = entryUids[targetBoard].filter((u) => u !== targetUid);
+  entryUids[attackerBoard] = entryUids[attackerBoard].filter((u) => u !== attackerUid);
   await assertBoardOrientation(page, entryUids);
 
   // Targeting still keys on data-slot: top row rightmost remains slot 0 when 2+ remain.
