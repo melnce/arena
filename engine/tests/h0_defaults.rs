@@ -109,11 +109,65 @@ const LEGACY_FINGERPRINTS: [u64; 8] = [
     0xf00a_d8f4_4136_9f74,
     0x0c5e_00eb_14bd_ce85,
     0x3207_d65c_42f5_89a8,
-    0x7393_0e18_abe2_6408,
+    0x7404_fbcb_4cae_7f60,
     0x00cc_fe69_8d17_49cf,
     0x953e_ffd4_7650_d22e,
     0x48b6_cc9c_3605_0fc5,
 ];
+
+/// Dump neutral actions for gate seeds (ignored). Usage:
+/// `H0_DUMP_SEEDS=41,53,67 H0_SPEC=h0 cargo test --release --test h0_defaults dump_gate_actions -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn dump_gate_actions() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| "h0".into());
+    let seeds: Vec<u64> = std::env::var("H0_DUMP_SEEDS")
+        .unwrap_or_else(|_| "41,53,67".into())
+        .split(',')
+        .filter_map(|s| s.trim().parse().ok())
+        .collect();
+    for seed in seeds {
+        let i = GATE_SEEDS.iter().position(|&s| s == seed).expect("gate seed");
+        let deck = load_meta_deck(&stems[i]);
+        let deck_b = load_meta_deck("meta-sword-rally");
+        let mut state = new_game(
+            &db,
+            GameConfig {
+                seed,
+                deck_a: deck,
+                deck_b,
+                first: First::A,
+                opening_hands: None,
+            },
+        )
+        .expect("new_game");
+        let mut a = parse_h0(&spec);
+        let mut b = parse_h0(&spec);
+        let mut rng = policy_rng(seed);
+        let mut n = 0u32;
+        while state.winner.is_none() && !matches!(state.phase, arena_engine::Phase::Terminal) {
+            let legal = legal_actions(&db, &state);
+            if legal.is_empty() {
+                break;
+            }
+            let me = arena_engine::acting_player(&state);
+            let idx = match me {
+                PlayerId::A => a.choose(&db, &state, &legal, &mut rng),
+                PlayerId::B => b.choose(&db, &state, &legal, &mut rng),
+            };
+            let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
+            println!(
+                "seed={seed} n={n} {}",
+                serde_json::to_string(&to_neutral(&state, &action)).unwrap()
+            );
+            apply(&db, &mut state, action).expect("apply");
+            n += 1;
+        }
+        println!("seed={seed} DONE actions={n}");
+    }
+}
 
 #[test]
 #[ignore]
