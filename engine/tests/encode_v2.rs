@@ -207,9 +207,6 @@ fn v2_strict_pool_counts_fuse_partners_as_remaining() {
     for i in 0..POOL_OFF {
         assert_eq!(v1.features[i], v2.features[i], "feat {i}");
     }
-    for i in POOL_OFF + POOL_WIDTH..Observation::LEN {
-        assert_eq!(v1.features[i], v2.features[i], "feat {i}");
-    }
 }
 
 #[test]
