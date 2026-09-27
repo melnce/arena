@@ -69,6 +69,42 @@ async function playSomeTurns(page: Page, turns: number) {
   }
 }
 
+/** Apply one legal play or attack when available (distinct from end_turn). */
+async function applyPlayOrAttack(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const legal = window.__arena!.legal() as Array<Record<string, unknown>>;
+    const act =
+      legal.find((a) => "play" in a) ??
+      legal.find((a) => "attack" in a);
+    if (!act) return false;
+    window.__arena!.apply(act);
+    return true;
+  });
+}
+
+/** Drive main phase: prefer plays/attacks, then end turn. */
+async function driveMain(page: Page, maxSteps = 40) {
+  for (let i = 0; i < maxSteps; i++) {
+    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
+    if (phase === "terminal") break;
+    if (phase === "choice") {
+      await page.evaluate(() => {
+        const legal = window.__arena!.legal() as Array<Record<string, unknown>>;
+        const act = legal.find((a) => "choose" in a);
+        if (act) window.__arena!.apply(act);
+      });
+      continue;
+    }
+    if (await applyPlayOrAttack(page)) continue;
+    if (await endTurnApply(page)) continue;
+    break;
+  }
+}
+
+function actionKey(step: unknown): string {
+  return JSON.stringify(step);
+}
+
 async function loadLog(page: Page, log: PositionLog) {
   await page.evaluate((raw) => window.__arena!.loadLog(raw), log);
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main|choice|terminal/, {
@@ -213,6 +249,68 @@ test("replay at: reseed in redo tail opens at end with toast", async ({ page }) 
   await expect(page.locator("#actionToast")).toContainText(/Reseed in redo tail/);
   await expect.poll(() => page.evaluate(() => window.__arena!.hash())).toBe(fullHash);
   await expect(page.locator("#redoBtn")).toBeDisabled();
+});
+
+test("replay at: distinct redo tail exports in chronological order", async ({ page }) => {
+  test.setTimeout(120_000);
+  await boot(page);
+  await startHotseat(page);
+  await confirmMulligans(page);
+  await closeDrawer(page);
+  await driveMain(page, 50);
+
+  const fullLog = (await page.evaluate(() => window.__arena!.exportLog())) as PositionLog;
+  const fullHash = await page.evaluate(() => window.__arena!.hash());
+  expect(fullLog.actions.length).toBeGreaterThan(6);
+
+  let at = -1;
+  for (let n = 3; n <= 5; n++) {
+    const start = fullLog.actions.length - n;
+    const keys = fullLog.actions.slice(start).map(actionKey);
+    if (new Set(keys).size >= 3) {
+      at = start;
+      break;
+    }
+  }
+  expect(at, "need a redo tail of 3+ distinct actions").toBeGreaterThan(0);
+  const tailLen = fullLog.actions.length - at;
+
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  for (let i = 0; i < tailLen; i++) await page.keyboard.press("Control+z");
+  expect(await page.evaluate(() => window.__arena!.actions().length)).toBe(at);
+  await expect(page.locator("#redoBtn")).toBeEnabled();
+
+  const logAt: PositionLog = { ...fullLog, at };
+  await loadLog(page, logAt);
+
+  const exported = (await page.evaluate(() => window.__arena!.exportPositionLog())) as PositionLog;
+  expect(exported.at).toBe(at);
+  expect(exported.actions).toEqual(fullLog.actions);
+
+  await loadLog(page, exported);
+  for (let i = at; i < fullLog.actions.length; i++) {
+    await page.keyboard.press("Control+y");
+  }
+  await expect.poll(() => page.evaluate(() => window.__arena!.hash())).toBe(fullHash);
+
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  for (let i = 0; i < tailLen; i++) await page.keyboard.press("Control+z");
+  await openSettings(page);
+  page.once("dialog", (d) => d.accept("distinct-tail"));
+  await page.locator("#savePositionBtn").click();
+  const saved = (await page.evaluate(() => window.__arena!.savedPosition())) as PositionLog;
+  expect(saved.at).toBe(at);
+  expect(saved.actions).toEqual(fullLog.actions);
+
+  await page.locator("#loadPositionBtn").click();
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /main|choice/, {
+    timeout: 15_000,
+  });
+  expect(await page.evaluate(() => window.__arena!.actions().length)).toBe(at);
+  for (let i = at; i < fullLog.actions.length; i++) {
+    await page.keyboard.press("Control+y");
+  }
+  await expect.poll(() => page.evaluate(() => window.__arena!.hash())).toBe(fullHash);
 });
 
 test("default exportLog matches bot payload shape when redo tail exists", async ({ page }) => {

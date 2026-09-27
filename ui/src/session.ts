@@ -386,7 +386,9 @@ export function toPositionLog(s: Session, meta?: ToPositionLogMeta): PositionLog
   let actions = applied;
   let at: number | undefined;
   if (meta?.includeRedoTail && s.future.length > 0) {
-    actions = [...applied, ...s.future.map((f) => f.action)];
+    // future is a stack: undo pushes, redo pops from the end — export oldest-first.
+    const tail = s.future.slice().reverse().map((f) => f.action);
+    actions = [...applied, ...tail];
     at = applied.length;
   }
   const log: PositionLog = {
