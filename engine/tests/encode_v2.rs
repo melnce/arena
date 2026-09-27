@@ -12,7 +12,7 @@ use common::*;
 const POOL_OFF: usize = 353 + arena_engine::encode::HIST_WIDTH;
 const POOL_WIDTH: usize = arena_engine::encode::HIST_WIDTH;
 const V2_EXTRA_OFF: usize = arena_engine::encode::LEN_V1;
-const V2_EXTRA_LEN: usize = 18;
+const V2_EXTRA_LEN: usize = 22;
 const OPEN_WORLDS: u64 = 8;
 
 fn offset(name: &str) -> usize {
@@ -112,6 +112,68 @@ fn v2_deck_bonuses_rise_on_thestae_crest_buff() {
         got,
         expected.to_vec(),
         "deck atk/def buckets + storm + cost reduction"
+    );
+}
+
+#[test]
+fn v2_bonus_pp_flags_second_player_start() {
+    let db = load_db();
+    let mut st = started(&db, 5);
+    end_turn(&db, &mut st);
+    let second = PlayerId::B;
+    assert!(st.player(second).is_second);
+    let obs = encode_version(&st, second, EncodingVersion::V2, Some(&db));
+    assert_eq!(obs.features[offset("own_bonus_early")], 1.0);
+    assert_eq!(obs.features[offset("own_bonus_late")], 1.0);
+    let obs_a = encode_version(&st, PlayerId::A, EncodingVersion::V2, Some(&db));
+    assert_eq!(obs_a.features[offset("own_bonus_early")], 0.0);
+    assert_eq!(obs_a.features[offset("own_bonus_late")], 0.0);
+}
+
+#[test]
+fn v2_bonus_pp_flags_after_early_spent() {
+    let db = load_db();
+    let mut st = started(&db, 5);
+    end_turn(&db, &mut st);
+    let me = PlayerId::B;
+    give_pp(&mut st, me, 0, 1);
+    st.player_mut(me).hand.clear();
+    let h = put_hand(&db, &mut st, me, "88001110");
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    play(&db, &mut st, h);
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
+    let obs = encode_version(&st, me, EncodingVersion::V2, Some(&db));
+    assert_eq!(obs.features[offset("own_bonus_early")], 0.0);
+    assert_eq!(obs.features[offset("own_bonus_late")], 1.0);
+}
+
+#[test]
+fn v2_bonus_pp_flags_early_expires_after_turn_5() {
+    let db = load_db();
+    let mut st = started(&db, 5);
+    let me = PlayerId::B;
+    while st.player(me).turns_taken < 6 {
+        end_turn(&db, &mut st);
+    }
+    assert_eq!(st.player(me).turns_taken, 6);
+    let obs = encode_version(&st, me, EncodingVersion::V2, Some(&db));
+    assert_eq!(obs.features[offset("own_bonus_early")], 0.0);
+    assert_eq!(obs.features[offset("own_bonus_late")], 1.0);
+}
+
+#[test]
+fn v1_encode_ignores_bonus_pp_charge_flags() {
+    let db = load_db();
+    let mut st = started(&db, 5);
+    end_turn(&db, &mut st);
+    let me = PlayerId::B;
+    let with_both = encode(&st, me);
+    st.player_mut(me).bonus_pp.early_charge = false;
+    let early_spent = encode(&st, me);
+    assert_eq!(
+        with_both.features, early_spent.features,
+        "v1 does not encode charge availability"
     );
 }
 
@@ -353,9 +415,9 @@ fn model_rejects_truncated_encoding() {
     let json = serde_json::json!({
         "arch": "linear",
         "encoding": 258,
-        "feature_len": 563,
-        "feat_mean": vec![0.0; 563],
-        "feat_std": vec![1.0; 563],
+        "feature_len": 567,
+        "feat_mean": vec![0.0; 567],
+        "feat_std": vec![1.0; 567],
         "vocab": [0u32],
         "zones": [
             {"name": "own_hand", "id_offset": 0, "count": 9},
@@ -365,7 +427,7 @@ fn model_rejects_truncated_encoding() {
             {"name": "opp_pool", "id_offset": 115, "count": 96, "hist_offset": 449},
         ],
         "scale": 1.0,
-        "linear": {"w": vec![0.0; 563], "zone_w": zone_w, "b": 0.0},
+        "linear": {"w": vec![0.0; 567], "zone_w": zone_w, "b": 0.0},
     });
     let err = ValueNet::from_json(&json.to_string()).unwrap_err();
     assert!(err.contains("encoding"), "{err}");

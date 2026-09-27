@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 FEATURE_LEN_V1 = 545
-FEATURE_LEN_V2 = 563
+FEATURE_LEN_V2 = 567
 HIST_WIDTH = 96
 IDS_OWN_HAND = 0
 IDS_OWN_DECK = 9
