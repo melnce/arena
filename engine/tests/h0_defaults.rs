@@ -14,10 +14,43 @@
 //!
 //! On this branch, `h0:mull=rule,info=fair` must match those pins; bare `h0`
 //! must match `h0:mull=engine/models/mulligan-v1.json,info=open`.
+//!
+//! `print_legacy_fingerprints` uses `h0:mull=rule,info=fair` (not bare `h0`).
+//!
+//! ## Play-time re-pins (`main@b5b822c` → branch)
+//!
+//! Proofs: branch vs `git worktree` at `main@b5b822c` using `dump_gate_hashes`,
+//! `dump_gate_actions`, `dump_gate_legal_at` (`H0_DUMP_SEEDS`, `H0_DUMP_AT`,
+//! `H0_VERBOSE=1`). **`n`** = first neutral-action index where fingerprints diverge
+//! (requires `hash@n` match on both engines). **`hash@k`** = canonical `hash(state)`
+//! after action `k−1`. **`hashΔ`** = first step where hashes differ (intermediate
+//! play-time state); **`reconv`** = step where hashes match again.
+//!
+//! Unchanged on `main@b5b822c` (same pin on branch): default seeds 11, 23, 97;
+//! legacy seeds 11, 23, 67, 79, 97. (`main@b5b822c` bonus-PP already moved
+//! default 97 and legacy 67/97 — those values are the `main@b5b822c` column.)
+//!
+//! ### default `h0`
+//!
+//! | seed | deck | main@b5b822c → branch | n | hash@n | hashΔ | reconv | proof |
+//! |------|------|------------------------|---|--------|-------|--------|-------|
+//! | 37 | meta-dragon-aggro | `0xe0ff3ba0823747ae` → `0x0c5e00eb14bdce85` | 88 | match | 79 | 80 | **hashΔ 79:** after Spilling Red `10642310` discard pick (`choose` `90044330`); main `PendingKind::EffectSelect` + faith tick in snapshot; branch `PlaySelect` destroy pick (`step 1/2`, `pending_work=1`). **reconv 80.** **n 88:** `hash@87` match; main attacks; branch plays Spilling Red then play-time discard+destroy picks (`89`–`90`). |
+//! | 41 | meta-dragon-ramp | `0x9e542bf8f4f4ba5c` → `0x09d1f4dde9630cb7` | 47 | match | 17 | 18 | **hashΔ 17:** after Depths of the Eld Sword `90024320` (Enhanced) play; main `EffectSelect` destroy pick with Faith: Yidmetra `faith:10624120` tick first; branch `PlaySelect` + `deferred_rx=1`. **reconv 18.** **n 47:** `hash@46` match; main idx 4 plays Lyria, Skydestined `10403120`; branch idx 2 plays Burnite, Anathema of Ash `10744110`. |
+//! | 53 | meta-forest-combo | `0x7404fbcb4cae7f60` → `0x73930e18abe26408` | 86 | match | 37 | 38 | **hashΔ 37:** after Miroku, Swarmpetal `10514120` play; main `ModeSelect`; branch `PlaySelect` mode + `deferred_rx=1`. **reconv 38.** **n 86:** `hash@85` match; main idx 1 plays Yidmetra, Eld Sword `10624120`; branch idx 8 attacks (`87` plays Depths of the Eld Sword `90024320` Enhanced). |
+//! | 67 | meta-haven-amulet | `0x50a92b69688f99c3` → `0x85c938a069126ff1` | 20 | match | — | — | **n 20:** actions `0..19` identical; `hash@20` match; legal identical (10 actions); main idx 5 attack slot 0; branch idx 2 play Timepiece of Perfection `10762210` (no play-time pick on either root). **explain@20 cand[2]:** worlds 0–2 match (leaf −6.2134); **world[3]** diverges — main hits node cap after engage (`pv_len=2`); branch `pv_len=9` leaf +4.4162 with opp Depths of the Eld Sword `90024320` (Enhanced) `choose` at PV step 5 while Faith: Yidmetra `faith:10624120` is deferred → `root_agg` −6.2134 → −3.5560 (beats main best attack −5.8025). |
+//! | 79 | meta-haven-evo | `0x42fbd544e452ebf0` → `0x2d183971e45391ae` | 63 | match | — | — | **n 63:** actions `0..62` identical; `hash@63` match; legal identical (4 actions); main idx 0 play Depths of the Eld Sword `90024320` (Enhanced) → `64` `EffectSelect` destroy; branch idx 1 attack (`64` plays Depths with `PlaySelect` + `deferred_rx=1`). |
+//!
+//! ### legacy `h0:mull=rule,info=fair`
+//!
+//! | seed | deck | main@b5b822c → branch | n | hash@n | hashΔ | reconv | proof |
+//! |------|------|------------------------|---|--------|-------|--------|-------|
+//! | 37 | meta-dragon-aggro | `0xe0ff3ba0823747ae` → `0x0c5e00eb14bdce85` | 88 | match | 79 | 80 | same as default 37 |
+//! | 41 | meta-dragon-ramp | `0xc4e8ab63aec96246` → `0x3207d65c42f589a8` | 51 | match | 52 | 53 | **hashΔ 52:** Lumiore & Argente, Shining Wings `10844120` discard (`PlaySelect` both); main hash shifts on first discard pick; branch stays at `hash@51`. **reconv 53.** **n 51:** `hash@50` match; main discards Dragonsign `10042310` then Burnite, Anathema of Ash `10744110`; branch reverses order. |
+//! | 53 | meta-forest-combo | `0x7404fbcb4cae7f60` → `0x73930e18abe26408` | 86 | match | 37 | 38 | same as default 53 |
 
 use arena_engine::{
-    apply, legal_actions, new_game, play_game, policy_rng, to_neutral, trace::fnv1a64, Action,
-    AnyPolicy, CardDb, First, GameConfig, PlayerId, Policy,
+    apply, hash, legal_actions, new_game, play_game, policy_rng, to_neutral, trace::fnv1a64,
+    Action, AnyPolicy, CardDb, First, GameConfig, PlayerId, Policy,
 };
 
 mod common;
@@ -134,26 +167,350 @@ fn action_trace(
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0x8cd3_2204_3bbb_ebaf,
-    0xe0ff_3ba0_8237_47ae,
-    0x9e54_2bf8_f4f4_ba5c,
-    0x7404_fbcb_4cae_7f60,
-    0x50a9_2b69_688f_99c3,
-    0x42fb_d544_e452_ebf0,
+    0x0c5e_00eb_14bd_ce85,
+    0x09d1_f4dd_e963_0cb7,
+    0x7393_0e18_abe2_6408,
+    0x85c9_38a0_6912_6ff1,
+    0x2d18_3971_e453_91ae,
     0x5b5a_5be5_f92e_3c7c,
 ];
 
-/// Pre-flip `h0` action fingerprints on eight meta-deck / seed pairs (`main@2e40d4d`).
-/// `h0:mull=rule,info=fair` must reproduce them exactly.
+/// Pre-flip `h0` action fingerprints (`h0:mull=rule,info=fair`). Re-pinned with
+/// play-time / Pay gating on top of `main@b5b822c`; see module docs.
 const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0xf00a_d8f4_4136_9f74,
-    0xe0ff_3ba0_8237_47ae,
-    0xc4e8_ab63_aec9_6246,
-    0x7404_fbcb_4cae_7f60,
+    0x0c5e_00eb_14bd_ce85,
+    0x3207_d65c_42f5_89a8,
+    0x7393_0e18_abe2_6408,
     0x8fe4_b401_a51d_973b,
     0x953e_ffd4_7650_d22e,
     0x5b5a_5be5_f92e_3c7c,
 ];
+
+/// Dump canonical state hash after each h0 decision (ignored).
+#[test]
+#[ignore]
+fn dump_gate_hashes() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| "h0".into());
+    let seeds: Vec<u64> = std::env::var("H0_DUMP_SEEDS")
+        .unwrap_or_else(|_| "41,53,67".into())
+        .split(',')
+        .filter_map(|s| s.trim().parse().ok())
+        .collect();
+    for seed in seeds {
+        let i = GATE_SEEDS
+            .iter()
+            .position(|&s| s == seed)
+            .expect("gate seed");
+        let deck = load_meta_deck(&stems[i]);
+        let deck_b = load_meta_deck("meta-sword-rally");
+        let mut state = new_game(
+            &db,
+            GameConfig {
+                seed,
+                deck_a: deck,
+                deck_b,
+                first: First::A,
+                opening_hands: None,
+            },
+        )
+        .expect("new_game");
+        let mut a = parse_h0(&spec);
+        let mut b = parse_h0(&spec);
+        let mut rng = policy_rng(seed);
+        let mut n = 0u32;
+        println!("seed={seed} n={n} hash=0x{:016x}", hash(&state));
+        if std::env::var("H0_VERBOSE").ok().as_deref() == Some("1") {
+            println!(
+                "seed={seed} n={n} phase={:?} pending={}",
+                state.phase,
+                pending_summary(&state)
+            );
+        }
+        while state.winner.is_none() && !matches!(state.phase, arena_engine::Phase::Terminal) {
+            let legal = legal_actions(&db, &state);
+            if legal.is_empty() {
+                break;
+            }
+            let me = arena_engine::acting_player(&state);
+            let idx = match me {
+                PlayerId::A => a.choose(&db, &state, &legal, &mut rng),
+                PlayerId::B => b.choose(&db, &state, &legal, &mut rng),
+            };
+            let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
+            apply(&db, &mut state, action).expect("apply");
+            n += 1;
+            println!("seed={seed} n={n} hash=0x{:016x}", hash(&state));
+            if std::env::var("H0_VERBOSE").ok().as_deref() == Some("1") {
+                println!(
+                    "seed={seed} n={n} phase={:?} pending={}",
+                    state.phase,
+                    pending_summary(&state)
+                );
+            }
+        }
+    }
+}
+
+fn pending_summary(state: &arena_engine::State) -> String {
+    let mut parts = vec![format!("phase={:?}", state.phase)];
+    if let Some(p) = &state.pending_play_choices {
+        parts.push(format!(
+            "play_choices step={}/{} deferred_rx={}",
+            p.step_idx,
+            p.steps.len(),
+            p.deferred_rx.len()
+        ));
+    }
+    if state.deferred_play_rx.is_some() {
+        parts.push("deferred_play_rx".into());
+    }
+    if !state.pending_work.is_empty() {
+        parts.push(format!("pending_work={}", state.pending_work.len()));
+    }
+    parts.join(" ")
+}
+
+/// Dump h0 explain at step `H0_DUMP_AT` (ignored). Replay with `H0_DUMP_SEEDS` /
+/// `H0_DUMP_AT`; prints each candidate's `root_agg` and principal-variation prefix.
+#[test]
+#[ignore]
+fn dump_gate_explain_at() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| "h0".into());
+    let seed: u64 = std::env::var("H0_DUMP_SEEDS")
+        .unwrap_or_else(|_| "67".into())
+        .parse()
+        .expect("seed");
+    let at: u32 = std::env::var("H0_DUMP_AT")
+        .unwrap_or_else(|_| "20".into())
+        .parse()
+        .expect("at");
+    let i = GATE_SEEDS
+        .iter()
+        .position(|&s| s == seed)
+        .expect("gate seed");
+    let deck = load_meta_deck(&stems[i]);
+    let deck_b = load_meta_deck("meta-sword-rally");
+    let mut state = new_game(
+        &db,
+        GameConfig {
+            seed,
+            deck_a: deck,
+            deck_b,
+            first: First::A,
+            opening_hands: None,
+        },
+    )
+    .expect("new_game");
+    let mut h0 = parse_h0(&spec);
+    let mut opp = parse_h0(&spec);
+    let mut rng = policy_rng(seed);
+    let mut n = 0u32;
+    while state.winner.is_none() && !matches!(state.phase, arena_engine::Phase::Terminal) {
+        if n == at {
+            let legal = legal_actions(&db, &state);
+            h0.arm_explain();
+            let me = arena_engine::acting_player(&state);
+            let idx = match me {
+                PlayerId::A => h0.choose(&db, &state, &legal, &mut rng),
+                PlayerId::B => opp.choose(&db, &state, &legal, &mut rng),
+            };
+            let rec = h0.take_explain().expect("explain");
+            println!(
+                "seed={seed} at={at} hash=0x{:016x} path={:?} chosen={} legal={}",
+                hash(&state),
+                rec.path,
+                idx,
+                legal.len()
+            );
+            let focus: Option<usize> = std::env::var("H0_EXPLAIN_CAND")
+                .ok()
+                .and_then(|s| s.parse().ok());
+            for cand in &rec.candidates {
+                if focus.is_some_and(|f| f != cand.legal_index) {
+                    continue;
+                }
+                println!(
+                    "  cand[{}] agg={:.4} worst={:.4} n={} action={}",
+                    cand.legal_index,
+                    cand.root_agg,
+                    cand.worst,
+                    cand.n,
+                    serde_json::to_string(&cand.action).unwrap()
+                );
+                for (wi, w) in cand.worlds.iter().enumerate() {
+                    let pv =
+                        w.pv.iter()
+                            .map(|a| serde_json::to_string(a).unwrap_or_else(|_| "?".into()))
+                            .collect::<Vec<_>>()
+                            .join(" | ");
+                    println!(
+                        "    world[{wi}] raw={:.4} clamped={:.4} end={:?} pv_len={} pv={}",
+                        w.raw, w.clamped, w.end, w.pv_len, pv
+                    );
+                    if let Some(leaf) = &w.leaf {
+                        println!(
+                            "      leaf value={:.4} phase={} turn={} active={}",
+                            leaf.value, leaf.phase, leaf.turn, leaf.active
+                        );
+                    }
+                }
+            }
+            return;
+        }
+        let legal = legal_actions(&db, &state);
+        if legal.is_empty() {
+            break;
+        }
+        let me = arena_engine::acting_player(&state);
+        let idx = match me {
+            PlayerId::A => h0.choose(&db, &state, &legal, &mut rng),
+            PlayerId::B => opp.choose(&db, &state, &legal, &mut rng),
+        };
+        let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
+        apply(&db, &mut state, action).expect("apply");
+        n += 1;
+    }
+}
+
+/// Dump legal action count + fingerprint at step `H0_DUMP_AT` (ignored).
+#[test]
+#[ignore]
+fn dump_gate_legal_at() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| "h0".into());
+    let seed: u64 = std::env::var("H0_DUMP_SEEDS")
+        .unwrap_or_else(|_| "67".into())
+        .parse()
+        .expect("seed");
+    let at: u32 = std::env::var("H0_DUMP_AT")
+        .unwrap_or_else(|_| "20".into())
+        .parse()
+        .expect("at");
+    let i = GATE_SEEDS
+        .iter()
+        .position(|&s| s == seed)
+        .expect("gate seed");
+    let deck = load_meta_deck(&stems[i]);
+    let deck_b = load_meta_deck("meta-sword-rally");
+    let mut state = new_game(
+        &db,
+        GameConfig {
+            seed,
+            deck_a: deck,
+            deck_b,
+            first: First::A,
+            opening_hands: None,
+        },
+    )
+    .expect("new_game");
+    let mut a = parse_h0(&spec);
+    let mut b = parse_h0(&spec);
+    let mut rng = policy_rng(seed);
+    let mut n = 0u32;
+    while state.winner.is_none() && !matches!(state.phase, arena_engine::Phase::Terminal) {
+        if n == at {
+            let legal = legal_actions(&db, &state);
+            let me = arena_engine::acting_player(&state);
+            let idx = match me {
+                PlayerId::A => a.choose(&db, &state, &legal, &mut rng),
+                PlayerId::B => b.choose(&db, &state, &legal, &mut rng),
+            };
+            println!(
+                "seed={seed} at={at} hash=0x{:016x} legal={} pick={} action={}",
+                hash(&state),
+                legal.len(),
+                idx,
+                serde_json::to_string(&to_neutral(
+                    &state,
+                    &legal[idx.min(legal.len().saturating_sub(1))]
+                ))
+                .unwrap()
+            );
+            for (j, act) in legal.iter().enumerate() {
+                println!(
+                    "  legal[{j}] {}",
+                    serde_json::to_string(&to_neutral(&state, act)).unwrap()
+                );
+            }
+            return;
+        }
+        let legal = legal_actions(&db, &state);
+        if legal.is_empty() {
+            break;
+        }
+        let me = arena_engine::acting_player(&state);
+        let idx = match me {
+            PlayerId::A => a.choose(&db, &state, &legal, &mut rng),
+            PlayerId::B => b.choose(&db, &state, &legal, &mut rng),
+        };
+        let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
+        apply(&db, &mut state, action).expect("apply");
+        n += 1;
+    }
+}
+
+/// Dump neutral actions for gate seeds (ignored).
+#[test]
+#[ignore]
+fn dump_gate_actions() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| "h0".into());
+    let seeds: Vec<u64> = std::env::var("H0_DUMP_SEEDS")
+        .unwrap_or_else(|_| "41,53,67".into())
+        .split(',')
+        .filter_map(|s| s.trim().parse().ok())
+        .collect();
+    for seed in seeds {
+        let i = GATE_SEEDS
+            .iter()
+            .position(|&s| s == seed)
+            .expect("gate seed");
+        let deck = load_meta_deck(&stems[i]);
+        let deck_b = load_meta_deck("meta-sword-rally");
+        let mut state = new_game(
+            &db,
+            GameConfig {
+                seed,
+                deck_a: deck,
+                deck_b,
+                first: First::A,
+                opening_hands: None,
+            },
+        )
+        .expect("new_game");
+        let mut a = parse_h0(&spec);
+        let mut b = parse_h0(&spec);
+        let mut rng = policy_rng(seed);
+        let mut n = 0u32;
+        while state.winner.is_none() && !matches!(state.phase, arena_engine::Phase::Terminal) {
+            let legal = legal_actions(&db, &state);
+            if legal.is_empty() {
+                break;
+            }
+            let me = arena_engine::acting_player(&state);
+            let idx = match me {
+                PlayerId::A => a.choose(&db, &state, &legal, &mut rng),
+                PlayerId::B => b.choose(&db, &state, &legal, &mut rng),
+            };
+            let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
+            println!(
+                "seed={seed} n={n} {}",
+                serde_json::to_string(&to_neutral(&state, &action)).unwrap()
+            );
+            apply(&db, &mut state, action).expect("apply");
+            n += 1;
+        }
+        println!("seed={seed} DONE actions={n}");
+    }
+}
 
 #[test]
 #[ignore]

@@ -4,47 +4,7 @@
     "i": 129,
     "path": "error",
     "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'Summon 2 random differently named Abysscraft followers that cost 2 or less from your deck'; the old engine's two multiset_picks both chose 10951120",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-2.jsonl",
-    "i": 83,
-    "path": "error",
-    "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's two multiset_picks both chose 10052110",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-4.jsonl",
-    "i": 89,
-    "path": "error",
-    "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-5.jsonl",
-    "i": 98,
-    "path": "error",
-    "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's two multiset_picks both chose 10052110",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-6.jsonl",
-    "i": 99,
-    "path": "error",
-    "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10751120",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-7.jsonl",
-    "i": 52,
-    "path": "error",
-    "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10751120",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated duplicate (duplicate)",
     "since": "2026-09-10"
   },
   {
@@ -52,7 +12,7 @@
     "i": 97,
     "path": "error",
     "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10751120",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated duplicate (duplicate)",
     "since": "2026-09-10"
   },
   {
@@ -60,7 +20,7 @@
     "i": 63,
     "path": "error",
     "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated duplicate (duplicate)",
     "since": "2026-09-10"
   },
   {
@@ -68,7 +28,7 @@
     "i": 66,
     "path": "error",
     "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated duplicate (duplicate)",
     "since": "2026-09-10"
   },
   {
@@ -76,7 +36,7 @@
     "i": 53,
     "path": "players.a.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Highwire Feline 10752110 max at the printed 5",
+    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Highwire Feline (10752110) max at the printed value",
     "since": "2026-09-10"
   },
   {
@@ -84,7 +44,15 @@
     "i": 108,
     "path": "error",
     "class": "old-data",
-    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's two multiset_picks both chose 10052110",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated duplicate (duplicate)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-2.jsonl",
+    "i": 83,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated duplicate (duplicate)",
     "since": "2026-09-10"
   },
   {
@@ -92,85 +60,109 @@
     "i": 46,
     "path": "players.a.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Raz, Demon on the Drums 10751120 max at the printed 2",
+    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Raz, Demon on the Drums (10751120) max at the printed value",
     "since": "2026-09-10"
   },
   {
-    "trace": "ramp-37772-mirror/trace-20260910-2.jsonl",
-    "i": 33,
-    "path": "players.a.field[0].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: a \u22120/\u22124 lowers max_defense by 4; the old engine set it to the current defense",
+    "trace": "abyss-p8rfn-mirror/trace-20260910-4.jsonl",
+    "i": 89,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated duplicate (duplicate)",
     "since": "2026-09-10"
   },
   {
-    "trace": "ramp-37772-mirror/trace-20260910-13.jsonl",
+    "trace": "abyss-p8rfn-mirror/trace-20260910-5.jsonl",
+    "i": 98,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated duplicate (duplicate)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-6.jsonl",
+    "i": 99,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated duplicate (duplicate)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-7.jsonl",
     "i": 52,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated duplicate (duplicate)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-1.jsonl",
+    "i": 84,
+    "path": "players.b.field[3].attack",
+    "class": "old-rule",
+    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' — a plain copy does not, and a card in hand is never evolved; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved statline (Asher & Lydia, Paths Beyond (10874110) after playing 10874110)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-11.jsonl",
+    "i": 88,
+    "path": "players.a.field[1].attack",
+    "class": "old-rule",
+    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' — a plain copy does not, and a card in hand is never evolved; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved statline (Ludicrous Ordnance (10673110) after playing 10673110)",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-12.jsonl",
+    "i": 68,
+    "path": "players.b.field[3]",
+    "class": "old-rule",
+    "reason": "play-time selection: Freerunning 10771310 pick excludes Imari's Little Buddies 90074140 summoned by Imari, Dewdrop 10574120 play reaction; the old engine offered the buddy as a candidate",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-17.jsonl",
+    "i": 48,
     "path": "players.b.field[1]",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Spilling Red summons after the destroy, not before the second selection",
+    "reason": "play-time selection: Sincerity of the Dewdrop 10573310 pick excludes Imari's Little Buddies 90074140 summoned by Imari, Dewdrop 10574120 play reaction; the old engine offered the buddy as a candidate",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-18.jsonl",
+    "i": 44,
+    "path": "players.a.field[1]",
+    "class": "old-rule",
+    "reason": "play-time selection: Freerunning 10771310 pick excludes Imari's Little Buddies 90074140 summoned by Imari, Dewdrop 10574120 play reaction; the old engine offered the buddy as a candidate",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "afnm-minatodao-mirror/trace-20260910-20.jsonl",
+    "i": 56,
+    "path": "players.a.field[4].attack",
+    "class": "old-rule",
+    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' — a plain copy does not, and a card in hand is never evolved; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved statline (Asher & Lydia, Paths Beyond (10874110) after playing 10874110)",
     "since": "2026-09-10"
   },
   {
-    "trace": "ramp-37772-mirror/trace-20260910-15.jsonl",
-    "i": 57,
-    "path": "players.a.leader_defense",
+    "trace": "afnm-minatodao-mirror/trace-20260910-21.jsonl",
+    "i": 54,
+    "path": "players.b.field[2]",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: Depths of the Eld Blades discarded by Spilling Red ('When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader') resolves after the destroy, not before the second selection",
-    "since": "2026-09-10"
+    "reason": "play-time selection: Sincerity of the Dewdrop 10573310 pick excludes Imari's Little Buddies 90074140 summoned by Imari, Dewdrop 10574120 play reaction; the old engine offered the buddy as a candidate",
+    "since": "2026-09-27"
   },
   {
-    "trace": "ramp-37772-mirror/trace-20260910-16.jsonl",
-    "i": 51,
-    "path": "players.a.field[2]",
+    "trace": "afnm-minatodao-mirror/trace-20260910-3.jsonl",
+    "i": 29,
+    "path": "players.b.field[2]",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Spilling Red summons after the destroy, not before the second selection",
-    "since": "2026-09-10"
+    "reason": "play-time selection: Freerunning 10771310 pick excludes Imari's Little Buddies 90074140 summoned by Imari, Dewdrop 10574120 play reaction; the old engine offered the buddy as a candidate",
+    "since": "2026-09-27"
   },
   {
     "trace": "basic-rune-mirror/trace-20260910-1.jsonl",
     "i": 71,
     "path": "players.b.banished.10031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-2.jsonl",
-    "i": 56,
-    "path": "players.a.banished.10031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-4.jsonl",
-    "i": 9,
-    "path": "players.a.banished.10031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-5.jsonl",
-    "i": 38,
-    "path": "players.a.banished.10031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-6.jsonl",
-    "i": 45,
-    "path": "players.b.banished.10031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-7.jsonl",
-    "i": 37,
-    "path": "players.a.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
     "since": "2026-09-10"
@@ -240,11 +232,51 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "basic-rune-mirror/trace-20260910-2.jsonl",
+    "i": 56,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "basic-rune-mirror/trace-20260910-4.jsonl",
+    "i": 9,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "basic-rune-mirror/trace-20260910-5.jsonl",
+    "i": 38,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "basic-rune-mirror/trace-20260910-6.jsonl",
+    "i": 45,
+    "path": "players.b.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "basic-rune-mirror/trace-20260910-7.jsonl",
+    "i": 37,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "elf-neanisu2-mirror/trace-20260910-0.jsonl",
     "i": 65,
     "path": "players.a.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left Great Hart of the Glacial Realm (10714120) max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
@@ -252,23 +284,15 @@
     "i": 39,
     "path": "players.a.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left Virid Lieutenant (10913110) max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
-    "trace": "elf-neanisu2-mirror/trace-20260910-2.jsonl",
-    "i": 80,
-    "path": "players.a.field[0].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-4.jsonl",
-    "i": 46,
+    "trace": "elf-neanisu2-mirror/trace-20260910-10.jsonl",
+    "i": 182,
     "path": "players.b.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left Leafshadow Assassin (10912110) max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
@@ -276,7 +300,15 @@
     "i": 71,
     "path": "players.b.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left Great Hart of the Glacial Realm (10714120) max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-13.jsonl",
+    "i": 90,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left Magachiyo, Aromatic Convict (10914110) max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
@@ -284,24 +316,648 @@
     "i": 74,
     "path": "players.b.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left Virid Lieutenant (10913110) max at the pre-buff value",
     "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-18.jsonl",
+    "i": 66,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 spell target pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=66)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-19.jsonl",
+    "i": 24,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 spell target pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 4→3 at i=24)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-2.jsonl",
+    "i": 80,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left Setus & Maisha, Bladerights (10814110) max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-21.jsonl",
+    "i": 77,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 spell target pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 5→4 at i=77)",
+    "since": "2026-09-27"
   },
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-22.jsonl",
     "i": 41,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "reason": "E39: playing Magachiyo, Aromatic Convict 10914110 with Combo — no pick; arena judges World of Games 10503210 at play (counts same-cost cards per official Q&A, countdown arena=3 trace=4); the old engine resolved Fanfare first (destroyed the only other cost-3 follower) and never advanced WoG",
     "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-23.jsonl",
+    "i": 23,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "E39: branch advances World of Games 10503210 after Magachiyo, Aromatic Convict 10914110's pick before Fanfare body; the old engine resolved Fanfare first (Magachiyo Fanfare, 4 damage to the picked follower) destroying the only other same-cost card and never advanced WoG (trace countdown 2 through the pick at i=23)",
+    "since": "2026-09-27"
   },
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-25.jsonl",
     "i": 100,
     "path": "players.b.field[0].max_defense",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left Virid Lieutenant (10913110) max at the pre-buff value",
     "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-27.jsonl",
+    "i": 81,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left Thestae, Anathema of Distortion (10714110) max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-29.jsonl",
+    "i": 37,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left Leafshadow Assassin (10912110) max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-3.jsonl",
+    "i": 20,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "E39: branch advances World of Games 10503210 after Miroku, Swarmpetal 10514120's pick before Fanfare body; the old engine resolved Fanfare first (Miroku mode 2, 3-damage split) destroying the only other same-cost card and never advanced WoG (trace countdown 2 through the pick at i=20)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-4.jsonl",
+    "i": 46,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left Leafshadow Assassin (10912110) max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-6.jsonl",
+    "i": 74,
+    "path": "players.b.field[2].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left Virewind Fencer (10712110) max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-9.jsonl",
+    "i": 112,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 spell target pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=112)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-0.jsonl",
+    "i": 37,
+    "path": "players.a.cemetery.10444120",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Zooey, Ally of the World 10444120 cemetery count shifts because the old engine deferred picks (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-1.jsonl",
+    "i": 46,
+    "path": "players.a.cemetery.10944120",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Normagdala, Ravening Revenant 10944120 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-10.jsonl",
+    "i": 39,
+    "path": "players.b.cemetery.10444120",
+    "class": "old-rule",
+    "reason": "play-time selection: Lumiore & Argente 10844120 hand-discard picks lock at play; Zooey, Ally of the World 10444120 cemetery timing differs because the old engine discarded before opening the second pick (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-12.jsonl",
+    "i": 44,
+    "path": "players.a.cemetery.10603210",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Dark Dimensions 10603210 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-13.jsonl",
+    "i": 52,
+    "path": "players.b.cemetery.10644120",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai, Eld Blades 10644120 discarded by Spilling Red 10642310 summons after the destroy, not before the second selection",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-14.jsonl",
+    "i": 37,
+    "path": "players.a.cemetery.10642310",
+    "class": "old-rule",
+    "reason": "play-time selection: Lumiore & Argente 10844120 hand-discard picks lock at play; Spilling Red 10642310 cemetery timing differs because the old engine discarded before opening the second pick (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-15.jsonl",
+    "i": 57,
+    "path": "players.a.cemetery.90044330",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: Depths of the Eld Blades 90044330 discarded by Spilling Red 10642310 ('When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader') resolves after the destroy, not before the second selection",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-16.jsonl",
+    "i": 51,
+    "path": "players.a.cemetery.10644120",
+    "class": "old-rule",
+    "reason": "play-time selection: Lumiore & Argente 10844120 hand-discard picks lock at play; Vorlalai, Eld Blades 10644120 cemetery timing differs because the old engine discarded before opening the second pick (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-17.jsonl",
+    "i": 73,
+    "path": "players.b.cemetery.10544110",
+    "class": "old-rule",
+    "reason": "play-time selection: Lumiore & Argente 10844120 hand-discard picks lock at play; Erntz, Governing Justice 10544110 cemetery timing differs because the old engine discarded before opening the second pick (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-18.jsonl",
+    "i": 48,
+    "path": "players.a.cemetery.10444120",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Zooey, Ally of the World 10444120 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-2.jsonl",
+    "i": 33,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: a −0/−4 lowers max_defense by 4; the old engine set it to the current defense",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-21.jsonl",
+    "i": 56,
+    "path": "players.b.cemetery.10944120",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Normagdala, Ravening Revenant 10944120 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-23.jsonl",
+    "i": 39,
+    "path": "players.b.cemetery.10642310",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Spilling Red 10642310 cemetery count shifts because the old engine deferred picks (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-24.jsonl",
+    "i": 81,
+    "path": "players.b.cemetery.10644110",
+    "class": "old-rule",
+    "reason": "play-time selection: Lumiore & Argente 10844120 hand-discard picks lock at play; Sagatsumatsu, Fair Beheader 10644110 cemetery timing differs because the old engine discarded before opening the second pick (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-25.jsonl",
+    "i": 49,
+    "path": "players.b.cemetery.10444120",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Zooey, Ally of the World 10444120 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-26.jsonl",
+    "i": 29,
+    "path": "players.a.cemetery.10603210",
+    "class": "old-rule",
+    "reason": "play-time selection: Lumiore & Argente 10844120 hand-discard picks lock at play; Dark Dimensions 10603210 cemetery timing differs because the old engine discarded before opening the second pick (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-28.jsonl",
+    "i": 40,
+    "path": "players.b.cemetery.10642310",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Spilling Red 10642310 cemetery count shifts because the old engine deferred picks (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-29.jsonl",
+    "i": 41,
+    "path": "players.b.cemetery.10804110",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Alabaster Bahamut 10804110 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-4.jsonl",
+    "i": 52,
+    "path": "players.b.cemetery.10544110",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Erntz, Governing Justice 10544110 cemetery count shifts because the old engine deferred picks (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-5.jsonl",
+    "i": 40,
+    "path": "players.b.cemetery.10944120",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Normagdala, Ravening Revenant 10944120 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-6.jsonl",
+    "i": 40,
+    "path": "players.a.cemetery.10503310",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Fate of the World 10503310 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-7.jsonl",
+    "i": 38,
+    "path": "players.b.cemetery.10944120",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Normagdala, Ravening Revenant 10944120 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-8.jsonl",
+    "i": 52,
+    "path": "players.b.cemetery.10642310",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Spilling Red 10642310 cemetery count shifts because the old engine deferred picks (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-0.jsonl",
+    "i": 32,
+    "path": "players.a.cemetery.10944120",
+    "class": "old-rule",
+    "reason": "play-time selection: Lumiore & Argente 10844120 hand-discard picks lock at play; Normagdala, Ravening Revenant 10944120 cemetery timing differs because the old engine discarded before opening the second pick (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-11.jsonl",
+    "i": 28,
+    "path": "players.a.cemetery.10741110",
+    "class": "old-rule",
+    "reason": "play-time selection: Lumiore & Argente 10844120 hand-discard picks lock at play; Dragonewt Promoter 10741110 cemetery timing differs because the old engine discarded before opening the second pick (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-12.jsonl",
+    "i": 64,
+    "path": "players.a.cemetery.10444120",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Zooey, Ally of the World 10444120 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-13.jsonl",
+    "i": 45,
+    "path": "players.a.cemetery.10944120",
+    "class": "old-rule",
+    "reason": "play-time selection: Lumiore & Argente 10844120 hand-discard picks lock at play; Normagdala, Ravening Revenant 10944120 cemetery timing differs because the old engine discarded before opening the second pick (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-14.jsonl",
+    "i": 57,
+    "path": "players.a.cemetery.10642310",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Spilling Red 10642310 cemetery count shifts because the old engine deferred picks (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-16.jsonl",
+    "i": 43,
+    "path": "players.b.cemetery.10642310",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Spilling Red 10642310 cemetery count shifts because the old engine deferred picks (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-18.jsonl",
+    "i": 50,
+    "path": "players.a.cemetery.90044330",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: Depths of the Eld Blades 90044330 discarded by Spilling Red 10642310 ('When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader') resolves after the destroy, not before the second selection",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-19.jsonl",
+    "i": 59,
+    "path": "players.a.cemetery.10944120",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Normagdala, Ravening Revenant 10944120 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-2.jsonl",
+    "i": 43,
+    "path": "players.a.cemetery.10644110",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Sagatsumatsu, Fair Beheader 10644110 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-4.jsonl",
+    "i": 59,
+    "path": "players.a.cemetery.10644120",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai, Eld Blades 10644120 discarded by Spilling Red 10642310 summons after the destroy, not before the second selection",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-5.jsonl",
+    "i": 51,
+    "path": "players.b.cemetery.10642310",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Spilling Red 10642310 cemetery count shifts because the old engine deferred picks (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-6.jsonl",
+    "i": 28,
+    "path": "players.a.cemetery.10644120",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai, Eld Blades 10644120 discarded by Spilling Red 10642310 summons after the destroy, not before the second selection",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-7.jsonl",
+    "i": 55,
+    "path": "players.a.cemetery.10444120",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Zooey, Ally of the World 10444120 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "ramp-claywies-mirror/trace-20260910-8.jsonl",
+    "i": 33,
+    "path": "players.a.cemetery.10744110",
+    "class": "old-rule",
+    "reason": "play-time selection: Spilling Red 10642310 destroy/discard picks lock at play; Burnite, Anathema of Ash 10744110 cemetery count shifts because the old engine deferred picks (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-0.jsonl",
+    "i": 39,
+    "path": "players.a.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-1.jsonl",
+    "i": 45,
+    "path": "players.a.cemetery.90021210",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 advances Dread Pirate's Flag 90021210 after its pick; the old engine cemeteried the flag earlier (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-10.jsonl",
+    "i": 34,
+    "path": "players.a.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-11.jsonl",
+    "i": 33,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=5 trace=4) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-12.jsonl",
+    "i": 17,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=4 trace=3) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-13.jsonl",
+    "i": 31,
+    "path": "players.b.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-14.jsonl",
+    "i": 30,
+    "path": "players.b.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-15.jsonl",
+    "i": 27,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=3 trace=2) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-16.jsonl",
+    "i": 23,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=5 trace=4) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-17.jsonl",
+    "i": 75,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Gilded Boots 90021330 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=6 trace=5) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-18.jsonl",
+    "i": 43,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=3 trace=2) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-19.jsonl",
+    "i": 31,
+    "path": "players.a.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-2.jsonl",
+    "i": 19,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Severed Ties 10922310 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=5 trace=4) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-20.jsonl",
+    "i": 23,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=3 trace=2) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-21.jsonl",
+    "i": 61,
+    "path": "players.a.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-22.jsonl",
+    "i": 67,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Severed Ties 10922310 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=6 trace=5) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-23.jsonl",
+    "i": 57,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=5 trace=4) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-24.jsonl",
+    "i": 33,
+    "path": "players.a.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-25.jsonl",
+    "i": 33,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=5 trace=4) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-26.jsonl",
+    "i": 21,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=6 trace=5) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-27.jsonl",
+    "i": 25,
+    "path": "players.a.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-28.jsonl",
+    "i": 19,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Severed Ties 10922310 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=5 trace=4) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-29.jsonl",
+    "i": 12,
+    "path": "players.a.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-3.jsonl",
+    "i": 43,
+    "path": "players.b.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-4.jsonl",
+    "i": 28,
+    "path": "players.a.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-5.jsonl",
+    "i": 36,
+    "path": "players.b.faith",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Depths of the Eld Sword 90024320 opens its Enhanced pick before Yidmetra Faith ticks; the old engine incremented faith before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-6.jsonl",
+    "i": 16,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=5 trace=4) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-7.jsonl",
+    "i": 31,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Slice of Domesticity 10823310 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=4 trace=3) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-8.jsonl",
+    "i": 35,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=6 trace=5) before the pick",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-9.jsonl",
+    "i": 35,
+    "path": "players.a.field[1].countdown",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Glittering Gold 90021350 opens its pick before Dread Pirate's Flag 90021210 spell-advance; the old engine advanced the flag (countdown arena=4 trace=3) before the pick",
+    "since": "2026-09-27"
   },
   {
     "trace": "rune-mach15-mirror/trace-20260910-0.jsonl",
@@ -320,20 +976,44 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "rune-mach15-mirror/trace-20260910-3.jsonl",
-    "i": 6,
-    "path": "players.b.banished.10031210",
+    "trace": "rune-mach15-mirror/trace-20260910-10.jsonl",
+    "i": 53,
+    "path": "players.b.field[1].countdown",
     "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
+    "reason": "E39 / play-time selection: playing Wills United 10803310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=53)",
+    "since": "2026-09-27"
   },
   {
-    "trace": "rune-mach15-mirror/trace-20260910-9.jsonl",
-    "i": 12,
-    "path": "players.a.banished.10031210",
+    "trace": "rune-mach15-mirror/trace-20260910-11.jsonl",
+    "i": 29,
+    "path": "players.a.cemetery.10503210",
     "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
+    "reason": "play-time selection: playing Alchemic Flare 10433310 shifts World of Games 10503210 cemetery timing relative to World of Games 10503210 reactions (arena=1 trace=2)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-12.jsonl",
+    "i": 64,
+    "path": "players.a.cemetery.10031210",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Sweet Abomination 10733110 shifts Witch's New Brew 10031210 cemetery timing relative to World of Games 10503210 reactions (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-13.jsonl",
+    "i": 54,
+    "path": "players.a.cemetery.90031210",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Sweet Abomination 10733110 shifts Magic Sediment 90031210 cemetery timing relative to World of Games 10503210 reactions (arena=null trace=1)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-15.jsonl",
+    "i": 49,
+    "path": "players.a.cemetery.10503210",
+    "class": "old-rule",
+    "reason": "play-time selection: playing Alchemic Flare 10433310 shifts World of Games 10503210 cemetery timing relative to World of Games 10503210 reactions (arena=null trace=1)",
+    "since": "2026-09-27"
   },
   {
     "trace": "rune-mach15-mirror/trace-20260910-16.jsonl",
@@ -344,9 +1024,49 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "rune-mach15-mirror/trace-20260910-17.jsonl",
+    "i": 37,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "E39 / play-time selection: playing Wills United 10803310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=37)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-18.jsonl",
+    "i": 66,
+    "path": "players.b.earth",
+    "class": "old-rule",
+    "reason": "play-time selection: Sweet Abomination 10733110 Earth Rite pay gates the play-time walk; playing Sweet Abomination 10733110 shifts earth count because picks lock before pay/reactions (arena earth differs)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-19.jsonl",
+    "i": 86,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "E39 / play-time selection: playing Wills United 10803310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=86)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-2.jsonl",
+    "i": 16,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "E39 / play-time selection: playing Wills United 10803310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 4→3 at i=16)",
+    "since": "2026-09-27"
+  },
+  {
     "trace": "rune-mach15-mirror/trace-20260910-20.jsonl",
     "i": 7,
     "path": "players.b.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-21.jsonl",
+    "i": 76,
+    "path": "players.a.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
     "since": "2026-09-10"
@@ -360,6 +1080,22 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "rune-mach15-mirror/trace-20260910-23.jsonl",
+    "i": 28,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "E39 / play-time selection: playing Alchemic Flare 10433310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 4→3 at i=28)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-24.jsonl",
+    "i": 33,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "E39 / play-time selection: playing Alchemic Flare 10433310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=33)",
+    "since": "2026-09-27"
+  },
+  {
     "trace": "rune-mach15-mirror/trace-20260910-26.jsonl",
     "i": 38,
     "path": "players.a.banished.10031210",
@@ -368,307 +1104,75 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "elf-neanisu2-mirror/trace-20260910-3.jsonl",
-    "i": 10,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-5.jsonl",
-    "i": 53,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-6.jsonl",
-    "i": 40,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-7.jsonl",
-    "i": 109,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-10.jsonl",
-    "i": 15,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-13.jsonl",
-    "i": 24,
-    "path": "error",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts, so the fifth advance destroys World of Games and Last Words draw; the old engine did not count the enemy card and recorded no draw pick",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-14.jsonl",
-    "i": 160,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-15.jsonl",
-    "i": 92,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-18.jsonl",
-    "i": 131,
-    "path": "players.a.field[1].max_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-19.jsonl",
-    "i": 36,
-    "path": "players.b.hand[3].card",
-    "class": "old-rule",
-    "reason": "E39 / owner 2026-09-10: World of Games Last Words from a play-reaction destroy resolve before Fanfare; the old engine ran Leafshadow Assassin 10912110 Fanfare add-Fairy first then the draws",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-21.jsonl",
-    "i": 6,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-23.jsonl",
-    "i": 22,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-24.jsonl",
-    "i": 38,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-26.jsonl",
-    "i": 89,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-27.jsonl",
-    "i": 40,
-    "path": "players.a.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-28.jsonl",
-    "i": 6,
-    "path": "players.b.field[0].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-29.jsonl",
-    "i": 16,
-    "path": "players.b.field[1].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-2.jsonl",
-    "i": 39,
-    "path": "players.a.banished.90031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-8.jsonl",
-    "i": 95,
-    "path": "players.a.banished.90031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-15.jsonl",
-    "i": 132,
-    "path": "players.a.banished.10031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-17.jsonl",
-    "i": 61,
-    "path": "players.b.banished.10031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-19.jsonl",
-    "i": 100,
-    "path": "players.a.banished.90031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-21.jsonl",
-    "i": 56,
-    "path": "players.b.field[1].countdown",
-    "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-23.jsonl",
-    "i": 32,
-    "path": "players.b.banished.10031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-24.jsonl",
-    "i": 52,
-    "path": "players.b.banished.90031210",
-    "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
-  },
-  {
     "trace": "rune-mach15-mirror/trace-20260910-27.jsonl",
-    "i": 81,
-    "path": "players.b.field[2].countdown",
+    "i": 34,
+    "path": "players.a.earth",
     "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
+    "reason": "play-time selection: Sweet Abomination 10733110 Earth Rite pay gates the play-time walk; playing Sweet Abomination 10733110 shifts earth count because picks lock before pay/reactions (arena earth differs)",
+    "since": "2026-09-27"
   },
   {
     "trace": "rune-mach15-mirror/trace-20260910-28.jsonl",
-    "i": 48,
+    "i": 22,
     "path": "players.b.field[1].countdown",
     "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
-    "since": "2026-09-10"
+    "reason": "E39 / play-time selection: playing Wills United 10803310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 4→3 at i=22)",
+    "since": "2026-09-27"
   },
   {
     "trace": "rune-mach15-mirror/trace-20260910-29.jsonl",
-    "i": 99,
-    "path": "players.a.banished.10031210",
+    "i": 94,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "E39 / play-time selection: playing Alchemic Flare 10433310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=94)",
+    "since": "2026-09-27"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-3.jsonl",
+    "i": 6,
+    "path": "players.b.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
     "since": "2026-09-10"
   },
   {
-    "trace": "rune-mach15-mirror/trace-20260910-11.jsonl",
-    "i": 107,
-    "path": "players.a.banished.90031210",
+    "trace": "rune-mach15-mirror/trace-20260910-4.jsonl",
+    "i": 83,
+    "path": "players.b.cemetery.10503210",
     "class": "old-rule",
-    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
-    "since": "2026-09-10"
+    "reason": "play-time selection: playing Wills United 10803310 shifts World of Games 10503210 cemetery timing relative to World of Games 10503210 reactions (arena=null trace=1)",
+    "since": "2026-09-27"
   },
   {
-    "trace": "royal-nattui-mirror/trace-20260910-26.jsonl",
-    "i": 63,
-    "path": "players.a.field[0].max_defense",
+    "trace": "rune-mach15-mirror/trace-20260910-6.jsonl",
+    "i": 58,
+    "path": "players.b.earth",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10 (like Baal): Gilded Necklace 90021340 'give it +0/+1 and Ward' raises max_defense; the old engine left Super-Evolved Unkei, Goldbloom 10524120 max at 7",
-    "since": "2026-09-10"
+    "reason": "play-time selection: Sweet Abomination 10733110 Earth Rite pay gates the play-time walk; playing Sweet Abomination 10733110 shifts earth count because picks lock before pay/reactions (arena earth differs)",
+    "since": "2026-09-27"
   },
   {
-    "trace": "ramp-claywies-mirror/trace-20260910-4.jsonl",
-    "i": 59,
-    "path": "players.a.field[4]",
+    "trace": "rune-mach15-mirror/trace-20260910-7.jsonl",
+    "i": 66,
+    "path": "players.a.field[1].countdown",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Spilling Red 10642310 summons after the destroy, not before the second selection",
-    "since": "2026-09-10"
+    "reason": "E39 / play-time selection: playing Alchemic Flare 10433310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 5→4 at i=66)",
+    "since": "2026-09-27"
   },
   {
-    "trace": "ramp-claywies-mirror/trace-20260910-6.jsonl",
-    "i": 28,
-    "path": "players.a.field[2]",
+    "trace": "rune-mach15-mirror/trace-20260910-8.jsonl",
+    "i": 13,
+    "path": "players.b.field[0].countdown",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Spilling Red 10642310 summons after the destroy, not before the second selection",
-    "since": "2026-09-10"
+    "reason": "E39 / play-time selection: playing Alchemic Flare 10433310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=13)",
+    "since": "2026-09-27"
   },
   {
-    "trace": "ramp-claywies-mirror/trace-20260910-8.jsonl",
-    "i": 43,
-    "path": "players.b.field[2]",
+    "trace": "rune-mach15-mirror/trace-20260910-9.jsonl",
+    "i": 12,
+    "path": "players.a.banished.10031210",
     "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Lumiore & Argente 10844120 ('Select 2 cards in your hand and discard them') summons after both discards and the damage, not after the first selection",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-18.jsonl",
-    "i": 50,
-    "path": "players.a.leader_defense",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-10: Depths of the Eld Blades 90044330 discarded by Spilling Red 10642310 ('When this card is discarded, deal 1 damage to the enemy leader and restore 1 defense to your leader') resolves after the destroy, not before the second selection",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-11.jsonl",
-    "i": 88,
-    "path": "players.a.field[1].attack",
-    "class": "old-rule",
-    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not, and a card in hand is never evolved; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 5/6 (Ludicrous Ordnance 10673110)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-20.jsonl",
-    "i": 56,
-    "path": "players.a.field[4].attack",
-    "class": "old-rule",
-    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not, and a card in hand is never evolved; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 7/7 (Asher & Lydia 10874110)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-1.jsonl",
-    "i": 84,
-    "path": "players.b.field[3].attack",
-    "class": "old-rule",
-    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 8/8 (Asher & Lydia 10874110)",
-    "since": "2026-09-10"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-21.jsonl",
-    "i": 93,
-    "path": "players.a.field[3].attack",
-    "class": "old-rule",
-    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 7/7 (Asher & Lydia 10874110)",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
     "since": "2026-09-10"
   }
 ]

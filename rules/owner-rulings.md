@@ -832,6 +832,24 @@ Follows the official Cygames Q&A for `10642310` Spilling Red — _"Can I play Sp
 
 Current behaviour confirmed correct by measurement in PR #50; no code or data change. Pinned by `extravagance_no_spell_in_hand_stays_unplayable`.
 
+## A played card's selections are made while playing it — 2026-09-27
+
+<!-- rulebook: absorbed #fanfare-and-enter-play-trigger-order -->
+
+> "moelle needs to send back a card before she is actually played pretty sure"
+>
+> "i believe when you play her the hand you have is fixed/frozen and you pick from that hand no matter what else happens to it in that moment"
+>
+> "ok i think this is acutally correct then. i dont think you are supposed to be able to target imaris summoned buddie with your spell (even tho youd never do it)."
+
+When a **played** card's own text asks for a player selection — hand or field targets, mode picks — that choice is made **as part of the play**, before any "whenever you play" reaction (`ally_card_played`, `ally_spell_played`, crests included) resolves and before the card's own enter abilities. The Fanfare / spell body then resolves on those locked-in picks. A target that is gone or no longer valid by resolution time is skipped for that part; the rest still resolves (`rules/rulebook.md` targeting).
+
+Supporting source (original Shadowverse effect-processing wiki; no official Cygames Q&A on this timing): https://w.atwiki.jp/svkoukasyori/pages/16.html — 「対象はプレイ時に選択する」 ("targets are selected when the card is played") and 「「(スペルを/カードを)プレイした時」効果はスペルの効果解決前に誘発する」 ("'when you play' effects trigger before the spell's effect resolves"). Order: pick → play reactions → the card's own text.
+
+**Unchanged:** Evolve, Super-Evolve, Last Words, Engage, Strike, Clash, and every other triggered ability still select when they resolve (owner 2026-09-10: evolve first, reactions, then the Evolve selection).
+
+**Measured cases:** Moelle, Gloomy Maiden (`10811130`) + World of Games (`10503210`) at count 1 — the Last Words draws are not candidates for Moelle's Fanfare return. Evolved Imari, Dewdrop (`10574120`) + Sincerity of the Dewdrop (`10573310`) — Little Buddies summoned by Imari's play reaction are not candidates. Flowering Artisan (`10571120`) + a spell that selects an enemy follower — the pick is offered while the target is still alive; if Artisan's damage kills it, that part fizzles. Crest: Majestic Conquest (`crest:10622310`) + an Enhanced card whose text picks an allied follower — the Fearless Soldier it summons is not a candidate. Crest: Yuel & Societte (`crest:10414120`) + a follower with Fanfare and Evolve picks — Fanfare pick first, then Evolve pick. Itsurugi & Taketsumi (`10854110`) mode before play reactions. Spilling Red (`10642310`) — both picks at play, in text order.
+
 ## Goddess of Starlight (`10502110`) selects as many as it can — 2026-09-18
 
 <!-- rulebook: pending — "Select N, take as many as you can" not written through to rulebook -->

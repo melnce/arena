@@ -317,8 +317,21 @@ fn choose_card_takes_the_lowest_hand_position() {
     let mapped = from_neutral(&st, &neu).expect("lowest copy");
     assert_eq!(mapped, Action::Choose(0));
     apply_neutral(&db, &mut st, &neu).unwrap();
+    assert!(
+        matches!(st.phase, Phase::Choice { .. }),
+        "second play-time pick still open after cemetery pick"
+    );
+    choose(&db, &mut st, 0);
     let ids: Vec<String> = st.player(me).hand.iter().map(|c| c.card.as_str()).collect();
-    assert_eq!(ids, vec!["88001120".to_string(), "88001110".to_string()]);
+    assert_eq!(
+        ids,
+        vec!["88001120", "88001110"],
+        "lowest-position 88001110 copy discarded"
+    );
+    assert!(
+        st.player(PlayerId::B).field[0].is_none(),
+        "enemy follower destroyed after both picks"
+    );
 }
 
 // ----- E19 -----

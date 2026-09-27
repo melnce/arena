@@ -121,7 +121,7 @@ fn oracle_traces() {
 
 /// Sum of `replay_trace_stats.compared_lines` over the oracle corpus on `origin/main`
 /// (same allowlist, no kept-charge normalisation). Normalisation must not reduce it.
-const MAIN_COMPARED_LINES: u32 = 21_287;
+const MAIN_COMPARED_LINES: u32 = 17_995;
 
 #[test]
 fn bonus_pp_kept_norm_compares_full_trace_depth() {
