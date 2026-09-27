@@ -10,7 +10,7 @@ use crate::apply::{apply_neutral, new_game};
 use crate::card::CardId;
 use crate::db::CardDb;
 use crate::error::{Illegal, ReplayError};
-use crate::ids::First;
+use crate::ids::{First, PlayerId};
 use crate::legal_actions_neutral;
 use crate::rng::GameRng;
 use crate::snapshot::snapshot_json;
@@ -19,6 +19,103 @@ use crate::trace::{
     legal_divergence_parts, neutral_json, picks_from_trace_rng, replay_compare_legal,
     replay_state_diff, NeutralAction, TraceHeader,
 };
+
+/// Owner ruling 2026-09-27: an activated, unspent Bonus PP orb is not consumed at
+/// EOT. While replaying old traces, remember each such EOT for the second player
+/// and ignore `bonus_pp` legal differences for that tier until it ends.
+#[derive(Debug, Clone, Copy)]
+struct BonusPpKeptNorm {
+    second: PlayerId,
+    kept_early: bool,
+    kept_late: bool,
+}
+
+impl BonusPpKeptNorm {
+    fn new(second: PlayerId) -> Self {
+        Self {
+            second,
+            kept_early: false,
+            kept_late: false,
+        }
+    }
+
+    fn note_eot_unspent_orb(&mut self, state: &State) {
+        let p = state.player(self.second);
+        if !p.bonus_pp.active || p.bonus_pp.locked {
+            return;
+        }
+        if p.turns_taken < 6 {
+            self.kept_early = true;
+        } else {
+            self.kept_late = true;
+        }
+    }
+
+    fn note_after_apply(&mut self, state: &State) {
+        let p = state.player(self.second);
+        if p.turns_taken >= 6 {
+            self.kept_early = false;
+        }
+        if !p.bonus_pp.early_charge {
+            self.kept_early = false;
+        }
+        if !p.bonus_pp.late_charge {
+            self.kept_late = false;
+        }
+    }
+
+    fn ignore_bonus_pp_legal(&self, state: &State) -> bool {
+        let p = state.player(self.second);
+        (self.kept_early && p.bonus_pp.early_charge && p.turns_taken < 6)
+            || (self.kept_late && p.bonus_pp.late_charge)
+    }
+
+    fn mask_state_diff(
+        &self,
+        state: &State,
+        diff: Option<(String, String, String)>,
+    ) -> Option<(String, String, String)> {
+        let Some((path, arena, trace)) = diff else {
+            return None;
+        };
+        if !self.path_is_kept_bonus_pp(state, &path) {
+            return Some((path, arena, trace));
+        }
+        None
+    }
+
+    fn path_is_kept_bonus_pp(&self, state: &State, path: &str) -> bool {
+        let side = match self.second {
+            PlayerId::A => "a",
+            PlayerId::B => "b",
+        };
+        if !path.starts_with(&format!("players.{side}.")) {
+            return false;
+        }
+        if path == format!("players.{side}.pp_bonus") {
+            return self.ignore_bonus_pp_legal(state);
+        }
+        false
+    }
+}
+
+fn filter_bonus_pp(actions: &mut Vec<NeutralAction>, player: &str) {
+    actions.retain(|a| !matches!(a, NeutralAction::BonusPp { player: p } if p == player));
+}
+
+fn second_player(first: First) -> PlayerId {
+    match first {
+        First::A | First::Coin => PlayerId::B,
+        First::B => PlayerId::A,
+    }
+}
+
+fn player_tag(p: PlayerId) -> &'static str {
+    match p {
+        PlayerId::A => "a",
+        PlayerId::B => "b",
+    }
+}
 
 /// Result of a completed replay (parse / load / unsupported stay `ReplayError`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -90,8 +187,29 @@ impl Divergence {
     }
 }
 
+/// Lines whose `state` (and `legal` when present) were compared during replay.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ReplayStats {
+    pub compared_lines: u32,
+}
+
 /// Replay `text` (one JSONL document) against `db`.
 pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayError> {
+    replay_trace_inner(db, text).map(|(out, _)| out)
+}
+
+/// Like [`replay_trace`], also returning how many lines were compared.
+pub fn replay_trace_stats(
+    db: &CardDb,
+    text: &str,
+) -> Result<(ReplayOutcome, ReplayStats), ReplayError> {
+    replay_trace_inner(db, text)
+}
+
+fn replay_trace_inner(
+    db: &CardDb,
+    text: &str,
+) -> Result<(ReplayOutcome, ReplayStats), ReplayError> {
     let mut lines = text.lines().filter(|l| !l.trim().is_empty());
     let header_line = lines
         .next()
@@ -123,6 +241,9 @@ pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayErro
         crate::error::LoadError::Unsupported(u) => ReplayError::Unsupported(u),
         other => ReplayError::Header(other.to_string()),
     })?;
+    let mut norm = BonusPpKeptNorm::new(second_player(first));
+    let second_tag = player_tag(norm.second);
+    let mut stats = ReplayStats::default();
     for (ln, line) in lines.enumerate() {
         let rec: serde_json::Value =
             serde_json::from_str(line).map_err(|source| ReplayError::Parse {
@@ -140,6 +261,9 @@ pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayErro
         let action_json = serde_json::to_value(&action).unwrap_or(serde_json::Value::Null);
         let rng = rec.get("rng").map(picks_from_trace_rng).unwrap_or_default();
         state.rng = GameRng::scripted(rng, header.seed);
+        if matches!(action, NeutralAction::EndTurn { ref player } if player == second_tag) {
+            norm.note_eot_unspent_orb(&state);
+        }
         if let Err(e) = apply_neutral(db, &mut state, &action) {
             return Err(match e {
                 Illegal::Unsupported(u) => ReplayError::Unsupported(u),
@@ -147,41 +271,53 @@ pub fn replay_trace(db: &CardDb, text: &str) -> Result<ReplayOutcome, ReplayErro
                 other => illegal_at(i, &action, &legal_json(db, &state), other),
             });
         }
+        norm.note_after_apply(&state);
+        stats.compared_lines += 1;
         let got = snapshot_json(&state);
         let want = rec.get("state").cloned().unwrap_or(serde_json::Value::Null);
-        if let Some((path, a, b)) = replay_state_diff(&got, &want) {
+        if let Some((path, a, b)) = norm.mask_state_diff(&state, replay_state_diff(&got, &want)) {
             let cards = cards_at_path(db, &path, &got, &want);
-            return Ok(ReplayOutcome::Divergence(Divergence {
-                i,
-                path,
-                arena: a,
-                trace: b,
-                action: action_json,
-                cards,
-            }));
+            return Ok((
+                ReplayOutcome::Divergence(Divergence {
+                    i,
+                    path,
+                    arena: a,
+                    trace: b,
+                    action: action_json,
+                    cards,
+                }),
+                stats,
+            ));
         }
         if replay_compare_legal(&got, &want) {
             if let Some(legal) = rec.get("legal") {
                 let mut ours: Vec<NeutralAction> = legal_actions_neutral(db, &state);
                 let mut theirs: Vec<NeutralAction> =
                     serde_json::from_value(legal.clone()).unwrap_or_default();
+                if norm.ignore_bonus_pp_legal(&state) {
+                    filter_bonus_pp(&mut ours, second_tag);
+                    filter_bonus_pp(&mut theirs, second_tag);
+                }
                 ours.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
                 theirs.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
                 if ours != theirs {
                     let (arena, trace) = legal_divergence_parts(&ours, &theirs);
-                    return Ok(ReplayOutcome::Divergence(Divergence {
-                        i,
-                        path: "legal".into(),
-                        arena,
-                        trace,
-                        action: action_json,
-                        cards: Vec::new(),
-                    }));
+                    return Ok((
+                        ReplayOutcome::Divergence(Divergence {
+                            i,
+                            path: "legal".into(),
+                            arena,
+                            trace,
+                            action: action_json,
+                            cards: Vec::new(),
+                        }),
+                        stats,
+                    ));
                 }
             }
         }
     }
-    Ok(ReplayOutcome::Green)
+    Ok((ReplayOutcome::Green, stats))
 }
 
 fn legal_json(db: &CardDb, state: &State) -> String {

@@ -1,5 +1,21 @@
 [
   {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-0.jsonl",
+    "i": 129,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'Summon 2 random differently named Abysscraft followers that cost 2 or less from your deck'; the old engine's two multiset_picks both chose 10951120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-2.jsonl",
+    "i": 83,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's two multiset_picks both chose 10052110",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "abyss-p8rfn-mirror/trace-20260910-4.jsonl",
     "i": 89,
     "path": "error",
@@ -8,8 +24,48 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-5.jsonl",
+    "i": 98,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's two multiset_picks both chose 10052110",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-6.jsonl",
+    "i": 99,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10751120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-7.jsonl",
+    "i": 52,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10751120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-10.jsonl",
+    "i": 97,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10751120",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "abyss-p8rfn-mirror/trace-20260910-13.jsonl",
     "i": 63,
+    "path": "error",
+    "class": "old-data",
+    "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-16.jsonl",
+    "i": 66,
     "path": "error",
     "class": "old-data",
     "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's second multiset_pick repeated 10951120",
@@ -29,6 +85,30 @@
     "path": "error",
     "class": "old-data",
     "reason": "Adahime, Anathema of Death 10754110 prints 'differently named'; the old engine's two multiset_picks both chose 10052110",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "abyss-p8rfn-mirror/trace-20260910-27.jsonl",
+    "i": 46,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: Baal, Elemental Resonance 10452130 '+1/+1' raises max_defense; the old engine left Raz, Demon on the Drums 10751120 max at the printed 2",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-2.jsonl",
+    "i": 33,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: a \u22120/\u22124 lowers max_defense by 4; the old engine set it to the current defense",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "ramp-37772-mirror/trace-20260910-13.jsonl",
+    "i": 52,
+    "path": "players.b.field[1]",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10: reactions queued during an effect wait until the list completes, including across a player choice; Vorlalai discarded by Spilling Red summons after the destroy, not before the second selection",
     "since": "2026-09-10"
   },
   {
@@ -88,6 +168,22 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "basic-rune-mirror/trace-20260910-7.jsonl",
+    "i": 37,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "basic-rune-mirror/trace-20260910-11.jsonl",
+    "i": 19,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "basic-rune-mirror/trace-20260910-12.jsonl",
     "i": 63,
     "path": "players.a.banished.10031210",
@@ -120,8 +216,24 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "basic-rune-mirror/trace-20260910-17.jsonl",
+    "i": 53,
+    "path": "players.b.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "basic-rune-mirror/trace-20260910-18.jsonl",
     "i": 17,
+    "path": "players.b.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "basic-rune-mirror/trace-20260910-19.jsonl",
+    "i": 63,
     "path": "players.b.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
@@ -144,11 +256,35 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "elf-neanisu2-mirror/trace-20260910-2.jsonl",
+    "i": 80,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-4.jsonl",
+    "i": 46,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "elf-neanisu2-mirror/trace-20260910-12.jsonl",
     "i": 71,
     "path": "players.b.field[0].max_defense",
     "class": "old-rule",
     "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-17.jsonl",
+    "i": 74,
+    "path": "players.b.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Virid Lieutenant 10913110 Evolve 'Select another allied follower on the field and give it +1/+1 and Rush' raises max_defense; the old engine left max at the pre-buff value",
     "since": "2026-09-10"
   },
   {
@@ -165,6 +301,14 @@
     "path": "players.b.field[0].max_defense",
     "class": "old-rule",
     "reason": "owner ruling 2026-09-10 (like Baal): Setus & Maisha, Bladerights 10814110 'Give all other allied followers on the field +1/+1' raises max_defense; the old engine left a damaged or evolved follower's max at the pre-buff value",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-0.jsonl",
+    "i": 7,
+    "path": "players.b.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
     "since": "2026-09-10"
   },
   {
@@ -192,9 +336,33 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "rune-mach15-mirror/trace-20260910-16.jsonl",
+    "i": 102,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "rune-mach15-mirror/trace-20260910-20.jsonl",
     "i": 7,
     "path": "players.b.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-22.jsonl",
+    "i": 60,
+    "path": "players.b.banished.90031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-26.jsonl",
+    "i": 38,
+    "path": "players.a.banished.10031210",
     "class": "old-rule",
     "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
     "since": "2026-09-10"
@@ -210,6 +378,22 @@
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-5.jsonl",
     "i": 53,
+    "path": "players.b.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-6.jsonl",
+    "i": 40,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-7.jsonl",
+    "i": 109,
     "path": "players.b.field[0].countdown",
     "class": "old-rule",
     "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
@@ -234,6 +418,14 @@
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-14.jsonl",
     "i": 160,
+    "path": "players.a.field[0].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "elf-neanisu2-mirror/trace-20260910-15.jsonl",
+    "i": 92,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
     "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
@@ -320,6 +512,14 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "rune-mach15-mirror/trace-20260910-8.jsonl",
+    "i": 95,
+    "path": "players.a.banished.90031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "rune-mach15-mirror/trace-20260910-15.jsonl",
     "i": 132,
     "path": "players.a.banished.10031210",
@@ -344,6 +544,14 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "rune-mach15-mirror/trace-20260910-21.jsonl",
+    "i": 56,
+    "path": "players.b.field[1].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "rune-mach15-mirror/trace-20260910-23.jsonl",
     "i": 32,
     "path": "players.b.banished.10031210",
@@ -352,11 +560,51 @@
     "since": "2026-09-10"
   },
   {
+    "trace": "rune-mach15-mirror/trace-20260910-24.jsonl",
+    "i": 52,
+    "path": "players.b.banished.90031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-27.jsonl",
+    "i": 81,
+    "path": "players.b.field[2].countdown",
+    "class": "old-rule",
+    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
     "trace": "rune-mach15-mirror/trace-20260910-28.jsonl",
     "i": 48,
     "path": "players.b.field[1].countdown",
     "class": "old-rule",
     "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-29.jsonl",
+    "i": 99,
+    "path": "players.a.banished.10031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto another Earth Sigil amulet banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "rune-mach15-mirror/trace-20260910-11.jsonl",
+    "i": 107,
+    "path": "players.a.banished.90031210",
+    "class": "old-rule",
+    "reason": "official glossary Earth Sigil + owner 2026-09-10 'yes banish them instead': playing Witch's New Brew 10031210 onto Magic Sediment 90031210 banishes the older holder (no shadow); the old engine cemeteries it",
+    "since": "2026-09-10"
+  },
+  {
+    "trace": "royal-nattui-mirror/trace-20260910-26.jsonl",
+    "i": 63,
+    "path": "players.a.field[0].max_defense",
+    "class": "old-rule",
+    "reason": "owner ruling 2026-09-10 (like Baal): Gilded Necklace 90021340 'give it +0/+1 and Ward' raises max_defense; the old engine left Super-Evolved Unkei, Goldbloom 10524120 max at 7",
     "since": "2026-09-10"
   },
   {
@@ -416,1115 +664,11 @@
     "since": "2026-09-10"
   },
   {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-0.jsonl",
-    "i": 80,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-1.jsonl",
-    "i": 22,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-10.jsonl",
-    "i": 13,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-11.jsonl",
-    "i": 16,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-12.jsonl",
-    "i": 49,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-14.jsonl",
-    "i": 6,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-15.jsonl",
-    "i": 19,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-16.jsonl",
-    "i": 61,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-17.jsonl",
-    "i": 6,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-2.jsonl",
-    "i": 52,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-20.jsonl",
-    "i": 21,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-21.jsonl",
-    "i": 39,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-22.jsonl",
-    "i": 90,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-23.jsonl",
-    "i": 18,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-24.jsonl",
-    "i": 99,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-25.jsonl",
-    "i": 24,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-26.jsonl",
-    "i": 50,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-27.jsonl",
-    "i": 21,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-29.jsonl",
-    "i": 6,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-5.jsonl",
-    "i": 8,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-6.jsonl",
-    "i": 78,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-7.jsonl",
-    "i": 15,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-8.jsonl",
-    "i": 19,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "abyss-p8rfn-mirror/trace-20260910-9.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-0.jsonl",
-    "i": 10,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-18.jsonl",
-    "i": 71,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
     "trace": "afnm-minatodao-mirror/trace-20260910-21.jsonl",
-    "i": 8,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-22.jsonl",
-    "i": 7,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-24.jsonl",
-    "i": 5,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-25.jsonl",
-    "i": 57,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-27.jsonl",
-    "i": 63,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-28.jsonl",
-    "i": 65,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-29.jsonl",
-    "i": 7,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-4.jsonl",
-    "i": 51,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-5.jsonl",
-    "i": 141,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "afnm-minatodao-mirror/trace-20260910-7.jsonl",
-    "i": 79,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-0.jsonl",
-    "i": 17,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-1.jsonl",
-    "i": 21,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-11.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-12.jsonl",
-    "i": 53,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-13.jsonl",
-    "i": 65,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-15.jsonl",
-    "i": 13,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-17.jsonl",
-    "i": 15,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-18.jsonl",
-    "i": 70,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-19.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-2.jsonl",
-    "i": 6,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-3.jsonl",
-    "i": 90,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-6.jsonl",
-    "i": 82,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-8.jsonl",
-    "i": 77,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-forest-mirror/trace-20260910-9.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-portal-mirror/trace-20260910-1.jsonl",
-    "i": 56,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-portal-mirror/trace-20260910-11.jsonl",
-    "i": 59,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-portal-mirror/trace-20260910-15.jsonl",
-    "i": 103,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-portal-mirror/trace-20260910-16.jsonl",
-    "i": 69,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-portal-mirror/trace-20260910-17.jsonl",
-    "i": 15,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-portal-mirror/trace-20260910-18.jsonl",
-    "i": 84,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-portal-mirror/trace-20260910-2.jsonl",
-    "i": 6,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-portal-mirror/trace-20260910-8.jsonl",
-    "i": 52,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-0.jsonl",
-    "i": 62,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-11.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-17.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-19.jsonl",
-    "i": 49,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-7.jsonl",
-    "i": 16,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-8.jsonl",
-    "i": 53,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "basic-rune-mirror/trace-20260910-9.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-11.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-15.jsonl",
-    "i": 13,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-17.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-2.jsonl",
-    "i": 7,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-4.jsonl",
-    "i": 22,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-6.jsonl",
-    "i": 24,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-7.jsonl",
-    "i": 94,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "elf-neanisu2-mirror/trace-20260910-8.jsonl",
-    "i": 61,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-1.jsonl",
-    "i": 69,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-10.jsonl",
-    "i": 91,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-13.jsonl",
-    "i": 48,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-17.jsonl",
-    "i": 13,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-18.jsonl",
-    "i": 53,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-2.jsonl",
-    "i": 6,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-20.jsonl",
-    "i": 50,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-21.jsonl",
-    "i": 43,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-22.jsonl",
-    "i": 7,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-23.jsonl",
-    "i": 46,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-24.jsonl",
-    "i": 5,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-25.jsonl",
-    "i": 34,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-26.jsonl",
-    "i": 48,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-28.jsonl",
-    "i": 11,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-29.jsonl",
-    "i": 6,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-4.jsonl",
-    "i": 65,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-6.jsonl",
-    "i": 44,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-7.jsonl",
-    "i": 34,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-8.jsonl",
-    "i": 38,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-37772-mirror/trace-20260910-9.jsonl",
-    "i": 52,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-1.jsonl",
-    "i": 48,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-11.jsonl",
-    "i": 38,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-12.jsonl",
-    "i": 53,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-14.jsonl",
-    "i": 42,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-16.jsonl",
-    "i": 61,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-17.jsonl",
-    "i": 13,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-19.jsonl",
-    "i": 51,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-2.jsonl",
-    "i": 6,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-5.jsonl",
-    "i": 80,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "ramp-claywies-mirror/trace-20260910-7.jsonl",
-    "i": 16,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-0.jsonl",
-    "i": 81,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-1.jsonl",
-    "i": 21,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-10.jsonl",
-    "i": 28,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-13.jsonl",
-    "i": 13,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-16.jsonl",
-    "i": 67,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-17.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-2.jsonl",
-    "i": 67,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-21.jsonl",
-    "i": 10,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-22.jsonl",
-    "i": 13,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-23.jsonl",
-    "i": 75,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-24.jsonl",
-    "i": 28,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-25.jsonl",
-    "i": 81,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-26.jsonl",
-    "i": 9,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-29.jsonl",
-    "i": 15,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-3.jsonl",
-    "i": 11,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-4.jsonl",
-    "i": 32,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-7.jsonl",
-    "i": 44,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "royal-nattui-mirror/trace-20260910-9.jsonl",
-    "i": 17,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-0.jsonl",
-    "i": 6,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-10.jsonl",
-    "i": 71,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-11.jsonl",
-    "i": 90,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-12.jsonl",
-    "i": 85,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-14.jsonl",
-    "i": 11,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-16.jsonl",
-    "i": 67,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-21.jsonl",
-    "i": 37,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-22.jsonl",
-    "i": 26,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-24.jsonl",
-    "i": 18,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-25.jsonl",
-    "i": 20,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-26.jsonl",
-    "i": 14,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-27.jsonl",
-    "i": 60,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-29.jsonl",
-    "i": 79,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-4.jsonl",
-    "i": 67,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-5.jsonl",
-    "i": 8,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-6.jsonl",
-    "i": 82,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-7.jsonl",
-    "i": 12,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
-  },
-  {
-    "trace": "rune-mach15-mirror/trace-20260910-8.jsonl",
-    "i": 7,
-    "path": "legal",
-    "class": "old-rule",
-    "reason": "owner ruling 2026-09-27: Bonus PP charge is not consumed when the orb is activated but unspent; arena still offers bonus_pp on a later turn, the old trace does not",
-    "since": "2026-09-27"
+    "i": 93,
+    "path": "players.a.field[3].attack",
+    "class": "old-rule",
+    "reason": "rules/official-glossary.md Exact Copy: 'An exact copy of a card retains any damage and effects on the original' \u2014 a plain copy does not; Depths of the Eld Axe 90074320 'add a copy of it to your hand'; the old engine played the copy as an evolved 7/7 (Asher & Lydia 10874110)",
+    "since": "2026-09-10"
   }
 ]

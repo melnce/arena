@@ -125,7 +125,10 @@ fn bppv_penalizes_opponent_charges_from_first_player_view() {
     let v0 = bare.evaluate(&db, &st, first);
     let v1 = prized.evaluate(&db, &st, first);
     assert!(v1 < v0, "bppv should penalize the opponent's held charges");
-    assert!((v0 - v1 - 20.0).abs() < 1e-3, "two usable charges at bppv=10");
+    assert!(
+        (v0 - v1 - 20.0).abs() < 1e-3,
+        "two usable charges at bppv=10"
+    );
 }
 
 #[test]

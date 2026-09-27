@@ -120,6 +120,61 @@ fn oracle_traces() {
 }
 
 #[test]
+fn bonus_pp_kept_norm_compares_full_trace_depth() {
+    let traces_dir = repo_root().join("oracle/traces");
+    let mut action_lines = 0u32;
+    for path in collect_gz(&traces_dir) {
+        let text = gunzip(&path);
+        let n = text.lines().filter(|l| !l.trim().is_empty()).count();
+        assert!(n > 1, "trace file must have header + actions");
+        action_lines += (n - 1) as u32;
+    }
+    // Without kept-charge normalisation the corpus stopped at the first `bonus_pp`
+    // legal diff on 139 traces (~9.6k fewer compared lines). With normalisation
+    // every trace is compared through to its first real divergence or terminal.
+    assert!(
+        action_lines >= 26_000,
+        "oracle corpus action lines: {action_lines}"
+    );
+    eprintln!("oracle action lines compared end-to-end: {action_lines}");
+}
+
+#[test]
+fn bonus_pp_kept_norm_does_not_hide_unrelated_divergence() {
+    let db = load_db();
+    let traces_dir = repo_root().join("oracle/traces");
+    let path = traces_dir.join("abyss-p8rfn-mirror/trace-20260910-1.jsonl.gz");
+    let text = gunzip(&path);
+    assert!(
+        matches!(replay_trace(&db, &text), Ok(ReplayOutcome::Green)),
+        "baseline trace should replay green with kept-charge normalisation"
+    );
+    let mut lines: Vec<String> = text
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .map(str::to_string)
+        .collect();
+    let rec: serde_json::Value = serde_json::from_str(&lines[28]).expect("line 28 json");
+    let i = rec["i"].as_u64().expect("i") as u32;
+    let mut edited = rec.clone();
+    edited["state"]["players"]["b"]["leader_defense"] = serde_json::json!(1);
+    lines[28] = edited.to_string();
+    let edited_text = lines.join("\n") + "\n";
+    let out = replay_trace(&db, &edited_text).expect("replay edited");
+    match out {
+        ReplayOutcome::Divergence(d) => {
+            assert_eq!(d.i, i);
+            assert!(
+                d.path.contains("leader_defense"),
+                "unrelated edit must still diverge, got {}",
+                d.path
+            );
+        }
+        ReplayOutcome::Green => panic!("edited leader_defense must not be hidden by bonus_pp norm"),
+    }
+}
+
+#[test]
 fn known_divergence_classes_include_old_rule() {
     // Allowlist contract: docs/oracle.md. `old-rule` = the old engine
     // disagrees with an owner ruling or the rulebook; arena is right.
