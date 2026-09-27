@@ -187,6 +187,7 @@ Projection both engines can produce. Keys sorted.
 | per-instance granted-ability **text** | grants are gameplay; the snapshot carries a sorted `granted` list of **trigger tags** (`lastWords`, `fanfare`, …), not the quoted string |
 | undo / history / checkpoints | client-only |
 | pending-target click buffers | `phase: choice` plus `legal` is enough |
+| play-time vs effect-time selection | `full()` choice node `pending` is `play_select` (locked before play reactions) or `effect_select` / `mode_select` (at resolution); traces emit `choose` the same either way |
 | RNG internal counters | the next line's `rng` picks are the contract |
 | hidden-hand flags | the engine is perfect-information |
 | animation / UI | out of scope |
