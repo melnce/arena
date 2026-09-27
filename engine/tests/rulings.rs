@@ -54,7 +54,7 @@ fn multi_tier_enhance_all_affordable() {
     let me = PlayerId::A;
     give_pp(&mut st, me, 4, 4);
     st.player_mut(me).hand.clear();
-    let h = put_hand(&db, &mut st, me, "88001110");
+    let h = put_hand(&db, &mut st, me, "10001110");
     play(&db, &mut st, h);
     let f = st.player(me).field.iter().flatten().next().unwrap();
     assert_eq!(f.attack, 5);
@@ -426,7 +426,7 @@ fn bonus_pp_unspent_orb_not_consumed() {
         "unspent orb must not consume the early charge"
     );
     assert!(!st.player(me).bonus_pp.active);
-    end_turn(&db, &mut st);
+    assert_eq!(st.active, me, "B's turn 2 after the unspent orb EOT");
     assert!(
         legal_actions(&db, &st)
             .iter()
