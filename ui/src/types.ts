@@ -266,6 +266,8 @@ export type PositionLog = {
   deckBId: string;
   first: First;
   actions: LogStep[];
+  /** Applied step count on import; remainder waits on Redo. Absent = all applied. */
+  at?: number;
   name?: string;
   turn?: number;
   savedAt?: string;

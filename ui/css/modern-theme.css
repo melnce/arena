@@ -996,6 +996,12 @@ body.gameover .leader {
   transform: translateX(-50%) translateY(0);
 }
 
+.replay-step-readout {
+  font-size: 0.85rem;
+  color: var(--ink-muted, rgba(255, 255, 255, 0.65));
+  white-space: nowrap;
+}
+
 #coverageBanner {
   position: fixed;
   left: 50%;

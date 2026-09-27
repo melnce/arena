@@ -890,8 +890,11 @@ Replay contract: build `arena.Game(db, int(seed), deckA, deckB, first)`
 with decks parsed the same way as `matchup.py`'s `parse_deck_json` (the
 UI stores deck JSON strings; wasm `GameInner::new` parses the same
 `{id: n}` shape), then apply every log step (`apply` or `reseed`). The
-position log is exactly `Session.toPositionLog`: seed, decks, first,
-actions including F6/F8 `reseed` steps. If `hash` is present it is
+position log is exactly `Session.toPositionLog` (default options): seed,
+decks, first, actions including F6/F8 `reseed` steps — applied actions
+only, no `at` key. Export / Save Pos may append the redo tail with
+`at` set to the applied count; see `PositionLog.at` in `ui/src/types.ts`.
+If `hash` is present it is
 compared to `str(game.hash())` before the decision; mismatch →
 `409 {"error": "state hash mismatch", "server": "…", "client": "…"}`.
 Other client errors → `400 {"error": "…"}`; unexpected → `500`. One

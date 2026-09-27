@@ -217,12 +217,14 @@
               <button id="startGameBtn" type="button">Start Game</button>
               <button id="undoBtn" type="button" title="Undo (Ctrl+Z / Cmd+Z)" disabled>Undo</button>
               <button id="redoBtn" type="button" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled>Redo</button>
+              <span id="replayStepReadout" class="replay-step-readout" hidden></span>
             </div>
           </div>
           <div class="settings-drawer-section">
             <h3>Practice &amp; Positions</h3>
             <p class="checkpoint-status">
-              Positions are replayable action logs (seed + decks + NeutralAction list). The engine cannot restore
+              Positions are replayable action logs (seed + decks + NeutralAction list). Optional
+              <code>at</code> opens at that step with the rest on Redo. The engine cannot restore
               <code>Game.full()</code> today.
             </p>
             <div class="toolbar-cluster toolbar-cluster--practice">

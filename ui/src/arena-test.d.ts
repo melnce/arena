@@ -32,6 +32,7 @@ declare global {
       };
       reseed(seed: string | number | bigint): void;
       exportLog(): unknown;
+      exportPositionLog(): unknown;
       loadLog(log: unknown): void;
       setCheckpoint(): void;
       restoreCheckpoint(): boolean;
