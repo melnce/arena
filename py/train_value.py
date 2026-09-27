@@ -623,12 +623,41 @@ def _json_safe(obj: Any) -> Any:
 
 def _format_metric_block(lines: list[str], who: str, block: dict[str, Any]) -> None:
     lines.append(f"--- {who} ---")
+    if block.get("skipped"):
+        lines.append(f"  skipped: {block['skipped']}")
+        return
     for key in ("overall", "<=3", "4-6", ">=7"):
         m = block[key]
         lines.append(
             f"  {key:8} rows={m['rows']:6}  mse={m['mse']:.5f}  "
             f"sign_acc={m['sign_acc']:.4f}  auc={m['auc']:.4f}"
         )
+
+
+def _eval_holdout_features(
+    ev_path: Path,
+    ev_spec: dict[str, Any],
+    feat_ho,
+    data_encoding: int,
+    data_feature_len: int,
+) -> tuple[str | None, Any, str | None]:
+    """Map holdout rows to an eval model, or skip on encoding mismatch."""
+    ev_enc = int(ev_spec.get("encoding", 1))
+    ev_fl = int(ev_spec["feature_len"])
+    if ev_enc == data_encoding and ev_fl == data_feature_len:
+        return ev_path.name, feat_ho, None
+    if (
+        ev_enc == 1
+        and data_encoding == 2
+        and ev_fl == FEATURE_LEN_V1
+        and data_feature_len == FEATURE_LEN_V2
+    ):
+        note = (
+            f"eval {ev_path.name}: scoring v1 model on leading "
+            f"{FEATURE_LEN_V1} columns of v2 rows"
+        )
+        return f"{ev_path.name} (v1 block of v2 rows)", feat_ho[:, :FEATURE_LEN_V1], note
+    return None, None, "encoding mismatch"
 
 
 def format_report(report: dict[str, Any]) -> str:
@@ -790,14 +819,23 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     for path in args.eval or []:
         ev_path = Path(path)
         ev_spec = json.loads(ev_path.read_text())
+        report_key, ev_feat, note = _eval_holdout_features(
+            ev_path, ev_spec, feat_ho, encoding, feature_len
+        )
+        if report_key is None:
+            print(f"eval {ev_path.name}: skipped ({note})", flush=True)
+            eval_blocks[ev_path.name] = {"skipped": note}
+            continue
+        if note:
+            print(note, flush=True)
         ev_pred = (
-            predict(ev_spec, feat_ho, ids_ho)
-            if feat_ho.shape[0]
+            predict(ev_spec, ev_feat, ids_ho)
+            if ev_feat.shape[0]
             else np.zeros((0,), dtype=np.float32)
         )
         ev_scale = float(ev_spec.get("scale", SCALE))
         ev_unit = ev_pred / ev_scale if ev_pred.size else ev_pred
-        eval_blocks[ev_path.name] = metric_block(ev_unit, lab_ho, turns_ho)
+        eval_blocks[report_key] = metric_block(ev_unit, lab_ho, turns_ho)
     report = {
         "arch": spec["arch"],
         "rows_train": int(y_tr.size),

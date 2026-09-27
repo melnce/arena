@@ -349,3 +349,115 @@ def test_train_value_refuses_mixed_encoding_shards(db, root: Path, tmp_path: Pat
     )
     with pytest.raises(SystemExit, match="mixed encoding"):
         train_value.load_dirs([str(v1_dir), str(v2_dir)])
+
+
+def test_eval_v1_model_on_v2_rows(db, root: Path, tmp_path: Path) -> None:
+    import arena
+
+    export = tmp_path / "v2"
+    arena.matchup(
+        db,
+        _forest(root),
+        2,
+        17,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        threads=1,
+        export=str(export),
+        encoding=2,
+    )
+    builtin = root / "engine" / "models" / "h0-linear-v1.json"
+    out = tmp_path / "evaled-v2.json"
+    train_value.main(
+        [
+            "--data",
+            str(export),
+            "--model",
+            "linear",
+            "--out",
+            str(out),
+            "--epochs",
+            "1",
+            "--seed",
+            "3",
+            "--eval",
+            str(builtin),
+            "--holdout",
+            "0.5",
+        ]
+    )
+    report = json.loads(_report_path(out).read_text())
+    key = "h0-linear-v1.json (v1 block of v2 rows)"
+    assert key in report["eval"]
+    ev = report["eval"][key]
+    assert "skipped" not in ev
+    acc = ev["overall"]["sign_acc"]
+    assert np.isfinite(acc)
+    assert 0.0 <= acc <= 1.0
+
+
+def test_eval_skips_v2_model_on_v1_rows(db, root: Path, tmp_path: Path) -> None:
+    import arena
+
+    v1_export = tmp_path / "v1"
+    v2_export = tmp_path / "v2"
+    arena.matchup(
+        db,
+        _forest(root),
+        2,
+        21,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        threads=1,
+        export=str(v1_export),
+        encoding=1,
+    )
+    arena.matchup(
+        db,
+        _forest(root),
+        2,
+        22,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        threads=1,
+        export=str(v2_export),
+        encoding=2,
+    )
+    v2_model = tmp_path / "tiny-v2.json"
+    train_value.main(
+        [
+            "--data",
+            str(v2_export),
+            "--model",
+            "linear",
+            "--out",
+            str(v2_model),
+            "--epochs",
+            "1",
+            "--seed",
+            "3",
+            "--holdout",
+            "0.5",
+        ]
+    )
+    out = tmp_path / "evaled-v1.json"
+    train_value.main(
+        [
+            "--data",
+            str(v1_export),
+            "--model",
+            "linear",
+            "--out",
+            str(out),
+            "--epochs",
+            "1",
+            "--seed",
+            "3",
+            "--eval",
+            str(v2_model),
+            "--holdout",
+            "0.5",
+        ]
+    )
+    report = json.loads(_report_path(out).read_text())
+    assert report["eval"][v2_model.name] == {"skipped": "encoding mismatch"}
