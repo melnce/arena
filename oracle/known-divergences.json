@@ -364,7 +364,7 @@
     "i": 23,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only (World of Games 10503210 countdown arena=1 trace=2)",
+    "reason": "play-time selection: arena advanced World of Games 10503210 countdown to 1 before Magachiyo, Aromatic Convict 10914110's pick; the old engine advances after the mode/Fanfare pick at i=23 (trace countdown 2→2, including enemy same-cost cards per official Q&A)",
     "since": "2026-09-10"
   },
   {
@@ -396,7 +396,7 @@
     "i": 20,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only (World of Games 10503210 countdown arena=1 trace=2)",
+    "reason": "play-time selection: arena advanced World of Games 10503210 countdown to 1 before Miroku, Swarmpetal 10514120's pick; the old engine advances after the mode/Fanfare pick at i=20 (trace countdown 2→2, including enemy same-cost cards per official Q&A)",
     "since": "2026-09-10"
   },
   {

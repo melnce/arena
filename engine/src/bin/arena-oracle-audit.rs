@@ -156,7 +156,7 @@ fn run() -> Result<(), String> {
     if let Some(main_path) = compare_main {
         let main_text = fs::read_to_string(&main_path).map_err(|e| e.to_string())?;
         let main_rows = KnownDivergence::parse_list(&main_text)?;
-        let notes = removed_notes(&main_rows, &allowlist);
+        let notes = removed_notes(&db, &traces_dir, &main_rows, &allowlist);
         let notes_path = root.join("oracle/removed-divergences-notes.md");
         fs::write(&notes_path, notes).map_err(|e| e.to_string())?;
         eprintln!("wrote {}", notes_path.display());
@@ -373,6 +373,21 @@ impl<'a> TraceCtx<'a> {
             .map(str::to_string)
     }
 
+    fn countdown_at_path(&self, i: u32) -> Option<String> {
+        let rest = self.path.strip_prefix("players.")?;
+        let (side, rest) = rest.split_once('.')?;
+        let after = rest.strip_prefix("field[")?;
+        let (idx, _) = after.split_once(']')?;
+        let idx: usize = idx.parse().ok()?;
+        let st = self.state_at(i)?;
+        st.get("players")?
+            .get(side)?
+            .get("field")?
+            .get(idx)?
+            .get("countdown")
+            .map(|v| v.to_string())
+    }
+
     fn recent_evolve(&self) -> Option<String> {
         for back in 0..=8 {
             let idx = self.i.saturating_sub(back);
@@ -567,6 +582,29 @@ fn classify_faith(db: &CardDb, ctx: &TraceCtx<'_>) -> (DivergenceClass, String) 
     )
 }
 
+/// World of Games: arena advanced countdown before the played card's pick; the trace
+/// (old engine) advances after the pick and does count enemy same-cost cards.
+fn wog_play_time_reason(db: &CardDb, ctx: &TraceCtx<'_>, arena: &str, _trace_val: &str) -> String {
+    let (play_id, play_name) = ctx
+        .played_card()
+        .unwrap_or_else(|| ("?".into(), "?".into()));
+    let cd_before = ctx.countdown_at_path(ctx.i).unwrap_or_else(|| "?".into());
+    let cd_after = ctx
+        .countdown_at_path(ctx.i + 1)
+        .or_else(|| ctx.countdown_at_path(ctx.i + 2))
+        .unwrap_or_else(|| "?".into());
+    let pick = if ctx.line_at(ctx.i + 1).is_some_and(|l| l.action.get("choose").is_some()) {
+        format!("mode/Fanfare pick at i={}", ctx.i + 1)
+    } else if ctx.line_at(ctx.i).is_some_and(|l| l.action.get("choose").is_some()) {
+        format!("mode/Fanfare pick at i={}", ctx.i)
+    } else {
+        "subsequent pick".into()
+    };
+    format!(
+        "play-time selection: arena advanced World of Games 10503210 countdown to {arena} before {play_name} {play_id}'s pick; the old engine advances after the {pick} (trace countdown {cd_before}→{cd_after}, including enemy same-cost cards per official Q&A)"
+    )
+}
+
 fn classify_countdown(
     db: &CardDb,
     trace: &str,
@@ -603,9 +641,7 @@ fn classify_countdown(
         if trace.starts_with("elf-neanisu2-mirror/") && action_play_card(ctx.action).is_none() {
             return (
                 DivergenceClass::OldRule,
-                format!(
-                    "official Q&A (World of Games / Divine Thunder): an enemy card with the same base cost counts; the old engine counted allied cards only (World of Games 10503210 countdown arena={arena} trace={trace_val})"
-                ),
+                wog_play_time_reason(db, ctx, arena, trace_val),
             );
         }
         if play_id == "10913310" || play_id == "10914110" {
@@ -901,7 +937,12 @@ fn mechanism_bucket(reason: &str) -> String {
     }
 }
 
-fn removed_notes(main: &[KnownDivergence], new: &[KnownDivergence]) -> String {
+fn removed_notes(
+    db: &CardDb,
+    traces_dir: &Path,
+    main: &[KnownDivergence],
+    new: &[KnownDivergence],
+) -> String {
     let new_keys: HashSet<(String, u32, String)> = new
         .iter()
         .map(|r| (r.trace.clone(), r.i, r.path.clone()))
@@ -916,10 +957,11 @@ fn removed_notes(main: &[KnownDivergence], new: &[KnownDivergence]) -> String {
     let mut categories: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for r in &removed {
         let cat = removed_category(r);
+        let reason = removed_reason(db, traces_dir, r, new);
         categories
             .entry(cat)
             .or_default()
-            .push(format!("- `{}` i={} `{}` — {}", r.trace, r.i, r.path, r.reason));
+            .push(format!("- `{}` i={} `{}` — {}", r.trace, r.i, r.path, reason));
     }
 
     let mut out = String::from("# Removed allowlist rows (main → play-time-selection branch)\n\n");
@@ -938,6 +980,33 @@ fn removed_notes(main: &[KnownDivergence], new: &[KnownDivergence]) -> String {
         out.push('\n');
     }
     out
+}
+
+fn removed_reason(db: &CardDb, traces_dir: &Path, r: &KnownDivergence, new: &[KnownDivergence]) -> String {
+    if r.path.ends_with(".countdown")
+        && (r.reason.contains("World of Games") || r.reason.contains("Divine Thunder"))
+    {
+        let trace_green = !new.iter().any(|n| n.trace == r.trace);
+        let gz = traces_dir.join(r.trace.replace(".jsonl", ".jsonl.gz"));
+        if let Ok(text) = gunzip(&gz) {
+            if let Ok(lines) = parse_trace_lines(&text) {
+                let ctx = TraceCtx::new(db, &lines, r.i, &r.path, &serde_json::Value::Null);
+                let detail = wog_play_time_reason(db, &ctx, "?", "?");
+                if trace_green {
+                    return format!(
+                        "{detail}; play-time selection restores pick-before-advance order — trace now green"
+                    );
+                }
+                let moved = new
+                    .iter()
+                    .find(|n| n.trace == r.trace)
+                    .map(|n| format!("new first divergence i={} `{}`", n.i, n.path))
+                    .unwrap_or_else(|| "first divergence moved".into());
+                return format!("{detail}; {moved}");
+            }
+        }
+    }
+    r.reason.clone()
 }
 
 fn removed_category(r: &KnownDivergence) -> String {
