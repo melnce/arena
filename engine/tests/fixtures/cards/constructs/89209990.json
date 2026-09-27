@@ -1,0 +1,35 @@
+{
+  "id": "89209990",
+  "name": "Draw Then Pick Fixture",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 0,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Draw a card. Select a card in your hand and discard it.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw a card. Select a card in your hand and discard it.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        },
+        {
+          "printed": "Select a card in your hand and discard it.",
+          "op": "discard",
+          "select": {
+            "side": "ally",
+            "zone": "hand",
+            "kind": "card",
+            "pick": "choose"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

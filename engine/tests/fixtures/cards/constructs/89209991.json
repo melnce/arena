@@ -1,0 +1,35 @@
+{
+  "id": "89209991",
+  "name": "Enhance Pick Ally Fixture",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 0,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "attack": 1,
+  "defense": 1,
+  "text": "Enhance (1): Select an allied follower on the field and give it +1/+1.",
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 1,
+      "printed": "Enhance (1): Select an allied follower on the field and give it +1/+1.",
+      "effects": [
+        {
+          "printed": "Select an allied follower on the field and give it +1/+1.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "choose"
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

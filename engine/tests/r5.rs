@@ -318,7 +318,15 @@ fn choose_card_takes_the_lowest_hand_position() {
     assert_eq!(mapped, Action::Choose(0));
     apply_neutral(&db, &mut st, &neu).unwrap();
     let ids: Vec<String> = st.player(me).hand.iter().map(|c| c.card.as_str()).collect();
-    assert_eq!(ids, vec!["88001120".to_string(), "88001110".to_string()]);
+    assert_eq!(
+        ids,
+        vec!["88001110", "88001120", "88001110"],
+        "play-time discard pick locks the target; hand changes after both picks resolve"
+    );
+    assert!(
+        matches!(st.phase, Phase::Choice { .. }),
+        "second play-time pick still open"
+    );
 }
 
 // ----- E19 -----

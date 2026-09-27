@@ -52,7 +52,8 @@ pub use rng::{policy_rng, GameRng, Xoshiro256ss};
 pub use search_key::search_key;
 pub use snapshot::{hash, snapshot, snapshot_json};
 pub use state::{
-    CardInstance, ChoiceNode, GameConfig, OpeningHands, Phase, PlayForm, PlayerState, State,
+    CardInstance, ChoiceNode, GameConfig, OpeningHands, PendingKind, Phase, PlayForm, PlayerState,
+    State, TargetOpt,
 };
 pub use support::m1_unsupported_list;
 pub use trace::{

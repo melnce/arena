@@ -695,13 +695,10 @@ fn e38_aizeden_destroy_before_analyzing_draw() {
     assert!(!field_has(&st, opp, "10771110"));
 }
 
-/// Imari 10574120 "Whenever you play a spell, if this follower is evolved,
-/// summon an Imari's Little Buddies" is a play reaction. E39: play reactions
-/// resolve when the card is played, before the spell's text or mode choice
-/// (rulebook Fanfare and Enter-Play item 1; official Q&A World of Games /
-/// Divine Thunder; `docs/engine-internals.md` § E39).
+/// Freerunning 10771310 mode is a play-time pick (owner 2026-09-27). Imari
+/// 10574120's buddy summon is a play reaction and waits until after the mode.
 #[test]
-fn imari_summons_before_freerunning_mode_choose() {
+fn freerunning_mode_choose_before_imari_play_reaction() {
     let db = load_db();
     let mut st = started(&db, 57);
     let me = PlayerId::A;
@@ -714,7 +711,7 @@ fn imari_summons_before_freerunning_mode_choose() {
     play_id(&db, &mut st, me, "10771310");
     assert!(matches!(st.phase, Phase::Choice { .. }));
     assert!(
-        field_has(&st, me, "90074140"),
-        "play reactions summon before the spell's Mode choose"
+        !field_has(&st, me, "90074140"),
+        "play-time mode choose opens before Imari's play reaction summons"
     );
 }
