@@ -1,0 +1,18 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:bpp1=4"
+  },
+  {
+    "index": 2,
+    "spec": "h0:bpp1=3"
+  },
+  {
+    "index": 3,
+    "spec": "h0:bppv=2.4"
+  },
+  {
+    "index": 4,
+    "spec": "h0:bppv=6"
+  }
+]
