@@ -344,19 +344,14 @@ fn dump_gate_explain_at() {
                     serde_json::to_string(&cand.action).unwrap()
                 );
                 for (wi, w) in cand.worlds.iter().enumerate() {
-                    let pv = w
-                        .pv
-                        .iter()
-                        .map(|a| serde_json::to_string(a).unwrap_or_else(|_| "?".into()))
-                        .collect::<Vec<_>>()
-                        .join(" | ");
+                    let pv =
+                        w.pv.iter()
+                            .map(|a| serde_json::to_string(a).unwrap_or_else(|_| "?".into()))
+                            .collect::<Vec<_>>()
+                            .join(" | ");
                     println!(
                         "    world[{wi}] raw={:.4} clamped={:.4} end={:?} pv_len={} pv={}",
-                        w.raw,
-                        w.clamped,
-                        w.end,
-                        w.pv_len,
-                        pv
+                        w.raw, w.clamped, w.end, w.pv_len, pv
                     );
                     if let Some(leaf) = &w.leaf {
                         println!(
