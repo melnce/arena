@@ -17,24 +17,36 @@
 //!
 //! `print_legacy_fingerprints` uses `h0:mull=rule,info=fair` (not bare `h0`).
 //!
-//! ## Play-time + Effect::Pay re-pins (`main@b5b822c` → branch)
+//! ## Play-time re-pins (`main@b5b822c` → branch)
 //!
-//! Proof workflow: `dump_gate_hashes` / `dump_gate_actions` on this branch vs
-//! `git worktree` at `main@b5b822c`; canonical `hash(state)` matches at every
-//! step before the cited `n`, then diverges on a play whose play-time walk
-//! (mode / discard / destroy picks, or `Effect::Pay` gating) locks before play
-//! reactions.
+//! Proofs: branch vs `git worktree` at `main@b5b822c` using `dump_gate_hashes`,
+//! `dump_gate_actions`, `dump_gate_legal_at` (`H0_DUMP_SEEDS`, `H0_DUMP_AT`,
+//! `H0_VERBOSE=1`). **`n`** = first neutral-action index where fingerprints diverge
+//! (requires `hash@n` match on both engines). **`hash@k`** = canonical `hash(state)`
+//! after action `k−1`. **`hashΔ`** = first step where hashes differ (intermediate
+//! play-time state); **`reconv`** = step where hashes match again.
 //!
-//! | spec | seed | deck | old → new | n | engine hash first diff | play-time step |
-//! |------|------|------|-----------|---|------------------------|----------------|
-//! | default | 37 | meta-dragon-aggro | `0xe0ff…` → `0x0c5e…` | 88 | 79 | Spilling Red `10642310` play + picks before attack |
-//! | default | 41 | meta-dragon-ramp | `0x9e54…` → `0x09d1…` | 47 | 17 | Yidmetra `90024320` faith tick after Enhanced pick; cascade → Burnite `10744110` vs Lyria `10403120` |
-//! | default | 53 | meta-forest-combo | `0x7404…` → `0x7393…` | 86 | 37 | Miroku `10514120` mode pick at play; cascade → attack vs play |
-//! | default | 67 | meta-haven-amulet | `0x50a9…` → `0x85c9…` | 20 | 21 | bonus-PP kept-charge + Timepiece `10762210` play vs attack |
-//! | default | 79 | meta-haven-evo | `0x42fb…` → `0x2d18…` | — | — | play-time cascade |
-//! | legacy | 37 | meta-dragon-aggro | `0xe0ff…` → `0x0c5e…` | 88 | 79 | same Spilling Red row |
-//! | legacy | 41 | meta-dragon-ramp | `0xc4e8…` → `0x3207…` | 51 | 52 | Lumiore `10844120` discard pick (`10744110` vs `10042310`) |
-//! | legacy | 53 | meta-forest-combo | `0x7404…` → `0x7393…` | 86 | 37 | same Miroku row |
+//! Unchanged on `main@b5b822c` (same pin on branch): default seeds 11, 23, 97;
+//! legacy seeds 11, 23, 67, 79, 97. (`main@b5b822c` bonus-PP already moved
+//! default 97 and legacy 67/97 — those values are the `main@b5b822c` column.)
+//!
+//! ### default `h0`
+//!
+//! | seed | deck | main@b5b822c → branch | n | hash@n | hashΔ | reconv | proof |
+//! |------|------|------------------------|---|--------|-------|--------|-------|
+//! | 37 | meta-dragon-aggro | `0xe0ff3ba0823747ae` → `0x0c5e00eb14bdce85` | 88 | match | 79 | 80 | **hashΔ 79:** after Spilling Red `10642310` discard pick (`choose` `90044330`); main `PendingKind::EffectSelect` + faith tick in snapshot; branch `PlaySelect` destroy pick (`step 1/2`, `pending_work=1`). **reconv 80.** **n 88:** `hash@87` match; main attacks; branch plays Spilling Red then play-time discard+destroy picks (`89`–`90`). |
+//! | 41 | meta-dragon-ramp | `0x9e542bf8f4f4ba5c` → `0x09d1f4dde9630cb7` | 47 | match | 17 | 18 | **hashΔ 17:** after Yidmetra `90024320` play; main `EffectSelect` Enhanced destroy; branch `PlaySelect` + `deferred_rx=1`. **reconv 18.** **n 47:** `hash@46` match; main plays Lyria `10403120`; branch plays Burnite `10744110` (h0 sim values shifted by play-time apply). |
+//! | 53 | meta-forest-combo | `0x7404fbcb4cae7f60` → `0x73930e18abe26408` | 86 | match | 37 | 38 | **hashΔ 37:** after Miroku `10514120` play; main `ModeSelect`; branch `PlaySelect` mode + `deferred_rx=1`. **reconv 38.** **n 86:** `hash@85` match; main plays Bell-ring Spirit `10624120`; branch attacks first (`87` plays Spirit). |
+//! | 67 | meta-haven-amulet | `0x50a92b69688f99c3` → `0x85c938a069126ff1` | 20 | match | — | — | **n 20:** actions `0..19` identical; `hash@20` match; legal set identical (10 actions); main pick idx 5 attack slot 0; branch pick idx 2 play Timepiece `10762210`. No prior hashΔ. h0 1-ply values differ because `apply()` simulation of candidates hits play-time ordering deeper in the tree. |
+//! | 79 | meta-haven-evo | `0x42fbd544e452ebf0` → `0x2d183971e45391ae` | 63 | match | — | — | **n 63:** actions `0..62` identical; `hash@63` match; legal identical (4 actions); main pick idx 0 play Yidmetra `90024320` → `64` `EffectSelect` Enhanced destroy; branch pick idx 1 attack (Yidmetra played later with `PlaySelect` + `deferred_rx=1`). |
+//!
+//! ### legacy `h0:mull=rule,info=fair`
+//!
+//! | seed | deck | main@b5b822c → branch | n | hash@n | hashΔ | reconv | proof |
+//! |------|------|------------------------|---|--------|-------|--------|-------|
+//! | 37 | meta-dragon-aggro | `0xe0ff3ba0823747ae` → `0x0c5e00eb14bdce85` | 88 | match | 79 | 80 | same as default 37 |
+//! | 41 | meta-dragon-ramp | `0xc4e8ab63aec96246` → `0x3207d65c42f589a8` | 51 | match | 52 | 53 | **hashΔ 52:** Lumiore `10844120` discard (`PlaySelect` both); main hash shifts on first discard pick; branch stays at `hash@51`. **reconv 53.** **n 51:** `hash@50` match; main discards `10042310` then `10744110`; branch reverses order. |
+//! | 53 | meta-forest-combo | `0x7404fbcb4cae7f60` → `0x73930e18abe26408` | 86 | match | 37 | 38 | same as default 53 |
 
 use arena_engine::{
     apply, hash, legal_actions, new_game, play_game, policy_rng, to_neutral, trace::fnv1a64,
@@ -211,6 +223,13 @@ fn dump_gate_hashes() {
         let mut rng = policy_rng(seed);
         let mut n = 0u32;
         println!("seed={seed} n={n} hash=0x{:016x}", hash(&state));
+        if std::env::var("H0_VERBOSE").ok().as_deref() == Some("1") {
+            println!(
+                "seed={seed} n={n} phase={:?} pending={}",
+                state.phase,
+                pending_summary(&state)
+            );
+        }
         while state.winner.is_none() && !matches!(state.phase, arena_engine::Phase::Terminal) {
             let legal = legal_actions(&db, &state);
             if legal.is_empty() {
@@ -225,7 +244,105 @@ fn dump_gate_hashes() {
             apply(&db, &mut state, action).expect("apply");
             n += 1;
             println!("seed={seed} n={n} hash=0x{:016x}", hash(&state));
+            if std::env::var("H0_VERBOSE").ok().as_deref() == Some("1") {
+                println!(
+                    "seed={seed} n={n} phase={:?} pending={}",
+                    state.phase,
+                    pending_summary(&state)
+                );
+            }
         }
+    }
+}
+
+fn pending_summary(state: &arena_engine::State) -> String {
+    let mut parts = vec![format!("phase={:?}", state.phase)];
+    if let Some(p) = &state.pending_play_choices {
+        parts.push(format!(
+            "play_choices step={}/{} deferred_rx={}",
+            p.step_idx,
+            p.steps.len(),
+            p.deferred_rx.len()
+        ));
+    }
+    if state.deferred_play_rx.is_some() {
+        parts.push("deferred_play_rx".into());
+    }
+    if !state.pending_work.is_empty() {
+        parts.push(format!("pending_work={}", state.pending_work.len()));
+    }
+    parts.join(" ")
+}
+
+/// Dump legal action count + fingerprint at step `H0_DUMP_AT` (ignored).
+#[test]
+#[ignore]
+fn dump_gate_legal_at() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| "h0".into());
+    let seed: u64 = std::env::var("H0_DUMP_SEEDS")
+        .unwrap_or_else(|_| "67".into())
+        .parse()
+        .expect("seed");
+    let at: u32 = std::env::var("H0_DUMP_AT")
+        .unwrap_or_else(|_| "20".into())
+        .parse()
+        .expect("at");
+    let i = GATE_SEEDS.iter().position(|&s| s == seed).expect("gate seed");
+    let deck = load_meta_deck(&stems[i]);
+    let deck_b = load_meta_deck("meta-sword-rally");
+    let mut state = new_game(
+        &db,
+        GameConfig {
+            seed,
+            deck_a: deck,
+            deck_b,
+            first: First::A,
+            opening_hands: None,
+        },
+    )
+    .expect("new_game");
+    let mut a = parse_h0(&spec);
+    let mut b = parse_h0(&spec);
+    let mut rng = policy_rng(seed);
+    let mut n = 0u32;
+    while state.winner.is_none() && !matches!(state.phase, arena_engine::Phase::Terminal) {
+        if n == at {
+            let legal = legal_actions(&db, &state);
+            let me = arena_engine::acting_player(&state);
+            let idx = match me {
+                PlayerId::A => a.choose(&db, &state, &legal, &mut rng),
+                PlayerId::B => b.choose(&db, &state, &legal, &mut rng),
+            };
+            println!(
+                "seed={seed} at={at} hash=0x{:016x} legal={} pick={} action={}",
+                hash(&state),
+                legal.len(),
+                idx,
+                serde_json::to_string(&to_neutral(&state, &legal[idx.min(legal.len().saturating_sub(1))]))
+                    .unwrap()
+            );
+            for (j, act) in legal.iter().enumerate() {
+                println!(
+                    "  legal[{j}] {}",
+                    serde_json::to_string(&to_neutral(&state, act)).unwrap()
+                );
+            }
+            return;
+        }
+        let legal = legal_actions(&db, &state);
+        if legal.is_empty() {
+            break;
+        }
+        let me = arena_engine::acting_player(&state);
+        let idx = match me {
+            PlayerId::A => a.choose(&db, &state, &legal, &mut rng),
+            PlayerId::B => b.choose(&db, &state, &legal, &mut rng),
+        };
+        let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
+        apply(&db, &mut state, action).expect("apply");
+        n += 1;
     }
 }
 
