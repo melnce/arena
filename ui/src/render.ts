@@ -150,6 +150,7 @@ export function render(s: Session, hooks: RenderHooks): void {
   renderTerminal(full, hooks);
   renderEventLog(s);
   syncUndoButtons(s);
+  syncReplayStepReadout(s);
   paintPending(hooks.pending, legal);
   refreshOpenTooltip(full);
   if (window.__arena) window.__arena.paintMs = performance.now() - t0;
@@ -1275,6 +1276,20 @@ function syncUndoButtons(s: Session): void {
   const redo = byId<HTMLButtonElement>("redoBtn");
   if (undo) undo.disabled = s.past.length === 0;
   if (redo) redo.disabled = s.future.length === 0;
+}
+
+function syncReplayStepReadout(s: Session): void {
+  const el = byId("replayStepReadout");
+  if (!el) return;
+  if (s.future.length === 0) {
+    el.hidden = true;
+    el.textContent = "";
+    return;
+  }
+  const applied = s.actions.length;
+  const total = applied + s.future.length;
+  el.hidden = false;
+  el.textContent = `step ${applied} / ${total}`;
 }
 
 function paintPending(pending: Pending, legal: NeutralAction[]): void {

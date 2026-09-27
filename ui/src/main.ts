@@ -192,6 +192,7 @@ function exposeArena(): void {
       session.game.reseed(seed);
     },
     exportLog: () => (session ? toPositionLog(session) : null),
+    exportPositionLog: () => (session ? toPositionLog(session, { includeRedoTail: true }) : null),
     loadLog: (log) => {
       loadLogSafely(log as PositionLog);
     },
@@ -1047,7 +1048,9 @@ function setText(id: string, text: string): void {
 function loadLogSafely(log: PositionLog): void {
   let next: Session | null = null;
   try {
-    next = replayPosition(log);
+    const replayed = replayPosition(log);
+    next = replayed.session;
+    if (replayed.warning) toast(replayed.warning);
   } catch (err) {
     toast(String(err));
     return;
@@ -1065,7 +1068,10 @@ function initPositions(): void {
     const name = window.prompt("Position name", `pos-${savedPositions.size + 1}`);
     if (!name) return;
     const id = `pos-${++positionSeq}`;
-    savedPositions.set(id, toPositionLog(session, { name, savedAt: new Date().toISOString() }));
+    savedPositions.set(
+      id,
+      toPositionLog(session, { name, savedAt: new Date().toISOString(), includeRedoTail: true }),
+    );
     refreshPositionSelect(id);
   });
   byId("loadPositionBtn")?.addEventListener("click", () => {
@@ -1077,7 +1083,9 @@ function initPositions(): void {
   });
   byId("exportPositionBtn")?.addEventListener("click", () => {
     const id = byId<HTMLSelectElement>("positionSelect")?.value;
-    const log = (id && savedPositions.get(id)) || (session ? toPositionLog(session) : null);
+    const log =
+      (id && savedPositions.get(id)) ||
+      (session ? toPositionLog(session, { includeRedoTail: true }) : null);
     if (!log) return;
     const blob = new Blob([JSON.stringify(log, null, 2)], { type: "application/json" });
     const a = document.createElement("a");

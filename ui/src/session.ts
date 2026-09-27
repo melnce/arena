@@ -374,8 +374,22 @@ export function checkpointStatusText(s: Session | null): string {
   return `Checkpoint: T${s.checkpoint.turn} · rerolls ${s.rerolls}`;
 }
 
-export function toPositionLog(s: Session, meta?: { name?: string; savedAt?: string }): PositionLog {
-  return {
+export type ToPositionLogMeta = {
+  name?: string;
+  savedAt?: string;
+  /** Export / Save Pos: append redo tail and set `at`. Off by default (bot payloads). */
+  includeRedoTail?: boolean;
+};
+
+export function toPositionLog(s: Session, meta?: ToPositionLogMeta): PositionLog {
+  const applied = s.actions.slice();
+  let actions = applied;
+  let at: number | undefined;
+  if (meta?.includeRedoTail && s.future.length > 0) {
+    actions = [...applied, ...s.future.map((f) => f.action)];
+    at = applied.length;
+  }
+  const log: PositionLog = {
     v: 1,
     kind: "replay-log",
     seed: s.cfg.seed.toString(),
@@ -384,14 +398,41 @@ export function toPositionLog(s: Session, meta?: { name?: string; savedAt?: stri
     deckAId: s.cfg.deckAId,
     deckBId: s.cfg.deckBId,
     first: s.cfg.first,
-    actions: s.actions.slice(),
+    actions,
     name: meta?.name,
     turn: s.game.turn(),
     savedAt: meta?.savedAt ?? new Date().toISOString(),
   };
+  if (at !== undefined) log.at = at;
+  return log;
 }
 
-export function replayPosition(log: PositionLog): Session {
+export type ReplayPositionResult = { session: Session; warning?: string };
+
+function resolveReplayAt(log: PositionLog): { targetAt: number; warning?: string } {
+  if (log.at === undefined) {
+    return { targetAt: log.actions.length };
+  }
+  const at = log.at;
+  if (!Number.isInteger(at) || at < 0 || at > log.actions.length) {
+    return {
+      targetAt: log.actions.length,
+      warning: `Invalid at=${String(at)}; opened at end (${log.actions.length} steps).`,
+    };
+  }
+  for (let i = at; i < log.actions.length; i++) {
+    if (isReseedStep(log.actions[i]!)) {
+      return {
+        targetAt: log.actions.length,
+        warning: `Reseed in redo tail; opened at end (${log.actions.length} steps).`,
+      };
+    }
+  }
+  return { targetAt: at };
+}
+
+export function replayPosition(log: PositionLog): ReplayPositionResult {
+  const { targetAt, warning: atWarning } = resolveReplayAt(log);
   const s = createSession({
     seed: BigInt(log.seed),
     deckA: log.deckA,
@@ -413,8 +454,19 @@ export function replayPosition(log: PositionLog): Session {
       applyAction(s, step);
     }
   }
+  let warning = atWarning;
+  if (targetAt < log.actions.length) {
+    const wantedAt = targetAt;
+    while (s.actions.length > targetAt && s.past.length > 0) {
+      undoOne(s);
+    }
+    if (s.actions.length > targetAt) {
+      const msg = `Step ${wantedAt} is beyond the ${HISTORY_LIMIT}-step undo window; opened at step ${s.actions.length}.`;
+      warning = warning ? `${warning} ${msg}` : msg;
+    }
+  }
   s.suppressFloater = true;
-  return s;
+  return { session: s, warning };
 }
 
 export function isHumanActing(s: Session): boolean {
