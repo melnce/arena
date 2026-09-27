@@ -4,7 +4,6 @@ use arena_engine::determinize::{determinize_with, Info};
 use arena_engine::{
     apply, encode, encode_version, encode_with_vocab, legal_actions, new_game, policy_rng, vocab,
     Action, EncodingVersion, First, GameConfig, Observation, Phase, PlayerId, ValueNet,
-    Xoshiro256ss,
 };
 
 mod common;
@@ -73,19 +72,6 @@ fn meta_deck_stems() -> Vec<String> {
         .collect()
 }
 
-fn play_random_legal(
-    db: &arena_engine::CardDb,
-    st: &mut arena_engine::State,
-    rng: &mut Xoshiro256ss,
-) -> bool {
-    let legal = legal_actions(db, st);
-    if legal.is_empty() {
-        return false;
-    }
-    let idx = rng.gen_range(legal.len() as u32) as usize;
-    apply(db, st, legal[idx].clone()).is_ok()
-}
-
 #[test]
 fn v1_encode_unchanged_on_thestae_crest_buff() {
     let db = load_db();
@@ -135,37 +121,40 @@ fn v2_hand_bonuses_see_drawn_buffed_follower() {
     let mut st = forest_combo_vs_sword_rally(&db, 5);
     trigger_thestae_deck_buff(&db, &mut st);
     let me = PlayerId::A;
-    let mut rng = policy_rng(5);
-    let mut drew = false;
-    for _ in 0..200 {
-        if st.winner.is_some() || matches!(st.phase, Phase::Terminal) {
-            break;
-        }
-        if st.active == me && matches!(st.phase, Phase::Main) {
-            let obs = encode_version(&st, me, EncodingVersion::V2, Some(&db));
-            let atk_34 = obs.features[offset("own_hand_atk_bonus_cost_3_4")];
-            let def_34 = obs.features[offset("own_hand_def_bonus_cost_3_4")];
-            let cost_red = obs.features[offset("own_hand_cost_reduction")];
-            if atk_34 >= 1.0 || def_34 >= 1.0 || cost_red >= 1.0 {
-                drew = true;
-                if atk_34 >= 1.0 {
-                    assert_eq!(atk_34, 1.0, "Magachiyo +1 atk in 3-4 bucket");
-                    assert_eq!(def_34, 1.0, "Magachiyo +1 def in 3-4 bucket");
-                }
-                if cost_red >= 1.0 {
-                    assert_eq!(cost_red, 1.0, "Crimson Incense combo-3 cost reduction");
-                }
-                break;
-            }
-        }
-        if !play_random_legal(&db, &mut st, &mut rng) {
-            break;
+    while st.active != me
+        || !matches!(st.phase, Phase::Main)
+        || st.player(me).turns_taken < 2
+    {
+        assert!(
+            st.winner.is_none() && !matches!(st.phase, Phase::Terminal),
+            "game ended before A turn 2"
+        );
+        let legal = legal_actions(&db, &st);
+        assert!(!legal.is_empty(), "no legal actions");
+        if legal.iter().any(|a| matches!(a, Action::EndTurn)) {
+            end_turn(&db, &mut st);
+        } else if matches!(st.phase, Phase::Choice { .. }) {
+            choose(&db, &mut st, 0);
+        } else {
+            apply(&db, &mut st, legal[0].clone()).expect("apply");
         }
     }
-    assert!(
-        drew,
-        "expected buffed draw or Crimson Incense cost reduction in hand"
-    );
+
+    let magachiyo = cid("10914110");
+    let drawn = st
+        .player(me)
+        .hand
+        .iter()
+        .find(|c| c.card == magachiyo)
+        .expect("Magachiyo drawn into hand");
+    assert_eq!(drawn.attack, 3, "Thestae deck buff +1 atk (printed 2)");
+    assert_eq!(drawn.max_defense, 3, "Thestae deck buff +1 def (printed 2)");
+
+    let obs = encode_version(&st, me, EncodingVersion::V2, Some(&db));
+    assert_eq!(obs.features[offset("own_hand_atk_bonus_cost_3_4")], 1.0);
+    assert_eq!(obs.features[offset("own_hand_def_bonus_cost_3_4")], 1.0);
+
+    assert_eq!(obs.features[offset("own_hand_cost_reduction")], 1.0);
 }
 
 #[test]
