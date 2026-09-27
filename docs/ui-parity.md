@@ -36,6 +36,7 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | Empty board label “Play zone” | `css/layout.css:234-247` | `ui/css/layout.css:236-249` | ported | 
 | Per-side board tint (red/blue dashed zone) | `css/layout.css:249-267`; `--color-board-*-tint` | `ui/css/layout.css:219-269`; same tokens | ported | 
 | Occupied slots only, engine order, row centred | (old rendered occupied cards in a flex row) | `ui/src/render.ts:226-232` (R1) | ported | 
+| Board rows face each other — each player's first-in card at their own left (bottom row slot 0 at screen-left, top row slot 0 at screen-right); follows Active-on-bottom | `css/layout.css:249-250` (red only, not flip-aware) | `ui/css/layout.css:251-278`; `ui/tests/board-orientation.spec.ts` | ported | Each player's row starts at that player's own left, as if seated across a table; top row `flex-direction: row-reverse`, bottom `row`, swapping under `body.active-on-bottom.active-second`. |
 | Active-on-bottom: `body.active-on-bottom` + `active-second` swaps side `order` (code-read) | `src/boot/perspectiveFlip.ts:4-14`; `src/ui/render.ts:31,44-66`; `css/phase3-layout.css:257-263` | `ui/index.html:80-88`; `ui/src/main.ts:712-723`; `ui/css/phase3-layout.css:234-240` | ported | Persisted as `svwb.activeOnBottom`; applied by an inline boot script before the first paint. |
 | Bottom hand full size, top hand `--hand-scale-top` 0.72–0.82 | `css/phase3-layout.css:30-45,266-289` | `ui/css/phase3-layout.css:30,243-249` (both hands `--hand-local-scale: 1`) | dropped (by design) | Equal hand sizes were an explicit R1/R2 ask (`--card-height` clamp for both hands). |
 | Card footprint 108×162 (114×171 @1440, 118×177 @1900) | `css/design-tokens.css:233-234,284-298` | `ui/css/design-tokens.css:235-237` (`clamp(110px, (100vh-48px)/6.4, 260px)`, width = 2/3 height) | ported | Viewport-scaled cards were R2; same tokens, different formula. |
@@ -381,14 +382,20 @@ Every former gap is `ported` or owner-dropped. Owner-dropped form chrome stays l
 
 | status | rows |
 |---|---|
-| ported | 203 |
+| ported | 204 |
 | missing | 0 |
 | dropped (by design) | 11 |
 | dropped (not representable) | 1 |
 | dropped (owner decision 2026-09-11) | 2 |
-| **total** | **217** |
+| **total** | **218** |
 
 Counts are feature rows in §§1–10 (the gap list is a reordering, not extra rows). SF (2026-09-11): undo-inside-choice is `ported` (one pick per press); the cyan form-cost badge and form-gate tooltip lines are `dropped (owner decision 2026-09-11)`.
+
+## Owner decided 2026-09-27
+
+> if i were to mirror the sides or swap perspective it should always bee left for the bot side and right for the top side
+
+Restated: each player's board row starts at that player's own left, as if the two sat across a table — bottom row slot 0 at the screen's left, top row slot 0 at the screen's right — whichever player is on top. The top row uses `flex-direction: row-reverse`; the bottom row uses `row`. Under Active-on-bottom with B acting (`body.active-on-bottom.active-second`), red moves to the bottom (`row`) and blue to the top (`row-reverse`).
 
 ## Owner decided 2026-09-11
 
