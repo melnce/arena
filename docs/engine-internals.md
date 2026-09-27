@@ -242,9 +242,13 @@ mid-turn cutoff (pending bot choices at level `2`, `greedy_until_end` first
 at level `3`), apply `EndTurn` when possible, then reply. Finish-and-reply
 work gets `max(remaining pair budget, hres)` applies; only the portion up to
 the pair cap is charged to `node_cap`, the rest is counted in
-`horizon_nodes`. Leaves scored this way are not stored in the TT. Explain
-marks them `depth_reply` / `cap_reply` instead of `depth` / `cap` (a sweep
-kill stays `opp_lethal`). Fuse overshoot paths are unchanged.
+`horizon_nodes` and the shared `nodes` counter is clamped back so later
+pairs keep their fair shares. Level `1` also takes the reserve when the
+turn is over and fewer than `hres` nodes remain in the pair budget. Leaves
+scored this way are not stored in the TT. Explain marks mid-turn or
+cap-exhausted cutoffs `depth_reply` / `cap_reply` instead of `depth` /
+`cap` (a sweep kill stays `opp_lethal`; a finished turn with budget left
+keeps the reply's own end). Fuse overshoot paths are unchanged.
 
 ## Tests
 
