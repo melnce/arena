@@ -89,6 +89,19 @@ fn action_fingerprint(db: &CardDb, spec: &str, seed: u64, deck_a: &[arena_engine
     fnv1a64(&bytes)
 }
 
+/// Default `h0` action fingerprints on eight meta-deck / seed pairs (`main@1f8b068`).
+/// Captured before leaf-encoding-v2; bare `h0` must reproduce them exactly.
+const DEFAULT_FINGERPRINTS: [u64; 8] = [
+    0x8a3c_ed65_9428_71b4,
+    0x8cd3_2204_3bbb_ebaf,
+    0xe0ff_3ba0_8237_47ae,
+    0x9e54_2bf8_f4f4_ba5c,
+    0x7404_fbcb_4cae_7f60,
+    0x50a9_2b69_688f_99c3,
+    0x42fb_d544_e452_ebf0,
+    0x23c5_a1fa_f13b_aff0,
+];
+
 /// Pre-flip `h0` action fingerprints on eight meta-deck / seed pairs (`main@2e40d4d`).
 /// `h0:mull=rule,info=fair` must reproduce them exactly.
 const LEGACY_FINGERPRINTS: [u64; 8] = [
@@ -104,6 +117,18 @@ const LEGACY_FINGERPRINTS: [u64; 8] = [
 
 #[test]
 #[ignore]
+fn print_default_fingerprints() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    for (i, seed) in GATE_SEEDS.iter().enumerate() {
+        let deck = load_meta_deck(&stems[i]);
+        let fp = action_fingerprint(&db, "h0", *seed, &deck);
+        println!("seed={seed} deck={} fp=0x{:016x}", stems[i], fp);
+    }
+}
+
+#[test]
+#[ignore]
 fn print_legacy_fingerprints() {
     let db = load_db();
     let stems = meta_deck_stems();
@@ -111,6 +136,23 @@ fn print_legacy_fingerprints() {
         let deck = load_meta_deck(&stems[i]);
         let fp = action_fingerprint(&db, "h0", *seed, &deck);
         println!("seed={seed} deck={} fp=0x{:016x}", stems[i], fp);
+    }
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn default_h0_matches_pinned_fingerprints() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    assert_eq!(stems.len(), 16);
+    for (i, seed) in GATE_SEEDS.iter().enumerate() {
+        let deck = load_meta_deck(&stems[i]);
+        let got = action_fingerprint(&db, "h0", *seed, &deck);
+        assert_eq!(
+            got, DEFAULT_FINGERPRINTS[i],
+            "default fingerprint seed={seed} deck={}",
+            stems[i]
+        );
     }
 }
 

@@ -314,7 +314,67 @@ the sorted union of both starting decklists plus visible token ids, padded
 to `HIST_WIDTH = 96`. `vocab(state)` returns that sorted union (capped at
 96). `encode_with_vocab(state, perspective, vocab)` is the same walk with
 the vocabulary supplied by the caller and binary-search histogram lookups;
-`encode` is `encode_with_vocab(state, p, &vocab(state))`.
+`encode` is `encode_with_vocab(state, p, &vocab(state), EncodingVersion::V1, None)`.
+
+### Encoding versions
+
+`EncodingVersion` selects the leaf feature layout. Version **1** (default) is
+the M5 layout above — 545 features, byte-identical to pre-v2 `encode`.
+`encode_version(state, perspective, version, db)` and
+`encode_with_vocab(..., version, db)` generalise the walk; `db` is required
+for version 2 (printed card stats).
+
+Version **2** (563 features) keeps the version-1 block at the same offsets
+except `opp_known_pool_hist`, which uses `PlayerState::strict_remaining_pool`
+(hidden removals still count as possibly remaining — the same multiset
+`info=open` resamples from). Eighteen features are appended after offset 544:
+
+| Name | Offset |
+|---|---|
+| `own_deck_atk_bonus_le2` | 545 |
+| `own_deck_atk_bonus_cost_3_4` | 546 |
+| `own_deck_atk_bonus_cost_ge5` | 547 |
+| `own_deck_atk_bonus_storm` | 548 |
+| `own_deck_def_bonus_le2` | 549 |
+| `own_deck_def_bonus_cost_3_4` | 550 |
+| `own_deck_def_bonus_cost_ge5` | 551 |
+| `own_deck_def_bonus_storm` | 552 |
+| `own_deck_cost_reduction` | 553 |
+| `own_hand_atk_bonus_le2` | 554 |
+| `own_hand_atk_bonus_cost_3_4` | 555 |
+| `own_hand_atk_bonus_cost_ge5` | 556 |
+| `own_hand_atk_bonus_storm` | 557 |
+| `own_hand_def_bonus_le2` | 558 |
+| `own_hand_def_bonus_cost_3_4` | 559 |
+| `own_hand_def_bonus_cost_ge5` | 560 |
+| `own_hand_def_bonus_storm` | 561 |
+| `own_hand_cost_reduction` | 562 |
+
+Each deck/hand bonus is an order-free sum over that zone: attack or defence
+bonus (current − printed from the card db) in cost buckets (≤2, 3–4, ≥5) and
+for Storm followers; cost reduction is `Σ max(0, printed cost − current cost)`.
+Only the perspective player's own hand and deck — never the opponent's hidden
+zones.
+
+Export: `arena.matchup(..., encoding=2)` or `py/matchup.py --encoding 2`;
+`meta.json` carries `"encoding"` and `"feature_len"`. Train v2 models with:
+
+```bash
+py/matchup.py --encoding 2 --export /path/to/shards ...
+python py/train_value.py --data /path/to/shards --model linear --out net-v2.json
+```
+
+One-command retrain through iteration:
+
+```bash
+python py/iterate.py --tag net-v2 --encoding 2 --seed 401 [options]
+```
+
+`train_value.py` reads `feature_len` from the shards, refuses mixed
+encodings, and writes `"encoding"` into the model JSON. Model files may omit
+`encoding` (means 1). `ValueNet` rejects a `feature_len` that does not match
+the declared encoding. `h0-linear-v1.json` has no `encoding` field and is
+unchanged.
 
 ## search_key (M5)
 
@@ -1077,8 +1137,9 @@ Model file (one JSON object, f32 values as JSON numbers):
 ```text
 {
   "arch": "linear" | "mlp",
-  "feature_len": 545,
-  "feat_mean": [545], "feat_std": [545],
+  "encoding": 1 | 2,          // optional; default 1
+  "feature_len": 545 | 563,     // must match encoding (545 for 1, 563 for 2)
+  "feat_mean": [feature_len], "feat_std": [feature_len],
   "vocab": [ids ascending, index 0 = 0],
   "zones": [{"name", "id_offset", "count", "hist_offset" | null} × 5],
   "scale": 60.0,

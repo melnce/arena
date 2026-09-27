@@ -14,7 +14,7 @@ from typing import Any
 def load(dir: str | Path) -> dict[str, Any]:
     """Return `{features, ids, labels, aux, meta, aux_columns}`.
 
-    Shapes: `features (N, 545) float32`, `ids (N, 220) uint32`,
+    Shapes: `features (N, feature_len) float32`, `ids (N, ids_len) uint32`,
     `labels (N,)`, `aux (N, len(aux_columns))`.
     """
     import numpy as np

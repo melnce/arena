@@ -203,7 +203,7 @@ fn clip_matches_unclipped_when_inputs_in_range() {
     for state in &states {
         for me in [arena_engine::PlayerId::A, arena_engine::PlayerId::B] {
             let v = vocab(state);
-            let obs = encode_with_vocab(state, me, &v);
+            let obs = encode_with_vocab(state, me, &v, arena_engine::EncodingVersion::V1, None);
             let xs = std_inputs(&mean, &std, &obs);
             if xs.iter().all(|x| (-5.0..=5.0).contains(x)) {
                 let plain = net.value(&obs);
@@ -229,7 +229,7 @@ fn clip_limits_choice_indicator_spike() {
     for state in &states {
         for me in [arena_engine::PlayerId::A, arena_engine::PlayerId::B] {
             let v = vocab(state);
-            let obs = encode_with_vocab(state, me, &v);
+            let obs = encode_with_vocab(state, me, &v, arena_engine::EncodingVersion::V1, None);
             let base = net.value(&obs);
             if base.abs() > 20.0 {
                 continue;

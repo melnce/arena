@@ -4,7 +4,7 @@
 
 use crate::action::Action;
 use crate::db::CardDb;
-use crate::encode::encode;
+use crate::encode::{encode_version, EncodingVersion};
 use crate::ids::PlayerId;
 use crate::play::Outcome;
 use crate::rng::Xoshiro256ss;
@@ -39,6 +39,7 @@ pub struct Recorder {
     /// Probability of replacing the inner choice with a uniform legal index.
     /// `0.0` (default) consumes no extra rng — byte-identical to `inner`.
     pub epsilon: f32,
+    encoding: EncodingVersion,
     samples: Vec<Sample>,
     decision_index: u32,
 }
@@ -49,6 +50,7 @@ impl Recorder {
             inner,
             me,
             epsilon: 0.0,
+            encoding: EncodingVersion::V1,
             samples: Vec::new(),
             decision_index: 0,
         }
@@ -56,6 +58,11 @@ impl Recorder {
 
     pub fn with_epsilon(mut self, epsilon: f32) -> Self {
         self.epsilon = epsilon;
+        self
+    }
+
+    pub fn with_encoding(mut self, encoding: EncodingVersion) -> Self {
+        self.encoding = encoding;
         self
     }
 
@@ -100,7 +107,7 @@ impl Policy for Recorder {
         legal: &[Action],
         rng: &mut Xoshiro256ss,
     ) -> usize {
-        let obs = encode(state, self.me);
+        let obs = encode_version(state, self.me, self.encoding, Some(db));
         let v0 = value_v0(state, self.me);
         let mut idx = self.inner.choose(db, state, legal, rng);
         // Value of the position, not of the (possibly ε-random) action.

@@ -118,6 +118,60 @@ def smoke(tmp_path_factory: pytest.TempPathFactory):
         _cleanup_results_worktree(_REPO, wt, existed)
 
 
+@pytest.fixture(scope="module")
+def smoke_v2(tmp_path_factory: pytest.TempPathFactory):
+    tmp = tmp_path_factory.mktemp("iterate-v2")
+    bare = tmp / "remote.git"
+    subprocess.run(["git", "init", "--bare", str(bare)], check=True, capture_output=True)
+    root = tmp / "results"
+    wt = tmp / "wt"
+    existed = (
+        subprocess.run(
+            ["git", "-C", str(_REPO), "show-ref", "--verify", "--quiet", "refs/heads/results"],
+            capture_output=True,
+        ).returncode
+        == 0
+    )
+    before = _porcelain(_REPO)
+    argv = [
+        "--smoke",
+        "--encoding",
+        "2",
+        "--tag",
+        "t2v",
+        "--seed",
+        "7",
+        "--root",
+        str(root),
+        "--publish",
+        "--publish-remote",
+        str(bare),
+        "--publish-dir",
+        str(wt),
+    ]
+    t0 = time.perf_counter()
+    first = _run_iterate(argv)
+    wall = time.perf_counter() - t0
+    after = _porcelain(_REPO)
+    ctx = {
+        "tmp": tmp,
+        "bare": bare,
+        "root": root,
+        "wt": wt,
+        "tag": root / "t2v",
+        "argv": argv,
+        "first": first,
+        "wall": wall,
+        "before": before,
+        "after": after,
+        "existed": existed,
+    }
+    try:
+        yield ctx
+    finally:
+        _cleanup_results_worktree(_REPO, wt, existed)
+
+
 def test_smoke_end_to_end(smoke, db, root: Path) -> None:
     first = smoke["first"]
     tag: Path = smoke["tag"]
@@ -191,6 +245,46 @@ def test_smoke_end_to_end(smoke, db, root: Path) -> None:
         text=True,
     ).stdout
     assert remote_summary == summary
+
+
+def test_smoke_encoding_v2_end_to_end(smoke_v2, db, root: Path) -> None:
+    first = smoke_v2["first"]
+    tag: Path = smoke_v2["tag"]
+    print(f"iterate v2 smoke wall: {smoke_v2['wall']:.1f}s", flush=True)
+    if first.returncode != 0:
+        print(first.stdout)
+        print(first.stderr, file=sys.stderr)
+    assert first.returncode == 0, first.stderr or first.stdout
+    assert smoke_v2["before"] == smoke_v2["after"]
+
+    for name in ("data-e0", "data-e10"):
+        meta = json.loads((tag / name / "meta.json").read_text())
+        assert int(meta["encoding"]) == 2
+        assert int(meta["feature_len"]) == 563
+
+    spec = json.loads((tag / "linear.json").read_text())
+    assert spec["arch"] == "linear"
+    assert spec["feature_len"] == 563
+    assert spec["encoding"] == 2
+
+    train_log = (tag / "train-linear.txt").read_text()
+    assert "leading 545 columns of v2 rows" in train_log
+
+    import arena
+
+    net = str((tag / "linear.json").resolve())
+    arena.matchup(
+        db,
+        _forest(root),
+        games=1,
+        seed=1,
+        policy_a=f"h0:value=net,net={net}",
+        policy_b="h0-fast",
+        threads=1,
+    )
+
+    summary = (tag / "SUMMARY.md").read_text()
+    assert "| model | main | reverse | pooled | sanity | g/s vs h0 |" in summary
 
 
 def test_resumable(smoke) -> None:

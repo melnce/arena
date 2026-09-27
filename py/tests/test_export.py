@@ -169,6 +169,95 @@ def write_legacy_10col(dir: Path, n: int = 12) -> None:
     (dir / "meta.json").write_text(json.dumps(meta) + "\n")
 
 
+def test_export_encoding_v2_metadata(db, root: Path, tmp_path: Path) -> None:
+    import arena
+
+    out = tmp_path / "v2"
+    result = arena.matchup(
+        db,
+        _forest(root),
+        2,
+        17,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        threads=1,
+        export=str(out),
+        encoding=2,
+    )
+    n = int(result["export"]["samples"])
+    meta = samples.load(out)["meta"]
+    assert meta["encoding"] == 2
+    assert meta["feature_len"] == 563
+    assert (out / "features.f32le").stat().st_size == n * 563 * 4
+    names = [f["name"] for f in meta["layout"]]
+    assert "own_deck_atk_bonus_le2" in names
+    assert "own_hand_cost_reduction" in names
+
+
+def test_encoding_v2_export_train_and_play(db, root: Path, tmp_path: Path) -> None:
+    import json
+    import importlib.util
+
+    import arena
+
+    train_path = Path(__file__).resolve().parents[1] / "train_value.py"
+    spec = importlib.util.spec_from_file_location("arena_train_value", train_path)
+    assert spec and spec.loader
+    train_value = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(train_value)
+
+    out = tmp_path / "v2"
+    arena.matchup(
+        db,
+        _forest(root),
+        2,
+        42,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        threads=1,
+        export=str(out),
+        encoding=2,
+    )
+    model = tmp_path / "tiny-v2.json"
+    report = train_value.train(
+        type(
+            "Args",
+            (),
+            {
+                "data": [str(out)],
+                "model": "linear",
+                "out": str(model),
+                "holdout": 0.5,
+                "seed": 1,
+                "epochs": 1,
+                "l2": 1e-4,
+                "hidden": 32,
+                "emb": 8,
+                "target": "outcome",
+                "mix_weight": 0.5,
+                "search_scale": 60.0,
+                "max_samples": 64,
+                "eval": None,
+            },
+        )()
+    )
+    doc = json.loads(model.read_text())
+    assert doc["encoding"] == 2
+    assert doc["feature_len"] == 563
+    assert report["rows_train"] > 0
+
+    for i in range(2):
+        arena.matchup(
+            db,
+            _forest(root),
+            1,
+            100 + i,
+            policy_a=f"h0:net={model}",
+            policy_b="h0-fast",
+            threads=1,
+        )
+
+
 def test_legacy_10col_dataset_loads(tmp_path: Path) -> None:
     d = tmp_path / "legacy10"
     write_legacy_10col(d, n=12)

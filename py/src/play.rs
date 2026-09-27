@@ -1,8 +1,8 @@
 //! Shared self-play via `engine::play::play_game`.
 
 use arena_engine::{
-    new_game, play_game, policy_rng, AnyPolicy, CardDb, CardId, First, GameConfig, Outcome,
-    PlayerId, Recorder, Sample,
+    encode::EncodingVersion, new_game, play_game, policy_rng, AnyPolicy, CardDb, CardId, First,
+    GameConfig, Outcome, PlayerId, Recorder, Sample,
 };
 
 pub fn play_one(
@@ -43,6 +43,7 @@ pub fn play_one_export(
     pol_a: &str,
     pol_b: &str,
     epsilon: f32,
+    encoding: EncodingVersion,
 ) -> Result<(Outcome, Vec<Sample>, Vec<Sample>), String> {
     let mut state = new_game(
         db,
@@ -55,10 +56,12 @@ pub fn play_one_export(
         },
     )
     .map_err(|e| e.to_string())?;
-    let mut a =
-        Recorder::new(Box::new(AnyPolicy::parse_spec(pol_a)?), PlayerId::A).with_epsilon(epsilon);
-    let mut b =
-        Recorder::new(Box::new(AnyPolicy::parse_spec(pol_b)?), PlayerId::B).with_epsilon(epsilon);
+    let mut a = Recorder::new(Box::new(AnyPolicy::parse_spec(pol_a)?), PlayerId::A)
+        .with_epsilon(epsilon)
+        .with_encoding(encoding);
+    let mut b = Recorder::new(Box::new(AnyPolicy::parse_spec(pol_b)?), PlayerId::B)
+        .with_epsilon(epsilon)
+        .with_encoding(encoding);
     let mut rng = policy_rng(seed);
     let out = play_game(db, &mut state, &mut a, &mut b, &mut rng);
     a.label(&out);
