@@ -112,6 +112,44 @@ const deckA = fs.readFileSync(deckAPath, "utf8");
 const deckB = fs.readFileSync(deckBPath, "utf8");
 ensureTraces();
 
+function drainToMain(game) {
+  const mull = { mulligan: { player: "a", swap: [false, false, false, false] } };
+  game.apply(JSON.stringify(mull));
+  mull.player = "b";
+  game.apply(JSON.stringify(mull));
+}
+
+function applyEndTurn(game) {
+  const legal = JSON.parse(game.legal());
+  const end = legal.find((a) => a.end_turn);
+  if (end) game.apply(JSON.stringify(end));
+}
+
+function modeChoiceInfoSmoke() {
+  const deck = JSON.stringify({ "10854110": 40 });
+  const game = new Game(77, deck, deck, "a");
+  try {
+    drainToMain(game);
+    assert.equal(game.modeChoiceInfo(), "null");
+    for (let i = 0; i < 10; i++) applyEndTurn(game);
+    const legal = JSON.parse(game.legal());
+    const play = legal.find((a) => a.play?.card === "10854110");
+    assert.ok(play, "Itsurugi playable after turn skip");
+    game.apply(JSON.stringify(play));
+    const info = JSON.parse(game.modeChoiceInfo());
+    assert.equal(info.source, "10854110");
+    assert.deepEqual(info.options, [
+      "1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.",
+      "2. Deal 5 damage to all enemy followers. Recover 1 evolution point.",
+    ]);
+  } finally {
+    game.free();
+  }
+}
+
+modeChoiceInfoSmoke();
+console.log("ok: modeChoiceInfo returns fanfare labels for Itsurugi");
+
 const info = JSON.parse(bundleInfo());
 assert.ok(info.cards > 0, "bundle has cards");
 console.log(

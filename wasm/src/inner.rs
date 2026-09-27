@@ -6,7 +6,8 @@ use std::collections::{BTreeMap, HashMap};
 use arena_engine::action::acting_player;
 use arena_engine::{
     apply_neutral, board_info, by_name, hand_info, hash, legal_actions, legal_actions_neutral,
-    names, new_game, player_info, policy_rng, snapshot_json, to_neutral, CardDb, CardId, First,
+    mode_choice_info, names, new_game, player_info, policy_rng, snapshot_json, to_neutral, CardDb,
+    CardId, First,
     GameConfig, NeutralAction, PlayerId, Policy, State,
 };
 
@@ -120,6 +121,13 @@ impl GameInner {
     pub fn player_info(&self, player: &str) -> Result<String, String> {
         let who = parse_player(player)?;
         serde_json::to_string(&player_info(db(), &self.state, who)).map_err(|e| e.to_string())
+    }
+
+    pub fn mode_choice_info(&self) -> Result<String, String> {
+        match mode_choice_info(db(), &self.state) {
+            Some(info) => serde_json::to_string(&info).map_err(|e| e.to_string()),
+            None => Ok("null".into()),
+        }
     }
 
     pub fn reseed(&mut self, seed: u64) {
