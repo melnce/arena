@@ -4,7 +4,7 @@
 use serde::Serialize;
 
 use crate::action::{acting_player, Action};
-use crate::apply::{eval_cond, legal_actions, resolve_select};
+use crate::apply::{eval_cond, legal_actions, resolve_choose_options, resolve_select, source_card_id};
 use crate::card::{
     Ability, Amount, CardKind, Class, Condition, CounterKey, Effect, FieldHasKind, Filter,
     FilterKind, Mode, NamedCounter, PayResource, Selector, SelectorKind, Side, Tribe, TribeOrList,
@@ -12,7 +12,9 @@ use crate::card::{
 };
 use crate::db::CardDb;
 use crate::ids::{AttackTarget, PlayerId};
-use crate::state::{CardInstance, Phase, PlayForm, SourceRef, State, TargetOpt};
+use crate::state::{
+    CardInstance, ChoiceNode, Phase, PlayForm, SourceRef, State, TargetOpt, WorkFrame,
+};
 use crate::support;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -59,6 +61,41 @@ pub struct BoardCardInfo {
     /// First numeric `vars` key (X, then Y, then Z) when this is an amulet
     /// with no countdown.
     pub named_counter: Option<i32>,
+}
+
+/// Printed mode labels for the open `ChoiceNode::Modes`, if any.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct ModeChoiceInfo {
+    pub source: String,
+    pub options: Vec<String>,
+}
+
+/// While a player mode choice is open, return the resolving card and every
+/// option's `printed` text for the active `Effect::Choose` (indexed by mode).
+pub fn mode_choice_info(db: &CardDb, state: &State) -> Option<ModeChoiceInfo> {
+    let Phase::Choice {
+        node: ChoiceNode::Modes { .. },
+        ..
+    } = &state.phase
+    else {
+        return None;
+    };
+    let WorkFrame::Effects {
+        source,
+        effects,
+        index,
+        ..
+    } = state.pending_work.last()?
+    else {
+        return None;
+    };
+    let e = effects.get(*index)?;
+    let opts = resolve_choose_options(db, state, *source, e)?;
+    let card_id = source_card_id(state, *source)?;
+    Some(ModeChoiceInfo {
+        source: card_id.as_str(),
+        options: opts.into_iter().map(|o| o.printed).collect(),
+    })
 }
 
 /// Per-player evolve / super-evolve unlock presentation (A9 / A10).
