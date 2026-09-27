@@ -75,9 +75,7 @@ impl BonusPpKeptNorm {
         state: &State,
         diff: Option<(String, String, String)>,
     ) -> Option<(String, String, String)> {
-        let Some((path, arena, trace)) = diff else {
-            return None;
-        };
+        let (path, arena, trace) = diff?;
         if !self.path_is_kept_bonus_pp(state, &path) {
             return Some((path, arena, trace));
         }
