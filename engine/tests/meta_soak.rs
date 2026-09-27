@@ -50,7 +50,7 @@ fn play_pair(
         assert!(!legal.is_empty(), "legal_actions empty before terminal");
         let idx = policy.gen_range(legal.len() as u32) as usize;
         let act = legal[idx].clone();
-        apply(db, &mut state, act).unwrap_or_else(|e| {
+        apply(db, &mut state, act.clone()).unwrap_or_else(|e| {
             panic!("seed={seed} legal action failed: {e:?} act={act:?}");
         });
         actions += 1;
