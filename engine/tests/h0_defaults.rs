@@ -14,10 +14,31 @@
 //!
 //! On this branch, `h0:mull=rule,info=fair` must match those pins; bare `h0`
 //! must match `h0:mull=engine/models/mulligan-v1.json,info=open`.
+//!
+//! `print_legacy_fingerprints` uses `h0:mull=rule,info=fair` (not bare `h0`).
+//!
+//! ## Play-time + Effect::Pay re-pins (`main@b5b822c` → branch)
+//!
+//! Proof workflow: `dump_gate_hashes` / `dump_gate_actions` on this branch vs
+//! `git worktree` at `main@b5b822c`; canonical `hash(state)` matches at every
+//! step before the cited `n`, then diverges on a play whose play-time walk
+//! (mode / discard / destroy picks, or `Effect::Pay` gating) locks before play
+//! reactions.
+//!
+//! | spec | seed | deck | old → new | n | engine hash first diff | play-time step |
+//! |------|------|------|-----------|---|------------------------|----------------|
+//! | default | 37 | meta-dragon-aggro | `0xe0ff…` → `0x0c5e…` | 88 | 79 | Spilling Red `10642310` play + picks before attack |
+//! | default | 41 | meta-dragon-ramp | `0x9e54…` → `0x09d1…` | 47 | 17 | Yidmetra `90024320` faith tick after Enhanced pick; cascade → Burnite `10744110` vs Lyria `10403120` |
+//! | default | 53 | meta-forest-combo | `0x7404…` → `0x7393…` | 86 | 37 | Miroku `10514120` mode pick at play; cascade → attack vs play |
+//! | default | 67 | meta-haven-amulet | `0x50a9…` → `0x85c9…` | 20 | 21 | bonus-PP kept-charge + Timepiece `10762210` play vs attack |
+//! | default | 79 | meta-haven-evo | `0x42fb…` → `0x2d18…` | — | — | play-time cascade |
+//! | legacy | 37 | meta-dragon-aggro | `0xe0ff…` → `0x0c5e…` | 88 | 79 | same Spilling Red row |
+//! | legacy | 41 | meta-dragon-ramp | `0xc4e8…` → `0x3207…` | 51 | 52 | Lumiore `10844120` discard pick (`10744110` vs `10042310`) |
+//! | legacy | 53 | meta-forest-combo | `0x7404…` → `0x7393…` | 86 | 37 | same Miroku row |
 
 use arena_engine::{
-    apply, legal_actions, new_game, play_game, policy_rng, to_neutral, trace::fnv1a64, Action,
-    AnyPolicy, CardDb, First, GameConfig, PlayerId, Policy,
+    apply, hash, legal_actions, new_game, play_game, policy_rng, to_neutral, trace::fnv1a64,
+    Action, AnyPolicy, CardDb, First, GameConfig, PlayerId, Policy,
 };
 
 mod common;
@@ -134,22 +155,22 @@ fn action_trace(
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0x8cd3_2204_3bbb_ebaf,
-    0xe0ff_3ba0_8237_47ae,
-    0x9e54_2bf8_f4f4_ba5c,
-    0x7404_fbcb_4cae_7f60,
-    0x50a9_2b69_688f_99c3,
-    0x42fb_d544_e452_ebf0,
+    0x0c5e_00eb_14bd_ce85,
+    0x09d1_f4dd_e963_0cb7,
+    0x7393_0e18_abe2_6408,
+    0x85c9_38a0_6912_6ff1,
+    0x2d18_3971_e453_91ae,
     0x5b5a_5be5_f92e_3c7c,
 ];
 
-/// Pre-flip `h0` action fingerprints on eight meta-deck / seed pairs (`main@2e40d4d`).
-/// `h0:mull=rule,info=fair` must reproduce them exactly.
+/// Pre-flip `h0` action fingerprints (`h0:mull=rule,info=fair`). Re-pinned with
+/// play-time / Pay gating on top of `main@b5b822c`; see module docs.
 const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0xf00a_d8f4_4136_9f74,
-    0xe0ff_3ba0_8237_47ae,
-    0xc4e8_ab63_aec9_6246,
-    0x7404_fbcb_4cae_7f60,
+    0x0c5e_00eb_14bd_ce85,
+    0x3207_d65c_42f5_89a8,
+    0x7393_0e18_abe2_6408,
     0x8fe4_b401_a51d_973b,
     0x953e_ffd4_7650_d22e,
     0x5b5a_5be5_f92e_3c7c,
