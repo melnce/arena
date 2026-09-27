@@ -324,7 +324,7 @@
     "i": 66,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 opens its Fanfare pick before World of Games 10503210 play-reaction advance; the old engine ran WoG Last Words first (countdown arena=2 trace=1)",
+    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 spell target pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=66)",
     "since": "2026-09-27"
   },
   {
@@ -332,7 +332,7 @@
     "i": 24,
     "path": "players.b.field[1].countdown",
     "class": "old-rule",
-    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 opens its Fanfare pick before World of Games 10503210 play-reaction advance; the old engine ran WoG Last Words first (countdown arena=4 trace=3)",
+    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 spell target pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 4→3 at i=24)",
     "since": "2026-09-27"
   },
   {
@@ -348,7 +348,7 @@
     "i": 77,
     "path": "players.b.field[0].countdown",
     "class": "old-rule",
-    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 opens its Fanfare pick before World of Games 10503210 play-reaction advance; the old engine ran WoG Last Words first (countdown arena=5 trace=4)",
+    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 spell target pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 5→4 at i=77)",
     "since": "2026-09-27"
   },
   {
@@ -356,16 +356,16 @@
     "i": 41,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "E39 / play-time selection: playing Magachiyo, Aromatic Convict 10914110 opens its Fanfare pick before World of Games 10503210 play-reaction advance; the old engine ran WoG Last Words first (countdown arena=3 trace=4)",
-    "since": "2026-09-27"
+    "reason": "E39: playing Magachiyo, Aromatic Convict 10914110 with Combo — no pick; arena judges World of Games 10503210 at play (counts same-cost cards per official Q&A, countdown arena=3 trace=4); the old engine resolved Fanfare first (destroyed the only other cost-3 follower) and never advanced WoG",
+    "since": "2026-09-10"
   },
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-23.jsonl",
     "i": 23,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: arena advanced World of Games 10503210 countdown to 1 before Magachiyo, Aromatic Convict 10914110's pick; the old engine advances after the mode/Fanfare pick at i=23 (trace countdown 2→2, including enemy same-cost cards per official Q&A)",
-    "since": "2026-09-10"
+    "reason": "E39: branch advances World of Games 10503210 after Magachiyo, Aromatic Convict 10914110's pick before Fanfare body; the old engine resolved Fanfare first (Magachiyo Fanfare, 4 damage to the picked follower) destroying the only other same-cost card and never advanced WoG (trace countdown 2 through the pick at i=23)",
+    "since": "2026-09-27"
   },
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-25.jsonl",
@@ -396,8 +396,8 @@
     "i": 20,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: arena advanced World of Games 10503210 countdown to 1 before Miroku, Swarmpetal 10514120's pick; the old engine advances after the mode/Fanfare pick at i=20 (trace countdown 2→2, including enemy same-cost cards per official Q&A)",
-    "since": "2026-09-10"
+    "reason": "E39: branch advances World of Games 10503210 after Miroku, Swarmpetal 10514120's pick before Fanfare body; the old engine resolved Fanfare first (Miroku mode 2, 3-damage split) destroying the only other same-cost card and never advanced WoG (trace countdown 2 through the pick at i=20)",
+    "since": "2026-09-27"
   },
   {
     "trace": "elf-neanisu2-mirror/trace-20260910-4.jsonl",
@@ -420,7 +420,7 @@
     "i": 112,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 opens its Fanfare pick before World of Games 10503210 play-reaction advance; the old engine ran WoG Last Words first (countdown arena=2 trace=1)",
+    "reason": "E39 / play-time selection: playing Crimson Incense 10913310 spell target pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=112)",
     "since": "2026-09-27"
   },
   {
@@ -980,7 +980,7 @@
     "i": 53,
     "path": "players.b.field[1].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: playing Wills United 10803310 opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena=2 trace=1) before the pick",
+    "reason": "E39 / play-time selection: playing Wills United 10803310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=53)",
     "since": "2026-09-27"
   },
   {
@@ -1028,7 +1028,7 @@
     "i": 37,
     "path": "players.b.field[1].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: playing Wills United 10803310 opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena=2 trace=1) before the pick",
+    "reason": "E39 / play-time selection: playing Wills United 10803310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=37)",
     "since": "2026-09-27"
   },
   {
@@ -1044,7 +1044,7 @@
     "i": 86,
     "path": "players.b.field[1].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: playing Wills United 10803310 opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena=2 trace=1) before the pick",
+    "reason": "E39 / play-time selection: playing Wills United 10803310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=86)",
     "since": "2026-09-27"
   },
   {
@@ -1052,7 +1052,7 @@
     "i": 16,
     "path": "players.b.field[0].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: playing Wills United 10803310 opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena=4 trace=3) before the pick",
+    "reason": "E39 / play-time selection: playing Wills United 10803310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 4→3 at i=16)",
     "since": "2026-09-27"
   },
   {
@@ -1084,7 +1084,7 @@
     "i": 28,
     "path": "players.a.field[0].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: playing Alchemic Flare 10433310 opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena=4 trace=3) before the pick",
+    "reason": "E39 / play-time selection: playing Alchemic Flare 10433310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 4→3 at i=28)",
     "since": "2026-09-27"
   },
   {
@@ -1092,7 +1092,7 @@
     "i": 33,
     "path": "players.b.field[0].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: playing Alchemic Flare 10433310 opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena=2 trace=1) before the pick",
+    "reason": "E39 / play-time selection: playing Alchemic Flare 10433310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=33)",
     "since": "2026-09-27"
   },
   {
@@ -1116,7 +1116,7 @@
     "i": 22,
     "path": "players.b.field[1].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: playing Wills United 10803310 opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena=4 trace=3) before the pick",
+    "reason": "E39 / play-time selection: playing Wills United 10803310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 4→3 at i=22)",
     "since": "2026-09-27"
   },
   {
@@ -1124,7 +1124,7 @@
     "i": 94,
     "path": "players.b.field[0].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: playing Alchemic Flare 10433310 opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena=2 trace=1) before the pick",
+    "reason": "E39 / play-time selection: playing Alchemic Flare 10433310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=94)",
     "since": "2026-09-27"
   },
   {
@@ -1156,7 +1156,7 @@
     "i": 66,
     "path": "players.a.field[1].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: playing Alchemic Flare 10433310 opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena=5 trace=4) before the pick",
+    "reason": "E39 / play-time selection: playing Alchemic Flare 10433310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 5→4 at i=66)",
     "since": "2026-09-27"
   },
   {
@@ -1164,7 +1164,7 @@
     "i": 13,
     "path": "players.b.field[0].countdown",
     "class": "old-rule",
-    "reason": "play-time selection: playing Alchemic Flare 10433310 opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena=2 trace=1) before the pick",
+    "reason": "E39 / play-time selection: playing Alchemic Flare 10433310 pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown 2→1 at i=13)",
     "since": "2026-09-27"
   },
   {

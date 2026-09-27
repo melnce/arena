@@ -374,18 +374,16 @@ impl<'a> TraceCtx<'a> {
     }
 
     fn countdown_at_path(&self, i: u32) -> Option<String> {
+        wog_countdown_at(self, i, self.path)
+    }
+
+    fn wog_field(&self) -> Option<(String, usize)> {
         let rest = self.path.strip_prefix("players.")?;
         let (side, rest) = rest.split_once('.')?;
         let after = rest.strip_prefix("field[")?;
         let (idx, _) = after.split_once(']')?;
         let idx: usize = idx.parse().ok()?;
-        let st = self.state_at(i)?;
-        st.get("players")?
-            .get(side)?
-            .get("field")?
-            .get(idx)?
-            .get("countdown")
-            .map(|v| v.to_string())
+        Some((side.to_string(), idx))
     }
 
     fn recent_evolve(&self) -> Option<String> {
@@ -582,32 +580,230 @@ fn classify_faith(db: &CardDb, ctx: &TraceCtx<'_>) -> (DivergenceClass, String) 
     )
 }
 
-/// World of Games: arena advanced countdown before the played card's pick; the trace
-/// (old engine) advances after the pick and does count enemy same-cost cards.
-fn wog_play_time_reason(db: &CardDb, ctx: &TraceCtx<'_>, arena: &str, _trace_val: &str) -> String {
-    let (play_id, play_name) = ctx
-        .played_card()
-        .unwrap_or_else(|| ("?".into(), "?".into()));
-    let cd_before = ctx.countdown_at_path(ctx.i).unwrap_or_else(|| "?".into());
-    let cd_after = ctx
-        .countdown_at_path(ctx.i + 1)
-        .or_else(|| ctx.countdown_at_path(ctx.i + 2))
-        .unwrap_or_else(|| "?".into());
-    let pick = if ctx.line_at(ctx.i + 1).is_some_and(|l| l.action.get("choose").is_some()) {
-        format!("mode/Fanfare pick at i={}", ctx.i + 1)
-    } else if ctx.line_at(ctx.i).is_some_and(|l| l.action.get("choose").is_some()) {
-        format!("mode/Fanfare pick at i={}", ctx.i)
+fn wog_countdown_at(ctx: &TraceCtx<'_>, i: u32, path: &str) -> Option<String> {
+    let rest = path.strip_prefix("players.")?;
+    let (side, rest) = rest.split_once('.')?;
+    let after = rest.strip_prefix("field[")?;
+    let (idx, _) = after.split_once(']')?;
+    let idx: usize = idx.parse().ok()?;
+    let st = ctx.state_at(i)?;
+    st.get("players")?
+        .get(side)?
+        .get("field")?
+        .get(idx)?
+        .get("countdown")
+        .map(|v| v.to_string())
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum WogTraceAdvance {
+    /// Trace countdown dropped on the play line, before any choose.
+    BeforePick,
+    /// Trace countdown unchanged through play+choose, drops on a later line.
+    AfterPick,
+    /// Trace never advanced WoG in the play/pick window (Fanfare removed the cost-3/5 card first).
+    Never,
+    /// Play with no choose (Combo etc.); trace may or may not advance on the play line.
+    NoPick,
+}
+
+struct WogPlayWindow {
+    play_i: u32,
+    play_id: String,
+    play_name: String,
+    has_pick: bool,
+    pick_i: Option<u32>,
+    cd_before_play: Option<i32>,
+    cd_after_play: Option<i32>,
+    cd_after_pick: Option<i32>,
+    advance: WogTraceAdvance,
+}
+
+fn parse_cd(s: &Option<String>) -> Option<i32> {
+    s.as_ref().and_then(|v| v.parse().ok())
+}
+
+fn wog_play_window(db: &CardDb, ctx: &TraceCtx<'_>) -> Option<WogPlayWindow> {
+    let path = ctx.path;
+    if !path.ends_with(".countdown") {
+        return None;
+    }
+    let (play_i, play_id) = (0..=6).find_map(|back| {
+        let idx = ctx.i.saturating_sub(back);
+        if idx == 0 && back > 0 {
+            return None;
+        }
+        ctx.line_at(idx)
+            .and_then(|l| action_play_card(&l.action).map(|id| (idx, id)))
+    })?;
+    let play_name = card_name(db, &play_id);
+    let pick_i = (play_i + 1..=play_i + 2).find(|&pi| {
+        ctx.line_at(pi)
+            .is_some_and(|l| l.action.get("choose").is_some())
+    });
+    let has_pick = pick_i.is_some()
+        || ctx
+            .line_at(ctx.i)
+            .is_some_and(|l| l.action.get("choose").is_some());
+    let cd_before_play = parse_cd(&wog_countdown_at(ctx, play_i.saturating_sub(1), path));
+    let cd_after_play = parse_cd(&wog_countdown_at(ctx, play_i, path));
+    let pick_line = pick_i.or_else(|| {
+        if ctx
+            .line_at(ctx.i)
+            .is_some_and(|l| l.action.get("choose").is_some())
+        {
+            Some(ctx.i)
+        } else {
+            None
+        }
+    });
+    let cd_before_pick = pick_line
+        .and_then(|pi| parse_cd(&wog_countdown_at(ctx, pi.saturating_sub(1), path)));
+    let cd_after_pick = pick_line.and_then(|pi| parse_cd(&wog_countdown_at(ctx, pi, path)));
+    let cd_after_pick_next = pick_line.and_then(|pi| parse_cd(&wog_countdown_at(ctx, pi + 1, path)));
+    let advance = if !has_pick {
+        WogTraceAdvance::NoPick
+    } else if cd_before_play.is_some()
+        && cd_after_play.is_some()
+        && cd_after_play < cd_before_play
+    {
+        // Trace countdown dropped on the play line, before the choose at pick_i.
+        WogTraceAdvance::BeforePick
+    } else if cd_before_pick.is_some()
+        && cd_after_pick.is_some()
+        && cd_after_pick < cd_before_pick
+    {
+        // Trace countdown dropped on the pick line (i−1 → i).
+        WogTraceAdvance::AfterPick
+    } else if cd_after_pick.is_some()
+        && cd_after_pick_next.is_some()
+        && cd_after_pick_next < cd_after_pick
+    {
+        // Trace countdown dropped immediately after the pick (i → i+1).
+        WogTraceAdvance::AfterPick
+    } else if cd_before_play.is_some()
+        && cd_after_pick
+            .or(cd_after_play)
+            .zip(cd_before_play)
+            .is_some_and(|(after, before)| after == before)
+    {
+        // Unchanged through the play/pick window — Fanfare removed the cost match first.
+        WogTraceAdvance::Never
     } else {
-        "subsequent pick".into()
+        WogTraceAdvance::AfterPick
     };
-    format!(
-        "play-time selection: arena advanced World of Games 10503210 countdown to {arena} before {play_name} {play_id}'s pick; the old engine advances after the {pick} (trace countdown {cd_before}→{cd_after}, including enemy same-cost cards per official Q&A)"
+    Some(WogPlayWindow {
+        play_i,
+        play_id,
+        play_name,
+        has_pick,
+        pick_i: pick_line,
+        cd_before_play,
+        cd_after_play,
+        cd_after_pick,
+        advance,
+    })
+}
+
+fn wog_fanfare_detail(play_id: &str) -> &'static str {
+    match play_id {
+        "10514120" => "Miroku mode 2, 3-damage split",
+        "10914110" => "Magachiyo Fanfare, 4 damage to the picked follower",
+        _ => "Fanfare",
+    }
+}
+
+fn classify_wog_countdown(
+    db: &CardDb,
+    arena: &str,
+    trace_val: &str,
+    ctx: &TraceCtx<'_>,
+) -> (DivergenceClass, String) {
+    let w = wog_play_window(db, ctx).unwrap_or_else(|| WogPlayWindow {
+        play_i: ctx.i,
+        play_id: ctx.played_card().map(|(id, _)| id).unwrap_or_default(),
+        play_name: ctx.played_card().map(|(_, n)| n).unwrap_or_default(),
+        has_pick: false,
+        pick_i: None,
+        cd_before_play: None,
+        cd_after_play: None,
+        cd_after_pick: None,
+        advance: WogTraceAdvance::NoPick,
+    });
+    let (play_id, play_name) = (w.play_id, w.play_name);
+
+    if play_id == "10811130" {
+        return (
+            DivergenceClass::OldRule,
+            format!(
+                "play-time selection: Moelle, Gloomy Maiden 10811130 Fanfare return pick locks before World of Games 10503210 Last Words draw; the old engine drew first (countdown arena={arena} trace={trace_val})"
+            ),
+        );
+    }
+
+    if play_id == "10913310" {
+        let cd = w.cd_before_play
+            .zip(w.cd_after_play)
+            .map(|(a, b)| format!("{a}→{b}"))
+            .unwrap_or_else(|| format!("trace={trace_val}"));
+        return (
+            DivergenceClass::OldRule,
+            format!(
+                "E39 / play-time selection: playing Crimson Incense {play_id} spell target pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown {cd} at i={})",
+                w.play_i
+            ),
+        );
+    }
+
+    if play_id == "10914110" && !w.has_pick {
+        return (
+            DivergenceClass::OldRule,
+            format!(
+                "E39: playing {play_name} {play_id} with Combo — no pick; arena judges World of Games 10503210 at play (counts same-cost cards per official Q&A, countdown arena={arena} trace={trace_val}); the old engine resolved Fanfare first (destroyed the only other cost-3 follower) and never advanced WoG"
+            ),
+        );
+    }
+
+    if w.has_pick && w.advance == WogTraceAdvance::Never {
+        let detail = wog_fanfare_detail(&play_id);
+        let cd = w.cd_after_pick
+            .or(w.cd_after_play)
+            .map(|c| c.to_string())
+            .unwrap_or_else(|| trace_val.to_string());
+        return (
+            DivergenceClass::OldRule,
+            format!(
+                "E39: branch advances World of Games 10503210 after {play_name} {play_id}'s pick before Fanfare body; the old engine resolved Fanfare first ({detail}) destroying the only other same-cost card and never advanced WoG (trace countdown {cd} through the pick at i={})",
+                w.pick_i.unwrap_or(ctx.i)
+            ),
+        );
+    }
+
+    if w.has_pick && w.advance == WogTraceAdvance::BeforePick {
+        let cd = w.cd_before_play
+            .zip(w.cd_after_play)
+            .map(|(a, b)| format!("{a}→{b}"))
+            .unwrap_or_else(|| trace_val.to_string());
+        return (
+            DivergenceClass::OldRule,
+            format!(
+                "E39 / play-time selection: playing {play_name} {play_id} pick opens before World of Games 10503210 play reaction; the old engine advanced WoG before the pick (trace countdown {cd} at i={})",
+                w.play_i
+            ),
+        );
+    }
+
+    (
+        DivergenceClass::OldRule,
+        format!(
+            "play-time selection: playing {play_name} {play_id} opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena={arena} trace={trace_val}) before the pick"
+        ),
     )
 }
 
 fn classify_countdown(
     db: &CardDb,
-    trace: &str,
+    _trace: &str,
     arena: &str,
     trace_val: &str,
     ctx: &TraceCtx<'_>,
@@ -630,34 +826,7 @@ fn classify_countdown(
     }
 
     if slot_card == "10503210" {
-        if play_id == "10811130" {
-            return (
-                DivergenceClass::OldRule,
-                format!(
-                    "play-time selection: Moelle, Gloomy Maiden 10811130 Fanfare return pick locks before World of Games 10503210 Last Words draw; the old engine drew first (countdown arena={arena} trace={trace_val})"
-                ),
-            );
-        }
-        if trace.starts_with("elf-neanisu2-mirror/") && action_play_card(ctx.action).is_none() {
-            return (
-                DivergenceClass::OldRule,
-                wog_play_time_reason(db, ctx, arena, trace_val),
-            );
-        }
-        if play_id == "10913310" || play_id == "10914110" {
-            return (
-                DivergenceClass::OldRule,
-                format!(
-                    "E39 / play-time selection: playing {play_name} {play_id} opens its Fanfare pick before World of Games 10503210 play-reaction advance; the old engine ran WoG Last Words first (countdown arena={arena} trace={trace_val})"
-                ),
-            );
-        }
-        return (
-            DivergenceClass::OldRule,
-            format!(
-                "play-time selection: playing {play_name} {play_id} opens its pick before World of Games 10503210 spell-play advance; the old engine advanced WoG (countdown arena={arena} trace={trace_val}) before the pick"
-            ),
-        );
+        return classify_wog_countdown(db, arena, trace_val, ctx);
     }
 
     (
@@ -991,7 +1160,7 @@ fn removed_reason(db: &CardDb, traces_dir: &Path, r: &KnownDivergence, new: &[Kn
         if let Ok(text) = gunzip(&gz) {
             if let Ok(lines) = parse_trace_lines(&text) {
                 let ctx = TraceCtx::new(db, &lines, r.i, &r.path, &serde_json::Value::Null);
-                let detail = wog_play_time_reason(db, &ctx, "?", "?");
+                let (_, detail) = classify_wog_countdown(db, "?", "?", &ctx);
                 if trace_green {
                     return format!(
                         "{detail}; play-time selection restores pick-before-advance order — trace now green"

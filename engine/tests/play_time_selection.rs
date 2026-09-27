@@ -23,6 +23,7 @@ const VANILLA: &str = "88001110";
 const TANK: &str = "89500001";
 const FEARLESS: &str = "10621110";
 const SWEET_ABOMINATION: &str = "10733110";
+const COST_FIVE_ALLY: &str = "89500011";
 
 fn hand_inst_ids(st: &arena_engine::State, who: PlayerId) -> Vec<u32> {
     st.player(who).hand.iter().map(|c| c.id).collect()
@@ -379,20 +380,49 @@ fn sweet_abomination_no_earth_no_play_time_prompt() {
     assert_eq!(st.player(me).earth, 0, "earth not spent at play");
 }
 
-/// Payable Earth Rite: mode prompt at play before play reactions.
+/// Payable Earth Rite: mode prompt at play before play reactions (WoG included).
 #[test]
 fn sweet_abomination_with_earth_mode_at_play_before_reactions() {
     let db = load_db();
     let mut st = started(&db, 921);
     let me = PlayerId::A;
+    let opp = PlayerId::B;
     give_pp(&mut st, me, 10, 10);
     st.player_mut(me).hand.clear();
     st.player_mut(me).earth = 1;
+    let wog = put_field(&db, &mut st, me, WORLD);
+    if let Some(w) = st.field_inst_mut(me, wog) {
+        w.countdown = Some(5);
+    }
+    put_field(&db, &mut st, me, COST_FIVE_ALLY);
+    let tank = put_field(&db, &mut st, opp, TANK);
+    if let Some(f) = st.field_inst_mut(opp, tank) {
+        f.defense = 3;
+        f.max_defense = 3;
+    }
     put_hand(&db, &mut st, me, SWEET_ABOMINATION);
     play(&db, &mut st, 0);
     assert!(matches!(st.phase, Phase::Choice { .. }));
     assert_eq!(pending_kind(&st), arena_engine::PendingKind::PlaySelect);
-    assert_eq!(st.player(me).earth, 1, "earth spent at resolution, not play");
+    assert_eq!(st.player(me).earth, 1, "earth not spent until mode resolves");
+    assert_eq!(
+        wog_countdown(&st, me),
+        Some(5),
+        "World of Games play reaction waits until after the mode pick"
+    );
+    choose(&db, &mut st, 0);
+    drain_choice(&db, &mut st);
+    assert_eq!(st.player(me).earth, 0, "earth spent when Fanfare resolves");
+    assert_eq!(
+        wog_countdown(&st, me),
+        Some(4),
+        "WoG advanced after Sweet Abomination (cost 5) fully resolved"
+    );
+    assert!(field_has(&st, me, SWEET_ABOMINATION));
+    assert!(
+        !field_has(&st, opp, TANK),
+        "mode 0: 3 damage to all enemy followers"
+    );
 }
 
 /// Regression: Engage pick still at resolution.
