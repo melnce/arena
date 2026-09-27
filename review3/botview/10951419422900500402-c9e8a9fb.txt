@@ -1,0 +1,255 @@
+GAME 10951419422900500402-c9e8a9fb
+human (seat a) deck: meta-forest-combo;  bot (seat b, h0:nodes=16000, info=open) deck: meta-abyss-midrange
+went first: HUMAN;  winner: HUMAN;  turns: 9
+Values: +80 = forced win for the side named, -80 = forced loss. 'ref' = h0:nodes=200000,k=16 (deeper search).
+Per decision: bot_value = the bot's own search value at the time; v_best/v_played = reference value of its best move / the move played;
+cost = v_best - v_played (>11.5 is beyond measurement noise). All values from the ACTING side's point of view.
+explain = the bot's own candidate list re-run on this position (seed differs from the live game, so 'explained choice' may differ).
+
+Reference value from the BOT's side at the start of each analysed player-turn (tN B = bot's turn, H = human's):
+  t1B:+10  t3H:-38  t4H:-21  t4B:-6  t5H:-30  t5B:+14  t6H:-24  t6B:+15  t7H:-36  t7B:+30  t8H:-39  t8B:-23  t9H:-55
+
+  [0] HUMAN mulligan swap [True, False, True, True]
+  [1] BOT mulligan swap [False, False, False, True]
+=== turn 1, HUMAN to act ===
+    BOT   HP 20/20  PP 0/0  EP 2 SEP 2  deck 36  hand 4  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand: Istyndet vs. Mitilykket(7), Lilith, Enchanting Succubus(1), Hark to the Night Song(3), Garodeth vs. Zeth(8)
+    HUMAN HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0
+          field: (empty)
+          hand (HIDDEN from the bot): World of Games(1), Ewiyar, Wind Personified(2), Thestae, Anathema of Distortion(4), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3)
+  [2] HUMAN plays World of Games (1pp)
+  [3] HUMAN ends turn
+=== turn 1, BOT to act ===
+    BOT   HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand: Istyndet vs. Mitilykket(7), Lilith, Enchanting Succubus(1), Hark to the Night Song(3), Garodeth vs. Zeth(8), Highwire Feline(5)
+    HUMAN HP 20/20  PP 0/1  EP 2 SEP 2  deck 35  hand 4  cemetery 0
+          field: [0] World of Games (amulet, cd 5)
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Thestae, Anathema of Distortion(4), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3)
+  [4] BOT plays Lilith, Enchanting Succubus (1pp)   bot_value +12.0   ref: played +12.9, best +10.1, cost 0.0
+      explain: path search, 3 candidates, nodes 254, top-2 margin 0.0
+  [5] BOT toggles bonus PP   bot_value +5.7
+      explain: path search, 2 candidates, nodes 107, top-2 margin 0.0
+  [6] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 2, HUMAN to act ===
+    BOT   HP 20/20  PP 0/1  EP 2 SEP 2  deck 35  hand 4  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Lilith, Enchanting Succubus 1/1 [sick]
+          hand: Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8), Highwire Feline(5)
+    HUMAN HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0
+          field: [0] World of Games (amulet, cd 4)
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Thestae, Anathema of Distortion(4), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3), Virewind Fencer(2)
+  [7] HUMAN plays Virewind Fencer (2pp)
+  [8] HUMAN ends turn
+=== turn 2, BOT to act ===
+    BOT   HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Lilith, Enchanting Succubus 1/1
+          hand: Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6)
+    HUMAN HP 20/20  PP 0/2  EP 2 SEP 2  deck 34  hand 4  cemetery 0
+          field: [0] World of Games (amulet, cd 4); [1] Virewind Fencer 2/2 [sick]
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Thestae, Anathema of Distortion(4), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3)
+  [9] BOT attacks: Lilith, Enchanting Succubus 1/1 -> LEADER   bot_value -9.1
+      explain: path search, 3 candidates, nodes 451, top-2 margin 3.6
+  [10] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 3, HUMAN to act ===
+    BOT   HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Lilith, Enchanting Succubus 1/1
+          hand: Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6)
+    HUMAN HP 19/20  PP 3/3  EP 2 SEP 2  deck 33  hand 5  cemetery 0
+          field: [0] World of Games (amulet, cd 3); [1] Virewind Fencer 2/2
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Thestae, Anathema of Distortion(4), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7)
+  [11] HUMAN attacks: Virewind Fencer 2/2 -> Lilith, Enchanting Succubus 1/1
+  [12] HUMAN ends turn
+=== turn 3, BOT to act ===
+    BOT   HP 20/20  PP 3/3  EP 2 SEP 2  deck 33  hand 7  cemetery 1 bonusPP(early used, late avail)
+          field: (empty)
+          hand: Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6), Bat(1), Netherworld Lieutenant(2)
+    HUMAN HP 19/20  PP 3/3  EP 2 SEP 2  deck 33  hand 5  cemetery 0
+          field: [0] World of Games (amulet, cd 3); [1] Virewind Fencer 2/1
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Thestae, Anathema of Distortion(4), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7)
+  [13] BOT plays Hark to the Night Song (3pp)   bot_value +3.0
+      explain: path search, 4 candidates, nodes 949, top-2 margin 14.3
+  [14] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 4, HUMAN to act ===
+    BOT   HP 20/20  PP 0/3  EP 2 SEP 2  deck 33  hand 6  cemetery 2 bonusPP(early used, late avail)
+          field: (empty)
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6), Bat(1), Netherworld Lieutenant(2)
+    HUMAN HP 19/20  PP 4/4  EP 2 SEP 2  deck 32  hand 6  cemetery 1
+          field: [0] World of Games (amulet, cd 2)
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Thestae, Anathema of Distortion(4), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7), Virid Lieutenant(2)
+  [15] HUMAN ends turn
+=== turn 4, BOT to act ===
+    BOT   HP 20/20  PP 4/4  EP 2 SEP 2  deck 32  hand 7  cemetery 2 bonusPP(early used, late avail)
+          field: (empty)
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6), Bat(1), Netherworld Lieutenant(2), Hark to the Night Song(3)
+    HUMAN HP 19/20  PP 4/4  EP 2 SEP 2  deck 32  hand 6  cemetery 1
+          field: [0] World of Games (amulet, cd 2)
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Thestae, Anathema of Distortion(4), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7), Virid Lieutenant(2)
+  [16] BOT plays Netherworld Lieutenant (2pp)   bot_value +11.2   ref: played -3.2, best -5.9, cost 0.0
+      explain: path search, 4 candidates, nodes 2868, top-2 margin 1.9; re-run would choose: BOT ends turn
+  [17] BOT plays Bat (1pp)   bot_value -7.8   ref: played -7.7, best -6.0, cost 1.7
+      explain: path search, 3 candidates, nodes 931, top-2 margin 1.2
+  [18] BOT evolves Netherworld Lieutenant 1/1 [sick]   bot_value -18.2
+      explain: path search, 3 candidates, nodes 636, top-2 margin 1.6
+  [19] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 5, HUMAN to act ===
+    BOT   HP 20/20  PP 1/4  EP 1 SEP 2  deck 32  hand 5  cemetery 2 bonusPP(early used, late avail)
+          field: [0] Netherworld Lieutenant 3/3*E [sick]; [1] Bat 1/1 [drain,sick]
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6), Hark to the Night Song(3)
+    HUMAN HP 19/20  PP 5/5  EP 2 SEP 2  deck 31  hand 7  cemetery 1
+          field: [0] World of Games (amulet, cd 1)
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Thestae, Anathema of Distortion(4), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7), Virid Lieutenant(2), Virid Lieutenant(2)
+  [20] HUMAN plays Thestae, Anathema of Distortion (4pp)
+  [21] HUMAN chooses {"slot": 0, "player": "b"}
+  [22] HUMAN plays Sathanid, Eld Lance (1pp)
+  [23] HUMAN evolves Thestae, Anathema of Distortion 3/3 [sick]
+  [24] HUMAN attacks: Thestae, Anathema of Distortion 5/5*E [sick] -> Netherworld Lieutenant 2/1 [rush,sick]
+  [25] HUMAN ends turn
+=== turn 5, BOT to act ===
+    BOT   HP 20/20  PP 5/5  EP 1 SEP 2  deck 31  hand 6  cemetery 4 bonusPP(early used, late avail)
+          field: [0] Bat 1/1 [drain]
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6), Hark to the Night Song(3), Highwire Feline(5)
+    HUMAN HP 19/20  PP 0/5  EP 1 SEP 2  deck 29  hand 7  cemetery 2
+          field: [0] Thestae, Anathema of Distortion 5/3*E [sick]; [1] Sathanid, Eld Lance 1/1 [drain,sick]
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7), Virid Lieutenant(2), Virid Lieutenant(2), Miroku, Swarmpetal(3), Leafshadow Assassin(2)
+  [26] BOT plays Highwire Feline (5pp)   bot_value +21.8   ref: played +10.4, best +13.9, cost 3.5
+      explain: path search, 8 candidates, nodes 13270, top-2 margin 0.6; re-run would choose: BOT plays Highwire Feline (5pp)
+  [27] BOT chooses {"slot": 0}   bot_value +10.8   ref: played +9.0, best +10.5, cost 1.6
+      explain: path search, 2 candidates, nodes 4254, top-2 margin 1.3
+  [28] BOT attacks: Bat 1/1 [drain] -> LEADER   bot_value +5.8   ref: played +12.2, best +11.6, cost 0.0
+      explain: path search, 6 candidates, nodes 3889, top-2 margin 8.0
+  [29] BOT evolves Highwire Feline 4/5 [sick]   bot_value +23.4
+      explain: path search, 4 candidates, nodes 1374, top-2 margin 21.7
+  [30] BOT chooses {"slot": 0}
+      explain: path single_legal, 0 candidates, nodes 0
+  [31] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 6, HUMAN to act ===
+    BOT   HP 20/20  PP 0/5  EP 0 SEP 2  deck 31  hand 5  cemetery 4 bonusPP(early used, late avail)
+          field: [0] Bat 1/1 [drain]; [1] Highwire Feline 6/7*E [sick]; [2] Skeleton 1/1 [sick]; [3] Skeleton 1/1 [sick]
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6), Hark to the Night Song(3)
+    HUMAN HP 18/20  PP 6/6  EP 1 SEP 2  deck 28  hand 8  cemetery 4
+          field: (empty)
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7), Virid Lieutenant(2), Virid Lieutenant(2), Miroku, Swarmpetal(3), Leafshadow Assassin(2), Magachiyo, Aromatic Convict(3)
+  [32] HUMAN plays Miroku, Swarmpetal (3pp)
+  [33] HUMAN chooses {"mode": 1}
+  [34] HUMAN plays Leafshadow Assassin (2pp)
+  [35] HUMAN plays Magachiyo, Aromatic Convict (3pp)
+  [36] HUMAN evolves Miroku, Swarmpetal 2/2 [sick]
+  [37] HUMAN chooses {"mode": 1}
+  [38] HUMAN plays Virid Lieutenant (2pp)   (human move; ref cost 14.6)
+  [39] HUMAN attacks: Miroku, Swarmpetal 4/4*E [sick] -> Highwire Feline 6/3*E [sick]
+  [40] HUMAN ends turn
+=== turn 6, BOT to act ===
+    BOT   HP 20/20  PP 6/6  EP 0 SEP 2  deck 30  hand 6  cemetery 8 bonusPP(early used, late avail)
+          field: (empty)
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6), Hark to the Night Song(3), Adahime, Anathema of Death(6)
+    HUMAN HP 18/20  PP 0/6  EP 0 SEP 2  deck 26  hand 7  cemetery 5
+          field: [0] Leafshadow Assassin 2/2 [sick]; [1] Magachiyo, Aromatic Convict 3/3 [sick]; [2] Virid Lieutenant 1/3 [sick]
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7), Virid Lieutenant(2), Fairy(1), Great Hart of the Glacial Realm(6), Sathanid, Eld Lance(1)
+  [41] BOT plays Adahime, Anathema of Death (6pp)   bot_value +15.9   ref: played +16.4, best +15.2, cost 0.0
+      explain: path search, 6 candidates, nodes 14839, top-2 margin 5.4; re-run would choose: BOT toggles bonus PP
+  [42] BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Leafshadow Assassin 2/2 [sick]   bot_value +9.7   ref: played +15.0, best +14.2, cost 0.0
+      explain: path search, 11 candidates, nodes 15746, top-2 margin 0.3; re-run would choose: BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Virid Lieutenant 1/3 [sick]
+  [43] BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]   bot_value +11.0   ref: played +15.4, best +14.1, cost 0.0
+      explain: path search, 11 candidates, nodes 15748, top-2 margin 0.8; re-run would choose: BOT toggles bonus PP
+  [44] BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Magachiyo, Aromatic Convict 3/3 [sick]   bot_value +19.3   ref: played +8.7, best +7.4, cost 0.0
+      explain: path search, 11 candidates, nodes 15776, top-2 margin 0.5
+  [45] BOT toggles bonus PP   bot_value +7.9   ref: played +10.3, best +9.3, cost 0.0
+      explain: path search, 6 candidates, nodes 5625, top-2 margin 0.0
+  [46] BOT attacks: Lilith, Devilish Cutie 3/3 [rush,sick] -> Virid Lieutenant 1/3 [sick]   bot_value +3.0   ref: played +8.9, best +9.3, cost 0.4
+      explain: path search, 5 candidates, nodes 2570, top-2 margin 0.0
+  [47] BOT attacks: Netherworld Lieutenant 4/3 [rush,sick] -> Leafshadow Assassin 2/1 [sick]   bot_value +6.3
+      explain: path search, 2 candidates, nodes 661, top-2 margin 23.8
+  [48] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 7, HUMAN to act ===
+    BOT   HP 19/20  PP 0/6  EP 0 SEP 1  deck 28  hand 5  cemetery 9 bonusPP(early used, late used)
+          field: [0] Adahime, Anathema of Death 8/7*SE [sick]; [1] Lilith, Devilish Cutie 3/2 [rush,sick]; [2] Netherworld Lieutenant 4/1 [rush,sick]
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6), Hark to the Night Song(3)
+    HUMAN HP 16/20  PP 7/7  EP 0 SEP 2  deck 25  hand 8  cemetery 8
+          field: (empty)
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7), Virid Lieutenant(2), Fairy(1), Great Hart of the Glacial Realm(6), Sathanid, Eld Lance(1), Miroku, Swarmpetal(3)
+  [49] HUMAN plays Great Hart of the Glacial Realm (6pp)
+  [50] HUMAN plays Deepwood Bounty (0pp)
+  [51] HUMAN plays Deepwood Bounty (0pp)
+  [52] HUMAN SUPER-evolves Great Hart of the Glacial Realm 6/6 [sick]   (human move; ref cost 29.6)
+  [53] HUMAN attacks: Great Hart of the Glacial Realm 9/9*SE [sick] -> Lilith, Devilish Cutie 3/2 [rush,sick]
+  [54] HUMAN plays Fairy (1pp)
+  [55] HUMAN ends turn
+=== turn 7, BOT to act ===
+    BOT   HP 18/20  PP 7/7  EP 0 SEP 1  deck 27  hand 7  cemetery 12 bonusPP(early used, late used)
+          field: (empty)
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Highwire Feline(5), Adahime, Anathema of Death(6), Hark to the Night Song(3), Bat(1), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 18/20  PP 0/7  EP 0 SEP 1  deck 25  hand 7  cemetery 10
+          field: [0] Great Hart of the Glacial Realm 9/9*SE [sick]; [1] Fairy 1/1 [rush,sick]
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7), Virid Lieutenant(2), Sathanid, Eld Lance(1), Miroku, Swarmpetal(3), Deepwood Bounty(0)
+  [56] BOT plays Bat (1pp)   bot_value +23.6   ref: played +24.0, best +30.2, cost 6.2
+      explain: path search, 6 candidates, nodes 14371, top-2 margin 12.7
+  [57] BOT plays Adahime, Anathema of Death (6pp)   bot_value +18.2   ref: played +9.2, best +17.9, cost 8.7
+      explain: path search, 5 candidates, nodes 9543, top-2 margin 35.0
+  [58] BOT attacks: Raz, Demon on the Drums 1/2 [rush,sick] -> Great Hart of the Glacial Realm 9/9*SE [sick]   bot_value -0.5   ref: played +13.4, best +4.7, cost 0.0
+      explain: path search, 9 candidates, nodes 15100, top-2 margin 3.6
+  [59] BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]   bot_value +7.7   ref: played +10.6, best +7.7, cost 0.0
+      explain: path search, 9 candidates, nodes 13179, top-2 margin 13.3
+  [60] BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Great Hart of the Glacial Realm 9/8*SE [sick]   bot_value -12.4   ref: played -8.3, best -0.1, cost 8.2
+      explain: path search, 7 candidates, nodes 6405, top-2 margin 7.4; re-run would choose: BOT attacks: Lilith, Devilish Cutie 3/3 [rush,sick] -> Fairy 1/1 [rush,sick]
+  [61] BOT attacks: Skeleton 3/3 [rush,sick] -> Fairy 1/1 [rush,sick]   bot_value -4.4
+      explain: path search, 3 candidates, nodes 1105, top-2 margin 3.1; re-run would choose: BOT ends turn
+  [62] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 8, HUMAN to act ===
+    BOT   HP 18/20  PP 0/7  EP 0 SEP 0  deck 25  hand 5  cemetery 13 bonusPP(early used, late used)
+          field: [0] Bat 3/3 [drain,sick]; [1] Adahime, Anathema of Death 8/7*SE [sick]; [2] Lilith, Devilish Cutie 3/3 [rush,sick]; [3] Skeleton 3/2 [rush,sick]
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Highwire Feline(5), Hark to the Night Song(3), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 17/20  PP 8/8  EP 0 SEP 1  deck 24  hand 8  cemetery 12
+          field: (empty)
+          hand (HIDDEN from the bot): Ewiyar, Wind Personified(2), Magachiyo, Aromatic Convict(3), Setus & Maisha, Bladerights(7), Virid Lieutenant(2), Sathanid, Eld Lance(1), Miroku, Swarmpetal(3), Deepwood Bounty(0), Thestae, Anathema of Distortion(4)
+  [63] HUMAN plays Ewiyar, Wind Personified (2pp)
+  [64] HUMAN plays Deepwood Bounty (0pp)
+  [65] HUMAN plays Magachiyo, Aromatic Convict (3pp)
+  [66] HUMAN plays Miroku, Swarmpetal (3pp)
+  [67] HUMAN chooses {"mode": 2}   (human move; ref cost 20.6)
+  [68] HUMAN ends turn
+=== turn 8, BOT to act ===
+    BOT   HP 18/20  PP 8/8  EP 0 SEP 0  deck 24  hand 7  cemetery 17 bonusPP(early used, late used)
+          field: (empty)
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Highwire Feline(5), Hark to the Night Song(3), Macmillan, Reaper of Ceremonies(9), Bat(1), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 18/20  PP 0/8  EP 1 SEP 1  deck 24  hand 5  cemetery 13
+          field: [0] Ewiyar, Wind Personified 2/1 [rush,sick]; [1] Magachiyo, Aromatic Convict 2/2 [sick]; [2] Miroku, Swarmpetal 4/4 [sick]
+          hand (HIDDEN from the bot): Setus & Maisha, Bladerights(7), Virid Lieutenant(2), Sathanid, Eld Lance(1), Thestae, Anathema of Distortion(4), Deepwood Bounty(0)
+  [69] BOT plays Garodeth vs. Zeth (8pp)   bot_value -25.8   ref: played -36.7, best -22.9, cost 13.8  <<< MISTAKE; ref prefers: BOT plays Garodeth vs. Zeth (8pp)
+      explain: path search, 6 candidates, nodes 6872, top-2 margin 5.0
+        cand   -35.7 (worst -55.1, n 4, ends opp_reply): BOT plays Garodeth vs. Zeth (8pp)
+        cand   -40.7 (worst -47.6, n 4, ends opp_reply): BOT plays Highwire Feline (5pp)
+        cand   -41.6 (worst -52.9, n 4, ends opp_reply): BOT plays Istyndet vs. Mitilykket (7pp)
+        cand   -43.3 (worst -54.0, n 4, ends opp_reply): BOT plays Bat (1pp)
+        bot's expected line for its top candidate (best world): B:play Garodeth vs. Zeth | B:choose | B:attack s0->leader | B:end_turn | H:play Lyria, Skydestined | H:play Moelle, Gloomy Maiden | H:choose | H:attack s2->leader  [end opp_reply, leaf 9.7]
+  [70] BOT chooses {"mode": 0}   bot_value -14.3   ref: played -48.8, best -37.5, cost 11.3
+      explain: path search, 2 candidates, nodes 1402, top-2 margin 20.0; re-run would choose: BOT chooses {"mode": 1}
+  [71] BOT attacks: Garodeth vs. Zeth 8/8 [storm,sick] -> LEADER   bot_value -72.5
+      explain: path search, 5 candidates, nodes 1153, top-2 margin 2.3
+  [72] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 9, HUMAN to act ===
+    BOT   HP 16/20  PP 0/8  EP 0 SEP 0  deck 24  hand 6  cemetery 17 bonusPP(early used, late used)
+          field: [0] Garodeth vs. Zeth 8/8 [storm,sick]
+          hand: Istyndet vs. Mitilykket(7), Highwire Feline(5), Hark to the Night Song(3), Macmillan, Reaper of Ceremonies(9), Bat(1), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 10/20  PP 9/9  EP 1 SEP 1  deck 23  hand 6  cemetery 13
+          field: [0] Ewiyar, Wind Personified 2/1 [rush]; [1] Magachiyo, Aromatic Convict 2/2; [2] Miroku, Swarmpetal 4/4
+          hand (HIDDEN from the bot): Setus & Maisha, Bladerights(7), Virid Lieutenant(2), Sathanid, Eld Lance(1), Thestae, Anathema of Distortion(4), Deepwood Bounty(0), Leafshadow Assassin(2)
+  [73] HUMAN plays Deepwood Bounty (0pp)
+  [74] HUMAN plays Setus & Maisha, Bladerights (7pp)
+  [75] HUMAN chooses {"slot": 0, "player": "b"}
+  [76] HUMAN plays Virid Lieutenant (2pp)
+  [77] HUMAN evolves Setus & Maisha, Bladerights 4/6 [storm,ward,sick]
+  [78] HUMAN attacks: Setus & Maisha, Bladerights 6/8*E [storm,ward] -> LEADER
+  [79] HUMAN attacks: Miroku, Swarmpetal 5/5 -> LEADER
+  [80] HUMAN attacks: Magachiyo, Aromatic Convict 3/3 -> LEADER
+  [81] HUMAN attacks: Ewiyar, Wind Personified 3/2 [rush] -> LEADER
+
+FINAL: winner HUMAN; bot HP 0, human HP 11

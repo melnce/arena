@@ -1,0 +1,257 @@
+GAME 2560486491816220020-5ce21003
+human (seat a) deck: meta-abyss-midrange;  bot (seat b, h0:nodes=16000, info=open) deck: meta-abyss-midrange
+went first: HUMAN;  winner: HUMAN;  turns: 9
+Values: +80 = forced win for the side named, -80 = forced loss. 'ref' = h0:nodes=200000,k=16 (deeper search).
+Per decision: bot_value = the bot's own search value at the time; v_best/v_played = reference value of its best move / the move played;
+cost = v_best - v_played (>11.5 is beyond measurement noise). All values from the ACTING side's point of view.
+explain = the bot's own candidate list re-run on this position (seed differs from the live game, so 'explained choice' may differ).
+
+Reference value from the BOT's side at the start of each analysed player-turn (tN B = bot's turn, H = human's):
+  t1B:+10  t2B:+11  t3H:-19  t3B:+11  t4B:+13  t5H:-20  t5B:+26  t6H:-25  t6B:+34  t7H:-54  t7B:+14  t8H:-53  t8B:-17  t9H:-80
+
+  [0] HUMAN mulligan swap [True, False, False, True]
+  [1] BOT mulligan swap [False, False, False, True]
+=== turn 1, HUMAN to act ===
+    BOT   HP 20/20  PP 0/0  EP 2 SEP 2  deck 36  hand 4  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand: Fickle Necromancer(3), Raz, Demon on the Drums(2), Lilith, Devilish Cutie(1), Istyndet vs. Mitilykket(7)
+    HUMAN HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0
+          field: (empty)
+          hand (HIDDEN from the bot): Netherworld Lieutenant(2), Garodeth vs. Zeth(8), Hark to the Night Song(3), Adahime, Anathema of Death(6), Netherworld Lieutenant(2)
+  [2] HUMAN ends turn
+=== turn 1, BOT to act ===
+    BOT   HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand: Fickle Necromancer(3), Raz, Demon on the Drums(2), Lilith, Devilish Cutie(1), Istyndet vs. Mitilykket(7), Hark to the Night Song(3)
+    HUMAN HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0
+          field: (empty)
+          hand (HIDDEN from the bot): Netherworld Lieutenant(2), Garodeth vs. Zeth(8), Hark to the Night Song(3), Adahime, Anathema of Death(6), Netherworld Lieutenant(2)
+  [3] BOT plays Lilith, Devilish Cutie (1pp)   bot_value +12.1   ref: played +11.0, best +9.6, cost 0.0
+      explain: path search, 3 candidates, nodes 210, top-2 margin 0.0
+  [4] BOT toggles bonus PP   bot_value +8.6
+      explain: path search, 2 candidates, nodes 91, top-2 margin 0.0
+  [5] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 2, HUMAN to act ===
+    BOT   HP 20/20  PP 0/1  EP 2 SEP 2  deck 35  hand 4  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Lilith, Devilish Cutie 1/1 [sick]
+          hand: Fickle Necromancer(3), Raz, Demon on the Drums(2), Istyndet vs. Mitilykket(7), Hark to the Night Song(3)
+    HUMAN HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 6  cemetery 0
+          field: (empty)
+          hand (HIDDEN from the bot): Netherworld Lieutenant(2), Garodeth vs. Zeth(8), Hark to the Night Song(3), Adahime, Anathema of Death(6), Netherworld Lieutenant(2), Istyndet vs. Mitilykket(7)
+  [6] HUMAN plays Netherworld Lieutenant (2pp)
+  [7] HUMAN ends turn
+=== turn 2, BOT to act ===
+    BOT   HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Lilith, Devilish Cutie 1/1
+          hand: Fickle Necromancer(3), Raz, Demon on the Drums(2), Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8)
+    HUMAN HP 20/20  PP 0/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0
+          field: [0] Netherworld Lieutenant 1/1 [sick]
+          hand (HIDDEN from the bot): Netherworld Lieutenant(2), Garodeth vs. Zeth(8), Hark to the Night Song(3), Adahime, Anathema of Death(6), Istyndet vs. Mitilykket(7)
+  [8] BOT plays Raz, Demon on the Drums (2pp)   bot_value +4.4   ref: played +4.4, best +11.1, cost 6.7
+      explain: path search, 4 candidates, nodes 735, top-2 margin 0.0
+  [9] BOT attacks: Lilith, Devilish Cutie 1/1 -> LEADER   bot_value +7.9
+      explain: path search, 3 candidates, nodes 304, top-2 margin 4.1
+  [10] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 3, HUMAN to act ===
+    BOT   HP 19/20  PP 0/2  EP 2 SEP 2  deck 34  hand 4  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Lilith, Devilish Cutie 1/1; [1] Raz, Demon on the Drums 1/2 [sick]
+          hand: Fickle Necromancer(3), Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8)
+    HUMAN HP 18/20  PP 3/3  EP 2 SEP 2  deck 33  hand 6  cemetery 0
+          field: [0] Netherworld Lieutenant 1/1
+          hand (HIDDEN from the bot): Netherworld Lieutenant(2), Garodeth vs. Zeth(8), Hark to the Night Song(3), Adahime, Anathema of Death(6), Istyndet vs. Mitilykket(7), Itsurugi & Taketsumi, Brothers(8)
+  [11] HUMAN plays Netherworld Lieutenant (2pp)
+  [12] HUMAN attacks: Netherworld Lieutenant 1/1 -> Lilith, Devilish Cutie 1/1
+  [13] HUMAN attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Raz, Demon on the Drums 1/2 [sick]
+  [14] HUMAN ends turn
+=== turn 3, BOT to act ===
+    BOT   HP 19/20  PP 3/3  EP 2 SEP 2  deck 33  hand 6  cemetery 2 bonusPP(early used, late avail)
+          field: [0] Skeleton 1/1
+          hand: Fickle Necromancer(3), Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8), Bat(1), Adahime, Anathema of Death(6)
+    HUMAN HP 18/20  PP 1/3  EP 2 SEP 2  deck 33  hand 5  cemetery 2
+          field: [0] Netherworld Lieutenant 1/1 [sick]
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Hark to the Night Song(3), Adahime, Anathema of Death(6), Istyndet vs. Mitilykket(7), Itsurugi & Taketsumi, Brothers(8)
+  [15] BOT plays Fickle Necromancer (3pp)   bot_value +5.2   ref: played +7.4, best +11.1, cost 3.7
+      explain: path search, 6 candidates, nodes 2958, top-2 margin 0.0
+  [16] BOT attacks: Skeleton 1/1 -> Netherworld Lieutenant 1/1 [sick]   bot_value +9.3   ref: played +12.1, best +9.6, cost 0.0
+      explain: path search, 5 candidates, nodes 1162, top-2 margin 0.0
+  [17] BOT attacks: Ghost 1/1 [storm,sick] -> Netherworld Lieutenant 2/1 [rush,sick]   bot_value +13.2
+      explain: path search, 3 candidates, nodes 283, top-2 margin 11.3
+  [18] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 4, HUMAN to act ===
+    BOT   HP 19/20  PP 0/3  EP 2 SEP 2  deck 33  hand 5  cemetery 3 bonusPP(early used, late avail)
+          field: [0] Fickle Necromancer 1/1 [sick]; [1] Skeleton 1/1 [sick]
+          hand: Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8), Bat(1), Adahime, Anathema of Death(6)
+    HUMAN HP 18/20  PP 4/4  EP 2 SEP 2  deck 32  hand 6  cemetery 4
+          field: (empty)
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Hark to the Night Song(3), Adahime, Anathema of Death(6), Istyndet vs. Mitilykket(7), Itsurugi & Taketsumi, Brothers(8), Baal, Elemental Resonance(3)
+  [19] HUMAN plays Hark to the Night Song (3pp)
+  [20] HUMAN ends turn
+=== turn 4, BOT to act ===
+    BOT   HP 19/20  PP 4/4  EP 2 SEP 2  deck 32  hand 6  cemetery 5 bonusPP(early used, late avail)
+          field: (empty)
+          hand: Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8), Bat(1), Adahime, Anathema of Death(6), Baal, Elemental Resonance(3)
+    HUMAN HP 18/20  PP 1/4  EP 2 SEP 2  deck 32  hand 5  cemetery 5
+          field: (empty)
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Istyndet vs. Mitilykket(7), Itsurugi & Taketsumi, Brothers(8), Baal, Elemental Resonance(3)
+  [21] BOT plays Bat (1pp)   bot_value +18.6   ref: played +16.5, best +13.4, cost 0.0
+      explain: path search, 4 candidates, nodes 3161, top-2 margin 5.2
+  [22] BOT plays Baal, Elemental Resonance (3pp)   bot_value +10.8   ref: played +16.2, best +14.8, cost 0.0
+      explain: path search, 4 candidates, nodes 1410, top-2 margin 3.6
+  [23] BOT chooses {"mode": 0}   bot_value +15.4   ref: played +15.5, best +13.0, cost 0.0
+      explain: path search, 2 candidates, nodes 680, top-2 margin 5.1
+  [24] BOT evolves Bat 2/2 [drain,sick]   bot_value +14.8
+      explain: path search, 3 candidates, nodes 298, top-2 margin 1.6; re-run would choose: BOT evolves Baal, Elemental Resonance 3/3 [sick]
+  [25] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 5, HUMAN to act ===
+    BOT   HP 19/20  PP 0/4  EP 1 SEP 2  deck 32  hand 4  cemetery 5 bonusPP(early used, late avail)
+          field: [0] Bat 4/4*E [drain,sick]; [1] Baal, Elemental Resonance 3/3 [sick]
+          hand: Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6)
+    HUMAN HP 18/20  PP 5/5  EP 2 SEP 2  deck 31  hand 6  cemetery 5
+          field: (empty)
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Istyndet vs. Mitilykket(7), Itsurugi & Taketsumi, Brothers(8), Baal, Elemental Resonance(3), Void Colonel(6)
+  [26] HUMAN plays Baal, Elemental Resonance (3pp)
+  [27] HUMAN chooses {"mode": 1}   (human move; ref cost 12.0)
+  [28] HUMAN plays Void Colonel (6pp)
+  [29] HUMAN evolves Baal, Elemental Resonance 2/2 [sick]
+  [30] HUMAN attacks: Baal, Elemental Resonance 4/4*E [sick] -> Baal, Elemental Resonance 3/3 [sick]
+  [31] HUMAN ends turn
+=== turn 5, BOT to act ===
+    BOT   HP 19/20  PP 5/5  EP 1 SEP 2  deck 31  hand 5  cemetery 6 bonusPP(early used, late avail)
+          field: [0] Bat 4/1*E [drain]
+          hand: Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), World of Games(1)
+    HUMAN HP 18/20  PP 0/5  EP 1 SEP 2  deck 31  hand 4  cemetery 5
+          field: [0] Baal, Elemental Resonance 4/1*E [sick]; [1] Void Colonel (amulet, cd 4)
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Istyndet vs. Mitilykket(7), Itsurugi & Taketsumi, Brothers(8)
+  [32] BOT plays Hark to the Night Song (3pp)   bot_value +21.9   ref: played +18.0, best +25.8, cost 7.8
+      explain: path search, 5 candidates, nodes 1764, top-2 margin 0.0
+  [33] BOT plays World of Games (1pp)   bot_value +34.5   ref: played +21.8, best +19.9, cost 0.0
+      explain: path search, 3 candidates, nodes 456, top-2 margin 0.0
+  [34] BOT attacks: Bat 4/1*E [drain] -> LEADER   bot_value +31.0
+      explain: path search, 2 candidates, nodes 242, top-2 margin 11.9
+  [35] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 6, HUMAN to act ===
+    BOT   HP 20/20  PP 1/5  EP 1 SEP 2  deck 31  hand 3  cemetery 7 bonusPP(early used, late avail)
+          field: [0] Bat 4/1*E [drain]; [1] World of Games (amulet, cd 5)
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6)
+    HUMAN HP 12/20  PP 6/6  EP 1 SEP 2  deck 30  hand 5  cemetery 6
+          field: [0] Void Colonel (amulet, cd 3)
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Istyndet vs. Mitilykket(7), Itsurugi & Taketsumi, Brothers(8), Itsurugi & Taketsumi, Brothers(8)
+  [36] HUMAN plays Adahime, Anathema of Death (6pp)
+  [37] HUMAN attacks: Lilith, Devilish Cutie 1/1 [rush,sick] -> Bat 4/1*E [drain]
+  [38] HUMAN ends turn
+=== turn 6, BOT to act ===
+    BOT   HP 19/20  PP 6/6  EP 1 SEP 2  deck 30  hand 4  cemetery 8 bonusPP(early used, late avail)
+          field: [0] World of Games (amulet, cd 4)
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Fickle Necromancer(3)
+    HUMAN HP 11/20  PP 0/6  EP 1 SEP 2  deck 28  hand 5  cemetery 7
+          field: [0] Void Colonel (amulet, cd 3); [1] Adahime, Anathema of Death 5/4 [sick]; [2] Raz, Demon on the Drums 1/2 [rush,sick]
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(7), Istyndet vs. Mitilykket(7), Itsurugi & Taketsumi, Brothers(8), Itsurugi & Taketsumi, Brothers(8), Bat(1)
+  [39] BOT plays Fickle Necromancer (3pp)   bot_value +32.8   ref: played +19.4, best +34.3, cost 14.9  <<< MISTAKE; ref prefers: BOT toggles bonus PP
+      explain: path search, 4 candidates, nodes 14627, top-2 margin 1.4
+        cand   +32.0 (worst +29.2, n 4, ends opp_reply): BOT plays Fickle Necromancer (3pp)
+        cand   +30.6 (worst +27.5, n 4, ends cap,opp_reply): BOT plays Adahime, Anathema of Death (6pp)
+        cand   +29.1 (worst +19.7, n 4, ends cap,depth,opp_reply): BOT toggles bonus PP
+        cand   -51.3 (worst -80.0, n 4, ends opp_lethal,opp_reply): BOT ends turn
+        bot's expected line for its top candidate (best world): B:play Fickle Necromancer | B:evolve | B:bonus_pp | B:attack s2->leader | B:end_turn  [end opp_reply, leaf 34.8]
+  [40] BOT evolves Fickle Necromancer 1/1 [sick]   bot_value +35.0   ref: played -3.0, best +18.8, cost 21.8  <<< MISTAKE; ref prefers: BOT toggles bonus PP
+      explain: path search, 11 candidates, nodes 14815, top-2 margin 2.0; re-run would choose: BOT toggles bonus PP
+        cand   +31.1 (worst +27.8, n 4, ends cap): BOT toggles bonus PP
+        cand   +29.1 (worst +27.8, n 4, ends cap,tt): BOT SUPER-evolves Fickle Necromancer 1/1 [sick]
+        cand   +22.4 (worst +15.1, n 4, ends tt): BOT attacks: Ghost 1/1 [storm,sick] -> Raz, Demon on the Drums 1/2 [rush,sick]
+        cand   +16.0 (worst -32.3, n 4, ends cap,tt): BOT evolves Fickle Necromancer 1/1 [sick]
+        bot's expected line for its top candidate (best world): B:bonus_pp | B:evolve | B:end_turn  [end cap, leaf 32.1]
+  [41] BOT toggles bonus PP   bot_value -7.2   ref: played -4.5, best +3.6, cost 8.1
+      explain: path search, 7 candidates, nodes 7687, top-2 margin 4.3
+  [42] BOT attacks: Fickle Necromancer 3/3*E [sick] -> Adahime, Anathema of Death 5/4 [sick]   bot_value -6.7   ref: played -8.7, best +0.4, cost 9.1
+      explain: path search, 6 candidates, nodes 3772, top-2 margin 15.9; re-run would choose: BOT attacks: Fickle Necromancer 3/3*E [sick] -> Raz, Demon on the Drums 1/2 [rush,sick]
+  [43] BOT attacks: Ghost 1/1 [storm,sick] -> Adahime, Anathema of Death 5/1 [sick]   bot_value -1.3
+      explain: path search, 4 candidates, nodes 893, top-2 margin 5.8
+  [44] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 7, HUMAN to act ===
+    BOT   HP 19/20  PP 3/6  EP 0 SEP 2  deck 30  hand 3  cemetery 9 bonusPP(early used, late used)
+          field: [0] World of Games (amulet, cd 4); [1] Skeleton 1/1 [sick]; [2] Rotting Zombie 2/2 [sick]
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6)
+    HUMAN HP 11/20  PP 7/7  EP 1 SEP 2  deck 27  hand 6  cemetery 8
+          field: [0] Void Colonel (amulet, cd 2); [1] Raz, Demon on the Drums 1/2 [rush]
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(7), Istyndet vs. Mitilykket(7), Itsurugi & Taketsumi, Brothers(8), Itsurugi & Taketsumi, Brothers(8), Bat(1), Raz, Demon on the Drums(2)
+  [45] HUMAN plays Istyndet vs. Mitilykket (7pp)
+  [46] HUMAN evolves Raz, Demon on the Drums 1/2 [rush]
+  [47] HUMAN chooses {"slot": 1, "player": "b"}
+  [48] HUMAN attacks: Raz, Demon on the Drums 3/4*E [rush] -> LEADER
+  [49] HUMAN ends turn
+=== turn 7, BOT to act ===
+    BOT   HP 16/20  PP 7/7  EP 0 SEP 2  deck 29  hand 4  cemetery 12 bonusPP(early used, late used)
+          field: [0] World of Games (amulet, cd 3)
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 11/20  PP 0/7  EP 0 SEP 2  deck 27  hand 5  cemetery 8
+          field: [0] Void Colonel (amulet, cd 2); [1] Raz, Demon on the Drums 3/4*E [rush]; [2] Istyndet vs. Mitilykket 3/3 [sick]; [3] Netherworld Lieutenant 1/1 [sick]; [4] Netherworld Lieutenant 1/1 [sick]
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(6), Itsurugi & Taketsumi, Brothers(8), Itsurugi & Taketsumi, Brothers(8), Bat(1), Raz, Demon on the Drums(2)
+  [50] BOT plays Adahime, Anathema of Death (6pp)   bot_value +11.1   ref: played +12.8, best +13.8, cost 1.0
+      explain: path search, 3 candidates, nodes 12748, top-2 margin 38.3
+  [51] BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Raz, Demon on the Drums 3/4*E [rush]   bot_value +12.1   ref: played +14.9, best +10.5, cost 0.0
+      explain: path search, 12 candidates, nodes 15759, top-2 margin 4.1
+  [52] BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]   bot_value +12.0   ref: played +14.4, best +10.0, cost 0.0
+      explain: path search, 12 candidates, nodes 15737, top-2 margin 4.5
+  [53] BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Raz, Demon on the Drums 3/3*E [rush]   bot_value +15.6   ref: played +11.5, best +14.9, cost 3.4
+      explain: path search, 13 candidates, nodes 15762, top-2 margin 0.0
+  [54] BOT attacks: Raz, Demon on the Drums 3/4 [rush,sick] -> Istyndet vs. Mitilykket 3/3 [sick]   bot_value +12.8   ref: played +8.0, best +14.6, cost 6.6
+      explain: path search, 9 candidates, nodes 11727, top-2 margin 6.7
+  [55] BOT ends turn   bot_value +12.8   ref after end-turn (bot's view): -51.1; optimism +63.2
+      explain: path search, 4 candidates, nodes 1762, top-2 margin 10.7
+        cand   +15.2 (worst +9.2, n 4, ends opp_reply): BOT ends turn
+        cand    +4.5 (worst -34.4, n 4, ends opp_reply): BOT attacks: Netherworld Lieutenant 4/3 [rush,sick] -> Skeleton 1/1 [sick]
+        cand    -0.1 (worst -32.0, n 4, ends opp_reply): BOT attacks: Netherworld Lieutenant 4/3 [rush,sick] -> Netherworld Lieutenant 1/1 [sick]
+        cand    -0.1 (worst -32.0, n 4, ends opp_reply): BOT attacks: Netherworld Lieutenant 4/3 [rush,sick] -> Netherworld Lieutenant 1/1 [sick]
+        bot's expected line for its top candidate (best world): B:end_turn | H:play Bat | H:attack s1->{'slot': 2} | H:attack s1->{'slot': 3} | H:end_turn  [end opp_reply, leaf 20.1]
+=== turn 8, HUMAN to act ===
+    BOT   HP 16/20  PP 1/7  EP 0 SEP 1  deck 27  hand 3  cemetery 13 bonusPP(early used, late used)
+          field: [0] World of Games (amulet, cd 3); [1] Adahime, Anathema of Death 8/7*SE [sick]; [2] Raz, Demon on the Drums 3/1 [rush,sick]; [3] Netherworld Lieutenant 4/3 [rush,sick]
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 10/20  PP 8/8  EP 0 SEP 2  deck 26  hand 6  cemetery 10
+          field: [0] Void Colonel (amulet, cd 1); [1] Netherworld Lieutenant 1/1; [2] Netherworld Lieutenant 1/1; [3] Skeleton 1/1
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(6), Itsurugi & Taketsumi, Brothers(8), Itsurugi & Taketsumi, Brothers(8), Bat(1), Raz, Demon on the Drums(2), Bibatii, Eld Sight(4)
+  [56] HUMAN plays Itsurugi & Taketsumi, Brothers (8pp)
+  [57] HUMAN chooses {"mode": 0}
+  [58] HUMAN SUPER-evolves Itsurugi & Taketsumi, Brothers 6/5 [sick]
+  [59] HUMAN chooses {"mode": 1}
+  [60] HUMAN attacks: Itsurugi & Taketsumi, Brothers 9/8*SE [sick] -> Adahime, Anathema of Death 8/7*SE [sick]
+  [61] HUMAN attacks: Netherworld Lieutenant 1/1 -> Raz, Demon on the Drums 3/1 [rush,sick]
+  [62] HUMAN attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Netherworld Lieutenant 4/3 [rush,sick]
+  [63] HUMAN attacks: Skeleton 1/1 -> Netherworld Lieutenant 4/1 [rush,sick]
+  [64] HUMAN attacks: Netherworld Lieutenant 1/1 -> Skeleton 1/1 [sick]
+  [65] HUMAN plays Raz, Demon on the Drums (2pp)
+  [66] HUMAN ends turn
+=== turn 8, BOT to act ===
+    BOT   HP 11/20  PP 8/8  EP 0 SEP 1  deck 26  hand 4  cemetery 17 bonusPP(early used, late used)
+          field: [0] World of Games (amulet, cd 2)
+          hand: Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Macmillan, Reaper of Ceremonies(9), Baal, Elemental Resonance(3)
+    HUMAN HP 14/20  PP 0/8  EP 0 SEP 1  deck 26  hand 4  cemetery 14
+          field: [0] Void Colonel (amulet, cd 1); [1] Itsurugi & Taketsumi, Brothers 9/8*SE [sick]; [2] Netherworld Lieutenant 2/1 [rush,sick]; [3] Raz, Demon on the Drums 1/2 [sick]
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(6), Itsurugi & Taketsumi, Brothers(8), Bat(1), Bibatii, Eld Sight(4)
+  [67] BOT plays Garodeth vs. Zeth (8pp)   bot_value -5.8   ref: played -22.9, best -16.7, cost 6.2
+      explain: path search, 4 candidates, nodes 2352, top-2 margin 36.7
+  [68] BOT chooses {"mode": 0}   bot_value -11.7   ref: played -42.1, best -32.5, cost 9.6
+      explain: path search, 2 candidates, nodes 965, top-2 margin 23.4; re-run would choose: BOT chooses {"mode": 1}
+  [69] BOT attacks: Garodeth vs. Zeth 8/8 [storm,sick] -> Itsurugi & Taketsumi, Brothers 9/8*SE [sick]   bot_value -80.0
+      explain: path search, 6 candidates, nodes 768, top-2 margin 21.2; re-run would choose: BOT SUPER-evolves Garodeth vs. Zeth 8/8 [storm,sick]
+  [70] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 9, HUMAN to act ===
+    BOT   HP 9/20  PP 0/8  EP 0 SEP 1  deck 26  hand 3  cemetery 18 bonusPP(early used, late used)
+          field: [0] World of Games (amulet, cd 1)
+          hand: Istyndet vs. Mitilykket(7), Macmillan, Reaper of Ceremonies(9), Baal, Elemental Resonance(3)
+    HUMAN HP 14/20  PP 9/9  EP 0 SEP 1  deck 25  hand 5  cemetery 16
+          field: [0] Netherworld Lieutenant 2/1 [rush]; [1] Raz, Demon on the Drums 1/2; [2] Void Colonel 4/6 [ward,sick]
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(6), Itsurugi & Taketsumi, Brothers(8), Bat(1), Bibatii, Eld Sight(4), Highwire Feline(5)
+  [71] HUMAN plays Garodeth vs. Zeth (8pp)
+  [72] HUMAN chooses {"mode": 0}
+  [73] HUMAN attacks: Garodeth vs. Zeth 8/8 [storm,sick] -> LEADER
+  [74] HUMAN attacks: Netherworld Lieutenant 2/1 [rush] -> LEADER
+
+FINAL: winner HUMAN; bot HP 0, human HP 12

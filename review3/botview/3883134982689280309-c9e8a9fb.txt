@@ -1,0 +1,395 @@
+GAME 3883134982689280309-c9e8a9fb
+human (seat a) deck: meta-forest-combo;  bot (seat b, h0:nodes=16000, info=open) deck: meta-abyss-midrange
+went first: BOT;  winner: BOT;  turns: 13
+Values: +80 = forced win for the side named, -80 = forced loss. 'ref' = h0:nodes=200000,k=16 (deeper search).
+Per decision: bot_value = the bot's own search value at the time; v_best/v_played = reference value of its best move / the move played;
+cost = v_best - v_played (>11.5 is beyond measurement noise). All values from the ACTING side's point of view.
+explain = the bot's own candidate list re-run on this position (seed differs from the live game, so 'explained choice' may differ).
+
+Reference value from the BOT's side at the start of each analysed player-turn (tN B = bot's turn, H = human's):
+  t1H:+13  t2B:+36  t2H:+23  t3B:+34  t3H:-8  t4B:+31  t4H:-6  t5B:+37  t5H:+15  t6B:+39  t6H:+10  t7B:+47  t7H:-9  t8B:+49  t8H:+8  t9B:+54  t9H:+30  t10B:+56  t10H:+48  t11B:+55  t11H:+50  t12B:+50  t12H:+42  t13B:+80
+
+  [0] BOT mulligan swap [False, True, True, True]
+  [1] HUMAN mulligan swap [True, True, True, True]
+=== turn 1, BOT to act ===
+    BOT   HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0
+          field: (empty)
+          hand: Highwire Feline(5), Raz, Demon on the Drums(2), Lilith, Devilish Cutie(1), Bibatii, Eld Sight(4), Netherworld Lieutenant(2)
+    HUMAN HP 20/20  PP 0/0  EP 2 SEP 2  deck 36  hand 4  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Sathanid, Eld Lance(1), Moelle, Gloomy Maiden(1), Moelle, Gloomy Maiden(1)
+  [2] BOT plays Lilith, Devilish Cutie (1pp)   bot_value +25.9
+      explain: path search, 2 candidates, nodes 165, top-2 margin 10.0
+  [3] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 1, HUMAN to act ===
+    BOT   HP 20/20  PP 0/1  EP 2 SEP 2  deck 35  hand 4  cemetery 0
+          field: [0] Lilith, Devilish Cutie 1/1 [sick]
+          hand: Highwire Feline(5), Raz, Demon on the Drums(2), Bibatii, Eld Sight(4), Netherworld Lieutenant(2)
+    HUMAN HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Sathanid, Eld Lance(1), Moelle, Gloomy Maiden(1), Moelle, Gloomy Maiden(1), Moelle, Gloomy Maiden(1)
+  [4] HUMAN plays Moelle, Gloomy Maiden (1pp)
+  [5] HUMAN chooses {"card": "10614120"}
+  [6] HUMAN ends turn
+=== turn 2, BOT to act ===
+    BOT   HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0
+          field: [0] Lilith, Devilish Cutie 1/1
+          hand: Highwire Feline(5), Raz, Demon on the Drums(2), Bibatii, Eld Sight(4), Netherworld Lieutenant(2), Hark to the Night Song(3)
+    HUMAN HP 20/20  PP 0/1  EP 2 SEP 2  deck 35  hand 4  cemetery 0 bonusPP(early avail, late avail)
+          field: [0] Moelle, Gloomy Maiden 1/1 [ward,sick]
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Moelle, Gloomy Maiden(1), Moelle, Gloomy Maiden(1), Virewind Fencer(2)
+  [7] BOT attacks: Lilith, Devilish Cutie 1/1 -> Moelle, Gloomy Maiden 1/1 [ward,sick]   bot_value +35.8   ref: played +34.6, best +35.7, cost 1.0
+      explain: path search, 4 candidates, nodes 873, top-2 margin 1.1; re-run would choose: BOT plays Raz, Demon on the Drums (2pp)
+  [8] BOT plays Netherworld Lieutenant (2pp)   bot_value +31.2
+      explain: path search, 4 candidates, nodes 347, top-2 margin 1.4
+  [9] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 2, HUMAN to act ===
+    BOT   HP 19/20  PP 0/2  EP 2 SEP 2  deck 34  hand 5  cemetery 1
+          field: [0] Netherworld Lieutenant 1/1 [sick]
+          hand: Highwire Feline(5), Raz, Demon on the Drums(2), Bibatii, Eld Sight(4), Hark to the Night Song(3), Bat(1)
+    HUMAN HP 19/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 1 bonusPP(early avail, late avail)
+          field: (empty)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Moelle, Gloomy Maiden(1), Moelle, Gloomy Maiden(1), Virewind Fencer(2), Leafshadow Assassin(2)
+  [10] HUMAN plays Leafshadow Assassin (2pp)
+  [11] HUMAN ends turn
+=== turn 3, BOT to act ===
+    BOT   HP 19/20  PP 3/3  EP 2 SEP 2  deck 33  hand 6  cemetery 1
+          field: [0] Netherworld Lieutenant 1/1
+          hand: Highwire Feline(5), Raz, Demon on the Drums(2), Bibatii, Eld Sight(4), Hark to the Night Song(3), Bat(1), Fickle Necromancer(3)
+    HUMAN HP 19/20  PP 0/2  EP 2 SEP 2  deck 34  hand 5  cemetery 1 bonusPP(early avail, late avail)
+          field: [0] Leafshadow Assassin 2/2 [sick]
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Moelle, Gloomy Maiden(1), Moelle, Gloomy Maiden(1), Virewind Fencer(2), Fairy(1)
+  [12] BOT plays Fickle Necromancer (3pp)   bot_value +27.3   ref: played +32.2, best +33.9, cost 1.6
+      explain: path search, 7 candidates, nodes 8525, top-2 margin 1.1
+  [13] BOT attacks: Netherworld Lieutenant 1/1 -> Leafshadow Assassin 2/2 [sick]   bot_value +34.2   ref: played +30.9, best +31.4, cost 0.4
+      explain: path search, 5 candidates, nodes 2627, top-2 margin 0.0
+  [14] BOT attacks: Ghost 1/1 [storm,sick] -> Leafshadow Assassin 2/1 [sick]   bot_value +33.2
+      explain: path search, 4 candidates, nodes 950, top-2 margin 0.0; re-run would choose: BOT attacks: Ghost 1/1 [storm,sick] -> LEADER
+  [15] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 3, HUMAN to act ===
+    BOT   HP 19/20  PP 0/3  EP 2 SEP 2  deck 33  hand 5  cemetery 2
+          field: [0] Fickle Necromancer 1/1 [sick]; [1] Skeleton 1/1 [sick]; [2] Netherworld Lieutenant 2/1 [rush,sick]
+          hand: Highwire Feline(5), Raz, Demon on the Drums(2), Bibatii, Eld Sight(4), Hark to the Night Song(3), Bat(1)
+    HUMAN HP 19/20  PP 3/3  EP 2 SEP 2  deck 33  hand 6  cemetery 2 bonusPP(early avail, late avail)
+          field: (empty)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Moelle, Gloomy Maiden(1), Moelle, Gloomy Maiden(1), Virewind Fencer(2), Fairy(1), Virid Lieutenant(2)
+  [16] HUMAN plays Fairy (1pp)   (human move; ref cost 25.4)
+  [17] HUMAN attacks: Fairy 1/1 [rush,sick] -> Netherworld Lieutenant 2/1 [rush,sick]
+  [18] HUMAN plays Moelle, Gloomy Maiden (1pp)
+  [19] HUMAN chooses {"card": "10712110"}   (human move; ref cost 15.9)
+  [20] HUMAN plays World of Games (1pp)
+  [21] HUMAN ends turn
+=== turn 4, BOT to act ===
+    BOT   HP 19/20  PP 4/4  EP 2 SEP 2  deck 32  hand 6  cemetery 3
+          field: [0] Fickle Necromancer 1/1; [1] Skeleton 1/1
+          hand: Highwire Feline(5), Raz, Demon on the Drums(2), Bibatii, Eld Sight(4), Hark to the Night Song(3), Bat(1), Garodeth vs. Zeth(8)
+    HUMAN HP 19/20  PP 0/3  EP 2 SEP 2  deck 33  hand 3  cemetery 3 bonusPP(early avail, late avail)
+          field: [0] Moelle, Gloomy Maiden 1/1 [ward,sick]; [1] World of Games (amulet, cd 5)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Moelle, Gloomy Maiden(1), Virid Lieutenant(2)
+  [22] BOT attacks: Fickle Necromancer 1/1 -> Moelle, Gloomy Maiden 1/1 [ward,sick]   bot_value +28.0   ref: played +30.2, best +31.0, cost 0.8
+      explain: path search, 7 candidates, nodes 9963, top-2 margin 0.0
+  [23] BOT plays Bibatii, Eld Sight (4pp)   bot_value +30.8   ref: played +33.3, best +30.0, cost 0.0
+      explain: path search, 6 candidates, nodes 3407, top-2 margin 2.1; re-run would choose: BOT attacks: Skeleton 1/1 -> LEADER
+  [24] BOT attacks: Skeleton 1/1 -> LEADER   bot_value +34.0
+      explain: path search, 2 candidates, nodes 279, top-2 margin 2.6
+  [25] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 4, HUMAN to act ===
+    BOT   HP 19/20  PP 0/4  EP 2 SEP 2  deck 32  hand 6  cemetery 4
+          field: [0] Skeleton 1/1; [1] Bibatii, Eld Sight 5/5*E [sick]
+          hand: Highwire Feline(5), Raz, Demon on the Drums(2), Hark to the Night Song(3), Bat(1), Garodeth vs. Zeth(8), Depths of the Eld Sight(1)
+    HUMAN HP 18/20  PP 4/4  EP 2 SEP 2  deck 32  hand 4  cemetery 4 bonusPP(early avail, late avail)
+          field: [0] World of Games (amulet, cd 4)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Moelle, Gloomy Maiden(1), Virid Lieutenant(2), Leafshadow Assassin(2)
+  [26] HUMAN plays Leafshadow Assassin (2pp)
+  [27] HUMAN plays Fairy (1pp)   (human move; ref cost 24.6)
+  [28] HUMAN attacks: Fairy 1/1 [rush,sick] -> Skeleton 1/1
+  [29] HUMAN toggles bonus PP
+  [30] HUMAN plays Virid Lieutenant (2pp)
+  [31] HUMAN evolves Virid Lieutenant 1/3 [sick]
+  [32] HUMAN chooses {"slot": 1, "player": "a"}
+  [33] HUMAN attacks: Virid Lieutenant 3/5*E [sick] -> Bibatii, Eld Sight 5/5*E [sick]
+  [34] HUMAN attacks: Leafshadow Assassin 3/3 [rush,sick] -> Bibatii, Eld Sight 5/2*E [sick]
+  [35] HUMAN ends turn
+=== turn 5, BOT to act ===
+    BOT   HP 19/20  PP 5/5  EP 2 SEP 2  deck 31  hand 7  cemetery 6
+          field: (empty)
+          hand: Highwire Feline(5), Raz, Demon on the Drums(2), Hark to the Night Song(3), Bat(1), Garodeth vs. Zeth(8), Depths of the Eld Sight(1), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 18/20  PP 0/4  EP 1 SEP 2  deck 30  hand 4  cemetery 7 bonusPP(early used, late avail)
+          field: [0] World of Games (amulet, cd 2)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Moelle, Gloomy Maiden(1), Crimson Incense(3), Sprouting Initiate(1)
+  [36] BOT plays Highwire Feline (5pp)   bot_value +35.9   ref: played +28.4, best +37.1, cost 8.8
+      explain: path search, 6 candidates, nodes 11163, top-2 margin 0.8; re-run would choose: BOT plays Depths of the Eld Sight (1pp)
+  [37] BOT evolves Highwire Feline 4/5 [sick]   bot_value +30.8
+      explain: path search, 3 candidates, nodes 528, top-2 margin 17.6
+  [38] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 5, HUMAN to act ===
+    BOT   HP 19/20  PP 0/5  EP 1 SEP 2  deck 31  hand 6  cemetery 6
+          field: [0] Highwire Feline 6/7*E [sick]; [1] Skeleton 1/1 [sick]; [2] Skeleton 1/1 [sick]
+          hand: Raz, Demon on the Drums(2), Hark to the Night Song(3), Bat(1), Garodeth vs. Zeth(8), Depths of the Eld Sight(1), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 18/20  PP 5/5  EP 1 SEP 2  deck 29  hand 5  cemetery 7 bonusPP(early used, late avail)
+          field: [0] World of Games (amulet, cd 1)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Moelle, Gloomy Maiden(1), Crimson Incense(3), Sprouting Initiate(1), Lyria, Skydestined(2)
+  [39] HUMAN plays Crimson Incense (4pp)
+  [40] HUMAN chooses {"slot": 0, "player": "b"}
+  [41] HUMAN plays Moelle, Gloomy Maiden (1pp)
+  [42] HUMAN chooses {"card": "10403120"}
+  [43] HUMAN plays Sprouting Initiate (1pp)
+  [44] HUMAN attacks: Sprouting Initiate 1/1 [rush,sick] -> Skeleton 1/1 [sick]
+  [45] HUMAN ends turn
+=== turn 6, BOT to act ===
+    BOT   HP 19/20  PP 6/6  EP 1 SEP 2  deck 30  hand 7  cemetery 8
+          field: [0] Skeleton 1/1
+          hand: Raz, Demon on the Drums(2), Hark to the Night Song(3), Bat(1), Garodeth vs. Zeth(8), Depths of the Eld Sight(1), Macmillan, Reaper of Ceremonies(9), Netherworld Lieutenant(2)
+    HUMAN HP 18/20  PP 0/5  EP 1 SEP 2  deck 25  hand 6  cemetery 10 bonusPP(early used, late avail)
+          field: [0] Moelle, Gloomy Maiden 1/1 [ward,sick]
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Virid Lieutenant(2), Miroku, Swarmpetal(3), World of Games(1), Virid Lieutenant(2), Great Hart of the Glacial Realm(6)
+  [46] BOT plays Raz, Demon on the Drums (2pp)   bot_value +40.4   ref: played +38.3, best +39.0, cost 0.8
+      explain: path search, 8 candidates, nodes 15509, top-2 margin 3.0
+  [47] BOT plays Depths of the Eld Sight (1pp)   bot_value +36.1   ref: played +31.1, best +38.7, cost 7.6
+      explain: path search, 8 candidates, nodes 14814, top-2 margin 0.0
+  [48] BOT plays Netherworld Lieutenant (2pp)   bot_value +33.9   ref: played +33.2, best +33.1, cost 0.0
+      explain: path search, 7 candidates, nodes 13527, top-2 margin 0.8; re-run would choose: BOT plays Bat (1pp)
+  [49] BOT evolves Netherworld Lieutenant 1/1 [sick]   bot_value +35.0   ref: played +30.7, best +31.8, cost 1.1
+      explain: path search, 6 candidates, nodes 4507, top-2 margin 1.8; re-run would choose: BOT plays Bat (1pp)
+  [50] BOT attacks: Netherworld Lieutenant 3/3*E [sick] -> Moelle, Gloomy Maiden 1/1 [ward,sick]   bot_value +31.1   ref: played +30.4, best +29.8, cost 0.0
+      explain: path search, 4 candidates, nodes 2420, top-2 margin 1.1; re-run would choose: BOT plays Bat (1pp)
+  [51] BOT plays Bat (1pp)   bot_value +28.8   ref: played +27.9, best +35.6, cost 7.8
+      explain: path search, 3 candidates, nodes 898, top-2 margin 0.0
+  [52] BOT attacks: Skeleton 1/1 -> LEADER   bot_value +33.8
+      explain: path search, 2 candidates, nodes 489, top-2 margin 3.1
+  [53] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 6, HUMAN to act ===
+    BOT   HP 19/20  PP 0/6  EP 0 SEP 2  deck 28  hand 5  cemetery 9
+          field: [0] Skeleton 1/1; [1] Raz, Demon on the Drums 1/2 [sick]; [2] Netherworld Lieutenant 3/2*E [sick]; [3] Bat 1/1 [drain,sick]
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Macmillan, Reaper of Ceremonies(9), Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8)
+    HUMAN HP 17/20  PP 6/6  EP 1 SEP 2  deck 24  hand 7  cemetery 11 bonusPP(early used, late avail)
+          field: (empty)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Virid Lieutenant(2), Miroku, Swarmpetal(3), World of Games(1), Virid Lieutenant(2), Great Hart of the Glacial Realm(6), Grace of the Swarmpetal(3)
+  [54] HUMAN plays Miroku, Swarmpetal (3pp)
+  [55] HUMAN chooses {"mode": 2}
+  [56] HUMAN plays World of Games (1pp)
+  [57] HUMAN plays Virid Lieutenant (2pp)
+  [58] HUMAN evolves Miroku, Swarmpetal 2/2 [sick]
+  [59] HUMAN chooses {"mode": 1}
+  [60] HUMAN attacks: Miroku, Swarmpetal 4/4*E [sick] -> Netherworld Lieutenant 3/2*E [sick]
+  [61] HUMAN plays Virid Lieutenant (2pp)   (human move; ref cost 17.0)
+  [62] HUMAN ends turn
+=== turn 7, BOT to act ===
+    BOT   HP 19/20  PP 7/7  EP 0 SEP 2  deck 27  hand 6  cemetery 12
+          field: [0] Bat 1/1 [drain]; [1] Skeleton 1/1; [2] Netherworld Lieutenant 2/1 [rush]
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Macmillan, Reaper of Ceremonies(9), Istyndet vs. Mitilykket(7), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7)
+    HUMAN HP 17/20  PP 0/6  EP 0 SEP 2  deck 20  hand 7  cemetery 11 bonusPP(early used, late avail)
+          field: [0] Miroku, Swarmpetal 4/1*E [sick]; [1] World of Games (amulet, cd 3); [2] Virid Lieutenant 1/3 [sick]; [3] Virid Lieutenant 1/3 [sick]
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Great Hart of the Glacial Realm(6), Grace of the Swarmpetal(3), Magachiyo, Aromatic Convict(3), Virewind Fencer(2), Setus & Maisha, Bladerights(7), Miroku, Swarmpetal(3)
+  [63] BOT attacks: Bat 1/1 [drain] -> Virid Lieutenant 1/3 [sick]   bot_value +47.7   ref: played +47.9, best +47.4, cost 0.0
+      explain: path search, 19 candidates, nodes 16000, top-2 margin 0.0
+  [64] BOT attacks: Skeleton 1/1 -> Miroku, Swarmpetal 4/1*E [sick]   bot_value +50.6   ref: played +47.6, best +48.2, cost 0.5
+      explain: path search, 14 candidates, nodes 15844, top-2 margin 0.1; re-run would choose: BOT attacks: Skeleton 1/1 -> Virid Lieutenant 1/3 [sick]
+  [65] BOT plays Istyndet vs. Mitilykket (7pp)   bot_value +50.5   ref: played +48.5, best +49.4, cost 0.9
+      explain: path search, 8 candidates, nodes 14193, top-2 margin 0.1
+  [66] BOT attacks: Netherworld Lieutenant 2/1 [rush] -> LEADER   bot_value +50.7   ref: played +49.5, best +50.7, cost 1.2
+      explain: path search, 8 candidates, nodes 8948, top-2 margin 2.5
+  [67] BOT SUPER-evolves Istyndet vs. Mitilykket 3/3 [sick]   bot_value +41.1   ref: played +42.9, best +50.6, cost 7.7
+      explain: path search, 6 candidates, nodes 3532, top-2 margin 3.1
+  [68] BOT attacks: Istyndet vs. Mitilykket 6/6*SE [sick] -> Virid Lieutenant 1/1 [sick]   bot_value +51.9
+      explain: path search, 2 candidates, nodes 609, top-2 margin 3.6
+  [69] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 7, HUMAN to act ===
+    BOT   HP 20/20  PP 0/7  EP 0 SEP 1  deck 27  hand 5  cemetery 15
+          field: [0] Netherworld Lieutenant 2/1 [rush]; [1] Istyndet vs. Mitilykket 6/6*SE [sick]; [2] Netherworld Lieutenant 1/1 [sick]; [3] Netherworld Lieutenant 1/1 [sick]; [4] Netherworld Lieutenant 2/1 [rush,sick]
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Macmillan, Reaper of Ceremonies(9), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7)
+    HUMAN HP 14/20  PP 7/7  EP 0 SEP 2  deck 19  hand 8  cemetery 14 bonusPP(early used, late avail)
+          field: [0] World of Games (amulet, cd 2)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Great Hart of the Glacial Realm(6), Grace of the Swarmpetal(3), Magachiyo, Aromatic Convict(3), Virewind Fencer(2), Setus & Maisha, Bladerights(7), Miroku, Swarmpetal(3), Sprouting Initiate(1)
+  [70] HUMAN plays Miroku, Swarmpetal (3pp)   (human move; ref cost 35.0)
+  [71] HUMAN chooses {"mode": 0}
+  [72] HUMAN plays Fairy (1pp)
+  [73] HUMAN attacks: Fairy 1/1 [rush,sick] -> Netherworld Lieutenant 1/1 [sick]
+  [74] HUMAN plays Sprouting Initiate (1pp)
+  [75] HUMAN attacks: Sprouting Initiate 1/1 [rush,sick] -> Netherworld Lieutenant 1/1 [sick]
+  [76] HUMAN toggles bonus PP
+  [77] HUMAN plays Magachiyo, Aromatic Convict (3pp)
+  [78] HUMAN SUPER-evolves Miroku, Swarmpetal 2/2 [sick]
+  [79] HUMAN chooses {"mode": 1}
+  [80] HUMAN plays Virewind Fencer (2pp)
+  [81] HUMAN attacks: Miroku, Swarmpetal 5/5*SE [sick] -> Istyndet vs. Mitilykket 6/2*SE [sick]
+  [82] HUMAN attacks: Virewind Fencer 2/2 [storm,sick] -> LEADER
+  [83] HUMAN ends turn
+=== turn 8, BOT to act ===
+    BOT   HP 17/20  PP 8/8  EP 0 SEP 1  deck 26  hand 6  cemetery 22
+          field: (empty)
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Macmillan, Reaper of Ceremonies(9), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7), Istyndet vs. Mitilykket(7)
+    HUMAN HP 14/20  PP 0/7  EP 0 SEP 1  deck 16  hand 7  cemetery 18 bonusPP(early used, late used)
+          field: [0] Miroku, Swarmpetal 5/5*SE [sick]; [1] Magachiyo, Aromatic Convict 2/2 [sick]; [2] Virewind Fencer 2/2 [storm,sick]
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Great Hart of the Glacial Realm(6), Grace of the Swarmpetal(3), Virewind Fencer(2), Setus & Maisha, Bladerights(7), Fairy(1), Lyria, Skydestined(2)
+  [84] BOT plays Istyndet vs. Mitilykket (7pp)   bot_value +41.6   ref: played +37.4, best +48.9, cost 11.5  <<< MISTAKE; ref prefers: BOT plays Istyndet vs. Mitilykket (7pp)
+      explain: path search, 6 candidates, nodes 9004, top-2 margin 0.0
+        cand   +42.5 (worst +38.7, n 4, ends opp_reply): BOT plays Istyndet vs. Mitilykket (7pp)
+        cand   +42.5 (worst +38.7, n 4, ends opp_reply): BOT plays Istyndet vs. Mitilykket (7pp)
+        cand   +27.7 (worst +5.3, n 4, ends opp_reply): BOT plays Garodeth vs. Zeth (8pp)
+        cand   +27.5 (worst +5.1, n 4, ends opp_reply): BOT plays Garodeth vs. Zeth (8pp)
+        bot's expected line for its top candidate (best world): B:play Istyndet vs. Mitilykket | B:evolve | B:end_turn | H:play Lyria, Skydestined | H:play Thestae, Anathema of Distortion | H:choose | H:play World of Games | H:play Sathanid, Eld Lance  [end opp_reply, leaf 46.6]
+  [85] BOT SUPER-evolves Netherworld Lieutenant 1/1 [sick]   bot_value +32.6   ref: played +38.1, best +42.4, cost 4.3
+      explain: path search, 5 candidates, nodes 2218, top-2 margin 3.7; re-run would choose: BOT SUPER-evolves Netherworld Lieutenant 1/1 [sick]
+  [86] BOT attacks: Netherworld Lieutenant 4/4*SE [sick] -> Miroku, Swarmpetal 5/3*SE [sick]   bot_value +26.7
+      explain: path search, 2 candidates, nodes 406, top-2 margin 0.5
+  [87] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 8, HUMAN to act ===
+    BOT   HP 17/20  PP 1/8  EP 0 SEP 0  deck 26  hand 5  cemetery 23
+          field: [0] Istyndet vs. Mitilykket 3/3 [sick]; [1] Netherworld Lieutenant 4/4*SE [sick]; [2] Netherworld Lieutenant 1/1 [sick]; [3] Netherworld Lieutenant 2/1 [rush,sick]
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Macmillan, Reaper of Ceremonies(9), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7)
+    HUMAN HP 13/20  PP 8/8  EP 0 SEP 1  deck 15  hand 8  cemetery 21 bonusPP(early used, late used)
+          field: (empty)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Great Hart of the Glacial Realm(6), Grace of the Swarmpetal(3), Virewind Fencer(2), Setus & Maisha, Bladerights(7), Fairy(1), Lyria, Skydestined(2), Sprouting Initiate(1)
+  [88] HUMAN plays Fairy (1pp)   (human move; ref cost 16.9)
+  [89] HUMAN attacks: Fairy 1/1 [rush,sick] -> Netherworld Lieutenant 1/1 [sick]
+  [90] HUMAN plays Great Hart of the Glacial Realm (6pp)
+  [91] HUMAN plays Sprouting Initiate (1pp)
+  [92] HUMAN SUPER-evolves Great Hart of the Glacial Realm 5/5 [sick]
+  [93] HUMAN attacks: Great Hart of the Glacial Realm 8/8*SE [sick] -> Netherworld Lieutenant 4/4*SE [sick]
+  [94] HUMAN ends turn
+=== turn 9, BOT to act ===
+    BOT   HP 16/20  PP 9/9  EP 0 SEP 0  deck 25  hand 6  cemetery 29
+          field: (empty)
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Macmillan, Reaper of Ceremonies(9), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 13/20  PP 0/8  EP 0 SEP 0  deck 14  hand 9  cemetery 22 bonusPP(early used, late used)
+          field: [0] Great Hart of the Glacial Realm 8/8*SE [sick]; [1] Sprouting Initiate 1/1 [rush,sick]
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Grace of the Swarmpetal(3), Virewind Fencer(2), Setus & Maisha, Bladerights(7), Lyria, Skydestined(2), Deepwood Bounty(0), Deepwood Bounty(0), Magachiyo, Aromatic Convict(3), Deepwood Bounty(0)
+  [95] BOT plays Macmillan, Reaper of Ceremonies (9pp)   bot_value +53.6   ref: played +53.4, best +54.0, cost 0.6
+      explain: path search, 7 candidates, nodes 12738, top-2 margin 0.2
+  [96] BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Great Hart of the Glacial Realm 8/8*SE [sick]   bot_value +54.4   ref: played +51.8, best +54.2, cost 2.3
+      explain: path search, 7 candidates, nodes 15375, top-2 margin 0.3; re-run would choose: BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Sprouting Initiate 1/1 [rush,sick]
+  [97] BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Great Hart of the Glacial Realm 8/5*SE [sick]   bot_value +50.9   ref: played +51.4, best +52.9, cost 1.4
+      explain: path search, 7 candidates, nodes 11609, top-2 margin 0.0; re-run would choose: BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Sprouting Initiate 1/1 [rush,sick]
+  [98] BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Sprouting Initiate 1/1 [rush,sick]   bot_value +53.8   ref: played +51.3, best +49.1, cost 0.0
+      explain: path search, 7 candidates, nodes 5337, top-2 margin 0.0
+  [99] BOT ends turn   bot_value +51.1   ref after end-turn (bot's view): +30.1; optimism +19.1
+      explain: path search, 3 candidates, nodes 748, top-2 margin 5.1
+=== turn 9, HUMAN to act ===
+    BOT   HP 16/20  PP 0/9  EP 0 SEP 0  deck 25  hand 5  cemetery 32
+          field: [0] Macmillan, Reaper of Ceremonies 4/4 [sick]; [1] Rotting Zombie 3/2 [rush,ward,sick]; [2] Rotting Zombie 3/2 [rush,ward,sick]; [3] Rotting Zombie 3/2 [rush,ward,sick]
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Macmillan, Reaper of Ceremonies(9), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7)
+    HUMAN HP 7/20  PP 9/9  EP 0 SEP 0  deck 13  hand 9  cemetery 25 bonusPP(early used, late used)
+          field: (empty)
+          hand (HIDDEN from the bot): Lyria, Skydestined(2), Grace of the Swarmpetal(3), Virewind Fencer(2), Setus & Maisha, Bladerights(7), Lyria, Skydestined(2), Deepwood Bounty(0), Deepwood Bounty(0), Magachiyo, Aromatic Convict(3), Deepwood Bounty(0)
+  [100] HUMAN plays Lyria, Skydestined (2pp)
+  [101] HUMAN plays Deepwood Bounty (0pp)
+  [102] HUMAN plays Lyria, Skydestined (2pp)
+  [103] HUMAN plays Magachiyo, Aromatic Convict (3pp)
+  [104] HUMAN plays Deepwood Bounty (0pp)
+  [105] HUMAN plays Deepwood Bounty (0pp)
+  [106] HUMAN plays Virewind Fencer (2pp)   (human move; ref cost 13.5)
+  [107] HUMAN attacks: Virewind Fencer 2/2 [storm,sick] -> LEADER
+  [108] HUMAN ends turn
+=== turn 10, BOT to act ===
+    BOT   HP 14/20  PP 10/10  EP 0 SEP 0  deck 24  hand 6  cemetery 36
+          field: (empty)
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Macmillan, Reaper of Ceremonies(9), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7), Hark to the Night Song(3)
+    HUMAN HP 10/20  PP 2/9  EP 0 SEP 0  deck 11  hand 5  cemetery 28 bonusPP(early used, late used)
+          field: [0] Lyria, Skydestined 1/1 [barrier,sick]; [1] Lyria, Skydestined 1/1 [barrier,sick]; [2] Magachiyo, Aromatic Convict 2/2 [sick]; [3] Virewind Fencer 2/2 [storm,sick]
+          hand (HIDDEN from the bot): Grace of the Swarmpetal(3), Setus & Maisha, Bladerights(7), Setus & Maisha, Bladerights(7), Setus & Maisha, Bladerights(7), Deepwood Bounty(0)
+  [109] BOT plays Macmillan, Reaper of Ceremonies (9pp)   bot_value +56.5   ref: played +56.8, best +56.3, cost 0.0
+      explain: path search, 7 candidates, nodes 8230, top-2 margin 8.2
+  [110] BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Magachiyo, Aromatic Convict 2/2 [sick]   bot_value +57.0   ref: played +55.1, best +56.5, cost 1.5
+      explain: path search, 13 candidates, nodes 15742, top-2 margin 0.0
+  [111] BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Lyria, Skydestined 1/1 [barrier,sick]   bot_value +57.5   ref: played +55.6, best +55.5, cost 0.0
+      explain: path search, 10 candidates, nodes 12051, top-2 margin 0.0; re-run would choose: BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Virewind Fencer 2/2 [storm,sick]
+  [112] BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Lyria, Skydestined 1/1 [sick]   bot_value +55.8   ref: played +52.5, best +56.0, cost 3.5
+      explain: path search, 7 candidates, nodes 4345, top-2 margin 0.0; re-run would choose: BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Lyria, Skydestined 1/1 [barrier,sick]
+  [113] BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Virewind Fencer 2/2 [storm,sick]   bot_value +52.0   ref: played +50.6, best +53.7, cost 3.0
+      explain: path search, 3 candidates, nodes 782, top-2 margin 1.4
+  [114] BOT attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Lyria, Skydestined 1/1 [barrier,sick]   bot_value +48.4
+      explain: path search, 2 candidates, nodes 389, top-2 margin 0.5
+  [115] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 10, HUMAN to act ===
+    BOT   HP 14/20  PP 1/10  EP 0 SEP 0  deck 24  hand 5  cemetery 39
+          field: [0] Macmillan, Reaper of Ceremonies 4/4 [sick]; [1] Rotting Zombie 3/1 [rush,ward,sick]; [2] Rotting Zombie 3/1 [rush,ward,sick]; [3] Rotting Zombie 3/2 [rush,ward,sick]
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7), Hark to the Night Song(3)
+    HUMAN HP 4/20  PP 10/10  EP 0 SEP 0  deck 10  hand 6  cemetery 32 bonusPP(early used, late used)
+          field: (empty)
+          hand (HIDDEN from the bot): Grace of the Swarmpetal(3), Setus & Maisha, Bladerights(7), Setus & Maisha, Bladerights(7), Setus & Maisha, Bladerights(7), Deepwood Bounty(0), Miroku, Swarmpetal(3)
+  [116] HUMAN plays Setus & Maisha, Bladerights (7pp)
+  [117] HUMAN chooses {"slot": 0, "player": "b"}
+  [118] HUMAN plays Miroku, Swarmpetal (3pp)
+  [119] HUMAN chooses {"mode": 2}
+  [120] HUMAN plays Deepwood Bounty (0pp)
+  [121] HUMAN attacks: Setus & Maisha, Bladerights 4/6 [storm,ward,sick] -> Rotting Zombie 3/1 [rush,ward,sick]
+  [122] HUMAN ends turn
+=== turn 11, BOT to act ===
+    BOT   HP 14/20  PP 10/10  EP 0 SEP 0  deck 23  hand 6  cemetery 43
+          field: (empty)
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Itsurugi & Taketsumi, Brothers(8)
+    HUMAN HP 5/20  PP 0/10  EP 0 SEP 0  deck 10  hand 4  cemetery 33 bonusPP(early used, late used)
+          field: [0] Setus & Maisha, Bladerights 4/3 [storm,ward,sick]; [1] Miroku, Swarmpetal 2/2 [sick]
+          hand (HIDDEN from the bot): Grace of the Swarmpetal(3), Setus & Maisha, Bladerights(7), Setus & Maisha, Bladerights(7), Deepwood Bounty(0)
+  [123] BOT plays Garodeth vs. Zeth (8pp)   bot_value +56.5   ref: played +52.0, best +55.1, cost 3.1
+      explain: path search, 7 candidates, nodes 3799, top-2 margin 0.5; re-run would choose: BOT plays Itsurugi & Taketsumi, Brothers (8pp)
+  [124] BOT chooses {"mode": 1}   bot_value +51.7
+      explain: path search, 2 candidates, nodes 475, top-2 margin 5.7
+  [125] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 11, HUMAN to act ===
+    BOT   HP 14/20  PP 2/10  EP 0 SEP 0  deck 23  hand 5  cemetery 43
+          field: [0] Garodeth vs. Zeth 8/8 [ward,sick]
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Itsurugi & Taketsumi, Brothers(8)
+    HUMAN HP 5/20  PP 10/10  EP 0 SEP 0  deck 9  hand 5  cemetery 35 bonusPP(early used, late used)
+          field: (empty)
+          hand (HIDDEN from the bot): Grace of the Swarmpetal(3), Setus & Maisha, Bladerights(7), Setus & Maisha, Bladerights(7), Deepwood Bounty(0), Sathanid, Eld Lance(1)
+  [126] HUMAN plays Deepwood Bounty (0pp)
+  [127] HUMAN plays Setus & Maisha, Bladerights (7pp)
+  [128] HUMAN chooses {"slot": 0, "player": "b"}
+  [129] HUMAN plays Grace of the Swarmpetal (3pp)
+  [130] HUMAN attacks: Setus & Maisha, Bladerights 4/6 [storm,ward,sick] -> LEADER
+  [131] HUMAN ends turn
+=== turn 12, BOT to act ===
+    BOT   HP 10/20  PP 10/10  EP 0 SEP 0  deck 22  hand 6  cemetery 44
+          field: (empty)
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Istyndet vs. Mitilykket(7), Hark to the Night Song(3), Itsurugi & Taketsumi, Brothers(8), Itsurugi & Taketsumi, Brothers(8)
+    HUMAN HP 6/20  PP 0/10  EP 0 SEP 0  deck 6  hand 5  cemetery 37 bonusPP(early used, late used)
+          field: [0] Setus & Maisha, Bladerights 4/6 [storm,ward,sick]
+          hand (HIDDEN from the bot): Setus & Maisha, Bladerights(7), Sathanid, Eld Lance(1), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3), Thestae, Anathema of Distortion(4)
+  [132] BOT plays Istyndet vs. Mitilykket (7pp)   bot_value +46.6   ref: played +46.3, best +49.8, cost 3.5
+      explain: path search, 7 candidates, nodes 5228, top-2 margin 0.1; re-run would choose: BOT plays Hark to the Night Song (3pp)
+  [133] BOT plays Hark to the Night Song (3pp)   bot_value +40.5
+      explain: path search, 3 candidates, nodes 746, top-2 margin 0.4
+  [134] BOT ends turn
+      explain: path single_legal, 0 candidates, nodes 0
+=== turn 12, HUMAN to act ===
+    BOT   HP 10/20  PP 0/10  EP 0 SEP 0  deck 22  hand 4  cemetery 46
+          field: [0] Istyndet vs. Mitilykket 3/3 [sick]; [1] Netherworld Lieutenant 1/1 [sick]; [2] Netherworld Lieutenant 1/1 [sick]; [3] Netherworld Lieutenant 2/1 [rush,sick]
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(7), Itsurugi & Taketsumi, Brothers(8), Itsurugi & Taketsumi, Brothers(8)
+    HUMAN HP 4/20  PP 10/10  EP 0 SEP 0  deck 5  hand 6  cemetery 38 bonusPP(early used, late used)
+          field: (empty)
+          hand (HIDDEN from the bot): Setus & Maisha, Bladerights(7), Sathanid, Eld Lance(1), Sathanid, Eld Lance(1), Magachiyo, Aromatic Convict(3), Thestae, Anathema of Distortion(4), Great Hart of the Glacial Realm(6)
+  [135] HUMAN plays Great Hart of the Glacial Realm (6pp)   (human move; ref cost 17.7)
+  [136] HUMAN plays Deepwood Bounty (0pp)
+  [137] HUMAN plays Deepwood Bounty (0pp)
+  [138] HUMAN plays Magachiyo, Aromatic Convict (3pp)
+  [139] HUMAN plays Sathanid, Eld Lance (1pp)
+  [140] HUMAN ends turn
+=== turn 13, BOT to act ===
+    BOT   HP 10/20  PP 10/10  EP 0 SEP 0  deck 21  hand 5  cemetery 52
+          field: (empty)
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(7), Itsurugi & Taketsumi, Brothers(8), Itsurugi & Taketsumi, Brothers(8), Highwire Feline(5)
+    HUMAN HP 6/20  PP 0/10  EP 0 SEP 0  deck 5  hand 3  cemetery 40 bonusPP(early used, late used)
+          field: [0] Great Hart of the Glacial Realm 5/5 [sick]; [1] Magachiyo, Aromatic Convict 2/2 [sick]; [2] Sathanid, Eld Lance 1/1 [drain,sick]
+          hand (HIDDEN from the bot): Setus & Maisha, Bladerights(7), Sathanid, Eld Lance(1), Thestae, Anathema of Distortion(4)
+  [141] BOT plays Garodeth vs. Zeth (8pp)   bot_value +80.0   ref: played +80.0, best +80.0, cost 0.0
+      explain: path consensus_lethal, 0 candidates, nodes 50
+  [142] BOT chooses {"mode": 0}   bot_value +80.0   ref: played +80.0, best +80.0, cost 0.0
+      explain: path consensus_lethal, 0 candidates, nodes 22
+  [143] BOT plays Hark to the Night Song (3pp)   bot_value +80.0   ref: played +80.0, best +80.0, cost 0.0
+      explain: path consensus_lethal, 0 candidates, nodes 26
+  [144] BOT attacks: Garodeth vs. Zeth 8/8 [storm,sick] -> LEADER   bot_value +80.0   ref: played +80.0, best +80.0, cost 0.0
+      explain: path consensus_lethal, 0 candidates, nodes 6
+
+FINAL: winner BOT; bot HP 8, human HP 0

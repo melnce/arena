@@ -1,0 +1,59 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\review.py",
+    "--tag",
+    "review3",
+    "--side",
+    "both",
+    "--games",
+    "results/games/14567320158693562650-5ce21003.json",
+    "results/games/5146842333902506308-5ce21003.json",
+    "results/games/6482272190127595542-5ce21003.json",
+    "results/games/7075938339537277432-5ce21003.json",
+    "results/games/11837117393133213561-5ce21003.json",
+    "results/games/7210033081212776899-5ce21003.json",
+    "results/games/2560486491816220020-5ce21003.json",
+    "results/games/2560486491816220020-c9e8a9fb.json",
+    "results/games/3883134982689280309-c9e8a9fb.json",
+    "results/games/5883843333739085459-c9e8a9fb.json",
+    "results/games/9038916459751691349-c9e8a9fb.json",
+    "results/games/13692073994695065052-c9e8a9fb.json",
+    "results/games/11472704200738364811-c9e8a9fb.json",
+    "results/games/13238162772055293923-c9e8a9fb.json",
+    "results/games/6711863184032091189-c9e8a9fb.json",
+    "results/games/10951419422900500402-c9e8a9fb.json",
+    "results/games/11162066908668332800-c9e8a9fb.json",
+    "results/games/2557551841517808989-c9e8a9fb.json"
+  ],
+  "git": "a45e2bb6a6056b5b73f666dbac510870cb8671e5",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "analyse": {
+      "start": "2026-09-27T10:49:39.403846+00:00",
+      "end": "2026-09-27T13:34:03.559238+00:00"
+    },
+    "summary": {
+      "start": "2026-09-27T13:34:03.586952+00:00",
+      "end": "2026-09-27T13:34:03.698875+00:00"
+    }
+  },
+  "human_side_assumed": false,
+  "review": {
+    "games": 18,
+    "clamped_negative": 372,
+    "mean_ms": 50793.840612523934,
+    "ref": "h0:nodes=200000,k=16",
+    "side": "both",
+    "engine": "a45e2bb6a6056b5b73f666dbac510870cb8671e5",
+    "human_side_assumed": false,
+    "lethal_walks": 5,
+    "analysed_end_turns": 69,
+    "mean_optimism": 24.631714278805084,
+    "noise_n": 539,
+    "noise_mean": 2.8303909240383827,
+    "noise_std": 5.745207940731191,
+    "noise_max": 58.52498245239258
+  }
+}
