@@ -433,7 +433,8 @@ fn legal_main(db: &CardDb, state: &State) -> Vec<Action> {
 /// Activate the current-tier charge; cancel while the bonus orb is unspent
 /// (`pp_bonus > 0`), regardless of regular PP. Regular orbs are spent first;
 /// the bonus orb last. Once the orb is spent, the toggle is not offered again
-/// that turn. Rulebook "Bonus PP" — two charges (turns ≤ 5 / from turn 6); EOT commits.
+/// that turn. Rulebook "Bonus PP" — two charges (turns ≤ 5 / from turn 6); EOT
+/// consumes only a spent orb.
 fn can_toggle_bonus_pp(p: &PlayerState) -> bool {
     if !p.is_second || p.turns_taken == 0 {
         return false;
@@ -1002,10 +1003,11 @@ fn apply_bonus(state: &mut State, _events: &mut [Event]) -> Result<(), Illegal> 
     Ok(())
 }
 
-/// End of turn commits an activated (or spent) Bonus PP charge.
-/// Rulebook Bonus PP; old engine commits on turn end, not on the click.
+/// End of turn: consume the current-tier charge only if the bonus orb was
+/// spent (`locked`). An activated, unspent orb is switched off and the charge
+/// stays (within its tier window). Owner ruling 2026-09-27.
 fn commit_bonus_pp(p: &mut PlayerState) {
-    if p.bonus_pp.active || p.bonus_pp.locked {
+    if p.bonus_pp.locked {
         if p.turns_taken < 6 {
             p.bonus_pp.early_charge = false;
         } else {
@@ -2107,6 +2109,9 @@ fn begin_turn(state: &mut State, who: PlayerId, events: &mut Vec<Event>) -> Resu
     let turn = {
         let p = state.player_mut(who);
         p.turns_taken += 1;
+        if p.turns_taken == 6 {
+            p.bonus_pp.early_charge = false;
+        }
         if p.pp_max < PP_CAP {
             p.pp_max += 1;
         }

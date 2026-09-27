@@ -324,10 +324,11 @@ the M5 layout above — 545 features, byte-identical to pre-v2 `encode`.
 `encode_with_vocab(..., version, db)` generalise the walk; `db` is required
 for version 2 (printed card stats).
 
-Version **2** (563 features) keeps the version-1 block at the same offsets
+Version **2** (567 features) keeps the version-1 block at the same offsets
 except `opp_known_pool_hist`, which uses `PlayerState::strict_remaining_pool`
 (hidden removals still count as possibly remaining — the same multiset
-`info=open` resamples from). Eighteen features are appended after offset 544:
+`info=open` resamples from). Twenty-two features are appended after offset 544
+(the last four were added before any v2 model or export data existed):
 
 | Name | Offset |
 |---|---|
@@ -349,6 +350,14 @@ except `opp_known_pool_hist`, which uses `PlayerState::strict_remaining_pool`
 | `own_hand_def_bonus_cost_ge5` | 560 |
 | `own_hand_def_bonus_storm` | 561 |
 | `own_hand_cost_reduction` | 562 |
+| `own_bonus_early` | 563 |
+| `own_bonus_late` | 564 |
+| `opp_bonus_early` | 565 |
+| `opp_bonus_late` | 566 |
+
+The four bonus-PP flags are `1.0` / `0.0` from
+`PlayerState::can_use_bonus_early` / `can_use_bonus_late` (both players'
+charges are public).
 
 Each deck/hand bonus is an order-free sum over that zone: attack or defence
 bonus (current − printed from the card db) in cost buckets (≤2, 3–4, ≥5) and
@@ -484,6 +493,12 @@ naming `info` and listing the four),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
 `0` disables a term),
+`bpp1=<1..6>` (do not activate the early Bonus PP charge before this turn;
+default `1` = today; `6` = never),
+`bpp2=<≥6>` (same for the late charge; default `6` = today),
+`bppv=<f32≥0>` (value prior: add `bppv` per usable Bonus PP charge for the
+evaluated player, subtract for the opponent; all value versions; default `0` =
+today),
 `mull=builtin|rule|random|<path>` (opening keep policy; default `builtin`
 is the embedded `mulligan-v1` table; `rule` sends back cost ≥ 4;
 `random` draws one `next_u64()` from the rng passed to `choose` and
@@ -548,6 +563,9 @@ streams and output as before). `H0` is a determinized search bot:
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
 | `info` | `open` | what the search is allowed to know. `open` (default) = deal the opponent only what the bot cannot rule out. `fair` = resample the perspective player's own deck (hand untouched) and the opponent's hand/deck — a human with open decklists. `draws` = own draw order exact, opponent resampled (the pre-flip path). `all` = no resampling; the search rolls out against the opponent's real hand. Under `all`, H0 builds **one** root regardless of `k` (every determinization would be identical). `info` is a search-time knob; `encode` still masks the opponent's hand at the leaf. Sweep 13 pooled 0.499 [0.486, 0.511] / −0.8 Elo vs `info=fair` on the 16-deck meta pool (6 144 games per candidate). Default since this PR |
+| `bpp1` | 1 | do not activate the early Bonus PP charge before this turn (`1`–`6`; `6` = never) |
+| `bpp2` | 6 | do not activate the late Bonus PP charge before this turn (`≥ 6`) |
+| `bppv` | 0 | value prior on usable Bonus PP charges (all value versions; added after clipping for `value=net`) |
 
 H0 builds `K = max(1, determinizations)` search roots via
 `determinize_with(state, me, seed, info)` (which reseeds the game RNG)
@@ -1139,7 +1157,7 @@ Model file (one JSON object, f32 values as JSON numbers):
 {
   "arch": "linear" | "mlp",
   "encoding": 1 | 2,          // optional; default 1
-  "feature_len": 545 | 563,     // must match encoding (545 for 1, 563 for 2)
+  "feature_len": 545 | 567,     // must match encoding (545 for 1, 567 for 2)
   "feat_mean": [feature_len], "feat_std": [feature_len],
   "vocab": [ids ascending, index 0 = 0],
   "zones": [{"name", "id_offset", "count", "hist_offset" | null} × 5],

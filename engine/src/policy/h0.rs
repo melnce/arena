@@ -144,10 +144,14 @@ struct Evaluator<'a> {
     vocab: &'a [CardId],
     encoding: EncodingVersion,
     clip: f32,
+    bpp1: u32,
+    bpp2: u32,
+    bppv: f32,
 }
 
 impl Evaluator<'_> {
-    fn value(self, state: &State, me: PlayerId) -> f32 {
+    /// Raw leaf value (unclipped). Matches main's `Evaluator::value` before bppv.
+    fn leaf(self, state: &State, me: PlayerId) -> f32 {
         match self.version {
             ValueVersion::V0 => value(state, me),
             ValueVersion::V1 => value_v1(state, me, self.needs, self.weights),
@@ -161,6 +165,27 @@ impl Evaluator<'_> {
                 }
             }
         }
+    }
+
+    fn bpp_prior(self, state: &State, me: PlayerId) -> f32 {
+        if self.bppv == 0.0 {
+            return 0.0;
+        }
+        let opp = me.opponent();
+        let me_own = state.active == me;
+        let opp_own = state.active == opp;
+        self.bppv
+            * (state.player(me).usable_bonus_charges(me_own)
+                - state.player(opp).usable_bonus_charges(opp_own)) as f32
+    }
+
+    /// Leaf value plus `bppv` prior (unclipped; `finite` applies at aggregation).
+    fn value(self, state: &State, me: PlayerId) -> f32 {
+        let v = self.leaf(state, me);
+        if !v.is_finite() {
+            return v;
+        }
+        v + self.bpp_prior(state, me)
     }
 }
 
@@ -341,6 +366,15 @@ pub struct H0 {
     /// Per-decision explain record. Populated when [`explain_armed`] was
     /// set; take with [`take_explain`].
     pub explain: Option<ExplainRecord>,
+    /// Do not activate the early Bonus PP charge before this turn (1–6;
+    /// default `1` = today; `6` = never).
+    pub bpp1: u32,
+    /// Do not activate the late Bonus PP charge before this turn (≥ 6;
+    /// default `6` = today).
+    pub bpp2: u32,
+    /// Value prior: add `bppv` per usable Bonus PP charge for the evaluated
+    /// player, subtract for the opponent (default `0` = today).
+    pub bppv: f32,
 }
 
 impl Default for H0 {
@@ -374,6 +408,9 @@ impl Default for H0 {
             last_value: None,
             explain_armed: false,
             explain: None,
+            bpp1: 1,
+            bpp2: 6,
+            bppv: 0.0,
         }
     }
 }
@@ -434,6 +471,9 @@ impl H0 {
             clip: self.clip,
             wv: self.wv,
             olethal: self.olethal,
+            bpp1: self.bpp1,
+            bpp2: self.bpp2,
+            bppv: self.bppv,
         }
     }
 
@@ -579,7 +619,7 @@ impl Policy for H0 {
         let cand: Vec<usize> = legal
             .iter()
             .enumerate()
-            .filter(|(_, a)| useful_action(state, me, a))
+            .filter(|(_, a)| useful_action(state, me, a, self.bpp1, self.bpp2))
             .map(|(i, _)| i)
             .collect();
         self.stats.candidates += cand.len() as u64;
@@ -993,10 +1033,21 @@ fn mulligan_table(h0: &mut H0, _db: &CardDb, state: &State, legal: &[Action]) ->
         .unwrap_or_else(|| mulligan_index(state, legal))
 }
 
-fn useful_action(state: &State, me: PlayerId, a: &Action) -> bool {
+fn useful_action(state: &State, me: PlayerId, a: &Action, bpp1: u32, bpp2: u32) -> bool {
     match a {
         // Activate only — never cancel an unspent orb.
-        Action::BonusPp => !state.player(me).bonus_pp.active,
+        Action::BonusPp => {
+            let p = state.player(me);
+            if p.bonus_pp.active {
+                return false;
+            }
+            let turns = p.turns_taken;
+            if turns < 6 {
+                turns >= bpp1 && p.bonus_pp.early_charge
+            } else {
+                turns >= bpp2 && p.bonus_pp.late_charge
+            }
+        }
         _ => true,
     }
 }
@@ -1121,7 +1172,7 @@ fn is_lethal(
     let mut next_line = line.to_vec();
     next_line.push(search_key(&s));
     next.iter().any(|b| {
-        useful_action(&s, me, b)
+        useful_action(&s, me, b, 1, 6)
             && is_lethal(
                 db,
                 &s,
@@ -1218,7 +1269,7 @@ fn greedy_index(
         if *nodes >= cap {
             break;
         }
-        if !useful_action(state, me, a) {
+        if !useful_action(state, me, a, eval.bpp1, eval.bpp2) {
             continue;
         }
         let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
@@ -1721,7 +1772,7 @@ fn search_own(
         if *nodes >= cap {
             break;
         }
-        if !useful_action(state, me, a) {
+        if !useful_action(state, me, a, eval.bpp1, eval.bpp2) {
             continue;
         }
         if fusemacro && matches!(a, Action::Fuse { .. }) {
@@ -2067,7 +2118,7 @@ fn search_opp_expand(
             *truncated = true;
             break;
         }
-        if !useful_action(state, opp, a) {
+        if !useful_action(state, opp, a, eval.bpp1, eval.bpp2) {
             continue;
         }
         let Some(s) = try_apply(db, state, a, nodes, cap, line) else {

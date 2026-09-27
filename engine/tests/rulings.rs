@@ -410,19 +410,85 @@ fn bonus_pp_cancel_while_orb_unspent_not_usable_gt_max() {
     );
 }
 
+/// Owner ruling 2026-09-27: an activated, unspent orb is not consumed at EOT.
 #[test]
-fn bonus_pp_end_of_turn_commits_charge() {
+fn bonus_pp_unspent_orb_not_consumed() {
     let db = load_db();
     let mut st = started(&db, 14);
     end_turn(&db, &mut st);
+    let me = PlayerId::B;
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    assert!(st.player(me).bonus_pp.active);
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
+    assert!(
+        st.player(me).bonus_pp.early_charge,
+        "unspent orb must not consume the early charge"
+    );
+    assert!(!st.player(me).bonus_pp.active);
+    assert_eq!(st.active, me, "B's turn 2 after the unspent orb EOT");
+    assert!(
+        legal_actions(&db, &st)
+            .iter()
+            .any(|a| matches!(a, Action::BonusPp)),
+        "charge can be activated again on a later turn"
+    );
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    assert!(st.player(me).bonus_pp.active);
+}
+
+#[test]
+fn bonus_pp_spent_orb_consumes_charge() {
+    let db = load_db();
+    let mut st = started(&db, 14);
+    end_turn(&db, &mut st);
+    let me = PlayerId::B;
+    give_pp(&mut st, me, 0, 1);
+    st.player_mut(me).hand.clear();
+    let h = put_hand(&db, &mut st, me, "88001110");
+    apply(&db, &mut st, Action::BonusPp).unwrap();
+    play(&db, &mut st, h);
+    assert!(st.player(me).bonus_pp.locked);
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
+    assert!(
+        !st.player(me).bonus_pp.early_charge,
+        "spent orb must consume the early charge"
+    );
+}
+
+#[test]
+fn bonus_pp_late_charge_unspent_not_consumed() {
+    let db = load_db();
+    let mut st = started(&db, 14);
+    let me = PlayerId::B;
+    while st.player(me).turns_taken < 6 || st.active != me {
+        end_turn(&db, &mut st);
+    }
+    assert_eq!(st.player(me).turns_taken, 6);
     apply(&db, &mut st, Action::BonusPp).unwrap();
     end_turn(&db, &mut st);
     end_turn(&db, &mut st);
     assert!(
-        !st.player(PlayerId::B).bonus_pp.early_charge,
-        "EOT commits the early charge"
+        st.player(me).bonus_pp.late_charge,
+        "unspent late orb must not consume the late charge"
     );
-    assert!(!st.player(PlayerId::B).bonus_pp.active);
+}
+
+#[test]
+fn bonus_pp_early_charge_expires_at_turn_6() {
+    let db = load_db();
+    let mut st = started(&db, 14);
+    let me = PlayerId::B;
+    while st.player(me).turns_taken < 6 {
+        end_turn(&db, &mut st);
+    }
+    assert_eq!(st.player(me).turns_taken, 6);
+    assert!(
+        !st.player(me).bonus_pp.early_charge,
+        "unused early charge expires at turn 6"
+    );
+    assert!(st.player(me).bonus_pp.late_charge);
 }
 
 #[test]

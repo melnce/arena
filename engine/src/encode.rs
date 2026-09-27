@@ -17,8 +17,8 @@ pub const HIST_WIDTH: usize = 96;
 /// Version-1 feature length (unchanged from M5).
 pub const LEN_V1: usize = 353 + 2 * HIST_WIDTH;
 
-/// Version-2 feature length (v1 block + 18 zone-bonus features).
-pub const LEN_V2: usize = LEN_V1 + 18;
+/// Version-2 feature length (v1 block + 18 zone-bonus + 4 bonus-PP features).
+pub const LEN_V2: usize = LEN_V1 + 22;
 
 /// `own_deck_hist` offset + 2 × histogram (version 1).
 pub const LEN: usize = LEN_V1;
@@ -216,6 +216,26 @@ pub const LAYOUT_V2_EXTRA: &[LayoutField] = &[
         offset: LEN_V1 + 17,
         width: 1,
     },
+    LayoutField {
+        name: "own_bonus_early",
+        offset: LEN_V1 + 18,
+        width: 1,
+    },
+    LayoutField {
+        name: "own_bonus_late",
+        offset: LEN_V1 + 19,
+        width: 1,
+    },
+    LayoutField {
+        name: "opp_bonus_early",
+        offset: LEN_V1 + 20,
+        width: 1,
+    },
+    LayoutField {
+        name: "opp_bonus_late",
+        offset: LEN_V1 + 21,
+        width: 1,
+    },
 ];
 
 /// Leaf observation encoding version.
@@ -371,6 +391,11 @@ pub fn encode_with_vocab(
         for (i, v) in deck_bonus.iter().chain(hand_bonus.iter()).enumerate() {
             feat[LEN_V1 + i] = *v;
         }
+        let me_own_turn = state.active == me;
+        feat[LEN_V1 + 18] = f32::from(state.player(me).can_use_bonus_early(me_own_turn));
+        feat[LEN_V1 + 19] = f32::from(state.player(me).can_use_bonus_late());
+        feat[LEN_V1 + 20] = f32::from(state.player(opp).can_use_bonus_early(state.active == opp));
+        feat[LEN_V1 + 21] = f32::from(state.player(opp).can_use_bonus_late());
     }
 
     Observation {
