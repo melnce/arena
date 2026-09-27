@@ -94,11 +94,11 @@ fn action_fingerprint(db: &CardDb, spec: &str, seed: u64, deck_a: &[arena_engine
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0x8cd3_2204_3bbb_ebaf,
-    0xe0ff_3ba0_8237_47ae,
-    0x9e54_2bf8_f4f4_ba5c,
-    0x7404_fbcb_4cae_7f60,
-    0x50a9_2b69_688f_99c3,
-    0x42fb_d544_e452_ebf0,
+    0x0c5e_00eb_14bd_ce85,
+    0x09d1_f4dd_e963_0cb7,
+    0x7393_0e18_abe2_6408,
+    0x3705_78b3_04cc_e2be,
+    0x2d18_3971_e453_91ae,
     0x23c5_a1fa_f13b_aff0,
 ];
 
@@ -107,10 +107,10 @@ const DEFAULT_FINGERPRINTS: [u64; 8] = [
 const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0xf00a_d8f4_4136_9f74,
-    0xe0ff_3ba0_8237_47ae,
-    0xc4e8_ab63_aec9_6246,
-    0x7404_fbcb_4cae_7f60,
-    0xdfee_fa09_e8aa_3e5c,
+    0x0c5e_00eb_14bd_ce85,
+    0x3207_d65c_42f5_89a8,
+    0x7393_0e18_abe2_6408,
+    0x00cc_fe69_8d17_49cf,
     0x953e_ffd4_7650_d22e,
     0x48b6_cc9c_3605_0fc5,
 ];
@@ -134,7 +134,7 @@ fn print_legacy_fingerprints() {
     let stems = meta_deck_stems();
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);
-        let fp = action_fingerprint(&db, "h0", *seed, &deck);
+        let fp = action_fingerprint(&db, "h0:mull=rule,info=fair", *seed, &deck);
         println!("seed={seed} deck={} fp=0x{:016x}", stems[i], fp);
     }
 }
