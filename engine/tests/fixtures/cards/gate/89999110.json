@@ -17,6 +17,7 @@
       "printed": "Add a Gate Token to your hand.",
       "effects": [
         {
+          "printed": "Add a Gate Token to your hand.",
           "op": "addToHand",
           "card": {
             "named": "89999120"

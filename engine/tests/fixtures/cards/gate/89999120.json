@@ -15,6 +15,7 @@
       "printed": "Increase the Skybound Art gauges of all cards in your hand by 1.",
       "effects": [
         {
+          "printed": "Increase the Skybound Art gauges of all cards in your hand by 1.",
           "op": "counter",
           "key": "skyboundHand",
           "how": "add",
