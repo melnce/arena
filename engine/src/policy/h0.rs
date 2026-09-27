@@ -254,6 +254,8 @@ pub struct SearchStats {
     pub horizon_nodes: u64,
     /// Mid-turn horizon finish could not end the turn — bare value used.
     pub horizon_fallback: u64,
+    /// Root worlds skipped because `node_cap` bound before the pair ran.
+    pub skipped_worlds: u64,
     /// Mulligans decided from a found deck entry (`mull=<table>`).
     pub mull_table: u64,
     /// Table mode, deck fingerprint not found — rule used for the whole hand.
@@ -292,6 +294,7 @@ impl SearchStats {
         self.horizon_leaves += other.horizon_leaves;
         self.horizon_nodes += other.horizon_nodes;
         self.horizon_fallback += other.horizon_fallback;
+        self.skipped_worlds += other.skipped_worlds;
         self.mull_table += other.mull_table;
         self.mull_fallback += other.mull_fallback;
         self.open_hidden += other.open_hidden;
@@ -791,6 +794,9 @@ impl Policy for H0 {
                     let root_key = search_key(root);
                     for (j, a) in subset.iter().enumerate() {
                         if nodes >= self.node_cap {
+                            let skipped = (subset.len() - j) as u64
+                                + (roots.len() - r - 1) as u64 * subset.len() as u64;
+                            dec_stats.skipped_worlds += skipped;
                             if recording {
                                 for explain_cand in explain_cands.iter_mut().skip(j) {
                                     explain_cand
@@ -1601,6 +1607,11 @@ fn charge_horizon_work(
     }
 }
 
+/// Reserve applies past the pair cap must not shrink later pairs' fair shares.
+fn clamp_horizon_charged_nodes(nodes: &mut u32, nodes_before: u32, cap: u32) {
+    *nodes = (*nodes).min(cap.max(nodes_before));
+}
+
 fn horizon_reply_end(cutoff: HorizonCutoff) -> PvEnd {
     match cutoff {
         HorizonCutoff::Depth => PvEnd::DepthReply,
@@ -1755,6 +1766,7 @@ fn horizon_score_leaf(
     cutoff: HorizonCutoff,
 ) -> f32 {
     let nodes_before = *nodes;
+    let track_len = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
     let work_cap = horizon_work_cap(*nodes, cap, hres);
     let mut reply_state = state.clone();
     let mut reply_line = line.to_vec();
@@ -1774,12 +1786,22 @@ fn horizon_score_leaf(
         )
     {
         stats.horizon_fallback += 1;
+        let nodes_after_work = *nodes;
+        charge_horizon_work(
+            nodes_before,
+            nodes_after_work,
+            cap,
+            stats,
+            track.as_deref_mut(),
+        );
+        clamp_horizon_charged_nodes(nodes, nodes_before, cap);
         let v = eval.value(state, me);
         let end = match cutoff {
             HorizonCutoff::Depth => PvEnd::Depth,
             HorizonCutoff::Cap => PvEnd::Cap,
         };
         if let Some(t) = track.as_mut() {
+            t.pop_to(track_len);
             t.set_leaf(v, end, state);
         }
         return v;
@@ -1799,9 +1821,17 @@ fn horizon_score_leaf(
         None,
         track.as_deref_mut(),
     );
-    charge_horizon_work(nodes_before, *nodes, cap, stats, track.as_deref_mut());
+    let nodes_after_work = *nodes;
+    charge_horizon_work(
+        nodes_before,
+        nodes_after_work,
+        cap,
+        stats,
+        track.as_deref_mut(),
+    );
+    clamp_horizon_charged_nodes(nodes, nodes_before, cap);
     stats.horizon_leaves += 1;
-    if horizon >= 2 || (horizon >= 1 && nodes_before >= cap) {
+    if matches!(cutoff, HorizonCutoff::Depth) || nodes_before >= cap {
         fix_horizon_pv_end(track, cutoff);
     }
     v
@@ -1959,10 +1989,8 @@ fn search_own(
         }
         return -INF;
     }
-    if horizon >= 1
-        && *nodes >= cap
-        && (acting_player(state) != me || matches!(state.phase, Phase::Terminal))
-    {
+    let turn_over = acting_player(state) != me || matches!(state.phase, Phase::Terminal);
+    if horizon >= 1 && turn_over && cap.saturating_sub(*nodes) < hres {
         return horizon_score_leaf(
             db,
             state,

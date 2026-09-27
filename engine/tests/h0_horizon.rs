@@ -2,9 +2,10 @@
 
 use arena_engine::policy::ChoosePath;
 use arena_engine::{
-    apply, legal_actions, new_game, policy_rng, Action, AnyPolicy, CardDb, First, GameConfig,
-    Phase, PlayerId, Policy, PvEnd, H0, MAX_ACTIONS, MAX_TURNS,
+    apply, legal_actions, new_game, policy_rng, search_key, Action, AnyPolicy, CardDb, ExplainRecord,
+    First, GameConfig, Phase, PlayerId, Policy, PvEnd, H0, MAX_ACTIONS, MAX_TURNS,
 };
+use std::collections::HashMap;
 
 mod common;
 use common::*;
@@ -75,6 +76,28 @@ fn lethal_storm_state(db: &CardDb) -> (arena_engine::State, Action) {
         .cloned()
         .expect("play");
     (st, play)
+}
+
+fn explain_decision(
+    spec: &str,
+    db: &CardDb,
+    st: &arena_engine::State,
+    choose_seed: u64,
+) -> ExplainRecord {
+    let mut h0 = parse_h0(spec);
+    h0.arm_explain();
+    let legal = legal_actions(db, st);
+    let mut rng = policy_rng(choose_seed);
+    let _ = h0.choose(db, st, &legal, &mut rng);
+    h0.take_explain().expect("explain")
+}
+
+fn skipped_worlds(rec: &ExplainRecord) -> u64 {
+    rec.candidates
+        .iter()
+        .flat_map(|c| c.worlds.iter())
+        .filter(|w| w.skipped)
+        .count() as u64
 }
 
 fn score_candidate_world(
@@ -202,6 +225,76 @@ fn horizon3_nothing_left_matches_level2() {
 }
 
 #[test]
+fn horizon1_finished_turn_under_hres_gets_reserve_reply() {
+    let db = load_db();
+    let (st, play) = lethal_storm_state(&db);
+    let legal = legal_actions(&db, &st);
+    let end_idx = legal
+        .iter()
+        .position(|a| matches!(a, Action::EndTurn))
+        .expect("EndTurn index");
+    assert!(matches!(play, Action::Play { .. }));
+    let base =
+        "h0:depth=6,beam=1,k=1,nodes=3,hres=50,lcap=0.0125,value=v0,olethal=1,tt=0,alloc=fair";
+    let rec0 = explain_decision(base, &db, &st, 99);
+    let rec1 = explain_decision(&format!("{base},horizon=1"), &db, &st, 99);
+    let w0 = &rec0
+        .candidates
+        .iter()
+        .find(|c| c.legal_index == end_idx)
+        .expect("EndTurn candidate")
+        .worlds[0];
+    let w1 = &rec1
+        .candidates
+        .iter()
+        .find(|c| c.legal_index == end_idx)
+        .expect("EndTurn candidate")
+        .worlds[0];
+    assert_eq!(w1.raw, -80.0);
+    assert!(matches!(w1.end, Some(PvEnd::OppLethal) | Some(PvEnd::OppReply)));
+    assert!(
+        w0.raw > w1.raw,
+        "starved at horizon=0: raw={} end={:?}",
+        w0.raw,
+        w0.end
+    );
+}
+
+#[test]
+fn horizon_reserve_keeps_later_pair_budgets() {
+    let db = load_db();
+    let (st, _) = lethal_storm_state(&db);
+    let base =
+        "h0:depth=6,beam=1,k=2,nodes=20,hres=15,lcap=0.0125,value=v0,olethal=1,tt=0,alloc=fair";
+    let mut h0 = parse_h0(&format!("{base},horizon=2"));
+    h0.arm_explain();
+    let legal = legal_actions(&db, &st);
+    let mut rng = policy_rng(88);
+    let _ = h0.choose(&db, &st, &legal, &mut rng);
+    let horizon_leaves = h0.stats.horizon_leaves;
+    let rec2 = h0.take_explain().expect("explain");
+    let rec0 = explain_decision(base, &db, &st, 88);
+    assert_eq!(rec0.path, ChoosePath::Search);
+    assert_eq!(rec2.path, ChoosePath::Search);
+    assert!(
+        rec2.nodes <= rec2.node_cap,
+        "charged nodes={} cap={}",
+        rec2.nodes,
+        rec2.node_cap
+    );
+    assert_eq!(rec0.k, 2);
+    assert_eq!(rec2.k, 2);
+    assert!(rec2.horizon_nodes > 0 || horizon_leaves > 0);
+    for (c0, c2) in rec0.candidates.iter().zip(rec2.candidates.iter()) {
+        assert_eq!(c0.n, 2, "every candidate should score k worlds");
+        assert_eq!(c2.n, 2);
+        for (w0, w2) in c0.worlds.iter().zip(c2.worlds.iter()) {
+            assert_eq!(w0.node_cap, w2.node_cap, "later pair cap unchanged");
+        }
+    }
+}
+
+#[test]
 fn horizon_fallback_when_turn_cannot_end() {
     let db = load_db();
     let mut st = started(&db, 74);
@@ -252,9 +345,14 @@ fn meta_deck_stems() -> Vec<String> {
         .collect()
 }
 
-fn collect_meta_decisions(db: &CardDb, spec: &str, games_per_deck: u32) -> (u64, u64) {
-    let mut bad_ends = 0u64;
-    let mut fallback = 0u64;
+#[derive(Clone)]
+struct SearchSnapshot {
+    state: arena_engine::State,
+    choose_seed: u64,
+}
+
+fn collect_search_snapshots(db: &CardDb, games_per_deck: u32) -> Vec<SearchSnapshot> {
+    let mut snaps = Vec::new();
     for stem in meta_deck_stems() {
         let deck = load_deck_file(repo_root().join(format!("oracle/decks/{stem}.json")));
         for g in 0..games_per_deck {
@@ -273,7 +371,6 @@ fn collect_meta_decisions(db: &CardDb, spec: &str, games_per_deck: u32) -> (u64,
             ) else {
                 continue;
             };
-            let mut h0 = parse_h0(spec);
             let mut rng = policy_rng(seed);
             let mut nact = 0u32;
             while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
@@ -285,24 +382,13 @@ fn collect_meta_decisions(db: &CardDb, spec: &str, games_per_deck: u32) -> (u64,
                     break;
                 }
                 if matches!(state.phase, Phase::Main) && state.turn >= 3 {
-                    h0.arm_explain();
-                    let _ = h0.choose(db, &state, &legal, &mut rng);
-                    if let Some(rec) = h0.take_explain() {
-                        if matches!(rec.path, ChoosePath::Search | ChoosePath::Unscored) {
-                            for cand in &rec.candidates {
-                                for world in &cand.worlds {
-                                    if world.skipped {
-                                        continue;
-                                    }
-                                    if matches!(world.end, Some(PvEnd::Depth) | Some(PvEnd::Cap)) {
-                                        bad_ends += 1;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    fallback += h0.stats.horizon_fallback;
-                    h0.reset_stats();
+                    let choose_seed = seed
+                        .wrapping_add(u64::from(state.turn) * 97)
+                        .wrapping_add(u64::from(nact) * 131);
+                    snaps.push(SearchSnapshot {
+                        state: state.clone(),
+                        choose_seed,
+                    });
                 }
                 let idx = rng.gen_range(legal.len() as u32) as usize;
                 if apply(db, &mut state, legal[idx].clone()).is_err() {
@@ -312,33 +398,101 @@ fn collect_meta_decisions(db: &CardDb, spec: &str, games_per_deck: u32) -> (u64,
             }
         }
     }
-    (bad_ends, fallback)
+    snaps
 }
 
-#[test]
-#[cfg_attr(debug_assertions, ignore)]
-fn horizon2_no_bare_depth_or_cap_in_meta_games() {
-    let db = load_db();
-    for nodes in [2000, 16000] {
-        let spec = format!("h0:nodes={nodes},horizon=2");
-        let (bad, fallback) = collect_meta_decisions(&db, &spec, 2);
-        assert_eq!(
-            bad, fallback,
-            "{spec}: depth/cap ends should match fallback"
-        );
+struct MetaAccounting {
+    bad_ends: u64,
+    fallback: u64,
+    over_node_cap: u64,
+    skip_mismatch: u64,
+    skipped_worlds: u64,
+}
+
+fn audit_horizon_decisions(
+    db: &CardDb,
+    nodes: u32,
+    horizon: u32,
+    snaps: &[SearchSnapshot],
+) -> MetaAccounting {
+    let base = format!("h0:nodes={nodes}");
+    let hz = format!("h0:nodes={nodes},horizon={horizon}");
+    let mut out = MetaAccounting {
+        bad_ends: 0,
+        fallback: 0,
+        over_node_cap: 0,
+        skip_mismatch: 0,
+        skipped_worlds: 0,
+    };
+    let mut baseline: HashMap<u64, u64> = HashMap::new();
+    for snap in snaps {
+        let key = search_key(&snap.state) ^ snap.choose_seed;
+        let rec0 = explain_decision(&base, db, &snap.state, snap.choose_seed);
+        let mut h0 = parse_h0(&hz);
+        h0.arm_explain();
+        let legal = legal_actions(db, &snap.state);
+        let mut rng = policy_rng(snap.choose_seed);
+        let _ = h0.choose(db, &snap.state, &legal, &mut rng);
+        let rec = h0.take_explain().unwrap_or_else(|| {
+            panic!("horizon decision missing explain at key={key}");
+        });
+        out.fallback += h0.stats.horizon_fallback;
+        if !matches!(rec0.path, ChoosePath::Search | ChoosePath::Unscored)
+            || !matches!(rec.path, ChoosePath::Search | ChoosePath::Unscored)
+        {
+            continue;
+        }
+        baseline.insert(key, skipped_worlds(&rec0));
+        if rec.nodes > rec.node_cap {
+            out.over_node_cap += 1;
+        }
+        let skipped = skipped_worlds(&rec);
+        out.skipped_worlds += skipped;
+        if baseline.get(&key).copied().unwrap_or(0) != skipped {
+            out.skip_mismatch += 1;
+        }
+        for cand in &rec.candidates {
+            for world in &cand.worlds {
+                if world.skipped {
+                    continue;
+                }
+                if matches!(world.end, Some(PvEnd::Depth) | Some(PvEnd::Cap)) {
+                    out.bad_ends += 1;
+                }
+            }
+        }
     }
+    out
 }
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn horizon3_no_bare_depth_or_cap_in_meta_games() {
+fn horizon_accounting_matches_baseline_in_meta_games() {
     let db = load_db();
+    let snaps = collect_search_snapshots(&db, 2);
+    assert!(!snaps.is_empty(), "need search snapshots");
     for nodes in [2000, 16000] {
-        let spec = format!("h0:nodes={nodes},horizon=3");
-        let (bad, fallback) = collect_meta_decisions(&db, &spec, 2);
-        assert_eq!(
-            bad, fallback,
-            "{spec}: depth/cap ends should match fallback"
-        );
+        for horizon in [1, 2, 3] {
+            let spec = format!("h0:nodes={nodes},horizon={horizon}");
+            let audit = audit_horizon_decisions(&db, nodes, horizon, &snaps);
+            assert_eq!(
+                audit.over_node_cap, 0,
+                "{spec}: rec.nodes must stay within node_cap"
+            );
+            assert_eq!(
+                audit.skip_mismatch, 0,
+                "{spec}: skipped worlds must match horizon=0 per decision"
+            );
+            eprintln!(
+                "{spec}: skipped_worlds={} fallback={} bad_ends={}",
+                audit.skipped_worlds, audit.fallback, audit.bad_ends
+            );
+            if horizon >= 2 {
+                assert_eq!(
+                    audit.bad_ends, audit.fallback,
+                    "{spec}: depth/cap ends should match fallback"
+                );
+            }
+        }
     }
 }

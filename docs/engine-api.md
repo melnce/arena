@@ -742,7 +742,7 @@ is the default. `tt=0` restores the pre-#32 search.
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=… horizon_leaves/decision=… horizon_nodes/decision=… horizon_fallback/decision=… mull_table/decision=… mull_fallback/decision=… open_hidden/decision=… open_hosts/decision=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… skipped_worlds/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=… horizon_leaves/decision=… horizon_nodes/decision=… horizon_fallback/decision=… mull_table/decision=… mull_fallback/decision=… open_hidden/decision=… open_hosts/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
@@ -761,6 +761,8 @@ choice at a leaf (`fusemacro=1` only);
 `horizon_nodes` counts reserve applies not charged to the pair cap;
 `horizon_fallback` counts mid-turn horizon finishes that could not end
 the turn and fell back to the bare leaf value;
+`skipped_worlds` counts root worlds skipped because `node_cap` bound
+before the pair ran;
 `open_hidden` / `open_hosts` (`info=open` only) count privately removed
 cards dealt into the opponent hand or deck and revealed fuse hosts held
 fixed per determinized root;
