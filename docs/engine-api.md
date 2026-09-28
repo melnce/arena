@@ -562,6 +562,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `mull` | `builtin` (`mulligan-v1`) | opening mulligan: built-in keep table from sweep 13 pooled 0.521 [0.509, 0.534] / +14.9 Elo vs `mull=rule` on the 16-deck meta pool (6 144 games per candidate). Default since this PR. `rule` = cost ≥ 4 send back; `random` = uniform random mask; `<path>` = JSON keep table (see below) |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
+| `horizon` | 0 | leaf scoring past the bot's own search cutoff. `0` = today (a finished turn at the pair cap, or a mid-turn cutoff at depth 0 / cap, returns the bare masked leaf value). `1` = a turn that is over always gets the opponent reply before the cap check. `2` = a mid-turn cutoff finishes pending bot choices greedily, applies `EndTurn`, then replies. `3` = same as `2` but runs `greedy_until_end` for the bot first. Levels are cumulative. Fallback to the bare value when the turn cannot be ended; counted in `horizon_fallback` |
+| `hres` | 200 | reserve node budget (integer ≥ 1) for horizon finish-and-reply work: `max(remaining pair budget, hres)` nodes are available; only applies up to the pair cap are charged to `node_cap`, the rest go to `horizon_nodes` |
 | `info` | `open` | what the search is allowed to know. `open` (default) = deal the opponent only what the bot cannot rule out. `fair` = resample the perspective player's own deck (hand untouched) and the opponent's hand/deck — a human with open decklists. `draws` = own draw order exact, opponent resampled (the pre-flip path). `all` = no resampling; the search rolls out against the opponent's real hand. Under `all`, H0 builds **one** root regardless of `k` (every determinization would be identical). `info` is a search-time knob; `encode` still masks the opponent's hand at the leaf. Sweep 13 pooled 0.499 [0.486, 0.511] / −0.8 Elo vs `info=fair` on the 16-deck meta pool (6 144 games per candidate). Default since this PR |
 | `bpp1` | 1 | do not activate the early Bonus PP charge before this turn (`1`–`6`; `6` = never) |
 | `bpp2` | 6 | do not activate the late Bonus PP charge before this turn (`≥ 6`) |
@@ -740,7 +742,7 @@ is the default. `tt=0` restores the pre-#32 search.
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=… mull_table/decision=… mull_fallback/decision=… open_hidden/decision=… open_hosts/decision=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… skipped_worlds/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=… horizon_leaves/decision=… horizon_nodes/decision=… horizon_fallback/decision=… mull_table/decision=… mull_fallback/decision=… open_hidden/decision=… open_hosts/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
@@ -755,6 +757,12 @@ legal actions kept after the Bonus-PP filter; `pairs_skipped` is
 budget for search; `unscored` remains possible with `lcap=1`;
 `fuse_overshoot` counts uncharged applies used to finish a partner
 choice at a leaf (`fusemacro=1` only);
+`horizon_leaves` counts leaves scored through horizon finish-and-reply;
+`horizon_nodes` counts reserve applies not charged to the pair cap;
+`horizon_fallback` counts mid-turn horizon finishes that could not end
+the turn and fell back to the bare leaf value;
+`skipped_worlds` counts root worlds skipped because `node_cap` bound
+before the pair ran;
 `open_hidden` / `open_hosts` (`info=open` only) count privately removed
 cards dealt into the opponent hand or deck and revealed fuse hosts held
 fixed per determinized root;
@@ -1006,6 +1014,7 @@ For `h0`, the dict also carries:
 | `alloc` | str | `fair` or `root`. |
 | `nodes` | int | Total `apply`s spent. |
 | `nodes_lethal` | int | Nodes spent on the consensus-lethal check before search (0 on other paths). |
+| `horizon_nodes` | int | Reserve applies spent on horizon finish-and-reply (not charged to `node_cap`). |
 | `candidates` | list | One entry per root candidate, in candidate order. |
 | `chosen_index` | int | Index in `legal` of the chosen action. |
 | `tie_set` | list[int] | Every candidate whose aggregated value equals the maximum; the chosen index is the lowest. On `unscored`, every candidate. |
@@ -1034,7 +1043,8 @@ Each world entry:
 | `skipped` | bool | Pair never searched (global cap already spent, or `try_apply` failed at the root). |
 | `pv` | list[NeutralAction] | Principal variation (first 12 actions of the line that produced the value). |
 | `pv_len` | int | Full PV length in actions (may exceed `len(pv)`). |
-| `end` | str \| null | `depth`, `cap`, `terminal`, `opp_reply`, `opp_lethal`, `opp_search` (opponent beam search leaf), or `tt` (transposition-table hit — no line behind it). |
+| `end` | str \| null | `depth`, `cap`, `depth_reply`, `cap_reply`, `terminal`, `opp_reply`, `opp_lethal`, `opp_search` (opponent beam search leaf), or `tt` (transposition-table hit — no line behind it). |
+| `horizon_nodes` | int | Reserve applies on this pair (see decision `horizon_nodes`). |
 | `leaf` | object \| null | `{value, phase, turn, active}` at the line end. **Invariant:** for scored worlds, `leaf.value == raw` (within float tolerance); it is the value the search returned, not a replay of `pv`. |
 
 Replay check (tests): for worlds whose `end` is `depth`, `cap`, or `opp_reply` with `pv_len ≤ 12` and `tt` off, replaying `pv` from that world's determinized root under `value=v0` evaluates to `raw`.

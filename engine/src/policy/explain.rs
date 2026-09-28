@@ -29,6 +29,11 @@ pub enum ChoosePath {
 pub enum PvEnd {
     Depth,
     Cap,
+    /// Leaf cut at depth 0, then finished through the opponent reply (`horizon≥2`).
+    DepthReply,
+    /// Leaf cut by the cap or a finished turn at a spent pair budget, then
+    /// answered through the opponent reply (`horizon≥1`).
+    CapReply,
     Terminal,
     OppReply,
     OppLethal,
@@ -65,6 +70,8 @@ pub struct WorldRecord {
     pub clamped: f32,
     pub node_cap: u32,
     pub nodes: u32,
+    /// Reserve nodes spent finishing the turn and reply (`horizon≥1`).
+    pub horizon_nodes: u32,
     pub hit_cap: bool,
     pub skipped: bool,
     pub pv: Vec<NeutralAction>,
@@ -93,6 +100,8 @@ pub struct ExplainRecord {
     pub alloc: String,
     pub nodes: u32,
     pub nodes_lethal: u32,
+    /// Reserve nodes not charged to the pair budget (`horizon≥1`).
+    pub horizon_nodes: u32,
     pub candidates: Vec<CandidateRecord>,
     pub chosen_index: usize,
     pub tie_set: Vec<usize>,
@@ -107,6 +116,7 @@ impl ExplainRecord {
             alloc: alloc.to_string(),
             nodes: 0,
             nodes_lethal: 0,
+            horizon_nodes: 0,
             candidates: Vec::new(),
             chosen_index: 0,
             tie_set: Vec::new(),
@@ -131,6 +141,7 @@ pub(crate) struct PvTracker {
     last: Option<Line>,
     cap: u32,
     hit_cap: bool,
+    horizon_nodes: u32,
 }
 
 impl PvTracker {
@@ -141,7 +152,12 @@ impl PvTracker {
             last: None,
             cap,
             hit_cap: false,
+            horizon_nodes: 0,
         }
+    }
+
+    pub(crate) fn add_horizon_nodes(&mut self, n: u32) {
+        self.horizon_nodes += n;
     }
 
     pub(crate) fn push(&mut self, a: Action) {
@@ -203,6 +219,7 @@ impl PvTracker {
             clamped: 0.0,
             node_cap: cap,
             nodes: 0,
+            horizon_nodes: 0,
             hit_cap: false,
             skipped: true,
             pv: Vec::new(),
@@ -245,6 +262,7 @@ impl PvTracker {
             clamped,
             node_cap: self.cap,
             nodes: nodes_spent,
+            horizon_nodes: self.horizon_nodes,
             hit_cap: self.hit_cap,
             skipped: false,
             pv,
