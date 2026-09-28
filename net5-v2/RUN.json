@@ -1,0 +1,43 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\iterate.py",
+    "--tag",
+    "net5-v2",
+    "--encoding",
+    "2",
+    "--seed",
+    "12",
+    "--bot",
+    "h0",
+    "--target",
+    "outcome",
+    "--models",
+    "linear",
+    "--publish"
+  ],
+  "git": "1e417633c8d3813204bee75399d05e1c2c2c2730",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "data": {
+      "start": "2026-09-27T21:26:32.931322+00:00",
+      "end": "2026-09-27T23:23:59.918871+00:00"
+    },
+    "train": {
+      "start": "2026-09-27T23:23:59.947051+00:00",
+      "end": "2026-09-27T23:25:05.183494+00:00"
+    },
+    "yard": {
+      "start": "2026-09-27T23:25:05.214648+00:00",
+      "end": "2026-09-28T00:27:53.344573+00:00"
+    },
+    "summary": {
+      "start": "2026-09-28T00:27:53.368824+00:00",
+      "end": "2026-09-28T00:27:53.388586+00:00"
+    },
+    "publish": {
+      "start": "2026-09-28T00:27:53.450657+00:00"
+    }
+  }
+}
