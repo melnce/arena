@@ -21,3 +21,25 @@ sha256 `a29910999d5b9529a45406f3ec7259b6c607155596e5f061dcafe8a469cca774`
 ## Rule
 
 Model files are immutable measured artifacts — a retrained model is a new file with a new name (`h0-linear-v2`, …) and becomes the default only after it beats the current default at ±1.5 % on the 4 096-game yardstick with the reverse seating agreeing; never regenerate a committed file in place. Unknown card ids (cards added after training) map to the net's index 0 — a deck-set change is a reason to retrain, not to edit the file.
+
+# `h0-linear-v2`
+
+The `h0-linear-v2` value model — linear on the 567 standardized features (encoding 2: 18 stat-bonus and cost-reduction features for the bot's own hand and deck, 4 flags for both players' Extra PP charges, and the strict opponent pool) plus one per-card weight table per zone over a 245-id vocab; `scale` 60. The format is documented in `docs/engine-api.md` "Learned value".
+
+## Provenance
+
+Command: `python py/iterate.py --tag net5-v2 --encoding 2 --seed 12 --bot h0 --target outcome --models linear --publish` on engine `1e41763`, results branch `c029fcb`.
+
+Data: 6 144 self-play games at ε = 0 (515 889 samples) + 6 144 at ε = 0.1 (507 559); train 920 762 rows, holdout 102 686 (split by game); `train_value.py --model linear`, 45 s.
+
+## Holdout
+
+Sign acc 0.730 / AUC 0.814 / MSE 0.707 (`h0-linear-v1` on the v1 block of the same rows: 0.655 / 0.699 / 0.967).
+
+## Yardstick
+
+`h0:value=net,net=<net5-v2 linear.json>` vs `h0`: main 0.562 [0.547, 0.578] (4 096 games), reverse 0.573 [0.552, 0.595] (2 048), pooled 0.566 [0.554, 0.578] = +46.2 Elo; sanity vs random 1.000; royal-nattui mirror 0.540; throughput 1.64 vs 1.87 g/s (the candidate's games are longer: 89.2 vs 82.2 actions).
+
+sha256 `3262c437bb628c03edc9e013e0904732ee5d5c4fbac9c5f1a9b50a98e544f216`
+
+This is the default H0 leaf since the `h0-linear-v2` default PR. Reach the previous leaf with `h0:net=engine/models/h0-linear-v1.json`.

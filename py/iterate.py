@@ -38,7 +38,7 @@ from runlib import (  # noqa: E402
 
 
 STAGES = ("data", "train", "yard", "summary", "publish")
-DEFAULT_EVAL = Path("engine") / "models" / "h0-linear-v1.json"
+DEFAULT_EVAL = Path("engine") / "models" / "h0-linear-v2.json"
 
 
 def have_torch() -> bool:
@@ -171,11 +171,29 @@ class Runner:
 
     def _eval_paths(self) -> list[str]:
         if self.args.eval is not None:
-            return [str(Path(p).resolve()) for p in self.args.eval]
-        builtin = self.repo / DEFAULT_EVAL
-        if builtin.is_file():
-            return [str(builtin.resolve())]
-        return []
+            paths = [str(Path(p).resolve()) for p in self.args.eval]
+        else:
+            builtin = self.repo / DEFAULT_EVAL
+            if builtin.is_file():
+                paths = [str(builtin.resolve())]
+            else:
+                paths = []
+        return self._filter_eval_paths(paths)
+
+    def _filter_eval_paths(self, paths: list[str]) -> list[str]:
+        data_enc = self.args.encoding
+        out: list[str] = []
+        for p in paths:
+            spec = json.loads(Path(p).read_text(encoding="utf-8"))
+            ev_enc = int(spec.get("encoding", 1))
+            if ev_enc == 2 and data_enc == 1:
+                print(
+                    f"skip eval {Path(p).name}: encoding mismatch (model 2, data 1)",
+                    flush=True,
+                )
+                continue
+            out.append(p)
+        return out
 
     def _argv_list(self) -> list[str]:
         return [sys.executable, str(Path(__file__).resolve()), *self.args._argv]
