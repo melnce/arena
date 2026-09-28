@@ -1,0 +1,14 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:net=results/ablate/v2-no18.json"
+  },
+  {
+    "index": 2,
+    "spec": "h0:net=results/ablate/v2-nocost.json"
+  },
+  {
+    "index": 3,
+    "spec": "h0:net=results/ablate/v2-nobpp.json"
+  }
+]
