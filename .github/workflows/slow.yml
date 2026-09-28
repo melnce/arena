@@ -36,7 +36,9 @@ jobs:
   # 36266480089, wall ~22 min): h0_explain 1m50s, h0_fusemacro 6m7s,
   # h0_tt 19m15s, h0_alloc 21m42s, h0_olethal 5m52s, h0_opp 8m53s,
   # h0_wv 5m45s, net 2m19s, record 1m53s, h0_defaults 3m41s, h0_info
-  # 4m17s, h0_lcap_clip 3m0s, h0_oevo 5m25s, h0_pess 4m21s. Each job
+  # 4m17s, h0_lcap_clip 3m0s, h0_oevo 5m25s, h0_pess 4m21s.
+  # h0_horizon_2000 10m12s–10m19s, h0_horizon_16000 17m39s–18m21s (runs 36389727114, 36439579024); runner speed
+  # varies per job by up to ~1.7x (h0_tt 10m45s–18m20s on consecutive runs). Each job
   # timeout is chosen so measured CI time stays under ~two-thirds of
   # timeout-minutes (plus setup/cache).
   suite:
@@ -131,7 +133,7 @@ jobs:
             test: h0_horizon
             filter: horizon_accounting_matches_baseline_in_meta_games_nodes16000
             ignored: false
-            timeout: 25
+            timeout: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -205,7 +207,7 @@ jobs:
             "h0_oevo": 25,
             "h0_pess": 25,
             "h0_horizon_2000": 25,
-            "h0_horizon_16000": 25
+            "h0_horizon_16000": 30
           }'
 
           failed_jobs=""
@@ -301,7 +303,7 @@ jobs:
             "h0_oevo": 25,
             "h0_pess": 25,
             "h0_horizon_2000": 25,
-            "h0_horizon_16000": 25
+            "h0_horizon_16000": 30
           }'
 
           failed_jobs=""
