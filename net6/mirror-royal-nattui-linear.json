@@ -1,0 +1,73 @@
+{
+  "decks": [
+    "royal-nattui"
+  ],
+  "first": "alternate",
+  "games": 200,
+  "games_per_second": 1.6168164640658738,
+  "matrix": {
+    "royal-nattui": {
+      "royal-nattui": {
+        "a_games_as_first": 100,
+        "a_wins": 89,
+        "a_wins_as_first": 58,
+        "b_wins": 111,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 200,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 127,
+        "games": 200,
+        "mean_actions": 88.645,
+        "mean_turns": 8.715,
+        "wilson95": [
+          0.3778048169746545,
+          0.5142682436763609
+        ],
+        "wr_decisive": 0.445
+      }
+    }
+  },
+  "policy_a": "h0:value=net,net=C:\\Users\\agban\\projects\\arena\\results\\net6\\linear.json",
+  "policy_b": "h0",
+  "seconds": 123.69987839995883,
+  "seed": 1,
+  "summary": {
+    "cpu_count": 28,
+    "decisive": 200,
+    "draws": 0,
+    "end": {
+      "action_cap": 0,
+      "deckout": 0,
+      "illegal": 0,
+      "lethal": 200,
+      "no_legal": 0,
+      "turn_cap": 0
+    },
+    "first_player_win_rate": 0.635,
+    "games": 200,
+    "games_per_second": 1.6168164640658738,
+    "mean_actions": 88.645,
+    "mean_turns": 8.715,
+    "per_deck": {
+      "royal-nattui": {
+        "policy_a_as_row": 0.445,
+        "policy_b_as_col": 0.555
+      }
+    },
+    "policy_a": "h0:value=net,net=C:\\Users\\agban\\projects\\arena\\results\\net6\\linear.json",
+    "policy_a_win_rate": 0.445,
+    "policy_b": "h0",
+    "seconds": 123.69987839995883,
+    "wilson95": [
+      0.3778048169746545,
+      0.5142682436763609
+    ]
+  },
+  "threads": 28
+}

@@ -1,0 +1,26 @@
+arch=linear  train_rows=953815 holdout_rows=108190
+games train/holdout=11059/1229
+label balance train={'+1': 488520, '-1': 465295, '0': 0} holdout={'+1': 55412, '-1': 52778, '0': 0}
+training time 22.50s
+target=outcome  mix_weight=0.5  search_scale=60.0  search_rows=867119/1062005
+--- net ---
+  overall  rows=108190  mse=0.69710  sign_acc=0.7355  auc=0.8178
+  <=3      rows= 25933  mse=0.80743  sign_acc=0.6807  auc=0.7532
+  4-6      rows= 41538  mse=0.70080  sign_acc=0.7362  auc=0.8159
+  >=7      rows= 40719  mse=0.62308  sign_acc=0.7696  auc=0.8549
+--- v0 ---
+  overall  rows=108190  mse=1060.91467  sign_acc=0.6292  auc=0.7040
+  <=3      rows= 25933  mse=56.97017  sign_acc=0.5145  auc=0.5897
+  4-6      rows= 41538  mse=964.05750  sign_acc=0.6303  auc=0.6906
+  >=7      rows= 40719  mse=1799.10925  sign_acc=0.7012  auc=0.7721
+--- search_v ---
+  overall  rows= 88570  mse=1746.06409  sign_acc=0.7327  auc=0.8322
+  <=3      rows= 17024  mse=862.71063  sign_acc=0.6712  auc=0.7468
+  4-6      rows= 35522  mse=1409.66589  sign_acc=0.7192  auc=0.8146
+  >=7      rows= 36024  mse=2495.22412  sign_acc=0.7750  auc=0.8830
+--- eval h0-linear-v2.json ---
+  overall  rows=108190  mse=0.71571  sign_acc=0.7264  auc=0.8114
+  <=3      rows= 25933  mse=0.82382  sign_acc=0.6693  auc=0.7437
+  4-6      rows= 41538  mse=0.72054  sign_acc=0.7289  auc=0.8082
+  >=7      rows= 40719  mse=0.64193  sign_acc=0.7603  auc=0.8504
+wrote C:\Users\agban\projects\arena\results\net6\linear.json and C:\Users\agban\projects\arena\results\net6\linear.report.json

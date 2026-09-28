@@ -1,0 +1,30 @@
+pool: --decks
+decks: 1 (basic-forest)
+pairs: 1 (1 x 1, mirrors included)
+games   100 games/pair x 1 =   100
+matchup: 1 decks × 100 games = 100 games (seed=1, policy_a=h0:value=net,net=C:\Users\agban\projects\arena\results\net6\linear.json, policy_b=random, first=alternate, threads=None)
+Win rate (row = A, col = B; cell = A's win rate)
+                        basic-forest
+basic-forest                   0.980
+
+First-player win rate / mean turns
+                        basic-forest
+basic-forest           0.520 /   6.6
+
+A win rate over decisive games, Wilson 95% [lo, hi]
+                        basic-forest
+basic-forest    0.980 [0.930, 0.994]
+
+=== summary ===
+h0:value=net,net=C:\Users\agban\projects\arena\results\net6\linear.json vs random
+games: 100  decisive: 100  draws: 0
+policy_a win rate: 0.980 [0.930, 0.994]
+first-player win rate: 0.520
+mean turns: 6.64  mean actions: 54.44
+end: lethal=100 deckout=0 turn_cap=0 action_cap=0 no_legal=0 illegal=0
+16.093s  6.21 games/s  cpus=28
+per deck:
+  basic-forest: policy_a (row) 0.980  policy_b (col) 0.020
+
+100 games in 16.093s (6.2 games/s)
+wrote C:\Users\agban\projects\arena\results\net6\sanity-linear.json
