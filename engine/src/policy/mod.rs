@@ -120,7 +120,7 @@ impl AnyPolicy {
     /// ([`H0::fast`]) | `"h0:depth=6,beam=4,k=4,nodes=2000"` — any subset of
     /// keys, the rest default; `k` = `determinizations`, `nodes` = `node_cap`.
     /// H0 also accepts `value=v0|v1|net` (default `net` = the built-in
-    /// `h0-linear-v1`), `net=<path>` (overrides the built-in; only
+    /// `h0-linear-v2`), `net=<path>` (overrides the built-in; only
     /// meaningful with `value=net`; `h0:net=<path>` alone means
     /// `h0:value=net,net=<path>`; the path may not contain commas; a
     /// missing file is a parse error naming the path),

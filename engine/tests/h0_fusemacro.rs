@@ -384,7 +384,7 @@ fn show_it_sephie_fuse_reasks() {
             continue;
         };
         let mut rng = policy_rng(seed);
-        let mut h0 = parse_h0("h0:lcap=1,clip=0,fusemacro=0");
+        let mut h0 = parse_h0_v1("h0:lcap=1,clip=0,fusemacro=0");
         while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
             let is_decision = state.active == PlayerId::A
                 && matches!(state.phase, Phase::Main)

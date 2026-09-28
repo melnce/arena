@@ -1,6 +1,6 @@
 //! `lcap` (consensus-lethal budget) and `clip` (learned-leaf input clamp).
 
-use arena_engine::policy::{builtin_net, ChoosePath};
+use arena_engine::policy::{ChoosePath, ValueNet};
 use arena_engine::{
     apply, encode_with_vocab, legal_actions, new_game, policy_rng, vocab, AnyPolicy, Phase, Policy,
     H0,
@@ -71,6 +71,10 @@ fn parse_h0(spec: &str) -> H0 {
     }
 }
 
+fn v1_net() -> std::sync::Arc<ValueNet> {
+    ValueNet::from_json(include_str!("../models/h0-linear-v1.json")).expect("v1 model")
+}
+
 fn choose_on_states(spec: &str, states: &[arena_engine::State]) -> (u64, u64) {
     let db = load_db();
     let mut h0 = parse_h0(spec);
@@ -138,12 +142,13 @@ fn lcap_one_has_unscored_midgame() {
     let db = load_db();
     let states = collect_states(&db, 200, true);
     assert_eq!(states.len(), 200, "could not reach 200 mid-game states");
-    let unscored = count_unscored_unarmed("h0:lcap=1", &states);
+    let spec = with_v1_net("h0:lcap=1");
+    let unscored = count_unscored_unarmed(&spec, &states);
     assert!(
         unscored >= 1,
         "expected at least one unscored decision with h0:lcap=1"
     );
-    cross_check_unscored_stats_vs_explain("h0:lcap=1", &states);
+    cross_check_unscored_stats_vs_explain(&spec, &states);
 }
 
 #[test]
@@ -152,10 +157,11 @@ fn lcap_fraction_eliminates_unscored() {
     let db = load_db();
     let states = collect_states(&db, 200, true);
     assert_eq!(states.len(), 200);
-    for spec in ["h0:lcap=0.5", "h0:lcap=0.25"] {
-        let unscored = count_unscored_unarmed(spec, &states);
+    for base in ["h0:lcap=0.5", "h0:lcap=0.25"] {
+        let spec = with_v1_net(base);
+        let unscored = count_unscored_unarmed(&spec, &states);
         assert_eq!(unscored, 0, "{spec} should have zero unscored");
-        cross_check_unscored_stats_vs_explain(spec, &states);
+        cross_check_unscored_stats_vs_explain(&spec, &states);
     }
 }
 
@@ -197,7 +203,7 @@ fn clip_matches_unclipped_when_inputs_in_range() {
     let db = load_db();
     let states = collect_states(&db, 200, true);
     assert_eq!(states.len(), 200);
-    let net = builtin_net();
+    let net = v1_net();
     let (mean, std, _) = model_stats();
     let mut checked = 0u32;
     for state in &states {
@@ -220,7 +226,7 @@ fn clip_matches_unclipped_when_inputs_in_range() {
 fn clip_limits_choice_indicator_spike() {
     let db = load_db();
     let states = collect_states(&db, 200, true);
-    let net = builtin_net();
+    let net = v1_net();
     let (_, _, weights) = model_stats();
     let w18 = weights[18];
     let max_delta = 60.0 * 5.0 * w18.abs();
@@ -341,7 +347,9 @@ fn pre_flip_default_bench_identity_seed5() {
         )
         .unwrap();
         let mut rng = policy_rng(s);
-        let mut pol_a = parse_h0("h0:mull=rule,info=fair,lcap=1,clip=0,fusemacro=0");
+        let mut pol_a = parse_h0(&with_v1_net(
+            "h0:mull=rule,info=fair,lcap=1,clip=0,fusemacro=0",
+        ));
         // Opponent inherits defaults; pin pre-flip keys so seat B matches main h0:value=v0.
         let mut pol_b = parse_h0("h0:value=v0,mull=rule,info=fair,lcap=1,clip=0,fusemacro=0");
         let out = arena_engine::play_game(&db, &mut state, &mut pol_a, &mut pol_b, &mut rng);

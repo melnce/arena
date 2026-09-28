@@ -194,8 +194,8 @@ fn pess_separates_mixed_lethal() {
     let st = mixed_lethal_opp_state(&db);
     const SEED: u64 = 7;
     // Pre-flip lcap/clip/fusemacro: pessimism separation calibrated on old defaults.
-    let mut mean = parse_h0("h0:pess=0,lcap=1,clip=0,fusemacro=0");
-    let mut pess1 = parse_h0("h0:pess=1,lcap=1,clip=0,fusemacro=0");
+    let mut mean = parse_h0_v1("h0:pess=0,lcap=1,clip=0,fusemacro=0");
+    let mut pess1 = parse_h0_v1("h0:pess=1,lcap=1,clip=0,fusemacro=0");
     let (mi, ma) = pick(&mut mean, &db, &st, SEED);
     let (pi, pa) = pick(&mut pess1, &db, &st, SEED);
     eprintln!(

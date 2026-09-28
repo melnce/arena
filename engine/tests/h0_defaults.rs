@@ -12,8 +12,9 @@
 //! cargo test --release --test h0_defaults print_legacy_fingerprints -- --nocapture
 //! ```
 //!
-//! On this branch, `h0:mull=rule,info=fair` must match those pins; bare `h0`
-//! must match `h0:mull=engine/models/mulligan-v1.json,info=open`.
+//! On this branch, `h0:mull=rule,info=fair,net=<v1 path>` must match those pins;
+//! bare `h0` must match `h0:mull=engine/models/mulligan-v1.json,info=open` and
+//! `h0:net=<v2 path>` (the yardstick candidate).
 //!
 //! `print_legacy_fingerprints` uses `h0:mull=rule,info=fair` (not bare `h0`).
 //!
@@ -162,9 +163,22 @@ fn action_trace(
     serialized
 }
 
-/// Default `h0` action fingerprints on eight meta-deck / seed pairs (`main@1f8b068`).
-/// Captured before leaf-encoding-v2; bare `h0` must reproduce them exactly.
+/// Default `h0` action fingerprints on eight meta-deck / seed pairs.
+/// Captured from `h0:net=/tmp/net5-v2.json` on `main@063bdd4` (yardstick
+/// candidate); bare `h0` must reproduce them exactly.
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
+    0x9e78_76d1_68f6_7ca1,
+    0x0cde_c89d_1da5_5cf3,
+    0x122c_fa71_850c_7637,
+    0xec79_9a62_bfca_6750,
+    0x661e_1e5c_19a5_9461,
+    0x67ef_ff4e_5e77_f58b,
+    0xb42f_c81d_b87e_5b1c,
+    0x46e6_1033_24ea_959f,
+];
+
+/// Pre-v2 default `h0` fingerprints (`main@063bdd4`, built-in `h0-linear-v1`).
+const V1_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
     0x8cd3_2204_3bbb_ebaf,
     0x0c5e_00eb_14bd_ce85,
@@ -633,13 +647,34 @@ fn default_h0_matches_pinned_fingerprints() {
 fn legacy_spec_matches_pre_flip_fingerprints() {
     let db = load_db();
     let stems = meta_deck_stems();
+    let v1 = h0_linear_v1_path();
+    let spec = format!("h0:mull=rule,info=fair,net={v1}");
     assert_eq!(stems.len(), 16);
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);
-        let got = action_fingerprint(&db, "h0:mull=rule,info=fair", *seed, &deck);
+        let got = action_fingerprint(&db, &spec, *seed, &deck);
         assert_eq!(
             got, LEGACY_FINGERPRINTS[i],
             "legacy fingerprint seed={seed} deck={}",
+            stems[i]
+        );
+    }
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn v1_net_matches_pre_v2_default_fingerprints() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let v1 = h0_linear_v1_path();
+    let spec = format!("h0:net={v1}");
+    assert_eq!(stems.len(), 16);
+    for (i, seed) in GATE_SEEDS.iter().enumerate() {
+        let deck = load_meta_deck(&stems[i]);
+        let got = action_fingerprint(&db, &spec, *seed, &deck);
+        assert_eq!(
+            got, V1_DEFAULT_FINGERPRINTS[i],
+            "v1 net fingerprint seed={seed} deck={}",
             stems[i]
         );
     }
@@ -653,13 +688,17 @@ fn default_matches_explicit_builtin_table_and_open() {
         .join("engine/models/mulligan-v1.json")
         .display()
         .to_string();
-    let explicit = format!("h0:mull={table},info=open");
+    let v2 = h0_linear_v2_path();
+    let explicit_mull = format!("h0:mull={table},info=open");
+    let explicit_net = format!("h0:net={v2}");
     let stems = meta_deck_stems();
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);
         let def = action_fingerprint(&db, "h0", *seed, &deck);
-        let named = action_fingerprint(&db, &explicit, *seed, &deck);
-        assert_eq!(def, named, "seed={seed} deck={}", stems[i]);
+        let named_mull = action_fingerprint(&db, &explicit_mull, *seed, &deck);
+        let named_net = action_fingerprint(&db, &explicit_net, *seed, &deck);
+        assert_eq!(def, named_mull, "mull seed={seed} deck={}", stems[i]);
+        assert_eq!(def, named_net, "net seed={seed} deck={}", stems[i]);
     }
 }
 

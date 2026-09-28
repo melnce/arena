@@ -16,6 +16,45 @@ pub fn repo_root() -> PathBuf {
     crate_dir().parent().unwrap().to_path_buf()
 }
 
+/// Absolute path to the committed `h0-linear-v1` leaf (pre-v2 default).
+pub fn h0_linear_v1_path() -> String {
+    crate_dir()
+        .join("models/h0-linear-v1.json")
+        .display()
+        .to_string()
+}
+
+/// Absolute path to the committed `h0-linear-v2` leaf (built-in default).
+pub fn h0_linear_v2_path() -> String {
+    crate_dir()
+        .join("models/h0-linear-v2.json")
+        .display()
+        .to_string()
+}
+
+/// Append `net=<v1 path>` when the spec does not already set `net=`.
+pub fn with_v1_net(spec: &str) -> String {
+    if spec.contains("net=") || spec.contains("value=v0") || spec.contains("value=v1") {
+        spec.to_string()
+    } else if spec == "h0" {
+        format!("h0:net={}", h0_linear_v1_path())
+    } else if spec.starts_with("h0:") {
+        format!("{spec},net={}", h0_linear_v1_path())
+    } else {
+        spec.to_string()
+    }
+}
+
+/// Parse an [`arena_engine::H0`] pinned to the committed v1 leaf.
+pub fn parse_h0_v1(spec: &str) -> arena_engine::H0 {
+    match arena_engine::AnyPolicy::parse_spec(&with_v1_net(spec))
+        .unwrap_or_else(|e| panic!("{spec}: {e}"))
+    {
+        arena_engine::AnyPolicy::H0(h) => h,
+        other => panic!("{spec} parsed as {other:?}"),
+    }
+}
+
 pub fn fixtures_dir() -> PathBuf {
     crate_dir().join("tests/fixtures")
 }
