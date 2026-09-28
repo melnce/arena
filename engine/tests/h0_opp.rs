@@ -251,8 +251,8 @@ fn four_attacker_ward_candidate_plays_ward() {
     let st = four_attacker_state(&db, 12);
     // Pre-flip greedy: default `h0` now runs olethal=1,osteps=6 and would
     // play the Ward itself (see h0_olethal::four_attacker_olethal_plays_ward).
-    let mut greedy = parse_h0("h0:olethal=0,osteps=3");
-    let mut cand = parse_h0("h0:odepth=5,obeam=3");
+    let mut greedy = parse_h0_v1("h0:olethal=0,osteps=3");
+    let mut cand = parse_h0_v1("h0:odepth=5,obeam=3");
     let (gi, ga) = pick(&mut greedy, &db, &st, 7);
     let (ci, ca) = pick(&mut cand, &db, &st, 7);
     eprintln!("four-attacker greedy={ga:?} idx={gi} candidate={ca:?} idx={ci}");
@@ -286,8 +286,8 @@ fn four_attacker_normal_ward_wv300_plays_ward() {
         }
     }
     // Pre-flip lcap/clip/fusemacro: depth-5 search calibrated on the old defaults.
-    let mut cand80 = parse_h0("h0:odepth=5,obeam=3,lcap=1,clip=0,fusemacro=0");
-    let mut cand300 = parse_h0("h0:odepth=5,obeam=3,wv=300,lcap=1,clip=0,fusemacro=0");
+    let mut cand80 = parse_h0_v1("h0:odepth=5,obeam=3,lcap=1,clip=0,fusemacro=0");
+    let mut cand300 = parse_h0_v1("h0:odepth=5,obeam=3,wv=300,lcap=1,clip=0,fusemacro=0");
     let (i80, a80) = pick(&mut cand80, &db, &st, 7);
     let (i300, a300) = pick(&mut cand300, &db, &st, 7);
     eprintln!("1/3-Ward wv=80={a80:?} idx={i80}  wv=300={a300:?} idx={i300}");
@@ -301,7 +301,7 @@ fn four_attacker_normal_ward_wv300_plays_ward() {
 fn four_attacker_at_13_is_finite_and_legal() {
     let db = load_db();
     let st = four_attacker_state(&db, 13);
-    let mut cand = parse_h0("h0:odepth=5,obeam=3");
+    let mut cand = parse_h0_v1("h0:odepth=5,obeam=3");
     let (_, a) = pick(&mut cand, &db, &st, 7);
     let legal = legal_actions(&db, &st);
     assert!(legal.contains(&a), "decision must be legal: {a:?}");
@@ -339,8 +339,8 @@ fn play_then_attack_opp_lethal_values() {
     let st = storm_lethal_opp_state(&db);
     // Pre-flip greedy: default `h0` now runs olethal=1 and would also
     // see the play-then-face lethal.
-    let mut greedy = parse_h0("h0:olethal=0,osteps=3");
-    let mut cand = parse_h0("h0:odepth=5,obeam=3");
+    let mut greedy = parse_h0_v1("h0:olethal=0,osteps=3");
+    let mut cand = parse_h0_v1("h0:odepth=5,obeam=3");
     let gv = greedy.opponent_value(&db, &st, PlayerId::A);
     let cv = cand.opponent_value(&db, &st, PlayerId::A);
     eprintln!("play-then-attack greedy={gv} candidate={cv}");

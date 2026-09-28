@@ -386,8 +386,8 @@ fn four_attacker_olethal_plays_ward() {
     let bodies = four_attacker_normal_ward_bodies(&db);
     for (label, st) in [("1/15-Ward", &tall), ("1/3-Ward-3/11", &bodies)] {
         // `olethal=1` is now the default; named so the fixture stays explicit.
-        let mut sweep = parse_h0("h0:olethal=1,wv=300");
-        let mut greedy = parse_h0("h0:olethal=0,osteps=3,wv=300");
+        let mut sweep = parse_h0_v1("h0:olethal=1,wv=300");
+        let mut greedy = parse_h0_v1("h0:olethal=0,osteps=3,wv=300");
         let (si, sa) = pick(&mut sweep, &db, st, 7);
         let (gi, ga) = pick(&mut greedy, &db, st, 7);
         eprintln!("{label} olethal={sa:?} idx={si}  greedy={ga:?} idx={gi}");
@@ -403,8 +403,8 @@ fn play_then_attack_olethal_sees_storm() {
     let db = load_db();
     let st = storm_lethal_opp_state(&db);
     // `olethal=1` is now the default; named so the fixture stays explicit.
-    let mut sweep = parse_h0("h0:olethal=1,wv=300");
-    let mut greedy = parse_h0("h0:olethal=0,osteps=3,wv=300");
+    let mut sweep = parse_h0_v1("h0:olethal=1,wv=300");
+    let mut greedy = parse_h0_v1("h0:olethal=0,osteps=3,wv=300");
     let sv = sweep.opponent_value(&db, &st, PlayerId::A);
     let gv = greedy.opponent_value(&db, &st, PlayerId::A);
     eprintln!("play-then-attack olethal={sv} greedy={gv}");
@@ -424,8 +424,8 @@ fn no_false_positive_empty_hand_two_bodies() {
     let db = load_db();
     let st = no_lethal_opp_state(&db);
     // `olethal=1` is now the default; named so the fixture stays explicit.
-    let mut with = parse_h0("h0:olethal=1");
-    let mut without = parse_h0("h0:olethal=0,osteps=3");
+    let mut with = parse_h0_v1("h0:olethal=1");
+    let mut without = parse_h0_v1("h0:olethal=0,osteps=3");
     let a = with.opponent_value(&db, &st, PlayerId::A);
     let b = without.opponent_value(&db, &st, PlayerId::A);
     eprintln!(
@@ -445,15 +445,15 @@ fn osteps6_reaches_fourth_attack() {
     let db = load_db();
     let st = four_attacker_state(&db, 12);
     // `osteps=6` is now the default; named so the fixture stays explicit.
-    let mut long = parse_h0("h0:osteps=6,wv=300");
-    let mut short = parse_h0("h0:osteps=3,wv=300");
+    let mut long = parse_h0_v1("h0:osteps=6,wv=300");
+    let mut short = parse_h0_v1("h0:osteps=3,wv=300");
     let (li, la) = pick(&mut long, &db, &st, 7);
     let (si, sa) = pick(&mut short, &db, &st, 7);
     eprintln!("osteps=6={la:?} idx={li}  osteps=3={sa:?} idx={si}");
     let mut after_end = st.clone();
     apply(&db, &mut after_end, Action::EndTurn).expect("EndTurn");
-    let mut v6 = parse_h0("h0:osteps=6,wv=300");
-    let mut v3 = parse_h0("h0:osteps=3,wv=300");
+    let mut v6 = parse_h0_v1("h0:osteps=6,wv=300");
+    let mut v3 = parse_h0_v1("h0:osteps=3,wv=300");
     let ov6 = v6.opponent_value(&db, &after_end, PlayerId::A);
     let ov3 = v3.opponent_value(&db, &after_end, PlayerId::A);
     eprintln!("after EndTurn opponent_value osteps=6={ov6} osteps=3={ov3}");

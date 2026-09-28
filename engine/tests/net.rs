@@ -79,7 +79,7 @@ fn net_dir() -> PathBuf {
 }
 
 fn builtin_model_path() -> PathBuf {
-    crate_dir().join("models/h0-linear-v1.json")
+    crate_dir().join("models/h0-linear-v2.json")
 }
 
 fn check_builtin_identity(n: usize) {
@@ -136,9 +136,10 @@ fn builtin_choose_identity_200_midgame() {
 
 #[test]
 fn builtin_model_is_the_committed_file() {
-    let net = ValueNet::from_json(include_str!("../models/h0-linear-v1.json")).expect("parse");
+    let net = ValueNet::from_json(include_str!("../models/h0-linear-v2.json")).expect("parse");
     assert_eq!(net.arch, NetArch::Linear);
-    assert_eq!(net.feature_len, 545);
+    assert_eq!(net.feature_len, 567);
+    assert_eq!(net.encoding, arena_engine::EncodingVersion::V2);
     let a = builtin_net();
     let b = builtin_net();
     assert!(std::sync::Arc::ptr_eq(&a, &b));
@@ -156,6 +157,14 @@ fn builtin_model_is_the_committed_file() {
             assert_eq!(x.to_bits(), y.to_bits(), "evaluate state {i} {me:?}");
         }
     }
+}
+
+#[test]
+fn v1_model_parses() {
+    let net = ValueNet::from_json(include_str!("../models/h0-linear-v1.json")).expect("parse");
+    assert_eq!(net.arch, NetArch::Linear);
+    assert_eq!(net.feature_len, 545);
+    assert_eq!(net.encoding, arena_engine::EncodingVersion::V1);
 }
 
 #[test]
