@@ -6,7 +6,7 @@
 //! `std::fs::read_to_string`, which compiles for `wasm32-unknown-unknown`
 //! and is never called from the WASM client. [`ValueNet::from_json`]
 //! names the source `<json>`; [`ValueNet::from_json_named`] names it
-//! (the built-in uses `builtin:h0-linear-v1`).
+//! (the built-in uses `builtin:h0-linear-v2`).
 
 use std::path::Path;
 use std::sync::Arc;
