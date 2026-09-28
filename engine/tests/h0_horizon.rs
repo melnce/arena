@@ -354,11 +354,28 @@ struct SearchSnapshot {
     choose_seed: u64,
 }
 
-fn collect_search_snapshots(db: &CardDb, games_per_deck: u32) -> Vec<SearchSnapshot> {
+/// Main decisions from turn 3 onward, evenly spread (first and last included).
+const MAX_SNAPSHOTS_PER_GAME: usize = 8;
+const GAMES_PER_DECK: u32 = 2;
+
+fn sample_snapshots_evenly(snaps: &[SearchSnapshot], max: usize) -> Vec<SearchSnapshot> {
+    if snaps.len() <= max {
+        return snaps.to_vec();
+    }
+    let mut out = Vec::with_capacity(max);
+    for i in 0..max {
+        let idx = i * (snaps.len() - 1) / (max - 1);
+        out.push(snaps[idx].clone());
+    }
+    out
+}
+
+fn collect_search_snapshots(db: &CardDb) -> Vec<SearchSnapshot> {
     let mut snaps = Vec::new();
     for stem in meta_deck_stems() {
         let deck = load_deck_file(repo_root().join(format!("oracle/decks/{stem}.json")));
-        for g in 0..games_per_deck {
+        let mut deck_snaps = Vec::new();
+        for g in 0..GAMES_PER_DECK {
             let seed = 20260927u64
                 .wrapping_add(u64::from(g))
                 .wrapping_add(stem.len() as u64 * 97);
@@ -376,6 +393,7 @@ fn collect_search_snapshots(db: &CardDb, games_per_deck: u32) -> Vec<SearchSnaps
             };
             let mut rng = policy_rng(seed);
             let mut nact = 0u32;
+            let mut game_snaps = Vec::new();
             while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
                 if state.turn > MAX_TURNS || nact >= MAX_ACTIONS {
                     break;
@@ -388,7 +406,7 @@ fn collect_search_snapshots(db: &CardDb, games_per_deck: u32) -> Vec<SearchSnaps
                     let choose_seed = seed
                         .wrapping_add(u64::from(state.turn) * 97)
                         .wrapping_add(u64::from(nact) * 131);
-                    snaps.push(SearchSnapshot {
+                    game_snaps.push(SearchSnapshot {
                         state: state.clone(),
                         choose_seed,
                     });
@@ -399,7 +417,25 @@ fn collect_search_snapshots(db: &CardDb, games_per_deck: u32) -> Vec<SearchSnaps
                 }
                 nact += 1;
             }
+            deck_snaps.extend(sample_snapshots_evenly(&game_snaps, MAX_SNAPSHOTS_PER_GAME));
         }
+        if !deck_snaps.is_empty() {
+            let min_turn = deck_snaps
+                .iter()
+                .map(|s| s.state.turn)
+                .min()
+                .expect("deck snaps");
+            let max_turn = deck_snaps
+                .iter()
+                .map(|s| s.state.turn)
+                .max()
+                .expect("deck snaps");
+            eprintln!(
+                "h0_horizon meta {stem}: {} snapshots, turns {min_turn}-{max_turn}",
+                deck_snaps.len()
+            );
+        }
+        snaps.extend(deck_snaps);
     }
     snaps
 }
@@ -479,36 +515,50 @@ fn audit_horizon_decisions(
     out
 }
 
-#[test]
-#[cfg_attr(debug_assertions, ignore)]
-fn horizon_accounting_matches_baseline_in_meta_games() {
+fn horizon_accounting_matches_baseline_in_meta_games_at_nodes(nodes: u32) {
     let db = load_db();
-    let snaps = collect_search_snapshots(&db, 2);
+    let snaps = collect_search_snapshots(&db);
     assert!(!snaps.is_empty(), "need search snapshots");
-    for nodes in [2000, 16000] {
-        let baseline = baseline_skipped(&db, nodes, &snaps);
-        assert!(!baseline.is_empty(), "need baseline search decisions");
-        for horizon in [1, 2, 3] {
-            let spec = format!("h0:nodes={nodes},horizon={horizon}");
-            let audit = audit_horizon_decisions(&db, nodes, horizon, &snaps, &baseline);
+    eprintln!(
+        "h0_horizon meta nodes={nodes}: {} total snapshots ({} games/deck, up to {} snapshots/game)",
+        snaps.len(),
+        GAMES_PER_DECK,
+        MAX_SNAPSHOTS_PER_GAME
+    );
+    let baseline = baseline_skipped(&db, nodes, &snaps);
+    assert!(!baseline.is_empty(), "need baseline search decisions");
+    for horizon in [1, 2, 3] {
+        let spec = format!("h0:nodes={nodes},horizon={horizon}");
+        let audit = audit_horizon_decisions(&db, nodes, horizon, &snaps, &baseline);
+        assert_eq!(
+            audit.over_node_cap, 0,
+            "{spec}: rec.nodes must stay within node_cap"
+        );
+        assert_eq!(
+            audit.skip_mismatch, 0,
+            "{spec}: skipped worlds must match horizon=0 per decision"
+        );
+        eprintln!(
+            "{spec}: skipped_worlds={} fallback={} bad_ends={}",
+            audit.skipped_worlds, audit.fallback, audit.bad_ends
+        );
+        if horizon >= 2 {
             assert_eq!(
-                audit.over_node_cap, 0,
-                "{spec}: rec.nodes must stay within node_cap"
+                audit.bad_ends, audit.fallback,
+                "{spec}: depth/cap ends should match fallback"
             );
-            assert_eq!(
-                audit.skip_mismatch, 0,
-                "{spec}: skipped worlds must match horizon=0 per decision"
-            );
-            eprintln!(
-                "{spec}: skipped_worlds={} fallback={} bad_ends={}",
-                audit.skipped_worlds, audit.fallback, audit.bad_ends
-            );
-            if horizon >= 2 {
-                assert_eq!(
-                    audit.bad_ends, audit.fallback,
-                    "{spec}: depth/cap ends should match fallback"
-                );
-            }
         }
     }
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn horizon_accounting_matches_baseline_in_meta_games_nodes2000() {
+    horizon_accounting_matches_baseline_in_meta_games_at_nodes(2000);
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn horizon_accounting_matches_baseline_in_meta_games_nodes16000() {
+    horizon_accounting_matches_baseline_in_meta_games_at_nodes(16000);
 }
