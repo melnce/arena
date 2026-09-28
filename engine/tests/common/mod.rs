@@ -36,8 +36,12 @@ pub fn h0_linear_v2_path() -> String {
 pub fn with_v1_net(spec: &str) -> String {
     if spec.contains("net=") || spec.contains("value=v0") || spec.contains("value=v1") {
         spec.to_string()
-    } else {
+    } else if spec == "h0" {
+        format!("h0:net={}", h0_linear_v1_path())
+    } else if spec.starts_with("h0:") {
         format!("{spec},net={}", h0_linear_v1_path())
+    } else {
+        spec.to_string()
     }
 }
 
