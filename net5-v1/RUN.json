@@ -1,0 +1,47 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\iterate.py",
+    "--tag",
+    "net5-v1",
+    "--encoding",
+    "1",
+    "--seed",
+    "12",
+    "--bot",
+    "h0:net=engine/models/h0-linear-v1.json",
+    "--target",
+    "outcome",
+    "--models",
+    "linear",
+    "--eval",
+    "engine/models/h0-linear-v1.json",
+    "--baseline",
+    "h0:net=engine/models/h0-linear-v1.json",
+    "--publish"
+  ],
+  "git": "515995da3468a36be0c2da42760a985cc46539dc",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "data": {
+      "start": "2026-09-28T06:45:08.744313+00:00",
+      "end": "2026-09-28T08:35:45.527839+00:00"
+    },
+    "train": {
+      "start": "2026-09-28T08:35:45.551727+00:00",
+      "end": "2026-09-28T08:36:33.385218+00:00"
+    },
+    "yard": {
+      "start": "2026-09-28T08:36:33.415434+00:00",
+      "end": "2026-09-28T09:38:38.613811+00:00"
+    },
+    "summary": {
+      "start": "2026-09-28T09:38:38.635712+00:00",
+      "end": "2026-09-28T09:38:38.655033+00:00"
+    },
+    "publish": {
+      "start": "2026-09-28T09:38:38.713438+00:00"
+    }
+  }
+}
