@@ -1,0 +1,22 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:net=results/sweep16/leaf-net6-t14.json"
+  },
+  {
+    "index": 2,
+    "spec": "h0:net=results/sweep16/leaf-v2-t071.json"
+  },
+  {
+    "index": 3,
+    "spec": "h0:net=results/sweep16/leaf-v2-t14.json"
+  },
+  {
+    "index": 4,
+    "spec": "h0:net=results/sweep16/leaf-union.json"
+  },
+  {
+    "index": 5,
+    "spec": "h0:net=results/sweep16/leaf-net6-e20.json"
+  }
+]
