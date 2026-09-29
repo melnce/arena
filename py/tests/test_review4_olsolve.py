@@ -7,8 +7,10 @@ action's ``bot_value`` stripped.
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -27,6 +29,11 @@ _spec.loader.exec_module(audit)
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "review4"
 GAME_9420 = "9420046197828951589-5ce21003.json"
 GAME_14155 = "14155189002142913913-5ce21003.json"
+# Pinned from origin/results:review4/games/ @ 45f119f (engine 71127bf captures).
+FIXTURE_SHA256 = {
+    GAME_9420: "f0cc56e054c1147914b5370518cf3fdc4ee04d6384aa0b6d9ea96ee8cfb584c7",
+    GAME_14155: "0b7a7355036ee51c3cf8375f5a9968ab5508e32068f058a294133d1a4c6f3b96",
+}
 SERVED_SPEC = "h0:nodes=16000,horizon=3"
 GARODETH = "10954120"
 
@@ -71,18 +78,11 @@ def _format_worlds(worlds: list[dict[str, Any]]) -> str:
     return "; ".join(parts)
 
 
-def test_review4_fixtures_byte_identical_to_results() -> None:
+def test_review4_fixtures_match_pinned_hashes() -> None:
     """Guardrail: fixtures must match origin/results review4 captures."""
-    import subprocess
-
-    repo = Path(__file__).resolve().parents[2]
-    for name in (GAME_9420, GAME_14155):
-        ref = subprocess.check_output(
-            ["git", "show", f"origin/results:review4/games/{name}"],
-            cwd=repo,
-            text=True,
-        )
-        assert (FIXTURES / name).read_text() == ref
+    for name, expected in FIXTURE_SHA256.items():
+        data = (FIXTURES / name).read_bytes()
+        assert hashlib.sha256(data).hexdigest() == expected, name
 
 
 def test_9420_before_71_forced_lethal_at_200(db) -> None:
@@ -102,6 +102,10 @@ def test_9420_before_71_forced_lethal_at_200(db) -> None:
     assert isinstance(out.get("line"), list)
 
 
+@pytest.mark.skipif(
+    os.environ.get("ARENA_REPORTS") != "1",
+    reason="set ARENA_REPORTS=1 to run slow report-only review4 explain/solver output",
+)
 def test_9420_65_served_pick_report(db) -> None:
     """Report only: bot turn 7 after Hark [64]; no assertion on pick drift."""
     cap = _load_capture(GAME_9420)
@@ -151,7 +155,7 @@ def test_9420_65_served_pick_report(db) -> None:
 
     lines.extend(
         [
-                f"owner hand after Hark: {garodeth_in_true_hand}x Garodeth in {len(hand)} cards",
+            f"owner hand after Hark: {garodeth_in_true_hand}x Garodeth in {len(hand)} cards",
             f"worlds with Garodeth in determinized hand: {garodeth_worlds}/4",
             f"worlds where opp_solver fired: {opp_solver_worlds}/4 "
             "(0 — glance opp_lethal on EndTurn in all worlds)",
@@ -161,6 +165,10 @@ def test_9420_65_served_pick_report(db) -> None:
     print("\n".join(lines))
 
 
+@pytest.mark.skipif(
+    os.environ.get("ARENA_REPORTS") != "1",
+    reason="set ARENA_REPORTS=1 to run slow report-only review4 explain/solver output",
+)
 def test_14155_51_known_limit_report(db) -> None:
     """Report only: Ward-break kill needs ~219933 nodes; do not chase in olsolve."""
     import arena
