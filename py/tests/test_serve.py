@@ -36,6 +36,20 @@ def _load_serve():
 
 serve = _load_serve()
 
+DEFAULT_STRONG = "h0:nodes=16000,horizon=3"
+
+
+def test_default_strong_constant_and_parse_args(db, root: Path) -> None:
+    assert serve.DEFAULT_STRONG == DEFAULT_STRONG
+    args = serve.parse_args(["--cards", str(root / "cards"), "--no-games"])
+    assert args.strong == DEFAULT_STRONG
+    import arena
+
+    decks = {"basic-forest": {str(k): int(v) for k, v in json.loads(
+        (root / "oracle" / "decks" / "basic-forest.json").read_text(encoding="utf-8")
+    ).items()}}
+    arena.matchup(db, decks, 0, 1, policy=DEFAULT_STRONG, threads=1)
+
 
 def _decks(root: Path) -> tuple[dict[str, int], dict[str, int]]:
     forest = json.loads((root / "oracle" / "decks" / "basic-forest.json").read_text())

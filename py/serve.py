@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
-DEFAULT_STRONG = "h0:nodes=16000"
+DEFAULT_STRONG = "h0:nodes=16000,horizon=3"
 DEFAULT_GAMES_DIR = "results/games"
 DEFAULT_ORIGINS = (
     "https://arena-nu-one.vercel.app,"
@@ -579,7 +579,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--strong",
         default=DEFAULT_STRONG,
-        help='spec used for every h0 / h0:… request (default: "h0:nodes=16000")',
+        help=f'spec used for every h0 / h0:… request (default: "{DEFAULT_STRONG}")',
     )
     p.add_argument(
         "--origins",

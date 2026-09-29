@@ -864,7 +864,7 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=16000`) is the spec used whenever the request's `policy` is an
+`h0:nodes=16000,horizon=3`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`). `random` / `first-legal` and
 any non-h0 spec pass through unchanged — the server, not the client,
 decides H0 strength. `--origins` is the CORS allow list (default
@@ -933,7 +933,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=16000, 28 cpus)` or
+select) is `bot: local server (h0:nodes=16000,horizon=3, 28 cpus)` or
 `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.
 

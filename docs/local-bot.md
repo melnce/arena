@@ -24,16 +24,18 @@ cd C:\Users\agban\projects\arena
 git pull --ff-only
 .\.venv\Scripts\Activate.ps1
 maturin develop --release -m py\Cargo.toml
-python py\serve.py --strong "h0:nodes=16000"
+python py\serve.py
 ```
 
 ## Run
 
 ```
-python py/serve.py --strong "h0:nodes=16000"
+python py/serve.py
 ```
 
-On Windows: `python py\serve.py --strong "h0:nodes=16000"`.
+On Windows: `python py\serve.py`.
+
+`--strong "<spec>"` overrides the default, e.g. `--strong "h0:nodes=16000"` for the previous bot.
 
 The process prints the strong spec, the CORS origin list, and
 `http://127.0.0.1:8765/`. Leave it running. Open the site in the **same
@@ -44,7 +46,7 @@ browser still blocks the request, run the UI with `cd ui && npm run dev`.
 Settings → **Use local bot server when available** (on by default; the
 `?localbot=0` query flag also skips the probe and every `/bot` POST).
 In vs-bot the badge next to the policy select should read something like
-`bot: local server (h0:nodes=16000, 28 cpus)`. No server → `bot: browser`.
+`bot: local server (h0:nodes=16000,horizon=3, 28 cpus)`. No server → `bot: browser`.
 One vs-bot loop runs per game, so acting while the bot is thinking never
 starts a second one. A reply that arrives after the position has moved is
 dropped and the move is recomputed, and after three such drops in a row
@@ -75,7 +77,7 @@ python py/serve.py --strong "h0:nodes=32000"
 Each decision prints one stdout line:
 
 ```
-bot policy=h0:nodes=16000 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
+bot policy=h0:nodes=16000,horizon=3 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
 ```
 
 `hash=ok` means the client's `Game.hash()` matched the replayed
