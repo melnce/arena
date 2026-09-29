@@ -31,8 +31,9 @@
 //!
 //! [`crate::policy::H0`]'s `opp_lethal_sweep` is a capped heuristic glance
 //! (one `Play` deep, at most one evolve, 40 or 120 applies). It is
-//! deliberately cheap and incomplete. This solver must never be called
-//! from search — it is far too slow — and it does not reuse that glance.
+//! deliberately cheap and incomplete. Search may call this solver only
+//! through H0's `olsolve` key, with a budget charged to the node cap.
+//! It does not reuse the sweep glance.
 //!
 //! Transposition is allowed only for positions already proven `None`
 //! within budget. `Unknown` is never memoised. The table key is

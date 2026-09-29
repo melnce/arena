@@ -247,7 +247,7 @@ pairs keep their fair shares. Level `1` also takes the reserve when the
 turn is over and fewer than `hres` nodes remain in the pair budget. Leaves
 scored this way are not stored in the TT. Explain marks mid-turn or
 cap-exhausted cutoffs `depth_reply` / `cap_reply` instead of `depth` /
-`cap` (a sweep kill stays `opp_lethal`; a finished turn with budget left
+`cap` (a sweep kill stays `opp_lethal`; a solver kill stays `opp_solver`; a finished turn with budget left
 keeps the reply's own end). Fuse overshoot paths are unchanged.
 
 ## Tests

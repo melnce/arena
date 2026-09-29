@@ -37,6 +37,8 @@ pub enum PvEnd {
     Terminal,
     OppReply,
     OppLethal,
+    /// Opponent reply scored through bounded [`forced_lethal`] (`olsolve>0`).
+    OppSolver,
     OppSearch,
     Tt,
 }

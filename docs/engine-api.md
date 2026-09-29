@@ -475,6 +475,8 @@ may not contain commas), `odepth=` / `obeam=` (opponent model; defaults `0` / `3
 sweep-8b flip; `oevo=0` restores the pre-flip glance path; only
 meaningful with `olethal=1` and `odepth=0`; no hard error for other
 combinations),
+`olsolve=<u32>` (after a sweep miss, run [`forced_lethal`] with this
+node budget charged to the pair cap; default `0` = off),
 `osteps=<u32>` (greedy forced-`EndTurn` step;
 default `6`; hard stop is `osteps+3`),
 `wv=<f32>` (saturation bound on every accumulated value; default `80`),
@@ -554,6 +556,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `obeam` | 3 | opponent beam (plus `EndTurn` always) |
 | `olethal` | 1 | glance-level opponent-lethal sweep before the greedy line; `0` restores the pre-flip greedy path. Ignored when `odepth≥1` |
 | `oevo` | 1 | extend that sweep with at most one `Evolve` / `super_evolve` per leaf. Only meaningful with `olethal=1` and `odepth=0`. Sweep 8b pooled 0.527 [0.515, 0.540] / +19.0 Elo vs `h0:olethal=1,osteps=6` on the seven real decks (6 174 games). Owner flipped the default on 2026-09-19 |
+| `olsolve` | 0 | after a sweep miss on the opponent's turn, run [`forced_lethal`] with this node budget (charged to the pair cap). `0` = off (today). Only when `olethal=1` and `odepth=0` |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
@@ -642,8 +645,16 @@ with no play, for each legal `Evolve`, apply and run the face line.
 This is the owner's missed line: play a Storm, evolve it (+2 and any
 `Evolve:` ability), attack with it and an existing body. The apply cap
 is 120 when `oevo=1` and stays 40 when `oevo=0`. Sweep 8b pooled
-0.527 [0.515, 0.540] / +19.0 Elo; the owner flipped the default on
-2026-09-19. `oevo=0` restores the pre-flip glance path.
+0.527 [0.515, 0.540] / +19.0 Elo vs `h0:olethal=1,osteps=6` on the
+seven real decks (6 174 games). Owner flipped the default on 2026-09-19.
+
+When `olsolve>0` and the sweep misses (`olethal=1`, `odepth=0`, opponent's
+turn, budget remaining), `opponent_reply` runs [`forced_lethal`] with
+`budget = min(olsolve, cap − nodes)`. Every apply it spends is charged
+to `nodes`. A [`LethalVerdict::Lethal`] (including `rng_dependent` lines)
+returns `-wv` and skips the greedy line; [`None`] and [`Unknown`] fall
+through to the greedy reply. Default `olsolve=0` — byte-identical to
+today. `odepth≥1` ignores `olsolve` like `olethal`. `oevo=0` restores the pre-flip glance path.
 
 The owner's standing yardstick (`results` branch, `sweep5/SUMMARY.md`,
 `b79421a`, engine `f7b0a61`, data seed 6, 16 oracle decks, wall 3 h 38)
@@ -743,7 +754,7 @@ is the default. `tt=0` restores the pre-#32 search.
 line per seat with means per decision:
 
 ```text
-search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… skipped_worlds/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=… horizon_leaves/decision=… horizon_nodes/decision=… horizon_fallback/decision=… mull_table/decision=… mull_fallback/decision=… open_hidden/decision=… open_hosts/decision=…
+search-stats A h0: decisions=N nodes/decision=… cap_hit_rate=… candidates/decision=… pairs_skipped/decision=… skipped_worlds/decision=… lethal_nodes/decision=… unscored/decision=… opp_leaves/decision=… opp_cap_hit_rate=… tt_hits/decision=… tt_stores/decision=… opp_lethal_checks/decision=… opp_lethal_found/decision=… opp_lethal_evo_found/decision=… opp_lethal_nodes/decision=… opp_solver_calls/decision=… opp_solver_found/decision=… opp_solver_unknown/decision=… opp_solver_nodes/decision=… chose_with_lethal_root/decision=… cands_with_lethal_root/decision=… fuse_overshoot/decision=… horizon_leaves/decision=… horizon_nodes/decision=… horizon_fallback/decision=… mull_table/decision=… mull_fallback/decision=… open_hidden/decision=… open_hosts/decision=…
 ```
 
 `decisions` is `choose` count; `nodes` are `apply`s; `cap_hit_rate` is
@@ -775,6 +786,10 @@ are transposition-table lookups that returned a value and writes
 found, lethals found *only* through an evolve branch, and applies spent
 by the `olethal` sweep (`0` when `olethal=0`; the default is `olethal=1`;
 `opp_lethal_evo_found` stays 0 unless `oevo=1`, which is the default).
+`opp_solver_calls` / `opp_solver_found` / `opp_solver_unknown` /
+`opp_solver_nodes` are bounded [`forced_lethal`] runs after a sweep miss,
+kills found, budget-starved [`Unknown`] results, and applies spent
+(`0` when `olsolve=0`; the default is `olsolve=0`).
 `chose_with_lethal_root` is the fraction of searched decisions whose
 chosen candidate had at least one determinization at exactly `-wv`
 (the clamp floor; compared with a small epsilon).
@@ -1044,7 +1059,7 @@ Each world entry:
 | `skipped` | bool | Pair never searched (global cap already spent, or `try_apply` failed at the root). |
 | `pv` | list[NeutralAction] | Principal variation (first 12 actions of the line that produced the value). |
 | `pv_len` | int | Full PV length in actions (may exceed `len(pv)`). |
-| `end` | str \| null | `depth`, `cap`, `depth_reply`, `cap_reply`, `terminal`, `opp_reply`, `opp_lethal`, `opp_search` (opponent beam search leaf), or `tt` (transposition-table hit — no line behind it). |
+| `end` | str \| null | `depth`, `cap`, `depth_reply`, `cap_reply`, `terminal`, `opp_reply`, `opp_lethal`, `opp_solver` (bounded [`forced_lethal`] kill on the greedy opponent path), `opp_search` (opponent beam search leaf), or `tt` (transposition-table hit — no line behind it). |
 | `horizon_nodes` | int | Reserve applies on this pair (see decision `horizon_nodes`). |
 | `leaf` | object \| null | `{value, phase, turn, active}` at the line end. **Invariant:** for scored worlds, `leaf.value == raw` (within float tolerance); it is the value the search returned, not a replay of `pv`. |
 
