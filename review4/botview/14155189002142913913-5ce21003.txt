@@ -1,0 +1,265 @@
+GAME 14155189002142913913-5ce21003  (engine 71127bf, bot h0:nodes=16000,horizon=3, leaf = default h0-linear-v2)
+human (seat a) deck: meta-abyss-midrange;  bot (seat b) deck: meta-abyss-midrange
+went first: HUMAN;  winner: HUMAN;  actions 58
+Values: +80 = forced win for the side to move, -80 = forced loss; bot values from the bot's side.
+Per bot decision: bot_value = the live bot's own value; explain = the served spec re-run on this position (seed differs
+from the live game, so 're-run would choose' can differ); candidates show aggregate over worlds, worst world, per-world
+values and how lines ended. [SOLVER] = the exact forced-lethal solver (sees everything) on the position BEFORE the action.
+
+  [0] HUMAN mulligan swap [True, False, True, False]
+  [1] BOT mulligan swap [False, True, True, False]
+=== turn 1, HUMAN to act ===
+    BOT   HP 20/20  PP 0/0  EP 2 SEP 2  deck 36  hand 4  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand: Baal, Elemental Resonance(3), Lilith, Devilish Cutie(1), Void Colonel(6), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0
+          field: (empty)
+          hand (HIDDEN from the bot): Baal, Elemental Resonance(3), Netherworld Lieutenant(2), Adahime, Anathema of Death(6), World of Games(1), Highwire Feline(5)
+  [2] HUMAN plays World of Games (1pp)
+  [3] HUMAN ends turn
+=== turn 1, BOT to act ===
+    BOT   HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand: Baal, Elemental Resonance(3), Lilith, Devilish Cutie(1), Void Colonel(6), Macmillan, Reaper of Ceremonies(9), Raz, Demon on the Drums(2)
+    HUMAN HP 20/20  PP 0/1  EP 2 SEP 2  deck 35  hand 4  cemetery 0
+          field: [0] World of Games (amulet, cd 5)
+          hand (HIDDEN from the bot): Baal, Elemental Resonance(3), Netherworld Lieutenant(2), Adahime, Anathema of Death(6), Highwire Feline(5)
+  [4] BOT toggles bonus PP   bot_value +5.3
+      explain: path search, 3 candidates, nodes 174, top-2 margin 1.9
+        cand    +7.5 (worst +2.5; worlds +10 +2 +7 +10; ends opp_reply): BOT toggles bonus PP
+        cand    +5.5 (worst +0.5; worlds +8 +0 +5 +8; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand    -4.4 (worst -9.1; worlds -2 -9 -4 -2; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:bonus_pp | B:play Raz, Demon on the Drums | B:end_turn | H:end_turn  [end opp_reply]
+  [5] BOT plays Raz, Demon on the Drums (2pp)   bot_value +8.0
+      explain: path search, 4 candidates, nodes 143, top-2 margin 1.9
+        cand    +6.5 (worst +1.1; worlds +1 +6 +11 +9; ends opp_reply): BOT plays Raz, Demon on the Drums (2pp)
+        cand    +4.6 (worst -0.8; worlds -1 +4 +9 +7; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand    -0.2 (worst -5.7; worlds -6 -1 +4 +2; ends opp_reply): BOT plays Void Colonel (6pp)
+        expected line (top candidate, best world): B:play Raz, Demon on the Drums | B:end_turn | H:play Netherworld Lieutenant | H:end_turn  [end opp_reply]
+  [6] BOT ends turn
+=== turn 2, HUMAN to act ===
+    BOT   HP 20/20  PP 0/1  EP 2 SEP 2  deck 35  hand 4  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/2 [sick]
+          hand: Baal, Elemental Resonance(3), Lilith, Devilish Cutie(1), Void Colonel(6), Macmillan, Reaper of Ceremonies(9)
+    HUMAN HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0
+          field: [0] World of Games (amulet, cd 4)
+          hand (HIDDEN from the bot): Baal, Elemental Resonance(3), Netherworld Lieutenant(2), Adahime, Anathema of Death(6), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9)
+  [7] HUMAN plays Netherworld Lieutenant (2pp)
+  [8] HUMAN ends turn
+=== turn 2, BOT to act ===
+    BOT   HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/2
+          hand: Baal, Elemental Resonance(3), Lilith, Devilish Cutie(1), Void Colonel(6), Macmillan, Reaper of Ceremonies(9), Highwire Feline(5)
+    HUMAN HP 20/20  PP 0/2  EP 2 SEP 2  deck 34  hand 4  cemetery 0
+          field: [0] World of Games (amulet, cd 3); [1] Netherworld Lieutenant 1/1 [sick]
+          hand (HIDDEN from the bot): Baal, Elemental Resonance(3), Adahime, Anathema of Death(6), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9)
+  [9] BOT plays Void Colonel (6pp)   bot_value +18.1
+      explain: path search, 5 candidates, nodes 898, top-2 margin 0.0
+        cand   +18.7 (worst +15.0; worlds +15 +20 +24 +16; ends opp_reply): BOT plays Void Colonel (6pp)
+        cand   +18.7 (worst +15.0; worlds +15 +20 +24 +16; ends tt): BOT attacks: Raz, Demon on the Drums 1/2 -> LEADER
+        cand    +8.0 (worst +5.0; worlds +5 +9 +13 +5; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        expected line (top candidate, best world): B:play Void Colonel | B:attack s0->leader | B:end_turn | H:attack s1->{'slot': 0} | H:play Lilith, Devilish Cutie | H:end_turn  [end opp_reply]
+  [10] BOT attacks: Raz, Demon on the Drums 1/2 -> LEADER   bot_value +23.1
+      explain: path search, 3 candidates, nodes 261, top-2 margin 4.6
+        cand   +17.0 (worst +13.6; worlds +20 +14 +18 +17; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 -> LEADER
+        cand   +12.4 (worst +8.9; worlds +15 +9 +13 +13; ends opp_reply): BOT ends turn
+        cand    +1.5 (worst -5.6; worlds +5 -6 +3 +3; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 -> Netherworld Lieutenant 1/1 [sick]
+        expected line (top candidate, best world): B:attack s0->leader | B:end_turn | H:attack s1->{'slot': 0} | H:play Raz, Demon on the Drums | H:end_turn  [end opp_reply]
+  [11] BOT ends turn
+=== turn 3, HUMAN to act ===
+    BOT   HP 20/20  PP 0/2  EP 2 SEP 2  deck 34  hand 4  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/2; [1] Void Colonel (amulet, cd 4)
+          hand: Baal, Elemental Resonance(3), Lilith, Devilish Cutie(1), Macmillan, Reaper of Ceremonies(9), Highwire Feline(5)
+    HUMAN HP 19/20  PP 3/3  EP 2 SEP 2  deck 33  hand 5  cemetery 0
+          field: [0] World of Games (amulet, cd 2); [1] Netherworld Lieutenant 1/1
+          hand (HIDDEN from the bot): Baal, Elemental Resonance(3), Adahime, Anathema of Death(6), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Bibatii, Eld Sight(4)
+  [12] HUMAN plays Baal, Elemental Resonance (3pp)
+  [13] HUMAN chooses {"mode": 0}
+  [14] HUMAN attacks: Netherworld Lieutenant 2/2 -> LEADER
+  [15] HUMAN ends turn
+=== turn 3, BOT to act ===
+    BOT   HP 18/20  PP 3/3  EP 2 SEP 2  deck 33  hand 5  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/2; [1] Void Colonel (amulet, cd 3)
+          hand: Baal, Elemental Resonance(3), Lilith, Devilish Cutie(1), Macmillan, Reaper of Ceremonies(9), Highwire Feline(5), Garodeth vs. Zeth(8)
+    HUMAN HP 19/20  PP 0/3  EP 2 SEP 2  deck 33  hand 4  cemetery 0
+          field: [0] World of Games (amulet, cd 2); [1] Netherworld Lieutenant 2/2; [2] Baal, Elemental Resonance 3/3 [sick]
+          hand (HIDDEN from the bot): Adahime, Anathema of Death(6), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Bibatii, Eld Sight(4)
+  [16] BOT plays Baal, Elemental Resonance (3pp)   bot_value +5.3
+      explain: path search, 6 candidates, nodes 3227, top-2 margin 1.2
+        cand   +12.5 (worst +7.5; worlds +8 +11 +8 +23; ends opp_reply): BOT plays Baal, Elemental Resonance (3pp)
+        cand   +11.3 (worst +2.7; worlds +3 +11 +8 +23; ends opp_reply,tt): BOT attacks: Raz, Demon on the Drums 1/2 -> LEADER
+        cand    -2.3 (worst -13.3; worlds -13 -5 +0 +9; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 -> Baal, Elemental Resonance 3/3 [sick]
+        expected line (top candidate, best world): B:play Baal, Elemental Resonance | B:choose {"mode": 1} | B:attack s0->leader | B:end_turn | H:attack s1->{'slot': 2} | H:play Lilith, Devilish Cutie | H:end_turn  [end opp_reply]
+  [17] BOT chooses {"mode": 1}   bot_value +8.5
+      explain: path search, 2 candidates, nodes 1497, top-2 margin 0.4
+        cand    +5.7 (worst -11.6; worlds -12 +18 -4 +20; ends opp_reply): BOT chooses {"mode": 1}
+        cand    +5.3 (worst -2.0; worlds -2 +8 +8 +7; ends opp_reply): BOT chooses {"mode": 0}
+        expected line (top candidate, best world): B:choose {"mode": 1} | B:attack s0->leader | B:end_turn | H:attack s1->{'slot': 2} | H:play Netherworld Lieutenant | H:play Netherworld Lieutenant | H:end_turn  [end opp_reply]
+  [18] BOT attacks: Raz, Demon on the Drums 1/2 -> LEADER   bot_value +17.1
+      explain: path search, 3 candidates, nodes 345, top-2 margin 4.6
+        cand   +16.8 (worst +10.9; worlds +18 +21 +11 +18; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 -> LEADER
+        cand   +12.2 (worst +6.1; worlds +13 +17 +6 +13; ends opp_reply): BOT ends turn
+        cand    +3.0 (worst -4.0; worlds +3 +9 -4 +4; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 -> Netherworld Lieutenant 2/2
+        expected line (top candidate, best world): B:attack s0->leader | B:end_turn | H:attack s1->{'slot': 2} | H:play Bibatii, Eld Sight | H:end_turn  [end opp_reply]
+  [19] BOT ends turn
+=== turn 4, HUMAN to act ===
+    BOT   HP 18/20  PP 0/3  EP 2 SEP 2  deck 33  hand 4  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/2; [1] Void Colonel (amulet, cd 3); [2] Baal, Elemental Resonance 2/2 [sick]
+          hand: Lilith, Devilish Cutie(1), Macmillan, Reaper of Ceremonies(9), Highwire Feline(5), Garodeth vs. Zeth(8)
+    HUMAN HP 18/20  PP 4/4  EP 2 SEP 2  deck 32  hand 5  cemetery 1
+          field: [0] World of Games (amulet, cd 1); [1] Netherworld Lieutenant 2/2
+          hand (HIDDEN from the bot): Adahime, Anathema of Death(6), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Bibatii, Eld Sight(4), Hark to the Night Song(3)
+  [20] HUMAN plays Hark to the Night Song (3pp)
+  [21] HUMAN attacks: Netherworld Lieutenant 2/2 -> LEADER
+  [22] HUMAN ends turn
+=== turn 4, BOT to act ===
+    BOT   HP 16/20  PP 4/4  EP 2 SEP 2  deck 32  hand 5  cemetery 2 bonusPP(early used, late avail)
+          field: [0] Void Colonel (amulet, cd 2); [1] Skeleton 1/1
+          hand: Lilith, Devilish Cutie(1), Macmillan, Reaper of Ceremonies(9), Highwire Feline(5), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6)
+    HUMAN HP 18/20  PP 1/4  EP 2 SEP 2  deck 30  hand 6  cemetery 3
+          field: [0] Netherworld Lieutenant 2/2
+          hand (HIDDEN from the bot): Adahime, Anathema of Death(6), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Bibatii, Eld Sight(4), Fickle Necromancer(3), Highwire Feline(5)
+  [23] BOT attacks: Skeleton 1/1 -> Netherworld Lieutenant 2/2   bot_value -15.0
+      explain: path search, 5 candidates, nodes 3497, top-2 margin 3.2; re-run would choose: BOT plays Lilith, Devilish Cutie (1pp)
+        cand    +4.0 (worst -16.8; worlds -17 +13 +29 -9; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand    +0.7 (worst -19.1; worlds -19 +13 +28 -19; ends opp_reply,tt): BOT evolves Skeleton 1/1
+        cand    -1.7 (worst -23.9; worlds -24 +12 +29 -24; ends opp_reply,tt): BOT attacks: Skeleton 1/1 -> LEADER
+        expected line (top candidate, best world): B:play Lilith, Devilish Cutie | B:evolve | B:attack s1->leader | B:end_turn | H:play Lilith, Enchanting Succubus | H:attack s0->{'slot': 2} | H:attack s1->{'slot': 1} | H:evolve | H:end_turn  [end opp_reply]
+  [24] BOT ends turn   bot_value -15.1
+      explain: path search, 2 candidates, nodes 835, top-2 margin 3.4; re-run would choose: BOT plays Lilith, Devilish Cutie (1pp)
+        cand    -8.4 (worst -18.1; worlds -11 +3 -7 -18; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand   -11.8 (worst -17.1; worlds -17 -4 -13 -13; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:play Lilith, Devilish Cutie | B:end_turn | H:attack s0->{'slot': 1} | H:play Lilith, Devilish Cutie | H:play Void Colonel | H:evolve | H:end_turn  [end opp_reply]
+=== turn 5, HUMAN to act ===
+    BOT   HP 16/20  PP 4/4  EP 2 SEP 2  deck 32  hand 5  cemetery 3 bonusPP(early used, late avail)
+          field: [0] Void Colonel (amulet, cd 2)
+          hand: Lilith, Devilish Cutie(1), Macmillan, Reaper of Ceremonies(9), Highwire Feline(5), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6)
+    HUMAN HP 18/20  PP 5/5  EP 2 SEP 2  deck 29  hand 7  cemetery 3
+          field: [0] Netherworld Lieutenant 2/1
+          hand (HIDDEN from the bot): Adahime, Anathema of Death(6), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Bibatii, Eld Sight(4), Fickle Necromancer(3), Highwire Feline(5), Bibatii, Eld Sight(4)
+  [25] HUMAN plays Fickle Necromancer (3pp)
+  [26] HUMAN evolves Fickle Necromancer 1/1 [sick]
+  [27] HUMAN attacks: Ghost 1/1 [storm,sick] -> LEADER
+  [28] HUMAN attacks: Netherworld Lieutenant 2/1 -> LEADER
+  [29] HUMAN ends turn
+=== turn 5, BOT to act ===
+    BOT   HP 13/20  PP 5/5  EP 2 SEP 2  deck 31  hand 6  cemetery 3 bonusPP(early used, late avail)
+          field: [0] Void Colonel (amulet, cd 1)
+          hand: Lilith, Devilish Cutie(1), Macmillan, Reaper of Ceremonies(9), Highwire Feline(5), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Void Colonel(6)
+    HUMAN HP 18/20  PP 2/5  EP 1 SEP 2  deck 29  hand 6  cemetery 3
+          field: [0] Netherworld Lieutenant 2/1; [1] Fickle Necromancer 3/3*E [sick]; [2] Skeleton 1/1 [sick]; [3] Rotting Zombie 2/2 [sick]
+          hand (HIDDEN from the bot): Adahime, Anathema of Death(6), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Bibatii, Eld Sight(4), Highwire Feline(5), Bibatii, Eld Sight(4)
+  [30] BOT plays Highwire Feline (5pp)   bot_value +10.4
+      explain: path search, 4 candidates, nodes 11841, top-2 margin 27.2
+        cand    +8.4 (worst -16.1; worlds +14 +30 -16 +6; ends opp_reply): BOT plays Highwire Feline (5pp)
+        cand   -18.9 (worst -25.2; worlds -20 -8 -25 -22; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand   -26.3 (worst -29.1; worlds -29 -19 -28 -29; ends opp_reply): BOT plays Void Colonel (6pp)
+        expected line (top candidate, best world): B:play Highwire Feline | B:choose {"slot": 1} | B:evolve | B:choose {"slot": 0} | B:attack s1->{'slot': 0} | B:end_turn | H:attack s0->{'slot': 1} | H:play Lilith, Enchanting Succubus | H:play Lilith, Devilish Cutie | H:play Raz, Demon on the Drums  [end opp_reply]
+  [31] BOT chooses {"slot": 1}   bot_value +2.3
+      explain: path search, 4 candidates, nodes 16000, top-2 margin 4.8
+        cand   +18.9 (worst +6.7; worlds +23 +10 +35 +7; ends opp_reply): BOT chooses {"slot": 1}
+        cand   +14.1 (worst +2.8; worlds +23 +4 +26 +3; ends opp_reply): BOT chooses {"slot": 3}
+        cand   +11.3 (worst -3.5; worlds -3 +10 +32 +6; ends opp_reply): BOT chooses {"slot": 2}
+        expected line (top candidate, best world): B:choose {"slot": 1} | B:evolve | B:choose {"slot": 0} | B:attack s1->{'slot': 2} | B:end_turn | H:attack s1->{'slot': 1} | H:play Baal, Elemental Resonance | H:choose {"mode": 1} | H:attack s0->{'slot': 2} | H:play Netherworld Lieutenant  [end opp_reply]
+  [32] BOT evolves Highwire Feline 4/5 [sick]   bot_value +6.0
+      explain: path search, 3 candidates, nodes 5665, top-2 margin 17.7
+        cand    -3.7 (worst -11.6; worlds -12 +4 +1 -8; ends opp_reply): BOT evolves Highwire Feline 4/5 [sick]
+        cand   -21.3 (worst -23.0; worlds -23 -20 -23 -20; ends opp_reply): BOT evolves Skeleton 1/1 [sick]
+        cand   -21.5 (worst -29.2; worlds -29 -6 -25 -26; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:evolve | B:choose {"slot": 1} | B:end_turn | H:play Adahime, Anathema of Death | H:attack s0->{'slot': 2} | H:evolve | H:choose {"slot": 2} | H:attack s0->leader | H:attack s4->{'slot': 1} | H:end_turn  [end opp_reply]
+  [33] BOT chooses {"slot": 2}   bot_value +16.6
+      explain: path search, 3 candidates, nodes 4438, top-2 margin 4.9
+        cand    +9.6 (worst -12.3; worlds -12 +2 +26 +23; ends opp_reply): BOT chooses {"slot": 2}
+        cand    +4.7 (worst -12.7; worlds -13 +9 +26 -3; ends opp_reply): BOT chooses {"slot": 1}
+        cand    +3.6 (worst -11.3; worlds -11 -3 +28 +0; ends opp_reply): BOT chooses {"slot": 0}
+        expected line (top candidate, best world): B:choose {"slot": 2} | B:attack s1->{'slot': 2} | B:end_turn | H:attack s0->{'slot': 2} | H:play Lilith, Enchanting Succubus | H:play Baal, Elemental Resonance | H:choose {"mode": 0} | H:attack s0->{'slot': 2} | H:evolve | H:end_turn  [end opp_reply]
+  [34] BOT ends turn   bot_value -6.3
+      explain: path search, 4 candidates, nodes 1423, top-2 margin 0.7; re-run would choose: BOT attacks: Highwire Feline 6/7*E [sick] -> Skeleton 1/1 [sick]
+        cand    -4.8 (worst -17.9; worlds -11 -18 -0 +10; ends opp_reply): BOT attacks: Highwire Feline 6/7*E [sick] -> Skeleton 1/1 [sick]
+        cand    -5.5 (worst -16.4; worlds -9 -9 -16 +13; ends opp_reply): BOT attacks: Highwire Feline 6/7*E [sick] -> Rotting Zombie 2/2 [sick]
+        cand    -5.7 (worst -12.5; worlds +10 -8 -12 -12; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:attack s1->{'slot': 1} | B:end_turn | H:play Adahime, Anathema of Death | H:attack s3->{'slot': 2} | H:attack s0->{'slot': 2} | H:attack s0->leader | H:evolve | H:attack s3->{'slot': 1} | H:end_turn  [end opp_reply]
+=== turn 6, HUMAN to act ===
+    BOT   HP 13/20  PP 0/5  EP 1 SEP 2  deck 31  hand 5  cemetery 3 bonusPP(early used, late avail)
+          field: [0] Void Colonel (amulet, cd 1); [1] Highwire Feline 6/7*E [sick]; [2] Skeleton 1/1 [sick]; [3] Skeleton 1/1 [sick]
+          hand: Lilith, Devilish Cutie(1), Macmillan, Reaper of Ceremonies(9), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Void Colonel(6)
+    HUMAN HP 18/20  PP 6/6  EP 1 SEP 2  deck 28  hand 7  cemetery 5
+          field: [0] Netherworld Lieutenant 2/1; [1] Skeleton 1/1; [2] Rotting Zombie 2/2
+          hand (HIDDEN from the bot): Adahime, Anathema of Death(6), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Bibatii, Eld Sight(4), Highwire Feline(5), Bibatii, Eld Sight(4), Lilith, Devilish Cutie(1)
+  [35] HUMAN plays Highwire Feline (5pp)
+  [36] HUMAN chooses {"slot": 1, "player": "b"}
+  [37] HUMAN attacks: Skeleton 1/1 -> Skeleton 1/1 [sick]
+  [38] HUMAN evolves Highwire Feline 4/5 [sick]
+  [39] HUMAN chooses {"slot": 1, "player": "b"}
+  [40] HUMAN attacks: Netherworld Lieutenant 2/1 -> Highwire Feline 6/1*E [sick]
+  [41] HUMAN attacks: Highwire Feline 6/7*E [sick] -> Skeleton 1/1 [sick]
+  [42] HUMAN attacks: Rotting Zombie 2/2 -> LEADER
+  [43] HUMAN ends turn
+=== turn 6, BOT to act ===
+    BOT   HP 11/20  PP 6/6  EP 1 SEP 2  deck 30  hand 6  cemetery 7 bonusPP(early used, late avail)
+          field: [0] Void Colonel 4/6 [ward,sick]
+          hand: Lilith, Devilish Cutie(1), Macmillan, Reaper of Ceremonies(9), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Void Colonel(6), Garodeth vs. Zeth(8)
+    HUMAN HP 18/20  PP 1/6  EP 0 SEP 2  deck 28  hand 6  cemetery 7
+          field: [0] Rotting Zombie 2/2; [1] Highwire Feline 6/6*E [sick]; [2] Skeleton 1/1 [sick]; [3] Skeleton 1/1 [sick]; [4] Netherworld Lieutenant 2/1 [rush,sick]
+          hand (HIDDEN from the bot): Adahime, Anathema of Death(6), Macmillan, Reaper of Ceremonies(9), Bibatii, Eld Sight(4), Highwire Feline(5), Bibatii, Eld Sight(4), Lilith, Devilish Cutie(1)
+  [44] BOT toggles bonus PP   bot_value +51.0
+      explain: path search, 7 candidates, nodes 15369, top-2 margin 0.3
+        cand   +54.0 (worst +46.5; worlds +47 +57 +56 +56; ends cap_reply,tt): BOT toggles bonus PP
+        cand   +53.6 (worst +46.8; worlds +47 +56 +56 +56; ends cap_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand   +43.2 (worst +24.7; worlds +25 +47 +49 +52; ends cap_reply,depth_reply): BOT plays Adahime, Anathema of Death (6pp)
+        expected line (top candidate, best world): B:bonus_pp | B:play Adahime, Anathema of Death | B:attack s3->{'slot': 4} | B:play Lilith, Devilish Cutie | B:evolve | B:attack s1->{'slot': 1} | B:attack s3->{'slot': 1} | B:attack s2->{'slot': 1} | B:attack s4->{'slot': 0} | B:end_turn  [end cap_reply]
+  [45] BOT plays Lilith, Devilish Cutie (1pp)   bot_value +28.1
+      explain: path search, 6 candidates, nodes 15202, top-2 margin 7.8
+        cand   +32.3 (worst +1.3; worlds +1 +34 +45 +49; ends cap_reply,depth_reply,opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand   +24.5 (worst +14.5; worlds +30 +14 +27 +26; ends cap_reply): BOT SUPER-evolves Void Colonel 4/6 [ward,sick]
+        cand   +23.3 (worst +5.1; worlds +5 +8 +39 +41; ends opp_reply): BOT plays Adahime, Anathema of Death (6pp)
+        expected line (top candidate, best world): B:play Lilith, Devilish Cutie | B:play Adahime, Anathema of Death | B:evolve | B:attack s2->{'slot': 4} | B:attack s4->{'slot': 1} | B:end_turn | H:play Lilith, Devilish Cutie | H:end_turn  [end opp_reply]
+  [46] BOT plays Adahime, Anathema of Death (6pp)   bot_value +48.2
+      explain: path search, 7 candidates, nodes 15373, top-2 margin 2.8; re-run would choose: BOT SUPER-evolves Void Colonel 4/6 [ward,sick]
+        cand   +34.5 (worst +19.6; worlds +44 +37 +20 +38; ends cap_reply,opp_reply): BOT SUPER-evolves Void Colonel 4/6 [ward,sick]
+        cand   +31.7 (worst +28.2; worlds +33 +28 +33 +33; ends cap_reply,opp_reply): BOT evolves Lilith, Devilish Cutie 1/1 [sick]
+        cand   +31.4 (worst -22.6; worlds +47 +49 -23 +52; ends cap_reply,opp_reply): BOT plays Adahime, Anathema of Death (6pp)
+        expected line (top candidate, best world): B:evolve | B:attack s0->{'slot': 1} | B:play Adahime, Anathema of Death | B:end_turn | H:play Raz, Demon on the Drums | H:attack s1->{'slot': 0} | H:play Raz, Demon on the Drums | H:attack s1->{'slot': 0} | H:attack s0->{'slot': 0} | H:end_turn  [end cap_reply]
+  [47] BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Rotting Zombie 2/2   bot_value +44.3
+      explain: path search, 21 candidates, nodes 15923, top-2 margin 9.2; re-run would choose: BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]
+        cand   +30.2 (worst -4.8; worlds +20 +55 -5 +51; ends cap_reply,opp_reply): BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]
+        cand   +21.0 (worst -18.8; worlds -19 +56 -4 +50; ends cap_reply,opp_reply): BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Skeleton 1/1 [sick]
+        cand   +21.0 (worst -18.8; worlds -19 +56 -4 +50; ends cap_reply,opp_reply): BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Skeleton 1/1 [sick]
+        expected line (top candidate, best world): B:evolve | B:attack s2->{'slot': 1} | B:attack s3->{'slot': 1} | B:attack s4->{'slot': 2} | B:end_turn | H:end_turn  [end opp_reply]
+  [48] BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Netherworld Lieutenant 2/1 [rush,sick]   bot_value +45.0
+      explain: path search, 21 candidates, nodes 15825, top-2 margin 1.4; re-run would choose: BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Highwire Feline 6/6*E [sick]
+        cand   +34.3 (worst +10.0; worlds +41 +41 +45 +10; ends cap_reply,opp_reply): BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Highwire Feline 6/6*E [sick]
+        cand   +32.9 (worst +7.4; worlds +40 +40 +44 +7; ends cap_reply,opp_reply): BOT attacks: Lilith, Enchanting Succubus 1/1 [rush,sick] -> Highwire Feline 6/6*E [sick]
+        cand   +31.8 (worst +29.8; worlds +33 +32 +32 +30; ends cap_reply): BOT evolves Void Colonel 4/6 [ward,sick]
+        expected line (top candidate, best world): B:attack s4->{'slot': 1} | B:evolve | B:attack s2->{'slot': 1} | B:attack s3->{'slot': 3} | B:end_turn | H:play Lilith, Enchanting Succubus | H:play Netherworld Lieutenant | H:end_turn  [end opp_reply]
+  [49] BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]   bot_value +34.8
+      explain: path search, 13 candidates, nodes 15400, top-2 margin 3.2
+        cand   +31.1 (worst +11.1; worlds +21 +45 +47 +11; ends opp_reply): BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]
+        cand   +27.9 (worst +15.7; worlds +16 +37 +41 +17; ends cap_reply,opp_reply): BOT SUPER-evolves Void Colonel 4/6 [ward,sick]
+        cand   +22.9 (worst +20.2; worlds +20 +24 +24 +24; ends cap_reply,opp_reply): BOT SUPER-evolves Lilith, Devilish Cutie 1/1 [sick]
+        expected line (top candidate, best world): B:evolve | B:attack s2->{'slot': 1} | B:attack s3->{'slot': 1} | B:end_turn | H:play Lilith, Devilish Cutie | H:play Lilith, Devilish Cutie | H:play Netherworld Lieutenant | H:end_turn  [end opp_reply]
+  [50] BOT ends turn   bot_value +32.8
+      explain: path search, 9 candidates, nodes 6414, top-2 margin 0.0; re-run would choose: BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Skeleton 1/1 [sick]
+        cand   +23.0 (worst +6.8; worlds +7 +39 +21 +24; ends opp_reply): BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Skeleton 1/1 [sick]
+        cand   +23.0 (worst +6.8; worlds +7 +39 +21 +24; ends opp_reply): BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Skeleton 1/1 [sick]
+        cand   +22.6 (worst -19.8; worlds -20 +45 +31 +34; ends opp_reply): BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Highwire Feline 6/6*E [sick]
+        expected line (top candidate, best world): B:attack s2->{'slot': 2} | B:attack s3->{'slot': 2} | B:end_turn | H:play Lilith, Devilish Cutie | H:play Raz, Demon on the Drums | H:end_turn  [end opp_reply]
+=== turn 7, HUMAN to act ===
+    BOT   HP 11/20  PP 0/6  EP 1 SEP 1  deck 28  hand 4  cemetery 9 bonusPP(early used, late used)
+          field: [0] Void Colonel 6/8 [ward,sick]; [1] Lilith, Devilish Cutie 3/3 [sick]; [2] Adahime, Anathema of Death 8/7*SE [sick]; [3] Lilith, Enchanting Succubus 3/3 [rush,sick]
+          hand: Macmillan, Reaper of Ceremonies(9), Garodeth vs. Zeth(7), Void Colonel(6), Garodeth vs. Zeth(7)
+    HUMAN HP 18/20  PP 7/7  EP 0 SEP 2  deck 27  hand 7  cemetery 8
+          field: [0] Rotting Zombie 2/1; [1] Highwire Feline 6/6*E; [2] Skeleton 1/1; [3] Skeleton 1/1
+          hand (HIDDEN from the bot): Adahime, Anathema of Death(6), Macmillan, Reaper of Ceremonies(9), Bibatii, Eld Sight(4), Highwire Feline(5), Bibatii, Eld Sight(4), Lilith, Devilish Cutie(1), Itsurugi & Taketsumi, Brothers(8)
+  [51] HUMAN plays Adahime, Anathema of Death (6pp)
+  [52] HUMAN SUPER-evolves Adahime, Anathema of Death 5/4 [sick]   [SOLVER: HUMAN has a forced kill here (rng-dependent); line H:attack s0->{'slot': 0} | H:attack s1->{'slot': 0} | H:evolve | H:play Lilith, Devilish Cutie | H:attack s2->{'slot': 0} | H:attack s0->leader | H:attack s1->leader | H:attack s3->{'slot': 0}]
+  [53] HUMAN attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Void Colonel 6/8 [ward,sick]   [SOLVER: HUMAN has a forced kill here (rng-dependent); line H:attack s0->{'slot': 0} | H:attack s1->{'slot': 0} | H:play Lilith, Devilish Cutie | H:attack s2->{'slot': 0} | H:attack s0->leader | H:attack s1->leader | H:attack s3->{'slot': 0}]
+  [54] HUMAN plays Lilith, Devilish Cutie (1pp)   [SOLVER: HUMAN has a forced kill here; line H:attack s0->leader | H:attack s1->leader | H:attack s2->leader]
+  [55] HUMAN attacks: Highwire Feline 8/8*E -> LEADER   [SOLVER: HUMAN has a forced kill here; line H:attack s0->leader | H:attack s1->leader | H:attack s2->leader]
+  [56] HUMAN attacks: Skeleton 3/3 -> LEADER   [SOLVER: HUMAN has a forced kill here; line H:attack s1->leader | H:attack s2->leader]
+  [57] HUMAN attacks: Skeleton 3/3 -> LEADER   [SOLVER: HUMAN has a forced kill here; line H:attack s1->leader]
+
+FINAL: winner HUMAN; bot HP 0, human HP 18
+
+SOLVER SUMMARY (first action index per player-turn where the side to move had a forced kill):
+  turn 7 HUMAN: forced kill available from [52]

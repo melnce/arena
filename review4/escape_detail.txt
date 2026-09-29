@@ -1,0 +1,17 @@
+tools/escape_detail.py output (2026-09-29, engine 71127bf venv build; solver budget 500000 for the two re-checks)
+
+14155189002142913913-5ce21003 before [51] (HUMAN to act, turn 7): verdict lethal (nodes 219933, rng True); line: H:attack s0->{'slot': 0} | H:attack s1->{'slot': 0} | H:play Adahime, Anathema of Death | H:attack s3->{'slot': 0} | H:attack s3->{'slot': 0} | H:attack s3->{'slot': 0} | H:evolve | H:play Lilith, Devilish Cutie | H:attack s2->{'slot': 0} | H:attack s0->leader
+11296488206978013884-5ce21003 before [47] (HUMAN to act, turn 6): verdict none (nodes 191468, rng None)
+
+9420046197828951589-5ce21003 bot turn 7 from [64]:
+  recorded: [64] BOT plays Hark to the Night Song (3pp) ; [65] BOT SUPER-evolves Raz, Demon on the Drums 3/1 [rush] ; [66] BOT chooses {"slot": 0} ; [67] BOT plays Depths of the Eld Sight (1pp) ; [68] BOT attacks: Raz, Demon on the Drums 6/4*SE [rush] -> LEADER ; [69] BOT plays Raz, Demon on the Drums (2pp) ; [70] BOT ends turn
+  safe (same first move, perfect-info rest): BOT plays Hark to the Night Song (3pp) ; BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> Highwire Feline 7/2*SE [sick] ; BOT plays Raz, Demon on the Drums (2pp) ; BOT plays Depths of the Eld Sight (1pp) ; BOT SUPER-evolves Raz, Demon on the Drums 1/2 [sick] ; BOT chooses {"slot": 0} ; BOT attacks: Raz, Demon on the Drums 4/5*SE [sick] -> Skeleton 1/1 [sick] ; BOT ends turn
+  human kill after safe line: none
+  first divergence at [65]: recorded BOT SUPER-evolves Raz, Demon on the Drums 3/1 [rush]  vs  perfect-info BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> Highwire Feline 7/2*SE [sick]
+    served cand   +24.2 worst  +14.3 worlds +14 +29 +17 +36 ends cap_reply,depth_reply: BOT plays Raz, Demon on the Drums (2pp)
+    served cand   +22.3 worst  +14.3 worlds +14 +20 +19 +36 ends opp_reply: BOT SUPER-evolves Raz, Demon on the Drums 3/1 [rush]
+    served cand   +20.1 worst   +7.4 worlds +14 +29 +7 +30 ends cap_reply,depth_reply: BOT plays Depths of the Eld Sight (1pp)
+    served cand   +16.5 worst   -0.2 worlds -0 +29 +7 +30 ends tt: BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> LEADER
+    served cand    -5.8 worst  -19.2 worlds -19 -0 -16 +12 ends cap_reply,depth_reply,opp_reply: BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> Skeleton 1/1 [sick]
+    after recorded choice + perfect-info rest -> human kill: lethal
+    after perfect-info choice + perfect-info rest -> human kill: none

@@ -1,0 +1,345 @@
+GAME 9420046197828951589-5ce21003  (engine 71127bf, bot h0:nodes=16000,horizon=3, leaf = default h0-linear-v2)
+human (seat a) deck: meta-abyss-midrange;  bot (seat b) deck: meta-abyss-midrange
+went first: HUMAN;  winner: HUMAN;  actions 76
+Values: +80 = forced win for the side to move, -80 = forced loss; bot values from the bot's side.
+Per bot decision: bot_value = the live bot's own value; explain = the served spec re-run on this position (seed differs
+from the live game, so 're-run would choose' can differ); candidates show aggregate over worlds, worst world, per-world
+values and how lines ended. [SOLVER] = the exact forced-lethal solver (sees everything) on the position BEFORE the action.
+
+  [0] HUMAN mulligan swap [False, False, True, False]
+  [1] BOT mulligan swap [True, False, False, True]
+=== turn 1, HUMAN to act ===
+    BOT   HP 20/20  PP 0/0  EP 2 SEP 2  deck 36  hand 4  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand: Netherworld Lieutenant(2), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8)
+    HUMAN HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0
+          field: (empty)
+          hand (HIDDEN from the bot): Baal, Elemental Resonance(3), Raz, Demon on the Drums(2), Lilith, Devilish Cutie(1), Garodeth vs. Zeth(8), Netherworld Lieutenant(2)
+  [2] HUMAN plays Lilith, Devilish Cutie (1pp)
+  [3] HUMAN ends turn
+=== turn 1, BOT to act ===
+    BOT   HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand: Netherworld Lieutenant(2), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Raz, Demon on the Drums(2)
+    HUMAN HP 20/20  PP 0/1  EP 2 SEP 2  deck 35  hand 4  cemetery 0
+          field: [0] Lilith, Devilish Cutie 1/1 [sick]
+          hand (HIDDEN from the bot): Baal, Elemental Resonance(3), Raz, Demon on the Drums(2), Garodeth vs. Zeth(8), Netherworld Lieutenant(2)
+  [4] BOT toggles bonus PP   bot_value +8.4
+      explain: path search, 2 candidates, nodes 265, top-2 margin 11.9
+        cand    +8.4 (worst +2.2; worlds +14 +10 +2 +8; ends opp_reply): BOT toggles bonus PP
+        cand    -3.5 (worst -9.3; worlds +2 -3 -9 -4; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:bonus_pp | B:play Raz, Demon on the Drums | B:end_turn | H:play Netherworld Lieutenant | H:attack s0->leader | H:end_turn  [end opp_reply]
+  [5] BOT plays Raz, Demon on the Drums (2pp)   bot_value +7.4
+      explain: path search, 3 candidates, nodes 202, top-2 margin 0.4
+        cand    +8.1 (worst +3.0; worlds +11 +5 +3 +13; ends opp_reply): BOT plays Raz, Demon on the Drums (2pp)
+        cand    +7.7 (worst +2.6; worlds +11 +5 +3 +13; ends opp_reply): BOT plays Netherworld Lieutenant (2pp)
+        cand    -3.7 (worst -9.1; worlds -0 -7 -9 +1; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:play Raz, Demon on the Drums | B:end_turn | H:play Lilith, Devilish Cutie | H:attack s0->leader | H:end_turn  [end opp_reply]
+  [6] BOT ends turn
+=== turn 2, HUMAN to act ===
+    BOT   HP 20/20  PP 0/1  EP 2 SEP 2  deck 35  hand 4  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/2 [sick]
+          hand: Netherworld Lieutenant(2), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8)
+    HUMAN HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0
+          field: [0] Lilith, Devilish Cutie 1/1
+          hand (HIDDEN from the bot): Baal, Elemental Resonance(3), Raz, Demon on the Drums(2), Garodeth vs. Zeth(8), Netherworld Lieutenant(2), Baal, Elemental Resonance(3)
+  [7] HUMAN plays Raz, Demon on the Drums (2pp)
+  [8] HUMAN attacks: Lilith, Devilish Cutie 1/1 -> LEADER
+  [9] HUMAN ends turn
+=== turn 2, BOT to act ===
+    BOT   HP 18/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/2
+          hand: Netherworld Lieutenant(2), Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Bibatii, Eld Sight(4)
+    HUMAN HP 19/20  PP 0/2  EP 2 SEP 2  deck 34  hand 4  cemetery 0
+          field: [0] Lilith, Devilish Cutie 1/1; [1] Raz, Demon on the Drums 1/2 [sick]
+          hand (HIDDEN from the bot): Baal, Elemental Resonance(3), Garodeth vs. Zeth(8), Netherworld Lieutenant(2), Baal, Elemental Resonance(3)
+  [10] BOT plays Netherworld Lieutenant (2pp)   bot_value +15.2
+      explain: path search, 5 candidates, nodes 1016, top-2 margin 0.0
+        cand   +15.0 (worst +12.8; worlds +14 +18 +13 +15; ends opp_reply): BOT plays Netherworld Lieutenant (2pp)
+        cand   +15.0 (worst +12.8; worlds +14 +18 +13 +15; ends tt): BOT attacks: Raz, Demon on the Drums 1/2 -> Lilith, Devilish Cutie 1/1
+        cand    +9.3 (worst -3.7; worlds +12 +16 -4 +13; ends tt): BOT attacks: Raz, Demon on the Drums 1/2 -> LEADER
+        expected line (top candidate, best world): B:play Netherworld Lieutenant | B:attack s0->{'slot': 0} | B:end_turn | H:play Bat | H:play Lilith, Devilish Cutie | H:attack s0->leader | H:end_turn  [end opp_reply]
+  [11] BOT attacks: Raz, Demon on the Drums 1/2 -> Lilith, Devilish Cutie 1/1   bot_value +12.9
+      explain: path search, 4 candidates, nodes 470, top-2 margin 2.7
+        cand   +13.7 (worst +5.5; worlds +10 +17 +5 +23; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 -> Lilith, Devilish Cutie 1/1
+        cand   +11.0 (worst +3.4; worlds +7 +12 +3 +21; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 -> LEADER
+        cand    +7.7 (worst -0.0; worlds +4 +9 -0 +18; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 -> Raz, Demon on the Drums 1/2 [sick]
+        expected line (top candidate, best world): B:attack s0->{'slot': 0} | B:end_turn | H:play Bat | H:attack s0->leader | H:end_turn  [end opp_reply]
+  [12] BOT ends turn
+=== turn 3, HUMAN to act ===
+    BOT   HP 18/20  PP 0/2  EP 2 SEP 2  deck 34  hand 4  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/1; [1] Netherworld Lieutenant 1/1 [sick]
+          hand: Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Bibatii, Eld Sight(4)
+    HUMAN HP 19/20  PP 3/3  EP 2 SEP 2  deck 33  hand 6  cemetery 1
+          field: [0] Raz, Demon on the Drums 1/2
+          hand (HIDDEN from the bot): Baal, Elemental Resonance(3), Garodeth vs. Zeth(8), Netherworld Lieutenant(2), Baal, Elemental Resonance(3), Bat(1), Garodeth vs. Zeth(8)
+  [13] HUMAN plays Baal, Elemental Resonance (3pp)
+  [14] HUMAN chooses {"mode": 0}
+  [15] HUMAN attacks: Raz, Demon on the Drums 2/3 -> LEADER
+  [16] HUMAN ends turn
+=== turn 3, BOT to act ===
+    BOT   HP 16/20  PP 3/3  EP 2 SEP 2  deck 33  hand 5  cemetery 0 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/1; [1] Netherworld Lieutenant 1/1
+          hand: Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Bibatii, Eld Sight(4), Fickle Necromancer(3)
+    HUMAN HP 19/20  PP 0/3  EP 2 SEP 2  deck 33  hand 5  cemetery 1
+          field: [0] Raz, Demon on the Drums 2/3; [1] Baal, Elemental Resonance 3/3 [sick]
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Netherworld Lieutenant(2), Baal, Elemental Resonance(3), Bat(1), Garodeth vs. Zeth(8)
+  [17] BOT attacks: Raz, Demon on the Drums 1/1 -> LEADER   bot_value +4.1
+      explain: path search, 8 candidates, nodes 15437, top-2 margin 0.0
+        cand    +2.8 (worst +0.2; worlds +1 +4 +0 +6; ends cap_reply): BOT attacks: Raz, Demon on the Drums 1/1 -> LEADER
+        cand    +2.8 (worst +0.2; worlds +1 +4 +0 +6; ends opp_reply): BOT attacks: Netherworld Lieutenant 1/1 -> Baal, Elemental Resonance 3/3 [sick]
+        cand    +0.1 (worst -2.5; worlds -1 +1 -3 +3; ends cap_reply): BOT plays Fickle Necromancer (3pp)
+        expected line (top candidate, best world): B:attack s0->leader | B:attack s1->{'slot': 1} | B:attack s1->{'slot': 1} | B:play Fickle Necromancer | B:attack s2->leader | B:end_turn | H:play Bat | H:attack s0->leader | H:play Void Colonel | H:end_turn  [end cap_reply]
+  [18] BOT plays Fickle Necromancer (3pp)   bot_value +1.6
+      explain: path search, 5 candidates, nodes 10354, top-2 margin 0.0
+        cand    +1.6 (worst +0.5; worlds +3 +1 +2 +1; ends opp_reply): BOT plays Fickle Necromancer (3pp)
+        cand    +1.6 (worst +0.5; worlds +3 +1 +2 +1; ends opp_reply): BOT attacks: Netherworld Lieutenant 1/1 -> Baal, Elemental Resonance 3/3 [sick]
+        cand    -1.1 (worst -2.2; worlds +0 -2 -0 -2; ends opp_reply): BOT attacks: Netherworld Lieutenant 1/1 -> Raz, Demon on the Drums 2/3
+        expected line (top candidate, best world): B:play Fickle Necromancer | B:attack s1->{'slot': 1} | B:attack s2->leader | B:attack s4->{'slot': 1} | B:end_turn | H:play Bat | H:attack s0->leader | H:play Netherworld Lieutenant | H:end_turn  [end opp_reply]
+  [19] BOT attacks: Netherworld Lieutenant 1/1 -> Baal, Elemental Resonance 3/3 [sick]   bot_value +1.1
+      explain: path search, 7 candidates, nodes 5891, top-2 margin 0.0
+        cand    +4.6 (worst -2.0; worlds +6 +7 +6 -2; ends opp_reply): BOT attacks: Netherworld Lieutenant 1/1 -> Baal, Elemental Resonance 3/3 [sick]
+        cand    +4.6 (worst -2.0; worlds +6 +7 +6 -2; ends tt): BOT attacks: Ghost 1/1 [storm,sick] -> LEADER
+        cand    +1.8 (worst -4.7; worlds +4 +5 +4 -5; ends opp_reply): BOT attacks: Netherworld Lieutenant 1/1 -> Raz, Demon on the Drums 2/3
+        expected line (top candidate, best world): B:attack s1->{'slot': 1} | B:attack s2->leader | B:attack s4->{'slot': 1} | B:end_turn | H:play Bat | H:play Netherworld Lieutenant | H:attack s0->leader | H:end_turn  [end opp_reply]
+  [20] BOT attacks: Ghost 1/1 [storm,sick] -> LEADER   bot_value +1.7
+      explain: path search, 6 candidates, nodes 2448, top-2 margin 0.0
+        cand    +3.2 (worst -2.5; worlds +11 +2 +2 -2; ends opp_reply): BOT attacks: Ghost 1/1 [storm,sick] -> LEADER
+        cand    +3.2 (worst -2.5; worlds +11 +2 +2 -2; ends tt): BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Baal, Elemental Resonance 3/2 [sick]
+        cand    +0.5 (worst -5.2; worlds +9 -1 -1 -5; ends opp_reply): BOT attacks: Ghost 1/1 [storm,sick] -> Raz, Demon on the Drums 2/3
+        expected line (top candidate, best world): B:attack s2->leader | B:attack s4->{'slot': 1} | B:end_turn | H:play Bat | H:play Netherworld Lieutenant | H:attack s0->leader | H:end_turn  [end opp_reply]
+  [21] BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Baal, Elemental Resonance 3/2 [sick]   bot_value +7.3
+      explain: path search, 3 candidates, nodes 597, top-2 margin 12.2
+        cand    +4.5 (worst -3.3; worlds +11 -3 +2 +8; ends opp_reply): BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Baal, Elemental Resonance 3/2 [sick]
+        cand    -7.7 (worst -15.9; worlds -2 -16 -7 -6; ends opp_reply): BOT ends turn
+        cand   -14.9 (worst -22.7; worlds -10 -23 -14 -13; ends opp_reply): BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Raz, Demon on the Drums 2/3
+        expected line (top candidate, best world): B:attack s4->{'slot': 1} | B:end_turn | H:play Bat | H:play Netherworld Lieutenant | H:attack s0->leader | H:end_turn  [end opp_reply]
+  [22] BOT ends turn
+=== turn 4, HUMAN to act ===
+    BOT   HP 16/20  PP 0/3  EP 2 SEP 2  deck 33  hand 4  cemetery 2 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/1; [1] Fickle Necromancer 1/1 [sick]; [2] Skeleton 1/1 [sick]
+          hand: Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Bibatii, Eld Sight(4)
+    HUMAN HP 17/20  PP 4/4  EP 2 SEP 2  deck 32  hand 6  cemetery 2
+          field: [0] Raz, Demon on the Drums 2/3
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Netherworld Lieutenant(2), Baal, Elemental Resonance(3), Bat(1), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6)
+  [23] HUMAN plays Baal, Elemental Resonance (3pp)
+  [24] HUMAN chooses {"mode": 0}
+  [25] HUMAN attacks: Raz, Demon on the Drums 3/4 -> LEADER
+  [26] HUMAN ends turn
+=== turn 4, BOT to act ===
+    BOT   HP 13/20  PP 4/4  EP 2 SEP 2  deck 32  hand 5  cemetery 2 bonusPP(early used, late avail)
+          field: [0] Raz, Demon on the Drums 1/1; [1] Fickle Necromancer 1/1; [2] Skeleton 1/1
+          hand: Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Bibatii, Eld Sight(4), Raz, Demon on the Drums(2)
+    HUMAN HP 17/20  PP 1/4  EP 2 SEP 2  deck 32  hand 5  cemetery 2
+          field: [0] Raz, Demon on the Drums 3/4; [1] Baal, Elemental Resonance 3/3 [sick]
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Netherworld Lieutenant(2), Bat(1), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6)
+  [27] BOT evolves Raz, Demon on the Drums 1/1   bot_value +14.9
+      explain: path search, 15 candidates, nodes 15816, top-2 margin 0.3; re-run would choose: BOT attacks: Fickle Necromancer 1/1 -> Raz, Demon on the Drums 3/4
+        cand   +12.6 (worst +4.3; worlds +4 +15 +24 +7; ends cap_reply,depth_reply): BOT attacks: Fickle Necromancer 1/1 -> Raz, Demon on the Drums 3/4
+        cand   +12.3 (worst +11.5; worlds +13 +11 +12 +13; ends depth_reply): BOT evolves Raz, Demon on the Drums 1/1
+        cand   +12.3 (worst +11.5; worlds +13 +11 +12 +13; ends cap_reply): BOT attacks: Skeleton 1/1 -> LEADER
+        expected line (top candidate, best world): B:attack s1->{'slot': 0} | B:play Raz, Demon on the Drums | B:evolve | B:choose {"slot": 1} | B:attack s2->{'slot': 0} | B:attack s1->{'slot': 0} | B:attack s0->leader | B:end_turn | H:play Bat | H:play Baal, Elemental Resonance  [end cap_reply]
+  [28] BOT chooses {"slot": 0}   bot_value +19.8
+      explain: path search, 2 candidates, nodes 16000, top-2 margin 7.1
+        cand   +25.5 (worst +11.5; worlds +24 +32 +11 +35; ends depth_reply,opp_reply): BOT chooses {"slot": 0}
+        cand   +18.4 (worst +15.3; worlds +24 +20 +15 +15; ends depth_reply,opp_reply): BOT chooses {"slot": 1}
+        expected line (top candidate, best world): B:choose {"slot": 0} | B:attack s0->leader | B:attack s2->{'slot': 0} | B:attack s1->{'slot': 1} | B:play Bibatii, Eld Sight | B:attack s1->{'slot': 0} | B:end_turn | H:play Bat | H:play Fickle Necromancer | H:evolve  [end depth_reply]
+  [29] BOT attacks: Fickle Necromancer 1/1 -> LEADER   bot_value +5.7
+      explain: path search, 12 candidates, nodes 15737, top-2 margin 0.0; re-run would choose: BOT attacks: Raz, Demon on the Drums 3/3*E -> LEADER
+        cand   +13.4 (worst +7.2; worlds +13 +13 +21 +7; ends cap_reply): BOT attacks: Raz, Demon on the Drums 3/3*E -> LEADER
+        cand   +13.4 (worst +7.2; worlds +13 +13 +21 +7; ends tt): BOT attacks: Skeleton 1/1 -> Raz, Demon on the Drums 3/1
+        cand   +12.9 (worst +5.4; worlds +13 +13 +21 +5; ends cap_reply,opp_reply): BOT plays Bibatii, Eld Sight (4pp)
+        expected line (top candidate, best world): B:attack s0->leader | B:attack s2->{'slot': 0} | B:attack s1->leader | B:play Bibatii, Eld Sight | B:end_turn | H:attack s0->{'slot': 2} | H:play Bat | H:play Lilith, Enchanting Succubus | H:attack s0->{'slot': 1} | H:evolve  [end cap_reply]
+  [30] BOT attacks: Skeleton 1/1 -> Raz, Demon on the Drums 3/1   bot_value +6.0
+      explain: path search, 9 candidates, nodes 13517, top-2 margin 1.3
+        cand    +9.4 (worst -0.2; worlds +8 +11 -0 +19; ends opp_reply,tt): BOT attacks: Skeleton 1/1 -> Raz, Demon on the Drums 3/1
+        cand    +8.1 (worst -5.5; worlds +8 +11 -5 +19; ends opp_reply): BOT attacks: Raz, Demon on the Drums 3/3*E -> Baal, Elemental Resonance 3/3 [sick]
+        cand    +6.0 (worst -2.4; worlds -2 +8 +0 +18; ends opp_reply): BOT plays Bibatii, Eld Sight (4pp)
+        expected line (top candidate, best world): B:attack s2->{'slot': 0} | B:attack s0->{'slot': 0} | B:play Bibatii, Eld Sight | B:end_turn | H:play Bat | H:attack s0->{'slot': 1} | H:play Netherworld Lieutenant | H:play Netherworld Lieutenant | H:evolve | H:attack s2->{'slot': 1}  [end opp_reply]
+  [31] BOT attacks: Raz, Demon on the Drums 3/3*E -> Baal, Elemental Resonance 3/3 [sick]   bot_value +7.5
+      explain: path search, 6 candidates, nodes 3340, top-2 margin 0.5
+        cand    +5.2 (worst -16.4; worlds -16 +10 +13 +14; ends opp_reply): BOT attacks: Raz, Demon on the Drums 3/3*E -> Baal, Elemental Resonance 3/3 [sick]
+        cand    +4.6 (worst -22.9; worlds -23 +15 +13 +14; ends opp_reply): BOT plays Raz, Demon on the Drums (2pp)
+        cand    -1.7 (worst -23.5; worlds -16 +21 -24 +12; ends opp_reply): BOT plays Bibatii, Eld Sight (4pp)
+        expected line (top candidate, best world): B:attack s0->{'slot': 0} | B:play Raz, Demon on the Drums | B:end_turn | H:play Bat | H:attack s0->{'slot': 1} | H:play Netherworld Lieutenant | H:evolve | H:attack s1->{'slot': 0} | H:end_turn  [end opp_reply]
+  [32] BOT plays Bibatii, Eld Sight (4pp)   bot_value +15.7
+      explain: path search, 3 candidates, nodes 759, top-2 margin 0.1; re-run would choose: BOT plays Raz, Demon on the Drums (2pp)
+        cand    +9.0 (worst +2.5; worlds +11 +18 +2 +4; ends opp_reply): BOT plays Raz, Demon on the Drums (2pp)
+        cand    +8.9 (worst -17.6; worlds +11 +28 +14 -18; ends opp_reply): BOT plays Bibatii, Eld Sight (4pp)
+        cand    -4.0 (worst -10.9; worlds -1 +5 -11 -9; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:play Raz, Demon on the Drums | B:end_turn | H:play Bat | H:attack s0->{'slot': 1} | H:play Lilith, Devilish Cutie | H:evolve | H:attack s1->{'slot': 0} | H:end_turn  [end opp_reply]
+  [33] BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Skeleton 1/1 [sick]   bot_value +4.0
+      explain: path search, 2 candidates, nodes 376, top-2 margin 1.2
+        cand    -2.7 (worst -12.8; worlds -13 -12 +8 +6; ends opp_reply): BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Skeleton 1/1 [sick]
+        cand    -3.9 (worst -12.8; worlds -13 -12 +6 +4; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:attack s2->{'slot': 0} | B:end_turn | H:play Bat | H:play Netherworld Lieutenant | H:evolve | H:attack s1->{'slot': 2} | H:attack s1->{'slot': 2} | H:play Void Colonel | H:end_turn  [end opp_reply]
+  [34] BOT ends turn
+=== turn 5, HUMAN to act ===
+    BOT   HP 13/20  PP 0/4  EP 1 SEP 2  deck 32  hand 5  cemetery 4 bonusPP(early used, late avail)
+          field: [0] Fickle Necromancer 1/1; [1] Skeleton 1/1 [sick]; [2] Bibatii, Eld Sight 5/4*E [sick]
+          hand: Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Raz, Demon on the Drums(2), Depths of the Eld Sight(1)
+    HUMAN HP 16/20  PP 5/5  EP 2 SEP 2  deck 31  hand 6  cemetery 5
+          field: (empty)
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Netherworld Lieutenant(2), Bat(1), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Hark to the Night Song(3)
+  [35] HUMAN plays Hark to the Night Song (3pp)
+  [36] HUMAN plays Netherworld Lieutenant (2pp)
+  [37] HUMAN ends turn
+=== turn 5, BOT to act ===
+    BOT   HP 11/20  PP 5/5  EP 1 SEP 2  deck 31  hand 6  cemetery 7 bonusPP(early used, late avail)
+          field: (empty)
+          hand: Highwire Feline(5), Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Raz, Demon on the Drums(2), Depths of the Eld Sight(1), Adahime, Anathema of Death(6)
+    HUMAN HP 16/20  PP 0/5  EP 2 SEP 2  deck 31  hand 4  cemetery 6
+          field: [0] Netherworld Lieutenant 1/1 [sick]
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Bat(1), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6)
+  [38] BOT plays Highwire Feline (5pp)   bot_value +2.7
+      explain: path search, 4 candidates, nodes 8476, top-2 margin 6.9
+        cand    +8.1 (worst +1.8; worlds +12 +2 +13 +6; ends opp_reply): BOT plays Highwire Feline (5pp)
+        cand    +1.1 (worst -10.4; worlds -10 -6 +11 +10; ends depth_reply,opp_reply): BOT plays Raz, Demon on the Drums (2pp)
+        cand    +1.1 (worst -10.4; worlds -10 -6 +11 +10; ends depth_reply,opp_reply): BOT plays Depths of the Eld Sight (1pp)
+        expected line (top candidate, best world): B:play Highwire Feline | B:choose {"slot": 0} | B:evolve | B:attack s1->{'slot': 0} | B:end_turn | H:play Bat | H:play Lilith, Enchanting Succubus | H:end_turn  [end opp_reply]
+  [39] BOT chooses {"slot": 0}
+  [40] BOT evolves Highwire Feline 4/5 [sick]   bot_value -7.0
+      explain: path search, 3 candidates, nodes 540, top-2 margin 1.4; re-run would choose: BOT evolves Skeleton 1/1 [sick]
+        cand   +15.9 (worst +11.5; worlds +20 +12 +16 +15; ends opp_reply): BOT evolves Skeleton 1/1 [sick]
+        cand   +14.5 (worst -8.5; worlds +27 -8 +22 +17; ends opp_reply): BOT evolves Highwire Feline 4/5 [sick]
+        cand   -23.5 (worst -41.7; worlds -10 -21 -21 -42; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:evolve | B:attack s1->{'slot': 0} | B:end_turn | H:play Bat | H:play Netherworld Lieutenant | H:end_turn  [end opp_reply]
+  [41] BOT chooses {"slot": 0}
+  [42] BOT ends turn
+=== turn 6, HUMAN to act ===
+    BOT   HP 11/20  PP 0/5  EP 0 SEP 2  deck 31  hand 5  cemetery 7 bonusPP(early used, late avail)
+          field: [0] Highwire Feline 6/7*E [sick]; [1] Skeleton 1/1 [sick]; [2] Skeleton 1/1 [sick]
+          hand: Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Raz, Demon on the Drums(2), Depths of the Eld Sight(1), Adahime, Anathema of Death(6)
+    HUMAN HP 16/20  PP 6/6  EP 2 SEP 2  deck 30  hand 5  cemetery 8
+          field: (empty)
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Bat(1), Garodeth vs. Zeth(8), Adahime, Anathema of Death(6), Void Colonel(6)
+  [43] HUMAN plays Adahime, Anathema of Death (6pp)
+  [44] HUMAN evolves Adahime, Anathema of Death 5/4 [sick]
+  [45] HUMAN attacks: Adahime, Anathema of Death 7/6*E [sick] -> Highwire Feline 6/7*E [sick]
+  [46] HUMAN attacks: Raz, Demon on the Drums 1/2 [rush,sick] -> Skeleton 1/1 [sick]
+  [47] HUMAN attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Skeleton 1/1 [sick]
+  [48] HUMAN ends turn
+=== turn 6, BOT to act ===
+    BOT   HP 11/20  PP 6/6  EP 0 SEP 2  deck 30  hand 6  cemetery 10 bonusPP(early used, late avail)
+          field: (empty)
+          hand: Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Raz, Demon on the Drums(2), Depths of the Eld Sight(1), Adahime, Anathema of Death(6), Highwire Feline(5)
+    HUMAN HP 16/20  PP 0/6  EP 1 SEP 2  deck 28  hand 4  cemetery 10
+          field: [0] Raz, Demon on the Drums 1/1 [rush,sick]; [1] Netherworld Lieutenant 2/1 [rush,sick]
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Bat(1), Garodeth vs. Zeth(8), Void Colonel(6)
+  [49] BOT toggles bonus PP   bot_value +20.8
+      explain: path search, 6 candidates, nodes 15236, top-2 margin 7.0
+        cand   +19.4 (worst +2.4; worlds +20 +24 +2 +31; ends cap_reply,depth_reply,tt): BOT toggles bonus PP
+        cand   +12.3 (worst -4.1; worlds +20 -4 +2 +31; ends cap_reply,depth_reply,opp_reply): BOT plays Adahime, Anathema of Death (6pp)
+        cand    -7.3 (worst -29.9; worlds -30 +6 -18 +13; ends depth_reply,opp_reply): BOT plays Highwire Feline (5pp)
+        expected line (top candidate, best world): B:bonus_pp | B:play Adahime, Anathema of Death | B:play Depths of the Eld Sight | B:evolve | B:attack s0->{'slot': 1}  [end tt]
+  [50] BOT plays Adahime, Anathema of Death (6pp)   bot_value +11.7
+      explain: path search, 5 candidates, nodes 14997, top-2 margin 10.6; re-run would choose: BOT plays Depths of the Eld Sight (1pp)
+        cand    +1.7 (worst -21.0; worlds -12 -21 +14 +25; ends cap_reply,depth_reply,opp_reply): BOT plays Depths of the Eld Sight (1pp)
+        cand    -8.9 (worst -15.8; worlds -15 -13 -16 +8; ends cap_reply,depth_reply,opp_reply): BOT plays Adahime, Anathema of Death (6pp)
+        cand    -9.7 (worst -30.2; worlds -8 -30 +15 -16; ends depth_reply,opp_reply): BOT plays Raz, Demon on the Drums (2pp)
+        expected line (top candidate, best world): B:play Depths of the Eld Sight | B:play Adahime, Anathema of Death | B:evolve | B:attack s1->{'slot': 1} | B:attack s0->{'slot': 0} | B:attack s2->{'slot': 0} | B:end_turn | H:play Bat | H:play Fickle Necromancer | H:attack s2->{'slot': 1}  [end depth_reply]
+  [51] BOT attacks: Lilith, Devilish Cutie 1/1 [rush,sick] -> Netherworld Lieutenant 2/1 [rush,sick]   bot_value +13.9
+      explain: path search, 9 candidates, nodes 15591, top-2 margin 0.0; re-run would choose: BOT plays Depths of the Eld Sight (1pp)
+        cand   +21.5 (worst +4.2; worlds +4 +40 +14 +27; ends opp_reply): BOT plays Depths of the Eld Sight (1pp)
+        cand   +21.5 (worst +4.2; worlds +4 +40 +14 +27; ends tt): BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]
+        cand   +18.0 (worst -9.8; worlds -10 +40 +14 +27; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 [rush,sick] -> Raz, Demon on the Drums 1/1 [rush,sick]
+        expected line (top candidate, best world): B:play Depths of the Eld Sight | B:evolve | B:attack s0->{'slot': 1} | B:attack s2->{'slot': 0} | B:attack s1->{'slot': 0} | B:end_turn | H:play Bat | H:play Lilith, Devilish Cutie | H:play World of Games | H:end_turn  [end opp_reply]
+  [52] BOT plays Bat (1pp)   bot_value +8.5
+      explain: path search, 6 candidates, nodes 11033, top-2 margin 6.6
+        cand    -1.5 (worst -6.4; worlds -5 +5 +0 -6; ends opp_reply): BOT plays Bat (1pp)
+        cand    -8.1 (worst -9.6; worlds -8 -5 -10 -10; ends opp_reply,tt): BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]
+        cand   -14.0 (worst -18.9; worlds -19 -1 -19 -18; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 [rush,sick] -> Raz, Demon on the Drums 1/1 [rush,sick]
+        expected line (top candidate, best world): B:play Bat | B:evolve | B:attack s2->{'slot': 0} | B:attack s0->{'slot': 0} | B:end_turn | H:play Adahime, Anathema of Death | H:evolve | H:choose {"slot": 2} | H:play Bat | H:attack s1->{'slot': 0}  [end opp_reply]
+  [53] BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]   bot_value +0.5
+      explain: path search, 6 candidates, nodes 7277, top-2 margin 4.7
+        cand   -12.4 (worst -37.4; worlds -5 -4 -37 -4; ends opp_reply): BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]
+        cand   -17.1 (worst -37.4; worlds -5 -22 -37 -4; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 [rush,sick] -> Raz, Demon on the Drums 1/1 [rush,sick]
+        cand   -19.4 (worst -40.9; worlds -13 -10 -41 -13; ends opp_reply,tt): BOT attacks: Bat 1/1 [drain,rush,sick] -> Raz, Demon on the Drums 1/1 [rush,sick]
+        expected line (top candidate, best world): B:evolve | B:attack s2->{'slot': 0} | B:attack s0->{'slot': 0} | B:end_turn | H:play Bat | H:play Lilith, Devilish Cutie | H:play Highwire Feline | H:choose {"slot": 2} | H:evolve | H:choose {"slot": 0}  [end opp_reply]
+  [54] BOT attacks: Bat 3/3 [drain,rush,sick] -> Raz, Demon on the Drums 1/1 [rush,sick]   bot_value -7.4
+      explain: path search, 4 candidates, nodes 1929, top-2 margin 0.0; re-run would choose: BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Raz, Demon on the Drums 1/1 [rush,sick]
+        cand   +15.8 (worst -6.4; worlds -6 +39 +27 +3; ends opp_reply): BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Raz, Demon on the Drums 1/1 [rush,sick]
+        cand   +15.8 (worst -6.4; worlds -6 +39 +27 +3; ends opp_reply): BOT attacks: Bat 3/3 [drain,rush,sick] -> Raz, Demon on the Drums 1/1 [rush,sick]
+        cand    +2.2 (worst -20.4; worlds -20 +36 +9 -17; ends opp_reply): BOT attacks: Raz, Demon on the Drums 3/4 [rush,sick] -> Raz, Demon on the Drums 1/1 [rush,sick]
+        expected line (top candidate, best world): B:attack s0->{'slot': 0} | B:attack s2->{'slot': 0} | B:end_turn | H:play Bat | H:play Netherworld Lieutenant | H:end_turn  [end opp_reply]
+  [55] BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Skeleton 1/1 [sick]   bot_value -2.0
+      explain: path search, 3 candidates, nodes 611, top-2 margin 8.4
+        cand    +0.8 (worst -34.2; worlds -34 +30 -1 +8; ends opp_reply): BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Skeleton 1/1 [sick]
+        cand    -7.6 (worst -37.4; worlds -37 +29 -20 -2; ends opp_reply): BOT attacks: Raz, Demon on the Drums 3/4 [rush,sick] -> Skeleton 1/1 [sick]
+        cand   -12.7 (worst -40.0; worlds -40 +16 -26 -1; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:attack s0->{'slot': 0} | B:end_turn | H:play Bat | H:play Baal, Elemental Resonance | H:choose {"mode": 0} | H:play Hark to the Night Song | H:end_turn  [end opp_reply]
+  [56] BOT ends turn
+=== turn 7, HUMAN to act ===
+    BOT   HP 13/20  PP 0/6  EP 0 SEP 1  deck 28  hand 5  cemetery 11 bonusPP(early used, late used)
+          field: [0] Adahime, Anathema of Death 8/7*SE [sick]; [1] Raz, Demon on the Drums 3/4 [rush,sick]; [2] Bat 3/2 [drain,rush,sick]
+          hand: Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Raz, Demon on the Drums(2), Depths of the Eld Sight(1), Highwire Feline(5)
+    HUMAN HP 14/20  PP 7/7  EP 1 SEP 2  deck 27  hand 5  cemetery 13
+          field: (empty)
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Bat(1), Garodeth vs. Zeth(8), Void Colonel(6), Highwire Feline(5)
+  [57] HUMAN plays Highwire Feline (5pp)
+  [58] HUMAN chooses {"slot": 2, "player": "b"}
+  [59] HUMAN SUPER-evolves Highwire Feline 4/5 [sick]
+  [60] HUMAN chooses {"slot": 1, "player": "b"}
+  [61] HUMAN attacks: Highwire Feline 7/8*SE [sick] -> Adahime, Anathema of Death 8/7*SE [sick]
+  [62] HUMAN plays Void Colonel (6pp)
+  [63] HUMAN ends turn
+=== turn 7, BOT to act ===
+    BOT   HP 12/20  PP 7/7  EP 0 SEP 1  deck 27  hand 6  cemetery 13 bonusPP(early used, late used)
+          field: [0] Raz, Demon on the Drums 3/1 [rush]
+          hand: Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Raz, Demon on the Drums(2), Depths of the Eld Sight(1), Highwire Feline(5), Hark to the Night Song(3)
+    HUMAN HP 14/20  PP 0/7  EP 1 SEP 1  deck 27  hand 3  cemetery 13
+          field: [0] Highwire Feline 7/8*SE [sick]; [1] Skeleton 1/1 [sick]; [2] Skeleton 1/1 [sick]; [3] Void Colonel (amulet, cd 4)
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Bat(1), Garodeth vs. Zeth(8)
+  [64] BOT plays Hark to the Night Song (3pp)   bot_value +28.7
+      explain: path search, 10 candidates, nodes 15548, top-2 margin 11.4; re-run would choose: BOT plays Depths of the Eld Sight (1pp)
+        cand   +27.1 (worst -30.9; worlds +57 +39 -31 +44; ends cap_reply,depth_reply): BOT plays Depths of the Eld Sight (1pp)
+        cand   +15.7 (worst -24.5; worlds +33 +22 -25 +32; ends cap_reply,depth_reply): BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> Skeleton 1/1 [sick]
+        cand   +15.7 (worst -24.5; worlds +33 +22 -25 +32; ends cap_reply,depth_reply): BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> Skeleton 1/1 [sick]
+        expected line (top candidate, best world): B:play Depths of the Eld Sight | B:play Adahime, Anathema of Death | B:attack s3->{'slot': 1} | B:evolve | B:attack s1->{'slot': 0} | B:attack s0->leader | B:attack s3->{'slot': 0} | B:end_turn | H:play Bat | H:play Lilith, Devilish Cutie  [end cap_reply]
+  [65] BOT SUPER-evolves Raz, Demon on the Drums 3/1 [rush]   bot_value +26.6
+      explain: path search, 8 candidates, nodes 15401, top-2 margin 1.9; re-run would choose: BOT plays Raz, Demon on the Drums (2pp)
+        cand   +24.2 (worst +14.3; worlds +14 +29 +17 +36; ends cap_reply,depth_reply): BOT plays Raz, Demon on the Drums (2pp)
+        cand   +22.3 (worst +14.3; worlds +14 +20 +19 +36; ends opp_reply): BOT SUPER-evolves Raz, Demon on the Drums 3/1 [rush]
+        cand   +20.1 (worst +7.4; worlds +14 +29 +7 +30; ends cap_reply,depth_reply): BOT plays Depths of the Eld Sight (1pp)
+        expected line (top candidate, best world): B:play Raz, Demon on the Drums | B:play Depths of the Eld Sight | B:evolve | B:choose {"slot": 0} | B:attack s0->leader | B:end_turn | H:play Lilith, Enchanting Succubus | H:play Bat | H:evolve | H:attack s0->{'slot': 0}  [end cap_reply]
+  [66] BOT chooses {"slot": 0}   bot_value +18.6
+      explain: path search, 3 candidates, nodes 12900, top-2 margin 18.1
+        cand    +3.7 (worst -80.0; worlds +39 -80 +37 +18; ends opp_lethal,opp_reply): BOT chooses {"slot": 0}
+        cand   -14.4 (worst -80.0; worlds +22 -80 +5 -4; ends opp_lethal,opp_reply): BOT chooses {"slot": 1}
+        cand   -14.4 (worst -80.0; worlds +22 -80 +5 -4; ends opp_lethal,opp_reply): BOT chooses {"slot": 2}
+        expected line (top candidate, best world): B:choose {"slot": 0} | B:attack s0->leader | B:play Depths of the Eld Sight | B:play Baal, Elemental Resonance | B:choose {"mode": 0} | B:end_turn | H:play Bat | H:attack s0->{'slot': 0} | H:evolve | H:attack s2->{'slot': 1}  [end opp_reply]
+  [67] BOT plays Depths of the Eld Sight (1pp)   bot_value -14.2
+      explain: path search, 6 candidates, nodes 4584, top-2 margin 1.7; re-run would choose: BOT attacks: Raz, Demon on the Drums 6/4*SE [rush] -> LEADER
+        cand   -11.8 (worst -80.0; worlds +6 +18 +9 -80; ends opp_reply,tt): BOT attacks: Raz, Demon on the Drums 6/4*SE [rush] -> LEADER
+        cand   -13.5 (worst -80.0; worlds +3 +15 +7 -80; ends opp_lethal,opp_reply): BOT plays Raz, Demon on the Drums (2pp)
+        cand   -19.8 (worst -80.0; worlds -26 +18 +9 -80; ends opp_lethal,opp_reply): BOT plays Depths of the Eld Sight (1pp)
+        expected line (top candidate, best world): B:attack s0->leader | B:play Depths of the Eld Sight | B:play Baal, Elemental Resonance  [end tt]
+  [68] BOT attacks: Raz, Demon on the Drums 6/4*SE [rush] -> LEADER   bot_value +26.5
+      explain: path search, 5 candidates, nodes 2068, top-2 margin 1.9
+        cand    -8.9 (worst -80.0; worlds +13 -80 +16 +15; ends opp_reply,tt): BOT attacks: Raz, Demon on the Drums 6/4*SE [rush] -> LEADER
+        cand   -10.8 (worst -80.0; worlds +11 -80 +10 +15; ends opp_lethal,opp_reply): BOT plays Raz, Demon on the Drums (2pp)
+        cand   -23.8 (worst -80.0; worlds -4 -80 -3 -8; ends tt): BOT attacks: Raz, Demon on the Drums 6/4*SE [rush] -> Skeleton 1/1 [sick]
+        expected line (top candidate, best world): B:attack s0->leader | B:end_turn | H:play Bat | H:play Baal, Elemental Resonance | H:choose {"mode": 0} | H:attack s0->leader | H:evolve | H:attack s3->{'slot': 0} | H:end_turn  [end opp_reply]
+  [69] BOT plays Raz, Demon on the Drums (2pp)   bot_value -30.4
+      explain: path search, 2 candidates, nodes 957, top-2 margin 19.2
+        cand   +32.9 (worst +14.0; worlds +14 +39 +40 +38; ends opp_reply): BOT plays Raz, Demon on the Drums (2pp)
+        cand   +13.7 (worst -19.8; worlds -20 +23 +24 +28; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:play Raz, Demon on the Drums | B:end_turn | H:play Bat | H:play Raz, Demon on the Drums | H:evolve | H:choose {"slot": 0} | H:attack s0->{'slot': 1} | H:attack s0->{'slot': 1} | H:end_turn  [end opp_reply]
+  [70] BOT ends turn
+=== turn 8, HUMAN to act ===
+    BOT   HP 12/20  PP 1/7  EP 0 SEP 0  deck 25  hand 5  cemetery 15 bonusPP(early used, late used)
+          field: [0] Raz, Demon on the Drums 6/4*SE [rush]; [1] Raz, Demon on the Drums 1/2 [sick]
+          hand: Macmillan, Reaper of Ceremonies(9), Itsurugi & Taketsumi, Brothers(8), Highwire Feline(5), Istyndet vs. Mitilykket(7), Highwire Feline(5)
+    HUMAN HP 6/20  PP 8/8  EP 1 SEP 1  deck 26  hand 4  cemetery 14
+          field: [0] Skeleton 1/1; [1] Skeleton 1/1; [2] Void Colonel (amulet, cd 3)
+          hand (HIDDEN from the bot): Garodeth vs. Zeth(8), Bat(1), Garodeth vs. Zeth(8), Highwire Feline(5)
+  [71] HUMAN plays Garodeth vs. Zeth (8pp)   [SOLVER: HUMAN has a forced kill here; line H:attack s0->leader | H:attack s1->leader | H:play Garodeth vs. Zeth | H:choose {"mode": 0} | H:evolve | H:attack s3->leader]
+  [72] HUMAN chooses {"mode": 0}   [SOLVER: HUMAN has a forced kill here; line H:choose {"mode": 0} | H:attack s0->leader | H:attack s1->leader | H:evolve | H:attack s3->leader]
+  [73] HUMAN SUPER-evolves Garodeth vs. Zeth 8/8 [storm,sick]   [SOLVER: HUMAN has a forced kill here; line H:attack s0->leader | H:attack s1->leader | H:evolve | H:attack s3->leader]
+  [74] HUMAN attacks: Garodeth vs. Zeth 11/11*SE [storm] -> LEADER   [SOLVER: HUMAN has a forced kill here; line H:attack s0->leader | H:attack s1->leader | H:attack s3->leader]
+  [75] HUMAN attacks: Skeleton 1/1 -> LEADER   [SOLVER: HUMAN has a forced kill here; line H:attack s0->leader]
+
+FINAL: winner HUMAN; bot HP 0, human HP 4
+
+SOLVER SUMMARY (first action index per player-turn where the side to move had a forced kill):
+  turn 8 HUMAN: forced kill available from [71]

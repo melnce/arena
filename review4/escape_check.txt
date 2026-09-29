@@ -1,0 +1,189 @@
+﻿GAME 257109342992564242-5ce21003: human's winning turn starts at [90] (turn 11)
+  bot turn 10 from [86]  (bot HP 10, human HP 14)
+    recorded turn (4 actions) -> human forced kill after it: lethal (rng-dependent)
+    recorded                           first: BOT plays Void Colonel (6pp)
+        + perfect-info rest (3 actions) -> human forced kill: lethal (rng-dependent);  after: bot HP 10, human HP 14, bot board 2, human board 5
+        rest: BOT plays Baal, Elemental Resonance (3pp) ; BOT chooses {"mode": 0} ; BOT ends turn
+    served cand -54.0 (worst -80.0)    first: BOT plays Baal, Elemental Resonance (3pp)
+        + perfect-info rest (3 actions) -> human forced kill: lethal (rng-dependent);  after: bot HP 10, human HP 14, bot board 2, human board 5
+        rest: BOT chooses {"mode": 0} ; BOT plays Void Colonel (6pp) ; BOT ends turn
+    served cand -59.3 (worst -80.0)    first: BOT plays Istyndet vs. Mitilykket (7pp)
+        + perfect-info rest (3 actions) -> human forced kill: lethal;  after: bot HP 10, human HP 14, bot board 5, human board 2
+        rest: BOT plays Baal, Elemental Resonance (3pp) ; BOT chooses {"mode": 1} ; BOT ends turn
+    served cand -59.3 (worst -80.0)    first: BOT plays Istyndet vs. Mitilykket (7pp)
+        + perfect-info rest (3 actions) -> human forced kill: lethal;  after: bot HP 10, human HP 14, bot board 5, human board 2
+        rest: BOT plays Baal, Elemental Resonance (3pp) ; BOT chooses {"mode": 1} ; BOT ends turn
+    served cand -59.5 (worst -80.0)    first: BOT plays Istyndet vs. Mitilykket (7pp)
+        + perfect-info rest (3 actions) -> human forced kill: lethal;  after: bot HP 10, human HP 14, bot board 5, human board 2
+        rest: BOT plays Baal, Elemental Resonance (3pp) ; BOT chooses {"mode": 1} ; BOT ends turn
+    served cand -80.0 (worst -80.0)    first: BOT plays Highwire Feline (5pp)
+        + perfect-info rest (5 actions) -> human forced kill: lethal;  after: bot HP 10, human HP 14, bot board 4, human board 5
+        rest: BOT chooses {"slot": 0} ; BOT plays Baal, Elemental Resonance (3pp) ; BOT chooses {"mode": 0} ; BOT plays Void Colonel (6pp) ; BOT ends turn
+    served cand -80.0 (worst -80.0)    first: BOT plays Adahime, Anathema of Death (6pp)
+        + perfect-info rest (9 actions) -> human forced kill: lethal;  after: bot HP 11, human HP 14, bot board 1, human board 4
+        rest: BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Rotting Zombie 3/1 [rush,ward,sick] ; BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Rotting Zombie 3/2 [rush,ward,sick] ; BOT plays Baal, Elemental Resonance (3pp) ; BOT chooses {"mode": 0} ; BOT attacks: Lilith, Enchanting Succubus 1/1 [rush,sick] -> Rotting Zombie 3/2 [rush,ward,sick] ; BOT plays Bat (1pp) ; BOT attacks: Baal, Eleme
+    served cand -80.0 (worst -80.0)    first: BOT plays Highwire Feline (5pp)
+        + perfect-info rest (4 actions) -> human forced kill: lethal;  after: bot HP 10, human HP 14, bot board 4, human board 4
+        rest: BOT chooses {"slot": 0} ; BOT plays Highwire Feline (5pp) ; BOT chooses {"slot": 0} ; BOT ends turn
+  bot turn 9 from [76]  (bot HP 14, human HP 14)
+    recorded turn (6 actions) -> human forced kill after it: none
+    recorded                           first: BOT plays Bibatii, Eld Sight (4pp)
+        + perfect-info rest (5 actions) -> human forced kill: none;  after: bot HP 14, human HP 14, bot board 1, human board 0
+        rest: BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Void Colonel 4/6 [ward,sick] ; BOT plays Hark to the Night Song (3pp) ; BOT plays Bat (1pp) ; BOT plays Depths of the Eld Sight (1pp) ; BOT ends turn
+    served cand -10.9 (worst -18.5)    first: BOT plays Hark to the Night Song (3pp)
+        + perfect-info rest (4 actions) -> human forced kill: none;  after: bot HP 14, human HP 14, bot board 2, human board 0
+        rest: BOT plays Adahime, Anathema of Death (6pp) ; BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Lilith, Devilish Cutie 1/1 [sick] ; BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Netherworld Lieutenant 2/1 [rush,sick] ; BOT ends turn
+    served cand -16.9 (worst -28.6)    first: BOT plays Highwire Feline (5pp)
+        + perfect-info rest (3 actions) -> human forced kill: none;  after: bot HP 14, human HP 14, bot board 1, human board 0
+        rest: BOT chooses {"slot": 0} ; BOT plays Hark to the Night Song (3pp) ; BOT ends turn
+    served cand -17.2 (worst -46.5)    first: BOT plays Bat (1pp)
+        + perfect-info rest (4 actions) -> human forced kill: none;  after: bot HP 14, human HP 14, bot board 2, human board 0
+        rest: BOT plays Highwire Feline (5pp) ; BOT chooses {"slot": 0} ; BOT plays Hark to the Night Song (3pp) ; BOT ends turn
+    served cand -19.3 (worst -37.6)    first: BOT plays Baal, Elemental Resonance (3pp)
+        + perfect-info rest (3 actions) -> human forced kill: none;  after: bot HP 14, human HP 14, bot board 0, human board 1
+        rest: BOT chooses {"mode": 1} ; BOT plays Hark to the Night Song (3pp) ; BOT ends turn
+    served cand -22.0 (worst -49.3)    first: BOT plays Adahime, Anathema of Death (6pp)
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 13, human HP 15, bot board 0, human board 1
+        rest: BOT plays Baal, Elemental Resonance (3pp) ; BOT chooses {"mode": 1} ; BOT attacks: Lilith, Devilish Cutie 1/1 [rush,sick] -> Void Colonel 4/3 [ward,sick] ; BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Void Colonel 4/2 [ward,sick] ; BOT attacks: Baal, Elemental Resonance 2/2 [rush,sick] -> Void Colonel 4/1 [ward,sick] ; BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Netherworld Li
+    served cand -25.1 (worst -80.0)    first: BOT plays Istyndet vs. Mitilykket (7pp)
+        + perfect-info rest (2 actions) -> human forced kill: unknown;  after: bot HP 14, human HP 14, bot board 5, human board 1
+        rest: BOT plays Bat (1pp) ; BOT ends turn
+    served cand -26.1 (worst -80.0)    first: BOT plays Istyndet vs. Mitilykket (7pp)
+        + perfect-info rest (2 actions) -> human forced kill: unknown;  after: bot HP 14, human HP 14, bot board 5, human board 1
+        rest: BOT plays Bat (1pp) ; BOT ends turn
+GAME 9420046197828951589-5ce21003: human's winning turn starts at [71] (turn 8)
+  bot turn 7 from [64]  (bot HP 12, human HP 14)
+    recorded turn (7 actions) -> human forced kill after it: lethal
+    recorded                           first: BOT plays Hark to the Night Song (3pp)
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 12, human HP 11, bot board 2, human board 1
+        rest: BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> Highwire Feline 7/2*SE [sick] ; BOT plays Raz, Demon on the Drums (2pp) ; BOT plays Depths of the Eld Sight (1pp) ; BOT SUPER-evolves Raz, Demon on the Drums 1/2 [sick] ; BOT chooses {"slot": 0} ; BOT attacks: Raz, Demon on the Drums 4/5*SE [sick] -> Skeleton 1/1 [sick] ; BOT ends turn
+    served cand +27.1 (worst -30.9)    first: BOT plays Depths of the Eld Sight (1pp)
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 12, human HP 8, bot board 2, human board 1
+        rest: BOT plays Raz, Demon on the Drums (2pp) ; BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> LEADER ; BOT SUPER-evolves Raz, Demon on the Drums 1/2 [sick] ; BOT chooses {"slot": 0} ; BOT plays Hark to the Night Song (3pp) ; BOT attacks: Raz, Demon on the Drums 4/5*SE [sick] -> Skeleton 1/1 [sick] ; BOT ends turn
+    served cand +15.7 (worst -24.5)    first: BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> Skeleton 1/1 [sick]
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 12, human HP 11, bot board 2, human board 1
+        rest: BOT plays Raz, Demon on the Drums (2pp) ; BOT plays Hark to the Night Song (3pp) ; BOT plays Depths of the Eld Sight (1pp) ; BOT SUPER-evolves Raz, Demon on the Drums 1/2 [sick] ; BOT chooses {"slot": 0} ; BOT attacks: Raz, Demon on the Drums 4/5*SE [sick] -> Skeleton 1/1 [sick] ; BOT ends turn
+    served cand +15.7 (worst -24.5)    first: BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> Skeleton 1/1 [sick]
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 12, human HP 11, bot board 2, human board 1
+        rest: BOT plays Raz, Demon on the Drums (2pp) ; BOT plays Hark to the Night Song (3pp) ; BOT plays Depths of the Eld Sight (1pp) ; BOT SUPER-evolves Raz, Demon on the Drums 1/2 [sick] ; BOT chooses {"slot": 0} ; BOT attacks: Raz, Demon on the Drums 4/5*SE [sick] -> Skeleton 1/1 [sick] ; BOT ends turn
+    served cand +13.3 (worst -80.0)    first: BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> LEADER
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 12, human HP 8, bot board 2, human board 1
+        rest: BOT plays Raz, Demon on the Drums (2pp) ; BOT SUPER-evolves Raz, Demon on the Drums 1/2 [sick] ; BOT chooses {"slot": 0} ; BOT plays Hark to the Night Song (3pp) ; BOT plays Depths of the Eld Sight (1pp) ; BOT attacks: Raz, Demon on the Drums 4/5*SE [sick] -> Skeleton 1/1 [sick] ; BOT ends turn
+    served cand +4.0 (worst -34.4)     first: BOT plays Raz, Demon on the Drums (2pp)
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 12, human HP 8, bot board 2, human board 1
+        rest: BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> LEADER ; BOT SUPER-evolves Raz, Demon on the Drums 1/2 [sick] ; BOT chooses {"slot": 0} ; BOT plays Hark to the Night Song (3pp) ; BOT plays Depths of the Eld Sight (1pp) ; BOT attacks: Raz, Demon on the Drums 4/5*SE [sick] -> Skeleton 1/1 [sick] ; BOT ends turn
+    served cand -0.3 (worst -36.8)     first: BOT plays Highwire Feline (5pp)
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 12, human HP 13, bot board 4, human board 1
+        rest: BOT chooses {"slot": 0} ; BOT plays Depths of the Eld Sight (1pp) ; BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> Skeleton 1/1 [sick] ; BOT SUPER-evolves Highwire Feline 4/5 [sick] ; BOT chooses {"slot": 1} ; BOT attacks: Highwire Feline 7/8*SE [sick] -> Highwire Feline 7/5*SE [sick] ; BOT ends turn
+    served cand -5.8 (worst -24.5)     first: BOT attacks: Raz, Demon on the Drums 3/1 [rush] -> Highwire Feline 7/8*SE [sick]
+        + perfect-info rest (5 actions) -> human forced kill: none;  after: bot HP 12, human HP 11, bot board 1, human board 1
+        rest: BOT plays Hark to the Night Song (3pp) ; BOT plays Depths of the Eld Sight (1pp) ; BOT SUPER-evolves Skeleton 1/1 [sick] ; BOT attacks: Skeleton 4/4*SE [sick] -> Skeleton 1/1 [sick] ; BOT ends turn
+  bot turn 6 from [49]  (bot HP 11, human HP 16)
+    recorded turn (8 actions) -> human forced kill after it: none
+    recorded                           first: BOT toggles bonus PP
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 11, human HP 15, bot board 3, human board 0
+        rest: BOT plays Depths of the Eld Sight (1pp) ; BOT plays Adahime, Anathema of Death (6pp) ; BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Raz, Demon on the Drums 1/1 [rush,sick] ; BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick] ; BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Netherworld Lieutenant 2/1 [rush,sick] ; BOT attacks: Netherworld Lieutenant 4/3 [rush,sick] -> Skele
+    served cand +12.3 (worst -4.1)     first: BOT plays Adahime, Anathema of Death (6pp)
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 10, human HP 14, bot board 3, human board 0
+        rest: BOT toggles bonus PP ; BOT plays Depths of the Eld Sight (1pp) ; BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick] ; BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Netherworld Lieutenant 2/1 [rush,sick] ; BOT attacks: Lilith, Devilish Cutie 3/3 [rush,sick] -> Raz, Demon on the Drums 1/1 [rush,sick] ; BOT attacks: Raz, Demon on the Drums 3/4 [rush,sick] -> Skeleton 1/1 [sick] ; BOT 
+    served cand -7.3 (worst -29.9)     first: BOT plays Highwire Feline (5pp)
+        + perfect-info rest (6 actions) -> human forced kill: none;  after: bot HP 11, human HP 15, bot board 2, human board 1
+        rest: BOT chooses {"slot": 0} ; BOT plays Depths of the Eld Sight (1pp) ; BOT toggles bonus PP ; BOT SUPER-evolves Skeleton 1/1 [sick] ; BOT attacks: Skeleton 4/4*SE [sick] -> Netherworld Lieutenant 2/1 [rush,sick] ; BOT ends turn
+    served cand -9.3 (worst -28.8)     first: BOT plays Depths of the Eld Sight (1pp)
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 11, human HP 15, bot board 3, human board 0
+        rest: BOT toggles bonus PP ; BOT plays Adahime, Anathema of Death (6pp) ; BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Raz, Demon on the Drums 1/1 [rush,sick] ; BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick] ; BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Netherworld Lieutenant 2/1 [rush,sick] ; BOT attacks: Netherworld Lieutenant 4/3 [rush,sick] -> Skeleton 1/1 [sick] ; BO
+    served cand -20.7 (worst -30.4)    first: BOT plays Raz, Demon on the Drums (2pp)
+        + perfect-info rest (7 actions) -> human forced kill: none;  after: bot HP 11, human HP 15, bot board 4, human board 0
+        rest: BOT toggles bonus PP ; BOT plays Highwire Feline (5pp) ; BOT chooses {"slot": 0} ; BOT SUPER-evolves Highwire Feline 4/5 [sick] ; BOT chooses {"slot": 0} ; BOT attacks: Highwire Feline 7/8*SE [sick] -> Skeleton 1/1 [sick] ; BOT ends turn
+    served cand -43.3 (worst -52.2)    first: BOT ends turn
+        + perfect-info rest (0 actions) -> human forced kill: none;  after: bot HP 11, human HP 16, bot board 0, human board 2
+GAME 11296488206978013884-5ce21003: human's winning turn starts at [58] (turn 7)
+  bot turn 7 from [54]  (bot HP 8, human HP 14)
+    recorded turn (4 actions) -> human forced kill after it: lethal
+    recorded                           first: BOT plays Istyndet vs. Mitilykket (7pp)
+        + perfect-info rest (3 actions) -> human forced kill: lethal;  after: bot HP 8, human HP 13, bot board 4, human board 4
+        rest: BOT SUPER-evolves Istyndet vs. Mitilykket 3/3 [sick] ; BOT attacks: Istyndet vs. Mitilykket 6/6*SE [sick] -> Netherworld Lieutenant 3/1 ; BOT ends turn
+    served cand -80.0 (worst -80.0)    first: BOT plays Fickle Necromancer (3pp)
+        + perfect-info rest (4 actions) -> human forced kill: lethal;  after: bot HP 8, human HP 13, bot board 3, human board 5
+        rest: BOT SUPER-evolves Fickle Necromancer 1/1 [sick] ; BOT attacks: Fickle Necromancer 4/4*SE [sick] -> Netherworld Lieutenant 3/3 ; BOT attacks: Ghost 1/1 [storm,sick] -> Lilith, Devilish Cutie 3/3 ; BOT ends turn
+    served cand -80.0 (worst -80.0)    first: BOT ends turn
+        + perfect-info rest (0 actions) -> human forced kill: lethal;  after: bot HP 8, human HP 14, bot board 0, human board 5
+  bot turn 6 from [42]  (bot HP 19, human HP 15)
+    recorded turn (5 actions) -> human forced kill after it: unknown
+    recorded                           first: BOT attacks: Skeleton 1/1 -> Raz, Demon on the Drums 3/1*E [sick]
+        + perfect-info rest (4 actions) -> human forced kill: unknown;  after: bot HP 19, human HP 15, bot board 1, human board 3
+        rest: BOT plays Bibatii, Eld Sight (4pp) ; BOT evolves Bibatii, Eld Sight 3/3 [sick] ; BOT plays Depths of the Eld Sight (1pp) ; BOT ends turn
+    served cand +28.4 (worst +20.0)    first: BOT evolves Skeleton 1/1
+        + perfect-info rest (3 actions) -> human forced kill: unknown;  after: bot HP 19, human HP 12, bot board 2, human board 3
+        rest: BOT attacks: Skeleton 3/3*E -> LEADER ; BOT plays Bibatii, Eld Sight (4pp) ; BOT ends turn
+    served cand +26.7 (worst +18.9)    first: BOT plays Bibatii, Eld Sight (4pp)
+        + perfect-info rest (4 actions) -> human forced kill: unknown;  after: bot HP 19, human HP 15, bot board 1, human board 3
+        rest: BOT attacks: Skeleton 1/1 -> Raz, Demon on the Drums 3/1*E [sick] ; BOT evolves Bibatii, Eld Sight 3/3 [sick] ; BOT plays Depths of the Eld Sight (1pp) ; BOT ends turn
+    served cand +24.4 (worst +13.7)    first: BOT attacks: Skeleton 1/1 -> LEADER
+        + perfect-info rest (5 actions) -> human forced kill: unknown;  after: bot HP 19, human HP 14, bot board 2, human board 3
+        rest: BOT plays Bibatii, Eld Sight (4pp) ; BOT evolves Bibatii, Eld Sight 3/3 [sick] ; BOT plays Depths of the Eld Sight (1pp) ; BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Raz, Demon on the Drums 3/1*E [sick] ; BOT ends turn
+    served cand +15.2 (worst +9.4)     first: BOT attacks: Skeleton 1/1 -> Netherworld Lieutenant 1/1 [sick]
+        + perfect-info rest (2 actions) -> human forced kill: unknown;  after: bot HP 19, human HP 15, bot board 1, human board 3
+        rest: BOT plays Bibatii, Eld Sight (4pp) ; BOT ends turn
+    served cand +14.7 (worst -5.5)     first: BOT attacks: Skeleton 1/1 -> Lilith, Devilish Cutie 1/1 [sick]
+        + perfect-info rest (5 actions) -> human forced kill: none;  after: bot HP 19, human HP 15, bot board 1, human board 2
+        rest: BOT plays Bibatii, Eld Sight (4pp) ; BOT evolves Bibatii, Eld Sight 3/3 [sick] ; BOT plays Depths of the Eld Sight (1pp) ; BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Raz, Demon on the Drums 3/1*E [sick] ; BOT ends turn
+    served cand +10.0 (worst +5.1)     first: BOT ends turn
+        + perfect-info rest (0 actions) -> human forced kill: none;  after: bot HP 19, human HP 15, bot board 1, human board 3
+GAME 4373984720253669473-5ce21003: human's winning turn starts at [51] (turn 7)
+  bot turn 6 from [45]  (bot HP 5, human HP 10)
+    recorded turn (6 actions) -> human forced kill after it: lethal
+    recorded                           first: BOT toggles bonus PP
+        + perfect-info rest (5 actions) -> human forced kill: lethal;  after: bot HP 5, human HP 12, bot board 4, human board 0
+        rest: BOT plays Istyndet vs. Mitilykket (7pp) ; BOT evolves Istyndet vs. Mitilykket 3/3 [sick] ; BOT attacks: Istyndet vs. Mitilykket 5/5*E [sick] -> Void Colonel 4/4 [ward,sick] ; BOT attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Skeleton 3/1*E ; BOT ends turn
+    served cand -80.0 (worst -80.0)    first: BOT plays Fickle Necromancer (3pp)
+        + perfect-info rest (5 actions) -> human forced kill: lethal;  after: bot HP 5, human HP 10, bot board 3, human board 4
+        rest: BOT toggles bonus PP ; BOT evolves Fickle Necromancer 1/1 [sick] ; BOT attacks: Fickle Necromancer 3/3*E [sick] -> Void Colonel 4/6 [ward,sick] ; BOT attacks: Ghost 1/1 [storm,sick] -> Void Colonel 4/3 [ward,sick] ; BOT ends turn
+    served cand -80.0 (worst -80.0)    first: BOT ends turn
+        + perfect-info rest (0 actions) -> human forced kill: lethal;  after: bot HP 5, human HP 10, bot board 1, human board 4
+  bot turn 5 from [36]  (bot HP 15, human HP 12)
+    recorded turn (3 actions) -> human forced kill after it: none
+    recorded                           first: BOT plays Void Colonel (6pp)
+        + perfect-info rest (2 actions) -> human forced kill: none;  after: bot HP 15, human HP 10, bot board 1, human board 3
+        rest: BOT plays Hark to the Night Song (3pp) ; BOT ends turn
+    served cand -26.4 (worst -29.1)    first: BOT plays Hark to the Night Song (3pp)
+        + perfect-info rest (2 actions) -> human forced kill: none;  after: bot HP 15, human HP 10, bot board 1, human board 3
+        rest: BOT plays Void Colonel (6pp) ; BOT ends turn
+    served cand -39.5 (worst -42.1)    first: BOT ends turn
+        + perfect-info rest (0 actions) -> human forced kill: none;  after: bot HP 15, human HP 12, bot board 0, human board 3
+GAME 14155189002142913913-5ce21003: human's winning turn starts at [51] (turn 7)
+  bot turn 6 from [44]  (bot HP 11, human HP 18)
+    recorded turn (7 actions) -> human forced kill after it: unknown
+    recorded                           first: BOT toggles bonus PP
+        + perfect-info rest (7 actions) -> human forced kill: unknown;  after: bot HP 11, human HP 17, bot board 5, human board 3
+        rest: BOT plays Lilith, Devilish Cutie (1pp) ; BOT plays Adahime, Anathema of Death (6pp) ; BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Rotting Zombie 2/2 ; BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick] ; BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Highwire Feline 6/6*E [sick] ; BOT attacks: Netherworld Lieutenant 4/3 [rush,sick] -> Netherworld Lieutenant 2/1 [rush,sick
+    served cand +53.6 (worst +46.8)    first: BOT plays Lilith, Devilish Cutie (1pp)
+        + perfect-info rest (7 actions) -> human forced kill: unknown;  after: bot HP 11, human HP 17, bot board 5, human board 3
+        rest: BOT toggles bonus PP ; BOT plays Adahime, Anathema of Death (6pp) ; BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Rotting Zombie 2/2 ; BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick] ; BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Highwire Feline 6/6*E [sick] ; BOT attacks: Netherworld Lieutenant 4/3 [rush,sick] -> Netherworld Lieutenant 2/1 [rush,sick] ; BOT ends turn
+    served cand +43.2 (worst +24.7)    first: BOT plays Adahime, Anathema of Death (6pp)
+        + perfect-info rest (9 actions) -> human forced kill: none;  after: bot HP 10, human HP 16, bot board 5, human board 0
+        rest: BOT toggles bonus PP ; BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Netherworld Lieutenant 2/1 [rush,sick] ; BOT plays Lilith, Devilish Cutie (1pp) ; BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick] ; BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Highwire Feline 6/6*E [sick] ; BOT attacks: Lilith, Enchanting Succubus 3/3 [rush,sick] -> Skeleton 1/1 [sick] ; BOT attacks:
+    served cand +35.7 (worst +26.7)    first: BOT evolves Void Colonel 4/6 [ward,sick]
+        + perfect-info rest (6 actions) -> human forced kill: unknown;  after: bot HP 11, human HP 18, bot board 5, human board 4
+        rest: BOT plays Adahime, Anathema of Death (6pp) ; BOT attacks: Void Colonel 6/8*E [ward,sick] -> Netherworld Lieutenant 2/1 [rush,sick] ; BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Rotting Zombie 2/2 ; BOT toggles bonus PP ; BOT plays Lilith, Devilish Cutie (1pp) ; BOT ends turn
+    served cand +33.4 (worst +5.3)     first: BOT SUPER-evolves Void Colonel 4/6 [ward,sick]
+        + perfect-info rest (5 actions) -> human forced kill: unknown;  after: bot HP 11, human HP 17, bot board 3, human board 4
+        rest: BOT plays Void Colonel (6pp) ; BOT toggles bonus PP ; BOT plays Lilith, Devilish Cutie (1pp) ; BOT attacks: Void Colonel 7/9*SE [ward,sick] -> Highwire Feline 6/6*E [sick] ; BOT ends turn
+    served cand +23.6 (worst +19.1)    first: BOT plays Void Colonel (6pp)
+        + perfect-info rest (5 actions) -> human forced kill: unknown;  after: bot HP 11, human HP 17, bot board 3, human board 4
+        rest: BOT SUPER-evolves Void Colonel 4/6 [ward,sick] ; BOT toggles bonus PP ; BOT plays Lilith, Devilish Cutie (1pp) ; BOT attacks: Void Colonel 7/9*SE [ward,sick] -> Highwire Feline 6/6*E [sick] ; BOT ends turn
+    served cand -34.9 (worst -80.0)    first: BOT ends turn
+        + perfect-info rest (0 actions) -> human forced kill: lethal (rng-dependent);  after: bot HP 11, human HP 18, bot board 1, human board 5
+  bot turn 5 from [30]  (bot HP 13, human HP 18)
+    recorded turn (5 actions) -> human forced kill after it: unknown
+    recorded                           first: BOT plays Highwire Feline (5pp)
+        + perfect-info rest (5 actions) -> human forced kill: unknown;  after: bot HP 13, human HP 18, bot board 4, human board 2
+        rest: BOT chooses {"slot": 0} ; BOT evolves Highwire Feline 4/5 [sick] ; BOT chooses {"slot": 0} ; BOT attacks: Highwire Feline 6/7*E [sick] -> Skeleton 1/1 [sick] ; BOT ends turn
+    served cand -18.9 (worst -25.2)    first: BOT plays Lilith, Devilish Cutie (1pp)
+        + perfect-info rest (5 actions) -> human forced kill: none;  after: bot HP 12, human HP 17, bot board 3, human board 3
+        rest: BOT plays Void Colonel (6pp) ; BOT evolves Lilith, Devilish Cutie 1/1 [sick] ; BOT attacks: Lilith, Devilish Cutie 3/3*E [sick] -> Fickle Necromancer 3/3*E [sick] ; BOT plays Bat (1pp) ; BOT ends turn
+    served cand -26.3 (worst -29.1)    first: BOT plays Void Colonel (6pp)
+        + perfect-info rest (5 actions) -> human forced kill: none;  after: bot HP 12, human HP 17, bot board 3, human board 3
+        rest: BOT plays Lilith, Devilish Cutie (1pp) ; BOT evolves Lilith, Devilish Cutie 1/1 [sick] ; BOT attacks: Lilith, Devilish Cutie 3/3*E [sick] -> Fickle Necromancer 3/3*E [sick] ; BOT plays Bat (1pp) ; BOT ends turn
+    served cand -42.0 (worst -46.1)    first: BOT ends turn
+        + perfect-info rest (0 actions) -> human forced kill: none;  after: bot HP 13, human HP 18, bot board 1, human board 4

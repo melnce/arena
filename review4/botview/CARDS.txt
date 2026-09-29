@@ -1,0 +1,142 @@
+90051110  Skeleton  [abysscraft follower token, cost 0 1/1]
+    
+10052110  Lilith, Enchanting Succubus  [abysscraft follower, cost 1 1/1]
+    Last Words: Add a Bat to your hand.
+10851120  Lilith, Devilish Cutie  [abysscraft follower, cost 1 1/1]
+    Strike: Deal 1 damage to both leaders.
+    Last Words: Add a Bat to your hand.
+90051120  Bat  [abysscraft follower token, cost 1 1/1]
+    Drain
+90051130  Ghost  [abysscraft follower token, cost 1 1/1]
+    Storm
+    When this card leaves the field, banish it.
+    At the end of your turn, banish this card.
+90054330  Depths of the Eld Sight  [abysscraft spell token, cost 1]
+    Draw 2 cards.
+10751120  Raz, Demon on the Drums  [abysscraft follower, cost 2 1/2]
+    Last Words: Summon a Skeleton. 
+    
+    Evolve: Select an enemy follower on the field and deal it 3 damage.
+10951120  Netherworld Lieutenant  [abysscraft follower, cost 2 1/1]
+    Last Words: Summon a Netherworld Lieutenant, give it +1/+0 and Rush, and remove Last Words from it.
+10452130  Baal, Elemental Resonance  [abysscraft follower, cost 3 2/2]
+    Fanfare: Select a Mode to activate.
+    1. Give this follower and another random allied follower on the field +1/+1.
+    2. Deal 3 damage to a random enemy follower.
+10552110  Fickle Necromancer  [abysscraft follower, cost 3 1/1]
+    Fanfare: Summon a Ghost and Skeleton.
+    
+    Evolve: Summon a Rotting Zombie.
+10753310  Hark to the Night Song  [abysscraft spell, cost 3]
+    Deal 6 damage split between all enemy followers. Necromancy (6) - Deal 2 damage to the enemy leader.
+90051140  Rotting Zombie  [abysscraft follower token, cost 3 2/2]
+    Last Words: Summon a Rotting Zombie and remove Last Words from it.
+10654120  Bibatii, Eld Sight  [abysscraft follower, cost 4 3/3]
+    Fanfare: Necromancy (4) - Evolve this follower.
+    
+    When this follower evolves, add a Depths of the Eld Sight to your hand.
+10752110  Highwire Feline  [abysscraft follower, cost 5 4/5]
+    Fanfare: Select an enemy follower on the field and deal it 3 damage. Summon a Skeleton.
+    
+    Evolve: Replicate the effects of this card's Fanfare ability.
+10754110  Adahime, Anathema of Death  [abysscraft follower, cost 6 5/4]
+    Fanfare: Summon 2 random differently named Abysscraft followers that cost 2 or less from your deck.
+    
+    Whenever another allied Abysscraft follower enters the field, give it Rush.
+    
+    Super-Evolve: Give all other allied Abysscraft followers on the field +2/+2.
+10952110  Void Colonel  [abysscraft follower, cost 6 4/6]
+    Ward
+    Last Words: Destroy a random enemy follower. Restore 2 defense to your leader.
+10954110  Istyndet vs. Mitilykket  [abysscraft follower, cost 7 3/3]
+    Fanfare: Do this 3 times: "Reanimate (2)." Deal 2 damage to all enemy followers.
+    
+    Super-Evolve: Gain Crest: Istyndet vs. Mitilykket.
+10854110  Itsurugi & Taketsumi, Brothers  [abysscraft follower, cost 8 6/5]
+    Fanfare: Select a Mode to activate.
+    1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.
+    2. Deal 5 damage to all enemy followers. Recover 1 evolution point.
+    
+    Evolve: Select a Mode to activate.
+    1. Draw 2 cards.
+    2. Recover 2 play points.
+10954120  Garodeth vs. Zeth  [abysscraft follower, cost 8 8/8]
+    Activates in hand. At the end of your turn, if your leader's defense is 12 or less, reduce the cost of this card by 1.
+    
+    Fanfare: Select a Mode to activate.
+    1. Give this follower Storm. Deal 2 damage to your leader.
+    2. Give this follower Ward. Deal 8 damage to all enemy followers.
+10754120  Macmillan, Reaper of Ceremonies  [abysscraft follower, cost 9 4/4]
+    Fanfare: Necromancy (10) - Summon 3 copies of Rotting Zombie.
+    
+    During your turn, whenever an allied Departed follower enters the field, give it +1/+0, Rush, and Ward and deal 1 damage to the enemy leader.
+90011310  Deepwood Bounty  [forestcraft spell token, cost 0]
+    Restore 1 defense to your leader.
+10614120  Sathanid, Eld Lance  [forestcraft follower, cost 1 1/1]
+    Fanfare: Reduce your faith's value by 10 to add a Depths of the Eld Lance to your hand and give your faith "Whenever an allied follower evolves, deal 1 damage to the enemy leader."
+    
+    Drain
+10811130  Moelle, Gloomy Maiden  [forestcraft follower, cost 1 1/1]
+    Fanfare: Select a card in your hand and return it to deck. Draw a card.
+    
+    Ward
+10911110  Sprouting Initiate  [forestcraft follower, cost 1 1/1]
+    Fanfare: Combo (3) - Draw a card.
+    
+    Rush
+90011110  Fairy  [forestcraft follower token, cost 1 1/1]
+    Rush
+90014330  Depths of the Eld Lance  [forestcraft spell token, cost 1]
+    Select an unevolved allied follower on the field and evolve it.
+10414110  Ewiyar, Wind Personified  [forestcraft follower, cost 2 2/1]
+    Fanfare: Skybound Art - Recover 1 evolution point.
+    
+    Rush
+10712110  Virewind Fencer  [forestcraft follower, cost 2 2/2]
+    Fanfare: Combo (3) - Give this follower Storm.
+10912110  Leafshadow Assassin  [forestcraft follower, cost 2 2/2]
+    Fanfare: Add a Fairy to your hand. Combo (3) - Give it Bane.
+10913110  Virid Lieutenant  [forestcraft follower, cost 2 1/3]
+    Fanfare: Combo (3) - Draw 2 cards.
+    
+    Evolve: Select another allied follower on the field and give it +1/+1 and Rush.
+10513310  Grace of the Swarmpetal  [forestcraft spell, cost 3]
+    Draw X cards. X is your Combo.
+10514120  Miroku, Swarmpetal  [forestcraft follower, cost 3 2/2]
+    Fanfare: Select a Mode to activate.
+    1. Add 2 copies of Fairy to your hand.
+    2. Recover 2 play points.
+    3. Deal 3 damage split between all enemy followers.
+    
+    Evolve: Replicate the effects of this card's Fanfare ability.
+10914110  Magachiyo, Aromatic Convict  [forestcraft follower, cost 3 2/2]
+    Fanfare: Select an enemy follower on the field and deal it 4 damage. Combo (3) - Deal damage to all enemy followers instead.
+    
+    Super-Evolve: Give this follower Storm.
+10714110  Thestae, Anathema of Distortion  [forestcraft follower, cost 4 3/3]
+    Fanfare: Select an enemy follower on the field and give it -0/-X. X is this follower's attack. Increase your Combo by 1.
+    
+    Evolve: Gain Crest: Thestae, Anathema of Distortion.
+10913310  Crimson Incense  [forestcraft spell, cost 4]
+    Activates in hand. At the end of your turn, Combo (3) - Reduce the cost of this card by 1.
+    
+    Select an enemy follower on the field and destroy it. Draw a card.
+10714120  Great Hart of the Glacial Realm  [forestcraft follower, cost 6 5/5]
+    Fanfare: Add 2 copies of Deepwood Bounty to your hand.
+    
+    At the end of your turn, deal X damage split between all enemy followers. X is this follower's attack.
+    
+    Super-Evolve: Gain Crest: Great Hart of the Glacial Realm.
+10814110  Setus & Maisha, Bladerights  [forestcraft follower, cost 7 4/6]
+    Fanfare: Select an enemy follower on the field and destroy it. Give all other allied followers on the field +1/+1.
+    
+    Storm
+    Ward
+10503210  World of Games  [neutral amulet, cost 1]
+    Countdown (5)
+    Whenever you play another card, if there's a card on the field other than it with the same base cost, advance this amulet's count by 1.
+    Last Words: Draw 2 cards.
+10403120  Lyria, Skydestined  [neutral follower, cost 2 1/1]
+    Enhance (8): Draw a follower that costs 7 or more. Recover 7 play points.
+    
+    Barrier
