@@ -41,6 +41,7 @@ jobs:
   # varies per job by up to ~1.7x (h0_tt 10m45s–18m20s on consecutive runs). Each job
   # timeout is chosen so measured CI time stays under ~two-thirds of
   # timeout-minutes (plus setup/cache).
+  # h0_olsolve_2000 ~13m18s, h0_olsolve_16000 ~19m26s (cloud-agent 2026-09-29, horizon=3,olsolve=1000)
   suite:
     name: slow (${{ matrix.suite }})
     runs-on: ubuntu-latest
@@ -134,6 +135,16 @@ jobs:
             filter: horizon_accounting_matches_baseline_in_meta_games_nodes16000
             ignored: false
             timeout: 30
+          - suite: h0_olsolve_2000
+            test: h0_olsolve
+            filter: olsolve_accounting_matches_meta_games_nodes2000
+            ignored: false
+            timeout: 30
+          - suite: h0_olsolve_16000
+            test: h0_olsolve
+            filter: olsolve_accounting_matches_meta_games_nodes16000
+            ignored: false
+            timeout: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -207,7 +218,9 @@ jobs:
             "h0_oevo": 25,
             "h0_pess": 25,
             "h0_horizon_2000": 25,
-            "h0_horizon_16000": 30
+            "h0_horizon_16000": 30,
+            "h0_olsolve_2000": 30,
+            "h0_olsolve_16000": 45
           }'
 
           failed_jobs=""
@@ -303,7 +316,9 @@ jobs:
             "h0_oevo": 25,
             "h0_pess": 25,
             "h0_horizon_2000": 25,
-            "h0_horizon_16000": 30
+            "h0_horizon_16000": 30,
+            "h0_olsolve_2000": 30,
+            "h0_olsolve_16000": 45
           }'
 
           failed_jobs=""

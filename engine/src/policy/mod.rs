@@ -131,7 +131,9 @@ impl AnyPolicy {
     /// `odepth≥1`), `oevo=0|1` (extend that sweep with one evolve;
     /// default `1` is the sweep-8b flip; `oevo=0` restores the pre-flip
     /// glance path; only meaningful with `olethal=1` and `odepth=0`;
-    /// no hard error for other combinations), `osteps=<u32>` (greedy
+    /// no hard error for other combinations), `olsolve=<u32>` (after a
+    /// sweep miss, run [`forced_lethal`] with this node budget charged to
+    /// the pair cap; default `0` = off), `osteps=<u32>` (greedy
     /// forced-`EndTurn` step; default `6`;
     /// hard stop is `osteps+3`), `wv=<f32>` (saturation bound on every
     /// accumulated value; default `80`), `pess=<f32>` (pessimism weight
@@ -179,7 +181,8 @@ impl AnyPolicy {
     /// `value=net,net=<path>` (the built-in net is the default and is not
     /// printed), non-default
     /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
-    /// `oevo=0` when the evolve branch is off, non-default `wv`,
+    /// `oevo=0` when the evolve branch is off, non-default `olsolve`,
+    /// non-default `wv`,
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
     /// when the allocator is the pre-#46 root-major spend, `info=fair`
     /// / `info=draws` / `info=all` when the information regime is not the
@@ -237,6 +240,9 @@ fn h0_spec(h: &H0) -> String {
     }
     if !h.oevo {
         parts.push("oevo=0".to_string());
+    }
+    if h.olsolve != def.olsolve {
+        parts.push(format!("olsolve={}", h.olsolve));
     }
     if h.osteps != def.osteps {
         parts.push(format!("osteps={}", h.osteps));
@@ -330,6 +336,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.obeam == b.obeam
         && a.olethal == b.olethal
         && a.oevo == b.oevo
+        && a.olsolve == b.olsolve
         && a.osteps == b.osteps
         && a.wv == b.wv
         && a.pess == b.pess
@@ -419,6 +426,10 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     "1" => true,
                     other => return Err(format!("unknown oevo '{other}'")),
                 }
+            }
+            "olsolve" => {
+                let v: u32 = parse_num(val)?;
+                h.olsolve = v;
             }
             "wv" => h.wv = parse_num(val)?,
             "pess" => {

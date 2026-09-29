@@ -24,6 +24,7 @@ use crate::determinize::{determinize_with, determinize_with_stats, OpenStats};
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
 use crate::ids::{AttackTarget, PlayerId};
+use crate::lethal::{forced_lethal, LethalVerdict};
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
 use crate::search_key::search_key;
@@ -145,6 +146,7 @@ struct Evaluator<'a> {
     wv: f32,
     olethal: bool,
     oevo: bool,
+    olsolve: u32,
     osteps: u32,
     net: Option<&'a ValueNet>,
     vocab: &'a [CardId],
@@ -228,6 +230,16 @@ pub struct SearchStats {
     pub opp_lethal_evo_found: u64,
     /// `apply`s spent inside lethal sweeps.
     pub opp_lethal_nodes: u64,
+    /// Bounded [`forced_lethal`] calls after a sweep miss (`olsolve>0`,
+    /// `olethal=1`, `odepth=0`).
+    pub opp_solver_calls: u64,
+    /// Solver calls that found a kill within budget.
+    pub opp_solver_found: u64,
+    /// Solver calls that returned [`LethalVerdict::Unknown`] (budget
+    /// exhausted, not proof of absence).
+    pub opp_solver_unknown: u64,
+    /// `apply`s spent inside solver calls (charged to the node cap).
+    pub opp_solver_nodes: u64,
     /// Searched decisions whose chosen candidate had a determinization
     /// pinned at the clamp floor (`-wv`).
     pub chose_with_lethal_root: u64,
@@ -283,6 +295,10 @@ impl SearchStats {
         self.opp_lethal_found += other.opp_lethal_found;
         self.opp_lethal_evo_found += other.opp_lethal_evo_found;
         self.opp_lethal_nodes += other.opp_lethal_nodes;
+        self.opp_solver_calls += other.opp_solver_calls;
+        self.opp_solver_found += other.opp_solver_found;
+        self.opp_solver_unknown += other.opp_solver_unknown;
+        self.opp_solver_nodes += other.opp_solver_nodes;
         self.chose_with_lethal_root += other.chose_with_lethal_root;
         self.cands_with_lethal_root += other.cands_with_lethal_root;
         self.tt_hits += other.tt_hits;
@@ -353,6 +369,9 @@ pub struct H0 {
     /// leaf (`olethal=1`, `odepth=0` only). Default `true` is the sweep-8b
     /// flip; `oevo=0` restores the pre-flip glance path.
     pub oevo: bool,
+    /// After the opponent-lethal sweep misses, run [`forced_lethal`] with
+    /// this node budget (charged to the pair cap). `0` = off (today).
+    pub olsolve: u32,
     /// Greedy-line steps before a forced `EndTurn`. Default `6` is the sweep-5
     /// flip; the hard stop is `osteps + 3` (today: 9).
     pub osteps: u32,
@@ -420,6 +439,7 @@ impl Default for H0 {
             tt: true,
             olethal: true,
             oevo: true,
+            olsolve: 0,
             osteps: 6,
             fusemacro: true,
             net: Some(builtin_net()),
@@ -487,6 +507,7 @@ impl H0 {
             version: self.value,
             weights: &self.weights,
             oevo: self.oevo,
+            olsolve: self.olsolve,
             osteps: self.osteps,
             net: self.net.as_deref(),
             vocab: root_vocab,
@@ -1622,7 +1643,7 @@ fn horizon_reply_end(cutoff: HorizonCutoff) -> PvEnd {
 fn fix_horizon_pv_end(track: Option<&mut PvTracker>, cutoff: HorizonCutoff) {
     if let Some(t) = track {
         if let Some(mut line) = t.take_last() {
-            if line.end != PvEnd::OppLethal {
+            if line.end != PvEnd::OppLethal && line.end != PvEnd::OppSolver {
                 line.end = horizon_reply_end(cutoff);
             }
             t.restore_last(Some(line));
@@ -2234,15 +2255,40 @@ fn opponent_reply(
         return -eval.wv;
     }
     if odepth == 0 {
-        if eval.olethal
-            && acting_player(state) == me.opponent()
-            && opp_lethal_sweep(db, state, me, nodes, cap, line, eval.oevo, stats)
-        {
-            stats.opp_leaves += 1;
-            if let Some(t) = track.as_deref_mut() {
-                t.set_leaf(-eval.wv, PvEnd::OppLethal, state);
+        if eval.olethal && acting_player(state) == me.opponent() {
+            if opp_lethal_sweep(db, state, me, nodes, cap, line, eval.oevo, stats) {
+                stats.opp_leaves += 1;
+                if let Some(t) = track.as_deref_mut() {
+                    t.set_leaf(-eval.wv, PvEnd::OppLethal, state);
+                }
+                return -eval.wv;
             }
-            return -eval.wv;
+            if eval.olsolve > 0 && *nodes < cap {
+                let budget = eval.olsolve.min(cap - *nodes);
+                stats.opp_solver_calls += 1;
+                let start = *nodes;
+                match forced_lethal(db, state, budget) {
+                    LethalVerdict::Lethal { nodes: spent, .. } => {
+                        *nodes = nodes.saturating_add(spent).min(cap);
+                        stats.opp_solver_found += 1;
+                        stats.opp_solver_nodes += u64::from(*nodes - start);
+                        stats.opp_leaves += 1;
+                        if let Some(t) = track.as_deref_mut() {
+                            t.set_leaf(-eval.wv, PvEnd::OppSolver, state);
+                        }
+                        return -eval.wv;
+                    }
+                    LethalVerdict::Unknown { nodes: spent } => {
+                        *nodes = nodes.saturating_add(spent).min(cap);
+                        stats.opp_solver_unknown += 1;
+                        stats.opp_solver_nodes += u64::from(*nodes - start);
+                    }
+                    LethalVerdict::None { nodes: spent } => {
+                        *nodes = nodes.saturating_add(spent).min(cap);
+                        stats.opp_solver_nodes += u64::from(*nodes - start);
+                    }
+                }
+            }
         }
         let mut s = state.clone();
         greedy_until_end(
