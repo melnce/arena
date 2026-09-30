@@ -458,7 +458,7 @@ const STRONG_H0_TITLE =
   "6 000 search nodes per decision — stronger, ~2× slower; default on desktop";
 const CHEAT_H0 = "h0:nodes=6000,info=all";
 const CHEAT_H0_TITLE =
-  "Full information: sees your hand and both decks' draw order (random effects stay random). For sparring — not a fair opponent.";
+  "Full information: sees your hand and what is left in both decks — not what will be drawn (draws and random effects stay random). For sparring — not a fair opponent.";
 
 function isCheaterPolicy(policy: string): boolean {
   if (!policy.startsWith("h0:")) return false;

@@ -4,11 +4,12 @@
 //!
 //! Search starts from `K = max(1, determinizations)` roots produced by
 //! `determinize_with(state, me, seed, info)` (which reseeds the game RNG).
-//! Under [`Info::All`] every root would be identical, so K is 1 regardless
-//! of `determinizations`. Own-turn search, lethal, and the opponent reply
-//! all run on those roots — the true hidden hand and live game RNG are
-//! never consulted (except under `info=all`, where the opponent hand *is*
-//! the true hand). A lethal is taken only when every root agrees. The
+//! Under [`Info::All`] every root clones the true hidden state (opponent
+//! hand and both decks' contents) and only the RNG seed differs, so K
+//! roots average over future draws and random effects. Own-turn search,
+//! lethal, and the opponent reply all run on those roots — the live game
+//! RNG is never read directly (except under `info=all`, where the opponent
+//! hand *is* the true hand). A lethal is taken only when every root agrees. The
 //! node cap is global. `encode` still masks the opponent's hand at the
 //! leaf; `info` is a search-time knob only.
 
@@ -701,9 +702,7 @@ impl Policy for H0 {
         }
         let subset: Vec<Action> = cand.iter().map(|&i| legal[i].clone()).collect();
         let mut nodes = 0u32;
-        // `info=all` makes every determinization identical; do not spend
-        // `k` copies of the same tree.
-        let k = if self.info == Info::All { 1 } else { self.k() };
+        let k = self.k();
         let mut roots = Vec::with_capacity(k as usize);
         for _ in 0..k {
             if self.info == Info::Open {
