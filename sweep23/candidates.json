@@ -1,0 +1,14 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:net=results/sweep23/leaf-h0e8-s1.json"
+  },
+  {
+    "index": 2,
+    "spec": "h0:net=results/sweep23/leaf-h0e8-s2.json"
+  },
+  {
+    "index": 3,
+    "spec": "h0:net=results/sweep23/leaf-r0.json"
+  }
+]
