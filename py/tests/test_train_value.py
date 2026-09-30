@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -461,3 +463,364 @@ def test_eval_skips_v2_model_on_v1_rows(db, root: Path, tmp_path: Path) -> None:
     )
     report = json.loads(_report_path(out).read_text())
     assert report["eval"][v2_model.name] == {"skipped": "encoding mismatch"}
+
+
+_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "train_value_ref"
+_SYNTH_V2_AUX = [
+    "game_index",
+    "decision_index",
+    "side",
+    "turn",
+    "phase",
+    "v0",
+    "legal_len",
+    "chosen",
+    "random",
+    "first_is_me",
+    "search_v",
+]
+
+
+def _write_synthetic_encoding2(dir: Path, n: int, rows_per_game: int = 88) -> int:
+    feat = np.zeros((n, 567), dtype="<f4")
+    feat[:, 0] = 1.0
+    feat[:, 353 : 353 + 96] = 1.0
+    feat[:, 449 : 449 + 96] = 1.0
+    ids = np.zeros((n, 220), dtype="<u4")
+    labels = np.where(np.arange(n) % 2 == 0, 1.0, -1.0).astype("<f4")
+    aux = np.zeros((n, len(_SYNTH_V2_AUX)), dtype="<f4")
+    aux[:, 0] = np.arange(n) // rows_per_game
+    aux[:, 3] = 4
+    aux[:, 5] = 0.25
+    aux[:, _SYNTH_V2_AUX.index("search_v")] = labels
+    dir.mkdir(parents=True, exist_ok=True)
+    feat.tofile(dir / "features.f32le")
+    ids.tofile(dir / "ids.u32le")
+    labels.tofile(dir / "labels.f32le")
+    aux.tofile(dir / "aux.f32le")
+    meta = {
+        "samples": n,
+        "feature_len": 567,
+        "ids_len": 220,
+        "encoding": 2,
+        "aux_columns": _SYNTH_V2_AUX,
+    }
+    (dir / "meta.json").write_text(json.dumps(meta) + "\n")
+    return sum(f.stat().st_size for f in dir.iterdir())
+
+
+def _run_reference_training(name: str, export: Path, out: Path) -> tuple[dict, dict]:
+    ref = json.loads((_FIXTURES / f"{name}.json").read_text())
+    args = ref["args"]
+    cmd = [
+        "--data",
+        str(export),
+        "--model",
+        args["model"],
+        "--out",
+        str(out),
+        "--seed",
+        str(args["seed"]),
+        "--holdout",
+        str(args["holdout"]),
+        "--epochs",
+        str(args["epochs"]),
+    ]
+    if args.get("hidden") is not None:
+        cmd += ["--hidden", str(args["hidden"]), "--emb", str(args["emb"])]
+    train_value.main(cmd)
+    return json.loads(out.read_text()), json.loads(_report_path(out).read_text())
+
+
+def test_reference_fixtures_reproduce(db, root: Path, tmp_path: Path) -> None:
+    import arena
+
+    for name in ("linear_seed0", "mlp_seed0"):
+        ref = json.loads((_FIXTURES / f"{name}.json").read_text())
+        export = tmp_path / name
+        arena.matchup(
+            db,
+            _forest(root),
+            ref["export_games"],
+            ref["export_seed"],
+            policy_a="h0-fast",
+            policy_b="h0-fast",
+            export=str(export),
+            threads=1,
+        )
+        out = tmp_path / f"{name}_out.json"
+        spec, report = _run_reference_training(name, export, out)
+        assert abs(report["net"]["overall"]["mse"] - ref["holdout_mse"]) < 1e-3
+        assert abs(report["net"]["overall"]["sign_acc"] - ref["holdout_sign_acc"]) < 1e-3
+        if ref["arch"] == "linear":
+            lin = spec["linear"]
+            rlin = ref["linear"]
+            assert max(abs(a - b) for a, b in zip(lin["w"], rlin["w"])) < 1e-4
+            assert (
+                max(
+                    max(abs(a - b) for a, b in zip(row, rrow))
+                    for row, rrow in zip(lin["zone_w"], rlin["zone_w"])
+                )
+                < 1e-4
+            )
+            assert abs(lin["b"] - rlin["b"]) < 1e-4
+        else:
+            for key in ("emb", "w1", "b1", "w2"):
+                a = np.asarray(spec["mlp"][key])
+                b = np.asarray(ref["mlp"][key])
+                assert float(np.max(np.abs(a - b))) < 1e-3
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="memory gate uses /proc VmRSS")
+def test_memory_gate_200k_rows(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    disk_bytes = _write_synthetic_encoding2(data_dir, 200_000)
+    script = f"""
+import importlib.util
+import resource
+import sys
+
+import numpy as np
+import torch
+
+spec = importlib.util.spec_from_file_location("tv", "{_TRAIN}")
+tv = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(tv)
+
+def vm_rss() -> int:
+    for line in open("/proc/self/status"):
+        if line.startswith("VmRSS:"):
+            return int(line.split()[1])
+    return 0
+
+rss0 = vm_rss()
+tv.main(
+    [
+        "--data",
+        "{data_dir}",
+        "--model",
+        "linear",
+        "--out",
+        "{tmp_path / 'out.json'}",
+        "--holdout",
+        "0.1",
+        "--seed",
+        "0",
+        "--epochs",
+        "3",
+    ]
+)
+hwm = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+ratio = (hwm - rss0) * 1024 / {disk_bytes}
+print(ratio)
+if ratio > 1.5:
+    raise SystemExit(f"memory ratio {{ratio:.3f}} > 1.5 (baseline on old code was ~5.1)")
+"""
+    proc = subprocess.run(
+        [sys.executable, "-c", script],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    ratio = float(proc.stdout.strip().splitlines()[-1])
+    assert ratio <= 1.5
+
+
+def test_lbfgs_linear_teacher(db, root: Path, tmp_path: Path) -> None:
+    import arena
+
+    export = tmp_path / "teacher"
+    arena.matchup(
+        db,
+        _forest(root),
+        3,
+        41,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        export=str(export),
+        threads=1,
+    )
+    adam_out = tmp_path / "adam.json"
+    train_value.main(
+        [
+            "--data",
+            str(export),
+            "--model",
+            "linear",
+            "--out",
+            str(adam_out),
+            "--holdout",
+            "0",
+            "--epochs",
+            "20",
+            "--seed",
+            "0",
+        ]
+    )
+    lbfgs_out = tmp_path / "lbfgs.json"
+    train_value.main(
+        [
+            "--data",
+            str(export),
+            "--model",
+            "linear",
+            "--out",
+            str(lbfgs_out),
+            "--holdout",
+            "0",
+            "--optimizer",
+            "lbfgs",
+            "--lbfgs-iters",
+            "200",
+        ]
+    )
+    adam_spec = json.loads(adam_out.read_text())
+    lbfgs_report = json.loads(_report_path(lbfgs_out).read_text())
+    data = train_value.load_dirs([str(export)])
+    row_idx = np.arange(data["features"].shape[0], dtype=np.int32)
+    adam_pred = train_value.predict(adam_spec, data["features"][row_idx], data["ids"][row_idx])
+    adam_unit = adam_pred / float(adam_spec["scale"])
+    adam_train_mse = float(np.mean((adam_unit - data["labels"][row_idx]) ** 2))
+    assert lbfgs_report["final_loss"] <= adam_train_mse + 1e-3
+
+    lbfgs_a = None
+    for seed in (1, 99):
+        out = tmp_path / f"lbfgs_seed{seed}.json"
+        train_value.main(
+            [
+                "--data",
+                str(export),
+                "--model",
+                "linear",
+                "--out",
+                str(out),
+                "--holdout",
+                "0",
+                "--seed",
+                str(seed),
+                "--optimizer",
+                "lbfgs",
+                "--lbfgs-iters",
+                "200",
+            ]
+        )
+        spec = json.loads(out.read_text())
+        if lbfgs_a is None:
+            lbfgs_a = spec
+            continue
+        for key in ("w", "zone_w"):
+            a = np.asarray(lbfgs_a["linear"][key])
+            b = np.asarray(spec["linear"][key])
+            assert float(np.max(np.abs(a - b))) < 1e-6
+        assert abs(lbfgs_a["linear"]["b"] - spec["linear"]["b"]) < 1e-6
+
+    arena.matchup(
+        db,
+        _forest(root),
+        0,
+        1,
+        policy=f"h0:net={lbfgs_out}",
+        threads=1,
+    )
+
+
+def test_mlp_lbfgs_rejected(tmp_path: Path) -> None:
+    data = tmp_path / "tiny"
+    _write_synthetic_encoding2(data, 64)
+    with pytest.raises(SystemExit, match="lbfgs is only supported with --model linear"):
+        train_value.main(
+            [
+                "--data",
+                str(data),
+                "--model",
+                "mlp",
+                "--out",
+                str(tmp_path / "bad.json"),
+                "--optimizer",
+                "lbfgs",
+            ]
+        )
+
+
+def test_numpy_fallback_new_layout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    data = tmp_path / "tiny"
+    _write_synthetic_encoding2(data, 128)
+    monkeypatch.setattr(train_value, "_try_torch", lambda: None)
+    out = tmp_path / "numpy.json"
+    train_value.main(
+        [
+            "--data",
+            str(data),
+            "--model",
+            "linear",
+            "--out",
+            str(out),
+            "--epochs",
+            "2",
+            "--seed",
+            "0",
+        ]
+    )
+    spec = json.loads(out.read_text())
+    assert spec["arch"] == "linear"
+    report = json.loads(_report_path(out).read_text())
+    assert report["optimizer"] == "adam"
+    assert report["epochs_run"] == 2
+    assert report["best_epoch"] <= report["epochs_run"]
+
+
+def test_epochs_run_and_best_epoch(db, root: Path, tmp_path: Path) -> None:
+    import arena
+
+    export = tmp_path / "tiny"
+    arena.matchup(
+        db,
+        _forest(root),
+        2,
+        17,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        export=str(export),
+        threads=1,
+    )
+    out = tmp_path / "holdout.json"
+    train_value.main(
+        [
+            "--data",
+            str(export),
+            "--model",
+            "linear",
+            "--out",
+            str(out),
+            "--holdout",
+            "0.5",
+            "--epochs",
+            "5",
+            "--seed",
+            "0",
+        ]
+    )
+    report = json.loads(_report_path(out).read_text())
+    assert report["epochs_run"] >= 1
+    assert report["best_epoch"] <= report["epochs_run"]
+
+    out0 = tmp_path / "nohold.json"
+    train_value.main(
+        [
+            "--data",
+            str(export),
+            "--model",
+            "linear",
+            "--out",
+            str(out0),
+            "--holdout",
+            "0",
+            "--epochs",
+            "5",
+            "--seed",
+            "0",
+        ]
+    )
+    report0 = json.loads(_report_path(out0).read_text())
+    assert report0["epochs_run"] == 5
+    assert report0["best_epoch"] == 5

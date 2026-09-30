@@ -1243,14 +1243,23 @@ search value, on the leaf's own scale), and that number is a far less
 noisy teacher than the outcome.
 
 `py/train_value.py --data <dir> [<dir> …] --model linear|mlp --out <net.json>`
-loads every directory with `py/samples.py`, concatenates, and splits
-**by game** (`holdout` fraction of distinct `game_index` values, offset
-per directory so games never collide). Flags: `--holdout` (default 0.1),
-`--epochs` (30), `--seed`, `--hidden` (128), `--emb` (16), `--l2`
-(1e-4), `--max-samples`, `--target outcome|search|mix` (default
-`outcome` — trains exactly as before), `--mix-weight w` (default 0.5;
-only meaningful with `mix`), `--search-scale S` (default 60.0, the
-built-in net's `scale`), `--eval MODEL [MODEL …]`. Per row
+loads every directory with `py/samples.py` into a single in-memory
+layout (single-shard exports are mmap'd; multi-shard reads go straight
+into preallocated arrays), then splits **by game** (`holdout` fraction
+of distinct `game_index` values, offset per directory so games never
+collide). Peak RAM is about **1.5× the export size on disk** (training
+rows are gathered per batch; holdout rows stay raw for `predict`); on a
+32 GB machine that is on the order of **10 M rows** at encoding 2
+(≈ 3.2 kB/row). Flags: `--holdout` (default 0.1), `--epochs` (30),
+`--seed`, `--hidden` (128), `--emb` (16), `--l2` (1e-4),
+`--max-samples`, `--optimizer adam|lbfgs` (default `adam`; `lbfgs` is
+**linear only** — full-batch L-BFGS with strong-Wolfe line search,
+deterministic when `--holdout 0`, ignores `--epochs`; stop with
+`--lbfgs-iters`, default 500, or gradient tolerance), `--target
+outcome|search|mix` (default `outcome` — trains exactly as before),
+`--mix-weight w` (default 0.5; only meaningful with `mix`),
+`--search-scale S` (default 60.0, the built-in net's `scale`), `--eval
+MODEL [MODEL …]`. Per row
 `s = clip(search_v / S, −1, 1)`; the training target is `outcome` →
 `label`; `search` → `s`; `mix` → `(1 − w)·label + w·s`. Rows whose
 `search_v` is `NaN`, and every row of a data set that has no
@@ -1259,14 +1268,19 @@ summary prints how many rows had a search value). Loss is MSE against
 that target; Adam with `--l2` weight decay; early stopping on holdout
 MSE (patience 3). Holdout metrics (`sign_acc`, `auc`, `mse`, by turn
 band, the `v0` baseline) stay against the **outcome** label. The
-report adds a `search_v` block alongside `v0` (the search value's own
-sign accuracy / AUC against the outcome on the held-out rows; skipped
-with a note when the column is absent) and, when `--eval` is given,
-an `eval` map of each model JSON's `metric_block` on those same rows
-(printed as `--- eval <basename> ---` after `v0`; unknown ids map to
-index 0 as in the engine). `target`, `mix_weight`, `search_scale`, and
-the search-row count are written into the report and into
-`trained_on`. The model file format does not change.
+report adds `optimizer` (`adam` or `lbfgs`), and for Adam `epochs_run` /
+`best_epoch` (the epoch whose weights were kept; with `--holdout 0`,
+`epochs_run == --epochs`). L-BFGS runs add `iterations`,
+`function_evals`, `final_loss`, `grad_max`, and `stopped` (`tolerance`
+or `iterations`). The report adds a `search_v` block alongside `v0`
+(the search value's own sign accuracy / AUC against the outcome on the
+held-out rows; skipped with a note when the column is absent) and,
+when `--eval` is given, an `eval` map of each model JSON's
+`metric_block` on those same rows (printed as `--- eval <basename>
+---` after `v0`; unknown ids map to index 0 as in the engine).
+`target`, `mix_weight`, `search_scale`, and the search-row count are
+written into the report and into `trained_on`. The model file format
+does not change.
 
 ## One-command iteration (`py/iterate.py`)
 
