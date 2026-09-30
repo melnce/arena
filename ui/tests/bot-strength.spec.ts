@@ -2,6 +2,7 @@ import { expect, test, devices, type Page } from "@playwright/test";
 import { ART, artShot, openSettings } from "./helpers.ts";
 
 const STRONG = "h0:nodes=6000";
+const CHEAT = "h0:nodes=6000,info=all";
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -63,14 +64,15 @@ test("desktop: option list defaults to h0 (strong)", async ({ page }) => {
   await openSettings(page);
   await page.locator("#modeSelect").selectOption("vs-bot");
   const opts = await vsBotOptions(page);
-  expect(opts.map((o) => o.value)).toEqual(["random", "first-legal", "h0", STRONG]);
+  expect(opts.map((o) => o.value)).toEqual(["random", "first-legal", "h0", STRONG, CHEAT]);
   expect(opts[2]?.label).toBe("h0 (standard)");
   expect(opts[3]?.label).toBe("h0 (strong)");
   expect(opts[3]?.title).toContain("6 000 search nodes");
+  expect(opts[4]?.label).toBe("h0 (cheater — sees your hand)");
   await expect(page.locator("#vsBotPolicy")).toHaveValue(STRONG);
   await expect(page.locator("#vsBotPolicyHint")).toContainText("6 000 search nodes");
   await page.locator("#vsBotPolicy").evaluate((el) => {
-    (el as HTMLSelectElement).size = 4;
+    (el as HTMLSelectElement).size = 5;
   });
   await artShot(page.locator("#vsBotFields"), `${ART}/bot_strength_options.png`);
 });
