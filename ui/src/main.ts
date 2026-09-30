@@ -626,10 +626,10 @@ function botBackendBadgeText(): string {
   if (localBotGameError) {
     return `bot: browser (server error: ${localBotGameError})`;
   }
-  if (cheater && (!localBot || !localBot.cheat)) {
-    return "bot: browser (cheater needs an updated local server)";
-  }
   if (localBot && localBotToggleOn() && !localBotQueryOff()) {
+    if (cheater && !localBot.cheat) {
+      return "bot: browser (cheater needs an updated local server)";
+    }
     const cpus = localBot.cpus == null ? "?" : String(localBot.cpus);
     const spec = cheater && localBot.cheat ? localBot.cheat : localBot.strong;
     return `bot: local server (${spec}, ${cpus} cpus)`;

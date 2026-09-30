@@ -211,6 +211,10 @@ test("cheater without cheat field: browser only, no /bot", async ({ page }) => {
 test("no server: cheater vs-bot makes first bot move in browser", async ({ page }) => {
   await boot(page);
   await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser");
+  await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#vsBotPolicy").selectOption(CHEAT_H0);
+  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser");
   await startGame(page, {
     mode: "vs-bot",
     seed: "1",
@@ -225,6 +229,32 @@ test("no server: cheater vs-bot makes first bot move in browser", async ({ page 
     timeout: 15_000,
   });
   await expect(page.locator("#eventLog")).not.toHaveText("", { timeout: 15_000 });
+  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser");
+});
+
+test("cheater with old server and toggle off: plain browser badge, no /bot", async ({ page }) => {
+  const mock = await mockLocalBot(page, { omitCheat: true });
+  await boot(page);
+  await openSettings(page);
+  await page.locator("#localBotToggle").uncheck();
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#vsBotPolicy").selectOption(CHEAT_H0);
+  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser", { timeout: 5_000 });
+  await startGame(page, {
+    mode: "vs-bot",
+    seed: "1",
+    first: "b",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+    human: "a",
+    botPolicy: CHEAT_H0,
+  });
+  await confirmMulligans(page);
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", {
+    timeout: 15_000,
+  });
+  expect(mock.botRequests()).toBe(0);
+  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser");
 });
 
 test("no server: badge is browser and vs-bot still plays", async ({ page }) => {
