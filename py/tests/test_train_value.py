@@ -724,6 +724,53 @@ def test_lbfgs_linear_teacher(db, root: Path, tmp_path: Path) -> None:
     )
 
 
+def test_std_floor_caps_feat_std_and_loads(db, root: Path, tmp_path: Path) -> None:
+    import arena
+
+    export = tmp_path / "tiny"
+    arena.matchup(
+        db,
+        _forest(root),
+        2,
+        17,
+        policy_a="h0-fast",
+        policy_b="h0-fast",
+        export=str(export),
+        threads=1,
+    )
+    out = tmp_path / "floored.json"
+    train_value.main(
+        [
+            "--data",
+            str(export),
+            "--model",
+            "linear",
+            "--out",
+            str(out),
+            "--epochs",
+            "2",
+            "--seed",
+            "0",
+            "--std-floor",
+            "0.05",
+        ]
+    )
+    spec = json.loads(out.read_text())
+    stds = np.asarray(spec["feat_std"], dtype=np.float32)
+    assert float(np.min(stds)) >= 0.05
+    report = json.loads(_report_path(out).read_text())
+    assert report["std_floor"] == 0.05
+    assert spec["trained_on"]["std_floor"] == 0.05
+    arena.matchup(
+        db,
+        _forest(root),
+        0,
+        1,
+        policy=f"h0:net={out}",
+        threads=1,
+    )
+
+
 def test_mlp_lbfgs_rejected(tmp_path: Path) -> None:
     data = tmp_path / "tiny"
     _write_synthetic_encoding2(data, 64)

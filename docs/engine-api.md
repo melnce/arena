@@ -1252,7 +1252,9 @@ rows are gathered per batch; holdout rows stay raw for `predict`); on a
 32 GB machine that is on the order of **10 M rows** at encoding 2
 (≈ 3.2 kB/row). Flags: `--holdout` (default 0.1), `--epochs` (30),
 `--seed`, `--hidden` (128), `--emb` (16), `--l2` (1e-4),
-`--max-samples`, `--optimizer adam|lbfgs` (default `adam`; `lbfgs` is
+`--max-samples`, `--std-floor F` (default `1e-3`, floor under each
+`feat_std`; stored in the model and report), `--optimizer adam|lbfgs`
+(default `adam`; `lbfgs` is
 **linear only** — full-batch L-BFGS with strong-Wolfe line search,
 deterministic when `--holdout 0`, ignores `--epochs`; stop with
 `--lbfgs-iters`, default 500, or gradient tolerance), `--target
@@ -1278,9 +1280,9 @@ held-out rows; skipped with a note when the column is absent) and,
 when `--eval` is given, an `eval` map of each model JSON's
 `metric_block` on those same rows (printed as `--- eval <basename>
 ---` after `v0`; unknown ids map to index 0 as in the engine).
-`target`, `mix_weight`, `search_scale`, and the search-row count are
-written into the report and into `trained_on`. The model file format
-does not change.
+`target`, `mix_weight`, `search_scale`, `std_floor`, and the search-row
+count are written into the report and into `trained_on`. The model file
+format does not change.
 
 ## One-command iteration (`py/iterate.py`)
 

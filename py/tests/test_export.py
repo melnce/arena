@@ -240,6 +240,7 @@ def test_encoding_v2_export_train_and_play(db, root: Path, tmp_path: Path) -> No
                 "eval": None,
                 "optimizer": "adam",
                 "lbfgs_iters": 500,
+                "std_floor": 1e-3,
             },
         )()
     )

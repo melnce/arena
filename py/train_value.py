@@ -70,13 +70,14 @@ def _index_dtype(n_vocab: int):
     return np.uint16 if n_vocab <= 65535 else np.uint32
 
 
-def _chunk_mean_std(features, row_idx, chunk: int = 2048):
+def _chunk_mean_std(features, row_idx, std_floor: float, chunk: int = 2048):
     """Mean/std over training rows without materialising a train-only copy."""
     import numpy as np
 
     n_feat = features.shape[1]
+    floor = float(std_floor)
     if row_idx.size == 0:
-        return np.zeros(n_feat, np.float32), np.full(n_feat, STD_FLOOR, np.float32)
+        return np.zeros(n_feat, np.float32), np.full(n_feat, floor, np.float32)
     sum_v = np.zeros(n_feat, np.float64)
     sum_sq = np.zeros(n_feat, np.float64)
     n = int(row_idx.size)
@@ -87,7 +88,7 @@ def _chunk_mean_std(features, row_idx, chunk: int = 2048):
         sum_sq += np.multiply(block, block, dtype=np.float32).sum(axis=0, dtype=np.float64)
     mean = (sum_v / n).astype(np.float32)
     var = np.maximum(sum_sq / n - mean.astype(np.float64) ** 2, 0.0)
-    std = np.maximum(np.sqrt(var).astype(np.float32), STD_FLOOR)
+    std = np.maximum(np.sqrt(var).astype(np.float32), floor)
     return mean, std
 
 
@@ -925,7 +926,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     games_tr = int(np.unique(game_index[train_idx]).size)
     games_ho = int(np.unique(game_index[hold_idx]).size) if hold_idx.size else 0
 
-    mean, std = _chunk_mean_std(features, train_idx)
+    std_floor = float(args.std_floor)
+    mean, std = _chunk_mean_std(features, train_idx, std_floor)
     vocab = build_vocab(ids, train_idx)
     import gc
 
@@ -1069,6 +1071,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         "mix_weight": mix_w,
         "search_scale": scale_s,
         "search_rows": search_rows,
+        "std_floor": std_floor,
         **train_meta,
     }
     spec["trained_on"] = {
@@ -1079,6 +1082,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         "mix_weight": mix_w,
         "search_scale": scale_s,
         "search_rows": search_rows,
+        "std_floor": std_floor,
         "holdout": {
             "rows": report["rows_holdout"],
             "games": games_ho,
@@ -1118,6 +1122,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--eval", nargs="+", default=None)
     p.add_argument("--optimizer", choices=("adam", "lbfgs"), default="adam")
     p.add_argument("--lbfgs-iters", type=int, default=LBFGS_ITERS_DEFAULT)
+    p.add_argument("--std-floor", type=float, default=STD_FLOOR)
     args = p.parse_args(argv)
     train(args)
     return 0
