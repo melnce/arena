@@ -1,0 +1,409 @@
+GAME 672758849267719898-5ce21003  (engine 2d12e25, bot h0:nodes=16000,horizon=3,info=all = the CHEATER: sees the human's hand and deck contents, not the draw order (draws stay random); leaf h0-linear-v2)
+human (seat a) deck: meta-abyss-midrange;  bot (seat b) deck: meta-abyss-midrange
+went first: BOT;  winner: HUMAN;  actions 92
+Values: +80 = forced win for the side to move, -80 = forced loss; bot values from the bot's side.
+Per bot decision: bot_value = the live bot's own value; explain = the served spec re-run on this position (seed differs
+from the live game, so 're-run would choose' can differ); candidates show aggregate over worlds, worst world, per-world
+values and how lines ended. [SOLVER] = the exact forced-lethal solver (sees everything) on the position BEFORE the action.
+
+  [0] BOT mulligan swap [True, True, False, False]
+  [1] HUMAN mulligan swap [True, False, True, False]
+=== turn 1, BOT to act ===
+    BOT   HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0
+          field: (empty)
+          hand: Netherworld Lieutenant(2), Hark to the Night Song(3), Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4)
+    HUMAN HP 20/20  PP 0/0  EP 2 SEP 2  deck 36  hand 4  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand (visible to the cheater): Netherworld Lieutenant(2), Lilith, Devilish Cutie(1), Fickle Necromancer(3), Lilith, Devilish Cutie(1)
+  [2] BOT ends turn
+=== turn 1, HUMAN to act ===
+    BOT   HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0
+          field: (empty)
+          hand: Netherworld Lieutenant(2), Hark to the Night Song(3), Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4)
+    HUMAN HP 20/20  PP 1/1  EP 2 SEP 2  deck 35  hand 5  cemetery 0 bonusPP(early avail, late avail)
+          field: (empty)
+          hand (visible to the cheater): Netherworld Lieutenant(2), Lilith, Devilish Cutie(1), Fickle Necromancer(3), Lilith, Devilish Cutie(1), Hark to the Night Song(3)
+  [3] HUMAN plays Lilith, Devilish Cutie (1pp)
+  [4] HUMAN ends turn
+=== turn 2, BOT to act ===
+    BOT   HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 6  cemetery 0
+          field: (empty)
+          hand: Netherworld Lieutenant(2), Hark to the Night Song(3), Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4), Raz, Demon on the Drums(2)
+    HUMAN HP 20/20  PP 0/1  EP 2 SEP 2  deck 35  hand 4  cemetery 0 bonusPP(early avail, late avail)
+          field: [0] Lilith, Devilish Cutie 1/1 [sick]
+          hand (visible to the cheater): Netherworld Lieutenant(2), Lilith, Devilish Cutie(1), Fickle Necromancer(3), Hark to the Night Song(3)
+  [5] BOT plays Raz, Demon on the Drums (2pp)   bot_value +15.4
+      explain: path search, 3 candidates, nodes 90, top-2 margin 0.1
+        cand   +13.5 (worst +13.5; worlds +14; ends opp_reply): BOT plays Raz, Demon on the Drums (2pp)
+        cand   +13.5 (worst +13.5; worlds +13; ends opp_reply): BOT plays Netherworld Lieutenant (2pp)
+        cand    +0.6 (worst +0.6; worlds +1; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:play Raz, Demon on the Drums | B:end_turn | H:play Lilith, Devilish Cutie | H:play Lilith, Devilish Cutie | H:bonus_pp | H:attack s0->leader | H:end_turn  [end opp_reply]
+  [6] BOT ends turn
+=== turn 2, HUMAN to act ===
+    BOT   HP 20/20  PP 0/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0
+          field: [0] Raz, Demon on the Drums 1/2 [sick]
+          hand: Netherworld Lieutenant(2), Hark to the Night Song(3), Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4)
+    HUMAN HP 20/20  PP 2/2  EP 2 SEP 2  deck 34  hand 5  cemetery 0 bonusPP(early avail, late avail)
+          field: [0] Lilith, Devilish Cutie 1/1
+          hand (visible to the cheater): Netherworld Lieutenant(2), Lilith, Devilish Cutie(1), Fickle Necromancer(3), Hark to the Night Song(3), Adahime, Anathema of Death(6)
+  [7] HUMAN plays Netherworld Lieutenant (2pp)
+  [8] HUMAN attacks: Lilith, Devilish Cutie 1/1 -> LEADER
+  [9] HUMAN ends turn
+=== turn 3, BOT to act ===
+    BOT   HP 18/20  PP 3/3  EP 2 SEP 2  deck 33  hand 6  cemetery 0
+          field: [0] Raz, Demon on the Drums 1/2
+          hand: Netherworld Lieutenant(2), Hark to the Night Song(3), Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4), Lilith, Devilish Cutie(1)
+    HUMAN HP 19/20  PP 0/2  EP 2 SEP 2  deck 34  hand 4  cemetery 0 bonusPP(early avail, late avail)
+          field: [0] Lilith, Devilish Cutie 1/1; [1] Netherworld Lieutenant 1/1 [sick]
+          hand (visible to the cheater): Lilith, Devilish Cutie(1), Fickle Necromancer(3), Hark to the Night Song(3), Adahime, Anathema of Death(6)
+  [10] BOT plays Netherworld Lieutenant (2pp)   bot_value +27.2
+      explain: path search, 8 candidates, nodes 1518, top-2 margin 0.0
+        cand   +25.4 (worst +25.4; worlds +25; ends opp_reply): BOT plays Netherworld Lieutenant (2pp)
+        cand   +25.4 (worst +25.4; worlds +25; ends tt): BOT attacks: Raz, Demon on the Drums 1/2 -> Lilith, Devilish Cutie 1/1
+        cand   +24.9 (worst +24.9; worlds +25; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        expected line (top candidate, best world): B:play Netherworld Lieutenant | B:attack s0->{'slot': 0} | B:end_turn | H:play Bat | H:attack s0->{'slot': 0} | H:play Lilith, Devilish Cutie | H:bonus_pp | H:attack s1->{'slot': 1} | H:end_turn  [end opp_reply]
+  [11] BOT attacks: Raz, Demon on the Drums 1/2 -> Lilith, Devilish Cutie 1/1   bot_value +27.2
+      explain: path search, 5 candidates, nodes 498, top-2 margin 1.4; re-run would choose: BOT attacks: Raz, Demon on the Drums 1/2 -> LEADER
+        cand   +17.1 (worst +17.1; worlds +17; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 -> LEADER
+        cand   +15.7 (worst +15.7; worlds +16; ends opp_reply): BOT attacks: Raz, Demon on the Drums 1/2 -> Lilith, Devilish Cutie 1/1
+        cand   +13.2 (worst +13.2; worlds +13; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        expected line (top candidate, best world): B:attack s0->leader | B:end_turn | H:attack s1->{'slot': 0} | H:play Lilith, Enchanting Succubus | H:play Lilith, Devilish Cutie | H:bonus_pp | H:attack s0->leader | H:end_turn  [end opp_reply]
+  [12] BOT ends turn   bot_value +26.9
+      explain: path search, 2 candidates, nodes 103, top-2 margin 4.2
+        cand   +23.0 (worst +23.0; worlds +23; ends opp_reply): BOT ends turn
+        cand   +18.8 (worst +18.8; worlds +19; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        expected line (top candidate, best world): B:end_turn | H:play Bat | H:play Lilith, Devilish Cutie | H:attack s0->{'slot': 0} | H:bonus_pp | H:play Void Colonel | H:attack s2->{'slot': 1} | H:end_turn  [end opp_reply]
+=== turn 3, HUMAN to act ===
+    BOT   HP 18/20  PP 1/3  EP 2 SEP 2  deck 33  hand 5  cemetery 0
+          field: [0] Raz, Demon on the Drums 1/1; [1] Netherworld Lieutenant 1/1 [sick]
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4), Lilith, Devilish Cutie(1)
+    HUMAN HP 19/20  PP 3/3  EP 2 SEP 2  deck 33  hand 6  cemetery 1 bonusPP(early avail, late avail)
+          field: [0] Netherworld Lieutenant 1/1
+          hand (visible to the cheater): Lilith, Devilish Cutie(1), Fickle Necromancer(3), Hark to the Night Song(3), Adahime, Anathema of Death(6), Bat(1), Fickle Necromancer(3)
+  [13] HUMAN plays Fickle Necromancer (3pp)
+  [14] HUMAN attacks: Ghost 1/1 [storm,sick] -> Netherworld Lieutenant 1/1 [sick]
+  [15] HUMAN attacks: Netherworld Lieutenant 1/1 -> Netherworld Lieutenant 2/1 [rush,sick]
+  [16] HUMAN attacks: Netherworld Lieutenant 2/1 [rush,sick] -> Raz, Demon on the Drums 1/1
+  [17] HUMAN ends turn
+=== turn 4, BOT to act ===
+    BOT   HP 18/20  PP 4/4  EP 2 SEP 2  deck 32  hand 6  cemetery 3
+          field: [0] Skeleton 1/1
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4), Lilith, Devilish Cutie(1), Adahime, Anathema of Death(6)
+    HUMAN HP 19/20  PP 0/3  EP 2 SEP 2  deck 33  hand 5  cemetery 3 bonusPP(early avail, late avail)
+          field: [0] Fickle Necromancer 1/1 [sick]; [1] Skeleton 1/1 [sick]
+          hand (visible to the cheater): Lilith, Devilish Cutie(1), Fickle Necromancer(3), Hark to the Night Song(3), Adahime, Anathema of Death(6), Bat(1)
+  [18] BOT plays Lilith, Devilish Cutie (1pp)   bot_value +18.8
+      explain: path search, 8 candidates, nodes 2291, top-2 margin 0.0
+        cand   +18.1 (worst +18.1; worlds +18; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand   +18.1 (worst +18.1; worlds +18; ends opp_reply): BOT attacks: Skeleton 1/1 -> Fickle Necromancer 1/1 [sick]
+        cand   +18.1 (worst +18.1; worlds +18; ends opp_reply): BOT attacks: Skeleton 1/1 -> Skeleton 1/1 [sick]
+        expected line (top candidate, best world): B:play Lilith, Devilish Cutie | B:attack s0->{'slot': 0} | B:end_turn | H:attack s0->{'slot': 0} | H:play Bat | H:play Lilith, Devilish Cutie | H:bonus_pp | H:play Fickle Necromancer | H:evolve | H:end_turn  [end opp_reply]
+  [19] BOT attacks: Skeleton 1/1 -> Fickle Necromancer 1/1 [sick]   bot_value +14.6
+      explain: path search, 6 candidates, nodes 720, top-2 margin 0.0; re-run would choose: BOT plays Hark to the Night Song (3pp)
+        cand   +15.1 (worst +15.1; worlds +15; ends opp_reply): BOT plays Hark to the Night Song (3pp)
+        cand   +15.1 (worst +15.1; worlds +15; ends tt): BOT attacks: Skeleton 1/1 -> LEADER
+        cand   +14.3 (worst +14.3; worlds +14; ends opp_reply): BOT plays Hark to the Night Song (3pp)
+        expected line (top candidate, best world): B:play Hark to the Night Song | B:attack s0->leader | B:end_turn | H:play Hark to the Night Song | H:play Lilith, Devilish Cutie | H:bonus_pp | H:play Bat | H:evolve | H:end_turn  [end opp_reply]
+  [20] BOT ends turn   bot_value +18.0
+      explain: path search, 3 candidates, nodes 172, top-2 margin 5.5
+        cand   +19.7 (worst +19.7; worlds +20; ends opp_reply): BOT ends turn
+        cand   +14.1 (worst +14.1; worlds +14; ends opp_reply): BOT plays Hark to the Night Song (3pp)
+        cand   +13.3 (worst +13.3; worlds +13; ends opp_reply): BOT plays Hark to the Night Song (3pp)
+        expected line (top candidate, best world): B:end_turn | H:attack s0->{'slot': 0} | H:play Bat | H:play Lilith, Devilish Cutie | H:bonus_pp | H:play Fickle Necromancer | H:evolve | H:end_turn  [end opp_reply]
+=== turn 4, HUMAN to act ===
+    BOT   HP 18/20  PP 3/4  EP 2 SEP 2  deck 32  hand 5  cemetery 4
+          field: [0] Lilith, Devilish Cutie 1/1 [sick]
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4), Adahime, Anathema of Death(6)
+    HUMAN HP 19/20  PP 4/4  EP 2 SEP 2  deck 32  hand 6  cemetery 4 bonusPP(early avail, late avail)
+          field: [0] Skeleton 1/1
+          hand (visible to the cheater): Lilith, Devilish Cutie(1), Fickle Necromancer(3), Hark to the Night Song(3), Adahime, Anathema of Death(6), Bat(1), Highwire Feline(5)
+  [21] HUMAN plays Fickle Necromancer (3pp)
+  [22] HUMAN attacks: Ghost 1/1 [storm,sick] -> Lilith, Devilish Cutie 1/1 [sick]
+  [23] HUMAN plays Lilith, Devilish Cutie (1pp)
+  [24] HUMAN evolves Fickle Necromancer 1/1 [sick]
+  [25] HUMAN attacks: Skeleton 1/1 -> LEADER
+  [26] HUMAN ends turn
+=== turn 5, BOT to act ===
+    BOT   HP 17/20  PP 5/5  EP 2 SEP 2  deck 31  hand 7  cemetery 5
+          field: (empty)
+          hand: Hark to the Night Song(3), Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4), Adahime, Anathema of Death(6), Bat(1), Hark to the Night Song(3)
+    HUMAN HP 19/20  PP 0/4  EP 1 SEP 2  deck 32  hand 4  cemetery 4 bonusPP(early avail, late avail)
+          field: [0] Skeleton 1/1; [1] Fickle Necromancer 3/3*E [sick]; [2] Skeleton 1/1 [sick]; [3] Lilith, Devilish Cutie 1/1 [sick]; [4] Rotting Zombie 2/2 [sick]
+          hand (visible to the cheater): Hark to the Night Song(3), Adahime, Anathema of Death(6), Bat(1), Highwire Feline(5)
+  [27] BOT plays Hark to the Night Song (3pp)   bot_value +36.9
+      explain: path search, 6 candidates, nodes 8638, top-2 margin 0.0
+        cand   +25.0 (worst +25.0; worlds +25; ends opp_reply): BOT plays Hark to the Night Song (3pp)
+        cand   +25.0 (worst +25.0; worlds +25; ends opp_reply): BOT plays Bat (1pp)
+        cand   +24.3 (worst +24.3; worlds +24; ends opp_reply): BOT plays Hark to the Night Song (3pp)
+        expected line (top candidate, best world): B:play Hark to the Night Song | B:play Bat | B:evolve | B:end_turn | H:play Bat | H:attack s0->{'slot': 0} | H:play Bat | H:play Baal, Elemental Resonance | H:choose {"mode": 1} | H:bonus_pp  [end opp_reply]
+  [28] BOT plays Bat (1pp)   bot_value +26.8
+      explain: path search, 2 candidates, nodes 248, top-2 margin 14.9
+        cand   +25.0 (worst +25.0; worlds +25; ends opp_reply): BOT plays Bat (1pp)
+        cand   +10.1 (worst +10.1; worlds +10; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:play Bat | B:evolve | B:attack s0->{'slot': 0} | B:end_turn | H:play Bat | H:play Bat | H:play Raz, Demon on the Drums | H:evolve | H:choose {"slot": 0} | H:bonus_pp  [end opp_reply]
+  [29] BOT evolves Bat 1/1 [drain,sick]   bot_value +29.4
+      explain: path search, 2 candidates, nodes 178, top-2 margin 22.8
+        cand   +30.3 (worst +30.3; worlds +30; ends opp_reply): BOT evolves Bat 1/1 [drain,sick]
+        cand    +7.4 (worst +7.4; worlds +7; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:evolve | B:end_turn | H:play Bat | H:attack s0->{'slot': 0} | H:play Bat | H:bonus_pp | H:evolve | H:attack s2->{'slot': 0} | H:end_turn  [end opp_reply]
+  [30] BOT ends turn   bot_value +31.6
+      explain: path search, 2 candidates, nodes 117, top-2 margin 0.7
+        cand   +28.6 (worst +28.6; worlds +29; ends opp_reply): BOT ends turn
+        cand   +27.9 (worst +27.9; worlds +28; ends opp_reply): BOT attacks: Bat 3/3*E [drain,sick] -> Rotting Zombie 2/2 [sick]
+        expected line (top candidate, best world): B:end_turn | H:play Bat | H:attack s0->{'slot': 0} | H:play Bat | H:bonus_pp | H:evolve | H:attack s2->{'slot': 0} | H:end_turn  [end opp_reply]
+=== turn 5, HUMAN to act ===
+    BOT   HP 17/20  PP 1/5  EP 1 SEP 2  deck 31  hand 5  cemetery 6
+          field: [0] Bat 3/3*E [drain,sick]
+          hand: Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4), Adahime, Anathema of Death(6), Hark to the Night Song(3)
+    HUMAN HP 17/20  PP 5/5  EP 1 SEP 2  deck 31  hand 6  cemetery 8 bonusPP(early avail, late avail)
+          field: [0] Rotting Zombie 2/2
+          hand (visible to the cheater): Hark to the Night Song(3), Adahime, Anathema of Death(6), Bat(1), Highwire Feline(5), Bat(1), Baal, Elemental Resonance(3)
+  [31] HUMAN plays Highwire Feline (5pp)
+  [32] HUMAN chooses {"slot": 0, "player": "b"}
+  [33] HUMAN evolves Rotting Zombie 2/2
+  [34] HUMAN attacks: Rotting Zombie 4/4*E -> LEADER
+  [35] HUMAN ends turn
+=== turn 6, BOT to act ===
+    BOT   HP 13/20  PP 6/6  EP 1 SEP 2  deck 30  hand 6  cemetery 7
+          field: (empty)
+          hand: Garodeth vs. Zeth(8), Hark to the Night Song(3), Bibatii, Eld Sight(4), Adahime, Anathema of Death(6), Hark to the Night Song(3), World of Games(1)
+    HUMAN HP 17/20  PP 0/5  EP 0 SEP 2  deck 31  hand 5  cemetery 8 bonusPP(early avail, late avail)
+          field: [0] Rotting Zombie 4/4*E; [1] Highwire Feline 4/5 [sick]; [2] Skeleton 1/1 [sick]
+          hand (visible to the cheater): Hark to the Night Song(3), Adahime, Anathema of Death(6), Bat(1), Bat(1), Baal, Elemental Resonance(3)
+  [36] BOT plays Hark to the Night Song (3pp)   bot_value -2.9
+      explain: path search, 6 candidates, nodes 3715, top-2 margin 0.0
+        cand   -16.2 (worst -16.2; worlds -16; ends opp_reply): BOT plays Hark to the Night Song (3pp)
+        cand   -16.2 (worst -16.2; worlds -16; ends opp_reply): BOT plays Hark to the Night Song (3pp)
+        cand   -24.6 (worst -24.6; worlds -25; ends opp_reply): BOT plays Adahime, Anathema of Death (6pp)
+        expected line (top candidate, best world): B:play Hark to the Night Song | B:play Hark to the Night Song | B:end_turn | H:play Adahime, Anathema of Death | H:evolve | H:bonus_pp | H:play Bat | H:end_turn  [end opp_reply]
+  [37] BOT plays Hark to the Night Song (3pp)   bot_value -11.5
+      explain: path search, 3 candidates, nodes 262, top-2 margin 18.6
+        cand   -12.4 (worst -12.4; worlds -12; ends opp_reply): BOT plays Hark to the Night Song (3pp)
+        cand   -31.0 (worst -31.0; worlds -31; ends opp_reply): BOT plays World of Games (1pp)
+        cand   -34.8 (worst -34.8; worlds -35; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:play Hark to the Night Song | B:end_turn | H:play Adahime, Anathema of Death | H:evolve | H:bonus_pp | H:play Bat | H:end_turn  [end opp_reply]
+  [38] BOT ends turn
+=== turn 6, HUMAN to act ===
+    BOT   HP 13/20  PP 0/6  EP 1 SEP 2  deck 30  hand 4  cemetery 9
+          field: (empty)
+          hand: Garodeth vs. Zeth(8), Bibatii, Eld Sight(4), Adahime, Anathema of Death(6), World of Games(1)
+    HUMAN HP 17/20  PP 6/6  EP 0 SEP 2  deck 30  hand 6  cemetery 12 bonusPP(early used, late avail)
+          field: (empty)
+          hand (visible to the cheater): Hark to the Night Song(3), Adahime, Anathema of Death(6), Bat(1), Bat(1), Baal, Elemental Resonance(3), Macmillan, Reaper of Ceremonies(9)
+  [39] HUMAN plays Bat (1pp)
+  [40] HUMAN plays Baal, Elemental Resonance (3pp)
+  [41] HUMAN chooses {"mode": 0}
+  [42] HUMAN ends turn
+=== turn 7, BOT to act ===
+    BOT   HP 13/20  PP 7/7  EP 1 SEP 2  deck 29  hand 5  cemetery 9
+          field: (empty)
+          hand: Garodeth vs. Zeth(8), Bibatii, Eld Sight(4), Adahime, Anathema of Death(6), World of Games(1), Lilith, Devilish Cutie(1)
+    HUMAN HP 17/20  PP 2/6  EP 0 SEP 2  deck 30  hand 4  cemetery 12 bonusPP(early used, late avail)
+          field: [0] Bat 2/2 [drain,sick]; [1] Baal, Elemental Resonance 3/3 [sick]
+          hand (visible to the cheater): Hark to the Night Song(3), Adahime, Anathema of Death(6), Bat(1), Macmillan, Reaper of Ceremonies(9)
+  [43] BOT plays Lilith, Devilish Cutie (1pp)   bot_value +34.8
+      explain: path search, 5 candidates, nodes 12896, top-2 margin 30.1
+        cand   +47.8 (worst +47.8; worlds +48; ends depth_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand   +17.7 (worst +17.7; worlds +18; ends depth_reply): BOT plays Adahime, Anathema of Death (6pp)
+        cand   +11.0 (worst +11.0; worlds +11; ends cap_reply): BOT plays World of Games (1pp)
+        expected line (top candidate, best world): B:play Lilith, Devilish Cutie | B:play Adahime, Anathema of Death | B:attack s2->{'slot': 0} | B:evolve | B:attack s1->{'slot': 1} | B:attack s2->{'slot': 0} | B:end_turn | H:play Hark to the Night Song | H:play Bat | H:bonus_pp  [end depth_reply]
+  [44] BOT plays Adahime, Anathema of Death (6pp)   bot_value +48.7
+      explain: path search, 6 candidates, nodes 12842, top-2 margin 25.1
+        cand   +50.3 (worst +50.3; worlds +50; ends opp_reply): BOT plays Adahime, Anathema of Death (6pp)
+        cand   +25.2 (worst +25.2; worlds +25; ends opp_reply): BOT evolves Lilith, Devilish Cutie 1/1 [sick]
+        cand   +14.9 (worst +14.9; worlds +15; ends opp_reply): BOT SUPER-evolves Lilith, Devilish Cutie 1/1 [sick]
+        expected line (top candidate, best world): B:play Adahime, Anathema of Death | B:attack s2->{'slot': 0} | B:evolve | B:attack s1->{'slot': 1} | B:attack s2->{'slot': 0} | B:end_turn | H:play Hark to the Night Song | H:play Bat | H:bonus_pp | H:end_turn  [end opp_reply]
+  [45] BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]   bot_value +23.2
+      explain: path search, 13 candidates, nodes 11265, top-2 margin 0.0; re-run would choose: BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Bat 2/2 [drain,sick]
+        cand   +47.2 (worst +47.2; worlds +47; ends opp_reply): BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Bat 2/2 [drain,sick]
+        cand   +47.2 (worst +47.2; worlds +47; ends opp_reply): BOT attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Baal, Elemental Resonance 3/3 [sick]
+        cand   +46.7 (worst +46.7; worlds +47; ends opp_reply): BOT SUPER-evolves Adahime, Anathema of Death 5/4 [sick]
+        expected line (top candidate, best world): B:attack s3->{'slot': 0} | B:evolve | B:attack s1->{'slot': 1} | B:attack s2->{'slot': 0} | B:end_turn | H:play Hark to the Night Song | H:play Bat | H:bonus_pp | H:end_turn  [end opp_reply]
+  [46] BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Baal, Elemental Resonance 3/3 [sick]   bot_value +49.2
+      explain: path search, 7 candidates, nodes 954, top-2 margin 0.0
+        cand   +43.5 (worst +43.5; worlds +43; ends opp_reply): BOT attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Baal, Elemental Resonance 3/3 [sick]
+        cand   +43.5 (worst +43.5; worlds +43; ends opp_reply): BOT attacks: Lilith, Enchanting Succubus 3/3 [rush,sick] -> Bat 2/2 [drain,sick]
+        cand   +43.0 (worst +43.0; worlds +43; ends opp_reply): BOT attacks: Netherworld Lieutenant 3/3 [rush,sick] -> Bat 2/2 [drain,sick]
+        expected line (top candidate, best world): B:attack s1->{'slot': 1} | B:attack s2->{'slot': 0} | B:end_turn | H:play Hark to the Night Song | H:play Bat | H:play Raz, Demon on the Drums | H:bonus_pp | H:evolve | H:choose {"slot": 1} | H:end_turn  [end opp_reply]
+  [47] BOT attacks: Netherworld Lieutenant 3/3 [rush,sick] -> Bat 2/2 [drain,sick]   bot_value +48.9
+      explain: path search, 3 candidates, nodes 123, top-2 margin 0.0; re-run would choose: BOT attacks: Lilith, Enchanting Succubus 3/3 [rush,sick] -> Bat 2/2 [drain,sick]
+        cand   +47.6 (worst +47.6; worlds +48; ends opp_reply): BOT attacks: Lilith, Enchanting Succubus 3/3 [rush,sick] -> Bat 2/2 [drain,sick]
+        cand   +47.6 (worst +47.6; worlds +48; ends opp_reply): BOT attacks: Netherworld Lieutenant 3/3 [rush,sick] -> Bat 2/2 [drain,sick]
+        cand   +29.0 (worst +29.0; worlds +29; ends opp_reply): BOT ends turn
+        expected line (top candidate, best world): B:attack s2->{'slot': 0} | B:end_turn | H:play Hark to the Night Song | H:play Bat | H:play Lilith, Devilish Cutie | H:bonus_pp | H:end_turn  [end opp_reply]
+  [48] BOT ends turn
+=== turn 7, HUMAN to act ===
+    BOT   HP 13/20  PP 0/7  EP 1 SEP 1  deck 27  hand 3  cemetery 9
+          field: [0] Lilith, Devilish Cutie 3/3 [sick]; [1] Adahime, Anathema of Death 8/7*SE [sick]; [2] Lilith, Enchanting Succubus 3/3 [rush,sick]; [3] Netherworld Lieutenant 3/1 [rush,sick]
+          hand: Garodeth vs. Zeth(8), Bibatii, Eld Sight(4), World of Games(1)
+    HUMAN HP 16/20  PP 7/7  EP 0 SEP 2  deck 29  hand 5  cemetery 14 bonusPP(early used, late avail)
+          field: (empty)
+          hand (visible to the cheater): Hark to the Night Song(3), Adahime, Anathema of Death(6), Bat(1), Macmillan, Reaper of Ceremonies(9), Highwire Feline(5)
+  [49] HUMAN plays Adahime, Anathema of Death (6pp)
+  [50] HUMAN plays Bat (1pp)
+  [51] HUMAN attacks: Netherworld Lieutenant 1/1 [rush,sick] -> Netherworld Lieutenant 3/1 [rush,sick]
+  [52] HUMAN attacks: Raz, Demon on the Drums 1/2 [rush,sick] -> Netherworld Lieutenant 2/1 [rush,sick]
+  [53] HUMAN SUPER-evolves Adahime, Anathema of Death 5/4 [sick]
+  [54] HUMAN attacks: Adahime, Anathema of Death 8/7*SE [sick] -> Adahime, Anathema of Death 8/7*SE [sick]
+  [55] HUMAN attacks: Bat 3/3 [drain,rush,sick] -> Lilith, Devilish Cutie 3/3 [sick]
+  [56] HUMAN attacks: Skeleton 3/3 [rush,sick] -> Lilith, Enchanting Succubus 3/3 [rush,sick]
+  [57] HUMAN ends turn
+=== turn 8, BOT to act ===
+    BOT   HP 12/20  PP 8/8  EP 1 SEP 1  deck 26  hand 6  cemetery 14
+          field: (empty)
+          hand: Garodeth vs. Zeth(8), Bibatii, Eld Sight(4), World of Games(1), Bat(1), Bat(1), Highwire Feline(5)
+    HUMAN HP 19/20  PP 0/7  EP 0 SEP 1  deck 27  hand 3  cemetery 18 bonusPP(early used, late avail)
+          field: [0] Adahime, Anathema of Death 8/7*SE [sick]; [1] Netherworld Lieutenant 4/3 [rush,sick]
+          hand (visible to the cheater): Hark to the Night Song(3), Macmillan, Reaper of Ceremonies(9), Highwire Feline(5)
+  [58] BOT plays Garodeth vs. Zeth (8pp)   bot_value +14.0
+      explain: path search, 7 candidates, nodes 13397, top-2 margin 7.9; re-run would choose: BOT plays Highwire Feline (5pp)
+        cand   +27.8 (worst +27.8; worlds +28; ends depth_reply): BOT plays Highwire Feline (5pp)
+        cand   +19.9 (worst +19.9; worlds +20; ends opp_reply): BOT plays Garodeth vs. Zeth (8pp)
+        cand   +12.7 (worst +12.7; worlds +13; ends depth_reply): BOT plays Bat (1pp)
+        expected line (top candidate, best world): B:play Highwire Feline | B:choose {"slot": 1} | B:play Bat | B:play Bat | B:play World of Games | B:evolve | B:choose {"slot": 0} | B:attack s0->{'slot': 0} | B:end_turn | H:play Raz, Demon on the Drums  [end depth_reply]
+  [59] BOT chooses {"mode": 1}   bot_value -22.4
+      explain: path search, 2 candidates, nodes 212, top-2 margin 64.4
+        cand   +13.3 (worst +13.3; worlds +13; ends opp_reply): BOT chooses {"mode": 1}
+        cand   -51.2 (worst -51.2; worlds -51; ends opp_reply): BOT chooses {"mode": 0}
+        expected line (top candidate, best world): B:choose {"mode": 1} | B:evolve | B:end_turn | H:play Highwire Feline | H:choose {"slot": 0} | H:bonus_pp | H:play Bibatii, Eld Sight | H:evolve | H:choose {"slot": 0} | H:end_turn  [end opp_reply]
+  [60] BOT evolves Garodeth vs. Zeth 8/8 [ward,sick]   bot_value +17.6
+      explain: path search, 3 candidates, nodes 97, top-2 margin 0.3
+        cand   -26.1 (worst -26.1; worlds -26; ends opp_reply): BOT evolves Garodeth vs. Zeth 8/8 [ward,sick]
+        cand   -26.4 (worst -26.4; worlds -26; ends opp_reply): BOT ends turn
+        cand   -37.1 (worst -37.1; worlds -37; ends opp_reply): BOT SUPER-evolves Garodeth vs. Zeth 8/8 [ward,sick]
+        expected line (top candidate, best world): B:evolve | B:end_turn | H:play Highwire Feline | H:choose {"slot": 0} | H:bonus_pp | H:evolve | H:choose {"slot": 0} | H:attack s0->{'slot': 0} | H:end_turn  [end opp_reply]
+  [61] BOT ends turn
+=== turn 8, HUMAN to act ===
+    BOT   HP 12/20  PP 0/8  EP 0 SEP 1  deck 26  hand 5  cemetery 14
+          field: [0] Garodeth vs. Zeth 10/10*E [ward,sick]
+          hand: Bibatii, Eld Sight(4), World of Games(1), Bat(1), Bat(1), Highwire Feline(5)
+    HUMAN HP 19/20  PP 8/8  EP 0 SEP 1  deck 26  hand 4  cemetery 20 bonusPP(early used, late avail)
+          field: (empty)
+          hand (visible to the cheater): Hark to the Night Song(3), Macmillan, Reaper of Ceremonies(9), Highwire Feline(5), Void Colonel(6)
+  [62] HUMAN plays Highwire Feline (5pp)
+  [63] HUMAN chooses {"slot": 0, "player": "b"}
+  [64] HUMAN SUPER-evolves Highwire Feline 4/5 [sick]
+  [65] HUMAN chooses {"slot": 0, "player": "b"}
+  [66] HUMAN attacks: Highwire Feline 7/8*SE [sick] -> Garodeth vs. Zeth 10/4*E [ward,sick]
+  [67] HUMAN ends turn
+=== turn 9, BOT to act ===
+    BOT   HP 11/20  PP 9/9  EP 0 SEP 1  deck 25  hand 6  cemetery 15
+          field: (empty)
+          hand: Bibatii, Eld Sight(4), World of Games(1), Bat(1), Bat(1), Highwire Feline(5), Istyndet vs. Mitilykket(7)
+    HUMAN HP 19/20  PP 3/8  EP 0 SEP 0  deck 26  hand 3  cemetery 20 bonusPP(early used, late avail)
+          field: [0] Highwire Feline 7/8*SE [sick]; [1] Skeleton 1/1 [sick]; [2] Skeleton 1/1 [sick]
+          hand (visible to the cheater): Hark to the Night Song(3), Macmillan, Reaper of Ceremonies(9), Void Colonel(6)
+  [68] BOT plays World of Games (1pp)   bot_value -21.1
+      explain: path search, 7 candidates, nodes 13048, top-2 margin 13.7
+        cand   -17.8 (worst -17.8; worlds -18; ends opp_reply): BOT plays World of Games (1pp)
+        cand   -31.4 (worst -31.4; worlds -31; ends opp_reply): BOT plays Istyndet vs. Mitilykket (7pp)
+        cand   -34.9 (worst -34.9; worlds -35; ends opp_reply): BOT plays Bat (1pp)
+        expected line (top candidate, best world): B:play World of Games | B:play Istyndet vs. Mitilykket | B:evolve | B:attack s1->{'slot': 0} | B:end_turn | H:play Macmillan, Reaper of Ceremonies | H:attack s1->{'slot': 0} | H:attack s1->{'slot': 0} | H:bonus_pp | H:end_turn  [end opp_reply]
+  [69] BOT plays Bat (1pp)   bot_value -26.2
+      explain: path search, 6 candidates, nodes 10915, top-2 margin 0.3; re-run would choose: BOT plays Istyndet vs. Mitilykket (7pp)
+        cand   -31.1 (worst -31.1; worlds -31; ends opp_reply): BOT plays Istyndet vs. Mitilykket (7pp)
+        cand   -31.4 (worst -31.4; worlds -31; ends depth_reply): BOT plays Bat (1pp)
+        cand   -31.4 (worst -31.4; worlds -31; ends depth_reply): BOT plays Bat (1pp)
+        expected line (top candidate, best world): B:play Istyndet vs. Mitilykket | B:evolve | B:attack s1->{'slot': 0} | B:end_turn | H:play Macmillan, Reaper of Ceremonies | H:attack s1->{'slot': 4} | H:attack s1->{'slot': 1} | H:attack s1->{'slot': 1} | H:bonus_pp | H:end_turn  [end opp_reply]
+  [70] BOT plays Bat (1pp)   bot_value -25.9
+      explain: path search, 6 candidates, nodes 12268, top-2 margin 0.5; re-run would choose: BOT plays Bibatii, Eld Sight (4pp)
+        cand   -24.1 (worst -24.1; worlds -24; ends opp_reply): BOT plays Bibatii, Eld Sight (4pp)
+        cand   -24.6 (worst -24.6; worlds -25; ends opp_reply): BOT plays Istyndet vs. Mitilykket (7pp)
+        cand   -26.0 (worst -26.0; worlds -26; ends opp_reply): BOT plays Bat (1pp)
+        expected line (top candidate, best world): B:play Bibatii, Eld Sight | B:play Depths of the Eld Sight | B:play Bat | B:evolve | B:attack s1->{'slot': 0} | B:end_turn | H:attack s0->leader | H:play Macmillan, Reaper of Ceremonies | H:attack s4->{'slot': 2} | H:bonus_pp  [end opp_reply]
+  [71] BOT plays Bibatii, Eld Sight (4pp)   bot_value -24.0
+      explain: path search, 5 candidates, nodes 8622, top-2 margin 0.0; re-run would choose: BOT plays Highwire Feline (5pp)
+        cand   -27.9 (worst -27.9; worlds -28; ends opp_reply): BOT plays Highwire Feline (5pp)
+        cand   -27.9 (worst -27.9; worlds -28; ends tt): BOT SUPER-evolves Bat 1/1 [drain,sick]
+        cand   -27.9 (worst -27.9; worlds -28; ends tt): BOT SUPER-evolves Bat 1/1 [drain,sick]
+        expected line (top candidate, best world): B:play Highwire Feline | B:choose {"slot": 0} | B:evolve | B:attack s2->{'slot': 0} | B:end_turn | H:attack s0->leader | H:play Macmillan, Reaper of Ceremonies | H:attack s4->{'slot': 2} | H:bonus_pp | H:attack s2->leader  [end opp_reply]
+  [72] BOT plays Depths of the Eld Sight (1pp)   bot_value -35.2
+      explain: path search, 7 candidates, nodes 3453, top-2 margin 0.0; re-run would choose: BOT SUPER-evolves Bat 1/1 [drain,sick]
+        cand   -33.8 (worst -33.8; worlds -34; ends opp_reply): BOT SUPER-evolves Bat 1/1 [drain,sick]
+        cand   -33.8 (worst -33.8; worlds -34; ends opp_reply): BOT SUPER-evolves Bat 1/1 [drain,sick]
+        cand   -39.7 (worst -39.7; worlds -40; ends opp_reply): BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Highwire Feline 7/8*SE [sick]
+        expected line (top candidate, best world): B:evolve | B:attack s1->{'slot': 0} | B:end_turn | H:attack s0->leader | H:play Hark to the Night Song | H:play Baal, Elemental Resonance | H:choose {"mode": 0} | H:bonus_pp | H:attack s2->leader | H:end_turn  [end opp_reply]
+  [73] BOT SUPER-evolves Bat 1/1 [drain,sick]   bot_value -21.6
+      explain: path search, 7 candidates, nodes 1803, top-2 margin 5.2; re-run would choose: BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Highwire Feline 7/8*SE [sick]
+        cand   -43.8 (worst -43.8; worlds -44; ends opp_reply): BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Highwire Feline 7/8*SE [sick]
+        cand   -49.1 (worst -49.1; worlds -49; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand   -49.1 (worst -49.1; worlds -49; ends tt): BOT SUPER-evolves Bat 1/1 [drain,sick]
+        expected line (top candidate, best world): B:attack s3->{'slot': 0} | B:evolve | B:attack s1->{'slot': 0} | B:end_turn | H:play Macmillan, Reaper of Ceremonies | H:attack s3->{'slot': 1} | H:attack s3->{'slot': 1} | H:attack s3->{'slot': 1} | H:bonus_pp | H:attack s1->leader  [end opp_reply]
+  [74] BOT plays Lilith, Devilish Cutie (1pp)   bot_value -33.3
+      explain: path search, 8 candidates, nodes 2809, top-2 margin 8.6; re-run would choose: BOT attacks: Bat 4/4*SE [drain,sick] -> Highwire Feline 7/8*SE [sick]
+        cand   -23.9 (worst -23.9; worlds -24; ends opp_reply): BOT attacks: Bat 4/4*SE [drain,sick] -> Highwire Feline 7/8*SE [sick]
+        cand   -32.5 (worst -32.5; worlds -33; ends opp_reply): BOT plays Lilith, Devilish Cutie (1pp)
+        cand   -43.8 (worst -43.8; worlds -44; ends opp_reply): BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Highwire Feline 7/8*SE [sick]
+        expected line (top candidate, best world): B:attack s1->{'slot': 0} | B:end_turn | H:attack s0->leader | H:play Hark to the Night Song | H:play Raz, Demon on the Drums | H:bonus_pp | H:attack s1->{'slot': 1} | H:attack s1->leader | H:end_turn  [end opp_reply]
+  [75] BOT attacks: Bat 4/4*SE [drain,sick] -> Highwire Feline 7/8*SE [sick]   bot_value -31.8
+      explain: path search, 7 candidates, nodes 423, top-2 margin 1.8; re-run would choose: BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Highwire Feline 7/8*SE [sick]
+        cand   -46.5 (worst -46.5; worlds -46; ends opp_reply): BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Highwire Feline 7/8*SE [sick]
+        cand   -48.3 (worst -48.3; worlds -48; ends opp_reply): BOT attacks: Bat 4/4*SE [drain,sick] -> Highwire Feline 7/8*SE [sick]
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT attacks: Bat 4/4*SE [drain,sick] -> Skeleton 1/1 [sick]
+        expected line (top candidate, best world): B:attack s3->{'slot': 0} | B:attack s1->{'slot': 0} | B:end_turn | H:play Macmillan, Reaper of Ceremonies | H:attack s3->{'slot': 1} | H:attack s3->{'slot': 1} | H:attack s3->{'slot': 2} | H:attack s4->{'slot': 1} | H:bonus_pp | H:end_turn  [end opp_reply]
+  [76] BOT ends turn   bot_value -32.1
+      explain: path search, 4 candidates, nodes 147, top-2 margin 31.6; re-run would choose: BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Highwire Feline 7/4*SE [sick]
+        cand   -48.4 (worst -48.4; worlds -48; ends opp_reply): BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Highwire Feline 7/4*SE [sick]
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Skeleton 1/1 [sick]
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT attacks: Bibatii, Eld Sight 5/5*E [sick] -> Skeleton 1/1 [sick]
+        expected line (top candidate, best world): B:attack s3->{'slot': 0} | B:end_turn | H:play Macmillan, Reaper of Ceremonies | H:attack s3->{'slot': 1} | H:attack s3->{'slot': 1} | H:attack s3->{'slot': 2} | H:attack s4->{'slot': 1} | H:bonus_pp | H:end_turn  [end opp_reply]
+=== turn 9, HUMAN to act ===
+    BOT   HP 15/20  PP 0/9  EP 0 SEP 0  deck 23  hand 3  cemetery 16
+          field: [0] World of Games (amulet, cd 1); [1] Bat 4/4*SE [drain,sick]; [2] Bat 1/1 [drain,sick]; [3] Bibatii, Eld Sight 5/5*E [sick]; [4] Lilith, Devilish Cutie 1/1 [sick]
+          hand: Highwire Feline(5), Istyndet vs. Mitilykket(7), Void Colonel(6)
+    HUMAN HP 19/20  PP 9/9  EP 0 SEP 0  deck 25  hand 4  cemetery 20 bonusPP(early used, late avail)
+          field: [0] Highwire Feline 7/4*SE; [1] Skeleton 1/1; [2] Skeleton 1/1
+          hand (visible to the cheater): Hark to the Night Song(3), Macmillan, Reaper of Ceremonies(9), Void Colonel(6), Lilith, Enchanting Succubus(1)
+  [77] HUMAN attacks: Skeleton 1/1 -> Bat 1/1 [drain,sick]
+  [78] HUMAN attacks: Skeleton 1/1 -> Lilith, Devilish Cutie 1/1 [sick]
+  [79] HUMAN plays Macmillan, Reaper of Ceremonies (9pp)
+  [80] HUMAN attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Bat 4/4*SE [drain,sick]
+  [81] HUMAN attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Bibatii, Eld Sight 5/5*E [sick]
+  [82] HUMAN attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Bibatii, Eld Sight 5/2*E [sick]
+  [83] HUMAN attacks: Rotting Zombie 3/2 [rush,ward,sick] -> Bat 4/1*SE [drain,sick]
+  [84] HUMAN attacks: Highwire Feline 7/4*SE -> LEADER
+  [85] HUMAN ends turn
+=== turn 10, BOT to act ===
+    BOT   HP 2/20  PP 10/10  EP 0 SEP 0  deck 20  hand 7  cemetery 21
+          field: (empty)
+          hand: Highwire Feline(5), Istyndet vs. Mitilykket(7), Void Colonel(6), Bat(1), Istyndet vs. Mitilykket(7), Highwire Feline(5), Itsurugi & Taketsumi, Brothers(8)
+    HUMAN HP 19/20  PP 0/9  EP 0 SEP 0  deck 25  hand 3  cemetery 26 bonusPP(early used, late avail)
+          field: [0] Highwire Feline 7/4*SE; [1] Macmillan, Reaper of Ceremonies 4/4 [sick]; [2] Rotting Zombie 3/2 [rush,ward,sick]; [3] Rotting Zombie 3/2 [rush,ward,sick]
+          hand (visible to the cheater): Hark to the Night Song(3), Void Colonel(6), Lilith, Enchanting Succubus(1)
+  [86] BOT plays Highwire Feline (5pp)   bot_value -80.0
+      explain: path search, 8 candidates, nodes 420, top-2 margin 0.0
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT plays Highwire Feline (5pp)
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT plays Istyndet vs. Mitilykket (7pp)
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT plays Void Colonel (6pp)
+        expected line (top candidate, best world): B:play Highwire Feline | B:choose {"slot": 2} | B:play Highwire Feline | B:choose {"slot": 0} | B:end_turn  [end opp_lethal]
+  [87] BOT chooses {"slot": 0}   bot_value -80.0
+      explain: path search, 4 candidates, nodes 142, top-2 margin 0.0
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT chooses {"slot": 0}
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT chooses {"slot": 1}
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT chooses {"slot": 2}
+        expected line (top candidate, best world): B:choose {"slot": 0} | B:play Bat | B:play Void Colonel | B:end_turn  [end opp_lethal]
+  [88] BOT plays Void Colonel (6pp)   bot_value -80.0
+      explain: path search, 4 candidates, nodes 36, top-2 margin 0.0
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT plays Void Colonel (6pp)
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT plays Bat (1pp)
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT plays Highwire Feline (5pp)
+        expected line (top candidate, best world): B:play Void Colonel | B:play Bat | B:end_turn  [end opp_lethal]
+  [89] BOT plays Bat (1pp)   bot_value -80.0
+      explain: path search, 2 candidates, nodes 6, top-2 margin 0.0
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT plays Bat (1pp)
+        cand   -80.0 (worst -80.0; worlds -80; ends opp_lethal): BOT ends turn
+        expected line (top candidate, best world): B:play Bat | B:end_turn  [end opp_lethal]
+  [90] BOT ends turn
+=== turn 10, HUMAN to act ===
+    BOT   HP 2/20  PP 2/10  EP 0 SEP 0  deck 20  hand 4  cemetery 21
+          field: [0] Highwire Feline 4/5 [sick]; [1] Skeleton 1/1 [sick]; [2] Void Colonel (amulet, cd 4); [3] Bat 1/1 [drain,sick]
+          hand: Istyndet vs. Mitilykket(7), Istyndet vs. Mitilykket(7), Highwire Feline(5), Itsurugi & Taketsumi, Brothers(8)
+    HUMAN HP 19/20  PP 10/10  EP 0 SEP 0  deck 24  hand 4  cemetery 26 bonusPP(early used, late avail)
+          field: [0] Highwire Feline 7/1*SE; [1] Macmillan, Reaper of Ceremonies 4/4; [2] Rotting Zombie 3/2 [rush,ward]; [3] Rotting Zombie 3/2 [rush,ward]
+          hand (visible to the cheater): Hark to the Night Song(3), Void Colonel(6), Lilith, Enchanting Succubus(1), Adahime, Anathema of Death(6)
+  [91] HUMAN attacks: Highwire Feline 7/1*SE -> LEADER   [SOLVER: HUMAN has a forced kill here; line H:attack s0->leader]
+
+FINAL: winner HUMAN; bot HP 0, human HP 19
+
+SOLVER SUMMARY (first action index per player-turn where the side to move had a forced kill):
+  turn 10 HUMAN: forced kill available from [91]
