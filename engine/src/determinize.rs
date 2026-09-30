@@ -21,16 +21,20 @@ const OWN_DECK_SEED_XOR: u64 = 0x9E37_79B9_7F4A_7C15;
 /// opponent's hand on every leaf; `info` does not change that.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Info {
-    /// A human with open decklists: own draw order is resampled, opponent
-    /// hand and deck are resampled under open-information rules.
+    /// Deal the opponent only what the bot cannot rule out; own deck is
+    /// shuffled (draws pick uniformly at random from the deck, so order
+    /// does not affect which card is drawn).
     Open,
-    /// A human with open decklists: own draw order is resampled, opponent
-    /// hand and deck are resampled. Own hand is untouched.
+    /// A human with open decklists: opponent hand/deck resampled from the
+    /// known pool; own deck shuffled (hand untouched). Draws are uniform
+    /// random from the deck, so shuffling does not change draw outcomes.
     Fair,
-    /// Today's default: own draw order is exact, opponent is resampled.
+    /// Opponent hand/deck resampled from the known pool; own side untouched.
     #[default]
     Draws,
-    /// Hard-mode sparring: both sides are the true state. No resampling.
+    /// Hard-mode sparring: true hidden state (opponent hand and both decks'
+    /// contents). Only the RNG is reseeded per root — future draws and
+    /// random effects stay random.
     All,
 }
 
@@ -287,7 +291,8 @@ fn determinize_draws(state: &State, perspective: PlayerId, seed: u64) -> State {
 }
 
 /// Canon-sort then shuffle the perspective player's deck. Hand is not
-/// touched — a player knows their own hand; only the draw order is hidden.
+/// touched. Draws pick uniformly at random from the deck, so this shuffle
+/// does not change which card is drawn — it only varies the stored order.
 fn resample_own_deck(out: &mut State, perspective: PlayerId, seed: u64) {
     let mut deck = std::mem::take(&mut out.player_mut(perspective).deck);
     canon_sort(&mut deck);

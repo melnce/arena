@@ -76,9 +76,10 @@ python py/serve.py --strong "h0:nodes=32000"
 
 The **h0 (cheater — sees your hand)** option is a separate sparring partner
 with full information (`info=all`): it clones the true state (your hand and
-both decks in their real draw order) and only reseeds the RNG, so random
-effects stay random. Leaf encoding still masks the hand — this is a
-hard-mode diagnostic, not a fair opponent.
+what is left in both decks) and only reseeds the RNG per search root, so
+future draws and random effects stay random. Leaf encoding still masks the
+hand — this is a hard-mode diagnostic, not a fair opponent. Without an
+explicit `k=`, it builds the default four roots (same as the fair bot).
 
 Pick it in Settings → vs-bot policy (listed after **h0 (strong)**). The UI
 sends `h0:nodes=6000,info=all` to the server; the server rewrites that to

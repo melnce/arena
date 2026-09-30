@@ -146,8 +146,8 @@ impl AnyPolicy {
     /// allowed to know; default `open` = deal the opponent only what the
     /// bot cannot rule out; `fair` = own deck resampled (hand untouched),
     /// opponent resampled — a human with open decklists; `draws` restores
-    /// the pre-flip path (own draw order exact); `all` is the true state
-    /// and builds one root regardless of `k`),
+    /// the pre-flip path (own side untouched); `all` is the true hidden
+    /// state (opponent hand and deck contents exact; RNG reseeded per root)),
     /// and `w_shadows=`,
     /// `w_earth=`, `w_faith=`, `w_rally=`, `w_boost=`, `w_need=`,
     /// `w_lw=` (f32; only meaningful with `value=v1`),

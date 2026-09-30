@@ -488,10 +488,10 @@ pairs; default `fair` = per-pair share; `alloc=root` restores the
 pre-#46 root-major spend),
 `info=open|fair|draws|all` (what the search is allowed to know; default
 `open` = deal the opponent only what the bot cannot rule out;
-`fair` = own deck resampled (hand untouched), opponent resampled —
+`fair` = own deck shuffled (hand untouched), opponent resampled —
 a human with open decklists; `draws` restores the pre-flip path (own
-draw order exact); `all` is the true state — no resampling — and
-builds one root regardless of `k`; any other value is a parse error
+side untouched); `all` is the true hidden state (opponent hand and
+deck contents exact; RNG reseeded per root); any other value is a parse error
 naming `info` and listing the four),
 and `w_shadows=`, `w_earth=`, `w_faith=`, `w_rally=`,
 `w_boost=`, `w_need=`, `w_lw=` (f32; only meaningful with `value=v1`;
@@ -568,20 +568,20 @@ streams and output as before). `H0` is a determinized search bot:
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
 | `horizon` | 0 | leaf scoring past the bot's own search cutoff. `0` = today (a finished turn at the pair cap, or a mid-turn cutoff at depth 0 / cap, returns the bare masked leaf value). `1` = a turn that is over always gets the opponent reply before the cap check. `2` = a mid-turn cutoff finishes pending bot choices greedily, applies `EndTurn`, then replies. `3` = same as `2` but runs `greedy_until_end` for the bot first. Levels are cumulative. Fallback to the bare value when the turn cannot be ended; counted in `horizon_fallback` |
 | `hres` | 200 | reserve node budget (integer ≥ 1) for horizon finish-and-reply work: `max(remaining pair budget, hres)` nodes are available; only applies up to the pair cap are charged to `node_cap`, the rest go to `horizon_nodes` |
-| `info` | `open` | what the search is allowed to know. `open` (default) = deal the opponent only what the bot cannot rule out. `fair` = resample the perspective player's own deck (hand untouched) and the opponent's hand/deck — a human with open decklists. `draws` = own draw order exact, opponent resampled (the pre-flip path). `all` = no resampling; the search rolls out against the opponent's real hand. Under `all`, H0 builds **one** root regardless of `k` (every determinization would be identical). `info` is a search-time knob; `encode` still masks the opponent's hand at the leaf. Sweep 13 pooled 0.499 [0.486, 0.511] / −0.8 Elo vs `info=fair` on the 16-deck meta pool (6 144 games per candidate). Default since this PR |
+| `info` | `open` | what the search is allowed to know. `open` (default) = deal the opponent only what the bot cannot rule out. `fair` = shuffle the perspective player's own deck (hand untouched) and resample the opponent's hand/deck — a human with open decklists. `draws` = own side untouched, opponent resampled (the pre-flip path). `all` = true hidden state (opponent hand and both decks' contents); only the RNG is reseeded per root — future draws and random effects stay random. Draws pick uniformly at random from the deck (no "top card" effects), so `fair` vs `draws` deck shuffling does not change which card is drawn. `info` is a search-time knob; `encode` still masks the opponent's hand at the leaf. Sweep 13 pooled 0.499 [0.486, 0.511] / −0.8 Elo vs `info=fair` on the 16-deck meta pool (6 144 games per candidate). Default since this PR |
 | `bpp1` | 1 | do not activate the early Bonus PP charge before this turn (`1`–`6`; `6` = never) |
 | `bpp2` | 6 | do not activate the late Bonus PP charge before this turn (`≥ 6`) |
 | `bppv` | 0 | value prior on usable Bonus PP charges (all value versions; added after clipping for `value=net`) |
 
 H0 builds `K = max(1, determinizations)` search roots via
 `determinize_with(state, me, seed, info)` (which reseeds the game RNG)
-from the policy rng. Under `info=all` every root would be identical,
-so K is 1 regardless of `determinizations` — do not silently do
-`k` times the work for one tree. Own-turn search, lethal, and the
-opponent model all run on those roots — the true hidden hand and live
-game RNG are never read, except under `info=all` where the opponent
-hand *is* the true hand. `encode` is unchanged and still masks the
-opponent's hand; `info` governs the search, not the leaf. A lethal is taken only when every root agrees (a random lethal is
+from the policy rng. Under `info=all` every root clones the true hidden
+state and only the RNG seed differs, so K roots average over future draws
+and random effects. Own-turn search, lethal, and the opponent model all
+run on those roots — the live game RNG is never read directly, except
+under `info=all` where the opponent hand *is* the true hand. `encode` is
+unchanged and still masks the opponent's hand; `info` governs the search,
+not the leaf. A lethal is taken only when every root agrees (a random lethal is
 a bet, not a lethal). Candidate values are the mean over the K
 determinizations (`acc[j] / n[j]`). `pess` blends that mean with the
 worst `finite` sample: `v = (1-pess)*mean + pess*worst`. At `pess=0`
@@ -1029,7 +1029,7 @@ For `h0`, the dict also carries:
 | key | type | meaning |
 |---|---|---|
 | `path` | str | Which `H0::choose` branch decided: `single_legal`, `mulligan`, `one_ply`, `consensus_lethal`, `search`, or `unscored` (search entered but no `(root, candidate)` pair scored, e.g. with `lcap=1`, the consensus-lethal check spent the entire node cap). |
-| `k` | int | Determinized roots (`1` under `info=all`). |
+| `k` | int | Determinized roots (`determinizations`; honoured under all `info` modes). |
 | `node_cap` | int | Global node cap for the decision. |
 | `alloc` | str | `fair` or `root`. |
 | `nodes` | int | Total `apply`s spent. |
