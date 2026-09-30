@@ -967,7 +967,12 @@ fn all_roots_average_over_rng_streams() {
     );
 }
 
-fn check_meta_play_baseline(db: &CardDb, spec: &str, seed: u64, want: &[(Option<PlayerId>, u32, u32)]) {
+fn check_meta_play_baseline(
+    db: &CardDb,
+    spec: &str,
+    seed: u64,
+    want: &[(Option<PlayerId>, u32, u32)],
+) {
     let got = play_meta_pair_spec(db, spec, 3, seed);
     assert_eq!(got, *want, "{spec} play sequence changed");
 }
