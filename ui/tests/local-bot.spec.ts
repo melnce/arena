@@ -49,9 +49,12 @@ async function confirmMulligans(page: Page) {
   await expect(btn).toBeHidden({ timeout: 5_000 });
 }
 
+const CHEAT_H0 = "h0:nodes=6000,info=all";
+const SERVER_CHEAT = "h0:nodes=16000,horizon=3,info=all";
+
 async function mockLocalBot(
   page: Page,
-  opts?: { failBotOnce?: boolean; onBot?: () => void },
+  opts?: { failBotOnce?: boolean; onBot?: () => void; omitCheat?: boolean },
 ): Promise<{
   botRequests: () => number;
   lastBotBody: () => { actions?: unknown[] } | null;
@@ -70,6 +73,7 @@ async function mockLocalBot(
         body: JSON.stringify({
           ok: true,
           strong: "h0:nodes=16000",
+          ...(opts?.omitCheat ? {} : { cheat: SERVER_CHEAT }),
           cpus: 8,
           version: "test",
         }),
@@ -134,6 +138,94 @@ async function mockLocalBot(
     gamePosts: () => gamePosts,
   };
 }
+
+test("cheater with server: badge shows cheat spec and POST policy", async ({ page }) => {
+  let postedPolicy: string | null = null;
+  const mock = await mockLocalBot(page, {
+    onBot: () => {
+      /* counted by mock */
+    },
+  });
+  await page.route("http://127.0.0.1:8765/**", async (route) => {
+    const url = route.request().url();
+    if (url.includes("/bot")) {
+      const posted = route.request().postDataJSON() as { policy?: string };
+      postedPolicy = posted.policy ?? null;
+    }
+    await route.fallback();
+  });
+  await boot(page);
+  await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#vsBotPolicy").selectOption(CHEAT_H0);
+  await expect(page.locator("#botBackendBadge")).toHaveText(
+    `bot: local server (${SERVER_CHEAT}, 8 cpus)`,
+    { timeout: 5_000 },
+  );
+  await startGame(page, {
+    mode: "vs-bot",
+    seed: "1",
+    first: "b",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+    human: "a",
+    botPolicy: CHEAT_H0,
+  });
+  await confirmMulligans(page);
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", {
+    timeout: 15_000,
+  });
+  expect(postedPolicy).toBe(CHEAT_H0);
+  expect(mock.botRequests()).toBeGreaterThanOrEqual(1);
+});
+
+test("cheater without cheat field: browser only, no /bot", async ({ page }) => {
+  const mock = await mockLocalBot(page, { omitCheat: true });
+  await boot(page);
+  await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#vsBotPolicy").selectOption(CHEAT_H0);
+  await expect(page.locator("#botBackendBadge")).toHaveText(
+    "bot: browser (cheater needs an updated local server)",
+    { timeout: 5_000 },
+  );
+  await startGame(page, {
+    mode: "vs-bot",
+    seed: "1",
+    first: "b",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+    human: "a",
+    botPolicy: CHEAT_H0,
+  });
+  await confirmMulligans(page);
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", {
+    timeout: 15_000,
+  });
+  expect(mock.botRequests()).toBe(0);
+  await expect(page.locator("#botBackendBadge")).toHaveText(
+    "bot: browser (cheater needs an updated local server)",
+  );
+});
+
+test("no server: cheater vs-bot makes first bot move in browser", async ({ page }) => {
+  await boot(page);
+  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser");
+  await startGame(page, {
+    mode: "vs-bot",
+    seed: "1",
+    first: "b",
+    deckA: "basic-forest",
+    deckB: "basic-rune",
+    human: "a",
+    botPolicy: CHEAT_H0,
+  });
+  await confirmMulligans(page);
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", {
+    timeout: 15_000,
+  });
+  await expect(page.locator("#eventLog")).not.toHaveText("", { timeout: 15_000 });
+});
 
 test("no server: badge is browser and vs-bot still plays", async ({ page }) => {
   await boot(page);

@@ -23,6 +23,7 @@ from urllib.parse import urlparse
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 DEFAULT_STRONG = "h0:nodes=16000,horizon=3"
+DEFAULT_CHEAT = "h0:nodes=16000,horizon=3,info=all"
 DEFAULT_GAMES_DIR = "results/games"
 DEFAULT_ORIGINS = (
     "https://arena-nu-one.vercel.app,"
@@ -73,8 +74,27 @@ def is_h0_variant(policy: str) -> bool:
     return policy == "h0" or policy.startswith("h0:")
 
 
-def effective_policy(requested: str, strong: str) -> str:
-    return strong if is_h0_variant(requested) else requested
+def h0_keys(policy: str) -> list[str]:
+    if not is_h0_variant(policy) or policy == "h0":
+        return []
+    return [part.strip() for part in policy[3:].split(",") if part.strip()]
+
+
+def has_info_all(policy: str) -> bool:
+    return "info=all" in h0_keys(policy)
+
+
+def effective_policy(requested: str, strong: str, cheat: str) -> str:
+    if not is_h0_variant(requested):
+        return requested
+    return cheat if has_info_all(requested) else strong
+
+
+def validate_cheat_spec(spec: str) -> None:
+    if not is_h0_variant(spec):
+        raise ValueError(f'--cheat must be an h0 variant, got "{spec}"')
+    if not has_info_all(spec):
+        raise ValueError(f'--cheat must include info=all in its keys, got "{spec}"')
 
 
 def git_version(root: Path) -> str:
@@ -261,12 +281,14 @@ class ServerContext:
         self,
         db: Any,
         strong: str,
+        cheat: str,
         origins: list[str],
         version: str,
         games_dir: Path | None = None,
     ) -> None:
         self.db = db
         self.strong = strong
+        self.cheat = cheat
         self.origins = set(origins)
         self.version = version
         self.games_dir = games_dir
@@ -323,6 +345,7 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                 {
                     "ok": True,
                     "strong": ctx.strong,
+                    "cheat": ctx.cheat,
                     "cpus": os.cpu_count(),
                     "version": ctx.version,
                 },
@@ -384,7 +407,7 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                 self._error(400, str(e))
                 return
 
-            policy = effective_policy(requested, ctx.strong)
+            policy = effective_policy(requested, ctx.strong, ctx.cheat)
             game_id = make_game_id(seed, deck_a, deck_b, first)
             actions = body.get("actions") or []
             if not isinstance(actions, list):
@@ -503,7 +526,7 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                 return
             game_id = make_game_id(seed, deck_a, deck_b, first)
             requested = str(body.get("policy") or "")
-            policy = effective_policy(requested, ctx.strong) if requested else ""
+            policy = effective_policy(requested, ctx.strong, ctx.cheat) if requested else ""
             finished = utc_now()
             capture: dict[str, Any] = {
                 "v": 1,
@@ -536,6 +559,7 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
 
 
 def make_server(args: argparse.Namespace, db: Any | None = None) -> ThreadingHTTPServer:
+    validate_cheat_spec(args.cheat)
     root = repo_root()
     cards = Path(args.cards) if args.cards else (root / "cards")
     if db is None:
@@ -552,6 +576,7 @@ def make_server(args: argparse.Namespace, db: Any | None = None) -> ThreadingHTT
     ctx = ServerContext(
         db=db,
         strong=args.strong,
+        cheat=args.cheat,
         origins=origins,
         version=git_version(root),
         games_dir=games_dir,
@@ -580,6 +605,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--strong",
         default=DEFAULT_STRONG,
         help=f'spec used for every h0 / h0:… request (default: "{DEFAULT_STRONG}")',
+    )
+    p.add_argument(
+        "--cheat",
+        default=DEFAULT_CHEAT,
+        help=(
+            f'spec used for h0:… requests whose keys include info=all '
+            f'(default: "{DEFAULT_CHEAT}")'
+        ),
     )
     p.add_argument(
         "--origins",
@@ -615,6 +648,7 @@ def main(argv: list[str] | None = None) -> int:
     origins = parse_origins(args.origins)
     print(f"arena local bot server")
     print(f"  strong:   {args.strong}")
+    print(f"  cheat:    {args.cheat}")
     print(f"  origins:  {', '.join(origins)}")
     games = "off" if args.no_games else args.games_dir
     print(f"  games:    {games}")

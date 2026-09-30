@@ -37,6 +37,8 @@ def _load_serve():
 serve = _load_serve()
 
 DEFAULT_STRONG = "h0:nodes=16000,horizon=3"
+DEFAULT_CHEAT = "h0:nodes=16000,horizon=3,info=all"
+CHEAT_SPEC = "h0:nodes=200,info=all"
 
 
 def test_default_strong_constant_and_parse_args(db, root: Path) -> None:
@@ -49,6 +51,34 @@ def test_default_strong_constant_and_parse_args(db, root: Path) -> None:
         (root / "oracle" / "decks" / "basic-forest.json").read_text(encoding="utf-8")
     ).items()}}
     arena.matchup(db, decks, 0, 1, policy=DEFAULT_STRONG, threads=1)
+
+
+def test_default_cheat_constant_and_parse_args(db, root: Path) -> None:
+    assert serve.DEFAULT_CHEAT == DEFAULT_CHEAT
+    args = serve.parse_args(["--cards", str(root / "cards"), "--no-games"])
+    assert args.cheat == DEFAULT_CHEAT
+    import arena
+
+    decks = {"basic-forest": {str(k): int(v) for k, v in json.loads(
+        (root / "oracle" / "decks" / "basic-forest.json").read_text(encoding="utf-8")
+    ).items()}}
+    arena.matchup(db, decks, 0, 1, policy=DEFAULT_CHEAT, threads=1)
+
+
+@pytest.mark.parametrize(
+    ("requested", "expected"),
+    [
+        ("h0", "h0:nodes=16000"),
+        ("h0:nodes=6000", "h0:nodes=16000"),
+        ("h0:nodes=6000,info=all", CHEAT_SPEC),
+        ("h0:info=all", CHEAT_SPEC),
+        ("h0:info=open", "h0:nodes=16000"),
+        ("h0:info=allx", "h0:nodes=16000"),
+        ("random", "random"),
+    ],
+)
+def test_effective_policy(requested: str, expected: str) -> None:
+    assert serve.effective_policy(requested, "h0:nodes=16000", CHEAT_SPEC) == expected
 
 
 def _decks(root: Path) -> tuple[dict[str, int], dict[str, int]]:
@@ -112,6 +142,7 @@ def test_health_echoes_strong(server: str) -> None:
     assert status == 200
     assert payload["ok"] is True
     assert payload["strong"] == "h0:nodes=16000"
+    assert payload["cheat"] == DEFAULT_CHEAT
     assert payload["cpus"] is None or int(payload["cpus"]) >= 1
     assert payload["version"]
 
@@ -127,6 +158,42 @@ def _play_plies(db, root: Path, plies: int = 6, seed: int = 1):
         actions.append(act)
         game.apply(act)
     return game, actions, deck_a, deck_b
+
+
+def test_bot_cheat_uses_cheat_spec(db, root: Path) -> None:
+    httpd, thread, url = _start_server(
+        db,
+        root,
+        ["--no-games", "--cheat", CHEAT_SPEC],
+    )
+    try:
+        game, actions, deck_a, deck_b = _play_plies(db, root)
+        status, payload, _ = _request(
+            f"{url}/bot",
+            method="POST",
+            body={
+                "seed": "1",
+                "deckA": json.dumps(deck_a),
+                "deckB": json.dumps(deck_b),
+                "first": "a",
+                "actions": actions,
+                "policy": "h0:nodes=6000,info=all",
+                "botSeed": "99",
+                "hash": str(game.hash()),
+            },
+        )
+        assert status == 200, payload
+        assert payload["policy"] == CHEAT_SPEC
+    finally:
+        _stop_server(httpd, thread)
+
+
+def test_cheat_without_info_all_fails(db, root: Path) -> None:
+    args = serve.parse_args(
+        ["--cards", str(root / "cards"), "--no-games", "--cheat", "h0:nodes=200"]
+    )
+    with pytest.raises(ValueError, match="info=all"):
+        serve.make_server(args, db=db)
 
 
 def test_bot_h0_uses_strong_and_matches_hash(server: str, db, root: Path) -> None:

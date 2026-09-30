@@ -54,7 +54,12 @@ let watchPlaying = false;
 
 const LOCAL_BOT_HOST = "http://127.0.0.1:8765";
 
-type LocalBotHealth = { strong: string; cpus: number | null; version: string };
+type LocalBotHealth = {
+  strong: string;
+  cheat?: string;
+  cpus: number | null;
+  version: string;
+};
 
 let localBot: LocalBotHealth | null = null;
 let localBotGameError: string | null = null;
@@ -451,6 +456,21 @@ function formConfig(): SessionConfig {
 const STRONG_H0 = "h0:nodes=6000";
 const STRONG_H0_TITLE =
   "6 000 search nodes per decision — stronger, ~2× slower; default on desktop";
+const CHEAT_H0 = "h0:nodes=6000,info=all";
+const CHEAT_H0_TITLE =
+  "Full information: sees your hand and both decks' draw order (random effects stay random). For sparring — not a fair opponent.";
+
+function isCheaterPolicy(policy: string): boolean {
+  if (!policy.startsWith("h0:")) return false;
+  return policy
+    .slice(3)
+    .split(",")
+    .some((part) => part.trim() === "info=all");
+}
+
+function selectedVsBotPolicy(): string {
+  return byId<HTMLSelectElement>("vsBotPolicy")?.value ?? "";
+}
 
 function isDesktopClassDevice(): boolean {
   return (
@@ -599,15 +619,20 @@ function localBotToggleOn(): boolean {
 }
 
 function botBackendBadgeText(): string {
-  if (localBotThinking && localBot && !localBotGameError) {
+  const cheater = isCheaterPolicy(selectedVsBotPolicy());
+  if (localBotThinking && localBot && !localBotGameError && (!cheater || localBot.cheat)) {
     return "bot: local server — thinking…";
   }
   if (localBotGameError) {
     return `bot: browser (server error: ${localBotGameError})`;
   }
+  if (cheater && (!localBot || !localBot.cheat)) {
+    return "bot: browser (cheater needs an updated local server)";
+  }
   if (localBot && localBotToggleOn() && !localBotQueryOff()) {
     const cpus = localBot.cpus == null ? "?" : String(localBot.cpus);
-    return `bot: local server (${localBot.strong}, ${cpus} cpus)`;
+    const spec = cheater && localBot.cheat ? localBot.cheat : localBot.strong;
+    return `bot: local server (${spec}, ${cpus} cpus)`;
   }
   return "bot: browser";
 }
@@ -622,12 +647,14 @@ async function applyHealthResponse(res: Response): Promise<void> {
   const data = (await res.json()) as {
     ok?: boolean;
     strong?: string;
+    cheat?: string;
     cpus?: number | null;
     version?: string;
   };
   if (!data.ok || !data.strong) throw new Error("health not ok");
   localBot = {
     strong: data.strong,
+    cheat: data.cheat,
     cpus: data.cpus ?? null,
     version: data.version ?? "dev",
   };
@@ -677,7 +704,10 @@ async function probeLocalBot(): Promise<void> {
 
 function shouldUseLocalBot(s: Session): boolean {
   if (localBotQueryOff() || !localBotToggleOn() || !localBot || localBotGameError) return false;
-  return botPolicyFor(s, s.game.acting() as PlayerId).startsWith("h0");
+  const policy = botPolicyFor(s, s.game.acting() as PlayerId);
+  if (!policy.startsWith("h0")) return false;
+  if (isCheaterPolicy(policy) && !localBot.cheat) return false;
+  return true;
 }
 
 async function maybeBots(): Promise<void> {
@@ -821,6 +851,7 @@ function populatePolicies(): void {
       appendPolicyOption(sel, n, n === "h0" ? "h0 (standard)" : n);
       if (n === "h0") {
         appendPolicyOption(sel, STRONG_H0, "h0 (strong)", STRONG_H0_TITLE);
+        appendPolicyOption(sel, CHEAT_H0, "h0 (cheater — sees your hand)", CHEAT_H0_TITLE);
       }
     }
   }
@@ -832,6 +863,7 @@ function populatePolicies(): void {
     vs.addEventListener("change", () => {
       persistBotPolicy(vs.value);
       applyVsBotPolicy();
+      refreshBotBackendBadge();
     });
   }
 }

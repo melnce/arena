@@ -72,6 +72,25 @@ python py/serve.py --strong "h0:nodes=32000"
 
 `random` and `first-legal` are never rewritten.
 
+## Cheater (sparring)
+
+The **h0 (cheater — sees your hand)** option is a separate sparring partner
+with full information (`info=all`): it clones the true state (your hand and
+both decks in their real draw order) and only reseeds the RNG, so random
+effects stay random. Leaf encoding still masks the hand — this is a
+hard-mode diagnostic, not a fair opponent.
+
+Pick it in Settings → vs-bot policy (listed after **h0 (strong)**). The UI
+sends `h0:nodes=6000,info=all` to the server; the server rewrites that to
+its `--cheat` spec (default `h0:nodes=16000,horizon=3,info=all`). Override
+with e.g. `python py/serve.py --cheat "h0:nodes=32000,info=all"`. The
+`GET /health` payload includes `"cheat": "<spec>"` alongside `"strong"`.
+
+An older server without the `cheat` field would rewrite the cheater request
+to its fair `--strong` spec, so the UI refuses to POST and plays the cheater
+in the browser instead (badge: `bot: browser (cheater needs an updated local
+server)`).
+
 ## Log line
 
 Each decision prints one stdout line:

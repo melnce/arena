@@ -880,9 +880,12 @@ server constructs the policy per call (no cache). Unknown specs raise
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
 `h0:nodes=16000,horizon=3`) is the spec used whenever the request's `policy` is an
-h0 variant (`h0`, `h0:nodes=6000`, `h0:…`). `random` / `first-legal` and
-any non-h0 spec pass through unchanged — the server, not the client,
-decides H0 strength. `--origins` is the CORS allow list (default
+h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
+exact token `info=all`. `--cheat` (default `h0:nodes=16000,horizon=3,info=all`)
+is used for h0 variants whose keys include `info=all` (full-information
+sparring). `random` / `first-legal` and any non-h0 spec pass through
+unchanged — the server, not the client, decides H0 strength. `--origins` is
+the CORS allow list (default
 `https://arena-nu-one.vercel.app,http://localhost:5173,http://127.0.0.1:5173`);
 a request whose `Origin` is not on the list is served but gets no
 `Access-Control-Allow-Origin`. Allowed origins also get
@@ -891,7 +894,7 @@ a request whose `Origin` is not on the list is served but gets no
 
 | Endpoint | Body / query | Reply |
 |---|---|---|
-| `GET /health` | — | `{"ok": true, "strong": "<spec>", "cpus": <os.cpu_count()>, "version": "<git short HEAD or 'dev'>"}` |
+| `GET /health` | — | `{"ok": true, "strong": "<spec>", "cheat": "<spec>", "cpus": <os.cpu_count()>, "version": "<git short HEAD or 'dev'>"}` |
 | `POST /bot` | see below | `200 {"action": NeutralAction, "policy": "<effective spec>", "ms": <decision>, "hash": "<hash before the action>"}` |
 | `POST /game` | position log + `winner` | `200 {"ok": true, "game_id": "<seed>-<8 hex>"}` |
 
@@ -943,13 +946,14 @@ bot decision.
 
 Client (`ui/src/main.ts` + `botStepRemote` in `session.ts`): on load and
 when the mode becomes vs-bot, `GET http://127.0.0.1:8765/health` with
-`AbortSignal.timeout(400)`. Success stores `{strong, cpus, version}`;
+`AbortSignal.timeout(400)`. Success stores `{strong, cheat, cpus, version}`;
 any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
 select) is `bot: local server (h0:nodes=16000,horizon=3, 28 cpus)` or
-`bot: browser`. While a remote decision is pending the badge reads
+`bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
+selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.
 
 The vs-bot loop calls `botStepRemote` only when the seat's policy
