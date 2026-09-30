@@ -637,7 +637,11 @@ impl Policy for H0 {
         if recording {
             self.explain = None;
         }
-        let mut table = self.tt.then(HashMap::new);
+        let mut shared_table = if self.info != Info::All {
+            self.tt.then(HashMap::new)
+        } else {
+            None
+        };
         if legal.len() <= 1 {
             if recording {
                 let mut rec = ExplainRecord::new(
@@ -811,6 +815,11 @@ impl Policy for H0 {
                 let nodes_after_lethal = nodes;
                 let mut cap_exhausted = false;
                 for (r, root) in roots.iter().enumerate() {
+                    let mut root_table = if self.info == Info::All {
+                        self.tt.then(HashMap::new)
+                    } else {
+                        None
+                    };
                     let root_key = search_key(root);
                     for (j, a) in subset.iter().enumerate() {
                         if nodes >= self.node_cap {
@@ -895,7 +904,11 @@ impl Policy for H0 {
                                 odepth,
                                 obeam,
                                 &mut dec_stats,
-                                table.as_mut(),
+                                if self.info == Info::All {
+                                    root_table.as_mut()
+                                } else {
+                                    shared_table.as_mut()
+                                },
                                 tracker.as_mut(),
                                 self.fusemacro,
                                 self.horizon,

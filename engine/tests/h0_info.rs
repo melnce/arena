@@ -8,6 +8,7 @@ use std::collections::BTreeMap;
 use arena_engine::determinize::{
     determinize, determinize_with, determinize_with_stats, Info, OpenStats,
 };
+use arena_engine::policy::{ChoosePath, WorldRecord};
 use arena_engine::{
     apply, legal_actions, new_game, play_game, policy_rng, search_key, Action, AnyPolicy, CardDb,
     CardId, CardInstance, First, GameConfig, Phase, PlayerId, Policy, State, H0, MAX_ACTIONS,
@@ -851,6 +852,53 @@ fn play_pair_spec(
     out
 }
 
+fn play_meta_pair_spec(
+    db: &CardDb,
+    spec: &str,
+    n: u32,
+    seed: u64,
+) -> Vec<(Option<PlayerId>, u32, u32)> {
+    let deck_a = load_deck_file("oracle/decks/meta-haven-amulet.json");
+    let deck_b = load_deck_file("oracle/decks/meta-dragon-ramp.json");
+    assert!(deck_ready(db, &deck_a));
+    assert!(deck_ready(db, &deck_b));
+    let mut out = Vec::with_capacity(n as usize);
+    for i in 0..n {
+        let first = if i % 2 == 0 { First::A } else { First::B };
+        let mut state = new_game(
+            db,
+            GameConfig {
+                seed: seed.wrapping_add(u64::from(i)),
+                deck_a: deck_a.clone(),
+                deck_b: deck_b.clone(),
+                first,
+                opening_hands: None,
+            },
+        )
+        .unwrap();
+        let mut rng = policy_rng(seed.wrapping_add(u64::from(i)));
+        let mut a = parse_h0(spec);
+        let mut b = parse_h0(spec);
+        let o = play_game(db, &mut state, &mut a, &mut b, &mut rng);
+        out.push((o.winner, o.turns, o.actions));
+    }
+    out
+}
+
+fn world_raw_spread(worlds: &[WorldRecord]) -> f32 {
+    let raws: Vec<f32> = worlds
+        .iter()
+        .filter(|w| !w.skipped)
+        .map(|w| w.raw)
+        .collect();
+    if raws.len() < 2 {
+        return 0.0;
+    }
+    let min = raws.iter().cloned().fold(f32::INFINITY, f32::min);
+    let max = raws.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+    max - min
+}
+
 fn check_determinism(spec: &str, n: u32) {
     let db = load_db();
     const SEED: u64 = 20260919;
@@ -879,4 +927,101 @@ fn info_fair_determinism_20_games() {
 #[cfg_attr(debug_assertions, ignore)]
 fn info_all_determinism_20_games() {
     check_determinism("h0:info=all", 20);
+}
+
+/// Pinned mid-game state where `info=all` must average over four RNG streams.
+/// On `main` with one shared transposition table, per-world values collapse
+/// (spread ≈ 2.6) and node spend is ≈ 2 800; per-root tables raise spread to
+/// ≈ 4.2 and nodes to ≈ 5 900 on the same decision.
+#[test]
+fn all_roots_average_over_rng_streams() {
+    let db = load_db();
+    let states = collect_states(&db, 8, true);
+    let state = &states[2];
+    let legal = legal_actions(&db, state);
+    assert!(legal.len() > 1, "need a searched decision");
+    let mut h0 = parse_h0("h0:info=all,k=4,nodes=6000");
+    h0.arm_explain();
+    let mut rng = policy_rng(20260928);
+    let _ = h0.choose(&db, state, &legal, &mut rng);
+    let rec = h0.take_explain().expect("explain");
+    assert!(
+        matches!(rec.path, ChoosePath::Search | ChoosePath::Unscored),
+        "expected depth search, got {:?}",
+        rec.path
+    );
+    assert_eq!(rec.k, 4, "k=4 roots");
+    let spread = rec
+        .candidates
+        .iter()
+        .map(|c| world_raw_spread(&c.worlds))
+        .fold(0.0f32, f32::max);
+    assert!(
+        spread > 3.0,
+        "per-world values must differ across RNG streams (spread={spread})"
+    );
+    assert!(
+        rec.nodes >= 5000,
+        "per-root tables must expand each world (nodes={})",
+        rec.nodes
+    );
+}
+
+fn check_meta_play_baseline(
+    db: &CardDb,
+    spec: &str,
+    seed: u64,
+    want: &[(Option<PlayerId>, u32, u32)],
+) {
+    let got = play_meta_pair_spec(db, spec, 3, seed);
+    assert_eq!(got, *want, "{spec} play sequence changed");
+}
+
+/// `info=all` is the only regime that changes; other specs stay byte-identical
+/// to the pre-fix `main` play sequence on pinned meta matchups.
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn other_info_modes_play_unchanged_on_meta_games() {
+    let db = load_db();
+    const SEED: u64 = 99;
+    check_meta_play_baseline(
+        &db,
+        "h0",
+        SEED,
+        &[
+            (Some(PlayerId::A), 11, 96),
+            (Some(PlayerId::B), 9, 68),
+            (Some(PlayerId::B), 6, 54),
+        ],
+    );
+    check_meta_play_baseline(
+        &db,
+        "h0:info=fair",
+        SEED,
+        &[
+            (Some(PlayerId::A), 14, 134),
+            (Some(PlayerId::B), 9, 68),
+            (Some(PlayerId::B), 6, 54),
+        ],
+    );
+    check_meta_play_baseline(
+        &db,
+        "h0:info=draws",
+        SEED,
+        &[
+            (Some(PlayerId::A), 11, 118),
+            (Some(PlayerId::B), 9, 68),
+            (Some(PlayerId::B), 9, 89),
+        ],
+    );
+    check_meta_play_baseline(
+        &db,
+        "h0:nodes=6000",
+        SEED,
+        &[
+            (Some(PlayerId::B), 6, 60),
+            (Some(PlayerId::B), 18, 181),
+            (Some(PlayerId::B), 6, 53),
+        ],
+    );
 }
