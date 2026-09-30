@@ -238,7 +238,9 @@ jobs:
           python-version: "3.12"
 
       - name: Install maturin
-        run: pip install maturin pytest
+        run: |
+          pip install maturin pytest numpy
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
 
       - name: Build arena-trace
         run: cargo build --release --bin arena-trace

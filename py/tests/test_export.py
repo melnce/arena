@@ -238,6 +238,9 @@ def test_encoding_v2_export_train_and_play(db, root: Path, tmp_path: Path) -> No
                 "search_scale": 60.0,
                 "max_samples": 64,
                 "eval": None,
+                "optimizer": "adam",
+                "lbfgs_iters": 500,
+                "std_floor": 1e-3,
             },
         )()
     )
