@@ -767,7 +767,7 @@ fn spec_info_round_trips() {
 }
 
 #[test]
-fn all_builds_one_root() {
+fn all_honours_k() {
     let db = load_db();
     let st = started(&db, 1);
     let legal = legal_actions(&db, &st);
@@ -776,11 +776,47 @@ fn all_builds_one_root() {
     assert_eq!(all.determinizations, 4);
     let mut rng = policy_rng(1);
     all.choose(&db, &st, &legal, &mut rng);
-    assert_eq!(all.stats.roots, 1, "info=all must build one root");
+    assert_eq!(all.stats.roots, 4, "info=all must build k roots");
+    let mut one = parse_h0("h0:info=all,k=1");
+    let mut rng = policy_rng(1);
+    one.choose(&db, &st, &legal, &mut rng);
+    assert_eq!(one.stats.roots, 1, "info=all,k=1 must build one root");
+    let mut two = parse_h0("h0:info=all,k=2");
+    let mut rng = policy_rng(1);
+    two.choose(&db, &st, &legal, &mut rng);
+    assert_eq!(two.stats.roots, 2, "info=all,k=2 must build two roots");
     let mut draws = parse_h0("h0:info=draws");
     let mut rng = policy_rng(1);
     draws.choose(&db, &st, &legal, &mut rng);
     assert_eq!(draws.stats.roots, 4, "info=draws still builds k roots");
+}
+
+#[test]
+fn all_roots_share_true_state_but_differ_by_rng() {
+    let db = load_db();
+    let st = mixed_info_state(&db);
+    let me = PlayerId::A;
+    let r0 = determinize_with(&st, me, 1, Info::All);
+    let r1 = determinize_with(&st, me, 2, Info::All);
+    assert_eq!(
+        zone_ids(&r0.player(me.opponent()).hand),
+        zone_ids(&st.player(me.opponent()).hand),
+        "all roots keep the true opponent hand"
+    );
+    assert_eq!(
+        zone_ids(&r0.player(me).deck),
+        zone_ids(&st.player(me).deck),
+        "all roots keep the true own deck contents"
+    );
+    assert_eq!(
+        zone_ids(&r1.player(me.opponent()).hand),
+        zone_ids(&st.player(me.opponent()).hand)
+    );
+    assert_ne!(
+        format!("{:?}", r0.rng),
+        format!("{:?}", r1.rng),
+        "all roots must differ in RNG state across seeds"
+    );
 }
 
 fn play_pair_spec(
