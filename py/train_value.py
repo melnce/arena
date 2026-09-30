@@ -236,11 +236,13 @@ def split_by_game(
     return train_idx, hold_idx
 
 
-def build_vocab(ids, row_idx) -> list[int]:
+def build_vocab(ids, row_idx, chunk: int = 8192) -> list[int]:
     import numpy as np
 
-    uniq = set(int(x) for x in np.unique(ids[row_idx]).tolist())
-    uniq.add(0)
+    uniq: set[int] = {0}
+    for start in range(0, row_idx.size, chunk):
+        sel = row_idx[start : start + chunk]
+        uniq.update(int(x) for x in np.unique(ids[sel]).tolist())
     rest = sorted(i for i in uniq if i != 0)
     return [0] + rest
 
@@ -591,7 +593,7 @@ def train_lbfgs(
         model.w.grad = None
         model.zone_w.grad = None
         model.b.grad = None
-        sq_sum = torch.zeros((), device=device)
+        total = 0.0
         for start in range(0, n, LBFGS_CHUNK):
             end = min(start + LBFGS_CHUNK, n)
             row_idx = train_idx[start:end]
@@ -599,18 +601,20 @@ def train_lbfgs(
             idx_b, c_b = _batch_zone_tensors(torch, features, ids, row_idx, vocab, device)
             yb = torch.from_numpy(y_tr_np[start:end]).to(device)
             pred = model.forward(xb, idx_b, c_b)
-            sq_sum = sq_sum + torch.sum((pred - yb) ** 2)
-        loss = sq_sum / n
+            chunk_loss = torch.sum((pred - yb) ** 2) / n
+            total += float(chunk_loss.item())
+            chunk_loss.backward()
         if l2 > 0:
-            loss = loss + model.l2_penalty(l2)
-        loss.backward()
-        final_loss = float(loss.item())
+            pen = model.l2_penalty(l2)
+            total += float(pen.item())
+            pen.backward()
+        final_loss = total
         gmax = 0.0
         for p in model.parameters():
             if p.grad is not None:
                 gmax = max(gmax, float(p.grad.abs().max().item()))
         grad_max = gmax
-        return final_loss
+        return torch.tensor(final_loss, device=device)
 
     opt = torch.optim.LBFGS(
         model.parameters(),

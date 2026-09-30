@@ -47,7 +47,7 @@ def _run_iterate(args: list[str], cwd: Path | None = None) -> subprocess.Complet
     )
 
 
-def _cleanup_results_worktree(repo: Path, wt: Path, existed: bool) -> None:
+def _cleanup_results_worktree(repo: Path, wt: Path, branch: str, existed: bool) -> None:
     subprocess.run(
         ["git", "-C", str(repo), "worktree", "remove", "--force", str(wt)],
         capture_output=True,
@@ -60,7 +60,7 @@ def _cleanup_results_worktree(repo: Path, wt: Path, existed: bool) -> None:
     )
     if not existed:
         subprocess.run(
-            ["git", "-C", str(repo), "branch", "-D", "results"],
+            ["git", "-C", str(repo), "branch", "-D", branch],
             capture_output=True,
             text=True,
         )
@@ -73,9 +73,10 @@ def smoke(tmp_path_factory: pytest.TempPathFactory):
     subprocess.run(["git", "init", "--bare", str(bare)], check=True, capture_output=True)
     root = tmp / "results"
     wt = tmp / "wt"
+    branch = "results-smoke-t1"
     existed = (
         subprocess.run(
-            ["git", "-C", str(_REPO), "show-ref", "--verify", "--quiet", "refs/heads/results"],
+            ["git", "-C", str(_REPO), "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
             capture_output=True,
         ).returncode
         == 0
@@ -94,6 +95,8 @@ def smoke(tmp_path_factory: pytest.TempPathFactory):
         str(bare),
         "--publish-dir",
         str(wt),
+        "--publish-branch",
+        branch,
     ]
     t0 = time.perf_counter()
     first = _run_iterate(argv)
@@ -111,11 +114,12 @@ def smoke(tmp_path_factory: pytest.TempPathFactory):
         "before": before,
         "after": after,
         "existed": existed,
+        "publish_branch": branch,
     }
     try:
         yield ctx
     finally:
-        _cleanup_results_worktree(_REPO, wt, existed)
+        _cleanup_results_worktree(_REPO, wt, branch, existed)
 
 
 @pytest.fixture(scope="module")
@@ -125,9 +129,10 @@ def smoke_v2(tmp_path_factory: pytest.TempPathFactory):
     subprocess.run(["git", "init", "--bare", str(bare)], check=True, capture_output=True)
     root = tmp / "results"
     wt = tmp / "wt"
+    branch = "results-smoke-t2v"
     existed = (
         subprocess.run(
-            ["git", "-C", str(_REPO), "show-ref", "--verify", "--quiet", "refs/heads/results"],
+            ["git", "-C", str(_REPO), "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
             capture_output=True,
         ).returncode
         == 0
@@ -148,6 +153,8 @@ def smoke_v2(tmp_path_factory: pytest.TempPathFactory):
         str(bare),
         "--publish-dir",
         str(wt),
+        "--publish-branch",
+        branch,
     ]
     t0 = time.perf_counter()
     first = _run_iterate(argv)
@@ -165,11 +172,12 @@ def smoke_v2(tmp_path_factory: pytest.TempPathFactory):
         "before": before,
         "after": after,
         "existed": existed,
+        "publish_branch": branch,
     }
     try:
         yield ctx
     finally:
-        _cleanup_results_worktree(_REPO, wt, existed)
+        _cleanup_results_worktree(_REPO, wt, branch, existed)
 
 
 def test_smoke_end_to_end(smoke, db, root: Path) -> None:
@@ -237,9 +245,10 @@ def test_smoke_end_to_end(smoke, db, root: Path) -> None:
         capture_output=True,
         text=True,
     ).stdout
-    assert "results" in branches
+    branch = smoke["publish_branch"]
+    assert branch in branches
     remote_summary = subprocess.run(
-        ["git", "--git-dir", str(smoke["bare"]), "show", "results:t1/SUMMARY.md"],
+        ["git", "--git-dir", str(smoke["bare"]), "show", f"{branch}:t1/SUMMARY.md"],
         check=True,
         capture_output=True,
         text=True,
@@ -290,8 +299,9 @@ def test_smoke_encoding_v2_end_to_end(smoke_v2, db, root: Path) -> None:
 
 def test_resumable(smoke) -> None:
     tag: Path = smoke["tag"]
+    branch = smoke["publish_branch"]
     tip = subprocess.run(
-        ["git", "--git-dir", str(smoke["bare"]), "rev-parse", "results"],
+        ["git", "--git-dir", str(smoke["bare"]), "rev-parse", branch],
         check=True,
         capture_output=True,
         text=True,
@@ -305,7 +315,7 @@ def test_resumable(smoke) -> None:
     for stage in ("data", "train", "yard", "summary", "publish"):
         assert f"skip: {stage}" in out, (stage, out)
     tip2 = subprocess.run(
-        ["git", "--git-dir", str(smoke["bare"]), "rev-parse", "results"],
+        ["git", "--git-dir", str(smoke["bare"]), "rev-parse", branch],
         check=True,
         capture_output=True,
         text=True,

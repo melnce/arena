@@ -571,14 +571,67 @@ def test_reference_fixtures_reproduce(db, root: Path, tmp_path: Path) -> None:
                 assert float(np.max(np.abs(a - b))) < 1e-3
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="memory gate uses /proc VmRSS")
-def test_memory_gate_200k_rows(tmp_path: Path) -> None:
-    data_dir = tmp_path / "data"
-    disk_bytes = _write_synthetic_encoding2(data_dir, 200_000)
+def _write_memory_gate_shard(dir: Path, n: int, seed: int, rows_per_game: int = 88) -> None:
+    rng = np.random.RandomState(seed)
+    feat = rng.randn(n, 567).astype("<f4") * 0.1
+    feat[:, 0] = 1.0
+    feat[:, 353 : 353 + 96] = rng.rand(n, 96).astype("<f4")
+    feat[:, 449 : 449 + 96] = rng.rand(n, 96).astype("<f4")
+    ids = rng.randint(1, 400, size=(n, 220)).astype("<u4")
+    logits = feat[:, 1] + feat[:, 2] * 0.5 + rng.randn(n).astype("<f4") * 0.05
+    labels = np.where(logits >= 0, 1.0, -1.0).astype("<f4")
+    aux = np.zeros((n, len(_SYNTH_V2_AUX)), dtype="<f4")
+    aux[:, 0] = np.arange(n) // rows_per_game
+    aux[:, 3] = 4
+    aux[:, 5] = logits * 0.25
+    aux[:, _SYNTH_V2_AUX.index("search_v")] = labels
+    dir.mkdir(parents=True, exist_ok=True)
+    feat.tofile(dir / "features.f32le")
+    ids.tofile(dir / "ids.u32le")
+    labels.tofile(dir / "labels.f32le")
+    aux.tofile(dir / "aux.f32le")
+    meta = {
+        "samples": n,
+        "feature_len": 567,
+        "ids_len": 220,
+        "encoding": 2,
+        "aux_columns": _SYNTH_V2_AUX,
+    }
+    (dir / "meta.json").write_text(json.dumps(meta) + "\n")
+
+
+def _write_memory_gate_export(root: Path, rows_per_shard: int) -> int:
+    _write_memory_gate_shard(root / "data-e0", rows_per_shard, seed=11)
+    _write_memory_gate_shard(root / "data-e10", rows_per_shard, seed=29)
+    return sum(
+        f.stat().st_size
+        for shard in ("data-e0", "data-e10")
+        for f in (root / shard).iterdir()
+    )
+
+
+def _memory_ratio_subprocess(
+    data_dirs: list[Path],
+    disk_bytes: int,
+    out: Path,
+    extra_args: list[str],
+) -> float:
+    argv_parts = ['"--data"'] + [repr(str(d)) for d in data_dirs]
+    argv_parts += [
+        '"--model"',
+        '"linear"',
+        '"--out"',
+        repr(str(out)),
+        '"--holdout"',
+        '"0.1"',
+        '"--seed"',
+        '"0"',
+    ]
+    argv_parts += [repr(a) for a in extra_args]
+    argv_py = ", ".join(argv_parts)
     script = f"""
 import importlib.util
 import resource
-import sys
 
 import numpy as np
 import torch
@@ -594,36 +647,38 @@ def vm_rss() -> int:
     return 0
 
 rss0 = vm_rss()
-tv.main(
-    [
-        "--data",
-        "{data_dir}",
-        "--model",
-        "linear",
-        "--out",
-        "{tmp_path / 'out.json'}",
-        "--holdout",
-        "0.1",
-        "--seed",
-        "0",
-        "--epochs",
-        "3",
-    ]
-)
+tv.main([{argv_py}])
 hwm = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-ratio = (hwm - rss0) * 1024 / {disk_bytes}
-print(ratio)
-if ratio > 1.5:
-    raise SystemExit(f"memory ratio {{ratio:.3f}} > 1.5 (baseline on old code was ~5.1)")
+print((hwm - rss0) * 1024 / {disk_bytes})
 """
     proc = subprocess.run(
         [sys.executable, "-c", script],
-        check=True,
         capture_output=True,
         text=True,
     )
-    ratio = float(proc.stdout.strip().splitlines()[-1])
-    assert ratio <= 1.5
+    if proc.returncode != 0:
+        raise AssertionError(
+            f"memory subprocess failed:\nstdout={proc.stdout}\nstderr={proc.stderr}"
+        )
+    return float(proc.stdout.strip().splitlines()[-1])
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="memory gate uses /proc VmRSS")
+def test_memory_gate(tmp_path: Path) -> None:
+    rows_per_shard = 100_000
+    disk_bytes = _write_memory_gate_export(tmp_path, rows_per_shard)
+    data_dirs = [tmp_path / "data-e0", tmp_path / "data-e10"]
+    cases = [
+        ("adam", ["--epochs", "3"]),
+        ("lbfgs", ["--optimizer", "lbfgs", "--lbfgs-iters", "3"]),
+    ]
+    for name, extra in cases:
+        out = tmp_path / f"{name}.json"
+        ratio = _memory_ratio_subprocess(data_dirs, disk_bytes, out, extra)
+        assert ratio <= 1.5, (
+            f"{name} memory ratio {ratio:.3f} > 1.5 "
+            f"(disk {disk_bytes} bytes, {rows_per_shard * 2} rows, two-shard preallocated load)"
+        )
 
 
 def test_lbfgs_linear_teacher(db, root: Path, tmp_path: Path) -> None:

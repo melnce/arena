@@ -1257,7 +1257,10 @@ rows are gathered per batch; holdout rows stay raw for `predict`); on a
 (default `adam`; `lbfgs` is
 **linear only** — full-batch L-BFGS with strong-Wolfe line search,
 deterministic when `--holdout 0`, ignores `--epochs`; stop with
-`--lbfgs-iters`, default 500, or gradient tolerance), `--target
+`--lbfgs-iters`, default 500, or gradient tolerance). Each L-BFGS
+**function evaluation** is a full pass over the training rows (≈ one
+Adam epoch), so use it for small data or exact reproduction, not as the
+default leaf trainer), `--target
 outcome|search|mix` (default `outcome` — trains exactly as before),
 `--mix-weight w` (default 0.5; only meaningful with `mix`),
 `--search-scale S` (default 60.0, the built-in net's `scale`), `--eval
