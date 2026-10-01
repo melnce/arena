@@ -88,46 +88,34 @@ def test_review5_fixtures_match_pinned_hashes() -> None:
         assert hashlib.sha256(data).hexdigest() == expected, name
 
 
-@pytest.mark.skipif(
-    os.environ.get("ARENA_REPORTS") != "1",
-    reason="set ARENA_REPORTS=1 to run slow report-only review5 explain output",
-)
-def test_1537_75_okill_report(db) -> None:
-    """Report: three Rush+Ward zombies — ward-break needs play+evolve in prefix."""
+def test_1537_75_okill_ward_break(db) -> None:
+    """Ward-break prefix: Baal/Lt/Bat + evolve clears wards, then Garodeth."""
     cap = _load_capture(GAME_1537)
     game = _replay(db, cap, 75)
     seed = _explain_seed(cap, 75)
-    lines = ["review5 1537 before [75]", ""]
-    for okill in (0, 1, 7):
-        exp = game.bot_action_explain(
-            BASE_SPEC if okill == 0 else f"{BASE_SPEC},okill={okill}", seed
-        )
-        cand = _end_turn_candidate(exp)
-        lines.append(
-            f"okill={okill}: ends={_world_ends(cand['worlds'])} agg={cand['root_agg']:+.2f}"
-        )
-    print("\n".join(lines))
+
+    off = game.bot_action_explain(BASE_SPEC, seed)
+    on = game.bot_action_explain(f"{BASE_SPEC},okill=1", seed)
+    cand_off = _end_turn_candidate(off)
+    cand_on = _end_turn_candidate(on)
+
+    assert _opp_lethal_worlds(cand_off) == 0
+    assert _opp_lethal_worlds(cand_on) >= 3
 
 
-@pytest.mark.skipif(
-    os.environ.get("ARENA_REPORTS") != "1",
-    reason="set ARENA_REPORTS=1 to run slow report-only review5 explain output",
-)
-def test_1043_109_okill_report(db) -> None:
-    """Report: full-board kill needs face-then-trade-then-play ordering."""
+def test_1043_109_okill_slot_free(db) -> None:
+    """Slot-freeing: face chip, double trade, then Garodeth on a full board."""
     cap = _load_capture(GAME_1043)
     game = _replay(db, cap, 109)
     seed = _explain_seed(cap, 109)
-    lines = ["review5 1043 before [109]", ""]
-    for okill in (0, 2, 7):
-        exp = game.bot_action_explain(
-            BASE_SPEC if okill == 0 else f"{BASE_SPEC},okill={okill}", seed
-        )
-        cand = _end_turn_candidate(exp)
-        lines.append(
-            f"okill={okill}: ends={_world_ends(cand['worlds'])} agg={cand['root_agg']:+.2f}"
-        )
-    print("\n".join(lines))
+
+    off = game.bot_action_explain(BASE_SPEC, seed)
+    on = game.bot_action_explain(f"{BASE_SPEC},okill=2", seed)
+    cand_off = _end_turn_candidate(off)
+    cand_on = _end_turn_candidate(on)
+
+    assert _opp_lethal_worlds(cand_off) == 0
+    assert _opp_lethal_worlds(cand_on) >= 3
 
 
 def test_6889_45_okill_play_through(db) -> None:
