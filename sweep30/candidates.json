@@ -1,0 +1,14 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:okill=7"
+  },
+  {
+    "index": 2,
+    "spec": "h0:omacro=1"
+  },
+  {
+    "index": 3,
+    "spec": "h0:okill=7,omacro=1"
+  }
+]
