@@ -1451,25 +1451,31 @@ fn score_play_with_macro(
     let mut best_v = play_v;
     let mut best_evo = None;
     if !prefer.is_empty() {
-        for a in ordered_evolves(db, &s, &prefer, &faces) {
-            let Action::Evolve { slot, .. } = &a else {
-                continue;
-            };
-            if !prefer.contains(&slot.0) {
-                continue;
+        for slot in &prefer {
+            let mut per_slot = 0usize;
+            for a in ordered_evolves(db, &s, &prefer, &faces) {
+                let Action::Evolve { slot: sl, .. } = &a else {
+                    continue;
+                };
+                if sl.0 != *slot {
+                    continue;
+                }
+                if per_slot >= 2 {
+                    break;
+                }
+                if *nodes >= cap {
+                    break;
+                }
+                let Some(s2) = try_apply(db, &s, &a, nodes, cap, &line2) else {
+                    continue;
+                };
+                per_slot += 1;
+                let v2 = eval.value(&s2, me);
+                if v2 > best_v {
+                    best_v = v2;
+                    best_evo = Some(a);
+                }
             }
-            if *nodes >= cap {
-                break;
-            }
-            let Some(s2) = try_apply(db, &s, &a, nodes, cap, &line2) else {
-                continue;
-            };
-            let v2 = eval.value(&s2, me);
-            if v2 > best_v {
-                best_v = v2;
-                best_evo = Some(a);
-            }
-            break;
         }
     }
     (best_v, best_evo)
@@ -3175,9 +3181,9 @@ fn face_line_kills(
     if !play_through {
         return false;
     }
-    *through_used = true;
     for slot in 0..FIELD_SIZE as u8 {
         if s.winner == Some(opp) {
+            *through_used = true;
             return true;
         }
         if s.winner.is_some() || matches!(s.phase, Phase::Terminal) {
@@ -3205,10 +3211,15 @@ fn face_line_kills(
         line.push(search_key(&next));
         s = next;
         if face_line_kills(db, &s, me, nodes, cap, &line, false, through_used) {
+            *through_used = true;
+            return true;
+        }
+        if s.winner == Some(opp) {
+            *through_used = true;
             return true;
         }
     }
-    s.winner == Some(opp)
+    false
 }
 
 /// Depth-first resolve of a play: pending `Choose` in index order, then any
@@ -3228,6 +3239,7 @@ fn resolve_play_line(
     oevo: bool,
     play_through: bool,
     evo_found: &mut bool,
+    through_used: &mut bool,
 ) -> bool {
     let opp = me.opponent();
     if state.winner == Some(opp) {
@@ -3265,6 +3277,7 @@ fn resolve_play_line(
                 oevo,
                 play_through,
                 evo_found,
+                through_used,
             ) {
                 return true;
             }
@@ -3288,6 +3301,7 @@ fn resolve_play_line(
                     oevo,
                     play_through,
                     evo_found,
+                    through_used,
                 );
             }
         }
@@ -3317,24 +3331,16 @@ fn resolve_play_line(
                 &just_played,
                 &now_faces,
                 play_through,
+                through_used,
             ) {
                 *evo_found = true;
+                *through_used = true;
                 return true;
             }
         }
         return false;
     }
-    let mut dummy_through = false;
-    if face_line_kills(
-        db,
-        state,
-        me,
-        nodes,
-        cap,
-        line,
-        play_through,
-        &mut dummy_through,
-    ) {
+    if face_line_kills(db, state, me, nodes, cap, line, play_through, through_used) {
         return true;
     }
     if oevo {
@@ -3353,6 +3359,7 @@ fn resolve_play_line(
             &just_played,
             &now_faces,
             play_through,
+            through_used,
         ) {
             *evo_found = true;
             return true;
@@ -3397,6 +3404,7 @@ fn evolve_then_face(
     prefer: &[u8],
     faces: &[u8],
     play_through: bool,
+    through_used: &mut bool,
 ) -> bool {
     for a in ordered_evolves(db, state, prefer, faces) {
         if *nodes >= cap {
@@ -3407,7 +3415,6 @@ fn evolve_then_face(
         };
         let mut next_line = line.to_vec();
         next_line.push(search_key(&s));
-        let mut dummy_through = false;
         if face_line_kills(
             db,
             &s,
@@ -3416,7 +3423,7 @@ fn evolve_then_face(
             cap,
             &next_line,
             play_through,
-            &mut dummy_through,
+            through_used,
         ) {
             return true;
         }
@@ -3515,6 +3522,7 @@ fn opp_lethal_sweep_core(
             oevo,
             play_through,
             evo_found,
+            through_used,
         ) {
             return true;
         }
