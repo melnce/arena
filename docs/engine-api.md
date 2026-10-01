@@ -475,6 +475,11 @@ may not contain commas), `odepth=` / `obeam=` (opponent model; defaults `0` / `3
 sweep-8b flip; `oevo=0` restores the pre-flip glance path; only
 meaningful with `olethal=1` and `odepth=0`; no hard error for other
 combinations),
+`okill=<u32>` (bitmask of extra kill shapes in the opponent-lethal sweep;
+bit `1` = Ward-break prefix, `2` = slot-freeing trades, `4` = play-through;
+default `0` = off),
+`omacro=0|1` (greedy opponent reply credits a `Play` with an evolve on the
+just-played slot; default `0` = off),
 `olsolve=<u32>` (after a sweep miss, run [`forced_lethal`] with this
 node budget charged to the pair cap; default `0` = off),
 `osteps=<u32>` (greedy forced-`EndTurn` step;
@@ -556,6 +561,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `obeam` | 3 | opponent beam (plus `EndTurn` always) |
 | `olethal` | 1 | glance-level opponent-lethal sweep before the greedy line; `0` restores the pre-flip greedy path. Ignored when `odepth≥1` |
 | `oevo` | 1 | extend that sweep with at most one `Evolve` / `super_evolve` per leaf. Only meaningful with `olethal=1` and `odepth=0`. Sweep 8b pooled 0.527 [0.515, 0.540] / +19.0 Elo vs `h0:olethal=1,osteps=6` on the seven real decks (6 174 games). Owner flipped the default on 2026-09-19 |
+| `okill` | 0 | bitmask of extra kill shapes in the opponent-lethal sweep (`olethal=1`, `odepth=0`): bit 1 = Ward-break prefix before the face line; bit 2 = slot-freeing trades when the attacker's field is full; bit 4 = play-through (keep plays that only open evolve lines, and follower on-attacks after the face line). Default off — play is byte-identical to today |
+| `omacro` | 0 | in the greedy opponent reply only, credit a `Play` with the best evolve on the just-played slot when that line scores higher; the evolve is applied as part of the same greedy step (not counted against `osteps`). Default off |
 | `olsolve` | 0 | after a sweep miss on the opponent's turn, run [`forced_lethal`] with this node budget (charged to the pair cap). `0` = off (today). Only when `olethal=1` and `odepth=0` |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
@@ -783,7 +790,8 @@ fixed per determinized root;
 `opp_cap_hit_rate` describe the opponent model; `tt_hits` / `tt_stores`
 are transposition-table lookups that returned a value and writes
 (`0` when `tt=0`); `opp_lethal_checks` / `opp_lethal_found` /
-`opp_lethal_evo_found` / `opp_lethal_nodes` are sweeps run, lethals
+`opp_lethal_evo_found` / `opp_lethal_ward_found` / `opp_lethal_slot_found` /
+`opp_lethal_through_found` / `opp_lethal_nodes` are sweeps run, lethals
 found, lethals found *only* through an evolve branch, and applies spent
 by the `olethal` sweep (`0` when `olethal=0`; the default is `olethal=1`;
 `opp_lethal_evo_found` stays 0 unless `oevo=1`, which is the default).

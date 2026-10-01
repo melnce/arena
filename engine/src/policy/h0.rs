@@ -24,11 +24,12 @@ use crate::determinize::{determinize_with, determinize_with_stats, OpenStats};
 
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
-use crate::ids::{AttackTarget, PlayerId};
+use crate::ids::{AttackTarget, PlayerId, Slot};
 use crate::lethal::{forced_lethal, LethalVerdict};
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
 use crate::search_key::search_key;
+use crate::state::FIELD_SIZE;
 use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
 
@@ -147,6 +148,8 @@ struct Evaluator<'a> {
     wv: f32,
     olethal: bool,
     oevo: bool,
+    okill: u32,
+    omacro: bool,
     olsolve: u32,
     osteps: u32,
     net: Option<&'a ValueNet>,
@@ -231,6 +234,12 @@ pub struct SearchStats {
     pub opp_lethal_evo_found: u64,
     /// `apply`s spent inside lethal sweeps.
     pub opp_lethal_nodes: u64,
+    /// Sweeps that found lethal through the Ward-break prefix (`okill` bit 1).
+    pub opp_lethal_ward_found: u64,
+    /// Sweeps that found lethal through slot-freeing trades (`okill` bit 2).
+    pub opp_lethal_slot_found: u64,
+    /// Sweeps that found lethal through play-through (`okill` bit 4).
+    pub opp_lethal_through_found: u64,
     /// Bounded [`forced_lethal`] calls after a sweep miss (`olsolve>0`,
     /// `olethal=1`, `odepth=0`).
     pub opp_solver_calls: u64,
@@ -296,6 +305,9 @@ impl SearchStats {
         self.opp_lethal_found += other.opp_lethal_found;
         self.opp_lethal_evo_found += other.opp_lethal_evo_found;
         self.opp_lethal_nodes += other.opp_lethal_nodes;
+        self.opp_lethal_ward_found += other.opp_lethal_ward_found;
+        self.opp_lethal_slot_found += other.opp_lethal_slot_found;
+        self.opp_lethal_through_found += other.opp_lethal_through_found;
         self.opp_solver_calls += other.opp_solver_calls;
         self.opp_solver_found += other.opp_solver_found;
         self.opp_solver_unknown += other.opp_solver_unknown;
@@ -370,6 +382,12 @@ pub struct H0 {
     /// leaf (`olethal=1`, `odepth=0` only). Default `true` is the sweep-8b
     /// flip; `oevo=0` restores the pre-flip glance path.
     pub oevo: bool,
+    /// Extra kill shapes in the opponent-lethal sweep (`okill` bitmask).
+    /// Bit 1 = Ward break, 2 = slot-freeing, 4 = play-through. Default `0`.
+    pub okill: u32,
+    /// In the greedy opponent reply, credit a `Play` with an evolve on the
+    /// just-played slot when that line scores higher. Default `false`.
+    pub omacro: bool,
     /// After the opponent-lethal sweep misses, run [`forced_lethal`] with
     /// this node budget (charged to the pair cap). `0` = off (today).
     pub olsolve: u32,
@@ -440,6 +458,8 @@ impl Default for H0 {
             tt: true,
             olethal: true,
             oevo: true,
+            okill: 0,
+            omacro: false,
             olsolve: 0,
             osteps: 6,
             fusemacro: true,
@@ -508,6 +528,8 @@ impl H0 {
             version: self.value,
             weights: &self.weights,
             oevo: self.oevo,
+            okill: self.okill,
+            omacro: self.omacro,
             olsolve: self.olsolve,
             osteps: self.osteps,
             net: self.net.as_deref(),
@@ -1318,6 +1340,12 @@ fn one_ply(
     (best_i, best_v)
 }
 
+#[derive(Clone, PartialEq, Eq)]
+enum GreedyPick {
+    Plain(usize),
+    PlayMacro { index: usize, evolve: Action },
+}
+
 #[allow(clippy::too_many_arguments)]
 fn greedy_index(
     db: &CardDb,
@@ -1348,6 +1376,132 @@ fn greedy_index(
         }
     }
     best_i
+}
+
+#[allow(clippy::too_many_arguments)]
+fn greedy_pick(
+    db: &CardDb,
+    state: &State,
+    legal: &[Action],
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    macro_evolve: bool,
+) -> GreedyPick {
+    let mut best = GreedyPick::Plain(0);
+    let mut best_v = f32::NEG_INFINITY;
+    for (i, a) in legal.iter().enumerate() {
+        if *nodes >= cap {
+            break;
+        }
+        if !useful_action(state, me, a, eval.bpp1, eval.bpp2) {
+            continue;
+        }
+        let (v, evo) = if macro_evolve && matches!(a, Action::Play { .. }) {
+            score_play_with_macro(db, state, a, me, nodes, cap, line, eval)
+        } else {
+            let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+                continue;
+            };
+            (eval.value(&s, me), None)
+        };
+        if v > best_v {
+            best_v = v;
+            best = match evo {
+                Some(e) => GreedyPick::PlayMacro {
+                    index: i,
+                    evolve: e,
+                },
+                None => GreedyPick::Plain(i),
+            };
+        }
+    }
+    best
+}
+
+#[allow(clippy::too_many_arguments)]
+fn score_play_with_macro(
+    db: &CardDb,
+    state: &State,
+    play: &Action,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    eval: Evaluator<'_>,
+) -> (f32, Option<Action>) {
+    let Some(mut s) = try_apply(db, state, play, nodes, cap, line) else {
+        return (f32::NEG_INFINITY, None);
+    };
+    let mut line2 = line.to_vec();
+    line2.push(search_key(&s));
+    if !greedy_resolve_choices(db, &mut s, me, nodes, cap, &mut line2, eval) {
+        return (f32::NEG_INFINITY, None);
+    }
+    let play_v = eval.value(&s, me);
+    let faces = leader_attackers(db, &s);
+    let prefer = new_follower_slots(state, &s, me);
+    let mut best_v = play_v;
+    let mut best_evo = None;
+    for a in ordered_evolves(db, &s, &prefer, &faces) {
+        if *nodes >= cap {
+            break;
+        }
+        let Some(s2) = try_apply(db, &s, &a, nodes, cap, &line2) else {
+            continue;
+        };
+        let v2 = eval.value(&s2, me);
+        if v2 > best_v {
+            best_v = v2;
+            best_evo = Some(a);
+        }
+    }
+    (best_v, best_evo)
+}
+
+fn new_follower_slots(before: &State, after: &State, who: PlayerId) -> Vec<u8> {
+    let mut out = Vec::new();
+    for i in 0..FIELD_SIZE {
+        let now = after.player(who).field[i].as_ref();
+        if now.is_none_or(|c| c.kind != CardKind::Follower) {
+            continue;
+        }
+        let was = before.player(who).field[i].as_ref();
+        if was.is_none() || was.is_some_and(|c| c.id != now.unwrap().id) {
+            out.push(i as u8);
+        }
+    }
+    out
+}
+
+#[allow(clippy::too_many_arguments)]
+fn greedy_resolve_choices(
+    db: &CardDb,
+    state: &mut State,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &mut Vec<u64>,
+    eval: Evaluator<'_>,
+) -> bool {
+    while matches!(state.phase, Phase::Choice { player, .. } if player == me) {
+        if *nodes >= cap {
+            return false;
+        }
+        let legal = legal_actions(db, state);
+        if legal.is_empty() {
+            return false;
+        }
+        let i = greedy_index(db, state, &legal, me, nodes, cap, line, eval);
+        let Some(next) = try_apply(db, state, &legal[i], nodes, cap, line) else {
+            return false;
+        };
+        line.push(search_key(&next));
+        *state = next;
+    }
+    true
 }
 
 /// Partner cards to pick for one fuse completion (`fusemacro=1`).
@@ -2268,7 +2422,7 @@ fn opponent_reply(
     }
     if odepth == 0 {
         if eval.olethal && acting_player(state) == me.opponent() {
-            if opp_lethal_sweep(db, state, me, nodes, cap, line, eval.oevo, stats) {
+            if opp_lethal_sweep(db, state, me, nodes, cap, line, eval, stats) {
                 stats.opp_leaves += 1;
                 if let Some(t) = track.as_deref_mut() {
                     t.set_leaf(-eval.wv, PvEnd::OppLethal, state);
@@ -2303,16 +2457,29 @@ fn opponent_reply(
             }
         }
         let mut s = state.clone();
-        greedy_until_end(
-            db,
-            &mut s,
-            me.opponent(),
-            nodes,
-            cap,
-            line,
-            eval,
-            track.as_deref_mut(),
-        );
+        if eval.omacro {
+            greedy_until_end_omacro(
+                db,
+                &mut s,
+                me.opponent(),
+                nodes,
+                cap,
+                line,
+                eval,
+                track.as_deref_mut(),
+            );
+        } else {
+            greedy_until_end(
+                db,
+                &mut s,
+                me.opponent(),
+                nodes,
+                cap,
+                line,
+                eval,
+                track.as_deref_mut(),
+            );
+        }
         if *nodes >= cap {
             stats.opp_cap_hits += 1;
         }
@@ -2667,6 +2834,71 @@ fn greedy_until_end(
     }
 }
 
+/// Greedy opponent reply with optional play→evolve (`omacro=1`).
+#[allow(clippy::too_many_arguments)]
+fn greedy_until_end_omacro(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    mut track: Option<&mut PvTracker>,
+) {
+    let mut steps = 0u32;
+    let mut line = line.to_vec();
+    while state.winner.is_none()
+        && !matches!(state.phase, Phase::Terminal)
+        && acting_player(state) == who
+        && *nodes < cap
+        && steps < eval.osteps + 3
+        && state.turn <= MAX_TURNS
+    {
+        let legal = legal_actions(db, state);
+        if legal.is_empty() {
+            break;
+        }
+        if let Some(end) = legal.iter().position(|a| matches!(a, Action::EndTurn)) {
+            if steps >= eval.osteps {
+                if let Some(next) = try_apply(db, state, &legal[end], nodes, cap, &line) {
+                    if let Some(t) = track.as_deref_mut() {
+                        t.push(legal[end].clone());
+                    }
+                    *state = next;
+                }
+                break;
+            }
+        }
+        let pick = greedy_pick(db, state, &legal, who, nodes, cap, &line, eval, true);
+        let (i, macro_evo) = match pick {
+            GreedyPick::Plain(i) => (i, None),
+            GreedyPick::PlayMacro { index, evolve } => (index, Some(evolve)),
+        };
+        let Some(next) = try_apply(db, state, &legal[i], nodes, cap, &line) else {
+            break;
+        };
+        if let Some(t) = track.as_deref_mut() {
+            t.push(legal[i].clone());
+        }
+        line.push(search_key(&next));
+        *state = next;
+        if matches!(legal[i], Action::Play { .. }) {
+            greedy_resolve_choices(db, state, who, nodes, cap, &mut line, eval);
+        }
+        if let Some(evo) = macro_evo {
+            if let Some(next2) = try_apply(db, state, &evo, nodes, cap, &line) {
+                if let Some(t) = track.as_deref_mut() {
+                    t.push(evo);
+                }
+                line.push(search_key(&next2));
+                *state = next2;
+            }
+        }
+        steps += 1;
+    }
+}
+
 /// Applies spent by one opponent-lethal sweep, charged through [`try_apply`].
 /// Tight for the attack-only + play-then-attack loop; do not raise.
 const OPP_LETHAL_APPLY_CAP: u32 = 40;
@@ -2677,6 +2909,23 @@ const OPP_LETHAL_APPLY_CAP: u32 = 40;
 /// The 50-game abyss-p8rfn mirror measured 8.2 applies/sweep (`oevo=1`)
 /// vs 6.1 (`oevo=0`); the play-then-evolve fixture spends 7.
 const OPP_LETHAL_EVO_APPLY_CAP: u32 = 120;
+/// Sweep with any `okill` bit set: Ward-break prefixes, slot-freeing trades,
+/// and play-through follower lines. 300 is the worst-case envelope — three
+/// Ward clears with evolve, two sacrifice trades each running the play loop,
+/// and follower on-attacks — not the mean. The 20-game meta mirror measured
+/// 14.8 applies/sweep (`okill=7`) vs 8.2 (`okill=0`, `oevo=1`).
+const OPP_LETHAL_KILL_APPLY_CAP: u32 = 300;
+const OKILL_WARD: u32 = 1;
+const OKILL_SLOT: u32 = 2;
+const OKILL_THROUGH: u32 = 4;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum KillShape {
+    Base,
+    Ward,
+    Slot,
+    Through,
+}
 
 fn leader_attackers(db: &CardDb, state: &State) -> Vec<u8> {
     legal_actions(db, state)
@@ -2691,8 +2940,75 @@ fn leader_attackers(db: &CardDb, state: &State) -> Vec<u8> {
         .collect()
 }
 
+fn has_leader_attack(db: &CardDb, state: &State) -> bool {
+    legal_actions(db, state).iter().any(|a| {
+        matches!(
+            a,
+            Action::Attack {
+                target: AttackTarget::Leader,
+                ..
+            }
+        )
+    })
+}
+
+fn defender_ward_slots(state: &State, defender: PlayerId) -> Vec<u8> {
+    state
+        .player(defender)
+        .field
+        .iter()
+        .enumerate()
+        .filter_map(|(i, f)| {
+            f.as_ref()
+                .filter(|c| c.kind == CardKind::Follower && c.defense > 0 && c.is_ward())
+                .map(|_| i as u8)
+        })
+        .collect()
+}
+
+fn attacker_can_face_leader(state: &State, who: PlayerId, slot: u8) -> bool {
+    let Some(inst) = state.field_inst(who, slot) else {
+        return false;
+    };
+    if inst.traits.cant_attack_leader == Some(true) {
+        return false;
+    }
+    inst.is_storm() || !inst.flags.summoning_sick
+}
+
+fn ward_attack_priority(state: &State, who: PlayerId, attack: &Action) -> (u8, i32, u8) {
+    let Action::Attack { attacker, target } = attack else {
+        return (9, 0, 0);
+    };
+    let Some(inst) = state.field_inst(who, attacker.0) else {
+        return (9, 0, 0);
+    };
+    let cant_face = !attacker_can_face_leader(state, who, attacker.0);
+    let tier = if cant_face { 0 } else { 1 };
+    let ward_def = match target {
+        AttackTarget::Slot(s) => state
+            .field_inst(who.opponent(), s.0)
+            .map(|f| f.defense)
+            .unwrap_or(0),
+        AttackTarget::Leader => 0,
+    };
+    let kills = inst.attack >= ward_def;
+    let atk_key = if kills { inst.attack } else { i32::MAX };
+    (tier, atk_key, attacker.0)
+}
+
+fn legal_ward_attacks(db: &CardDb, state: &State, ward_slot: u8) -> Vec<Action> {
+    let target = AttackTarget::Slot(Slot(ward_slot));
+    legal_actions(db, state)
+        .into_iter()
+        .filter(|a| matches!(a, Action::Attack { target: t, .. } if *t == target))
+        .collect()
+}
+
 /// First legal face attack, then the next, until none remain. Attacks to the
-/// leader commute, so one fixed order suffices.
+/// leader commute, so one fixed order suffices. With `play_through`, once no
+/// leader attack is legal each remaining follower attack is tried once (slot
+/// order), re-checking for a kill after each.
 fn face_line_kills(
     db: &CardDb,
     state: &State,
@@ -2700,6 +3016,8 @@ fn face_line_kills(
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
+    play_through: bool,
+    through_used: &mut bool,
 ) -> bool {
     let opp = me.opponent();
     let mut s = state.clone();
@@ -2724,7 +3042,7 @@ fn face_line_kills(
                 }
             )
         }) else {
-            return false;
+            break;
         };
         let Some(next) = try_apply(db, &s, a, nodes, cap, &line) else {
             return false;
@@ -2732,6 +3050,43 @@ fn face_line_kills(
         line.push(search_key(&next));
         s = next;
     }
+    if !play_through {
+        return false;
+    }
+    *through_used = true;
+    for slot in 0..FIELD_SIZE as u8 {
+        if s.winner == Some(opp) {
+            return true;
+        }
+        if s.winner.is_some() || matches!(s.phase, Phase::Terminal) {
+            return false;
+        }
+        if acting_player(&s) != opp || *nodes >= cap {
+            return false;
+        }
+        let legal = legal_actions(db, &s);
+        let target = AttackTarget::Slot(Slot(slot));
+        let Some(a) = legal.iter().find(|a| {
+            matches!(
+                a,
+                Action::Attack {
+                    attacker: _,
+                    target: t,
+                } if *t == target
+            )
+        }) else {
+            continue;
+        };
+        let Some(next) = try_apply(db, &s, a, nodes, cap, &line) else {
+            continue;
+        };
+        line.push(search_key(&next));
+        s = next;
+        if face_line_kills(db, &s, me, nodes, cap, &line, false, through_used) {
+            return true;
+        }
+    }
+    s.winner == Some(opp)
 }
 
 /// Depth-first resolve of a play: pending `Choose` in index order, then any
@@ -2749,6 +3104,7 @@ fn resolve_play_line(
     cap: u32,
     line: &[u64],
     oevo: bool,
+    play_through: bool,
     evo_found: &mut bool,
 ) -> bool {
     let opp = me.opponent();
@@ -2785,6 +3141,7 @@ fn resolve_play_line(
                 cap,
                 &next_line,
                 oevo,
+                play_through,
                 evo_found,
             ) {
                 return true;
@@ -2807,6 +3164,7 @@ fn resolve_play_line(
                     cap,
                     &next_line,
                     oevo,
+                    play_through,
                     evo_found,
                 );
             }
@@ -2821,9 +3179,40 @@ fn resolve_play_line(
     let now_faces = leader_attackers(db, state);
     let new_face = now_faces.iter().any(|slot| !origin_faces.contains(slot));
     if !(new_face || lowered) {
+        if play_through && oevo {
+            let just_played: Vec<u8> = now_faces
+                .iter()
+                .copied()
+                .filter(|slot| !origin_faces.contains(slot))
+                .collect();
+            if evolve_then_face(
+                db,
+                state,
+                me,
+                nodes,
+                cap,
+                line,
+                &just_played,
+                &now_faces,
+                play_through,
+            ) {
+                *evo_found = true;
+                return true;
+            }
+        }
         return false;
     }
-    if face_line_kills(db, state, me, nodes, cap, line) {
+    let mut dummy_through = false;
+    if face_line_kills(
+        db,
+        state,
+        me,
+        nodes,
+        cap,
+        line,
+        play_through,
+        &mut dummy_through,
+    ) {
         return true;
     }
     if oevo {
@@ -2832,7 +3221,17 @@ fn resolve_play_line(
             .copied()
             .filter(|slot| !origin_faces.contains(slot))
             .collect();
-        if evolve_then_face(db, state, me, nodes, cap, line, &just_played, &now_faces) {
+        if evolve_then_face(
+            db,
+            state,
+            me,
+            nodes,
+            cap,
+            line,
+            &just_played,
+            &now_faces,
+            play_through,
+        ) {
             *evo_found = true;
             return true;
         }
@@ -2875,6 +3274,7 @@ fn evolve_then_face(
     line: &[u64],
     prefer: &[u8],
     faces: &[u8],
+    play_through: bool,
 ) -> bool {
     for a in ordered_evolves(db, state, prefer, faces) {
         if *nodes >= cap {
@@ -2885,7 +3285,17 @@ fn evolve_then_face(
         };
         let mut next_line = line.to_vec();
         next_line.push(search_key(&s));
-        if face_line_kills(db, &s, me, nodes, cap, &next_line) {
+        let mut dummy_through = false;
+        if face_line_kills(
+            db,
+            &s,
+            me,
+            nodes,
+            cap,
+            &next_line,
+            play_through,
+            &mut dummy_through,
+        ) {
             return true;
         }
     }
@@ -2914,20 +3324,246 @@ fn standalone_evolve_kills(
         };
         let mut next_line = line.to_vec();
         next_line.push(search_key(&s));
-        if face_line_kills(db, &s, me, nodes, cap, &next_line) {
+        let mut dummy_through = false;
+        if face_line_kills(
+            db,
+            &s,
+            me,
+            nodes,
+            cap,
+            &next_line,
+            false,
+            &mut dummy_through,
+        ) {
             return true;
         }
     }
     false
 }
 
+#[allow(clippy::too_many_arguments)]
+fn opp_lethal_sweep_core(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    nodes: &mut u32,
+    sweep_cap: u32,
+    line: &[u64],
+    oevo: bool,
+    play_through: bool,
+    evo_found: &mut bool,
+    through_used: &mut bool,
+) -> bool {
+    if face_line_kills(
+        db,
+        state,
+        me,
+        nodes,
+        sweep_cap,
+        line,
+        play_through,
+        through_used,
+    ) {
+        return true;
+    }
+    let origin_def = state.player(me).leader_defense;
+    let origin_faces = leader_attackers(db, state);
+    let legal = legal_actions(db, state);
+    for a in &legal {
+        if *nodes >= sweep_cap {
+            break;
+        }
+        if !matches!(a, Action::Play { .. }) {
+            continue;
+        }
+        let Some(s) = try_apply(db, state, a, nodes, sweep_cap, line) else {
+            continue;
+        };
+        let mut next_line = line.to_vec();
+        next_line.push(search_key(&s));
+        if resolve_play_line(
+            db,
+            &s,
+            me,
+            origin_def,
+            &origin_faces,
+            nodes,
+            sweep_cap,
+            &next_line,
+            oevo,
+            play_through,
+            evo_found,
+        ) {
+            return true;
+        }
+    }
+    if oevo && standalone_evolve_kills(db, state, me, nodes, sweep_cap, line) {
+        *evo_found = true;
+        return true;
+    }
+    false
+}
+
+fn try_ward_prefix(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+) -> Option<State> {
+    let defender = me;
+    let attacker = me.opponent();
+    if defender_ward_slots(state, defender).is_empty() || has_leader_attack(db, state) {
+        return None;
+    }
+    let mut s = state.clone();
+    let mut line = line.to_vec();
+    let mut alt_budget = 3usize;
+    while !defender_ward_slots(&s, defender).is_empty() {
+        if *nodes >= cap {
+            return None;
+        }
+        if acting_player(&s) != attacker {
+            return None;
+        }
+        let ward_slot = defender_ward_slots(&s, defender)[0];
+        let mut attacks = legal_ward_attacks(db, &s, ward_slot);
+        if attacks.is_empty() {
+            let faces = leader_attackers(db, &s);
+            let mut unlocked = false;
+            for a in ordered_evolves(db, &s, &[], &faces) {
+                if *nodes >= cap {
+                    return None;
+                }
+                let Some(next) = try_apply(db, &s, &a, nodes, cap, &line) else {
+                    continue;
+                };
+                let mut nl = line.clone();
+                nl.push(search_key(&next));
+                attacks = legal_ward_attacks(db, &next, ward_slot);
+                if !attacks.is_empty() {
+                    s = next;
+                    line = nl;
+                    unlocked = true;
+                    break;
+                }
+            }
+            if !unlocked {
+                let origin_faces = leader_attackers(db, &s);
+                for play in legal_actions(db, &s) {
+                    if *nodes >= cap {
+                        break;
+                    }
+                    if !matches!(play, Action::Play { .. }) {
+                        continue;
+                    }
+                    let Some(next) = try_apply(db, &s, &play, nodes, cap, &line) else {
+                        continue;
+                    };
+                    let mut nl = line.clone();
+                    nl.push(search_key(&next));
+                    let prefer = new_follower_slots(&s, &next, attacker);
+                    for evo in ordered_evolves(db, &next, &prefer, &leader_attackers(db, &next)) {
+                        if *nodes >= cap {
+                            break;
+                        }
+                        let Some(after) = try_apply(db, &next, &evo, nodes, cap, &nl) else {
+                            continue;
+                        };
+                        let mut nl2 = nl.clone();
+                        nl2.push(search_key(&after));
+                        attacks = legal_ward_attacks(db, &after, ward_slot);
+                        if !attacks.is_empty() {
+                            s = after;
+                            line = nl2;
+                            unlocked = true;
+                            break;
+                        }
+                    }
+                    if unlocked {
+                        break;
+                    }
+                    let _ = origin_faces;
+                }
+            }
+            if !unlocked {
+                return None;
+            }
+        }
+        attacks.sort_by_key(|a| ward_attack_priority(&s, attacker, a));
+        let mut cleared = false;
+        for a in attacks.iter().take(alt_budget.max(1)) {
+            let mut trial = s.clone();
+            let mut trial_line = line.clone();
+            let Some(next) = try_apply(db, &trial, a, nodes, cap, &trial_line) else {
+                continue;
+            };
+            trial_line.push(search_key(&next));
+            trial = next;
+            let ward_gone = !defender_ward_slots(&trial, defender)
+                .iter()
+                .any(|slot| *slot == ward_slot);
+            s = trial;
+            line = trial_line;
+            cleared = true;
+            alt_budget = alt_budget.saturating_sub(1);
+            if ward_gone {
+                break;
+            }
+        }
+        if !cleared {
+            return None;
+        }
+    }
+    Some(s)
+}
+
+fn sacrifice_trades(
+    db: &CardDb,
+    state: &State,
+    attacker: PlayerId,
+    defender: PlayerId,
+) -> Vec<Action> {
+    let mut out = Vec::new();
+    for a in legal_actions(db, state) {
+        let Action::Attack {
+            attacker: slot,
+            target: AttackTarget::Slot(def_slot),
+        } = a
+        else {
+            continue;
+        };
+        let Some(att) = state.field_inst(attacker, slot.0) else {
+            continue;
+        };
+        let Some(def) = state.field_inst(defender, def_slot.0) else {
+            continue;
+        };
+        if def.attack < att.defense {
+            continue;
+        }
+        out.push(a);
+    }
+    out.sort_by_key(|a| {
+        let Action::Attack { attacker: slot, .. } = a else {
+            return (i32::MAX, 0u8);
+        };
+        let inst = state.field_inst(attacker, slot.0).unwrap();
+        (inst.attack + inst.defense, slot.0)
+    });
+    out
+}
+
 /// Glance-level opponent lethal: face attacks, then each `Play` (plus its
 /// `Choose`/`Confirm`) and a face line when that play opened one. With
 /// `oevo=1` (the default), a play that opened a line but missed face then
 /// tries each legal evolve (just-played slot first), and a standalone
-/// evolve pass runs if those also miss. Caps at [`OPP_LETHAL_APPLY_CAP`]
-/// (`oevo=0`) or [`OPP_LETHAL_EVO_APPLY_CAP`] (`oevo=1`), all charged to
-/// `nodes`.
+/// evolve pass runs if those also miss. With `okill` bits, Ward-break
+/// prefixes, slot-freeing trades, and play-through follower lines are
+/// tried before giving up. Caps at [`OPP_LETHAL_APPLY_CAP`] (`oevo=0`),
+/// [`OPP_LETHAL_EVO_APPLY_CAP`] (`oevo=1`), or [`OPP_LETHAL_KILL_APPLY_CAP`]
+/// (any `okill` bit), all charged to `nodes`.
 #[allow(clippy::too_many_arguments)]
 fn opp_lethal_sweep(
     db: &CardDb,
@@ -2936,65 +3572,115 @@ fn opp_lethal_sweep(
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
-    oevo: bool,
+    eval: Evaluator<'_>,
     stats: &mut SearchStats,
 ) -> bool {
     stats.opp_lethal_checks += 1;
     let start = *nodes;
-    let apply_limit = if oevo {
+    let okill = eval.okill;
+    let oevo = eval.oevo;
+    let play_through = okill & OKILL_THROUGH != 0;
+    let apply_limit = if okill != 0 {
+        OPP_LETHAL_KILL_APPLY_CAP
+    } else if oevo {
         OPP_LETHAL_EVO_APPLY_CAP
     } else {
         OPP_LETHAL_APPLY_CAP
     };
     let sweep_cap = nodes.saturating_add(apply_limit).min(cap);
     let mut evo_found = false;
-    let found = face_line_kills(db, state, me, nodes, sweep_cap, line) || {
-        let origin_def = state.player(me).leader_defense;
-        let origin_faces = leader_attackers(db, state);
-        let legal = legal_actions(db, state);
-        let mut hit = false;
-        for a in &legal {
-            if *nodes >= sweep_cap {
-                break;
-            }
-            if !matches!(a, Action::Play { .. }) {
-                continue;
-            }
-            let Some(s) = try_apply(db, state, a, nodes, sweep_cap, line) else {
-                continue;
-            };
+    let mut through_used = false;
+    let mut shape = KillShape::Base;
+    let mut found = false;
+
+    if okill & OKILL_WARD != 0
+        && !defender_ward_slots(state, me).is_empty()
+        && !has_leader_attack(db, state)
+    {
+        if let Some(cleared) = try_ward_prefix(db, state, me, nodes, sweep_cap, line) {
             let mut next_line = line.to_vec();
-            next_line.push(search_key(&s));
-            if resolve_play_line(
+            next_line.push(search_key(&cleared));
+            if opp_lethal_sweep_core(
                 db,
-                &s,
+                &cleared,
                 me,
-                origin_def,
-                &origin_faces,
                 nodes,
                 sweep_cap,
                 &next_line,
                 oevo,
+                play_through,
                 &mut evo_found,
+                &mut through_used,
             ) {
-                hit = true;
-                break;
+                found = true;
+                shape = KillShape::Ward;
             }
         }
-        if hit {
-            true
-        } else if oevo && standalone_evolve_kills(db, state, me, nodes, sweep_cap, line) {
-            evo_found = true;
-            true
-        } else {
-            false
+    }
+
+    if !found {
+        found = opp_lethal_sweep_core(
+            db,
+            state,
+            me,
+            nodes,
+            sweep_cap,
+            line,
+            oevo,
+            play_through,
+            &mut evo_found,
+            &mut through_used,
+        );
+    }
+
+    if !found && okill & OKILL_SLOT != 0 {
+        let attacker = me.opponent();
+        if state.player(attacker).field_count() >= FIELD_SIZE {
+            let trades = sacrifice_trades(db, state, attacker, me);
+            for trade in trades.iter().take(2) {
+                if *nodes >= sweep_cap {
+                    break;
+                }
+                let Some(s) = try_apply(db, state, trade, nodes, sweep_cap, line) else {
+                    continue;
+                };
+                let mut next_line = line.to_vec();
+                next_line.push(search_key(&s));
+                if opp_lethal_sweep_core(
+                    db,
+                    &s,
+                    me,
+                    nodes,
+                    sweep_cap,
+                    &next_line,
+                    oevo,
+                    play_through,
+                    &mut evo_found,
+                    &mut through_used,
+                ) {
+                    found = true;
+                    shape = KillShape::Slot;
+                    break;
+                }
+            }
         }
-    };
+    }
+
+    if found && play_through && shape == KillShape::Base && through_used {
+        shape = KillShape::Through;
+    }
+
     stats.opp_lethal_nodes += u64::from(*nodes - start);
     if found {
         stats.opp_lethal_found += 1;
         if evo_found {
             stats.opp_lethal_evo_found += 1;
+        }
+        match shape {
+            KillShape::Ward => stats.opp_lethal_ward_found += 1,
+            KillShape::Slot => stats.opp_lethal_slot_found += 1,
+            KillShape::Through => stats.opp_lethal_through_found += 1,
+            KillShape::Base => {}
         }
     }
     found
