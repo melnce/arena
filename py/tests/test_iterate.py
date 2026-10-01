@@ -277,8 +277,8 @@ def test_smoke_encoding_v2_end_to_end(smoke_v2, db, root: Path) -> None:
     assert spec["encoding"] == 2
 
     report = json.loads((tag / "linear.report.json").read_text())
-    assert "h0-linear-v2.json" in report["eval"]
-    assert "skipped" not in report["eval"]["h0-linear-v2.json"]
+    assert "h0-linear-v3.json" in report["eval"]
+    assert "skipped" not in report["eval"]["h0-linear-v3.json"]
 
     import arena
 

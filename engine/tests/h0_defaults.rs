@@ -14,7 +14,8 @@
 //!
 //! On this branch, `h0:mull=rule,info=fair,net=<v1 path>` must match those pins;
 //! bare `h0` must match `h0:mull=engine/models/mulligan-v1.json,info=open` and
-//! `h0:net=<v2 path>` (the yardstick candidate).
+//! `h0:net=<v3 path>` (the yardstick candidate); `h0:net=<v2 path>` reproduces
+//! the pre-v3 default pins.
 //!
 //! `print_legacy_fingerprints` uses `h0:mull=rule,info=fair` (not bare `h0`).
 //!
@@ -164,9 +165,21 @@ fn action_trace(
 }
 
 /// Default `h0` action fingerprints on eight meta-deck / seed pairs.
-/// Captured from `h0:net=/tmp/net5-v2.json` on `main@063bdd4` (yardstick
+/// Captured from `h0:net=/tmp/v3.json` on `main@a69b248` (yardstick
 /// candidate); bare `h0` must reproduce them exactly.
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
+    0xd7ac_bc56_d86e_84dd,
+    0xbe95_43fe_4fc0_3f96,
+    0x120b_7fb2_41cf_3f44,
+    0x871f_8e13_d4a6_c0b4,
+    0xbd46_13fd_4a50_be48,
+    0x8e4e_3568_7a31_644c,
+    0x05d7_3cb4_31fa_02c1,
+    0x857a_2b3b_a078_359e,
+];
+
+/// Pre-v3 default `h0` fingerprints (`main@a69b248`, built-in `h0-linear-v2`).
+const V2_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x9e78_76d1_68f6_7ca1,
     0x0cde_c89d_1da5_5cf3,
     0x122c_fa71_850c_7637,
@@ -295,7 +308,7 @@ fn pending_summary(state: &arena_engine::State) -> String {
 fn dump_gate_explain_at() {
     let db = load_db();
     let stems = meta_deck_stems();
-    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| "h0".into());
+    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| with_v2_net("h0"));
     let seed: u64 = std::env::var("H0_DUMP_SEEDS")
         .unwrap_or_else(|_| "67".into())
         .parse()
@@ -682,15 +695,34 @@ fn v1_net_matches_pre_v2_default_fingerprints() {
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
+fn v2_net_matches_pre_v3_default_fingerprints() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let v2 = h0_linear_v2_path();
+    let spec = format!("h0:net={v2}");
+    assert_eq!(stems.len(), 16);
+    for (i, seed) in GATE_SEEDS.iter().enumerate() {
+        let deck = load_meta_deck(&stems[i]);
+        let got = action_fingerprint(&db, &spec, *seed, &deck);
+        assert_eq!(
+            got, V2_DEFAULT_FINGERPRINTS[i],
+            "v2 net fingerprint seed={seed} deck={}",
+            stems[i]
+        );
+    }
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
 fn default_matches_explicit_builtin_table_and_open() {
     let db = load_db();
     let table = repo_root()
         .join("engine/models/mulligan-v1.json")
         .display()
         .to_string();
-    let v2 = h0_linear_v2_path();
+    let v3 = h0_linear_v3_path();
     let explicit_mull = format!("h0:mull={table},info=open");
-    let explicit_net = format!("h0:net={v2}");
+    let explicit_net = format!("h0:net={v3}");
     let stems = meta_deck_stems();
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);

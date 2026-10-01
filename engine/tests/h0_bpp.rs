@@ -41,7 +41,10 @@ fn bpp1_delays_early_charge_activation() {
     let db = load_db();
     let st = second_turn2_state(&db, 30);
     assert!(
-        matches!(h0_pick_with(&db, "h0", &st), arena_engine::Action::BonusPp),
+        matches!(
+            h0_pick_with(&db, &with_v2_net("h0"), &st),
+            arena_engine::Action::BonusPp
+        ),
         "default activates early charge on turn 2"
     );
     let st2 = second_turn2_state(&db, 31);
@@ -65,7 +68,10 @@ fn bpp2_delays_late_charge_activation() {
     clear_hand(&mut st, me);
     put_hand(&db, &mut st, me, "10002120");
     assert!(
-        matches!(h0_pick_with(&db, "h0", &st), arena_engine::Action::BonusPp),
+        matches!(
+            h0_pick_with(&db, &with_v2_net("h0"), &st),
+            arena_engine::Action::BonusPp
+        ),
         "default activates late charge on turn 6 when a 7-cost needs the orb"
     );
     let mut st2 = started(&db, 33);
