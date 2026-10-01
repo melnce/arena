@@ -483,8 +483,9 @@ just-played slot; the play's own `Choose` / `Confirm` resolve inside the same
 greedy step; default `0` = off),
 `olsolve=<u32>` (after a sweep miss, run [`forced_lethal`] with this
 node budget charged to the pair cap; default `0` = off),
-`tkill=<u32>` (on the bot's main-phase turn, run [`forced_lethal_det`]
-on the first determinization before search; default `0` = off),
+`tkill=<u32>` (on each own-turn decision — Main, Combat, or Choice — run
+[`forced_lethal_det`] on the first determinization before search; default
+`0` = off),
 `osteps=<u32>` (greedy forced-`EndTurn` step;
 default `6`; hard stop is `osteps+3`),
 `wv=<f32>` (saturation bound on every accumulated value; default `80`),
@@ -567,7 +568,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `okill` | 0 | bitmask of extra kill shapes in the opponent-lethal sweep (`olethal=1`, `odepth=0`): bit 1 = Ward-break prefix before the face line; bit 2 = slot-freeing trades when the attacker's field is full; bit 4 = play-through (keep plays that only open evolve lines, and follower on-attacks after the face line). Default off — play is byte-identical to today |
 | `omacro` | 0 | in the greedy opponent reply only, credit a `Play` with the best evolve on the just-played slot when that line scores higher; the play's own `Choose` / `Confirm` resolve inside the same greedy step, and the evolve is applied as part of that step (not counted against `osteps`). Default off |
 | `olsolve` | 0 | after a sweep miss on the opponent's turn, run [`forced_lethal`] with this node budget (charged to the pair cap). `0` = off (today). Only when `olethal=1` and `odepth=0` |
-| `tkill` | 0 | on the bot's main-phase turn with more than one useful candidate, run [`forced_lethal_det`] on the first determinization before `consensus_lethal` / search. A deterministic kill confirmed on every root is played; applies are outside `node_cap`. `0` = off (today) |
+| `tkill` | 0 | on each own-turn decision (Main, Combat, or Choice) with more than one useful candidate, run [`forced_lethal_det`] on the first determinization before `consensus_lethal` / search. A deterministic kill confirmed on every root is played; applies are outside `node_cap`. `0` = off (today) |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
@@ -668,9 +669,9 @@ returns `-wv` and skips the greedy line; [`None`] and [`Unknown`] fall
 through to the greedy reply. Default `olsolve=0` — byte-identical to
 today. `odepth≥1` ignores `olsolve` like `olethal`. `oevo=0` restores the pre-flip glance path.
 
-When `tkill>0` on a main-phase decision with more than one useful
-candidate, `H0::choose` runs [`forced_lethal_det`] on the first
-determinization (never the live hidden state). On
+When `tkill>0` on an own-turn decision (Main, Combat, or Choice) with
+more than one useful candidate, `H0::choose` runs [`forced_lethal_det`]
+on the first determinization (never the live hidden state). On
 [`LethalVerdict::Lethal`], the line is replayed on every other root;
 when every root confirms and `line[0]` is legal, that action is taken
 and `last_value = wv`. Solver applies are outside `node_cap` and do not

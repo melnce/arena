@@ -417,8 +417,9 @@ pub struct H0 {
     /// After the opponent-lethal sweep misses, run [`forced_lethal`] with
     /// this node budget (charged to the pair cap). `0` = off (today).
     pub olsolve: u32,
-    /// On the bot's main-phase turn, run [`forced_lethal_det`] on the first
-    /// determinization before search. `0` = off (today).
+    /// On each own-turn decision (Main / Combat / Choice), run
+    /// [`forced_lethal_det`] on the first determinization before search.
+    /// `0` = off (today).
     pub tkill: u32,
     /// Greedy-line steps before a forced `EndTurn`. Default `6` is the sweep-5
     /// flip; the hard stop is `osteps + 3` (today: 9).
@@ -788,7 +789,12 @@ impl Policy for H0 {
         } else {
             None
         };
-        if self.tkill > 0 && matches!(state.phase, Phase::Main | Phase::Combat) {
+        if self.tkill > 0
+            && matches!(
+                state.phase,
+                Phase::Main | Phase::Combat | Phase::Choice { .. }
+            )
+        {
             if let Some(idx) =
                 try_take_kill(db, &roots, legal, &cand, me, self.tkill, &mut dec_stats)
             {

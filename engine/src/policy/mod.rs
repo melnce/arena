@@ -137,9 +137,10 @@ impl AnyPolicy {
     /// (greedy opponent reply credits a `Play` with an evolve on the
     /// just-played slot; default `0` = off), `olsolve=<u32>` (after a
     /// sweep miss, run [`forced_lethal`] with this node budget charged to
-    /// the pair cap; default `0` = off), `tkill=<u32>` (on the bot's
-    /// main-phase turn, run [`forced_lethal_det`] on the first
-    /// determinization before search; default `0` = off), `osteps=<u32>` (greedy
+    /// the pair cap; default `0` = off), `tkill=<u32>` (on each own-turn
+    /// decision — Main, Combat, or Choice — run [`forced_lethal_det`] on the
+    /// first determinization before search; default `0` = off), `osteps=<u32>`
+    /// (greedy
     /// forced-`EndTurn` step; default `6`;
     /// hard stop is `osteps+3`), `wv=<f32>` (saturation bound on every
     /// accumulated value; default `80`), `pess=<f32>` (pessimism weight
