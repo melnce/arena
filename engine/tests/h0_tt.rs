@@ -222,8 +222,8 @@ fn check_table_does_work(n: usize) {
         "h0:value=v0,alloc=fair,olethal=0,osteps=3,info=draws,lcap=1,fusemacro=0",
         true,
     );
-    let v1 = with_v1_net("h0");
-    check_table_pair(&db, &states, n, &with_v1_net("h0:tt=0"), &v1, false);
+    let v2 = with_v2_net("h0");
+    check_table_pair(&db, &states, n, &with_v2_net("h0:tt=0"), &v2, false);
 }
 
 fn check_table_pair(

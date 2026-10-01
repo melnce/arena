@@ -449,7 +449,7 @@ struct MetaAccounting {
 }
 
 fn baseline_skipped(db: &CardDb, nodes: u32, snaps: &[SearchSnapshot]) -> HashMap<u64, u64> {
-    let base = with_v1_net(&format!("h0:nodes={nodes}"));
+    let base = with_v2_net(&format!("h0:nodes={nodes}"));
     let mut out = HashMap::new();
     for snap in snaps {
         let key = search_key(&snap.state) ^ snap.choose_seed;
@@ -468,7 +468,7 @@ fn audit_horizon_decisions(
     snaps: &[SearchSnapshot],
     baseline: &HashMap<u64, u64>,
 ) -> MetaAccounting {
-    let hz = with_v1_net(&format!("h0:nodes={nodes},horizon={horizon}"));
+    let hz = with_v2_net(&format!("h0:nodes={nodes},horizon={horizon}"));
     let mut out = MetaAccounting {
         bad_ends: 0,
         fallback: 0,

@@ -989,9 +989,9 @@ fn other_info_modes_play_unchanged_on_meta_games() {
         "h0",
         SEED,
         &[
-            (Some(PlayerId::A), 11, 96),
-            (Some(PlayerId::B), 9, 68),
-            (Some(PlayerId::B), 6, 54),
+            (Some(PlayerId::A), 18, 171),
+            (Some(PlayerId::A), 10, 111),
+            (Some(PlayerId::B), 6, 55),
         ],
     );
     check_meta_play_baseline(
@@ -999,9 +999,9 @@ fn other_info_modes_play_unchanged_on_meta_games() {
         "h0:info=fair",
         SEED,
         &[
-            (Some(PlayerId::A), 14, 134),
-            (Some(PlayerId::B), 9, 68),
-            (Some(PlayerId::B), 6, 54),
+            (Some(PlayerId::A), 16, 149),
+            (Some(PlayerId::A), 10, 104),
+            (Some(PlayerId::B), 6, 55),
         ],
     );
     check_meta_play_baseline(
@@ -1009,9 +1009,9 @@ fn other_info_modes_play_unchanged_on_meta_games() {
         "h0:info=draws",
         SEED,
         &[
-            (Some(PlayerId::A), 11, 118),
-            (Some(PlayerId::B), 9, 68),
-            (Some(PlayerId::B), 9, 89),
+            (Some(PlayerId::B), 11, 106),
+            (Some(PlayerId::B), 8, 72),
+            (Some(PlayerId::B), 6, 55),
         ],
     );
     check_meta_play_baseline(
@@ -1019,9 +1019,9 @@ fn other_info_modes_play_unchanged_on_meta_games() {
         "h0:nodes=6000",
         SEED,
         &[
-            (Some(PlayerId::B), 6, 60),
-            (Some(PlayerId::B), 18, 181),
-            (Some(PlayerId::B), 6, 53),
+            (Some(PlayerId::B), 6, 59),
+            (Some(PlayerId::B), 8, 73),
+            (Some(PlayerId::B), 6, 57),
         ],
     );
 }
@@ -1034,7 +1034,7 @@ fn okill_omacro_defaults_play_unchanged_on_meta_games() {
     const SEED: u64 = 99;
     check_meta_play_baseline(
         &db,
-        "h0",
+        &with_v2_net("h0"),
         SEED,
         &[
             (Some(PlayerId::A), 11, 96),
@@ -1044,7 +1044,7 @@ fn okill_omacro_defaults_play_unchanged_on_meta_games() {
     );
     check_meta_play_baseline(
         &db,
-        "h0:okill=0,omacro=0",
+        &with_v2_net("h0:okill=0,omacro=0"),
         SEED,
         &[
             (Some(PlayerId::A), 11, 96),
@@ -1054,7 +1054,7 @@ fn okill_omacro_defaults_play_unchanged_on_meta_games() {
     );
     check_meta_play_baseline(
         &db,
-        "h0:nodes=16000,horizon=3",
+        &with_v2_net("h0:nodes=16000,horizon=3"),
         SEED,
         &[
             (Some(PlayerId::A), 11, 112),
@@ -1064,7 +1064,7 @@ fn okill_omacro_defaults_play_unchanged_on_meta_games() {
     );
     check_meta_play_baseline(
         &db,
-        "h0:nodes=16000,horizon=3,okill=0,omacro=0",
+        &with_v2_net("h0:nodes=16000,horizon=3,okill=0,omacro=0"),
         SEED,
         &[
             (Some(PlayerId::A), 11, 112),

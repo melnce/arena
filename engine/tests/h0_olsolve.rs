@@ -361,7 +361,7 @@ struct SolverAccounting {
 }
 
 fn audit_olsolve_decisions(db: &CardDb, nodes: u32, snaps: &[SearchSnapshot]) -> SolverAccounting {
-    let spec = format!("h0:nodes={nodes},horizon=3,olsolve=1000");
+    let spec = with_v2_net(&format!("h0:nodes={nodes},horizon=3,olsolve=1000"));
     let mut out = SolverAccounting {
         over_node_cap: 0,
         solver_calls: 0,
@@ -420,13 +420,13 @@ fn olsolve_accounting_matches_meta_games_nodes16000() {
 fn pick_drift_report(base_spec: &str, olsolve: u32, limit: usize) {
     let db = load_db();
     let snaps = collect_search_snapshots(&db);
-    let base = with_v1_net(base_spec);
+    let base = with_v2_net(base_spec);
     let on_spec = if base_spec == "h0" {
         format!("h0:olsolve={olsolve}")
     } else {
         format!("{base_spec},olsolve={olsolve}")
     };
-    let on = with_v1_net(&on_spec);
+    let on = with_v2_net(&on_spec);
     let mut compared = 0usize;
     let mut changed = 0usize;
     for snap in snaps.iter().take(limit) {

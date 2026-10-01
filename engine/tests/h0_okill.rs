@@ -345,8 +345,14 @@ fn play_pair_spec(
 fn okill0_omacro0_play_unchanged() {
     let db = load_db();
     const SEED: u64 = 20260919;
-    let base = play_pair_spec(&db, "h0", "h0", 20, SEED);
-    let off = play_pair_spec(&db, "h0:okill=0,omacro=0", "h0:okill=0,omacro=0", 20, SEED);
+    let base = play_pair_spec(&db, &with_v2_net("h0"), &with_v2_net("h0"), 20, SEED);
+    let off = play_pair_spec(
+        &db,
+        &with_v2_net("h0:okill=0,omacro=0"),
+        &with_v2_net("h0:okill=0,omacro=0"),
+        20,
+        SEED,
+    );
     assert_eq!(off, base, "okill=0,omacro=0 must match default h0 play");
 }
 
