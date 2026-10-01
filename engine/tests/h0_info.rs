@@ -1052,12 +1052,24 @@ fn okill_omacro_defaults_play_unchanged_on_meta_games() {
             (Some(PlayerId::B), 6, 54),
         ],
     );
-    let horizon = play_meta_pair_spec(&db, "h0:nodes=16000,horizon=3", 3, SEED);
-    check_meta_play_baseline(&db, "h0:nodes=16000,horizon=3", SEED, &horizon);
+    check_meta_play_baseline(
+        &db,
+        "h0:nodes=16000,horizon=3",
+        SEED,
+        &[
+            (Some(PlayerId::A), 11, 112),
+            (Some(PlayerId::B), 9, 64),
+            (Some(PlayerId::B), 6, 54),
+        ],
+    );
     check_meta_play_baseline(
         &db,
         "h0:nodes=16000,horizon=3,okill=0,omacro=0",
         SEED,
-        &horizon,
+        &[
+            (Some(PlayerId::A), 11, 112),
+            (Some(PlayerId::B), 9, 64),
+            (Some(PlayerId::B), 6, 54),
+        ],
     );
 }
