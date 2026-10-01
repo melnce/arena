@@ -308,7 +308,7 @@ fn pending_summary(state: &arena_engine::State) -> String {
 fn dump_gate_explain_at() {
     let db = load_db();
     let stems = meta_deck_stems();
-    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| "h0".into());
+    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| with_v2_net("h0"));
     let seed: u64 = std::env::var("H0_DUMP_SEEDS")
         .unwrap_or_else(|_| "67".into())
         .parse()

@@ -293,7 +293,8 @@ fn audit_fixtures_plain_h0_ends_turn_without_win() {
         let ply = cap["ply"].as_u64().expect("ply") as usize;
         let st = replay_capture(&db, &cap, ply);
         let seed = explain_seed(&cap, ply);
-        let (walk, ended_turn) = play_own_turn_with(&db, &st, PLAIN_SPEC, seed);
+        let spec = with_v2_net(PLAIN_SPEC);
+        let (walk, ended_turn) = play_own_turn_with(&db, &st, &spec, seed);
         assert!(ended_turn, "{name}: plain h0 must EndTurn without winning");
         assert_eq!(walk.winner, None, "{name}: plain h0 must not win the game");
     }
