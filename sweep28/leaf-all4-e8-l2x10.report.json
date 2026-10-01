@@ -1,0 +1,116 @@
+{
+  "arch": "linear",
+  "rows_train": 4219106,
+  "rows_holdout": 0,
+  "games_train": 49152,
+  "games_holdout": 0,
+  "label_balance_train": {
+    "+1": 2158824,
+    "-1": 2060282,
+    "0": 0
+  },
+  "label_balance_holdout": {
+    "+1": 0,
+    "-1": 0,
+    "0": 0
+  },
+  "train_seconds": 456.78790960018523,
+  "net": {
+    "overall": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "<=3": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "4-6": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    ">=7": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    }
+  },
+  "v0": {
+    "overall": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "<=3": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "4-6": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    ">=7": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    }
+  },
+  "search_v": {
+    "overall": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "<=3": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "4-6": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    ">=7": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    }
+  },
+  "eval": {},
+  "dirs": [
+    "results\\net5-v2\\data-e0",
+    "results\\net5-v2\\data-e10",
+    "results\\net6\\data-e0",
+    "results\\net6\\data-e10",
+    "results\\net7\\data-e0",
+    "results\\net7\\data-e10"
+  ],
+  "holdout": 0.0,
+  "seed": 1,
+  "epochs": 8,
+  "target": "outcome",
+  "mix_weight": 0.5,
+  "search_scale": 60.0,
+  "search_rows": 3441870,
+  "std_floor": 0.001,
+  "optimizer": "adam",
+  "epochs_run": 8,
+  "best_epoch": 8
+}
