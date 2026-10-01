@@ -463,9 +463,10 @@ loser's `leader_defense <= 0`; otherwise a decided game is `Deckout`. No
 Any subset of the H0 keys; omitted keys take [`H0::default`].
 `k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
 `H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1|net`
-(default `net` = the built-in `h0-linear-v2`; `value=v0` is the
+(default `net` = the built-in `h0-linear-v3`; `value=v0` is the
 hand-written leaf the bot used before this default), `net=<path>`
-(override with `net=engine/models/h0-linear-v1.json` for the previous leaf),
+(override with `net=engine/models/h0-linear-v2.json` for the previous leaf;
+`net=engine/models/h0-linear-v1.json` for the v1 leaf),
 (overrides the built-in; only meaningful with `value=net`;
 `h0:net=<path>` alone means `h0:value=net,net=<path>`; the path
 may not contain commas), `odepth=` / `obeam=` (opponent model; defaults `0` / `3`),
@@ -549,7 +550,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `beam` | 4 | top-k by value each ply |
 | `determinizations` | 4 | opponent-reply samples |
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
-| `value` | `net` (built-in `h0-linear-v2`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
+| `value` | `net` (built-in `h0-linear-v3`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
 | `net` | — | path to a `net.json` overriding the built-in model |
 | `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
 | `w_earth` | 0.35 | v1: saturated earth sigils (cap 6) |
@@ -818,7 +819,7 @@ Value: leader-defense difference, board (atk+def with Ward/Storm/evolved
 weights), hand size, next-turn PP / EP / SEP, crest / countdown presence;
 terminal = ±∞ on a single root, finite-clamped when averaging. That
 arithmetic is `value=v0`. The default leaf is the built-in
-`h0-linear-v2` net (`value=net`, encoding 2). `value=v1` adds
+`h0-linear-v3` net (`value=net`, encoding 2). `value=v1` adds
 saturated shadows / earth / faith / rally, spellboost counters on cards
 that print Spellboost, a threshold-shaped “live” bonus for hand cards
 that pay those resources or check Rally, and a count of Last Words
@@ -1128,24 +1129,26 @@ dependency, not of the extension.
 
 ## Learned value (M5b-lite)
 
-The default H0 leaf is the built-in `h0-linear-v2` model
-(`engine/models/h0-linear-v2.json`, encoding 2, 567 features, 245-id
+The default H0 leaf is the built-in `h0-linear-v3` model
+(`engine/models/h0-linear-v3.json`, encoding 2, 567 features, 245-id
 vocab), `include_str!`-embedded and parsed once through `OnceLock`
 (`builtin_net()` / `BUILTIN_NET_NAME`). Provenance and the immutability
 rule live in `engine/models/README.md`: model files are measured
 artifacts — a retrained model is a new file with a new name and becomes
-the default only after it beats the current default on the 4 096-game
-yardstick. The `net5-v2` yardstick (engine `1e41763`, results `c029fcb`):
-main 0.562 [0.547, 0.578] over 4 096 games, reverse 0.573 [0.552, 0.595]
-over 2 048, pooled 0.566 [0.554, 0.578] = +46.2 Elo; holdout sign acc
-0.730 / AUC 0.814 / MSE 0.707. The search, the determinization, and the
-opponent model stay exactly as they are (`value=v1`, `tt`, `wv`, `odepth`
-untouched; `olethal` / `osteps` later flipped to `1` / `6`). `value=v0` is
-the hand-written leaf the bot used before this default and is
-byte-identical to that arithmetic. `h0:value=net` (no path) keeps the
-built-in — it is the same as `"h0"`. `net=<path>` overrides the built-in
-(`h0:net=<path>` alone means `h0:value=net,net=<path>`); use
-`net=engine/models/h0-linear-v1.json` for the previous default leaf.
+the default only after it beats the current default on the yardstick.
+The sweep-28 yardstick (`h0:net=<this file>` vs `h0` = v2): sweep 28
+(seed 1; results `9ecf4bb`) main 0.5181 (2 048), reverse 0.5283 (1 024),
+pooled 0.5215; sweep 28b (seed 3; results `6d3e271`) main 0.5181 (4 096),
+reverse 0.5205 (2 048), pooled 0.5189; combined main 0.5181 [0.5056, 0.5305]
+(6 144 games), reverse 0.5231 [0.5054, 0.5407] (3 072), pooled 0.5197
+[0.5095, 0.5299] = +13.7 Elo [+6.6, +20.8]. The search, the
+determinization, and the opponent model stay exactly as they are.
+`value=v0` is the hand-written leaf the bot used before learned defaults
+and is byte-identical to that arithmetic. `h0:value=net` (no path) keeps
+the built-in — it is the same as `"h0"`. `net=<path>` overrides the
+built-in (`h0:net=<path>` alone means `h0:value=net,net=<path>`); use
+`net=engine/models/h0-linear-v2.json` for the previous default leaf;
+`net=engine/models/h0-linear-v1.json` for the v1 leaf.
 `net=` with `value=v0` or `value=v1` is a parse error naming both keys
 (`net= requires value=net`). A missing file is a parse error naming the
 path. The path may not contain commas. `spec()` prints nothing for the
@@ -1158,7 +1161,7 @@ still the only `std::fs` user and is never called from wasm.
 ## Learned mulligan (keep tables)
 
 The default `h0` uses the built-in `mulligan-v1` table
-(`engine/models/mulligan-v1.json`, embedded like `h0-linear-v2`). `mull=builtin`
+(`engine/models/mulligan-v1.json`, embedded like `h0-linear-v3`). `mull=builtin`
 requests it explicitly; `mull=rule` restores cost ≥ 4 send back.
 `mull=random` explores uniformly. `mull=<path>` loads a JSON keep table at
 parse time (same path rules as `net=`). At the bot's own mulligan the engine
@@ -1319,7 +1322,7 @@ per stage, `git rev-parse HEAD`, `sys.version`, and `os.cpu_count()`.
 | stage | what | files |
 |---|---|---|
 | **data** | `matchup.py --policy <bot>` (default `h0`) `--games G` (default 24) `--seed S --export <tag>/data-e0` and `--seed S+1 --export-epsilon <ε>` (default 0.1) `--export <tag>/data-e10`. `--decks` passed through when given. | `data-e0.txt` / `data-e10.txt`, the export directories, `data-e0.json` / `data-e10.json` |
-| **train** | For each `--models` entry (default `linear mlp`): `train_value.py --data <tag>/data-e0 <tag>/data-e10 <extra --data dirs>` (new directories first so `--max-samples` keeps them) `--out <tag>/m.json --target` (default `outcome`) `--mix-weight` / `--search-scale` / `--eval` (default `engine/models/h0-linear-v2.json` when that file exists; skipped with a clear line when the eval model's encoding does not match the export shards) and `--epochs` / `--max-samples` when given. If `torch` is not importable and `mlp` is requested, that model is skipped with a clear line; the run does not fail. | `train-m.txt`, `m.json`, `m.report.json` |
+| **train** | For each `--models` entry (default `linear mlp`): `train_value.py --data <tag>/data-e0 <tag>/data-e10 <extra --data dirs>` (new directories first so `--max-samples` keeps them) `--out <tag>/m.json --target` (default `outcome`) `--mix-weight` / `--search-scale` / `--eval` (default `engine/models/h0-linear-v3.json` when that file exists; skipped with a clear line when the eval model's encoding does not match the export shards) and `--epochs` / `--max-samples` when given. If `torch` is not importable and `mlp` is requested, that model is skipped with a clear line; the run does not fail. | `train-m.txt`, `m.json`, `m.report.json` |
 | **yard** | For each trained model `C = h0:value=net,net=<absolute path of <tag>/m.json>` (the path may not contain a comma — the spec parser splits on commas) against `--baseline` (default `h0`): main (`--policy-a C --policy-b B --games` `--yard-games`, default 16), reverse seating (`--policy-a B --policy-b C --games` `--reverse-games`, default 8), sanity (`C` vs `random`, `--sanity-games` default 100, `--decks basic-forest`), throughput (`--policy C --games` `--tp-games` default 1), and a craft mirror per `--mirrors` deck (default `royal-nattui`, `--mirror-games` default 200). Once: `--policy B --games <tp-games>` → `tp-h0`. `--threads` passes through everywhere. `--yard-seed` (default 1) is independent of the data `--seed` so evaluation games are not the same shuffles the net trained on. | `main-m.txt/json`, `reverse-m.*`, `sanity-m.*`, `tp-m.*`, `mirror-<deck>-m.*`, `tp-h0.*` |
 | **summary** | Written from the JSON files (never by parsing the text). | `SUMMARY.md` |
 | **publish** | Off unless `--publish`. | copy into the results worktree (below) |
