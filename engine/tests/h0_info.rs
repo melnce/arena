@@ -1025,3 +1025,51 @@ fn other_info_modes_play_unchanged_on_meta_games() {
         ],
     );
 }
+
+/// Default-off `okill` / `omacro` must not change play on pinned meta matchups.
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn okill_omacro_defaults_play_unchanged_on_meta_games() {
+    let db = load_db();
+    const SEED: u64 = 99;
+    check_meta_play_baseline(
+        &db,
+        "h0",
+        SEED,
+        &[
+            (Some(PlayerId::A), 11, 96),
+            (Some(PlayerId::B), 9, 68),
+            (Some(PlayerId::B), 6, 54),
+        ],
+    );
+    check_meta_play_baseline(
+        &db,
+        "h0:okill=0,omacro=0",
+        SEED,
+        &[
+            (Some(PlayerId::A), 11, 96),
+            (Some(PlayerId::B), 9, 68),
+            (Some(PlayerId::B), 6, 54),
+        ],
+    );
+    check_meta_play_baseline(
+        &db,
+        "h0:nodes=16000,horizon=3",
+        SEED,
+        &[
+            (Some(PlayerId::A), 11, 112),
+            (Some(PlayerId::B), 9, 64),
+            (Some(PlayerId::B), 6, 54),
+        ],
+    );
+    check_meta_play_baseline(
+        &db,
+        "h0:nodes=16000,horizon=3,okill=0,omacro=0",
+        SEED,
+        &[
+            (Some(PlayerId::A), 11, 112),
+            (Some(PlayerId::B), 9, 64),
+            (Some(PlayerId::B), 6, 54),
+        ],
+    );
+}

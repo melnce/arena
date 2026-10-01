@@ -131,7 +131,11 @@ impl AnyPolicy {
     /// `odepth≥1`), `oevo=0|1` (extend that sweep with one evolve;
     /// default `1` is the sweep-8b flip; `oevo=0` restores the pre-flip
     /// glance path; only meaningful with `olethal=1` and `odepth=0`;
-    /// no hard error for other combinations), `olsolve=<u32>` (after a
+    /// no hard error for other combinations), `okill=<u32>` (bitmask of
+    /// extra kill shapes in the opponent-lethal sweep: bit 1 = Ward break,
+    /// 2 = slot-freeing, 4 = play-through; default `0` = off), `omacro=0|1`
+    /// (greedy opponent reply credits a `Play` with an evolve on the
+    /// just-played slot; default `0` = off), `olsolve=<u32>` (after a
     /// sweep miss, run [`forced_lethal`] with this node budget charged to
     /// the pair cap; default `0` = off), `osteps=<u32>` (greedy
     /// forced-`EndTurn` step; default `6`;
@@ -181,7 +185,8 @@ impl AnyPolicy {
     /// `value=net,net=<path>` (the built-in net is the default and is not
     /// printed), non-default
     /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
-    /// `oevo=0` when the evolve branch is off, non-default `olsolve`,
+    /// `oevo=0` when the evolve branch is off, non-default `okill`,
+    /// `omacro=1` when the greedy reply fuses play→evolve, non-default `olsolve`,
     /// non-default `wv`,
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
     /// when the allocator is the pre-#46 root-major spend, `info=fair`
@@ -240,6 +245,12 @@ fn h0_spec(h: &H0) -> String {
     }
     if !h.oevo {
         parts.push("oevo=0".to_string());
+    }
+    if h.okill != def.okill {
+        parts.push(format!("okill={}", h.okill));
+    }
+    if h.omacro {
+        parts.push("omacro=1".to_string());
     }
     if h.olsolve != def.olsolve {
         parts.push(format!("olsolve={}", h.olsolve));
@@ -336,6 +347,8 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.obeam == b.obeam
         && a.olethal == b.olethal
         && a.oevo == b.oevo
+        && a.okill == b.okill
+        && a.omacro == b.omacro
         && a.olsolve == b.olsolve
         && a.osteps == b.osteps
         && a.wv == b.wv
@@ -425,6 +438,17 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     "0" => false,
                     "1" => true,
                     other => return Err(format!("unknown oevo '{other}'")),
+                }
+            }
+            "okill" => {
+                let v: u32 = parse_num(val)?;
+                h.okill = v;
+            }
+            "omacro" => {
+                h.omacro = match val {
+                    "0" => false,
+                    "1" => true,
+                    other => return Err(format!("unknown omacro '{other}'")),
                 }
             }
             "olsolve" => {
