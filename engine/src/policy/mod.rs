@@ -137,7 +137,10 @@ impl AnyPolicy {
     /// (greedy opponent reply credits a `Play` with an evolve on the
     /// just-played slot; default `0` = off), `olsolve=<u32>` (after a
     /// sweep miss, run [`forced_lethal`] with this node budget charged to
-    /// the pair cap; default `0` = off), `osteps=<u32>` (greedy
+    /// the pair cap; default `0` = off), `tkill=<u32>` (on each own-turn
+    /// decision — Main, Combat, or Choice — run [`forced_lethal_det`] on the
+    /// first determinization before search; default `0` = off), `osteps=<u32>`
+    /// (greedy
     /// forced-`EndTurn` step; default `6`;
     /// hard stop is `osteps+3`), `wv=<f32>` (saturation bound on every
     /// accumulated value; default `80`), `pess=<f32>` (pessimism weight
@@ -187,6 +190,7 @@ impl AnyPolicy {
     /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
     /// `oevo=0` when the evolve branch is off, non-default `okill`,
     /// `omacro=1` when the greedy reply fuses play→evolve, non-default `olsolve`,
+    /// non-default `tkill`,
     /// non-default `wv`,
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
     /// when the allocator is the pre-#46 root-major spend, `info=fair`
@@ -254,6 +258,9 @@ fn h0_spec(h: &H0) -> String {
     }
     if h.olsolve != def.olsolve {
         parts.push(format!("olsolve={}", h.olsolve));
+    }
+    if h.tkill != def.tkill {
+        parts.push(format!("tkill={}", h.tkill));
     }
     if h.osteps != def.osteps {
         parts.push(format!("osteps={}", h.osteps));
@@ -350,6 +357,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.okill == b.okill
         && a.omacro == b.omacro
         && a.olsolve == b.olsolve
+        && a.tkill == b.tkill
         && a.osteps == b.osteps
         && a.wv == b.wv
         && a.pess == b.pess
@@ -454,6 +462,10 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             "olsolve" => {
                 let v: u32 = parse_num(val)?;
                 h.olsolve = v;
+            }
+            "tkill" => {
+                let v: u32 = parse_num(val)?;
+                h.tkill = v;
             }
             "wv" => h.wv = parse_num(val)?,
             "pess" => {

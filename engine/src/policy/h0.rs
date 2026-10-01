@@ -25,7 +25,7 @@ use crate::determinize::{determinize_with, determinize_with_stats, OpenStats};
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
 use crate::ids::{AttackTarget, PlayerId, Slot};
-use crate::lethal::{forced_lethal, LethalVerdict};
+use crate::lethal::{confirm_det_lethal_line, forced_lethal, forced_lethal_det, LethalVerdict};
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
 use crate::search_key::search_key;
@@ -252,6 +252,20 @@ pub struct SearchStats {
     pub opp_solver_unknown: u64,
     /// `apply`s spent inside solver calls (charged to the node cap).
     pub opp_solver_nodes: u64,
+    /// Root [`forced_lethal_det`] calls (`tkill>0`, own turn).
+    pub own_solver_calls: u64,
+    /// Solver calls that found a kill on the first determinization.
+    pub own_solver_found: u64,
+    /// Found kill confirmed on every root and played.
+    pub own_solver_taken: u64,
+    /// A root did not confirm, or `line[0]` was not legal.
+    pub own_solver_rejected: u64,
+    /// Solver calls that returned [`LethalVerdict::Unknown`].
+    pub own_solver_unknown: u64,
+    /// `apply`s spent inside own-turn solver calls (outside `node_cap`).
+    pub own_solver_nodes: u64,
+    /// Most `apply`s in a single own-turn solver call.
+    pub own_solver_nodes_max: u64,
     /// Searched decisions whose chosen candidate had a determinization
     /// pinned at the clamp floor (`-wv`).
     pub chose_with_lethal_root: u64,
@@ -317,6 +331,13 @@ impl SearchStats {
         self.opp_solver_found += other.opp_solver_found;
         self.opp_solver_unknown += other.opp_solver_unknown;
         self.opp_solver_nodes += other.opp_solver_nodes;
+        self.own_solver_calls += other.own_solver_calls;
+        self.own_solver_found += other.own_solver_found;
+        self.own_solver_taken += other.own_solver_taken;
+        self.own_solver_rejected += other.own_solver_rejected;
+        self.own_solver_unknown += other.own_solver_unknown;
+        self.own_solver_nodes += other.own_solver_nodes;
+        self.own_solver_nodes_max = self.own_solver_nodes_max.max(other.own_solver_nodes_max);
         self.chose_with_lethal_root += other.chose_with_lethal_root;
         self.cands_with_lethal_root += other.cands_with_lethal_root;
         self.tt_hits += other.tt_hits;
@@ -396,6 +417,10 @@ pub struct H0 {
     /// After the opponent-lethal sweep misses, run [`forced_lethal`] with
     /// this node budget (charged to the pair cap). `0` = off (today).
     pub olsolve: u32,
+    /// On each own-turn decision (Main / Combat / Choice), run
+    /// [`forced_lethal_det`] on the first determinization before search.
+    /// `0` = off (today).
+    pub tkill: u32,
     /// Greedy-line steps before a forced `EndTurn`. Default `6` is the sweep-5
     /// flip; the hard stop is `osteps + 3` (today: 9).
     pub osteps: u32,
@@ -466,6 +491,7 @@ impl Default for H0 {
             okill: 0,
             omacro: false,
             olsolve: 0,
+            tkill: 0,
             osteps: 6,
             fusemacro: true,
             net: Some(builtin_net()),
@@ -752,10 +778,6 @@ impl Policy for H0 {
             }
         }
         self.stats.roots += u64::from(k);
-        let root_vocab = self.root_vocab(state);
-        let eval = self.evaluator(db, &root_vocab);
-        let odepth = self.odepth;
-        let obeam = self.obeam;
         let mut dec_stats = SearchStats::default();
         let mut explain_rec = if recording {
             Some(ExplainRecord::new(
@@ -767,6 +789,32 @@ impl Policy for H0 {
         } else {
             None
         };
+        if self.tkill > 0
+            && matches!(
+                state.phase,
+                Phase::Main | Phase::Combat | Phase::Choice { .. }
+            )
+        {
+            if let Some(idx) =
+                try_take_kill(db, &roots, legal, &cand, me, self.tkill, &mut dec_stats)
+            {
+                self.last_value = Some(self.wv);
+                if let Some(rec) = &mut explain_rec {
+                    rec.path = ChoosePath::TakeKill;
+                    rec.chosen_index = idx;
+                    rec.tie_set = vec![idx];
+                }
+                self.stats.accum(&dec_stats);
+                if let Some(rec) = explain_rec {
+                    self.explain = Some(rec);
+                }
+                return idx;
+            }
+        }
+        let root_vocab = self.root_vocab(state);
+        let eval = self.evaluator(db, &root_vocab);
+        let odepth = self.odepth;
+        let obeam = self.obeam;
         let mut explain_cands: Vec<CandidateRecord> = if recording {
             subset
                 .iter()
@@ -1206,6 +1254,53 @@ fn try_apply(
         return None;
     }
     Some(s)
+}
+
+fn try_take_kill(
+    db: &CardDb,
+    roots: &[State],
+    legal: &[Action],
+    cand: &[usize],
+    me: PlayerId,
+    budget: u32,
+    stats: &mut SearchStats,
+) -> Option<usize> {
+    stats.own_solver_calls += 1;
+    let verdict = forced_lethal_det(db, &roots[0], budget);
+    let nodes = match &verdict {
+        LethalVerdict::Lethal { nodes, .. }
+        | LethalVerdict::None { nodes }
+        | LethalVerdict::Unknown { nodes } => *nodes,
+    };
+    stats.own_solver_nodes += u64::from(nodes);
+    stats.own_solver_nodes_max = stats.own_solver_nodes_max.max(u64::from(nodes));
+    match verdict {
+        LethalVerdict::Lethal { line, .. } => {
+            stats.own_solver_found += 1;
+            for root in roots.iter().skip(1) {
+                if !confirm_det_lethal_line(db, root, me, &line) {
+                    stats.own_solver_rejected += 1;
+                    return None;
+                }
+            }
+            let first = &line[0];
+            let Some(idx) = legal.iter().position(|a| a == first) else {
+                stats.own_solver_rejected += 1;
+                return None;
+            };
+            if !cand.contains(&idx) {
+                stats.own_solver_rejected += 1;
+                return None;
+            }
+            stats.own_solver_taken += 1;
+            Some(idx)
+        }
+        LethalVerdict::Unknown { .. } => {
+            stats.own_solver_unknown += 1;
+            None
+        }
+        LethalVerdict::None { .. } => None,
+    }
 }
 
 fn consensus_lethal(

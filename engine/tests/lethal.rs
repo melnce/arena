@@ -5,8 +5,8 @@
 use std::collections::HashSet;
 
 use arena_engine::{
-    apply, forced_lethal, legal_actions, Action, CardDb, LethalActionKind, LethalVerdict, PlayerId,
-    H0,
+    apply, forced_lethal, forced_lethal_det, legal_actions, Action, CardDb, LethalActionKind,
+    LethalVerdict, PlayerId, H0,
 };
 
 mod common;
@@ -380,6 +380,16 @@ fn search_reaches_every_action_kind() {
             | LethalVerdict::Unknown { nodes } => nodes,
         };
         assert!(nodes > 0, "{label} search spent no nodes: {v:?}");
+    }
+}
+
+#[test]
+fn forced_lethal_det_skips_rng_lines() {
+    let db = load_db();
+    let st = two_storm_lethal_state(&db);
+    match forced_lethal_det(&db, &st, 50_000) {
+        LethalVerdict::Lethal { rng_dependent, .. } => assert!(!rng_dependent),
+        other => panic!("expected deterministic Lethal, got {other:?}"),
     }
 }
 

@@ -38,7 +38,10 @@ pub use info::{
     board_info, hand_info, mode_choice_info, player_info, BoardCardInfo, GateInfo, HandCardInfo,
     ModeChoiceInfo, PlayerInfo,
 };
-pub use lethal::{forced_lethal, lethal_action_kind, LethalActionKind, LethalVerdict};
+pub use lethal::{
+    confirm_det_lethal_line, forced_lethal, forced_lethal_det, lethal_action_kind,
+    LethalActionKind, LethalVerdict,
+};
 pub use limits::{MAX_ACTIONS, MAX_TURNS};
 pub use play::{play_game, End, MulliganRecord, Outcome};
 pub use policy::{
