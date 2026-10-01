@@ -234,6 +234,8 @@ pub struct SearchStats {
     pub opp_lethal_evo_found: u64,
     /// `apply`s spent inside lethal sweeps.
     pub opp_lethal_nodes: u64,
+    /// Most `apply`s charged in a single lethal sweep (okill budgets).
+    pub opp_lethal_applies_max: u64,
     /// Sweeps that found lethal through the Ward-break prefix (`okill` bit 1).
     pub opp_lethal_ward_found: u64,
     /// Sweeps that found lethal through slot-freeing trades (`okill` bit 2).
@@ -305,6 +307,9 @@ impl SearchStats {
         self.opp_lethal_found += other.opp_lethal_found;
         self.opp_lethal_evo_found += other.opp_lethal_evo_found;
         self.opp_lethal_nodes += other.opp_lethal_nodes;
+        self.opp_lethal_applies_max = self
+            .opp_lethal_applies_max
+            .max(other.opp_lethal_applies_max);
         self.opp_lethal_ward_found += other.opp_lethal_ward_found;
         self.opp_lethal_slot_found += other.opp_lethal_slot_found;
         self.opp_lethal_through_found += other.opp_lethal_through_found;
@@ -1445,17 +1450,26 @@ fn score_play_with_macro(
     let prefer = new_follower_slots(state, &s, me);
     let mut best_v = play_v;
     let mut best_evo = None;
-    for a in ordered_evolves(db, &s, &prefer, &faces) {
-        if *nodes >= cap {
+    if !prefer.is_empty() {
+        for a in ordered_evolves(db, &s, &prefer, &faces) {
+            let Action::Evolve { slot, .. } = &a else {
+                continue;
+            };
+            if !prefer.contains(&slot.0) {
+                continue;
+            }
+            if *nodes >= cap {
+                break;
+            }
+            let Some(s2) = try_apply(db, &s, &a, nodes, cap, &line2) else {
+                continue;
+            };
+            let v2 = eval.value(&s2, me);
+            if v2 > best_v {
+                best_v = v2;
+                best_evo = Some(a);
+            }
             break;
-        }
-        let Some(s2) = try_apply(db, &s, &a, nodes, cap, &line2) else {
-            continue;
-        };
-        let v2 = eval.value(&s2, me);
-        if v2 > best_v {
-            best_v = v2;
-            best_evo = Some(a);
         }
     }
     (best_v, best_evo)
@@ -2909,12 +2923,21 @@ const OPP_LETHAL_APPLY_CAP: u32 = 40;
 /// The 50-game abyss-p8rfn mirror measured 8.2 applies/sweep (`oevo=1`)
 /// vs 6.1 (`oevo=0`); the play-then-evolve fixture spends 7.
 const OPP_LETHAL_EVO_APPLY_CAP: u32 = 120;
-/// Sweep with any `okill` bit set: Ward-break prefixes, slot-freeing trades,
-/// and play-through follower lines. 300 is the worst-case envelope — three
-/// Ward clears with evolve, two sacrifice trades each running the play loop,
-/// and follower on-attacks — not the mean. The 20-game meta mirror measured
-/// 14.8 applies/sweep (`okill=7`) vs 8.2 (`okill=0`, `oevo=1`).
+/// One shared apply budget per opponent-lethal sweep when any `okill` bit is
+/// set. 300 is the worst-case envelope for the whole sweep (Ward prefix, core,
+/// slot prefixes) — not per phase. Four meta-deck mirrors (2 games each, seed
+/// 42) measured 21.1 applies/sweep mean (`okill=7`, max 278) vs 14.1 (`oevo=1`
+/// only); bounded Ward unlock, core reserve, and two slot prefixes keep the
+/// max at 300.
 const OPP_LETHAL_KILL_APPLY_CAP: u32 = 300;
+/// Standalone evolves tried to unlock a Ward attack in the prefix.
+const WARD_PREFIX_UNLOCK_EVOS: usize = 2;
+/// Plays tried (cheap first) when unlocking Ward attacks in the prefix.
+const WARD_PREFIX_UNLOCK_PLAYS: usize = 4;
+/// Slot-free prefix states tried after face chip (spec: at most two trades).
+const SLOT_PREFIX_STATES: usize = 2;
+/// Applies held back from the core sweep when slot-freeing may follow.
+const SLOT_PREFIX_APPLY_RESERVE: u32 = 48;
 const OKILL_WARD: u32 = 1;
 const OKILL_SLOT: u32 = 2;
 const OKILL_THROUGH: u32 = 4;
@@ -2995,10 +3018,6 @@ fn ward_attack_priority(state: &State, who: PlayerId, attack: &Action) -> (u8, i
     let kills = inst.attack >= ward_def;
     let atk_key = if kills { inst.attack } else { i32::MAX };
     (tier, atk_key, attacker.0)
-}
-
-fn lethal_sweep_cap(nodes: u32, apply_limit: u32, cap: u32) -> u32 {
-    nodes.saturating_add(apply_limit).min(cap)
 }
 
 /// Apply every legal leader attack in slot order; stop only on a kill.
@@ -3535,7 +3554,10 @@ fn try_ward_prefix(
         if attacks.is_empty() {
             let faces = leader_attackers(db, &s);
             let mut unlocked = false;
-            for a in ordered_evolves(db, &s, &[], &faces) {
+            for a in ordered_evolves(db, &s, &[], &faces)
+                .into_iter()
+                .take(WARD_PREFIX_UNLOCK_EVOS)
+            {
                 if *nodes >= cap {
                     return None;
                 }
@@ -3553,7 +3575,10 @@ fn try_ward_prefix(
                 }
             }
             if !unlocked {
-                for play in ordered_plays(db, &s) {
+                for play in ordered_plays(db, &s)
+                    .into_iter()
+                    .take(WARD_PREFIX_UNLOCK_PLAYS)
+                {
                     if *nodes >= cap {
                         break;
                     }
@@ -3575,6 +3600,12 @@ fn try_ward_prefix(
                     let prefer = new_follower_slots(&s, &played, attacker);
                     for evo in ordered_evolves(db, &played, &prefer, &leader_attackers(db, &played))
                     {
+                        let Action::Evolve { slot, .. } = &evo else {
+                            continue;
+                        };
+                        if !prefer.contains(&slot.0) {
+                            continue;
+                        }
                         if *nodes >= cap {
                             break;
                         }
@@ -3590,6 +3621,7 @@ fn try_ward_prefix(
                             unlocked = true;
                             break;
                         }
+                        break;
                     }
                     if unlocked {
                         break;
@@ -3664,6 +3696,9 @@ fn slot_free_prefix_states(
         }
         let trades = sacrifice_trades(db, base, attacker, me);
         for trade in trades.iter().take(4) {
+            if *nodes >= cap {
+                break;
+            }
             let Action::Attack {
                 attacker: Slot(slot),
                 ..
@@ -3681,6 +3716,9 @@ fn slot_free_prefix_states(
                 continue;
             }
             for a2 in follower_attacks_from_slot(db, &s1, *slot) {
+                if *nodes >= cap {
+                    break;
+                }
                 let Some(s2) = try_apply(db, &s1, &a2, nodes, cap, &l1) else {
                     continue;
                 };
@@ -3692,6 +3730,7 @@ fn slot_free_prefix_states(
             }
         }
     }
+    out.truncate(SLOT_PREFIX_STATES);
     out
 }
 
@@ -3768,13 +3807,20 @@ fn opp_lethal_sweep(
     let mut shape = KillShape::Base;
     let mut found = false;
 
+    let sweep_end = (*nodes).saturating_add(apply_limit).min(cap);
+    let slot_pending =
+        okill & OKILL_SLOT != 0 && state.player(me.opponent()).field_count() >= FIELD_SIZE;
+    let core_end = if slot_pending {
+        sweep_end.saturating_sub(SLOT_PREFIX_APPLY_RESERVE.min(apply_limit))
+    } else {
+        sweep_end
+    };
+
     if okill & OKILL_WARD != 0
         && !defender_ward_slots(state, me).is_empty()
         && !has_leader_attack(db, state)
     {
-        let ward_cap = lethal_sweep_cap(*nodes, apply_limit, cap);
-        if let Some(cleared) = try_ward_prefix(db, state, me, nodes, ward_cap, line) {
-            let core_cap = lethal_sweep_cap(*nodes, apply_limit, cap);
+        if let Some(cleared) = try_ward_prefix(db, state, me, nodes, core_end, line) {
             let mut next_line = line.to_vec();
             next_line.push(search_key(&cleared));
             if opp_lethal_sweep_core(
@@ -3782,7 +3828,7 @@ fn opp_lethal_sweep(
                 &cleared,
                 me,
                 nodes,
-                core_cap,
+                core_end,
                 &next_line,
                 oevo,
                 play_through,
@@ -3796,13 +3842,12 @@ fn opp_lethal_sweep(
     }
 
     if !found {
-        let core_cap = lethal_sweep_cap(*nodes, apply_limit, cap);
         found = opp_lethal_sweep_core(
             db,
             state,
             me,
             nodes,
-            core_cap,
+            core_end,
             line,
             oevo,
             play_through,
@@ -3811,19 +3856,14 @@ fn opp_lethal_sweep(
         );
     }
 
-    if !found
-        && okill & OKILL_SLOT != 0
-        && state.player(me.opponent()).field_count() >= FIELD_SIZE
-    {
-        let slot_cap = lethal_sweep_cap(*nodes, apply_limit, cap);
-        for (s, next_line) in slot_free_prefix_states(db, state, me, nodes, slot_cap, line) {
-            let core_cap = lethal_sweep_cap(*nodes, apply_limit, cap);
+    if !found && slot_pending {
+        for (s, next_line) in slot_free_prefix_states(db, state, me, nodes, sweep_end, line) {
             if opp_lethal_sweep_core(
                 db,
                 &s,
                 me,
                 nodes,
-                core_cap,
+                sweep_end,
                 &next_line,
                 oevo,
                 play_through,
@@ -3841,7 +3881,9 @@ fn opp_lethal_sweep(
         shape = KillShape::Through;
     }
 
-    stats.opp_lethal_nodes += u64::from(*nodes - start);
+    let sweep_applies = *nodes - start;
+    stats.opp_lethal_nodes += u64::from(sweep_applies);
+    stats.opp_lethal_applies_max = stats.opp_lethal_applies_max.max(u64::from(sweep_applies));
     if found {
         stats.opp_lethal_found += 1;
         if evo_found {
