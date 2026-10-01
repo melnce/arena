@@ -42,4 +42,27 @@ Sign acc 0.730 / AUC 0.814 / MSE 0.707 (`h0-linear-v1` on the v1 block of the sa
 
 sha256 `3262c437bb628c03edc9e013e0904732ee5d5c4fbac9c5f1a9b50a98e544f216`
 
-This is the default H0 leaf since the `h0-linear-v2` default PR. Reach the previous leaf with `h0:net=engine/models/h0-linear-v1.json`.
+This was the default H0 leaf from the `h0-linear-v2` default PR until `h0-linear-v3` shipped. Reach it with `h0:net=engine/models/h0-linear-v2.json`; the previous leaf with `h0:net=engine/models/h0-linear-v1.json`.
+
+# `h0-linear-v3`
+
+The `h0-linear-v3` value model — linear on the 567 standardized features (encoding 2: 18 stat-bonus and cost-reduction features for the bot's own hand and deck, 4 flags for both players' Extra PP charges, and the strict opponent pool) plus one per-card weight table per zone over a 245-id vocab; `scale` 60. The format is documented in `docs/engine-api.md` "Learned value".
+
+## Provenance
+
+Data: `results/net5-v2`, `results/net6`, and `results/net7`, each `data-e0` + `data-e10` (49 152 games, 4 219 106 rows).
+
+Training: `py/train_value.py --model linear --target outcome --holdout 0 --epochs 2 --l2 1e-3 --seed 1` (Adam), 114 s CPU. The file's `trained_on` does not record `--l2`; it was `1e-3`.
+
+## Yardstick
+
+`h0:net=<this file>` vs `h0` (= v2), two independent samples on different deals:
+
+- sweep 28 (seed 1; results `9ecf4bb`): main 0.5181 (2 048), reverse 0.5283 (1 024), pooled 0.5215;
+- sweep 28b (seed 3; results `6d3e271`, combination `16ee62c`): main 0.5181 (4 096), reverse 0.5205 (2 048), pooled 0.5189;
+
+**Combined per arm: main 0.5181 [0.5056, 0.5305] (6 144 games), reverse 0.5231 [0.5054, 0.5407] (3 072), pooled 0.5197 [0.5095, 0.5299] = +13.7 Elo [+6.6, +20.8]** — both arms' lower bounds above 0.50, the project's `better` rule. Throughput unchanged (1.71 vs 1.67 games per second in sweep 28b's self-play).
+
+sha256 `926ce6021b27f94a49da965d9b7cd3b1b04283acf92d0c372a76b28b85e117b2`
+
+This is the default H0 leaf since this PR. Reach the previous leaf with `h0:net=engine/models/h0-linear-v2.json`.
