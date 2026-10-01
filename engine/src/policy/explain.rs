@@ -17,6 +17,8 @@ pub enum ChoosePath {
     Mulligan,
     OnePly,
     ConsensusLethal,
+    /// Root deterministic kill from [`forced_lethal_det`] (`tkill>0`).
+    TakeKill,
     Search,
     /// Search entered but no `(root, candidate)` pair scored (e.g. the
     /// consensus-lethal check spent the entire node cap).

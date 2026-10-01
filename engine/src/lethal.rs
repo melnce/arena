@@ -35,6 +35,9 @@
 //! through H0's `olsolve` key, with a budget charged to the node cap.
 //! It does not reuse the sweep glance.
 //!
+//! [`forced_lethal_det`] is the same search with RNG-consuming actions
+//! skipped: a proof of absence there is only for deterministic lines.
+//!
 //! Transposition is allowed only for positions already proven `None`
 //! within budget. `Unknown` is never memoised. The table key is
 //! [`crate::search_key`] plus [`crate::GameRng::fingerprint`], so two
@@ -91,6 +94,25 @@ pub enum LethalActionKind {
 /// `budget` is a cap on `apply` calls. `budget == 0` with any expandable
 /// action yields [`LethalVerdict::Unknown`], not [`LethalVerdict::None`].
 pub fn forced_lethal(db: &CardDb, state: &State, budget: u32) -> LethalVerdict {
+    forced_lethal_inner(db, state, budget, false)
+}
+
+/// Exhaustive within-turn search for a **deterministic** kill only.
+///
+/// Actions whose `apply` advances `state.rng` are not expanded and cannot
+/// complete a kill. Every [`LethalVerdict::Lethal`] has `rng_dependent ==
+/// false`. [`LethalVerdict::None`] is a proof that no deterministic line
+/// exists within budget — not a proof that no kill exists at all.
+pub fn forced_lethal_det(db: &CardDb, state: &State, budget: u32) -> LethalVerdict {
+    forced_lethal_inner(db, state, budget, true)
+}
+
+fn forced_lethal_inner(
+    db: &CardDb,
+    state: &State,
+    budget: u32,
+    deterministic_only: bool,
+) -> LethalVerdict {
     let perspective = acting_player(state);
     let mut nodes = 0u32;
     let mut tt: HashSet<(u64, u64)> = HashSet::new();
@@ -107,15 +129,36 @@ pub fn forced_lethal(db: &CardDb, state: &State, budget: u32) -> LethalVerdict {
         &mut line,
         false,
         0,
+        deterministic_only,
     ) {
         Outcome::Lethal { rng_dependent } => LethalVerdict::Lethal {
             line,
             nodes,
-            rng_dependent,
+            rng_dependent: if deterministic_only {
+                false
+            } else {
+                rng_dependent
+            },
         },
         Outcome::None => LethalVerdict::None { nodes },
         Outcome::Unknown => LethalVerdict::Unknown { nodes },
     }
+}
+
+/// Replay `line` on `state`; every action must apply, consume no RNG, and
+/// the last position must leave `winner == Some(me)`.
+pub fn confirm_det_lethal_line(db: &CardDb, state: &State, me: PlayerId, line: &[Action]) -> bool {
+    let mut s = state.clone();
+    for a in line {
+        let rng_before = s.rng.clone();
+        if apply(db, &mut s, a.clone()).is_err() {
+            return false;
+        }
+        if rng_consumed(&rng_before, &s.rng) {
+            return false;
+        }
+    }
+    s.winner == Some(me)
 }
 
 /// Kind the solver will expand, or `None` for [`Action::EndTurn`] /
@@ -196,6 +239,7 @@ fn search(
     line: &mut Vec<Action>,
     rng_so_far: bool,
     ply: u32,
+    deterministic_only: bool,
 ) -> Outcome {
     if state.winner == Some(perspective) {
         return Outcome::Lethal {
@@ -243,6 +287,9 @@ fn search(
             continue;
         }
         let consumed = rng_consumed(&rng_before, &s.rng);
+        if deterministic_only && consumed {
+            continue;
+        }
         if s.winner == Some(perspective) {
             line.push(a);
             return Outcome::Lethal {
@@ -262,6 +309,7 @@ fn search(
             line,
             rng_so_far || consumed,
             ply + 1,
+            deterministic_only,
         );
         match out {
             Outcome::Lethal { rng_dependent } => return Outcome::Lethal { rng_dependent },
