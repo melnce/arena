@@ -38,7 +38,7 @@ from runlib import (  # noqa: E402
 
 
 STAGES = ("data", "train", "yard", "summary", "publish")
-DEFAULT_EVAL = Path("engine") / "models" / "h0-linear-v2.json"
+DEFAULT_EVAL = Path("engine") / "models" / "h0-linear-v3.json"
 
 
 def have_torch() -> bool:
