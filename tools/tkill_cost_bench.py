@@ -128,7 +128,7 @@ def main() -> None:
             print(
                 f"{spec:52} {d:10d} {total['ms']/d:10.2f} {p95(ms_samples):10.2f} "
                 f"{total['solver_nodes']/d:16.2f} {p95(node_samples):10.2f} {total['solver_nodes_max']:10.0f} "
-                f"{total['solver_calls']/d:10.2f} {total['solver_taken']/d:10.2f} "
+                f"{total['solver_found']/d:10.2f} {total['solver_taken']/d:10.2f} "
                 f"{total['solver_rejected']/d:12.2f} {total['solver_unknown']/d:12.2f}"
             )
 
