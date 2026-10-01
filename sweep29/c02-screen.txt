@@ -1,0 +1,30 @@
+pool: --decks
+decks: 1 (meta-abyss-midrange)
+pairs: 1 (1 x 1, mirrors included)
+games    40 games/pair x 1 =    40
+matchup: 1 decks × 40 games = 40 games (seed=1, policy_a=h0:nodes=16000,horizon=3,info=all, policy_b=h0:nodes=16000,horizon=3, first=alternate, threads=None)
+Win rate (row = A, col = B; cell = A's win rate)
+                        meta-abyss-midrange
+meta-abyss-midrange                   0.425
+
+First-player win rate / mean turns
+                        meta-abyss-midrange
+meta-abyss-midrange           0.575 /   8.7
+
+A win rate over decisive games, Wilson 95% [lo, hi]
+                        meta-abyss-midrange
+meta-abyss-midrange    0.425 [0.285, 0.578]
+
+=== summary ===
+h0:nodes=16000,horizon=3,info=all vs h0:nodes=16000,horizon=3
+games: 40  decisive: 40  draws: 0
+policy_a win rate: 0.425 [0.285, 0.578]
+first-player win rate: 0.575
+mean turns: 8.68  mean actions: 82.50
+end: lethal=40 deckout=0 turn_cap=0 action_cap=0 no_legal=0 illegal=0
+256.875s  0.16 games/s  cpus=28
+per deck:
+  meta-abyss-midrange: policy_a (row) 0.425  policy_b (col) 0.575
+
+40 games in 256.875s (0.2 games/s)
+wrote C:\Users\agban\projects\arena\results\sweep29\c02-screen.json

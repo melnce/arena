@@ -1,0 +1,73 @@
+{
+  "decks": [
+    "meta-abyss-midrange"
+  ],
+  "first": "alternate",
+  "games": 400,
+  "games_per_second": 0.3424999984981565,
+  "matrix": {
+    "meta-abyss-midrange": {
+      "meta-abyss-midrange": {
+        "a_games_as_first": 200,
+        "a_wins": 215,
+        "a_wins_as_first": 120,
+        "b_wins": 185,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 400,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 225,
+        "games": 400,
+        "mean_actions": 78.7425,
+        "mean_turns": 8.325,
+        "wilson95": [
+          0.4885129330720267,
+          0.5857736188829973
+        ],
+        "wr_decisive": 0.5375
+      }
+    }
+  },
+  "policy_a": "h0:nodes=16000,horizon=3",
+  "policy_b": "h0:nodes=16000,horizon=3,info=all,k=1",
+  "seconds": 1167.8832167999353,
+  "seed": 1,
+  "summary": {
+    "cpu_count": 28,
+    "decisive": 400,
+    "draws": 0,
+    "end": {
+      "action_cap": 0,
+      "deckout": 0,
+      "illegal": 0,
+      "lethal": 400,
+      "no_legal": 0,
+      "turn_cap": 0
+    },
+    "first_player_win_rate": 0.5625,
+    "games": 400,
+    "games_per_second": 0.3424999984981565,
+    "mean_actions": 78.7425,
+    "mean_turns": 8.325,
+    "per_deck": {
+      "meta-abyss-midrange": {
+        "policy_a_as_row": 0.5375,
+        "policy_b_as_col": 0.4625
+      }
+    },
+    "policy_a": "h0:nodes=16000,horizon=3",
+    "policy_a_win_rate": 0.5375,
+    "policy_b": "h0:nodes=16000,horizon=3,info=all,k=1",
+    "seconds": 1167.8832167999353,
+    "wilson95": [
+      0.4885129330720267,
+      0.5857736188829973
+    ]
+  },
+  "threads": 28
+}

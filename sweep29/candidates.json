@@ -1,0 +1,10 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:nodes=16000,horizon=3,info=all,k=1"
+  },
+  {
+    "index": 2,
+    "spec": "h0:nodes=16000,horizon=3,info=all"
+  }
+]

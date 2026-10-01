@@ -1,0 +1,83 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\sweep.py",
+    "--tag",
+    "sweep29",
+    "--seed",
+    "1",
+    "--decks",
+    "meta-abyss-midrange",
+    "--baseline",
+    "h0:nodes=16000,horizon=3",
+    "--screen-games",
+    "40",
+    "--final-games",
+    "400",
+    "--final-reverse",
+    "400",
+    "--tp-games",
+    "20",
+    "--finalists",
+    "2",
+    "--allow-small",
+    "--candidates",
+    "h0:nodes=16000,horizon=3,info=all,k=1",
+    "h0:nodes=16000,horizon=3,info=all",
+    "--publish"
+  ],
+  "git": "8e66bcf253219f64300c3fb26e2918cf72b2ed81",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "screen": {
+      "start": "2026-10-01T12:14:37.867770+00:00",
+      "end": "2026-10-01T12:26:16.265771+00:00"
+    },
+    "final": {
+      "start": "2026-10-01T12:26:16.288867+00:00",
+      "end": "2026-10-01T14:00:48.566379+00:00"
+    },
+    "summary": {
+      "start": "2026-10-01T14:00:48.589587+00:00",
+      "end": "2026-10-01T14:00:48.610158+00:00"
+    },
+    "publish": {
+      "start": "2026-10-01T14:00:48.644236+00:00"
+    }
+  },
+  "sizing": {
+    "pool": "--decks",
+    "decks": [
+      "meta-abyss-midrange"
+    ],
+    "n_decks": 1,
+    "pairs": 1,
+    "games_per_pair": {
+      "screen": 40,
+      "final": 400,
+      "reverse": 400,
+      "tp": 20
+    },
+    "totals": {
+      "screen": 40,
+      "final": 400,
+      "reverse": 400,
+      "tp": 20
+    },
+    "target_games": null,
+    "block": "pool: --decks\ndecks: 1 (meta-abyss-midrange)\npairs: 1 (1 x 1, mirrors included)\nscreen   40 games/pair x 1 =    40\nfinal   400 games/pair x 1 =   400\nreverse 400 games/pair x 1 =   400\ntp       20 games/pair x 1 =    20"
+  },
+  "finalist_decisions": [
+    {
+      "index": 1,
+      "spec": "h0:nodes=16000,horizon=3,info=all,k=1",
+      "decision": "finalist"
+    },
+    {
+      "index": 2,
+      "spec": "h0:nodes=16000,horizon=3,info=all",
+      "decision": "finalist"
+    }
+  ]
+}

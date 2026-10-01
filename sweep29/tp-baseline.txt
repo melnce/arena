@@ -1,0 +1,30 @@
+pool: --decks
+decks: 1 (meta-abyss-midrange)
+pairs: 1 (1 x 1, mirrors included)
+games    20 games/pair x 1 =    20
+matchup: 1 decks × 20 games = 20 games (seed=1, policy_a=h0:nodes=16000,horizon=3, policy_b=h0:nodes=16000,horizon=3, first=alternate, threads=None)
+Win rate (row = A, col = B; cell = A's win rate)
+                        meta-abyss-midrange
+meta-abyss-midrange                   0.700
+
+First-player win rate / mean turns
+                        meta-abyss-midrange
+meta-abyss-midrange           0.600 /   8.8
+
+A win rate over decisive games, Wilson 95% [lo, hi]
+                        meta-abyss-midrange
+meta-abyss-midrange    0.700 [0.481, 0.855]
+
+=== summary ===
+h0:nodes=16000,horizon=3 vs h0:nodes=16000,horizon=3
+games: 20  decisive: 20  draws: 0
+policy_a win rate: 0.700 [0.481, 0.855]
+first-player win rate: 0.600
+mean turns: 8.85  mean actions: 83.65
+end: lethal=20 deckout=0 turn_cap=0 action_cap=0 no_legal=0 illegal=0
+141.596s  0.14 games/s  cpus=28
+per deck:
+  meta-abyss-midrange: policy_a (row) 0.700  policy_b (col) 0.300
+
+20 games in 141.596s (0.1 games/s)
+wrote C:\Users\agban\projects\arena\results\sweep29\tp-baseline.json
