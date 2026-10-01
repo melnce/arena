@@ -1,0 +1,48 @@
+### c01
+results/sweep25:c01: candidate h0:net=results/sweep25/leaf-all4-e2.json vs h0
+  main     0.5068 (1038/2048) [0.4852, 0.5285]  Elo +4.8 [-10.3, +19.8]
+  reverse  0.5234 (536/1024) [0.4928, 0.5539]  Elo +16.3 [-5.0, +37.6]
+  pooled   0.5124 (1574/3072) [0.4947, 0.5300]  Elo +8.6 [-3.7, +20.9]
+results/sweep25b:c01: candidate h0:net=results/sweep25/leaf-all4-e2.json vs h0
+  main     0.5095 (2087/4096) [0.4942, 0.5248]  Elo +6.6 [-4.0, +17.3]
+  reverse  0.5273 (1080/2048) [0.5057, 0.5489]  Elo +19.0 [+4.0, +34.1]
+  pooled   0.5155 (3167/6144) [0.5030, 0.5279]  Elo +10.7 [+2.1, +19.4]
+
+COMBINED (results/sweep25:c01 + results/sweep25b:c01):
+  main     0.5086 (3125/6144) [0.4961, 0.5211]  Elo +6.0 [-2.7, +14.7]
+  reverse  0.5260 (1616/3072) [0.5084, 0.5437]  Elo +18.1 [+5.8, +30.4]
+  pooled   0.5144 (4741/9216) [0.5042, 0.5246]  Elo +10.0 [+2.9, +17.1]
+  better (combined main low > 0.50 and reverse low > 0.50): False
+
+### c02
+results/sweep25:c02: candidate h0:net=results/sweep25/leaf-all4-e4.json vs h0
+  main     0.5029 (1030/2048) [0.4813, 0.5246]  Elo +2.0 [-13.0, +17.1]
+  reverse  0.4912 (503/1024) [0.4607, 0.5218]  Elo -6.1 [-27.4, +15.2]
+  pooled   0.4990 (1533/3072) [0.4814, 0.5167]  Elo -0.7 [-13.0, +11.6]
+results/sweep25b:c02: candidate h0:net=results/sweep25/leaf-all4-e4.json vs h0
+  main     0.4817 (1973/4096) [0.4664, 0.4970]  Elo -12.7 [-23.4, -2.1]
+  reverse  0.5117 (1048/2048) [0.4901, 0.5333]  Elo +8.1 [-6.9, +23.2]
+  pooled   0.4917 (3021/6144) [0.4792, 0.5042]  Elo -5.8 [-14.5, +2.9]
+
+COMBINED (results/sweep25:c02 + results/sweep25b:c02):
+  main     0.4888 (3003/6144) [0.4763, 0.5013]  Elo -7.8 [-16.5, +0.9]
+  reverse  0.5049 (1551/3072) [0.4872, 0.5225]  Elo +3.4 [-8.9, +15.7]
+  pooled   0.4941 (4554/9216) [0.4839, 0.5043]  Elo -4.1 [-11.2, +3.0]
+  better (combined main low > 0.50 and reverse low > 0.50): False
+
+### c03
+results/sweep25:c03: candidate h0:net=results/sweep25/leaf-all4-e8.json vs h0
+  main     0.4805 (984/2048) [0.4589, 0.5021]  Elo -13.6 [-28.6, +1.5]
+  reverse  0.4736 (485/1024) [0.4432, 0.5043]  Elo -18.3 [-39.6, +3.0]
+  pooled   0.4782 (1469/3072) [0.4606, 0.4959]  Elo -15.2 [-27.5, -2.9]
+results/sweep25b:c03: candidate h0:net=results/sweep25/leaf-all4-e8.json vs h0
+  main     0.4890 (2003/4096) [0.4737, 0.5043]  Elo -7.6 [-18.3, +3.0]
+  reverse  0.4907 (1005/2048) [0.4691, 0.5124]  Elo -6.4 [-21.5, +8.6]
+  pooled   0.4896 (3008/6144) [0.4771, 0.5021]  Elo -7.2 [-15.9, +1.4]
+
+COMBINED (results/sweep25:c03 + results/sweep25b:c03):
+  main     0.4862 (2987/6144) [0.4737, 0.4987]  Elo -9.6 [-18.3, -0.9]
+  reverse  0.4850 (1490/3072) [0.4674, 0.5027]  Elo -10.4 [-22.7, +1.9]
+  pooled   0.4858 (4477/9216) [0.4756, 0.4960]  Elo -9.9 [-17.0, -2.8]
+  better (combined main low > 0.50 and reverse low > 0.50): False
+
