@@ -42,7 +42,7 @@ jobs:
   # timeout is chosen so measured CI time stays under ~two-thirds of
   # timeout-minutes (plus setup/cache).
   # h0_olsolve_2000 ~13m18s, h0_olsolve_16000 ~19m26s (cloud-agent 2026-09-29, horizon=3,olsolve=1000)
-  # h0_tkill ~2m02s release (cloud-agent 2026-10-01, whole file minus ignored bench)
+  # h0_tkill ~2m04s release (cloud-agent 2026-10-01, whole file minus ignored bench)
   suite:
     name: slow (${{ matrix.suite }})
     runs-on: ubuntu-latest
