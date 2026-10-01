@@ -42,7 +42,7 @@ jobs:
   # timeout is chosen so measured CI time stays under ~two-thirds of
   # timeout-minutes (plus setup/cache).
   # h0_olsolve_2000 ~13m18s, h0_olsolve_16000 ~19m26s (cloud-agent 2026-09-29, horizon=3,olsolve=1000)
-  # h0_tkill ~2m04s release (cloud-agent 2026-10-01, whole file minus ignored bench)
+  # h0_tkill ~2m04s release tests (cloud-agent 2026-10-01); timeout 15 like encode_v2/record/net
   suite:
     name: slow (${{ matrix.suite }})
     runs-on: ubuntu-latest
@@ -150,7 +150,7 @@ jobs:
             test: h0_tkill
             filter: ""
             ignored: false
-            timeout: 5
+            timeout: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -227,7 +227,7 @@ jobs:
             "h0_horizon_16000": 30,
             "h0_olsolve_2000": 30,
             "h0_olsolve_16000": 45,
-            "h0_tkill": 5
+            "h0_tkill": 15
           }'
 
           failed_jobs=""
@@ -326,7 +326,7 @@ jobs:
             "h0_horizon_16000": 30,
             "h0_olsolve_2000": 30,
             "h0_olsolve_16000": 45,
-            "h0_tkill": 5
+            "h0_tkill": 15
           }'
 
           failed_jobs=""
