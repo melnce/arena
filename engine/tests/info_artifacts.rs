@@ -4,7 +4,8 @@ mod common;
 
 use arena_engine::{apply, board_info, hand_info, Action, Phase, PlayerId};
 use common::{
-    choose, cid, end_turn, give_pp, load_db, play, play_id, put_field, put_hand, started,
+    choose, cid, end_turn, give_pp, load_db, play, play_id, put_deck, put_field, put_hand,
+    started,
 };
 
 const ARTIFACT_FOLLOWERS: [&str; 5] = ["90071130", "90071140", "90071150", "90071160", "90073110"];
@@ -95,13 +96,70 @@ fn non_artifact_follower_does_not_count() {
     let db = load_db();
     let mut st = started(&db, 1);
     let me = PlayerId::A;
-    st.player_mut(me).enter_counts.insert(cid("88001110"), 3);
     set_distinct_artifacts(&mut st, me, 2);
+    st.player_mut(me).enter_counts.insert(cid("88001110"), 3);
     give_pp(&mut st, me, 10, 10);
     st.player_mut(me).hand.clear();
     let _ = put_hand(&db, &mut st, me, "10771120");
     let gate = artifacts_gate(&first_hand_gates(&db, &st, me));
     assert_eq!(gate.have, 2);
+}
+
+fn assert_no_yellow_condition_gates(gates: &[arena_engine::GateInfo], card: &str) {
+    assert!(
+        !gates.iter().any(|g| g.met && g.glow),
+        "{card} must not show met+glow from non-Fanfare hand abilities: {gates:?}"
+    );
+}
+
+#[test]
+fn garodeth_hand_does_not_leak_leader_defense_gate() {
+    let db = load_db();
+    let mut st = started(&db, 110);
+    let me = PlayerId::A;
+    st.player_mut(me).leader_defense = 10;
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    let _ = put_hand(&db, &mut st, me, "10954120");
+    assert_no_yellow_condition_gates(&first_hand_gates(&db, &st, me), "Garodeth vs. Zeth");
+}
+
+#[test]
+fn frostbow_hand_does_not_leak_end_of_turn_combo_gate() {
+    let db = load_db();
+    let mut st = started(&db, 111);
+    let me = PlayerId::A;
+    st.player_mut(me).combo = 3;
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    let _ = put_hand(&db, &mut st, me, "10713110");
+    assert_no_yellow_condition_gates(&first_hand_gates(&db, &st, me), "Frostbow Sniper");
+}
+
+#[test]
+fn cutthroat_hand_does_not_leak_evolve_deck_gate() {
+    let db = load_db();
+    let mut st = started(&db, 112);
+    let me = PlayerId::A;
+    st.player_mut(me).deck.clear();
+    put_deck(&db, &mut st, me, "88001110");
+    put_deck(&db, &mut st, me, "88001120");
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    let _ = put_hand(&db, &mut st, me, "10974110");
+    assert_no_yellow_condition_gates(&first_hand_gates(&db, &st, me), "Cutthroat");
+}
+
+#[test]
+fn galleon_hand_does_not_leak_super_evolution_gate() {
+    let db = load_db();
+    let mut st = started(&db, 113);
+    let me = PlayerId::A;
+    st.player_mut(me).turns_taken = 7;
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    let _ = put_hand(&db, &mut st, me, "10464110");
+    assert_no_yellow_condition_gates(&first_hand_gates(&db, &st, me), "Galleon");
 }
 
 #[test]
@@ -288,6 +346,31 @@ fn myuu_on_field_unevolved_shows_artifacts() {
     let info = board_info(&db, &st, me);
     let gate = artifacts_gate(&info[0].gates.clone());
     assert_eq!(gate.have, 3);
+}
+
+#[test]
+fn myuu_hides_artifacts_after_super_evolve() {
+    let db = load_db();
+    let mut st = started(&db, 73);
+    let me = PlayerId::A;
+    set_distinct_artifacts(&mut st, me, 3);
+    st.player_mut(me).turns_taken = 7;
+    st.player_mut(me).sep = 1;
+    let slot = put_field(&db, &mut st, me, "10774120");
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: arena_engine::Slot(slot),
+            super_evolve: true,
+        },
+    )
+    .expect("super-evolve");
+    let info = board_info(&db, &st, me);
+    assert!(
+        info[0].gates.iter().all(|g| g.kind != "artifacts"),
+        "super-evolved Myuu must not show artifacts line"
+    );
 }
 
 #[test]

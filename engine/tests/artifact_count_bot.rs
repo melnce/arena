@@ -2,7 +2,7 @@
 
 use arena_engine::determinize::{determinize_with, Info};
 use arena_engine::policy::Policy;
-use arena_engine::{legal_actions, policy_rng, search_key, Action, AnyPolicy, PlayerId, H0};
+use arena_engine::{hash, legal_actions, policy_rng, search_key, Action, AnyPolicy, PlayerId, H0};
 
 mod common;
 use common::{cid, give_pp, load_db, put_field, put_hand, started};
@@ -14,15 +14,10 @@ fn parse_h0(spec: &str) -> H0 {
     }
 }
 
-fn warp_slash_setup(db: &arena_engine::CardDb, artifact_k: usize) -> (arena_engine::State, u8) {
-    let mut st = started(db, 200 + artifact_k as u64);
+fn warp_slash_base(db: &arena_engine::CardDb) -> (arena_engine::State, u8) {
+    let mut st = started(db, 20261002);
     let me = PlayerId::A;
     let opp = PlayerId::B;
-    st.player_mut(me).enter_counts.clear();
-    const IDS: [&str; 3] = ["90071130", "90071140", "90071150"];
-    for id in IDS.iter().take(artifact_k.min(IDS.len())) {
-        st.player_mut(me).enter_counts.insert(cid(id), 1);
-    }
     put_field(db, &mut st, opp, "88001110");
     put_field(db, &mut st, opp, "88001120");
     for slot in 0..2 {
@@ -37,11 +32,30 @@ fn warp_slash_setup(db: &arena_engine::CardDb, artifact_k: usize) -> (arena_engi
     (st, hand)
 }
 
+fn with_artifact_k(st: &arena_engine::State, artifact_k: usize) -> arena_engine::State {
+    let mut out = st.clone();
+    let me = PlayerId::A;
+    out.player_mut(me).enter_counts.clear();
+    const IDS: [&str; 3] = ["90071130", "90071140", "90071150"];
+    for id in IDS.iter().take(artifact_k.min(IDS.len())) {
+        out.player_mut(me).enter_counts.insert(cid(id), 1);
+    }
+    out
+}
+
 #[test]
 fn determinize_preserves_enter_counts_all_info_modes() {
     let db = load_db();
-    let (st, _) = warp_slash_setup(&db, 3);
+    let (base, _) = warp_slash_base(&db);
     let me = PlayerId::A;
+    let opp = PlayerId::B;
+    let mut st = with_artifact_k(&base, 3);
+    st.player_mut(opp)
+        .enter_counts
+        .insert(cid("90071160"), 1);
+    st.player_mut(opp)
+        .enter_counts
+        .insert(cid("90073110"), 2);
     for info in [Info::Open, Info::Fair, Info::Draws, Info::All] {
         for seed in [1u64, 99, 4242] {
             let d = determinize_with(&st, me, seed, info);
@@ -51,8 +65,8 @@ fn determinize_preserves_enter_counts_all_info_modes() {
                 "{info:?} seed={seed} actor enter_counts"
             );
             assert_eq!(
-                d.player(me.opponent()).enter_counts,
-                st.player(me.opponent()).enter_counts,
+                d.player(opp).enter_counts,
+                st.player(opp).enter_counts,
                 "{info:?} seed={seed} opponent enter_counts"
             );
         }
@@ -62,28 +76,31 @@ fn determinize_preserves_enter_counts_all_info_modes() {
 #[test]
 fn search_key_differs_on_enter_counts() {
     let db = load_db();
-    let (a, _) = warp_slash_setup(&db, 0);
-    let mut b = a.clone();
-    b.player_mut(PlayerId::A)
-        .enter_counts
-        .insert(cid("90071130"), 1);
+    let (base, _) = warp_slash_base(&db);
+    let a = with_artifact_k(&base, 0);
+    let b = with_artifact_k(&base, 3);
+    assert_eq!(hash(&a), hash(&base), "k=0 differs only in enter_counts");
+    assert_eq!(search_key(&a), search_key(&base));
     assert_ne!(search_key(&a), search_key(&b));
 }
 
 #[test]
 fn h0_values_warp_slash_higher_with_three_artifacts() {
     let db = load_db();
-    let (st0, hand0) = warp_slash_setup(&db, 0);
-    let (st3, hand3) = warp_slash_setup(&db, 3);
+    let (base, warp_hand) = warp_slash_base(&db);
+    let st0 = with_artifact_k(&base, 0);
+    let st3 = with_artifact_k(&base, 3);
+    assert_eq!(hash(&st0), hash(&base));
+    assert_eq!(search_key(&st0), search_key(&base));
     let legal0 = legal_actions(&db, &st0);
     let legal3 = legal_actions(&db, &st3);
     let play0 = legal0
         .iter()
-        .position(|a| matches!(a, Action::Play { hand } if *hand == hand0))
+        .position(|a| matches!(a, Action::Play { hand } if *hand == warp_hand))
         .expect("play warp slash legal at 0");
     let play3 = legal3
         .iter()
-        .position(|a| matches!(a, Action::Play { hand } if *hand == hand3))
+        .position(|a| matches!(a, Action::Play { hand } if *hand == warp_hand))
         .expect("play warp slash legal at 3");
 
     let seed = 20261002u64;
@@ -112,8 +129,7 @@ fn h0_values_warp_slash_higher_with_three_artifacts() {
     let val0 = cand0.root_agg;
 
     eprintln!(
-        "artifacts=3: chosen={} play_warp_root={:.4}; artifacts=0: chosen={} play_warp_root={:.4}",
-        chosen3, val3, chosen0, val0
+        "artifacts=3: chosen={chosen3} play_warp_root={val3:.4}; artifacts=0: chosen={chosen0} play_warp_root={val0:.4}"
     );
     assert!(
         val3 > val0,
