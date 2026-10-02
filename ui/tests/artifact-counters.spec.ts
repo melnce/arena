@@ -29,7 +29,7 @@ async function importDeck(page: Page, name: string, cards: Record<string, number
 async function startGame(page: Page, deckId: string) {
   await openSettings(page);
   await page.locator("#modeSelect").selectOption("hotseat");
-  await page.locator("#seedInput").fill("42");
+  await page.locator("#seedInput").fill("7");
   await page.locator("#firstSelect").selectOption("a");
   await page.locator("#blueDeckSelect").selectOption(deckId);
   await page.locator("#redDeckSelect").selectOption(deckId);
@@ -122,13 +122,13 @@ test("artifact counters in tooltips track engine enter_counts", async ({ page })
   test.setTimeout(120_000);
   await boot(page);
   const deck = await importDeck(page, "portal-artifacts.json", {
-    [ANALYZING]: 12,
-    [ANCIENT]: 12,
-    [MYSTIC]: 12,
-    [BEAT_BREAKER]: 4,
-    [MYUU]: 4,
-    [SCARLET]: 4,
-    [WARP_SLASH]: 4,
+    [ANALYZING]: 10,
+    [ANCIENT]: 10,
+    [MYSTIC]: 10,
+    [BEAT_BREAKER]: 3,
+    [MYUU]: 3,
+    [SCARLET]: 2,
+    [WARP_SLASH]: 2,
   });
   await startGame(page, deck);
   await confirmMulligans(page);
@@ -149,6 +149,16 @@ test("artifact counters in tooltips track engine enter_counts", async ({ page })
   const k = await playArtifactsUntil(page, 3);
   expect(k).toBeGreaterThanOrEqual(3);
 
+  for (let i = 0; i < 40; i++) {
+    const have = await page.evaluate((ids) => {
+      const hand = (window.__arena!.full() as { players: { a: { hand: Array<{ card: string }> } } })
+        .players.a.hand;
+      return ids.map((id) => hand.some((c) => c.card === id));
+    }, [BEAT_BREAKER, MYUU, xCard].filter(Boolean));
+    if (have.every(Boolean)) break;
+    await endTurn(page);
+  }
+
   if (xCard) {
     const card = page.locator(`#blueHand .card[data-card='${xCard}']`).first();
     await card.hover();
@@ -156,8 +166,21 @@ test("artifact counters in tooltips track engine enter_counts", async ({ page })
     await artShot(card, `${ART}/artifact_x_at_${k}.png`);
   }
 
+  for (let i = 0; i < 24; i++) {
+    const snap = await page.evaluate(() => {
+      const full = window.__arena!.full() as {
+        active: string;
+        players: { a: { pp: number } };
+      };
+      return { active: full.active, pp: full.players.a.pp };
+    });
+    if (snap.active === "a" && snap.pp >= 7) break;
+    await endTurn(page);
+  }
+
   const beat = page.locator(`#blueHand .card[data-card='${BEAT_BREAKER}']`).first();
-  if (await beat.count()) {
+  await expect(beat, "Beat Breaker in hand at k>=3").toBeVisible({ timeout: 5000 });
+  {
     await beat.hover();
     await expect(page.locator("#cardTooltip")).toContainText(`Artifacts ${k}/3`);
     await expect(page.locator("#cardTooltip .dynamic-counter-line.gate-met")).toContainText(
@@ -165,6 +188,16 @@ test("artifact counters in tooltips track engine enter_counts", async ({ page })
     );
     await expect(beat).toHaveClass(/enhance-ready/);
     await artShot(beat, `${ART}/artifact_beat_breaker_met.png`);
+  }
+
+  for (let i = 0; i < 24; i++) {
+    const hasMyuu = await page.evaluate((id) => {
+      const hand = (window.__arena!.full() as { players: { a: { hand: Array<{ card: string }> } } })
+        .players.a.hand;
+      return hand.some((c) => c.card === id);
+    }, MYUU);
+    if (hasMyuu) break;
+    await endTurn(page);
   }
 
   const myuu = page.locator(`#blueHand .card[data-card='${MYUU}']`).first();
