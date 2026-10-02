@@ -53,6 +53,7 @@ def test_default_strong_constant_and_parse_args(db, root: Path) -> None:
     arena.matchup(db, decks, 0, 1, policy=DEFAULT_STRONG, threads=1)
     arena.matchup(db, decks, 0, 1, policy="h0:tkill=2000", threads=1)
     arena.matchup(db, decks, 0, 1, policy="h0:tkill=2000,tkroll=8", threads=1)
+    arena.matchup(db, decks, 0, 1, policy="h0:hbcheck=2000", threads=1)
 
 
 def test_default_cheat_constant_and_parse_args(db, root: Path) -> None:

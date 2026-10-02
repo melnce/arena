@@ -142,7 +142,10 @@ impl AnyPolicy {
     /// first determinization before search; default `0` = off),
     /// `tkroll=<u32>` (after a deterministic miss, run [`forced_lethal`] on the
     /// first determinization and confirm under rerolled dice on every root;
-    /// only when `tkill>0`; default `0` = off), `osteps=<u32>`
+    /// only when `tkill>0`; default `0` = off), `hbcheck=<u32>` (after search
+    /// chooses `EndTurn` with a kill attack available, re-score `EndTurn` per
+    /// root with a bounded opponent removal search; applies are outside
+    /// `node_cap`; default `0` = off), `osteps=<u32>`
     /// (greedy
     /// forced-`EndTurn` step; default `6`;
     /// hard stop is `osteps+3`), `wv=<f32>` (saturation bound on every
@@ -193,7 +196,7 @@ impl AnyPolicy {
     /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
     /// `oevo=0` when the evolve branch is off, non-default `okill`,
     /// `omacro=1` when the greedy reply fuses play→evolve, non-default `olsolve`,
-    /// non-default `tkill`, non-default `tkroll`,
+    /// non-default `tkill`, non-default `tkroll`, non-default `hbcheck`,
     /// non-default `wv`,
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
     /// when the allocator is the pre-#46 root-major spend, `info=fair`
@@ -267,6 +270,9 @@ fn h0_spec(h: &H0) -> String {
     }
     if h.tkroll != def.tkroll {
         parts.push(format!("tkroll={}", h.tkroll));
+    }
+    if h.hbcheck != def.hbcheck {
+        parts.push(format!("hbcheck={}", h.hbcheck));
     }
     if h.osteps != def.osteps {
         parts.push(format!("osteps={}", h.osteps));
@@ -365,6 +371,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.olsolve == b.olsolve
         && a.tkill == b.tkill
         && a.tkroll == b.tkroll
+        && a.hbcheck == b.hbcheck
         && a.osteps == b.osteps
         && a.wv == b.wv
         && a.pess == b.pess
@@ -477,6 +484,10 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             "tkroll" => {
                 let v: u32 = parse_num(val)?;
                 h.tkroll = v;
+            }
+            "hbcheck" => {
+                let v: u32 = parse_num(val)?;
+                h.hbcheck = v;
             }
             "wv" => h.wv = parse_num(val)?,
             "pess" => {
