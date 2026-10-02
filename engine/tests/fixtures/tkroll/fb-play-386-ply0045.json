@@ -1,0 +1,371 @@
+{
+  "seed": 386,
+  "deckA": {
+    "10471130": 1,
+    "10573310": 3,
+    "10574120": 3,
+    "10671110": 2,
+    "10673110": 3,
+    "10674110": 2,
+    "10674120": 2,
+    "10771110": 1,
+    "10771310": 3,
+    "10772110": 1,
+    "10773110": 3,
+    "10774110": 3,
+    "10774120": 3,
+    "10872120": 1,
+    "10874110": 3,
+    "10874120": 3,
+    "10974120": 3
+  },
+  "deckB": {
+    "10052110": 1,
+    "10452130": 3,
+    "10503210": 1,
+    "10552110": 2,
+    "10654120": 2,
+    "10751120": 3,
+    "10752110": 3,
+    "10753310": 3,
+    "10754110": 3,
+    "10754120": 3,
+    "10851120": 3,
+    "10854110": 2,
+    "10951120": 3,
+    "10952110": 2,
+    "10954110": 3,
+    "10954120": 3
+  },
+  "first": "b",
+  "actions": [
+    {
+      "mulligan": {
+        "player": "b",
+        "swap": [
+          false,
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    {
+      "mulligan": {
+        "player": "a",
+        "swap": [
+          false,
+          false,
+          false,
+          true
+        ]
+      }
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      }
+    },
+    {
+      "bonus_pp": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10574120",
+        "hand_pos": 2,
+        "player": "a"
+      }
+    },
+    {
+      "choose": {
+        "option": {
+          "card": "10573310"
+        },
+        "player": "a"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10951120",
+        "hand_pos": 0,
+        "player": "b"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 0,
+        "player": "a",
+        "target": "leader"
+      }
+    },
+    {
+      "play": {
+        "card": "10771310",
+        "hand_pos": 3,
+        "player": "a"
+      }
+    },
+    {
+      "choose": {
+        "option": {
+          "mode": 0
+        },
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "90071130",
+        "hand_pos": 4,
+        "player": "a"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 0,
+        "player": "b",
+        "target": {
+          "slot": 1
+        }
+      }
+    },
+    {
+      "play": {
+        "card": "10552110",
+        "hand_pos": 4,
+        "player": "b"
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 0,
+        "player": "b",
+        "target": {
+          "slot": 0
+        }
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 1,
+        "player": "b",
+        "target": "leader"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      }
+    },
+    {
+      "play": {
+        "card": "10674120",
+        "hand_pos": 2,
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10573310",
+        "hand_pos": 2,
+        "player": "a"
+      }
+    },
+    {
+      "choose": {
+        "option": {
+          "player": "a",
+          "slot": 0
+        },
+        "player": "a"
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 0,
+        "player": "a",
+        "target": {
+          "slot": 0
+        }
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10952110",
+        "hand_pos": 3,
+        "player": "b"
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 0,
+        "player": "b",
+        "target": "leader"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      }
+    },
+    {
+      "play": {
+        "card": "10771110",
+        "hand_pos": 4,
+        "player": "a"
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 0,
+        "player": "a",
+        "target": "leader"
+      }
+    },
+    {
+      "evolve": {
+        "player": "a",
+        "slot": 1,
+        "super": false
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 1,
+        "player": "a",
+        "target": {
+          "slot": 0
+        }
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10753310",
+        "hand_pos": 5,
+        "player": "b"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      }
+    },
+    {
+      "evolve": {
+        "player": "a",
+        "slot": 0,
+        "super": false
+      }
+    },
+    {
+      "play": {
+        "card": "10774120",
+        "hand_pos": 0,
+        "player": "a"
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 0,
+        "player": "a",
+        "target": "leader"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10754110",
+        "hand_pos": 3,
+        "player": "b"
+      }
+    },
+    {
+      "evolve": {
+        "player": "b",
+        "slot": 2,
+        "super": false
+      }
+    },
+    {
+      "choose": {
+        "option": {
+          "slot": 0
+        },
+        "player": "b"
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 2,
+        "player": "b",
+        "target": {
+          "slot": 0
+        }
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 2,
+        "player": "b",
+        "target": {
+          "slot": 0
+        }
+      }
+    },
+    {
+      "attack": {
+        "attacker_slot": 3,
+        "player": "b",
+        "target": {
+          "slot": 0
+        }
+      }
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      }
+    }
+  ],
+  "ply": 45,
+  "audit_file": "checkpoint2-fb.json",
+  "game_id": "play-386",
+  "auditee": "a",
+  "turn": 6,
+  "kind": "positive",
+  "deck_a": "meta-portal-af",
+  "deck_b": "meta-abyss-midrange",
+  "winner": "a",
+  "source": "results@checkpoint2-fb.json/play-386 turn=6 ply=45"
+}

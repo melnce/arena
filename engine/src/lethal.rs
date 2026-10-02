@@ -38,6 +38,10 @@
 //! [`forced_lethal_det`] is the same search with RNG-consuming actions
 //! skipped: a proof of absence there is only for deterministic lines.
 //!
+//! [`forced_lethal_accepting`] is roll search with an acceptance callback
+//! invoked on each candidate kill line before returning; rejected lines
+//! continue searching within the same budget and transposition is disabled.
+//!
 //! Transposition is allowed only for positions already proven `None`
 //! within budget. `Unknown` is never memoised. The table key is
 //! [`crate::search_key`] plus [`crate::GameRng::fingerprint`], so two
@@ -94,7 +98,7 @@ pub enum LethalActionKind {
 /// `budget` is a cap on `apply` calls. `budget == 0` with any expandable
 /// action yields [`LethalVerdict::Unknown`], not [`LethalVerdict::None`].
 pub fn forced_lethal(db: &CardDb, state: &State, budget: u32) -> LethalVerdict {
-    forced_lethal_inner(db, state, budget, false)
+    forced_lethal_inner::<fn(&[Action]) -> bool>(db, state, budget, false, None)
 }
 
 /// Exhaustive within-turn search for a **deterministic** kill only.
@@ -104,20 +108,43 @@ pub fn forced_lethal(db: &CardDb, state: &State, budget: u32) -> LethalVerdict {
 /// false`. [`LethalVerdict::None`] is a proof that no deterministic line
 /// exists within budget — not a proof that no kill exists at all.
 pub fn forced_lethal_det(db: &CardDb, state: &State, budget: u32) -> LethalVerdict {
-    forced_lethal_inner(db, state, budget, true)
+    forced_lethal_inner::<fn(&[Action]) -> bool>(db, state, budget, true, None)
 }
 
-fn forced_lethal_inner(
+/// Like [`forced_lethal`], but when a kill is found the search calls
+/// `accept(&line)` before returning [`LethalVerdict::Lethal`]. If `accept`
+/// returns `false`, that line is treated as a dead end and the search
+/// continues within the same budget. Transposition is disabled — acceptance
+/// depends on the whole line, not just the position.
+pub fn forced_lethal_accepting<F>(
+    db: &CardDb,
+    state: &State,
+    budget: u32,
+    mut accept: F,
+) -> LethalVerdict
+where
+    F: FnMut(&[Action]) -> bool,
+{
+    forced_lethal_inner(db, state, budget, false, Some(&mut accept))
+}
+
+fn forced_lethal_inner<F>(
     db: &CardDb,
     state: &State,
     budget: u32,
     deterministic_only: bool,
-) -> LethalVerdict {
+    accept: Option<&mut F>,
+) -> LethalVerdict
+where
+    F: FnMut(&[Action]) -> bool,
+{
     let perspective = acting_player(state);
     let mut nodes = 0u32;
     let mut tt: HashSet<(u64, u64)> = HashSet::new();
     let mut path_keys: Vec<(u64, u64)> = vec![pos_key(state)];
     let mut line: Vec<Action> = Vec::new();
+    let use_tt = accept.is_none();
+    let mut accept_holder = accept;
     match search(
         db,
         state,
@@ -125,11 +152,13 @@ fn forced_lethal_inner(
         budget,
         &mut nodes,
         &mut tt,
+        use_tt,
         &mut path_keys,
         &mut line,
         false,
         0,
         deterministic_only,
+        &mut accept_holder,
     ) {
         Outcome::Lethal { rng_dependent } => LethalVerdict::Lethal {
             line,
@@ -159,6 +188,39 @@ pub fn confirm_det_lethal_line(db: &CardDb, state: &State, me: PlayerId, line: &
         }
     }
     s.winner == Some(me)
+}
+
+/// Seed for one rerolled dice replay during roll-confirmed lethal checks.
+/// Derived only from `(pos_key, reroll_index)` — not from the policy rng.
+pub fn roll_confirm_seed(pos_key: u64, reroll: u32) -> u64 {
+    pos_key
+        .wrapping_mul(0x9E37_79B9_7F4A_7C15)
+        .wrapping_add(u64::from(reroll))
+}
+
+/// Replay `line` on `state` under each `seeds` entry (reseed before the
+/// line). Every action must apply and the last position must leave
+/// `winner == Some(me)`.
+pub fn confirm_lethal_line_rerolled(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    line: &[Action],
+    seeds: &[u64],
+) -> bool {
+    for &seed in seeds {
+        let mut s = state.clone();
+        s.reseed(seed);
+        for a in line {
+            if apply(db, &mut s, a.clone()).is_err() {
+                return false;
+            }
+        }
+        if s.winner != Some(me) {
+            return false;
+        }
+    }
+    true
 }
 
 /// Kind the solver will expand, or `None` for [`Action::EndTurn`] /
@@ -227,24 +289,42 @@ fn rng_consumed(before: &GameRng, after: &GameRng) -> bool {
     before.fingerprint() != after.fingerprint()
 }
 
+fn lethal_accepted<F>(line: &[Action], accept: &mut Option<&mut F>) -> bool
+where
+    F: FnMut(&[Action]) -> bool,
+{
+    match accept.as_deref_mut() {
+        Some(f) => f(line),
+        None => true,
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
-fn search(
+fn search<F>(
     db: &CardDb,
     state: &State,
     perspective: PlayerId,
     budget: u32,
     nodes: &mut u32,
     tt: &mut HashSet<(u64, u64)>,
+    use_tt: bool,
     path_keys: &mut Vec<(u64, u64)>,
     line: &mut Vec<Action>,
     rng_so_far: bool,
     ply: u32,
     deterministic_only: bool,
-) -> Outcome {
+    accept: &mut Option<&mut F>,
+) -> Outcome
+where
+    F: FnMut(&[Action]) -> bool,
+{
     if state.winner == Some(perspective) {
-        return Outcome::Lethal {
-            rng_dependent: rng_so_far,
-        };
+        if lethal_accepted(line, accept) {
+            return Outcome::Lethal {
+                rng_dependent: rng_so_far,
+            };
+        }
+        return Outcome::None;
     }
     if !within_turn(state, perspective) {
         return Outcome::None;
@@ -253,7 +333,7 @@ fn search(
         return Outcome::Unknown;
     }
     let key = pos_key(state);
-    if tt.contains(&key) {
+    if use_tt && tt.contains(&key) {
         return Outcome::None;
     }
 
@@ -267,7 +347,9 @@ fn search(
     acts.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.cmp(&b.1)));
 
     if acts.is_empty() {
-        tt.insert(key);
+        if use_tt {
+            tt.insert(key);
+        }
         return Outcome::None;
     }
 
@@ -292,9 +374,13 @@ fn search(
         }
         if s.winner == Some(perspective) {
             line.push(a);
-            return Outcome::Lethal {
-                rng_dependent: rng_so_far || consumed,
-            };
+            if lethal_accepted(line, accept) {
+                return Outcome::Lethal {
+                    rng_dependent: rng_so_far || consumed,
+                };
+            }
+            line.pop();
+            continue;
         }
         path_keys.push(child_key);
         line.push(a);
@@ -305,11 +391,13 @@ fn search(
             budget,
             nodes,
             tt,
+            use_tt,
             path_keys,
             line,
             rng_so_far || consumed,
             ply + 1,
             deterministic_only,
+            accept,
         );
         match out {
             Outcome::Lethal { rng_dependent } => return Outcome::Lethal { rng_dependent },
@@ -327,7 +415,9 @@ fn search(
     if saw_unknown {
         Outcome::Unknown
     } else {
-        tt.insert(key);
+        if use_tt {
+            tt.insert(key);
+        }
         Outcome::None
     }
 }

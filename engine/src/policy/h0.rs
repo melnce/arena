@@ -25,7 +25,10 @@ use crate::determinize::{determinize_with, determinize_with_stats, OpenStats};
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
 use crate::ids::{AttackTarget, PlayerId, Slot};
-use crate::lethal::{confirm_det_lethal_line, forced_lethal, forced_lethal_det, LethalVerdict};
+use crate::lethal::{
+    confirm_det_lethal_line, confirm_lethal_line_rerolled, forced_lethal, forced_lethal_accepting,
+    forced_lethal_det, roll_confirm_seed, LethalVerdict,
+};
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
 use crate::search_key::search_key;
@@ -266,6 +269,26 @@ pub struct SearchStats {
     pub own_solver_nodes: u64,
     /// Most `apply`s in a single own-turn solver call.
     pub own_solver_nodes_max: u64,
+    /// Root [`forced_lethal_accepting`] calls after a deterministic miss
+    /// (`tkill>0`, `tkroll>0`).
+    pub own_roll_calls: u64,
+    /// Roll solver calls that returned a line accepted on every root under
+    /// rerolled dice.
+    pub own_roll_found: u64,
+    /// Roll kill confirmed on every root under rerolled dice and played.
+    pub own_roll_taken: u64,
+    /// Decisions where the roll check took nothing — no accepted line
+    /// ([`LethalVerdict::None`] / [`LethalVerdict::Unknown`]), or the accepted
+    /// line's `line[0]` was not a legal candidate.
+    pub own_roll_rejected: u64,
+    /// Candidate kill lines rejected by the reroll acceptance check during search.
+    pub own_roll_lines_rejected: u64,
+    /// Roll solver calls that returned [`LethalVerdict::Unknown`].
+    pub own_roll_unknown: u64,
+    /// `apply`s spent inside roll-confirmed solver calls (outside `node_cap`).
+    pub own_roll_nodes: u64,
+    /// Most `apply`s in a single roll-confirmed solver call.
+    pub own_roll_nodes_max: u64,
     /// Searched decisions whose chosen candidate had a determinization
     /// pinned at the clamp floor (`-wv`).
     pub chose_with_lethal_root: u64,
@@ -338,6 +361,14 @@ impl SearchStats {
         self.own_solver_unknown += other.own_solver_unknown;
         self.own_solver_nodes += other.own_solver_nodes;
         self.own_solver_nodes_max = self.own_solver_nodes_max.max(other.own_solver_nodes_max);
+        self.own_roll_calls += other.own_roll_calls;
+        self.own_roll_found += other.own_roll_found;
+        self.own_roll_taken += other.own_roll_taken;
+        self.own_roll_rejected += other.own_roll_rejected;
+        self.own_roll_lines_rejected += other.own_roll_lines_rejected;
+        self.own_roll_unknown += other.own_roll_unknown;
+        self.own_roll_nodes += other.own_roll_nodes;
+        self.own_roll_nodes_max = self.own_roll_nodes_max.max(other.own_roll_nodes_max);
         self.chose_with_lethal_root += other.chose_with_lethal_root;
         self.cands_with_lethal_root += other.cands_with_lethal_root;
         self.tt_hits += other.tt_hits;
@@ -421,6 +452,10 @@ pub struct H0 {
     /// [`forced_lethal_det`] on the first determinization before search.
     /// `0` = off (today).
     pub tkill: u32,
+    /// After a deterministic miss, run [`forced_lethal`] on the first
+    /// determinization and confirm the line under rerolled dice on every
+    /// root. Only when `tkill>0`; `0` = off (today).
+    pub tkroll: u32,
     /// Greedy-line steps before a forced `EndTurn`. Default `6` is the sweep-5
     /// flip; the hard stop is `osteps + 3` (today: 9).
     pub osteps: u32,
@@ -492,6 +527,7 @@ impl Default for H0 {
             omacro: false,
             olsolve: 0,
             tkill: 0,
+            tkroll: 0,
             osteps: 6,
             fusemacro: true,
             net: Some(builtin_net()),
@@ -795,12 +831,19 @@ impl Policy for H0 {
                 Phase::Main | Phase::Combat | Phase::Choice { .. }
             )
         {
-            if let Some(idx) =
-                try_take_kill(db, &roots, legal, &cand, me, self.tkill, &mut dec_stats)
-            {
+            if let Some((idx, path)) = try_take_kill(
+                db,
+                &roots,
+                legal,
+                &cand,
+                me,
+                self.tkill,
+                self.tkroll,
+                &mut dec_stats,
+            ) {
                 self.last_value = Some(self.wv);
                 if let Some(rec) = &mut explain_rec {
-                    rec.path = ChoosePath::TakeKill;
+                    rec.path = path;
                     rec.chosen_index = idx;
                     rec.tie_set = vec![idx];
                 }
@@ -1256,6 +1299,7 @@ fn try_apply(
     Some(s)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn try_take_kill(
     db: &CardDb,
     roots: &[State],
@@ -1263,8 +1307,9 @@ fn try_take_kill(
     cand: &[usize],
     me: PlayerId,
     budget: u32,
+    tkroll: u32,
     stats: &mut SearchStats,
-) -> Option<usize> {
+) -> Option<(usize, ChoosePath)> {
     stats.own_solver_calls += 1;
     let verdict = forced_lethal_det(db, &roots[0], budget);
     let nodes = match &verdict {
@@ -1277,29 +1322,79 @@ fn try_take_kill(
     match verdict {
         LethalVerdict::Lethal { line, .. } => {
             stats.own_solver_found += 1;
+            let mut all_roots_confirmed = true;
             for root in roots.iter().skip(1) {
                 if !confirm_det_lethal_line(db, root, me, &line) {
-                    stats.own_solver_rejected += 1;
-                    return None;
+                    all_roots_confirmed = false;
+                    break;
                 }
             }
-            let first = &line[0];
-            let Some(idx) = legal.iter().position(|a| a == first) else {
+            if all_roots_confirmed {
+                let first = &line[0];
+                if let Some(idx) = legal.iter().position(|a| a == first) {
+                    if cand.contains(&idx) {
+                        stats.own_solver_taken += 1;
+                        return Some((idx, ChoosePath::TakeKill));
+                    }
+                }
                 stats.own_solver_rejected += 1;
-                return None;
-            };
-            if !cand.contains(&idx) {
+            } else {
                 stats.own_solver_rejected += 1;
-                return None;
             }
-            stats.own_solver_taken += 1;
-            Some(idx)
         }
         LethalVerdict::Unknown { .. } => {
             stats.own_solver_unknown += 1;
+        }
+        LethalVerdict::None { .. } => {}
+    }
+
+    if tkroll == 0 {
+        return None;
+    }
+
+    stats.own_roll_calls += 1;
+    let roll_verdict = forced_lethal_accepting(db, &roots[0], budget, |line| {
+        for root in roots {
+            let pos_key = search_key(root);
+            let seeds: Vec<u64> = (0..tkroll).map(|i| roll_confirm_seed(pos_key, i)).collect();
+            if !confirm_lethal_line_rerolled(db, root, me, line, &seeds) {
+                stats.own_roll_lines_rejected += 1;
+                return false;
+            }
+        }
+        true
+    });
+    let roll_nodes = match &roll_verdict {
+        LethalVerdict::Lethal { nodes, .. }
+        | LethalVerdict::None { nodes }
+        | LethalVerdict::Unknown { nodes } => *nodes,
+    };
+    stats.own_roll_nodes += u64::from(roll_nodes);
+    stats.own_roll_nodes_max = stats.own_roll_nodes_max.max(u64::from(roll_nodes));
+    match roll_verdict {
+        LethalVerdict::Lethal { line, .. } => {
+            stats.own_roll_found += 1;
+            let first = &line[0];
+            let Some(idx) = legal.iter().position(|a| a == first) else {
+                stats.own_roll_rejected += 1;
+                return None;
+            };
+            if !cand.contains(&idx) {
+                stats.own_roll_rejected += 1;
+                return None;
+            }
+            stats.own_roll_taken += 1;
+            Some((idx, ChoosePath::TakeKillRoll))
+        }
+        LethalVerdict::Unknown { .. } => {
+            stats.own_roll_unknown += 1;
+            stats.own_roll_rejected += 1;
             None
         }
-        LethalVerdict::None { .. } => None,
+        LethalVerdict::None { .. } => {
+            stats.own_roll_rejected += 1;
+            None
+        }
     }
 }
 

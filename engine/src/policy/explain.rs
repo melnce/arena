@@ -19,6 +19,8 @@ pub enum ChoosePath {
     ConsensusLethal,
     /// Root deterministic kill from [`forced_lethal_det`] (`tkill>0`).
     TakeKill,
+    /// Root roll-confirmed kill from [`forced_lethal`] (`tkill>0`, `tkroll>0`).
+    TakeKillRoll,
     Search,
     /// Search entered but no `(root, candidate)` pair scored (e.g. the
     /// consensus-lethal check spent the entire node cap).
