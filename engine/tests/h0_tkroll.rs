@@ -10,9 +10,10 @@ use std::time::Instant;
 use arena_engine::determinize::{determinize_with, determinize_with_stats, Info};
 use arena_engine::policy::ChoosePath;
 use arena_engine::{
-    apply, apply_neutral, confirm_lethal_line_rerolled, forced_lethal, legal_actions, new_game,
-    policy_rng, roll_confirm_seed, search_key, Action, AnyPolicy, CardDb, First, GameConfig,
-    LethalVerdict, Phase, PlayerId, Policy, H0, MAX_ACTIONS, MAX_TURNS,
+    apply, apply_neutral, confirm_lethal_line_rerolled, forced_lethal, forced_lethal_accepting,
+    from_neutral, legal_actions, new_game, policy_rng, roll_confirm_seed, search_key, Action,
+    AnyPolicy, CardDb, First, GameConfig, LethalVerdict, Phase, PlayerId, Policy, H0, MAX_ACTIONS,
+    MAX_TURNS,
 };
 use serde_json::Value;
 
@@ -277,6 +278,34 @@ fn solver_line_on_first_root(
     }
 }
 
+fn accepted_line_on_first_root(
+    db: &CardDb,
+    st: &arena_engine::State,
+    me: PlayerId,
+    seed: u64,
+    budget: u32,
+    tkroll: u32,
+) -> Option<Vec<Action>> {
+    let h0 = parse_h0(ROLL_SPEC);
+    let k = h0.determinizations.max(1);
+    let mut rng = policy_rng(seed);
+    let mut roots = Vec::with_capacity(k as usize);
+    for _ in 0..k {
+        roots.push(determinize_with(st, me, rng.next_u64(), h0.info));
+    }
+    let accept = |line: &[Action]| {
+        roots.iter().all(|root| {
+            let pos_key = search_key(root);
+            let seeds: Vec<u64> = (0..tkroll).map(|i| roll_confirm_seed(pos_key, i)).collect();
+            confirm_lethal_line_rerolled(db, root, me, line, &seeds)
+        })
+    };
+    match forced_lethal_accepting(db, &roots[0], budget, accept) {
+        LethalVerdict::Lethal { line, .. } => Some(line),
+        _ => None,
+    }
+}
+
 fn reroll_seeds(state: &arena_engine::State, n: u32) -> Vec<u64> {
     let pos_key = search_key(state);
     (0..n).map(|i| roll_confirm_seed(pos_key, i)).collect()
@@ -294,6 +323,48 @@ fn count_reroll_kills(
     for i in 0..rerolls {
         let seed = roll_confirm_seed(pos_key, i);
         if confirm_lethal_line_rerolled(db, state, me, line, &[seed]) {
+            kills += 1;
+        }
+    }
+    kills
+}
+
+fn audit_line_from_json(db: &CardDb, state: &arena_engine::State, line: &Value) -> Vec<Action> {
+    let mut s = state.clone();
+    let mut out = Vec::new();
+    for step in line.as_array().expect("audit line array") {
+        let mut body = serde_json::Map::new();
+        for (k, v) in step.as_object().expect("line step object") {
+            body.insert(k.clone(), v.clone());
+        }
+        let neu: arena_engine::NeutralAction =
+            serde_json::from_value(Value::Object(body)).expect("audit line step");
+        let a = from_neutral(&s, &neu).expect("audit line action");
+        apply(db, &mut s, a.clone()).expect("audit line replay");
+        out.push(a);
+    }
+    out
+}
+
+fn count_audit_probe_kills(
+    db: &CardDb,
+    state: &arena_engine::State,
+    me: PlayerId,
+    line: &[Action],
+    rerolls: u32,
+) -> u32 {
+    let mut kills = 0u32;
+    for r in 0..rerolls {
+        let mut s = state.clone();
+        s.reseed(10_000 + u64::from(r));
+        let mut ok = true;
+        for a in line {
+            if apply(db, &mut s, a.clone()).is_err() {
+                ok = false;
+                break;
+            }
+        }
+        if ok && s.winner == Some(me) {
             kills += 1;
         }
     }
@@ -486,7 +557,7 @@ fn confirm_rerolled_accepts_sure_kill() {
 #[test]
 fn confirm_rerolled_is_deterministic() {
     let db = load_db();
-    let path = tkroll_fixture_dir().join("fa-play-64-ply0070.json");
+    let path = tkroll_fixture_dir().join("fa-play-98-ply0071.json");
     let cap: Value =
         serde_json::from_str(&fs::read_to_string(&path).expect("read fixture")).expect("json");
     let ply = cap["ply"].as_u64().expect("ply") as usize;
@@ -648,12 +719,13 @@ fn tkroll_gambles_not_taken_blindly() {
                 continue;
             }
             let taken = &legal[pick];
-            let line = solver_line_on_first_root(&db, &st, me, seed, 10_000)
-                .expect("gamble fixture must have solver line on first root");
+            let line = accepted_line_on_first_root(&db, &st, me, seed, 10_000, 8)
+                .or_else(|| solver_line_on_first_root(&db, &st, me, seed, 10_000))
+                .expect("gamble fixture must have an accepted or solver line on first root");
             assert_eq!(
                 taken,
                 &line[0],
-                "{} bot seed {bot}: must take solver line[0]",
+                "{} bot seed {bot}: must take accepted line[0]",
                 path.display()
             );
             let kills = count_reroll_kills(&db, &st, me, &line, 32);
@@ -872,10 +944,15 @@ struct BenchRow {
     roll_found: u64,
     roll_taken: u64,
     roll_rejected: u64,
+    roll_lines_rejected: u64,
     roll_unknown: u64,
 }
 
-fn bench_choose(db: &CardDb, spec: &str, snap: &SearchSnapshot) -> (f64, u64, u64, u64, u64, u64) {
+fn bench_choose(
+    db: &CardDb,
+    spec: &str,
+    snap: &SearchSnapshot,
+) -> (f64, u64, u64, u64, u64, u64, u64) {
     let mut h0 = parse_h0(spec);
     let legal = legal_actions(db, &snap.state);
     let mut rng = policy_rng(snap.choose_seed);
@@ -888,6 +965,7 @@ fn bench_choose(db: &CardDb, spec: &str, snap: &SearchSnapshot) -> (f64, u64, u6
         h0.stats.own_roll_found,
         h0.stats.own_roll_taken,
         h0.stats.own_roll_rejected,
+        h0.stats.own_roll_lines_rejected,
         h0.stats.own_roll_unknown,
     )
 }
@@ -937,12 +1015,14 @@ fn tkroll_paired_cost_report() {
             roll_found: 0,
             roll_taken: 0,
             roll_rejected: 0,
+            roll_lines_rejected: 0,
             roll_unknown: 0,
         })
         .collect();
     for snap in &snaps {
         for row in &mut rows {
-            let (ms, nodes, found, taken, rejected, unknown) = bench_choose(&db, &row.spec, snap);
+            let (ms, nodes, found, taken, rejected, lines_rejected, unknown) =
+                bench_choose(&db, &row.spec, snap);
             row.decisions += 1;
             row.ms_total += ms;
             row.ms_samples.push(ms);
@@ -952,11 +1032,12 @@ fn tkroll_paired_cost_report() {
             row.roll_found += found;
             row.roll_taken += taken;
             row.roll_rejected += rejected;
+            row.roll_lines_rejected += lines_rejected;
             row.roll_unknown += unknown;
         }
     }
     eprintln!(
-        "{:<52} {:>10} {:>10} {:>10} {:>16} {:>10} {:>10} {:>10} {:>12} {:>12} {:>12}",
+        "{:<52} {:>10} {:>10} {:>10} {:>16} {:>10} {:>10} {:>10} {:>10} {:>12} {:>14} {:>12}",
         "spec",
         "decisions",
         "ms/dec",
@@ -967,12 +1048,13 @@ fn tkroll_paired_cost_report() {
         "found/dec",
         "taken/dec",
         "rejected/dec",
-        "unknown/dec"
+        "lines_rej/dec",
+        "unknown/dec",
     );
     for row in rows {
         let d = row.decisions as f64;
         eprintln!(
-            "{:<52} {:>10} {:>10.2} {:>10.2} {:>16.2} {:>10} {:>10} {:>10.2} {:>10.2} {:>12.2} {:>12.2}",
+            "{:<52} {:>10} {:>10.2} {:>10.2} {:>16.2} {:>10} {:>10} {:>10.2} {:>10.2} {:>12.2} {:>14.2} {:>12.2}",
             row.spec,
             row.decisions,
             row.ms_total / d,
@@ -983,8 +1065,82 @@ fn tkroll_paired_cost_report() {
             row.roll_found as f64 / d,
             row.roll_taken as f64 / d,
             row.roll_rejected as f64 / d,
+            row.roll_lines_rejected as f64 / d,
             row.roll_unknown as f64 / d,
         );
+    }
+}
+
+#[test]
+#[ignore = "scan chance_kills for tkroll fixture replacements"]
+fn scan_tkroll_fixture_candidates() {
+    let db = load_db();
+    let text = fs::read_to_string("/tmp/chance_kills.json").expect("chance_kills.json");
+    let data: Value = serde_json::from_str(&text).expect("json");
+    let skip = [
+        "play-174", "play-386", "play-344", "play-64", "play-28", "play-103",
+    ];
+    for game in data["games"].as_array().expect("games") {
+        let gid = game["game_id"].as_str().expect("game_id");
+        if skip.contains(&gid) {
+            continue;
+        }
+        for turn in game["chance_kill_turns"].as_array().unwrap_or(&vec![]) {
+            let auditee = turn["auditee"].as_str().expect("auditee");
+            let me = match auditee {
+                "a" => PlayerId::A,
+                "b" => PlayerId::B,
+                _ => continue,
+            };
+            let first = turn["decisions"]
+                .as_array()
+                .expect("decisions")
+                .iter()
+                .min_by_key(|d| d["ply"].as_u64().unwrap_or(u64::MAX))
+                .expect("decision");
+            let ply = first["ply"].as_u64().expect("ply") as usize;
+            let mut cap = serde_json::Map::new();
+            cap.insert("seed".into(), game["seed"].clone());
+            cap.insert("deckA".into(), game["deck_a_cards"].clone());
+            cap.insert("deckB".into(), game["deck_b_cards"].clone());
+            cap.insert("first".into(), game["first"].clone());
+            cap.insert(
+                "actions".into(),
+                Value::Array(game["actions"].as_array().unwrap()[..ply].to_vec()),
+            );
+            cap.insert("ply".into(), first["ply"].clone());
+            let st = replay_capture(&db, &Value::Object(cap), ply);
+            if st.active != me {
+                continue;
+            }
+            let legal = legal_actions(&db, &st);
+            if legal.len() <= 1 {
+                continue;
+            }
+            let audit_line = audit_line_from_json(&db, &st, &first["line"]);
+            let audit_kills = count_audit_probe_kills(&db, &st, me, &audit_line, 32);
+            if audit_kills != 32 {
+                continue;
+            }
+            let seed = game["seed"].as_u64().expect("seed") + ply as u64;
+            let mut det_only = parse_h0(DET_ONLY_SPEC);
+            let mut rng_det = policy_rng(seed);
+            let _ = det_only.choose(&db, &st, &legal, &mut rng_det);
+            if det_only.stats.own_solver_taken > 0 {
+                continue;
+            }
+            let mut roll = parse_h0(ROLL_SPEC);
+            roll.arm_explain();
+            let mut rng_roll = policy_rng(seed);
+            let _ = roll.choose(&db, &st, &legal, &mut rng_roll);
+            let rec = roll.take_explain().expect("explain");
+            if rec.path == ChoosePath::TakeKillRoll && roll.stats.own_roll_taken > 0 {
+                eprintln!(
+                    "CANDIDATE {gid} ply={ply} auditee={auditee} audit_sure=32/32 det_miss roll_take lines_rejected={}",
+                    roll.stats.own_roll_lines_rejected
+                );
+            }
+        }
     }
 }
 
@@ -998,13 +1154,18 @@ fn chance_kills_replay_report() {
     for spec in specs {
         let mut roll_takes = 0u32;
         let mut turn_wins = 0u32;
-        let mut sure_takes = 0u32;
+        let mut sure_takes_solver = 0u32;
+        let mut sure_takes_audit = 0u32;
         let mut sure_wins = 0u32;
         let mut gamble_takes = 0u32;
-        let mut n_sure = 0u32;
+        let mut n_sure_solver = 0u32;
+        let mut n_sure_audit = 0u32;
         let mut n_gamble = 0u32;
         for game in data["games"].as_array().expect("games") {
             for turn in game["chance_kill_turns"].as_array().unwrap_or(&vec![]) {
+                if turn["converted"].as_bool().unwrap_or(false) {
+                    continue;
+                }
                 let auditee = turn["auditee"].as_str().expect("auditee");
                 let me = match auditee {
                     "a" => PlayerId::A,
@@ -1033,42 +1194,59 @@ fn chance_kills_replay_report() {
                 }
                 let legal = legal_actions(&db, &st);
                 let seed = game["seed"].as_u64().expect("seed") + ply as u64;
+                let audit_actions = audit_line_from_json(&db, &st, &first["line"]);
+                let audit_probe_kills = count_audit_probe_kills(&db, &st, me, &audit_actions, 32);
+                let sure_audit = audit_probe_kills == 32;
+                if sure_audit {
+                    n_sure_audit += 1;
+                }
+                let LethalVerdict::Lethal { line, .. } = forced_lethal(&db, &st, 50_000) else {
+                    continue;
+                };
+                let solver_reroll_kills = count_reroll_kills(&db, &st, me, &line, 32);
+                let sure_solver = solver_reroll_kills == 32;
+                if sure_solver {
+                    n_sure_solver += 1;
+                } else if solver_reroll_kills <= 2 {
+                    n_gamble += 1;
+                }
                 let mut h0 = parse_h0(spec);
                 h0.arm_explain();
                 let mut rng = policy_rng(seed);
                 let _ = h0.choose(&db, &st, &legal, &mut rng);
                 let rec = h0.take_explain().expect("explain");
-                let audit_line = first["line"].as_array().expect("line");
-                let LethalVerdict::Lethal { line, .. } = forced_lethal(&db, &st, 50_000) else {
-                    continue;
-                };
-                let audit_kills = count_reroll_kills(&db, &st, me, &line, 32);
-                let sure = audit_kills == 32;
-                if sure {
-                    n_sure += 1;
-                } else if audit_kills <= 2 {
-                    n_gamble += 1;
-                }
                 if rec.path == ChoosePath::TakeKillRoll {
                     roll_takes += 1;
-                    if sure {
-                        sure_takes += 1;
-                    } else if audit_kills <= 2 {
+                    if sure_solver {
+                        sure_takes_solver += 1;
+                    }
+                    if sure_audit {
+                        sure_takes_audit += 1;
+                    }
+                    if !sure_solver && solver_reroll_kills <= 2 {
                         gamble_takes += 1;
                     }
                     let (walk, ended_turn) = play_own_turn_with(&db, &st, spec, seed);
                     if !ended_turn && walk.winner == Some(me) {
                         turn_wins += 1;
-                        if sure {
+                        if sure_solver {
                             sure_wins += 1;
                         }
                     }
                 }
-                let _ = audit_line;
             }
         }
         eprintln!(
-            "{spec}: roll_takes={roll_takes} turn_wins={turn_wins} sure_takes={sure_takes}/{n_sure} sure_wins={sure_wins} gamble_takes={gamble_takes}/{n_gamble}"
+            "{spec}: roll_takes={roll_takes} turn_wins={turn_wins} \
+             sure_takes_solver={sure_takes_solver}/{n_sure_solver} \
+             sure_takes_audit={sure_takes_audit}/{n_sure_audit} \
+             sure_wins={sure_wins} gamble_takes={gamble_takes}/{n_gamble}"
+        );
+        eprintln!(
+            "  sure_solver: forced_lethal line on true state, roll_confirm_seed(search_key, r) r=0..31"
+        );
+        eprintln!(
+            "  sure_audit: first lethal decision audit line on true state, reseed(10000+r) r=0..31"
         );
     }
 }
