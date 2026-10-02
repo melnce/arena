@@ -904,7 +904,6 @@ fn p95_u64(samples: &[u64]) -> u64 {
 
 #[test]
 #[ignore = "measurement helper for tools/hbcheck_cost_bench.py (paired holdback1 moments)"]
-#[cfg_attr(debug_assertions, ignore)]
 fn hbcheck_paired_cost_report() {
     let db = load_db();
     let moments = load_moments();
