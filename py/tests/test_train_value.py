@@ -745,16 +745,17 @@ def _lbfgs_teacher_bundle(db, root: Path, tmp_path: Path) -> dict[str, Any]:
     }
 
 
+@pytest.mark.xfail(
+    sys.platform == "win32",
+    reason=(
+        "Windows L-BFGS final_loss=0.4799 > Adam train MSE 0.3983+1e-3 on the owner's box; "
+        "L-BFGS is not used by any run"
+    ),
+    raises=AssertionError,
+    strict=False,
+)
 def test_lbfgs_final_loss_at_most_adam_train_mse(db, root: Path, tmp_path: Path) -> None:
     bundle = _lbfgs_teacher_bundle(db, root, tmp_path)
-    if sys.platform == "win32":
-        pytest.xfail(
-            strict=False,
-            reason=(
-                "Windows L-BFGS final_loss=0.4799 > Adam train MSE 0.3983+1e-3; "
-                "L-BFGS is not used by any run"
-            ),
-        )
     assert bundle["lbfgs_report"]["final_loss"] <= bundle["adam_train_mse"] + 1e-3
 
 
