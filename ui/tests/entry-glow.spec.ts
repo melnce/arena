@@ -532,7 +532,7 @@ test("Gentle Treant is yellow at Combo 2 in hand; tooltip shows Combo after play
   await treant.hover();
   await expect(page.locator("#cardTooltip")).toContainText("Combo after playing: 3/3");
   await expect(page.locator("#cardTooltip")).not.toContainText("Combo 3");
-  await artShot(treant, `${ART}/combo_treant_hand_yellow.png`);
+  await artShot(treant, `${ART}/combo_treant_after_playing_3_3.png`);
 });
 
 test("Gentle Treant is not yellow from Combo at 1 played; tooltip shows Combo after playing: 2/3", async ({
