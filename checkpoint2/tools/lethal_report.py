@@ -1,11 +1,13 @@
-"""Checkpoint lethal audit: cp2's h0 (checkpoint-f{a,b}) vs 2026-09-22 (matched-f{a,b}); matched.py method, steps 1-5.
-Usage: python checkpoint_report.py [NEW_PREFIX] [OLD_PREFIX]   (defaults checkpoint / matched). Throwaway."""
+"""Lethal audit report: NEW_PREFIX-f{a,b} vs OLD_PREFIX-f{a,b} on the same deals; the matched-state method, steps 1-5.
+Usage: python lethal_report.py NEW_PREFIX OLD_PREFIX [NEW_LABEL OLD_LABEL]   (labels default cp2 / cp1). Run from the repo root."""
 import json, math, os, sys, collections
 import numpy as np
 
 R = os.path.join(os.getcwd(), 'results', 'lethal')  # run from the repo root
 NEW = sys.argv[1] if len(sys.argv) > 1 else 'checkpoint'
 OLD = sys.argv[2] if len(sys.argv) > 2 else 'matched'
+LN = sys.argv[3] if len(sys.argv) > 3 else 'cp2'
+LO = sys.argv[4] if len(sys.argv) > 4 else 'cp1'
 # sweep 9 per-deck win rates: the external "win" axis of the 2026-09-22 analysis; fixes the top/bottom six
 S9 = {'portal-af': .725, 'portal-evo': .703, 'abyss-midrange': .692, 'sword-rally': .665, 'haven-evo': .603,
       'dragon-aggro': .603, 'abyss-aggro': .598, 'sword-loot': .582, 'forest-combo': .523, 'dragon-ramp': .501,
@@ -144,14 +146,14 @@ def analyse(data):
     return out
 
 
-A = {'cp2': analyse(new), 'cp1': analyse(old)}
-LAB = ('cp2', 'cp1')
-print(f"end-turns with a verdict: cp2 {A['cp2']['n_ends']}, cp1 {A['cp1']['n_ends']};  "
-      f"kill turns: {A['cp2']['n_kt']} / {A['cp1']['n_kt']};  auditee-games {A['cp2']['n_ag']} / {A['cp1']['n_ag']}")
+A = {LN: analyse(new), LO: analyse(old)}
+LAB = (LN, LO)
+print(f"end-turns with a verdict: {LN} {A[LN]['n_ends']}, {LO} {A[LO]['n_ends']};  "
+      f"kill turns: {A[LN]['n_kt']} / {A[LO]['n_kt']};  auditee-games {A[LN]['n_ag']} / {A[LO]['n_ag']}")
 
 # ---------------- 1. balance ----------------
 print("\n=== 1. balance: auditee_first share of end-turns per deck ===")
-print(f"  {'deck':20} {'cp2':>16} {'cp1':>16}")
+print(f"  {'deck':20} {LN:>16} {LO:>16}")
 for dk, d in enumerate(DECKS):
     cells = []
     for l in LAB:
@@ -160,17 +162,17 @@ for dk, d in enumerate(DECKS):
     print(f"  {short(d):20} {cells[0]:>16} {cells[1]:>16}")
 
 # ---------------- 2. win rate per deck ----------------
-print("\n=== 2. win rate per deck (auditee games, both seats; 128 per deck), sorted by cp2 ===")
-wt, wo = A['cp2']['win'], A['cp1']['win']
-dwb = A['cp2']['win_b'] - A['cp1']['win_b']
-print(f"  {'deck':20} {'cp2':>6} {'cp1':>6} {'change':>7}  {'95% CI (paired)':>17}  sweep9")
+print(f"\n=== 2. win rate per deck (auditee games, both seats; 128 per deck), sorted by {LN} ===")
+wt, wo = A[LN]['win'], A[LO]['win']
+dwb = A[LN]['win_b'] - A[LO]['win_b']
+print(f"  {'deck':20} {LN:>6} {LO:>6} {'change':>7}  {'95% CI (paired)':>17}  sweep9")
 for dk in np.argsort(-wt):
     print(f"  {short(DECKS[dk]):20} {wt[dk]:6.3f} {wo[dk]:6.3f} {wt[dk] - wo[dk]:+7.3f}  {ci(dwb[:, dk]):>17}  {WV9[dk]:.3f}")
 sp_t, sp_o = wt.max() - wt.min(), wo.max() - wo.min()
-spb = A['cp2']['win_b'].max(1) - A['cp2']['win_b'].min(1) - (A['cp1']['win_b'].max(1) - A['cp1']['win_b'].min(1))
-print(f"  spread max-min: cp2 {sp_t:.3f} ({wt.min():.3f}-{wt.max():.3f}), cp1 {sp_o:.3f} ({wo.min():.3f}-{wo.max():.3f}); "
+spb = A[LN]['win_b'].max(1) - A[LN]['win_b'].min(1) - (A[LO]['win_b'].max(1) - A[LO]['win_b'].min(1))
+print(f"  spread max-min: {LN} {sp_t:.3f} ({wt.min():.3f}-{wt.max():.3f}), {LO} {sp_o:.3f} ({wo.min():.3f}-{wo.max():.3f}); "
       f"change {sp_t - sp_o:+.3f} {ci(spb)}")
-print(f"  SD across decks: cp2 {wt.std():.3f}, cp1 {wo.std():.3f};  corr(cp2, cp1) {corr(wt, wo):+.3f};  corr(cp2, sweep9) {corr(wt, WV9):+.3f}")
+print(f"  SD across decks: {LN} {wt.std():.3f}, {LO} {wo.std():.3f};  corr({LN}, {LO}) {corr(wt, wo):+.3f};  corr({LN}, sweep9) {corr(wt, WV9):+.3f}")
 
 # ---------------- 3. handed_lethal, standardised ----------------
 print("\n=== 3. handed_lethal, standardised on deficit bucket x first player ===")
@@ -193,8 +195,8 @@ for axis_name in ('sweep9', 'own'):
         print(f"    {'':6} + early/late stratum:  corr(expected,win) {corr(e2, wv):+.3f} {ci([corr(e, wvb(i)) for i, (o, e) in enumerate(bb2)])}  "
               f"corr(residual,win) {corr(o2 - e2, wv):+.3f} {ci([corr(o - e, wvb(i)) for i, (o, e) in enumerate(bb2)])}  "
               f"split expected {covsplit(e2, o2, wv):.0%} / residual {1 - covsplit(e2, o2, wv):.0%}")
-Es_t, Es_o = A['cp2']['E'].sum(0), A['cp1']['E'].sum(0)
-print("  pooled handed rate by deficit bucket (cp2 | cp1):")
+Es_t, Es_o = A[LN]['E'].sum(0), A[LO]['E'].sum(0)
+print(f"  pooled handed rate by deficit bucket ({LN} | {LO}):")
 for b, name in enumerate(("<= -5", "-4..-1", "0", "1..4", ">= 5")):
     t_, o_ = Es_t[:, b].sum(0), Es_o[:, b].sum(0)
     print(f"    {name:7} {t_[:, 0].sum() / t_[:, 1].sum():.3f} (n={t_[:, 1].sum():.0f})  |  {o_[:, 0].sum() / o_[:, 1].sum():.3f} (n={o_[:, 1].sum():.0f})")
@@ -215,7 +217,7 @@ for l in LAB:
         KT[k['si'], k['deck'], tt] += (not k['converted'], 1)
     A[l]['KT'] = KT
     A[l]['kboot'] = np.einsum('rs,sdtk->rdtk', W, KT)
-print(f"  {'':12} {'cp2':>34} {'cp1':>34}")
+print(f"  {'':12} {LN:>34} {LO:>34}")
 rows = []
 for name, fn in (('all', lambda a: a[..., 0].sum(axis=(-1, -2)) / a[..., 1].sum(axis=(-1, -2))),
                  ('top six', lambda a: grp(TOP, a)), ('bottom six', lambda a: grp(BOT, a)),
@@ -224,8 +226,8 @@ for name, fn in (('all', lambda a: a[..., 0].sum(axis=(-1, -2)) / a[..., 1].sum(
     for l in LAB:
         KTs, kb = A[l]['KT'].sum(0), A[l]['kboot']
         cells.append(f"{float(fn(KTs)):+.4f} {ci(fn(kb), '+.4f')}" if name == 'bottom-top' else f"{float(fn(KTs)):.4f} {ci(fn(kb), '.4f')}")
-    diff = fn(A['cp2']['kboot']) - fn(A['cp1']['kboot'])
-    print(f"  {name:12} {cells[0]:>34} {cells[1]:>34}   change {float(fn(A['cp2']['KT'].sum(0)) - fn(A['cp1']['KT'].sum(0))):+.4f} {ci(diff, '+.4f')}")
+    diff = fn(A[LN]['kboot']) - fn(A[LO]['kboot'])
+    print(f"  {name:12} {cells[0]:>34} {cells[1]:>34}   change {float(fn(A[LN]['KT'].sum(0)) - fn(A[LO]['KT'].sum(0))):+.4f} {ci(diff, '+.4f')}")
 for tt in range(3):
     cells = []
     for l in LAB:
@@ -250,9 +252,9 @@ for l in LAB:
     TGs = A[l]['TG'].sum(0)
     print(f"  {l:6} pooled {TGs[:, 0].sum():.0f}/{TGs[:, 1].sum():.0f} = {TGs[:, 0].sum() / TGs[:, 1].sum():.2%}  "
           f"{ci(pooled(A[l]['tgb']) * 100, '.2f')} %")
-d = pooled(A['cp2']['tgb']) - pooled(A['cp1']['tgb'])
-tt_, to_ = A['cp2']['TG'].sum(0), A['cp1']['TG'].sum(0)
+d = pooled(A[LN]['tgb']) - pooled(A[LO]['tgb'])
+tt_, to_ = A[LN]['TG'].sum(0), A[LO]['TG'].sum(0)
 print(f"  change (paired by seed) {(tt_[:, 0].sum() - to_[:, 0].sum()) / 2048:+.2%}  {ci(d * 100, '+.2f')} points")
-print(f"  {'deck':20} {'cp2':>6} {'cp1':>6}   (of 128 auditee-games each)")
+print(f"  {'deck':20} {LN:>6} {LO:>6}   (of 128 auditee-games each)")
 for dk in np.argsort(-(tt_[:, 0])):
     print(f"  {short(DECKS[dk]):20} {tt_[dk, 0]:6.0f} {to_[dk, 0]:6.0f}")
