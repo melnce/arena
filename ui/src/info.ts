@@ -88,5 +88,5 @@ export function badgeCost(info: HandCardInfo | undefined, fallback: number): num
 }
 
 export function conditionGateMet(gates: GateInfo[] | undefined): boolean {
-  return !!gates?.some((g) => g.met && !isFormGate(g.kind) && g.kind !== "spellboost");
+  return !!gates?.some((g) => g.met && g.glow);
 }
