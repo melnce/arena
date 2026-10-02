@@ -203,7 +203,9 @@ test("artifact counters in tooltips track engine enter_counts", async ({ page })
   const myuu = page.locator(`#blueHand .card[data-card='${MYUU}']`).first();
   if (await myuu.count()) {
     await myuu.hover();
-    await expect(page.locator("#cardTooltip")).toContainText(`Artifacts ${k}/3`);
+    await expect(page.locator("#cardTooltip")).toContainText(
+      `Artifacts after super-evolving: ${k}/3`,
+    );
     await expect(myuu).toHaveClass(/playable-glow/);
     await expect(myuu).not.toHaveClass(/enhance-ready/);
     await artShot(myuu, `${ART}/artifact_myuu_no_yellow.png`);

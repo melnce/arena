@@ -57,6 +57,9 @@ export function formatGateLine(gate: GateInfo): string {
     case "necromancy":
       return `Necromancy ${gate.have}/${gate.need}`;
     case "artifacts":
+      if (gate.label === "artifacts after super-evolving") {
+        return `Artifacts after super-evolving: ${gate.have}/${gate.need}`;
+      }
       if (gate.need > 0) return `Artifacts ${gate.have}/${gate.need}`;
       return `Artifacts ${gate.have}`;
     case "combo":
