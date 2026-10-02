@@ -418,4 +418,3 @@ pub fn play_keeping_hand(db: &CardDb, st: &mut State, who: PlayerId, id: &str, p
     play_id(db, st, who, id);
     drain_choice(db, st);
 }
-
