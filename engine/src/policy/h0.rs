@@ -269,14 +269,17 @@ pub struct SearchStats {
     pub own_solver_nodes: u64,
     /// Most `apply`s in a single own-turn solver call.
     pub own_solver_nodes_max: u64,
-    /// Root [`forced_lethal`] calls after a deterministic miss (`tkill>0`,
-    /// `tkroll>0`).
+    /// Root [`forced_lethal_accepting`] calls after a deterministic miss
+    /// (`tkill>0`, `tkroll>0`).
     pub own_roll_calls: u64,
-    /// Roll solver calls that found a kill on the first world.
+    /// Roll solver calls that returned a line accepted on every root under
+    /// rerolled dice.
     pub own_roll_found: u64,
     /// Roll kill confirmed on every root under rerolled dice and played.
     pub own_roll_taken: u64,
-    /// A reroll did not kill, or `line[0]` was not a legal candidate.
+    /// Decisions where the roll check took nothing — no accepted line
+    /// ([`LethalVerdict::None`] / [`LethalVerdict::Unknown`]), or the accepted
+    /// line's `line[0]` was not a legal candidate.
     pub own_roll_rejected: u64,
     /// Candidate kill lines rejected by the reroll acceptance check during search.
     pub own_roll_lines_rejected: u64,
