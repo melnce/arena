@@ -429,11 +429,11 @@ fn bot_turn6(db: &CardDb, seed: u64) -> arena_engine::State {
 fn lieutenant_board(db: &CardDb, seed: u64, second_killer: bool) -> arena_engine::State {
     let mut st = bot_turn6(db, seed);
     put_field(db, &mut st, PlayerId::A, "88001110");
-    set_follower_evolved(&mut st, PlayerId::A, 0, 1, 1);
+    set_follower_evolved(&mut st, PlayerId::A, 0, 3, 3);
     set_no_face(&mut st, PlayerId::A, 0);
     if second_killer {
         put_field(db, &mut st, PlayerId::A, "88001110");
-        set_follower_evolved(&mut st, PlayerId::A, 1, 2, 2);
+        set_follower_evolved(&mut st, PlayerId::A, 1, 3, 2);
         set_no_face(&mut st, PlayerId::A, 1);
     }
     put_field(db, &mut st, PlayerId::B, LT);
@@ -517,30 +517,43 @@ fn netherworld_lieutenant_keeps_end_turn() {
 fn netherworld_lieutenant_second_killer_report() {
     let db = load_db();
     let st = lieutenant_board(&db, 77, true);
+    let legal = legal_actions(&db, &st);
     let mut holdback_trades = 0u32;
     let mut checks = 0u32;
+    let mut reported = 0u32;
     for j in 0..8 {
         let seed = 2_000 + j as u64;
         let mut h0 = parse_h0(HBCHECK_SPEC);
         h0.arm_explain();
-        let legal = legal_actions(&db, &st);
         let mut rng = policy_rng(seed);
         let pick = h0.choose(&db, &st, &legal, &mut rng);
-        if h0.stats.hb_checks > 0 {
-            checks += 1;
-            let rec = h0.take_explain().expect("explain");
-            if rec.path == ChoosePath::HoldbackTrade {
-                holdback_trades += 1;
-            }
-            if let Some(hb) = rec.holdback {
-                eprintln!(
-                    "lieutenant (b) seed={seed} path={:?} end_prime={} pick={pick}",
-                    rec.path, hb.end_prime
-                );
-            }
+        if h0.stats.hb_checks == 0 {
+            eprintln!("lieutenant (b) seed={seed}: search did not EndTurn (hb_checks=0)");
+            continue;
         }
+        checks += 1;
+        let rec = h0.take_explain().expect("explain");
+        let hb = rec.holdback.as_ref().expect("holdback");
+        let best_atk = hb
+            .attacks
+            .iter()
+            .map(|a| a.aggregate)
+            .fold(f32::NEG_INFINITY, f32::max);
+        if rec.path == ChoosePath::HoldbackTrade {
+            holdback_trades += 1;
+        }
+        eprintln!(
+            "lieutenant (b) seed={seed} path={:?} end_prime={} best_atk={} pick={pick}",
+            rec.path,
+            hb.end_prime,
+            best_atk
+        );
+        reported += 1;
     }
-    eprintln!("lieutenant (b): hb_checks={checks} holdback_trade={holdback_trades}/8");
+    eprintln!(
+        "lieutenant (b): hb_checks={checks} holdback_trade={holdback_trades} reported={}/8",
+        reported
+    );
 }
 
 fn assert_protect_x_branch(rec: &arena_engine::policy::ExplainRecord, seed: u64) {
