@@ -161,6 +161,39 @@ pub fn confirm_det_lethal_line(db: &CardDb, state: &State, me: PlayerId, line: &
     s.winner == Some(me)
 }
 
+/// Seed for one rerolled dice replay during roll-confirmed lethal checks.
+/// Derived only from `(pos_key, reroll_index)` — not from the policy rng.
+pub fn roll_confirm_seed(pos_key: u64, reroll: u32) -> u64 {
+    pos_key
+        .wrapping_mul(0x9E37_79B9_7F4A_7C15)
+        .wrapping_add(u64::from(reroll))
+}
+
+/// Replay `line` on `state` under each `seeds` entry (reseed before the
+/// line). Every action must apply and the last position must leave
+/// `winner == Some(me)`.
+pub fn confirm_lethal_line_rerolled(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    line: &[Action],
+    seeds: &[u64],
+) -> bool {
+    for &seed in seeds {
+        let mut s = state.clone();
+        s.reseed(seed);
+        for a in line {
+            if apply(db, &mut s, a.clone()).is_err() {
+                return false;
+            }
+        }
+        if s.winner != Some(me) {
+            return false;
+        }
+    }
+    true
+}
+
 /// Kind the solver will expand, or `None` for [`Action::EndTurn`] /
 /// mulligan.
 pub fn lethal_action_kind(a: &Action) -> Option<LethalActionKind> {

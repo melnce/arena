@@ -39,8 +39,8 @@ pub use info::{
     ModeChoiceInfo, PlayerInfo,
 };
 pub use lethal::{
-    confirm_det_lethal_line, forced_lethal, forced_lethal_det, lethal_action_kind,
-    LethalActionKind, LethalVerdict,
+    confirm_det_lethal_line, confirm_lethal_line_rerolled, forced_lethal, forced_lethal_det,
+    lethal_action_kind, roll_confirm_seed, LethalActionKind, LethalVerdict,
 };
 pub use limits::{MAX_ACTIONS, MAX_TURNS};
 pub use play::{play_game, End, MulliganRecord, Outcome};
