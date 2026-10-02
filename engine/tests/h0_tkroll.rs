@@ -688,7 +688,10 @@ fn tkroll_positive_fixtures_take_sure_kill() {
     eprintln!(
         "positive summary: converted={converted}/{positive_total} eligible={eligible} det_skipped={det_skipped} replay_stale={replay_stale}"
     );
-    assert_eq!(replay_stale, 2, "expected two stale positive fixtures (fb-play-122, fb-play-28)");
+    assert_eq!(
+        replay_stale, 2,
+        "expected two stale positive fixtures (fb-play-122, fb-play-28)"
+    );
     assert!(
         converted >= 4,
         "need all {positive_total} replayable positive fixtures (converted={converted}, eligible={eligible}, det_skipped={det_skipped}); run tkroll_fixture_root_diagnostics --include-ignored"
@@ -711,9 +714,7 @@ fn tkroll_gambles_not_taken_blindly() {
             continue;
         }
         if fixture_uses_balance_patch_cards(&cap) {
-            eprintln!(
-                "skip gamble {path:?}: replay stale after 2026-09-29 balance patch"
-            );
+            eprintln!("skip gamble {path:?}: replay stale after 2026-09-29 balance patch");
             continue;
         }
         let ply = cap["ply"].as_u64().expect("ply") as usize;

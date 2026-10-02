@@ -421,13 +421,7 @@ pub fn play_keeping_hand(db: &CardDb, st: &mut State, who: PlayerId, id: &str, p
 /// Cards changed on the 2026-09-29 balance patch. Fixture replays that include
 /// them were recorded against pre-patch printed text (owner ruling 2026-09-03).
 pub const BALANCE_PATCH_20260929: &[&str] = &[
-    "10423110",
-    "10633310",
-    "10921110",
-    "10922110",
-    "10972310",
-    "10973310",
-    "10974110",
+    "10423110", "10633310", "10921110", "10922110", "10972310", "10973310", "10974110",
 ];
 
 pub fn fixture_uses_balance_patch_cards(cap: &serde_json::Value) -> bool {
