@@ -35,19 +35,6 @@ fn set_artifact_ids(st: &mut arena_engine::State, who: PlayerId, ids: &[&str]) {
     }
 }
 
-fn myuu_super_evolve_gate(gates: &[arena_engine::GateInfo]) -> arena_engine::GateInfo {
-    let n = gates
-        .iter()
-        .filter(|g| g.kind == "artifacts" && g.label == "artifacts after super-evolving")
-        .count();
-    assert_eq!(n, 1, "expected one super-evolve artifacts gate: {gates:?}");
-    gates
-        .iter()
-        .find(|g| g.kind == "artifacts" && g.label == "artifacts after super-evolving")
-        .cloned()
-        .unwrap()
-}
-
 fn other_copies_gate(gates: &[arena_engine::GateInfo]) -> arena_engine::GateInfo {
     gates
         .iter()
@@ -364,8 +351,9 @@ fn artifact_count_is_card_owners_not_viewer() {
     put_field(&db, &mut st, opp, "10774120");
     let info = board_info(&db, &st, opp);
     let myuu = info.iter().find(|c| c.id == "10774120").expect("myuu");
-    let gate = myuu_super_evolve_gate(&myuu.gates.clone());
+    let gate = artifacts_gate(&myuu.gates.clone());
     assert_eq!(gate.have, 3);
+    assert_eq!(gate.label, "artifacts");
 }
 
 #[test]
@@ -377,15 +365,16 @@ fn myuu_hand_shows_artifacts_without_glow() {
     give_pp(&mut st, me, 4, 10);
     st.player_mut(me).hand.clear();
     let _ = put_hand(&db, &mut st, me, "10774120");
-    let gate = myuu_super_evolve_gate(&first_hand_gates(&db, &st, me));
+    let gate = artifacts_gate(&first_hand_gates(&db, &st, me));
     assert_eq!(gate.have, 3);
     assert_eq!(gate.need, 3);
+    assert_eq!(gate.label, "artifacts");
     assert!(gate.met);
     assert!(!gate.glow);
 }
 
 #[test]
-fn myuu_super_evolve_preview_counts_evolve_summon() {
+fn myuu_line_shows_current_count_without_ancient() {
     let db = load_db();
     let mut st = started(&db, 74);
     let me = PlayerId::A;
@@ -393,14 +382,14 @@ fn myuu_super_evolve_preview_counts_evolve_summon() {
     give_pp(&mut st, me, 4, 10);
     st.player_mut(me).hand.clear();
     let _ = put_hand(&db, &mut st, me, "10774120");
-    let gate = myuu_super_evolve_gate(&first_hand_gates(&db, &st, me));
-    assert_eq!(gate.have, 3);
+    let gate = artifacts_gate(&first_hand_gates(&db, &st, me));
+    assert_eq!(gate.have, 2, "line shows current count, not evolve summon");
     assert_eq!(gate.need, 3);
-    assert!(gate.met);
+    assert!(!gate.met);
 }
 
 #[test]
-fn myuu_super_evolve_preview_ancient_already_entered() {
+fn myuu_line_shows_current_count_with_ancient_already_entered() {
     let db = load_db();
     let mut st = started(&db, 75);
     let me = PlayerId::A;
@@ -408,21 +397,24 @@ fn myuu_super_evolve_preview_ancient_already_entered() {
     give_pp(&mut st, me, 4, 10);
     st.player_mut(me).hand.clear();
     let _ = put_hand(&db, &mut st, me, "10774120");
-    let gate = myuu_super_evolve_gate(&first_hand_gates(&db, &st, me));
+    let gate = artifacts_gate(&first_hand_gates(&db, &st, me));
     assert_eq!(gate.have, 2);
     assert_eq!(gate.need, 3);
     assert!(!gate.met);
 }
 
 #[test]
-fn myuu_super_evolve_grants_storm_when_preview_met() {
+fn myuu_super_evolve_grants_storm_when_ancient_not_yet_entered() {
     let db = load_db();
     let mut st = started(&db, 76);
     let me = PlayerId::A;
     set_artifact_ids(&mut st, me, &["90071130", "90071150"]);
+    let slot = put_field(&db, &mut st, me, "10774120");
+    let gate = artifacts_gate(&board_info(&db, &st, me)[0].gates.clone());
+    assert_eq!(gate.have, 2);
+    assert!(!gate.met);
     st.player_mut(me).turns_taken = 7;
     st.player_mut(me).sep = 1;
-    let slot = put_field(&db, &mut st, me, "10774120");
     apply(
         &db,
         &mut st,
@@ -466,9 +458,34 @@ fn myuu_on_field_unevolved_shows_artifacts() {
     set_distinct_artifacts(&mut st, me, 3);
     put_field(&db, &mut st, me, "10774120");
     let info = board_info(&db, &st, me);
-    let gate = myuu_super_evolve_gate(&info[0].gates.clone());
+    let gate = artifacts_gate(&info[0].gates.clone());
     assert_eq!(gate.have, 3);
-    assert_eq!(gate.label, "artifacts after super-evolving");
+    assert_eq!(gate.label, "artifacts");
+}
+
+#[test]
+fn myuu_super_evolve_grants_storm_at_three_distinct() {
+    let db = load_db();
+    let mut st = started(&db, 78);
+    let me = PlayerId::A;
+    set_distinct_artifacts(&mut st, me, 3);
+    let slot = put_field(&db, &mut st, me, "10774120");
+    let gate = artifacts_gate(&board_info(&db, &st, me)[0].gates.clone());
+    assert_eq!(gate.have, 3);
+    assert!(gate.met);
+    st.player_mut(me).turns_taken = 7;
+    st.player_mut(me).sep = 1;
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: arena_engine::Slot(slot),
+            super_evolve: true,
+        },
+    )
+    .expect("super-evolve");
+    let myuu = st.field_inst(me, slot).expect("myuu");
+    assert_eq!(myuu.traits.storm, Some(true));
 }
 
 #[test]
