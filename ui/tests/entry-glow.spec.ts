@@ -487,7 +487,7 @@ test("0-attack follower is green and a leader drop applies", async ({ page }) =>
 
 const TREANT = "10011130";
 
-test("Gentle Treant is yellow at Combo 2 in hand; tooltip shows Combo 2", async ({ page }) => {
+test("Gentle Treant is yellow at Combo 2 in hand; tooltip shows Combo after playing: 3/3", async ({ page }) => {
   test.setTimeout(90_000);
   await boot(page);
   const id = await importDeck(page, "treant-combo.json", { [TREANT]: 16, [RUSH]: 16, [FIGHTER]: 8 });
@@ -530,12 +530,12 @@ test("Gentle Treant is yellow at Combo 2 in hand; tooltip shows Combo 2", async 
   expect(outline.color).toBe("rgb(255, 212, 0)");
   expect(outline.width).toBe("4px");
   await treant.hover();
-  await expect(page.locator("#cardTooltip")).toContainText("Combo 2");
-  await expect(page.locator("#cardTooltip")).not.toContainText("Combo 2/3");
+  await expect(page.locator("#cardTooltip")).toContainText("Combo after playing: 3/3");
+  await expect(page.locator("#cardTooltip")).not.toContainText("Combo 3");
   await artShot(treant, `${ART}/combo_treant_hand_yellow.png`);
 });
 
-test("Gentle Treant is not yellow from Combo at 1 played; tooltip shows Combo 1", async ({
+test("Gentle Treant is not yellow from Combo at 1 played; tooltip shows Combo after playing: 2/3", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -577,6 +577,6 @@ test("Gentle Treant is not yellow from Combo at 1 played; tooltip shows Combo 1"
   await expect(treant).toBeVisible();
   await expect(treant).not.toHaveClass(/enhance-ready/);
   await treant.hover();
-  await expect(page.locator("#cardTooltip")).toContainText("Combo 1");
-  await expect(page.locator("#cardTooltip")).not.toContainText("Combo 1/3");
+  await expect(page.locator("#cardTooltip")).toContainText("Combo after playing: 2/3");
+  await expect(page.locator("#cardTooltip")).not.toContainText("Combo 2");
 });
