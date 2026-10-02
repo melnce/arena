@@ -1,0 +1,18 @@
+results/sweep31:c01: candidate h0:nodes=32000,horizon=3,k=8 vs h0:nodes=16000,horizon=3
+  main     0.5264 (1078/2048) [0.5047, 0.5479]  Elo +18.3 [+3.3, +33.4]
+  reverse  0.5176 (530/1024) [0.4870, 0.5481]  Elo +12.2 [-9.1, +33.5]
+  pooled   0.5234 (1608/3072) [0.5058, 0.5411]  Elo +16.3 [+4.0, +28.6]
+results/sweep31b:c01: candidate h0:nodes=32000,horizon=3,k=8,net=engine/models/h0-linear-v2.json vs h0:nodes=16000,horizon=3,net=engine/models/h0-linear-v2.json
+  main     0.5293 (1084/2048) [0.5076, 0.5508]  Elo +20.4 [+5.3, +35.4]
+  reverse  0.5273 (540/1024) [0.4967, 0.5578]  Elo +19.0 [-2.3, +40.3]
+  pooled   0.5286 (1624/3072) [0.5110, 0.5463]  Elo +19.9 [+7.6, +32.2]
+
+COMBINED (results/sweep31:c01 + results/sweep31b:c01) with net=engine/models/h0-linear-v2.json stripped:
+  main     0.5278 (2162/4096) [0.5125, 0.5431]  Elo +19.4 [+8.7, +30.0]
+  reverse  0.5225 (1070/2048) [0.5008, 0.5440]  Elo +15.6 [+0.6, +30.7]
+  pooled   0.5260 (3232/6144) [0.5135, 0.5385]  Elo +18.1 [+9.4, +26.8]
+  better (combined main low > 0.50 and reverse low > 0.50): True
+
+sweep31 ran on a69b248 with v2 as the default leaf; sweep31b on d5f4310 (v3 default) with both specs pinning
+net=engine/models/h0-linear-v2.json, so both halves play the v2 leaf. Tool: tools/combine_finals.py (adds --strip to
+sweep25b/tools/combine_finals.py; run from the repo root).
