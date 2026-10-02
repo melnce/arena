@@ -36,7 +36,10 @@ use crate::state::FIELD_SIZE;
 use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
 
-use super::explain::{CandidateRecord, ChoosePath, ExplainRecord, Line, PvEnd, PvTracker};
+use super::explain::{
+    CandidateRecord, ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord,
+    HoldbackRecord, Line, PvEnd, PvTracker,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum HorizonCutoff {
@@ -325,6 +328,20 @@ pub struct SearchStats {
     pub open_hidden: u64,
     /// Under `info=open`, revealed fuse hosts held fixed in the opponent hand.
     pub open_hosts: u64,
+    /// Decisions where the held-back check ran (`hbcheck>0`, search chose
+    /// `EndTurn` with a kill attack available).
+    pub hb_checks: u64,
+    /// Determinizations with a sure opponent removal line for a held-back
+    /// attacker.
+    pub hb_worlds_removable: u64,
+    /// Kill attacks played instead of `EndTurn` after the held-back check.
+    pub hb_overrides: u64,
+    /// `apply`s spent inside held-back removal searches (outside `node_cap`).
+    pub hb_nodes: u64,
+    /// Most `apply`s in a single held-back removal search (one world).
+    pub hb_nodes_max: u64,
+    /// Worlds where the held-back budget ran out before any sure removal line.
+    pub hb_unknown: u64,
 }
 
 impl SearchStats {
@@ -385,6 +402,12 @@ impl SearchStats {
         self.mull_fallback += other.mull_fallback;
         self.open_hidden += other.open_hidden;
         self.open_hosts += other.open_hosts;
+        self.hb_checks += other.hb_checks;
+        self.hb_worlds_removable += other.hb_worlds_removable;
+        self.hb_overrides += other.hb_overrides;
+        self.hb_nodes += other.hb_nodes;
+        self.hb_nodes_max = self.hb_nodes_max.max(other.hb_nodes_max);
+        self.hb_unknown += other.hb_unknown;
     }
 }
 
@@ -456,6 +479,10 @@ pub struct H0 {
     /// determinization and confirm the line under rerolled dice on every
     /// root. Only when `tkill>0`; `0` = off (today).
     pub tkroll: u32,
+    /// After search chooses `EndTurn` with a kill attack available, re-score
+    /// `EndTurn` per root with a bounded opponent removal search. Apply budget
+    /// per root; all applies are outside `node_cap`. `0` = off (today).
+    pub hbcheck: u32,
     /// Greedy-line steps before a forced `EndTurn`. Default `6` is the sweep-5
     /// flip; the hard stop is `osteps + 3` (today: 9).
     pub osteps: u32,
@@ -528,6 +555,7 @@ impl Default for H0 {
             olsolve: 0,
             tkill: 0,
             tkroll: 0,
+            hbcheck: 0,
             osteps: 6,
             fusemacro: true,
             net: Some(builtin_net()),
@@ -1059,9 +1087,11 @@ impl Policy for H0 {
                         break;
                     }
                 }
-                if nodes_after_lethal < self.node_cap {
-                    self.stats.pairs_skipped += total_pairs - attempted;
-                }
+                let pairs_skipped_add = if nodes_after_lethal < self.node_cap {
+                    total_pairs - attempted
+                } else {
+                    0
+                };
 
                 let mut best_i = 0usize;
                 let mut best_v = f32::NEG_INFINITY;
@@ -1096,21 +1126,56 @@ impl Policy for H0 {
                         }
                     }
                 }
-                self.last_value = Some(finite(best_v, self.wv));
-                if !any_scored {
-                    self.stats.unscored += 1;
-                }
+                let pick_last_value = finite(best_v, self.wv);
+                let unscored_inc = if !any_scored { 1 } else { 0 };
+                let (chosen, hb_override, pick_last_value) = if self.hbcheck > 0
+                    && any_scored
+                    && matches!(subset[best_i], Action::EndTurn)
+                {
+                    match try_holdback_trade(
+                        self.hbcheck,
+                        self.pess,
+                        self.horizon,
+                        self.hres,
+                        self.osteps,
+                        db,
+                        &roots,
+                        &subset,
+                        &cand,
+                        &n,
+                        best_i,
+                        me,
+                        eval,
+                        odepth,
+                        obeam,
+                        &mut explain_rec,
+                        &mut dec_stats,
+                    ) {
+                        Some((idx, lv)) => (idx, true, lv),
+                        None => (cand[best_i], false, pick_last_value),
+                    }
+                } else {
+                    (cand[best_i], false, pick_last_value)
+                };
+                self.stats.pairs_skipped += pairs_skipped_add;
+                self.stats.unscored += unscored_inc;
+                self.last_value = Some(pick_last_value);
                 if let Some(rec) = &mut explain_rec {
-                    rec.chosen_index = cand[best_i];
+                    rec.chosen_index = chosen;
                     if any_scored {
-                        rec.tie_set = tie_set_search(&n, &acc, &worst, self.pess, best_v, &cand);
+                        if hb_override {
+                            rec.tie_set = vec![chosen];
+                        } else {
+                            rec.tie_set =
+                                tie_set_search(&n, &acc, &worst, self.pess, best_v, &cand);
+                        }
                     } else {
                         rec.path = ChoosePath::Unscored;
                         rec.tie_set = cand.clone();
                     }
                     rec.candidates = explain_cands;
                 }
-                cand[best_i]
+                chosen
             }
         };
         self.stats.nodes += u64::from(nodes);
@@ -4095,6 +4160,609 @@ fn opp_lethal_sweep(
         }
     }
     found
+}
+
+const HB_MAX_DEPTH: u32 = 3;
+const HB_REROLLS: u32 = 4;
+const HB_REMOVAL_EPS: f32 = 1e-4;
+
+#[derive(Clone, Debug)]
+struct HoldbackBranch {
+    plain: f32,
+    removal: f32,
+    value: f32,
+    removable: bool,
+    line_len: u32,
+}
+
+#[derive(Clone)]
+struct RemovalCandidate {
+    line: Vec<Action>,
+    opp_value: f32,
+    kills_leader: bool,
+}
+
+fn is_kill_attack(db: &CardDb, state: &State, a: &Action) -> bool {
+    let Action::Attack {
+        target: AttackTarget::Slot(target),
+        ..
+    } = a
+    else {
+        return false;
+    };
+    let me = acting_player(state);
+    let opp = me.opponent();
+    let Some(target_inst) = state.field_inst(opp, target.0) else {
+        return false;
+    };
+    let target_id = target_inst.id;
+    let mut s = state.clone();
+    if apply(db, &mut s, a.clone()).is_err() {
+        return false;
+    }
+    s.find_field(opp, target_id).is_none()
+}
+
+fn attack_attacker_id(state: &State, me: PlayerId, a: &Action) -> Option<u32> {
+    let Action::Attack { attacker, .. } = a else {
+        return None;
+    };
+    state.field_inst(me, attacker.0).map(|f| f.id)
+}
+
+fn collect_attacker_ids(state: &State, me: PlayerId, attacks: &[&Action]) -> Vec<u32> {
+    let mut ids = Vec::new();
+    for a in attacks {
+        if let Some(id) = attack_attacker_id(state, me, a) {
+            if !ids.contains(&id) {
+                ids.push(id);
+            }
+        }
+    }
+    ids
+}
+
+fn filter_x_ids_on_field(state: &State, me: PlayerId, x_ids: &[u32]) -> Vec<u32> {
+    x_ids
+        .iter()
+        .copied()
+        .filter(|&id| state.find_field(me, id).is_some())
+        .collect()
+}
+
+fn hb_x_removed(state: &State, me: PlayerId, x_ids: &[u32]) -> bool {
+    x_ids.iter().any(|id| state.find_field(me, *id).is_none())
+}
+
+fn confirm_holdback_removal(
+    db: &CardDb,
+    turn_start: &State,
+    me: PlayerId,
+    x_ids: &[u32],
+    line: &[Action],
+    nodes: &mut u32,
+    budget: u32,
+) -> bool {
+    let pos_key = search_key(turn_start);
+    let seeds: Vec<u64> = (0..HB_REROLLS)
+        .map(|i| roll_confirm_seed(pos_key, i))
+        .collect();
+    for &seed in &seeds {
+        let mut s = turn_start.clone();
+        s.reseed(seed);
+        for a in line {
+            if *nodes >= budget {
+                return false;
+            }
+            *nodes += 1;
+            if apply(db, &mut s, a.clone()).is_err() {
+                return false;
+            }
+        }
+        if !hb_x_removed(&s, me, x_ids) {
+            return false;
+        }
+    }
+    true
+}
+
+fn try_apply_hb(
+    db: &CardDb,
+    state: &State,
+    a: &Action,
+    nodes: &mut u32,
+    budget: u32,
+    line: &[u64],
+) -> Option<State> {
+    if *nodes >= budget {
+        return None;
+    }
+    let mut s = state.clone();
+    *nodes += 1;
+    if apply(db, &mut s, a.clone()).is_err() {
+        return None;
+    }
+    let k = search_key(&s);
+    if line.contains(&k) {
+        return None;
+    }
+    Some(s)
+}
+
+fn removal_better(a: &RemovalCandidate, b: &RemovalCandidate) -> bool {
+    if a.kills_leader != b.kills_leader {
+        return a.kills_leader;
+    }
+    a.opp_value > b.opp_value
+}
+
+fn holdback_removal_search(
+    db: &CardDb,
+    turn_start: &State,
+    me: PlayerId,
+    x_ids: &[u32],
+    budget: u32,
+    eval: Evaluator<'_>,
+) -> (Option<RemovalCandidate>, u32, bool) {
+    let mut best: Option<RemovalCandidate> = None;
+    let mut nodes = 0u32;
+    let mut tt: HashMap<u64, u32> = HashMap::new();
+    for max_depth in 1..=HB_MAX_DEPTH {
+        if nodes >= budget {
+            break;
+        }
+        let mut path_keys: Vec<u64> = vec![search_key(turn_start)];
+        let mut line: Vec<Action> = Vec::new();
+        search_holdback_removal(
+            db,
+            turn_start,
+            turn_start,
+            me,
+            x_ids,
+            budget,
+            max_depth,
+            &mut nodes,
+            &mut tt,
+            &mut path_keys,
+            &mut line,
+            eval,
+            &mut best,
+        );
+    }
+    let unknown = nodes >= budget && best.is_none();
+    (best, nodes, unknown)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn search_holdback_removal(
+    db: &CardDb,
+    turn_start: &State,
+    state: &State,
+    me: PlayerId,
+    x_ids: &[u32],
+    budget: u32,
+    max_depth: u32,
+    nodes: &mut u32,
+    tt: &mut HashMap<u64, u32>,
+    path_keys: &mut Vec<u64>,
+    line: &mut Vec<Action>,
+    eval: Evaluator<'_>,
+    best: &mut Option<RemovalCandidate>,
+) {
+    let opp = me.opponent();
+    if hb_x_removed(state, me, x_ids) {
+        if confirm_holdback_removal(db, turn_start, me, x_ids, line, nodes, budget) {
+            let kills_leader = state.winner == Some(opp);
+            let opp_value = if kills_leader {
+                eval.wv
+            } else {
+                eval.value(state, opp)
+            };
+            let cand = RemovalCandidate {
+                line: line.clone(),
+                opp_value,
+                kills_leader,
+            };
+            match best {
+                None => *best = Some(cand),
+                Some(b) if removal_better(&cand, b) => *best = Some(cand),
+                _ => {}
+            }
+        }
+        return;
+    }
+    if line.len() as u32 >= max_depth {
+        return;
+    }
+    if *nodes >= budget {
+        return;
+    }
+    let remaining = max_depth - line.len() as u32;
+    let key = search_key(state);
+    if tt.get(&key).is_some_and(|&d| d >= remaining) {
+        return;
+    }
+    tt.insert(key, remaining);
+
+    if acting_player(state) != opp
+        || matches!(
+            state.phase,
+            Phase::Terminal | Phase::Mulligan { .. } | Phase::End
+        )
+    {
+        return;
+    }
+
+    let legal = legal_actions(db, state);
+    for a in legal {
+        if matches!(a, Action::EndTurn | Action::MulliganConfirm { .. }) {
+            continue;
+        }
+        let Some(next) = try_apply_hb(db, state, &a, nodes, budget, path_keys) else {
+            continue;
+        };
+        line.push(a.clone());
+        path_keys.push(search_key(&next));
+        search_holdback_removal(
+            db, turn_start, &next, me, x_ids, budget, max_depth, nodes, tt, path_keys, line, eval,
+            best,
+        );
+        line.pop();
+        path_keys.pop();
+        if *nodes >= budget {
+            break;
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn holdback_leaf_value(
+    db: &CardDb,
+    root: &State,
+    turn_start: &State,
+    me: PlayerId,
+    eval: Evaluator<'_>,
+    horizon: u32,
+    hres: u32,
+    odepth: u32,
+    obeam: usize,
+    dec_stats: &mut SearchStats,
+) -> f32 {
+    if turn_start.winner == Some(me.opponent()) {
+        return -eval.wv;
+    }
+    if turn_start.winner == Some(me) {
+        return eval.wv;
+    }
+    let root_key = search_key(root);
+    let mut nodes = 0u32;
+    let cap = u32::MAX;
+    let line = vec![root_key, search_key(turn_start)];
+    let mut hb_stats = SearchStats::default();
+    let v = if horizon >= 1 {
+        horizon_score_leaf(
+            db,
+            turn_start,
+            me,
+            &mut nodes,
+            cap,
+            hres,
+            horizon,
+            &line,
+            eval,
+            odepth,
+            obeam,
+            &mut hb_stats,
+            None,
+            HorizonCutoff::Depth,
+        )
+    } else {
+        opponent_reply(
+            db,
+            turn_start,
+            me,
+            &mut nodes,
+            cap,
+            &line,
+            eval,
+            odepth,
+            obeam,
+            &mut hb_stats,
+            None,
+            None,
+        )
+    };
+    dec_stats.horizon_nodes += hb_stats.horizon_nodes;
+    dec_stats.horizon_leaves += hb_stats.horizon_leaves;
+    finite(v, eval.wv)
+}
+
+fn holdback_branch(plain: f32, removal_plain: f32, line_len: u32) -> HoldbackBranch {
+    let removable = removal_plain + HB_REMOVAL_EPS < plain;
+    let removal = if removable { removal_plain } else { plain };
+    HoldbackBranch {
+        plain,
+        removal,
+        value: plain.min(removal),
+        removable,
+        line_len,
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn holdback_symmetric_v(
+    db: &CardDb,
+    root: &State,
+    turn_start: &State,
+    me: PlayerId,
+    x_ids: &[u32],
+    hbcheck: u32,
+    eval: Evaluator<'_>,
+    horizon: u32,
+    hres: u32,
+    odepth: u32,
+    obeam: usize,
+    dec_stats: &mut SearchStats,
+) -> HoldbackBranch {
+    let plain = holdback_leaf_value(
+        db, root, turn_start, me, eval, horizon, hres, odepth, obeam, dec_stats,
+    );
+    if x_ids.is_empty() {
+        return holdback_branch(plain, plain, 0);
+    }
+    let (removal, nodes, unknown) =
+        holdback_removal_search(db, turn_start, me, x_ids, hbcheck, eval);
+    dec_stats.hb_nodes += u64::from(nodes);
+    dec_stats.hb_nodes_max = dec_stats.hb_nodes_max.max(u64::from(nodes));
+    if unknown {
+        dec_stats.hb_unknown += 1;
+    }
+    let (removal_plain, line_len) = match removal {
+        Some(rem) => {
+            let mut after = turn_start.clone();
+            for a in &rem.line {
+                if apply(db, &mut after, a.clone()).is_err() {
+                    return holdback_branch(plain, plain, 0);
+                }
+            }
+            if after.winner == Some(me.opponent()) {
+                (-eval.wv, rem.line.len() as u32)
+            } else {
+                (
+                    holdback_leaf_value(
+                        db, root, &after, me, eval, horizon, hres, odepth, obeam, dec_stats,
+                    ),
+                    rem.line.len() as u32,
+                )
+            }
+        }
+        None => (plain, 0),
+    };
+    holdback_branch(plain, removal_plain, line_len)
+}
+
+fn holdback_apply_action(
+    db: &CardDb,
+    state: &State,
+    action: &Action,
+    me: PlayerId,
+    eval: Evaluator<'_>,
+) -> Option<State> {
+    let mut s = state.clone();
+    if apply(db, &mut s, action.clone()).is_err() {
+        return None;
+    }
+    let mut nodes = 0u32;
+    let cap = u32::MAX;
+    let mut line = vec![search_key(state), search_key(&s)];
+    if !greedy_resolve_choices(db, &mut s, me, &mut nodes, cap, &mut line, eval) {
+        return None;
+    }
+    Some(s)
+}
+
+fn holdback_bot_finish(
+    db: &CardDb,
+    state: &mut State,
+    me: PlayerId,
+    osteps: u32,
+    eval: Evaluator<'_>,
+) -> bool {
+    let mut nodes = 0u32;
+    let cap = u32::MAX;
+    let mut line = vec![search_key(state)];
+    let mut steps = 0u32;
+    while bot_turn_still_active(state, me) && steps < osteps {
+        if !greedy_resolve_choices(db, state, me, &mut nodes, cap, &mut line, eval) {
+            return false;
+        }
+        if !matches!(state.phase, Phase::Main | Phase::Combat) {
+            break;
+        }
+        let legal = legal_actions(db, state);
+        if legal.is_empty() {
+            break;
+        }
+        let i = greedy_index(db, state, &legal, me, &mut nodes, cap, &line, eval);
+        let a = legal[i].clone();
+        let ended = matches!(a, Action::EndTurn);
+        if apply(db, state, a).is_err() {
+            return false;
+        }
+        line.push(search_key(state));
+        if ended {
+            return true;
+        }
+        steps += 1;
+    }
+    if !bot_turn_still_active(state, me) {
+        return true;
+    }
+    if !matches!(state.phase, Phase::Main | Phase::Combat) {
+        return false;
+    }
+    apply(db, state, Action::EndTurn).is_ok()
+}
+
+fn holdback_after_attack_finish_end(
+    db: &CardDb,
+    root: &State,
+    me: PlayerId,
+    attack: &Action,
+    osteps: u32,
+    eval: Evaluator<'_>,
+) -> Option<State> {
+    let mut s = holdback_apply_action(db, root, attack, me, eval)?;
+    if !holdback_bot_finish(db, &mut s, me, osteps, eval) {
+        return None;
+    }
+    if acting_player(&s) == me {
+        return None;
+    }
+    Some(s)
+}
+
+fn holdback_world_record(r: u32, branch: &HoldbackBranch) -> HoldbackBranchWorldRecord {
+    HoldbackBranchWorldRecord {
+        r,
+        plain: branch.plain,
+        removal: branch.removal,
+        value: branch.value,
+        removable: branch.removable,
+        line_len: branch.line_len,
+    }
+}
+
+fn holdback_aggregate(branches: &[HoldbackBranch], pess: f32) -> Option<f32> {
+    if branches.is_empty() {
+        return None;
+    }
+    let n = branches.len() as u32;
+    let acc = branches.iter().map(|b| b.value).sum();
+    let worst = branches
+        .iter()
+        .map(|b| b.value)
+        .fold(f32::INFINITY, f32::min);
+    Some(root_agg(acc, n, worst, pess))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn try_holdback_trade(
+    hbcheck: u32,
+    pess: f32,
+    horizon: u32,
+    hres: u32,
+    osteps: u32,
+    db: &CardDb,
+    roots: &[State],
+    subset: &[Action],
+    cand: &[usize],
+    n: &[u32],
+    end_j: usize,
+    me: PlayerId,
+    eval: Evaluator<'_>,
+    odepth: u32,
+    obeam: usize,
+    explain_rec: &mut Option<ExplainRecord>,
+    dec_stats: &mut SearchStats,
+) -> Option<(usize, f32)> {
+    if !matches!(subset[end_j], Action::EndTurn) {
+        return None;
+    }
+
+    let mut kill_js: Vec<usize> = Vec::new();
+    for (j, a) in subset.iter().enumerate() {
+        if n[j] == 0 {
+            continue;
+        }
+        if is_kill_attack(db, &roots[0], a) {
+            kill_js.push(j);
+        }
+    }
+    if kill_js.is_empty() {
+        return None;
+    }
+    let kill_actions: Vec<&Action> = kill_js.iter().map(|j| &subset[*j]).collect();
+
+    dec_stats.hb_checks += 1;
+
+    let mut end_branches: Vec<HoldbackBranch> = Vec::new();
+    let mut attack_worlds: Vec<Vec<HoldbackBranch>> = vec![Vec::new(); kill_js.len()];
+
+    for root in roots.iter() {
+        let x_ids_end = collect_attacker_ids(root, me, &kill_actions);
+        let mut after_et = root.clone();
+        if apply(db, &mut after_et, Action::EndTurn).is_err() {
+            continue;
+        }
+        let end_branch = holdback_symmetric_v(
+            db, root, &after_et, me, &x_ids_end, hbcheck, eval, horizon, hres, odepth, obeam,
+            dec_stats,
+        );
+        if end_branch.removable {
+            dec_stats.hb_worlds_removable += 1;
+        }
+        end_branches.push(end_branch.clone());
+
+        for (ki, j) in kill_js.iter().enumerate() {
+            let attack = &subset[*j];
+            let branch = if let Some(after) =
+                holdback_after_attack_finish_end(db, root, me, attack, osteps, eval)
+            {
+                let x_ids_atk = filter_x_ids_on_field(&after, me, &x_ids_end);
+                holdback_symmetric_v(
+                    db, root, &after, me, &x_ids_atk, hbcheck, eval, horizon, hres, odepth, obeam,
+                    dec_stats,
+                )
+            } else {
+                end_branch.clone()
+            };
+            attack_worlds[ki].push(branch);
+        }
+    }
+
+    let end_prime = holdback_aggregate(&end_branches, pess)?;
+    let mut attack_records = Vec::new();
+    let mut best_kill: Option<(usize, f32)> = None;
+    for (ki, j) in kill_js.iter().enumerate() {
+        let worlds = &attack_worlds[ki];
+        let agg = holdback_aggregate(worlds, pess).unwrap_or(f32::NEG_INFINITY);
+        attack_records.push(HoldbackAttackRecord {
+            legal_index: cand[*j],
+            aggregate: agg,
+            worlds: worlds
+                .iter()
+                .enumerate()
+                .map(|(r, b)| holdback_world_record(r as u32, b))
+                .collect(),
+        });
+        if best_kill.as_ref().is_none_or(|(_, v)| agg > *v) {
+            best_kill = Some((cand[*j], agg));
+        }
+    }
+
+    if let Some(rec) = explain_rec {
+        rec.holdback = Some(HoldbackRecord {
+            end_prime,
+            end_worlds: end_branches
+                .iter()
+                .enumerate()
+                .map(|(r, b)| holdback_world_record(r as u32, b))
+                .collect(),
+            attacks: attack_records,
+        });
+    }
+
+    if let Some((idx, agg)) = best_kill {
+        if agg > end_prime {
+            dec_stats.hb_overrides += 1;
+            if let Some(rec) = explain_rec {
+                rec.path = ChoosePath::HoldbackTrade;
+            }
+            return Some((idx, agg));
+        }
+    }
+    None
 }
 
 /// Historical H0 leaf value (`value=v0`). Byte-for-byte the pre-v1 arithmetic.

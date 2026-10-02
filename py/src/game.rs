@@ -251,6 +251,7 @@ impl PyGame {
                         "candidates": explain_json.get("candidates"),
                         "chosen_index": explain_json.get("chosen_index"),
                         "tie_set": explain_json.get("tie_set"),
+                        "holdback": explain_json.get("holdback"),
                     }),
                 )
             }
