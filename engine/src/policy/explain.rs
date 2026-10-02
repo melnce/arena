@@ -21,6 +21,9 @@ pub enum ChoosePath {
     TakeKill,
     /// Root roll-confirmed kill from [`forced_lethal`] (`tkill>0`, `tkroll>0`).
     TakeKillRoll,
+    /// Kill attack played after the held-back check overrode `EndTurn`
+    /// (`hbcheck>0`).
+    HoldbackTrade,
     Search,
     /// Search entered but no `(root, candidate)` pair scored (e.g. the
     /// consensus-lethal check spent the entire node cap).
@@ -86,6 +89,33 @@ pub struct WorldRecord {
     pub leaf: Option<PvLeaf>,
 }
 
+/// One world's symmetric held-back branch (`plain`, `removal`, `v = min`).
+#[derive(Debug, Clone, Serialize)]
+pub struct HoldbackBranchWorldRecord {
+    pub r: u32,
+    pub plain: f32,
+    pub removal: f32,
+    pub value: f32,
+    pub removable: bool,
+    pub line_len: u32,
+}
+
+/// One kill attack's re-scored aggregate and per-world branches.
+#[derive(Debug, Clone, Serialize)]
+pub struct HoldbackAttackRecord {
+    pub legal_index: usize,
+    pub aggregate: f32,
+    pub worlds: Vec<HoldbackBranchWorldRecord>,
+}
+
+/// Held-back check summary when `hbcheck>0` ran on an `EndTurn` choice.
+#[derive(Debug, Clone, Serialize)]
+pub struct HoldbackRecord {
+    pub end_prime: f32,
+    pub end_worlds: Vec<HoldbackBranchWorldRecord>,
+    pub attacks: Vec<HoldbackAttackRecord>,
+}
+
 /// One root candidate's aggregated scores.
 #[derive(Debug, Clone, Serialize)]
 pub struct CandidateRecord {
@@ -111,6 +141,7 @@ pub struct ExplainRecord {
     pub candidates: Vec<CandidateRecord>,
     pub chosen_index: usize,
     pub tie_set: Vec<usize>,
+    pub holdback: Option<HoldbackRecord>,
 }
 
 impl ExplainRecord {
@@ -126,6 +157,7 @@ impl ExplainRecord {
             candidates: Vec::new(),
             chosen_index: 0,
             tie_set: Vec::new(),
+            holdback: None,
         }
     }
 }

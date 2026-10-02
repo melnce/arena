@@ -159,7 +159,7 @@ fn print_search_stats(seat: &str, spec: &str, s: &SearchStats) {
     }
     let d = s.decisions as f64;
     println!(
-        "search-stats {seat} {spec}: decisions={} nodes/decision={:.2} cap_hit_rate={:.4} candidates/decision={:.2} pairs_skipped/decision={:.2} skipped_worlds/decision={:.2} lethal_nodes/decision={:.2} unscored/decision={:.2} opp_leaves/decision={:.2} opp_cap_hit_rate={:.4} tt_hits/decision={:.2} tt_stores/decision={:.2} opp_lethal_checks/decision={:.2} opp_lethal_found/decision={:.2} opp_lethal_evo_found/decision={:.2} opp_lethal_ward_found/decision={:.2} opp_lethal_slot_found/decision={:.2} opp_lethal_through_found/decision={:.2} opp_lethal_nodes/decision={:.2} opp_lethal_applies_max={} opp_solver_calls/decision={:.2} opp_solver_found/decision={:.2} opp_solver_unknown/decision={:.2} opp_solver_nodes/decision={:.2} own_solver_calls/decision={:.2} own_solver_found/decision={:.2} own_solver_taken/decision={:.2} own_solver_rejected/decision={:.2} own_solver_unknown/decision={:.2} own_solver_nodes/decision={:.2} own_solver_nodes_max={} own_roll_calls/decision={:.2} own_roll_found/decision={:.2} own_roll_taken/decision={:.2} own_roll_rejected/decision={:.2} own_roll_lines_rejected/decision={:.2} own_roll_unknown/decision={:.2} own_roll_nodes/decision={:.2} own_roll_nodes_max={} chose_with_lethal_root/decision={:.2} cands_with_lethal_root/decision={:.2} fuse_overshoot/decision={:.2} horizon_leaves/decision={:.2} horizon_nodes/decision={:.2} horizon_fallback/decision={:.2} mull_table/decision={:.2} mull_fallback/decision={:.2} open_hidden/decision={:.2} open_hosts/decision={:.2}",
+        "search-stats {seat} {spec}: decisions={} nodes/decision={:.2} cap_hit_rate={:.4} candidates/decision={:.2} pairs_skipped/decision={:.2} skipped_worlds/decision={:.2} lethal_nodes/decision={:.2} unscored/decision={:.2} opp_leaves/decision={:.2} opp_cap_hit_rate={:.4} tt_hits/decision={:.2} tt_stores/decision={:.2} opp_lethal_checks/decision={:.2} opp_lethal_found/decision={:.2} opp_lethal_evo_found/decision={:.2} opp_lethal_ward_found/decision={:.2} opp_lethal_slot_found/decision={:.2} opp_lethal_through_found/decision={:.2} opp_lethal_nodes/decision={:.2} opp_lethal_applies_max={} opp_solver_calls/decision={:.2} opp_solver_found/decision={:.2} opp_solver_unknown/decision={:.2} opp_solver_nodes/decision={:.2} own_solver_calls/decision={:.2} own_solver_found/decision={:.2} own_solver_taken/decision={:.2} own_solver_rejected/decision={:.2} own_solver_unknown/decision={:.2} own_solver_nodes/decision={:.2} own_solver_nodes_max={} own_roll_calls/decision={:.2} own_roll_found/decision={:.2} own_roll_taken/decision={:.2} own_roll_rejected/decision={:.2} own_roll_lines_rejected/decision={:.2} own_roll_unknown/decision={:.2} own_roll_nodes/decision={:.2} own_roll_nodes_max={} hb_checks/decision={:.2} hb_worlds_removable/decision={:.2} hb_overrides/decision={:.2} hb_nodes/check={:.2} hb_nodes_max={} hb_unknown/decision={:.2} chose_with_lethal_root/decision={:.2} cands_with_lethal_root/decision={:.2} fuse_overshoot/decision={:.2} horizon_leaves/decision={:.2} horizon_nodes/decision={:.2} horizon_fallback/decision={:.2} mull_table/decision={:.2} mull_fallback/decision={:.2} open_hidden/decision={:.2} open_hosts/decision={:.2}",
         s.decisions,
         s.nodes as f64 / d,
         s.cap_hits as f64 / d,
@@ -199,6 +199,16 @@ fn print_search_stats(seat: &str, spec: &str, s: &SearchStats) {
         s.own_roll_unknown as f64 / d,
         s.own_roll_nodes as f64 / d,
         s.own_roll_nodes_max,
+        s.hb_checks as f64 / d,
+        s.hb_worlds_removable as f64 / d,
+        s.hb_overrides as f64 / d,
+        if s.hb_checks > 0 {
+            s.hb_nodes as f64 / s.hb_checks as f64
+        } else {
+            0.0
+        },
+        s.hb_nodes_max,
+        s.hb_unknown as f64 / d,
         s.chose_with_lethal_root as f64 / d,
         s.cands_with_lethal_root as f64 / d,
         s.fuse_overshoot as f64 / d,
