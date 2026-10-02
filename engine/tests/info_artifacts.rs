@@ -28,6 +28,34 @@ fn set_distinct_artifacts(st: &mut arena_engine::State, who: PlayerId, k: usize)
     }
 }
 
+fn set_artifact_ids(st: &mut arena_engine::State, who: PlayerId, ids: &[&str]) {
+    st.player_mut(who).enter_counts.clear();
+    for id in ids {
+        st.player_mut(who).enter_counts.insert(cid(id), 1);
+    }
+}
+
+fn myuu_super_evolve_gate(gates: &[arena_engine::GateInfo]) -> arena_engine::GateInfo {
+    let n = gates
+        .iter()
+        .filter(|g| g.kind == "artifacts" && g.label == "artifacts after super-evolving")
+        .count();
+    assert_eq!(n, 1, "expected one super-evolve artifacts gate: {gates:?}");
+    gates
+        .iter()
+        .find(|g| g.kind == "artifacts" && g.label == "artifacts after super-evolving")
+        .cloned()
+        .unwrap()
+}
+
+fn other_copies_gate(gates: &[arena_engine::GateInfo]) -> arena_engine::GateInfo {
+    gates
+        .iter()
+        .find(|g| g.label == "other copies entered")
+        .cloned()
+        .expect("other copies entered gate")
+}
+
 fn artifacts_gate(gates: &[arena_engine::GateInfo]) -> arena_engine::GateInfo {
     let n = gates.iter().filter(|g| g.kind == "artifacts").count();
     assert_eq!(
@@ -235,6 +263,25 @@ fn scarlet_damage_matches_artifact_count() {
 }
 
 #[test]
+fn beat_breaker_threshold_is_check_time_count() {
+    let db = load_db();
+    let mut st = started(&db, 85);
+    let me = PlayerId::A;
+    set_distinct_artifacts(&mut st, me, 2);
+    give_pp(&mut st, me, 7, 10);
+    st.player_mut(me).hand.clear();
+    let hand = put_hand(&db, &mut st, me, "10771120");
+    let gate = artifacts_gate(&first_hand_gates(&db, &st, me));
+    assert_eq!(gate.have, 2);
+    assert_eq!(gate.need, 3);
+    assert!(!gate.met);
+    let before = common::field_count(&st, me);
+    play(&db, &mut st, hand);
+    let summoned = common::field_count(&st, me) - before - 1;
+    assert_eq!(summoned, 1, "k=2 must summon one copy");
+}
+
+#[test]
 fn beat_breaker_summons_two_when_met() {
     let db = load_db();
     for (k, expect) in [(2usize, 1), (3, 2)] {
@@ -317,7 +364,7 @@ fn artifact_count_is_card_owners_not_viewer() {
     put_field(&db, &mut st, opp, "10774120");
     let info = board_info(&db, &st, opp);
     let myuu = info.iter().find(|c| c.id == "10774120").expect("myuu");
-    let gate = artifacts_gate(&myuu.gates.clone());
+    let gate = myuu_super_evolve_gate(&myuu.gates.clone());
     assert_eq!(gate.have, 3);
 }
 
@@ -330,9 +377,85 @@ fn myuu_hand_shows_artifacts_without_glow() {
     give_pp(&mut st, me, 4, 10);
     st.player_mut(me).hand.clear();
     let _ = put_hand(&db, &mut st, me, "10774120");
-    let gate = artifacts_gate(&first_hand_gates(&db, &st, me));
+    let gate = myuu_super_evolve_gate(&first_hand_gates(&db, &st, me));
     assert_eq!(gate.have, 3);
+    assert_eq!(gate.need, 3);
+    assert!(gate.met);
     assert!(!gate.glow);
+}
+
+#[test]
+fn myuu_super_evolve_preview_counts_evolve_summon() {
+    let db = load_db();
+    let mut st = started(&db, 74);
+    let me = PlayerId::A;
+    set_artifact_ids(&mut st, me, &["90071130", "90071150"]);
+    give_pp(&mut st, me, 4, 10);
+    st.player_mut(me).hand.clear();
+    let _ = put_hand(&db, &mut st, me, "10774120");
+    let gate = myuu_super_evolve_gate(&first_hand_gates(&db, &st, me));
+    assert_eq!(gate.have, 3);
+    assert_eq!(gate.need, 3);
+    assert!(gate.met);
+}
+
+#[test]
+fn myuu_super_evolve_preview_ancient_already_entered() {
+    let db = load_db();
+    let mut st = started(&db, 75);
+    let me = PlayerId::A;
+    set_artifact_ids(&mut st, me, &["90071130", "90071140"]);
+    give_pp(&mut st, me, 4, 10);
+    st.player_mut(me).hand.clear();
+    let _ = put_hand(&db, &mut st, me, "10774120");
+    let gate = myuu_super_evolve_gate(&first_hand_gates(&db, &st, me));
+    assert_eq!(gate.have, 2);
+    assert_eq!(gate.need, 3);
+    assert!(!gate.met);
+}
+
+#[test]
+fn myuu_super_evolve_grants_storm_when_preview_met() {
+    let db = load_db();
+    let mut st = started(&db, 76);
+    let me = PlayerId::A;
+    set_artifact_ids(&mut st, me, &["90071130", "90071150"]);
+    st.player_mut(me).turns_taken = 7;
+    st.player_mut(me).sep = 1;
+    let slot = put_field(&db, &mut st, me, "10774120");
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: arena_engine::Slot(slot),
+            super_evolve: true,
+        },
+    )
+    .expect("super-evolve");
+    let myuu = st.field_inst(me, slot).expect("myuu");
+    assert_eq!(myuu.traits.storm, Some(true));
+}
+
+#[test]
+fn myuu_super_evolve_no_storm_when_ancient_already_counted() {
+    let db = load_db();
+    let mut st = started(&db, 77);
+    let me = PlayerId::A;
+    set_artifact_ids(&mut st, me, &["90071130", "90071140"]);
+    st.player_mut(me).turns_taken = 7;
+    st.player_mut(me).sep = 1;
+    let slot = put_field(&db, &mut st, me, "10774120");
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: arena_engine::Slot(slot),
+            super_evolve: true,
+        },
+    )
+    .expect("super-evolve");
+    let myuu = st.field_inst(me, slot).expect("myuu");
+    assert_ne!(myuu.traits.storm, Some(true));
 }
 
 #[test]
@@ -343,8 +466,9 @@ fn myuu_on_field_unevolved_shows_artifacts() {
     set_distinct_artifacts(&mut st, me, 3);
     put_field(&db, &mut st, me, "10774120");
     let info = board_info(&db, &st, me);
-    let gate = artifacts_gate(&info[0].gates.clone());
+    let gate = myuu_super_evolve_gate(&info[0].gates.clone());
     assert_eq!(gate.have, 3);
+    assert_eq!(gate.label, "artifacts after super-evolving");
 }
 
 #[test]
@@ -475,23 +599,52 @@ fn combo_board_label_and_no_double_count() {
 }
 
 #[test]
-fn drache_aluzard_amount_at_least_evaluates_have_and_need() {
+fn drache_aluzard_other_copies_entered_in_hand() {
     let db = load_db();
-    let mut st = started(&db, 100);
     let me = PlayerId::A;
-    st.player_mut(me).enter_counts.insert(cid("10844110"), 3);
-    give_pp(&mut st, me, 4, 10);
+    for (previous, want_have, want_met) in
+        [(0, 0, false), (1, 1, false), (2, 2, true), (3, 3, true)]
+    {
+        let mut st = started(&db, 100 + previous as u64);
+        if previous > 0 {
+            st.player_mut(me)
+                .enter_counts
+                .insert(cid("10844110"), previous as i32);
+        }
+        give_pp(&mut st, me, 4, 10);
+        st.player_mut(me).hand.clear();
+        let _ = put_hand(&db, &mut st, me, "10844110");
+        let gate = other_copies_gate(&first_hand_gates(&db, &st, me));
+        assert_eq!(gate.have, want_have, "previous={previous}");
+        assert_eq!(gate.need, 2);
+        assert_eq!(gate.met, want_met, "previous={previous}");
+        assert_eq!(gate.glow, want_met);
+    }
+}
+
+#[test]
+fn drache_aluzard_play_matches_gate_and_evolve_threshold() {
+    let db = load_db();
+    let mut st = started(&db, 200);
+    let me = PlayerId::A;
+    st.player_mut(me).enter_counts.insert(cid("10844110"), 2);
+    give_pp(&mut st, me, 4, 4);
     st.player_mut(me).hand.clear();
-    let _ = put_hand(&db, &mut st, me, "10844110");
-    let info = hand_info(&db, &st, me);
-    let gate = info[0]
-        .gates
-        .iter()
-        .find(|g| g.kind == "amountAtLeast")
-        .expect("amountAtLeast");
+    let hand = put_hand(&db, &mut st, me, "10844110");
+    let gate = other_copies_gate(&first_hand_gates(&db, &st, me));
     assert_eq!(gate.have, 2);
-    assert_eq!(gate.need, 2);
     assert!(gate.met);
+    play(&db, &mut st, hand);
+    let d = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == "10844110")
+        .unwrap();
+    assert_eq!(d.attack, 8);
+    assert_eq!(d.defense, 8);
+    assert!(d.evolved);
 }
 
 #[test]
