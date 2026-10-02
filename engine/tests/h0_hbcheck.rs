@@ -783,7 +783,6 @@ fn count_kill_attacks(db: &CardDb, st: &arena_engine::State, legal: &[Action]) -
 
 #[test]
 #[ignore = "measurement helper for holdback1 166-moment replay (tools/hbcheck_cost_bench.py)"]
-#[cfg_attr(debug_assertions, ignore)]
 fn hbcheck_moment_replay_report() {
     let db = load_db();
     let moments = load_moments();
