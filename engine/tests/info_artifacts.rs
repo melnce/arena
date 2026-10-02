@@ -4,8 +4,7 @@ mod common;
 
 use arena_engine::{apply, board_info, hand_info, Action, Phase, PlayerId};
 use common::{
-    choose, cid, end_turn, give_pp, load_db, play, play_id, put_deck, put_field, put_hand,
-    started,
+    choose, cid, end_turn, give_pp, load_db, play, play_id, put_deck, put_field, put_hand, started,
 };
 
 const ARTIFACT_FOLLOWERS: [&str; 5] = ["90071130", "90071140", "90071150", "90071160", "90073110"];

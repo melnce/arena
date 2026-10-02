@@ -50,12 +50,8 @@ fn determinize_preserves_enter_counts_all_info_modes() {
     let me = PlayerId::A;
     let opp = PlayerId::B;
     let mut st = with_artifact_k(&base, 3);
-    st.player_mut(opp)
-        .enter_counts
-        .insert(cid("90071160"), 1);
-    st.player_mut(opp)
-        .enter_counts
-        .insert(cid("90073110"), 2);
+    st.player_mut(opp).enter_counts.insert(cid("90071160"), 1);
+    st.player_mut(opp).enter_counts.insert(cid("90073110"), 2);
     for info in [Info::Open, Info::Fair, Info::Draws, Info::All] {
         for seed in [1u64, 99, 4242] {
             let d = determinize_with(&st, me, seed, info);

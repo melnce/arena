@@ -454,10 +454,7 @@ fn collect_hand_gates(
             walk_ability(ctx_info, a, &mut extra);
             for g in extra {
                 if g.kind == "artifacts" {
-                    gates.push(GateInfo {
-                        glow: false,
-                        ..g
-                    });
+                    gates.push(GateInfo { glow: false, ..g });
                 }
             }
         }
