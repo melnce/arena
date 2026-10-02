@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
 
 import pytest
@@ -51,7 +52,7 @@ def _run_sweep(args: list[str], cwd: Path | None = None) -> subprocess.Completed
     )
 
 
-def _cleanup_results_worktree(repo: Path, wt: Path, existed: bool) -> None:
+def _cleanup_results_worktree(repo: Path, wt: Path, branch: str) -> None:
     subprocess.run(
         ["git", "-C", str(repo), "worktree", "remove", "--force", str(wt)],
         capture_output=True,
@@ -62,12 +63,11 @@ def _cleanup_results_worktree(repo: Path, wt: Path, existed: bool) -> None:
         capture_output=True,
         text=True,
     )
-    if not existed:
-        subprocess.run(
-            ["git", "-C", str(repo), "branch", "-D", "results"],
-            capture_output=True,
-            text=True,
-        )
+    subprocess.run(
+        ["git", "-C", str(repo), "branch", "-D", branch],
+        capture_output=True,
+        text=True,
+    )
 
 
 # The seven real decks from results/sweep8/. 7 × 7 = 49 pairs.
@@ -94,13 +94,7 @@ def smoke(tmp_path_factory: pytest.TempPathFactory):
     subprocess.run(["git", "init", "--bare", str(bare)], check=True, capture_output=True)
     root = tmp / "results"
     wt = tmp / "wt"
-    existed = (
-        subprocess.run(
-            ["git", "-C", str(_REPO), "show-ref", "--verify", "--quiet", "refs/heads/results"],
-            capture_output=True,
-        ).returncode
-        == 0
-    )
+    branch = f"pytest-results-{uuid.uuid4().hex[:8]}"
     before = _porcelain(_REPO)
     argv = [
         "--smoke",
@@ -118,6 +112,8 @@ def smoke(tmp_path_factory: pytest.TempPathFactory):
         str(bare),
         "--publish-dir",
         str(wt),
+        "--publish-branch",
+        branch,
     ]
     t0 = time.perf_counter()
     first = _run_sweep(argv)
@@ -134,12 +130,12 @@ def smoke(tmp_path_factory: pytest.TempPathFactory):
         "wall": wall,
         "before": before,
         "after": after,
-        "existed": existed,
+        "publish_branch": branch,
     }
     try:
         yield ctx
     finally:
-        _cleanup_results_worktree(_REPO, wt, existed)
+        _cleanup_results_worktree(_REPO, wt, branch)
 
 
 def test_smoke_end_to_end(smoke) -> None:
@@ -201,9 +197,10 @@ def test_smoke_end_to_end(smoke) -> None:
         capture_output=True,
         text=True,
     ).stdout
-    assert "results" in branches
+    branch = smoke["publish_branch"]
+    assert branch in branches
     remote_summary = subprocess.run(
-        ["git", "--git-dir", str(smoke["bare"]), "show", "results:s1/SUMMARY.md"],
+        ["git", "--git-dir", str(smoke["bare"]), "show", f"{branch}:s1/SUMMARY.md"],
         check=True,
         capture_output=True,
         text=True,
@@ -213,8 +210,9 @@ def test_smoke_end_to_end(smoke) -> None:
 
 def test_resumable(smoke) -> None:
     tag: Path = smoke["tag"]
+    branch = smoke["publish_branch"]
     tip = subprocess.run(
-        ["git", "--git-dir", str(smoke["bare"]), "rev-parse", "results"],
+        ["git", "--git-dir", str(smoke["bare"]), "rev-parse", branch],
         check=True,
         capture_output=True,
         text=True,
@@ -228,7 +226,7 @@ def test_resumable(smoke) -> None:
     for stage in ("screen", "final", "summary", "publish"):
         assert f"skip: {stage}" in out, (stage, out)
     tip2 = subprocess.run(
-        ["git", "--git-dir", str(smoke["bare"]), "rev-parse", "results"],
+        ["git", "--git-dir", str(smoke["bare"]), "rev-parse", branch],
         check=True,
         capture_output=True,
         text=True,
