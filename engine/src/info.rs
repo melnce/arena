@@ -1263,10 +1263,9 @@ fn collect_summon_follower_ids(db: &CardDb, effects: &[Effect], out: &mut Vec<Ca
                         .card(id)
                         .ok()
                         .is_some_and(|c| c.kind() == CardKind::Follower)
+                        && !out.contains(&id)
                     {
-                        if !out.contains(&id) {
-                            out.push(id);
-                        }
+                        out.push(id);
                     }
                 }
             }
