@@ -540,15 +540,14 @@ struct WalkCtx<'a> {
 }
 
 fn walk_ability(ctx: WalkCtx<'_>, ability: &Ability, gates: &mut Vec<GateInfo>) {
-    let mut super_eval = None;
-    let eval_state = if matches!(ability, Ability::SuperEvolve { .. }) {
+    let super_eval_state = if matches!(ability, Ability::SuperEvolve { .. }) {
         let mut s = ctx.eval_state.clone();
         apply_evolve_summon_preview(ctx.db, ctx.player, ctx.inst.card, &mut s);
-        super_eval = Some(s);
-        super_eval.as_ref().unwrap()
+        Some(s)
     } else {
-        ctx.eval_state
+        None
     };
+    let eval_state = super_eval_state.as_ref().unwrap_or(ctx.eval_state);
     let artifact_label = if matches!(ability, Ability::SuperEvolve { .. }) {
         Some("artifacts after super-evolving")
     } else {
