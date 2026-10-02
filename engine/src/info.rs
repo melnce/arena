@@ -18,7 +18,6 @@ use crate::state::{
     CardInstance, ChoiceNode, Phase, PlayForm, SourceRef, State, TargetOpt, WorkFrame,
 };
 use crate::support;
-use crate::CardId;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct GateInfo {
@@ -422,7 +421,6 @@ fn collect_hand_gates(
         },
         zone: Zone::Hand,
         artifact_glow: true,
-        artifact_label: None,
         field_fanfare: false,
     };
     for mode in card.modes() {
@@ -505,7 +503,6 @@ fn collect_board_gates(
         },
         zone: Zone::Field,
         artifact_glow: true,
-        artifact_label: None,
         field_fanfare: false,
     };
     for a in card.abilities() {
@@ -535,27 +532,11 @@ struct WalkCtx<'a> {
     source: SourceRef,
     zone: Zone,
     artifact_glow: bool,
-    artifact_label: Option<&'static str>,
     field_fanfare: bool,
 }
 
 fn walk_ability(ctx: WalkCtx<'_>, ability: &Ability, gates: &mut Vec<GateInfo>) {
-    let super_eval_state = if matches!(ability, Ability::SuperEvolve { .. }) {
-        let mut s = ctx.eval_state.clone();
-        apply_evolve_summon_preview(ctx.db, ctx.player, ctx.inst.card, &mut s);
-        Some(s)
-    } else {
-        None
-    };
-    let eval_state = super_eval_state.as_ref().unwrap_or(ctx.eval_state);
-    let artifact_label = if matches!(ability, Ability::SuperEvolve { .. }) {
-        Some("artifacts after super-evolving")
-    } else {
-        ctx.artifact_label
-    };
     let ctx = WalkCtx {
-        eval_state,
-        artifact_label,
         field_fanfare: ctx.zone == Zone::Field && matches!(ability, Ability::Fanfare { .. }),
         ..ctx
     };
@@ -704,7 +685,6 @@ fn walk_condition(ctx: WalkCtx<'_>, cond: &Condition, gates: &mut Vec<GateInfo>)
             ctx.source,
             ctx.artifact_glow,
             ctx.field_fanfare,
-            ctx.artifact_label,
             gates,
         ),
     }
@@ -720,7 +700,6 @@ fn push_evaluated(
     source: SourceRef,
     artifact_glow: bool,
     field_fanfare: bool,
-    artifact_label: Option<&str>,
     gates: &mut Vec<GateInfo>,
 ) {
     let met = eval_cond(db, eval_state, player, Some(source), cond);
@@ -844,8 +823,15 @@ fn push_evaluated(
             let need = eval_amount(db, eval_state, player, Some(source), &amount_at_least.n);
             let have = eval_amount(db, eval_state, player, Some(source), &amount_at_least.of);
             if is_artifact_distinct_enter_count(&amount_at_least.of) && !field_fanfare {
-                let label = artifact_label.unwrap_or("artifacts");
-                push_gate(gates, "artifacts", label, need, have, met, artifact_glow);
+                push_gate(
+                    gates,
+                    "artifacts",
+                    "artifacts",
+                    need,
+                    have,
+                    met,
+                    artifact_glow,
+                );
             } else if is_other_copies_entered(&amount_at_least.of) {
                 push_gate(
                     gates,
@@ -1214,8 +1200,7 @@ fn maybe_push_artifact_x_line(ctx: WalkCtx<'_>, amount: &Amount, gates: &mut Vec
         return;
     }
     let have = eval_amount(ctx.db, ctx.eval_state, ctx.player, Some(ctx.source), amount);
-    let label = ctx.artifact_label.unwrap_or("artifacts");
-    push_gate(gates, "artifacts", label, 0, have, false, false);
+    push_gate(gates, "artifacts", "artifacts", 0, have, false, false);
 }
 
 fn hand_self_entry_eval_state(
@@ -1233,69 +1218,6 @@ fn hand_self_entry_eval_state(
         .entry(inst.card)
         .or_insert(0) += 1;
     Some(s)
-}
-
-fn apply_evolve_summon_preview(db: &CardDb, player: PlayerId, card_id: CardId, state: &mut State) {
-    for id in evolve_summon_follower_ids(db, card_id) {
-        *state.player_mut(player).enter_counts.entry(id).or_insert(0) += 1;
-    }
-}
-
-fn evolve_summon_follower_ids(db: &CardDb, card_id: CardId) -> Vec<CardId> {
-    let Ok(card) = db.card(card_id) else {
-        return Vec::new();
-    };
-    let mut out = Vec::new();
-    for a in card.abilities() {
-        if matches!(a, Ability::Evolve { .. }) {
-            collect_summon_follower_ids(db, a.effects(), &mut out);
-        }
-    }
-    out
-}
-
-fn collect_summon_follower_ids(db: &CardDb, effects: &[Effect], out: &mut Vec<CardId>) {
-    for e in effects {
-        match e {
-            Effect::Summon { card, .. } => {
-                if let Some(id) = support::named_in_source(card) {
-                    if db
-                        .card(id)
-                        .ok()
-                        .is_some_and(|c| c.kind() == CardKind::Follower)
-                        && !out.contains(&id)
-                    {
-                        out.push(id);
-                    }
-                }
-            }
-            Effect::If {
-                then, else_effects, ..
-            } => {
-                collect_summon_follower_ids(db, then, out);
-                if let Some(els) = else_effects {
-                    collect_summon_follower_ids(db, els, out);
-                }
-            }
-            Effect::Seq { effects, .. } | Effect::Repeat { effects, .. } => {
-                collect_summon_follower_ids(db, effects, out);
-            }
-            Effect::Choose {
-                options: Some(opts),
-                ..
-            } => {
-                for o in opts {
-                    collect_summon_follower_ids(db, &o.effects, out);
-                }
-            }
-            Effect::Sequence { steps, .. } => {
-                for s in steps {
-                    collect_summon_follower_ids(db, &s.effects, out);
-                }
-            }
-            _ => {}
-        }
-    }
 }
 
 fn is_other_copies_entered(amount: &Amount) -> bool {
