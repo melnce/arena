@@ -12,7 +12,7 @@ use std::time::Instant;
 use arena_engine::policy::ChoosePath;
 use arena_engine::{
     apply, apply_neutral, legal_actions, new_game, policy_rng, Action, AnyPolicy, AttackTarget,
-    CardDb, First, GameConfig, Phase, PlayerId, Policy, H0,
+    CardDb, First, GameConfig, Phase, PlayerId, Policy, H0, MAX_ACTIONS, MAX_TURNS,
 };
 use serde_json::Value;
 
@@ -153,7 +153,12 @@ fn spec_hbcheck_round_trip() {
 #[test]
 fn hbcheck0_identity_smoke() {
     let db = load_db();
-    let st = protect_x_board(&db, 42);
+    let cap: Value = serde_json::from_str(
+        &fs::read_to_string(hbcheck_fixture_dir().join("owner-feline.json")).expect("read"),
+    )
+    .expect("json");
+    let ply = cap["ply"].as_u64().expect("ply") as usize;
+    let st = replay_capture(&db, &cap, ply);
     let legal = legal_actions(&db, &st);
     let seed = 99;
     let mut off = parse_h0(SERVED_SPEC);
@@ -188,9 +193,16 @@ fn owner_feline_holdback_overrides() {
         let mut rng = policy_rng(seed);
         let pick = hb.choose(&db, &st, &legal, &mut rng);
         let rec = hb.take_explain().expect("explain");
-        if rec.path == ChoosePath::HoldbackTrade && is_attack_0_to_1(&legal, pick) {
+        let via_hb = rec.path == ChoosePath::HoldbackTrade && is_attack_0_to_1(&legal, pick);
+        if via_hb {
             hb_hits += 1;
         }
+        eprintln!(
+            "owner-feline seed={} pick={} holdback_0to1={}",
+            seed,
+            pick,
+            via_hb
+        );
         let mut plain = parse_h0(SERVED_SPEC);
         let mut rng_p = policy_rng(seed);
         let plain_pick = plain.choose(&db, &st, &legal, &mut rng_p);
@@ -228,16 +240,9 @@ fn owner_feline_holdback_overrides() {
         "owner-feline: attack 0→1 holdback_trade {}/12, plain EndTurn {}/12",
         hb_hits, plain_end
     );
-    if hb_hits < 8 {
-        eprintln!(
-            "owner-feline: gate 8/12 not met ({}/12); reporting per-world values above",
-            hb_hits
-        );
-        return;
-    }
     assert!(
         hb_hits >= 8,
-        "expected >= 8/12 attack 0→1 holdback overrides"
+        "expected >= 8/12 attack 0→1 holdback overrides, got {hb_hits}/12"
     );
     assert!(plain_end >= 10, "expected >= 10/12 plain EndTurn");
 }
@@ -482,24 +487,6 @@ fn lieutenant_board(db: &CardDb, seed: u64, second_killer: bool) -> arena_engine
     st
 }
 
-/// Opponent's 4/4 can trade the 5/4 attacker after a 1/1 kill, not the healthy 5/5.
-fn protect_x_board(db: &CardDb, seed: u64) -> arena_engine::State {
-    let mut st = bot_turn6(db, seed);
-    put_field(db, &mut st, PlayerId::A, "88001110");
-    set_follower_evolved(&mut st, PlayerId::A, 0, 5, 5);
-    set_no_face(&mut st, PlayerId::A, 0);
-    put_field(db, &mut st, PlayerId::B, "88001110");
-    set_follower(&mut st, PlayerId::B, 0, 1, 1);
-    put_field(db, &mut st, PlayerId::B, "88001110");
-    set_follower(&mut st, PlayerId::B, 1, 4, 4);
-    put_field(db, &mut st, PlayerId::B, "88001110");
-    set_follower(&mut st, PlayerId::B, 2, 5, 5);
-    st.player_mut(PlayerId::A).leader_defense = 4;
-    give_pp(&mut st, PlayerId::A, 6, 10);
-    st.player_mut(PlayerId::B).leader_defense = 20;
-    st
-}
-
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn netherworld_lieutenant_keeps_end_turn() {
@@ -594,8 +581,27 @@ fn netherworld_lieutenant_second_killer_report() {
     );
 }
 
-fn assert_protect_x_branch(rec: &arena_engine::policy::ExplainRecord, seed: u64) {
-    assert_ne!(rec.path, ChoosePath::HoldbackTrade, "seed={seed}");
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn holding_back_protects_attacker() {
+    let db = load_db();
+    let cap: Value = serde_json::from_str(
+        &fs::read_to_string(hbcheck_fixture_dir().join("neg-play-100010-ply0036.json")).expect("read"),
+    )
+    .expect("json");
+    let ply = cap["ply"].as_u64().expect("ply") as usize;
+    let st = replay_capture(&db, &cap, ply);
+    let legal = legal_actions(&db, &st);
+    let seed = choose_seed(&cap, ply);
+    assert_eq!(seed, 100_046, "pinned protect-x seed");
+    let mut h0 = parse_h0(HBCHECK_SPEC);
+    h0.arm_explain();
+    let mut rng = policy_rng(seed);
+    let pick = h0.choose(&db, &st, &legal, &mut rng);
+    assert_eq!(h0.stats.hb_checks, 1, "holdback check must run");
+    let rec = h0.take_explain().expect("explain");
+    assert!(matches!(legal[pick], Action::EndTurn), "must keep End Turn");
+    assert_ne!(rec.path, ChoosePath::HoldbackTrade);
     let hb = rec.holdback.as_ref().expect("holdback");
     let best_atk = hb
         .attacks
@@ -610,100 +616,15 @@ fn assert_protect_x_branch(rec: &arena_engine::policy::ExplainRecord, seed: u64)
         .filter(|w| w.removable)
         .count();
     eprintln!(
-        "protect-x seed={seed} end_prime={} best_atk={} end_removable={} attack_removable={}",
-        hb.end_prime, best_atk, end_removable, attack_removable
+        "protect-x neg-play-100010@36 seed={seed} end_prime={} best_atk={} end_removable={} attack_removable={}",
+        hb.end_prime,
+        best_atk,
+        end_removable,
+        attack_removable
     );
-    assert!(attack_removable > end_removable, "seed={seed}");
-    assert!(hb.end_prime > best_atk, "seed={seed}");
-}
-
-#[test]
-#[cfg_attr(debug_assertions, ignore)]
-fn holding_back_protects_attacker() {
-    let db = load_db();
-    let dir = hbcheck_fixture_dir();
-    let mut paths: Vec<PathBuf> = fs::read_dir(&dir)
-        .expect("dir")
-        .filter_map(|e| e.ok())
-        .map(|e| e.path())
-        .filter(|p| {
-            p.file_name()
-                .and_then(|n| n.to_str())
-                .is_some_and(|n| n.starts_with("neg-"))
-        })
-        .collect();
-    paths.sort();
-    for path in paths {
-        let cap: Value =
-            serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("json");
-        let ply = cap["ply"].as_u64().expect("ply") as usize;
-        let st = replay_capture(&db, &cap, ply);
-        let legal = legal_actions(&db, &st);
-        let base_seed = choose_seed(&cap, ply);
-        for j in 0..8 {
-            let seed = base_seed + 1000 * j as u64;
-            let mut h0 = parse_h0(HBCHECK_SPEC);
-            h0.arm_explain();
-            let mut rng = policy_rng(seed);
-            let pick = h0.choose(&db, &st, &legal, &mut rng);
-            if h0.stats.hb_checks == 0 || !matches!(legal[pick], Action::EndTurn) {
-                continue;
-            }
-            let rec = h0.take_explain().expect("explain");
-            let hb = rec.holdback.as_ref().expect("holdback");
-            let best_atk = hb
-                .attacks
-                .iter()
-                .map(|a| a.aggregate)
-                .fold(f32::NEG_INFINITY, f32::max);
-            let end_removable = hb.end_worlds.iter().filter(|w| w.removable).count();
-            let attack_removable = hb
-                .attacks
-                .iter()
-                .flat_map(|a| &a.worlds)
-                .filter(|w| w.removable)
-                .count();
-            if attack_removable > end_removable && hb.end_prime > best_atk {
-                assert_protect_x_branch(&rec, seed);
-                return;
-            }
-        }
-    }
-    let st = protect_x_board(&db, 88);
-    let legal = legal_actions(&db, &st);
-    for seed in 0..8192u64 {
-        let mut h0 = parse_h0(HBCHECK_SPEC);
-        h0.arm_explain();
-        let mut rng = policy_rng(seed);
-        let pick = h0.choose(&db, &st, &legal, &mut rng);
-        if h0.stats.hb_checks == 0 || !matches!(legal[pick], Action::EndTurn) {
-            continue;
-        }
-        let rec = h0.take_explain().expect("explain");
-        if rec.path == ChoosePath::HoldbackTrade {
-            continue;
-        }
-        let Some(hb) = rec.holdback.as_ref() else {
-            continue;
-        };
-        let best_atk = hb
-            .attacks
-            .iter()
-            .map(|a| a.aggregate)
-            .fold(f32::NEG_INFINITY, f32::max);
-        let end_removable = hb.end_worlds.iter().filter(|w| w.removable).count();
-        let attack_removable = hb
-            .attacks
-            .iter()
-            .flat_map(|a| &a.worlds)
-            .filter(|w| w.removable)
-            .count();
-        if attack_removable > end_removable && hb.end_prime > best_atk {
-            assert_protect_x_branch(&rec, seed);
-            return;
-        }
-    }
-    panic!("no protect-x position found in replay or constructed scan");
+    assert_eq!(end_removable, 0, "End′ must have no removable worlds");
+    assert!(attack_removable > 0, "at least one A′ world must be removable");
+    assert!(hb.end_prime > best_atk, "End′ must beat best A′");
 }
 
 fn meta_mirror_decks() -> Vec<(String, String)> {
@@ -773,12 +694,49 @@ fn moment_capture(db: &CardDb, moment: &Value) -> (arena_engine::State, u64) {
     (replay_capture(db, &cap, ply), seed)
 }
 
-fn count_kill_attacks(db: &CardDb, st: &arena_engine::State, legal: &[Action]) -> usize {
-    legal
-        .iter()
-        .enumerate()
-        .filter(|(i, _)| is_kill_attack_pick(db, st, legal, *i))
-        .count()
+#[derive(Default, Clone, Copy)]
+struct ReplayBucket {
+    checks: u32,
+    overrides: u32,
+}
+
+impl ReplayBucket {
+    fn record(&mut self, ran: bool, ovr: bool) {
+        if ran {
+            self.checks += 1;
+            if ovr {
+                self.overrides += 1;
+            }
+        }
+    }
+}
+
+fn end_candidate_agg(rec: &arena_engine::policy::ExplainRecord, legal: &[Action]) -> Option<f32> {
+    rec.candidates.iter().find_map(|c| {
+        if matches!(legal.get(c.legal_index), Some(Action::EndTurn)) {
+            Some(c.root_agg)
+        } else {
+            None
+        }
+    })
+}
+
+fn median_f32(xs: &[f32]) -> f32 {
+    if xs.is_empty() {
+        return 0.0;
+    }
+    let mut v = xs.to_vec();
+    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    v[v.len() / 2]
+}
+
+fn print_replay_bucket(name: &str, b: &ReplayBucket) {
+    eprintln!(
+        "{:<28} checks={:<4} overrides={}",
+        name,
+        b.checks,
+        b.overrides
+    );
 }
 
 #[test]
@@ -787,51 +745,163 @@ fn hbcheck_moment_replay_report() {
     let db = load_db();
     let moments = load_moments();
     assert_eq!(moments.len(), 166, "expected 166 holdback1 moments");
-    let mut ran_check = 0u32;
-    let mut overrides = 0u64;
-    let mut no_kill_found = 0u32;
-    let mut total_kills = 0u32;
-    eprintln!(
-        "{:<20} {:>5} {:>10} {:>8} {:>8} {:>10}",
-        "moment", "kills", "found", "hb_chk", "override", "hb_nodes"
-    );
+    let mut all = ReplayBucket::default();
+    let mut died_y_alive = ReplayBucket::default();
+    let mut died = ReplayBucket::default();
+    let mut survived = ReplayBucket::default();
+    let mut free_kill = ReplayBucket::default();
+    let mut trade = ReplayBucket::default();
+    let mut end_shifts = Vec::new();
     for moment in &moments {
-        let game_id = moment["game"].as_str().expect("game");
-        let ply = moment["ply"].as_u64().expect("ply");
         let (st, seed) = moment_capture(&db, moment);
         let legal = legal_actions(&db, &st);
-        let n_kill = count_kill_attacks(&db, &st, &legal) as u32;
-        total_kills += n_kill;
         let mut h0 = parse_h0(HBCHECK_SPEC);
+        h0.arm_explain();
         let mut rng = policy_rng(seed);
         let _ = h0.choose(&db, &st, &legal, &mut rng);
-        let chk = h0.stats.hb_checks;
-        let ovr = h0.stats.hb_overrides;
-        if chk > 0 {
-            ran_check += 1;
-            overrides += ovr;
-            if n_kill == 0 {
-                no_kill_found += 1;
+        let rec = h0.take_explain().expect("explain");
+        let ran = h0.stats.hb_checks > 0;
+        let ovr = h0.stats.hb_overrides > 0;
+        all.record(ran, ovr);
+        let x_died = moment["x_died_next"].as_bool().unwrap_or(false);
+        let y_alive = moment["y_alive_end"].as_bool().unwrap_or(false);
+        if x_died && y_alive {
+            died_y_alive.record(ran, ovr);
+        }
+        if x_died {
+            died.record(ran, ovr);
+        }
+        if !x_died {
+            survived.record(ran, ovr);
+        }
+        let x_survives = moment["primary"]["x_survives"].as_bool().unwrap_or(false);
+        if x_survives {
+            free_kill.record(ran, ovr);
+        } else {
+            trade.record(ran, ovr);
+        }
+        if ran {
+            if let Some(hb) = rec.holdback.as_ref() {
+                if let Some(end) = end_candidate_agg(&rec, &legal) {
+                    end_shifts.push(end - hb.end_prime);
+                }
             }
         }
-        eprintln!(
-            "{:<20} {:>5} {:>10} {:>8} {:>8} {:>10}",
-            format!("{game_id}@{ply}"),
-            n_kill,
-            if chk > 0 { n_kill } else { 0 },
-            chk,
-            ovr,
-            h0.stats.hb_nodes
-        );
     }
+    eprintln!("replay table (166 moments, served+hbcheck=2000):");
+    print_replay_bucket("all", &all);
+    eprintln!("by outcome:");
+    print_replay_bucket("  x_died && y_alive_end", &died_y_alive);
+    print_replay_bucket("  x_died_next", &died);
+    print_replay_bucket("  x_survived", &survived);
+    eprintln!("by attack type:");
+    print_replay_bucket("  free_kill (x_survives)", &free_kill);
+    print_replay_bucket("  trade", &trade);
     eprintln!(
-        "replay summary: moments={} ran_check={} overrides={} total_kills={} no_kill_at_check={}",
-        moments.len(),
-        ran_check,
-        overrides,
-        total_kills,
-        no_kill_found
+        "median End − End′ shift (checks only): {:.3} (n={})",
+        median_f32(&end_shifts),
+        end_shifts.len()
     );
+}
+
+#[derive(Clone)]
+struct SearchSnapshot {
+    state: arena_engine::State,
+    choose_seed: u64,
+}
+
+fn own_turn_decision(state: &arena_engine::State, legal: &[Action]) -> bool {
+    matches!(
+        state.phase,
+        Phase::Main | Phase::Combat | Phase::Choice { .. }
+    ) && legal.len() > 1
+}
+
+fn meta_deck_stems() -> Vec<String> {
+    let text =
+        fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS.json");
+    let pools: Value = serde_json::from_str(&text).expect("pools json");
+    pools["meta"]
+        .as_array()
+        .expect("meta")
+        .iter()
+        .map(|v| v.as_str().expect("stem").to_string())
+        .filter(|s| s != "meta-rune-test-subject")
+        .collect()
+}
+
+const GAMES_PER_DECK: u32 = 2;
+const MAX_SNAPSHOTS_PER_GAME: usize = 6;
+
+fn sample_snapshots_evenly(snaps: &[SearchSnapshot], max: usize) -> Vec<SearchSnapshot> {
+    if snaps.len() <= max {
+        return snaps.to_vec();
+    }
+    let mut out = Vec::with_capacity(max);
+    for i in 0..max {
+        let idx = i * (snaps.len() - 1) / (max - 1);
+        out.push(snaps[idx].clone());
+    }
+    out
+}
+
+fn collect_h0_selfplay_snapshots(db: &CardDb) -> Vec<SearchSnapshot> {
+    let spec = "h0";
+    let mut snaps = Vec::new();
+    for stem in meta_deck_stems() {
+        let deck = load_deck_json(&stem);
+        let mut deck_snaps = Vec::new();
+        for g in 0..GAMES_PER_DECK {
+            let seed = 20261001u64
+                .wrapping_add(u64::from(g))
+                .wrapping_add(stem.len() as u64 * 97);
+            let Ok(mut state) = new_game(
+                db,
+                GameConfig {
+                    seed,
+                    deck_a: deck.clone(),
+                    deck_b: deck.clone(),
+                    first: First::A,
+                    opening_hands: None,
+                },
+            ) else {
+                continue;
+            };
+            let mut pol = parse_h0(spec);
+            let mut rng = policy_rng(seed);
+            let mut nact = 0u32;
+            let mut game_snaps = Vec::new();
+            while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
+                if state.turn > MAX_TURNS || nact >= MAX_ACTIONS {
+                    break;
+                }
+                let legal = legal_actions(db, &state);
+                if legal.is_empty() {
+                    break;
+                }
+                if state.active == PlayerId::A
+                    && state.turn >= 3
+                    && own_turn_decision(&state, &legal)
+                {
+                    let choose_seed = seed
+                        .wrapping_add(u64::from(state.turn) * 97)
+                        .wrapping_add(u64::from(nact) * 131);
+                    game_snaps.push(SearchSnapshot {
+                        state: state.clone(),
+                        choose_seed,
+                    });
+                }
+                let idx = pol.choose(db, &state, &legal, &mut rng);
+                if apply(db, &mut state, legal[idx].clone()).is_err() {
+                    break;
+                }
+                nact += 1;
+            }
+            deck_snaps.extend(sample_snapshots_evenly(&game_snaps, MAX_SNAPSHOTS_PER_GAME));
+        }
+        snaps.extend(deck_snaps);
+    }
+    snaps
 }
 
 struct HbBenchRow {
@@ -840,10 +910,11 @@ struct HbBenchRow {
     ms_total: f64,
     ms_samples: Vec<f64>,
     hb_nodes_total: u64,
-    hb_nodes_samples: Vec<u64>,
+    hb_nodes_per_check_samples: Vec<u64>,
+    hb_nodes_max: u64,
     hb_checks: u64,
     hb_overrides: u64,
-    hb_unknown: u64,
+    hb_removable: u64,
 }
 
 fn hb_specs(base: &str) -> Vec<String> {
@@ -861,25 +932,77 @@ fn hb_specs(base: &str) -> Vec<String> {
         .collect()
 }
 
+fn selfplay_specs() -> Vec<String> {
+    vec![
+        "h0".to_string(),
+        "h0:hbcheck=2000".to_string(),
+        SERVED_SPEC.to_string(),
+        format!("{SERVED_SPEC},hbcheck=2000"),
+    ]
+}
+
 fn bench_hb_choose(
     db: &CardDb,
     spec: &str,
     st: &arena_engine::State,
     seed: u64,
-) -> (f64, u64, u64, u64, u64) {
+) -> (f64, u64, u64, u64, u64, u64) {
     let mut h0 = parse_h0(spec);
     let legal = legal_actions(db, st);
     let mut rng = policy_rng(seed);
     let t0 = Instant::now();
     let _ = h0.choose(db, st, &legal, &mut rng);
     let ms = t0.elapsed().as_secs_f64() * 1000.0;
+    let nodes_per_check = if h0.stats.hb_checks > 0 {
+        h0.stats.hb_nodes
+    } else {
+        0
+    };
     (
         ms,
         h0.stats.hb_nodes,
+        nodes_per_check,
         h0.stats.hb_checks,
         h0.stats.hb_overrides,
-        h0.stats.hb_unknown,
+        h0.stats.hb_worlds_removable,
     )
+}
+
+fn print_cost_table(title: &str, rows: &[HbBenchRow]) {
+    eprintln!("{title}:");
+    eprintln!(
+        "{:<44} {:>8} {:>8} {:>8} {:>8} {:>8} {:>10} {:>10} {:>10}",
+        "spec",
+        "n",
+        "ms/dec",
+        "p95_ms",
+        "chk/dec",
+        "ovr/dec",
+        "rem/dec",
+        "nodes/chk",
+        "max/chk"
+    );
+    for row in rows {
+        let d = row.decisions as f64;
+        let chk = row.hb_checks as f64;
+        let nodes_per_chk = if chk > 0.0 {
+            row.hb_nodes_total as f64 / chk
+        } else {
+            0.0
+        };
+        eprintln!(
+            "{:<44} {:>8} {:>8.2} {:>8.2} {:>8.3} {:>8.3} {:>10.3} {:>10.1} {:>10}",
+            row.spec,
+            row.decisions,
+            row.ms_total / d,
+            p95_f64(&row.ms_samples),
+            row.hb_checks as f64 / d,
+            row.hb_overrides as f64 / d,
+            row.hb_removable as f64 / d,
+            nodes_per_chk,
+            row.hb_nodes_max
+        );
+    }
 }
 
 fn p95_f64(samples: &[f64]) -> f64 {
@@ -892,77 +1015,89 @@ fn p95_f64(samples: &[f64]) -> f64 {
     xs[i.min(xs.len() - 1)]
 }
 
-fn p95_u64(samples: &[u64]) -> u64 {
-    if samples.is_empty() {
-        return 0;
-    }
-    let mut xs = samples.to_vec();
-    xs.sort_unstable();
-    let i = ((0.95 * xs.len() as f64).ceil() as usize).saturating_sub(1);
-    xs[i.min(xs.len() - 1)]
-}
-
 #[test]
-#[ignore = "measurement helper for tools/hbcheck_cost_bench.py (paired holdback1 moments)"]
+#[ignore = "measurement helper for tools/hbcheck_cost_bench.py (paired meta mirrors + holdback1 moments)"]
 fn hbcheck_paired_cost_report() {
     let db = load_db();
+    let snaps = collect_h0_selfplay_snapshots(&db);
+    assert!(!snaps.is_empty(), "need h0 self-play snapshots");
+    let mut selfplay_rows: Vec<HbBenchRow> = selfplay_specs()
+        .into_iter()
+        .map(|spec| HbBenchRow {
+            spec,
+            decisions: 0,
+            ms_total: 0.0,
+            ms_samples: Vec::new(),
+            hb_nodes_total: 0,
+            hb_nodes_per_check_samples: Vec::new(),
+            hb_nodes_max: 0,
+            hb_checks: 0,
+            hb_overrides: 0,
+            hb_removable: 0,
+        })
+        .collect();
+    for snap in &snaps {
+        for row in &mut selfplay_rows {
+            let (ms, nodes, nodes_per_chk, checks, overrides, removable) =
+                bench_hb_choose(&db, &row.spec, &snap.state, snap.choose_seed);
+            row.decisions += 1;
+            row.ms_total += ms;
+            row.ms_samples.push(ms);
+            row.hb_nodes_total += nodes;
+            if checks > 0 {
+                row.hb_nodes_per_check_samples.push(nodes_per_chk);
+                row.hb_nodes_max = row.hb_nodes_max.max(nodes_per_chk);
+            }
+            row.hb_checks += checks;
+            row.hb_overrides += overrides;
+            row.hb_removable += removable;
+        }
+    }
+    print_cost_table(
+        &format!(
+            "self-play cost ({} positions, {} games/deck)",
+            snaps.len(),
+            GAMES_PER_DECK
+        ),
+        &selfplay_rows,
+    );
+
     let moments = load_moments();
-    assert!(!moments.is_empty(), "need holdback1 moments");
-    let bases = [SERVED_SPEC, "h0:nodes=32000,horizon=3,k=8"];
-    let mut rows: Vec<HbBenchRow> = Vec::new();
-    for base in bases {
+    assert_eq!(moments.len(), 166);
+    let mut moment_rows: Vec<HbBenchRow> = Vec::new();
+    for base in ["h0", SERVED_SPEC] {
         for spec in hb_specs(base) {
-            rows.push(HbBenchRow {
+            moment_rows.push(HbBenchRow {
                 spec,
                 decisions: 0,
                 ms_total: 0.0,
                 ms_samples: Vec::new(),
                 hb_nodes_total: 0,
-                hb_nodes_samples: Vec::new(),
+                hb_nodes_per_check_samples: Vec::new(),
+                hb_nodes_max: 0,
                 hb_checks: 0,
                 hb_overrides: 0,
-                hb_unknown: 0,
+                hb_removable: 0,
             });
         }
     }
     for moment in &moments {
         let (st, seed) = moment_capture(&db, moment);
-        for row in &mut rows {
-            let (ms, nodes, checks, overrides, unknown) =
+        for row in &mut moment_rows {
+            let (ms, nodes, nodes_per_chk, checks, overrides, removable) =
                 bench_hb_choose(&db, &row.spec, &st, seed);
             row.decisions += 1;
             row.ms_total += ms;
             row.ms_samples.push(ms);
             row.hb_nodes_total += nodes;
-            row.hb_nodes_samples.push(nodes);
+            if checks > 0 {
+                row.hb_nodes_per_check_samples.push(nodes_per_chk);
+                row.hb_nodes_max = row.hb_nodes_max.max(nodes_per_chk);
+            }
             row.hb_checks += checks;
             row.hb_overrides += overrides;
-            row.hb_unknown += unknown;
+            row.hb_removable += removable;
         }
     }
-    eprintln!(
-        "{:<52} {:>10} {:>10} {:>10} {:>14} {:>10} {:>10} {:>10}",
-        "spec",
-        "moments",
-        "ms/dec",
-        "p95_ms",
-        "hb_nodes/dec",
-        "p95_nodes",
-        "checks/dec",
-        "unknown/dec"
-    );
-    for row in rows {
-        let d = row.decisions as f64;
-        eprintln!(
-            "{:<52} {:>10} {:>10.2} {:>10.2} {:>14.2} {:>10} {:>10.2} {:>10.2}",
-            row.spec,
-            row.decisions,
-            row.ms_total / d,
-            p95_f64(&row.ms_samples),
-            row.hb_nodes_total as f64 / d,
-            p95_u64(&row.hb_nodes_samples),
-            row.hb_checks as f64 / d,
-            row.hb_unknown as f64 / d,
-        );
-    }
+    print_cost_table("166-moment worst case (holdback1 replay positions)", &moment_rows);
 }
