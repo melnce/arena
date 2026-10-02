@@ -609,7 +609,7 @@ fn drache_aluzard_other_copies_entered_in_hand() {
         if previous > 0 {
             st.player_mut(me)
                 .enter_counts
-                .insert(cid("10844110"), previous as i32);
+                .insert(cid("10844110"), previous);
         }
         give_pp(&mut st, me, 4, 10);
         st.player_mut(me).hand.clear();
