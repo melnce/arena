@@ -1,0 +1,7 @@
+holdback1 Part B
+commit (repo HEAD at play): d5f4310; the engine module built from d5f4310 (main 3422feb is the same engine: WO changed only Python)
+play start: 2026-10-02 15:30:00 (local time); beside it at the start: results/lethal/tkill-fa.json, results/lethal/tkill-fb.json (tkill audit halves, 1 core each)
+play: exit: 0; holdback play: 16 decks, 256 ordered pairs, 256 games, spec h0:nodes=32000,horizon=3,k=8, workers 26, out results\holdback1\games; game files: 256; ended 2026-10-02 16:11:29 (local); beside it at the end: results/lethal/tkill-fa.json, results/lethal/tkill-fb.json
+scan: exit: 0; ended 2026-10-02 16:12:19 (local); beside it: results/lethal/tkill-fa.json, results/lethal/tkill-fb.json
+nothing else ran on the box besides the tkill audit halves (no owner play: serve.py not running)
+end: 2026-10-02 16:12:19 (local, scan finished); wall 2539 s (play 2489 s, scan 50 s); REPORT.txt regenerated as UTF-8 at 16:15 (the chain had written it through the console code page)

@@ -1,0 +1,13 @@
+games 256 (audited seats 512), End Turns 3956, HB moments 166 = 0.324 per audited seat-game, 0.042 per End Turn
+  W  wasted (X died next turn, Y alive at its end)     0.514  [0.432, 0.595]  n=140
+  D  X died next turn                                  0.707  [0.628, 0.786]  n=140
+  K  opponent could kill X (sure line)                 0.87  [0.821, 0.918]  n=161
+  can_kill verdicts: {'kill (sure 0/4)': 4, 'kill (sure 1/4)': 4, 'kill (sure 2/4)': 3, 'kill (sure 3/4)': 4, 'kill (sure 4/4)': 140, 'lethal': 4, 'none': 5, 'none_within_depth': 1, 'unknown': 1}; game over on the next turn: 26
+  Y face damage on the next turn: mean 1.91; bot took (all sources): mean 4.04
+  primary trade is a free kill (X survives the attack): 115/166
+  kill-line length: 1:66, 2:49, 3:29, 4:10, 5:4, 6:1
+  games the HB side went on to win: 0.343
+  baseline: the HB side's other followers at those End Turns died next turn 159/240 = 0.662
+  sure kill lines within 3 actions and 2 000 applies: 132/140
+
+VERDICT: row 1 — brief: a cheap held-back check at the root (default off)
