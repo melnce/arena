@@ -18,6 +18,7 @@ use crate::state::{
     CardInstance, ChoiceNode, Phase, PlayForm, SourceRef, State, TargetOpt, WorkFrame,
 };
 use crate::support;
+use crate::CardId;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct GateInfo {
@@ -406,10 +407,13 @@ fn collect_hand_gates(
     let Ok(card) = db.card(inst.card) else {
         return Vec::new();
     };
+    let hand_eval = hand_self_entry_eval_state(state, player, inst, card);
+    let eval_state: &State = hand_eval.as_ref().unwrap_or(state);
     let mut gates = Vec::new();
     let ctx = WalkCtx {
         db,
         state,
+        eval_state,
         player,
         inst,
         source: SourceRef::Hand {
@@ -418,6 +422,7 @@ fn collect_hand_gates(
         },
         zone: Zone::Hand,
         artifact_glow: true,
+        artifact_label: None,
         field_fanfare: false,
     };
     for mode in card.modes() {
@@ -491,6 +496,7 @@ fn collect_board_gates(
     let ctx = WalkCtx {
         db,
         state,
+        eval_state: state,
         player,
         inst,
         source: SourceRef::Field {
@@ -499,6 +505,7 @@ fn collect_board_gates(
         },
         zone: Zone::Field,
         artifact_glow: true,
+        artifact_label: None,
         field_fanfare: false,
     };
     for a in card.abilities() {
@@ -522,16 +529,34 @@ fn collect_board_gates(
 struct WalkCtx<'a> {
     db: &'a CardDb,
     state: &'a State,
+    eval_state: &'a State,
     player: PlayerId,
     inst: &'a CardInstance,
     source: SourceRef,
     zone: Zone,
     artifact_glow: bool,
+    artifact_label: Option<&'static str>,
     field_fanfare: bool,
 }
 
 fn walk_ability(ctx: WalkCtx<'_>, ability: &Ability, gates: &mut Vec<GateInfo>) {
+    let mut super_eval = None;
+    let eval_state = if matches!(ability, Ability::SuperEvolve { .. }) {
+        let mut s = ctx.eval_state.clone();
+        apply_evolve_summon_preview(ctx.db, ctx.player, ctx.inst.card, &mut s);
+        super_eval = Some(s);
+        super_eval.as_ref().unwrap()
+    } else {
+        ctx.eval_state
+    };
+    let artifact_label = if matches!(ability, Ability::SuperEvolve { .. }) {
+        Some("artifacts after super-evolving")
+    } else {
+        ctx.artifact_label
+    };
     let ctx = WalkCtx {
+        eval_state,
+        artifact_label,
         field_fanfare: ctx.zone == Zone::Field && matches!(ability, Ability::Fanfare { .. }),
         ..ctx
     };
@@ -674,12 +699,13 @@ fn walk_condition(ctx: WalkCtx<'_>, cond: &Condition, gates: &mut Vec<GateInfo>)
         other => push_evaluated(
             ctx.db,
             other,
-            ctx.state,
+            ctx.eval_state,
             ctx.player,
             ctx.inst,
             ctx.source,
             ctx.artifact_glow,
             ctx.field_fanfare,
+            ctx.artifact_label,
             gates,
         ),
     }
@@ -689,26 +715,27 @@ fn walk_condition(ctx: WalkCtx<'_>, cond: &Condition, gates: &mut Vec<GateInfo>)
 fn push_evaluated(
     db: &CardDb,
     cond: &Condition,
-    state: &State,
+    eval_state: &State,
     player: PlayerId,
     inst: &CardInstance,
     source: SourceRef,
     artifact_glow: bool,
     field_fanfare: bool,
+    artifact_label: Option<&str>,
     gates: &mut Vec<GateInfo>,
 ) {
-    let met = eval_cond(db, state, player, Some(source), cond);
-    let p = state.player(player);
+    let met = eval_cond(db, eval_state, player, Some(source), cond);
+    let p = eval_state.player(player);
     match cond {
         Condition::CountAtLeast { count_at_least } => {
             if matches!(count_at_least.select, Selector::Ref(_) | Selector::Bound(_)) {
                 return;
             }
-            let ts = resolve_select(db, state, player, source, &count_at_least.select);
+            let ts = resolve_select(db, eval_state, player, source, &count_at_least.select);
             let have = match &count_at_least.filter {
                 Some(f) => ts
                     .iter()
-                    .filter(|t| target_matches_simple(db, state, t, f))
+                    .filter(|t| target_matches_simple(db, eval_state, t, f))
                     .count() as i32,
                 None => ts.len() as i32,
             };
@@ -719,7 +746,7 @@ fn push_evaluated(
         }
         Condition::FieldHas { field_has } => {
             let need = field_has.n.as_ref().and_then(amount_int).unwrap_or(1);
-            let have = field_has_count(state, player, field_has);
+            let have = field_has_count(eval_state, player, field_has);
             let label = field_has_label(field_has);
             push_gate(gates, "fieldHas", &label, need, have, met, true);
         }
@@ -790,7 +817,7 @@ fn push_evaluated(
                 Some(Side::Enemy) => player.opponent(),
                 _ => player,
             };
-            let mut have = state
+            let mut have = eval_state
                 .player(side)
                 .enter_counts
                 .get(&enter_count_at_least.card)
@@ -815,17 +842,20 @@ fn push_evaluated(
             push_gate(gates, "counterAtLeast", &label, need, have, met, true);
         }
         Condition::AmountAtLeast { amount_at_least } => {
-            let need = eval_amount(db, state, player, Some(source), &amount_at_least.n);
-            let have = eval_amount(db, state, player, Some(source), &amount_at_least.of);
+            let need = eval_amount(db, eval_state, player, Some(source), &amount_at_least.n);
+            let have = eval_amount(db, eval_state, player, Some(source), &amount_at_least.of);
             if is_artifact_distinct_enter_count(&amount_at_least.of) && !field_fanfare {
+                let label = artifact_label.unwrap_or("artifacts");
+                push_gate(gates, "artifacts", label, need, have, met, artifact_glow);
+            } else if is_other_copies_entered(&amount_at_least.of) {
                 push_gate(
                     gates,
-                    "artifacts",
-                    "artifacts",
+                    "amountAtLeast",
+                    "other copies entered",
                     need,
                     have,
                     met,
-                    artifact_glow,
+                    met,
                 );
             } else {
                 push_gate(gates, "amountAtLeast", "amount", need, have, met, true);
@@ -833,7 +863,7 @@ fn push_evaluated(
         }
         Condition::SkyboundArt { skybound_art } => {
             let need = amount_int(&skybound_art.n).unwrap_or(0);
-            let have = state.turn as i32 + inst.skybound;
+            let have = eval_state.turn as i32 + inst.skybound;
             push_gate(gates, "skyboundArt", "skybound art", need, have, met, true);
         }
         Condition::VarAtLeast { var_at_least } => {
@@ -1184,8 +1214,103 @@ fn maybe_push_artifact_x_line(ctx: WalkCtx<'_>, amount: &Amount, gates: &mut Vec
     if ctx.field_fanfare || !is_artifact_distinct_enter_count(amount) {
         return;
     }
-    let have = eval_amount(ctx.db, ctx.state, ctx.player, Some(ctx.source), amount);
-    push_gate(gates, "artifacts", "artifacts", 0, have, false, false);
+    let have = eval_amount(ctx.db, ctx.eval_state, ctx.player, Some(ctx.source), amount);
+    let label = ctx.artifact_label.unwrap_or("artifacts");
+    push_gate(gates, "artifacts", label, 0, have, false, false);
+}
+
+fn hand_self_entry_eval_state(
+    state: &State,
+    player: PlayerId,
+    inst: &CardInstance,
+    card: &crate::card::Card,
+) -> Option<State> {
+    if !matches!(card.kind(), CardKind::Follower | CardKind::Amulet) {
+        return None;
+    }
+    let mut s = state.clone();
+    *s.player_mut(player)
+        .enter_counts
+        .entry(inst.card)
+        .or_insert(0) += 1;
+    Some(s)
+}
+
+fn apply_evolve_summon_preview(db: &CardDb, player: PlayerId, card_id: CardId, state: &mut State) {
+    for id in evolve_summon_follower_ids(db, card_id) {
+        *state.player_mut(player).enter_counts.entry(id).or_insert(0) += 1;
+    }
+}
+
+fn evolve_summon_follower_ids(db: &CardDb, card_id: CardId) -> Vec<CardId> {
+    let Ok(card) = db.card(card_id) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for a in card.abilities() {
+        if matches!(a, Ability::Evolve { .. }) {
+            collect_summon_follower_ids(db, a.effects(), &mut out);
+        }
+    }
+    out
+}
+
+fn collect_summon_follower_ids(db: &CardDb, effects: &[Effect], out: &mut Vec<CardId>) {
+    for e in effects {
+        match e {
+            Effect::Summon { card, .. } => {
+                if let Some(id) = support::named_in_source(card) {
+                    if db
+                        .card(id)
+                        .ok()
+                        .is_some_and(|c| c.kind() == CardKind::Follower)
+                    {
+                        if !out.contains(&id) {
+                            out.push(id);
+                        }
+                    }
+                }
+            }
+            Effect::If {
+                then, else_effects, ..
+            } => {
+                collect_summon_follower_ids(db, then, out);
+                if let Some(els) = else_effects {
+                    collect_summon_follower_ids(db, els, out);
+                }
+            }
+            Effect::Seq { effects, .. } | Effect::Repeat { effects, .. } => {
+                collect_summon_follower_ids(db, effects, out);
+            }
+            Effect::Choose {
+                options: Some(opts),
+                ..
+            } => {
+                for o in opts {
+                    collect_summon_follower_ids(db, &o.effects, out);
+                }
+            }
+            Effect::Sequence { steps, .. } => {
+                for s in steps {
+                    collect_summon_follower_ids(db, &s.effects, out);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn is_other_copies_entered(amount: &Amount) -> bool {
+    match amount {
+        Amount::Sub { sub } if sub.len() == 2 => {
+            matches!(&*sub[1], Amount::Int(1))
+                && matches!(
+                    &*sub[0],
+                    Amount::EnteredThisMatch { entered_this_match } if entered_this_match.card.is_some()
+                )
+        }
+        _ => false,
+    }
 }
 
 fn push_gate(
