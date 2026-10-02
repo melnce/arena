@@ -210,12 +210,7 @@ fn owner_feline_holdback_overrides() {
                         for w in &atk.worlds {
                             eprintln!(
                                 "    r={} plain={} removal={} value={} removable={} line_len={}",
-                                w.r,
-                                w.plain,
-                                w.removal,
-                                w.value,
-                                w.removable,
-                                w.line_len
+                                w.r, w.plain, w.removal, w.value, w.removable, w.line_len
                             );
                         }
                     }
@@ -223,11 +218,7 @@ fn owner_feline_holdback_overrides() {
                 for w in &hb.end_worlds {
                     eprintln!(
                         "  End' r={} plain={} removal={} value={} removable={}",
-                        w.r,
-                        w.plain,
-                        w.removal,
-                        w.value,
-                        w.removable
+                        w.r, w.plain, w.removal, w.value, w.removable
                     );
                 }
             }
@@ -244,7 +235,10 @@ fn owner_feline_holdback_overrides() {
         );
         return;
     }
-    assert!(hb_hits >= 8, "expected >= 8/12 attack 0→1 holdback overrides");
+    assert!(
+        hb_hits >= 8,
+        "expected >= 8/12 attack 0→1 holdback overrides"
+    );
     assert!(plain_end >= 10, "expected >= 10/12 plain EndTurn");
 }
 
@@ -545,11 +539,11 @@ fn netherworld_lieutenant_keeps_end_turn() {
         assert!(matches!(legal[pick], Action::EndTurn), "seed={seed}");
         assert_ne!(rec.path, ChoosePath::HoldbackTrade, "seed={seed}");
         let hb = rec.holdback.expect("holdback");
-        let lt_in_attacks = hb
-            .attacks
-            .iter()
-            .any(|a| a.legal_index == lt_idx);
-        assert!(lt_in_attacks, "seed={seed}: LT attack must be in holdback.attacks");
+        let lt_in_attacks = hb.attacks.iter().any(|a| a.legal_index == lt_idx);
+        assert!(
+            lt_in_attacks,
+            "seed={seed}: LT attack must be in holdback.attacks"
+        );
         eprintln!(
             "lieutenant (a) seed={seed} end_prime={} attacks={}",
             hb.end_prime,
@@ -590,9 +584,7 @@ fn netherworld_lieutenant_second_killer_report() {
         }
         eprintln!(
             "lieutenant (b) seed={seed} path={:?} end_prime={} best_atk={} pick={pick}",
-            rec.path,
-            hb.end_prime,
-            best_atk
+            rec.path, hb.end_prime, best_atk
         );
         reported += 1;
     }
@@ -775,8 +767,7 @@ fn moment_capture(db: &CardDb, moment: &Value) -> (arena_engine::State, u64) {
     let game_id = moment["game"].as_str().expect("game");
     let ply = moment["ply"].as_u64().expect("ply") as usize;
     let path = format!("holdback1/games/{game_id}.json");
-    let text = git_show_results(&path)
-        .unwrap_or_else(|| panic!("missing origin/results:{path}"));
+    let text = git_show_results(&path).unwrap_or_else(|| panic!("missing origin/results:{path}"));
     let cap: Value = serde_json::from_str(&text).expect("game json");
     let seed = cap["seed"].as_u64().expect("seed") + ply as u64;
     (replay_capture(db, &cap, ply), seed)
@@ -803,12 +794,7 @@ fn hbcheck_moment_replay_report() {
     let mut total_kills = 0u32;
     eprintln!(
         "{:<20} {:>5} {:>10} {:>8} {:>8} {:>10}",
-        "moment",
-        "kills",
-        "found",
-        "hb_chk",
-        "override",
-        "hb_nodes"
+        "moment", "kills", "found", "hb_chk", "override", "hb_nodes"
     );
     for moment in &moments {
         let game_id = moment["game"].as_str().expect("game");
@@ -876,7 +862,12 @@ fn hb_specs(base: &str) -> Vec<String> {
         .collect()
 }
 
-fn bench_hb_choose(db: &CardDb, spec: &str, st: &arena_engine::State, seed: u64) -> (f64, u64, u64, u64, u64) {
+fn bench_hb_choose(
+    db: &CardDb,
+    spec: &str,
+    st: &arena_engine::State,
+    seed: u64,
+) -> (f64, u64, u64, u64, u64) {
     let mut h0 = parse_h0(spec);
     let legal = legal_actions(db, st);
     let mut rng = policy_rng(seed);
