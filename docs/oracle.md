@@ -113,6 +113,10 @@ CI shares the release build with the soak step (`cargo test --release --test ora
 
 ## After the oracle: random-deck soak
 
+## Balance patches
+
+Official balance patches change cost, stats, and printed text. Traces replay against the **card data they were recorded with**, not the live pool. When a patched card would make a committed trace diverge for a data reason, its recording-time authored file lives under `oracle/cards-as-recorded/` (byte-identical to the pre-patch `cards/**` file at trace record time). Only the oracle gate loads that overlay after `cards/**`, replacing those ids by file: `engine/tests/oracle.rs`, `arena-replay`, and `arena-oracle-audit`. Nothing else (wasm, py, bots) loads it.
+
 The committed traces under `oracle/traces/` are a frozen regression corpus (0 red / 0 stale). They do not grow. After every class in the Rotation pool is authorable, `engine/tests/soak_random.rs` is the live gate that the new cards actually play:
 
 - From the authored pool, build a seeded random 40-card deck per class (that class's cards + Neutral, ≤3 copies, tokens excluded, `deck_enabled_num` respected). A card is included only if it and every `named` / `related_card_ids` descendant `require_supported` — M1 stubs (`op:randomSplit`, `op:counter skyboundHand`) stay out of the decks. After M3 wave 1 every one of the eight classes has ≥ 40 authorable cards.

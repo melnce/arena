@@ -6,6 +6,8 @@ Rulings Chris has given during development, with the reasoning and evidence behi
 
 **Standing principle: owner rulings override printed card text.** When a card's printed text and a ruling here disagree, the ruling wins. This has already prevented one regression — a fidelity audit flagged Azurifrit's 3-per-turn cap as contradicting its text, and the cap is correct because it is a ruling.
 
+Balance patches invalidate card text; the post-patch official values are correct (owner, 2026-09-03).
+
 ---
 
 ## Rally — 2026-08-12

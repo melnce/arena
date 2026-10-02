@@ -1,0 +1,63 @@
+name: catalog-drift
+
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: catalog drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check official catalog
+        id: check
+        continue-on-error: true
+        run: node tools/fetch-official.mjs --check 2>&1 | tee /tmp/catalog-drift.log
+
+      - name: Track catalog drift issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ISSUE_TITLE: Official card data changed
+        run: |
+          set -euo pipefail
+
+          gh label create catalog-drift \
+            --description "Live Cygames catalog differs from committed cards/official/catalog.json" \
+            --color FBCA04 \
+            --force
+
+          body="$(printf '%s\n\nRun: %s\n\nEvent: `%s` on `%s` (`%s`).\n' \
+            "The nightly \`node tools/fetch-official.mjs --check\` failed. Per-card diff is in the workflow log." \
+            "${RUN_URL}" "${{ github.event_name }}" "${{ github.ref_name }}" "${{ github.sha }}")"
+          if [ -f /tmp/catalog-drift.log ]; then
+            body="${body}\n\`\`\`\n$(tail -n 200 /tmp/catalog-drift.log)\n\`\`\`"
+          fi
+
+          issue="$(gh issue list --label catalog-drift --state open --json number --jq '.[0].number // empty')"
+          if [ "${{ steps.check.outcome }}" != "success" ]; then
+            if [ -n "${issue}" ]; then
+              gh issue comment "${issue}" --body "${body}"
+              echo "Updated #${issue}"
+            else
+              gh issue create --title "${ISSUE_TITLE}" --label catalog-drift --body "${body}"
+            fi
+            exit 1
+          fi
+
+          if [ -n "${issue}" ]; then
+            gh issue close "${issue}" --comment "Live catalog matches committed \`cards/official/catalog.json\` again (${RUN_URL})."
+          fi

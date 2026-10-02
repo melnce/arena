@@ -528,7 +528,7 @@ Status:
 | `10972310` | Disgraceful Banishment | — | draw, discard | — | expressible |
 | `10973110` | Steelforged Right Hand | fanfare | grantTraits, destroy | — | expressible |
 | `10973310` | Soulforge | — | destroy | — | expressible |
-| `10974110` | Cutthroat, Fluxblade Convict | evolve | banish, crest | — | expressible |
+| `10974110` | Cutthroat, Fluxblade Convict | evolve | draw, crest | — | expressible |
 | `10974120` | Aizeden, Killshot Revenant | fanfare, superEvolve, enter/when | summon, destroy, replicate | — | expressible |
 | `90011110` | Fairy | — | — | — | expressible |
 | `90011120` | Springbloom Fairy | endOfTurn | evolve | — | expressible |

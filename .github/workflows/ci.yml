@@ -104,6 +104,10 @@ jobs:
         working-directory: tools
         run: node validate.mjs --schema-only ../engine/tests/fixtures/cards
 
+      - name: schema-only oracle card overlay
+        working-directory: tools
+        run: node validate.mjs --schema-only ../oracle/cards-as-recorded
+
   wasm:
     runs-on: ubuntu-latest
     timeout-minutes: 20

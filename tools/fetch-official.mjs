@@ -283,6 +283,75 @@ function recordsOnly(catalog) {
   return out;
 }
 
+const DIFF_FIELDS = [
+  "name",
+  "kind",
+  "class",
+  "tribes",
+  "rarity",
+  "cost",
+  "attack",
+  "defense",
+  "set",
+  "token",
+  "text",
+  "related_card_ids",
+  "card_image_hash",
+  "card_banner_image_hash",
+  "evo_card_image_hash",
+  "evo_card_banner_image_hash",
+];
+
+function formatVal(field, v) {
+  if (v == null) return "(null)";
+  if (field === "text") return String(v);
+  if (field.endsWith("_hash")) return "changed";
+  return JSON.stringify(v);
+}
+
+export function printCatalogDiff(live, committed) {
+  const a = recordsOnly(live);
+  const b = recordsOnly(committed);
+  const ids = [...new Set([...Object.keys(a), ...Object.keys(b)])].sort();
+  let any = false;
+  for (const id of ids) {
+    const recA = a[id];
+    const recB = b[id];
+    if (!recA) {
+      console.error(`${id}: removed from live API`);
+      any = true;
+      continue;
+    }
+    if (!recB) {
+      console.error(`${id} ${recA.name}: added in live API`);
+      any = true;
+      continue;
+    }
+    const changes = [];
+    for (const field of DIFF_FIELDS) {
+      const va = recA[field];
+      const vb = recB[field];
+      const same =
+        field.endsWith("_hash")
+          ? va === vb
+          : JSON.stringify(va) === JSON.stringify(vb);
+      if (!same) {
+        if (field.endsWith("_hash")) {
+          changes.push(`  ${field}: changed`);
+        } else {
+          changes.push(`  ${field}: ${formatVal(field, vb)} → ${formatVal(field, va)}`);
+        }
+      }
+    }
+    if (changes.length) {
+      console.error(`${id} ${recA.name}:`);
+      for (const line of changes) console.error(line);
+      any = true;
+    }
+  }
+  return any;
+}
+
 export function officialQaMarkdown(catalog) {
   const fetched = (catalog._meta?.fetched_at || "").slice(0, 10);
   const lang = catalog._meta?.lang || LANG;
@@ -388,10 +457,8 @@ async function main() {
       process.exit(1);
     }
     const committed = JSON.parse(fs.readFileSync(OUT, "utf8"));
-    const a = JSON.stringify(recordsOnly(catalog));
-    const b = JSON.stringify(recordsOnly(committed));
-    if (a !== b) {
-      console.error("official catalog differs from committed cards/official/catalog.json");
+    if (printCatalogDiff(catalog, committed)) {
+      console.error("\nofficial catalog differs from committed cards/official/catalog.json");
       process.exit(1);
     }
     console.log("ok: live official catalog matches committed records (fetched_at ignored)");
