@@ -417,3 +417,29 @@ pub fn play_keeping_hand(db: &CardDb, st: &mut State, who: PlayerId, id: &str, p
     play_id(db, st, who, id);
     drain_choice(db, st);
 }
+
+/// Cards changed on the 2026-09-29 balance patch. Fixture replays that include
+/// them were recorded against pre-patch printed text (owner ruling 2026-09-03).
+pub const BALANCE_PATCH_20260929: &[&str] = &[
+    "10423110",
+    "10633310",
+    "10921110",
+    "10922110",
+    "10972310",
+    "10973310",
+    "10974110",
+];
+
+pub fn fixture_uses_balance_patch_cards(cap: &serde_json::Value) -> bool {
+    for key in ["deckA", "deckB"] {
+        let Some(obj) = cap.get(key).and_then(|v| v.as_object()) else {
+            continue;
+        };
+        for &id in BALANCE_PATCH_20260929 {
+            if obj.contains_key(id) {
+                return true;
+            }
+        }
+    }
+    false
+}

@@ -644,7 +644,9 @@ fn tkroll_positive_fixtures_take_sure_kill() {
     let mut converted = 0usize;
     let mut eligible = 0usize;
     let mut det_skipped = 0usize;
-    let positive_total = 6usize;
+    // fb-play-122 and fb-play-28 include 2026-09-29 patched cards; replay is stale.
+    let positive_total = 4usize;
+    let mut replay_stale = 0usize;
     for ent in fs::read_dir(&dir).expect("tkroll fixtures dir").flatten() {
         let path = ent.path();
         if path.extension().and_then(|s| s.to_str()) != Some("json") {
@@ -653,6 +655,13 @@ fn tkroll_positive_fixtures_take_sure_kill() {
         let cap: Value =
             serde_json::from_str(&fs::read_to_string(&path).expect("read fixture")).expect("json");
         if cap["kind"].as_str() != Some("positive") {
+            continue;
+        }
+        if fixture_uses_balance_patch_cards(&cap) {
+            eprintln!(
+                "skip {path:?}: replay stale after 2026-09-29 balance patch (Disgraceful / Bewitching text)"
+            );
+            replay_stale += 1;
             continue;
         }
         let ply = cap["ply"].as_u64().expect("ply") as usize;
@@ -677,11 +686,12 @@ fn tkroll_positive_fixtures_take_sure_kill() {
         }
     }
     eprintln!(
-        "positive summary: converted={converted}/{positive_total} eligible={eligible} det_skipped={det_skipped}"
+        "positive summary: converted={converted}/{positive_total} eligible={eligible} det_skipped={det_skipped} replay_stale={replay_stale}"
     );
+    assert_eq!(replay_stale, 2, "expected two stale positive fixtures (fb-play-122, fb-play-28)");
     assert!(
-        converted >= 5,
-        "need at least 5 of {positive_total} positive fixtures (converted={converted}, eligible={eligible}, det_skipped={det_skipped}); run tkroll_fixture_root_diagnostics --include-ignored"
+        converted >= 4,
+        "need all {positive_total} replayable positive fixtures (converted={converted}, eligible={eligible}, det_skipped={det_skipped}); run tkroll_fixture_root_diagnostics --include-ignored"
     );
 }
 
@@ -698,6 +708,12 @@ fn tkroll_gambles_not_taken_blindly() {
         let cap: Value =
             serde_json::from_str(&fs::read_to_string(&path).expect("read fixture")).expect("json");
         if cap["kind"].as_str() != Some("gamble") {
+            continue;
+        }
+        if fixture_uses_balance_patch_cards(&cap) {
+            eprintln!(
+                "skip gamble {path:?}: replay stale after 2026-09-29 balance patch"
+            );
             continue;
         }
         let ply = cap["ply"].as_u64().expect("ply") as usize;

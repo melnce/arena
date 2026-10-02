@@ -315,6 +315,12 @@ fn tkill_fixtures_take_deterministic_kill() {
         let name = path.file_name().unwrap().to_str().unwrap();
         let cap: Value =
             serde_json::from_str(&fs::read_to_string(&path).expect("read fixture")).expect("json");
+        if fixture_uses_balance_patch_cards(&cap) {
+            eprintln!(
+                "skip {name}: replay stale after 2026-09-29 balance patch (Bewitching cost / Enhance)"
+            );
+            continue;
+        }
         assert_tkill_takes_kill(&db, &path, &cap);
         any = true;
         if is_audit_fixture(name) {
