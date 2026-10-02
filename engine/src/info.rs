@@ -450,7 +450,16 @@ fn collect_hand_gates(
     };
     for a in card.abilities() {
         if !matches!(a, Ability::Fanfare { .. }) {
-            walk_ability(ctx_info, a, &mut gates);
+            let mut extra = Vec::new();
+            walk_ability(ctx_info, a, &mut extra);
+            for g in extra {
+                if g.kind == "artifacts" {
+                    gates.push(GateInfo {
+                        glow: false,
+                        ..g
+                    });
+                }
+            }
         }
     }
     if inst.printed_tags.contains("spellboost")
