@@ -199,9 +199,7 @@ fn owner_feline_holdback_overrides() {
         }
         eprintln!(
             "owner-feline seed={} pick={} holdback_0to1={}",
-            seed,
-            pick,
-            via_hb
+            seed, pick, via_hb
         );
         let mut plain = parse_h0(SERVED_SPEC);
         let mut rng_p = policy_rng(seed);
@@ -586,7 +584,8 @@ fn netherworld_lieutenant_second_killer_report() {
 fn holding_back_protects_attacker() {
     let db = load_db();
     let cap: Value = serde_json::from_str(
-        &fs::read_to_string(hbcheck_fixture_dir().join("neg-play-100010-ply0036.json")).expect("read"),
+        &fs::read_to_string(hbcheck_fixture_dir().join("neg-play-100010-ply0036.json"))
+            .expect("read"),
     )
     .expect("json");
     let ply = cap["ply"].as_u64().expect("ply") as usize;
@@ -623,7 +622,10 @@ fn holding_back_protects_attacker() {
         attack_removable
     );
     assert_eq!(end_removable, 0, "End′ must have no removable worlds");
-    assert!(attack_removable > 0, "at least one A′ world must be removable");
+    assert!(
+        attack_removable > 0,
+        "at least one A′ world must be removable"
+    );
     assert!(hb.end_prime > best_atk, "End′ must beat best A′");
 }
 
@@ -733,9 +735,7 @@ fn median_f32(xs: &[f32]) -> f32 {
 fn print_replay_bucket(name: &str, b: &ReplayBucket) {
     eprintln!(
         "{:<28} checks={:<4} overrides={}",
-        name,
-        b.checks,
-        b.overrides
+        name, b.checks, b.overrides
     );
 }
 
@@ -818,8 +818,7 @@ fn own_turn_decision(state: &arena_engine::State, legal: &[Action]) -> bool {
 }
 
 fn meta_deck_stems() -> Vec<String> {
-    let text =
-        fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS.json");
+    let text = fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS.json");
     let pools: Value = serde_json::from_str(&text).expect("pools json");
     pools["meta"]
         .as_array()
@@ -972,15 +971,7 @@ fn print_cost_table(title: &str, rows: &[HbBenchRow]) {
     eprintln!("{title}:");
     eprintln!(
         "{:<44} {:>8} {:>8} {:>8} {:>8} {:>8} {:>10} {:>10} {:>10}",
-        "spec",
-        "n",
-        "ms/dec",
-        "p95_ms",
-        "chk/dec",
-        "ovr/dec",
-        "rem/dec",
-        "nodes/chk",
-        "max/chk"
+        "spec", "n", "ms/dec", "p95_ms", "chk/dec", "ovr/dec", "rem/dec", "nodes/chk", "max/chk"
     );
     for row in rows {
         let d = row.decisions as f64;
@@ -1099,5 +1090,8 @@ fn hbcheck_paired_cost_report() {
             row.hb_removable += removable;
         }
     }
-    print_cost_table("166-moment worst case (holdback1 replay positions)", &moment_rows);
+    print_cost_table(
+        "166-moment worst case (holdback1 replay positions)",
+        &moment_rows,
+    );
 }
