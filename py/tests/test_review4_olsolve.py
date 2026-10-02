@@ -82,6 +82,8 @@ def test_review4_fixtures_match_pinned_hashes() -> None:
     """Guardrail: fixtures must match origin/results review4 captures."""
     for name, expected in FIXTURE_SHA256.items():
         data = (FIXTURES / name).read_bytes()
+        # core.autocrlf on Windows checks JSON out with CRLF; pins are LF sha256.
+        data = data.replace(b"\r\n", b"\n")
         assert hashlib.sha256(data).hexdigest() == expected, name
 
 

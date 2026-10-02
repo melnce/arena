@@ -85,6 +85,8 @@ def _opp_lethal_worlds(cand: dict[str, Any]) -> int:
 def test_review5_fixtures_match_pinned_hashes() -> None:
     for name, expected in FIXTURE_SHA256.items():
         data = (FIXTURES / name).read_bytes()
+        # core.autocrlf on Windows checks JSON out with CRLF; pins are LF sha256.
+        data = data.replace(b"\r\n", b"\n")
         assert hashlib.sha256(data).hexdigest() == expected, name
 
 
