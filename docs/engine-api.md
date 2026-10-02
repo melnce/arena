@@ -573,7 +573,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `omacro` | 0 | in the greedy opponent reply only, credit a `Play` with the best evolve on the just-played slot when that line scores higher; the play's own `Choose` / `Confirm` resolve inside the same greedy step, and the evolve is applied as part of that step (not counted against `osteps`). Default off |
 | `olsolve` | 0 | after a sweep miss on the opponent's turn, run [`forced_lethal`] with this node budget (charged to the pair cap). `0` = off (today). Only when `olethal=1` and `odepth=0` |
 | `tkill` | 0 | on each own-turn decision (Main, Combat, or Choice) with more than one useful candidate, run [`forced_lethal_det`] on the first determinization before `consensus_lethal` / search. A deterministic kill confirmed on every root is played; applies are outside `node_cap`. `0` = off (today) |
-| `tkroll` | 0 | after a deterministic miss, run [`forced_lethal`] on the first determinization and confirm the line under rerolled dice on every root. Only when `tkill>0`; uses `tkill`'s budget. `0` = off (today; no effect when `tkill=0`) |
+| `tkroll` | 0 | after a deterministic miss, run [`forced_lethal_accepting`] on the first determinization (every-root × `tkroll` rerolled confirmation inside the search; transposition off). Only when `tkill>0`; uses `tkill`'s budget. `0` = off (today; no effect when `tkill=0`) |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
@@ -684,12 +684,12 @@ consume the policy rng. Default `tkill=0` — byte-identical to today.
 The check re-runs at every decision of the turn (no line cache).
 
 When `tkill>0` and `tkroll>0`, after the deterministic path misses,
-`H0::choose` runs [`forced_lethal`] on the first determinization. On
-[`LethalVerdict::Lethal`], the line is replayed on every root under
-`tkroll` dice rerolls (seeds derived from `search_key(root)` and the
-reroll index). When every replay kills and `line[0]` is legal, that
-action is taken and `last_value = wv`. One solve, one confirmation — no
-alternative lines when a reroll fails. Default `tkroll=0` — no effect
+`H0::choose` runs [`forced_lethal_accepting`] on the first determinization.
+When the search finds a kill, it calls the every-root × `tkroll` rerolled
+confirmation (seeds derived from `search_key(root)` and the reroll index)
+before accepting the line; rejected lines keep searching within the same
+budget (transposition off). When an accepted line’s `line[0]` is legal,
+that action is taken and `last_value = wv`. Default `tkroll=0` — no effect
 when `tkill=0`; with `tkill>0` and `tkroll=0`, play is byte-identical
 to deterministic-only `tkill`.
 
@@ -836,13 +836,13 @@ kills found on the first world, kills confirmed and played, rejections
 [`Unknown`] results, applies spent, and the per-call maximum
 (`0` when `tkill=0`; the default is `tkill=0`).
 `own_roll_calls` / `own_roll_found` / `own_roll_taken` /
-`own_roll_rejected` / `own_roll_unknown` / `own_roll_nodes` /
-`own_roll_nodes_max` are [`forced_lethal`] runs after a deterministic
-miss, kills found on the first world, kills confirmed under rerolled dice
-and played, rejections (a reroll did not kill or `line[0]` was not
-legal), budget-starved [`Unknown`] results, applies spent, and the
-per-call maximum (`0` when `tkroll=0` or `tkill=0`; the default is
-`tkroll=0`).
+`own_roll_rejected` / `own_roll_lines_rejected` / `own_roll_unknown` /
+`own_roll_nodes` / `own_roll_nodes_max` are [`forced_lethal_accepting`] runs
+after a deterministic miss: kills found and accepted under rerolled dice on
+every root and played; decision-level rejections when no line was accepted;
+candidate lines rejected during search; budget-starved [`Unknown`] results;
+applies spent; and the per-call maximum (`0` when `tkroll=0` or `tkill=0`;
+the default is `tkroll=0`).
 `chose_with_lethal_root` is the fraction of searched decisions whose
 chosen candidate had at least one determinization at exactly `-wv`
 (the clamp floor; compared with a small epsilon).
