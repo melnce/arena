@@ -13,7 +13,7 @@
 //! node cap is global. `encode` still masks the opponent's hand at the
 //! leaf; `info` is a search-time knob only.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
 use crate::action::{acting_player, to_neutral, Action};
@@ -4182,38 +4182,58 @@ struct RemovalCandidate {
     kills_leader: bool,
 }
 
-fn kill_attack_slot(db: &CardDb, state: &State, a: &Action) -> Option<Slot> {
+fn is_kill_attack(db: &CardDb, state: &State, a: &Action) -> bool {
     let Action::Attack {
-        attacker,
         target: AttackTarget::Slot(target),
+        ..
     } = a
     else {
-        return None;
+        return false;
     };
     let me = acting_player(state);
     let opp = me.opponent();
-    state.field_inst(opp, target.0)?;
+    let Some(target_inst) = state.field_inst(opp, target.0) else {
+        return false;
+    };
+    let target_id = target_inst.id;
     let mut s = state.clone();
     if apply(db, &mut s, a.clone()).is_err() {
-        return None;
+        return false;
     }
-    if s.field_inst(opp, target.0).is_none() {
-        Some(*attacker)
-    } else {
-        None
-    }
+    s.find_field(opp, target_id).is_none()
 }
 
-fn hb_x_removed(state: &State, me: PlayerId, x_slots: &[Slot]) -> bool {
-    x_slots.iter().any(|s| state.field_inst(me, s.0).is_none())
+fn attack_attacker_id(state: &State, me: PlayerId, a: &Action) -> Option<u32> {
+    let Action::Attack { attacker, .. } = a else {
+        return None;
+    };
+    state.field_inst(me, attacker.0).map(|f| f.id)
+}
+
+fn collect_attacker_ids(state: &State, me: PlayerId, attacks: &[&Action]) -> Vec<u32> {
+    let mut ids = Vec::new();
+    for a in attacks {
+        if let Some(id) = attack_attacker_id(state, me, a) {
+            if !ids.contains(&id) {
+                ids.push(id);
+            }
+        }
+    }
+    ids
+}
+
+fn hb_x_removed(state: &State, me: PlayerId, x_ids: &[u32]) -> bool {
+    x_ids.iter().any(|id| state.find_field(me, *id).is_none())
 }
 
 fn confirm_holdback_removal(
     db: &CardDb,
     turn_start: &State,
     me: PlayerId,
-    x_slots: &[Slot],
+    x_ids: &[u32],
     line: &[Action],
+    nodes: &mut u32,
+    budget: u32,
 ) -> bool {
     let pos_key = search_key(turn_start);
     let seeds: Vec<u64> = (0..HB_REROLLS)
@@ -4223,11 +4243,15 @@ fn confirm_holdback_removal(
         let mut s = turn_start.clone();
         s.reseed(seed);
         for a in line {
+            if *nodes >= budget {
+                return false;
+            }
+            *nodes += 1;
             if apply(db, &mut s, a.clone()).is_err() {
                 return false;
             }
         }
-        if !hb_x_removed(&s, me, x_slots) {
+        if !hb_x_removed(&s, me, x_ids) {
             return false;
         }
     }
@@ -4268,16 +4292,17 @@ fn holdback_removal_search(
     db: &CardDb,
     turn_start: &State,
     me: PlayerId,
-    x_slots: &[Slot],
+    x_ids: &[u32],
     budget: u32,
     eval: Evaluator<'_>,
 ) -> (Option<RemovalCandidate>, u32, bool) {
     let mut best: Option<RemovalCandidate> = None;
-    let mut total_nodes = 0u32;
-    let mut unknown = false;
+    let mut nodes = 0u32;
+    let mut tt: HashMap<u64, u32> = HashMap::new();
     for max_depth in 1..=HB_MAX_DEPTH {
-        let mut tt = HashSet::new();
-        let mut nodes = 0u32;
+        if nodes >= budget {
+            break;
+        }
         let mut path_keys: Vec<u64> = vec![search_key(turn_start)];
         let mut line: Vec<Action> = Vec::new();
         search_holdback_removal(
@@ -4285,7 +4310,7 @@ fn holdback_removal_search(
             turn_start,
             turn_start,
             me,
-            x_slots,
+            x_ids,
             budget,
             max_depth,
             &mut nodes,
@@ -4294,14 +4319,10 @@ fn holdback_removal_search(
             &mut line,
             eval,
             &mut best,
-            &mut unknown,
         );
-        total_nodes = total_nodes.max(nodes);
     }
-    if total_nodes >= budget && best.is_none() {
-        unknown = true;
-    }
-    (best, total_nodes, unknown)
+    let unknown = nodes >= budget && best.is_none();
+    (best, nodes, unknown)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -4310,20 +4331,19 @@ fn search_holdback_removal(
     turn_start: &State,
     state: &State,
     me: PlayerId,
-    x_slots: &[Slot],
+    x_ids: &[u32],
     budget: u32,
     max_depth: u32,
     nodes: &mut u32,
-    tt: &mut HashSet<u64>,
+    tt: &mut HashMap<u64, u32>,
     path_keys: &mut Vec<u64>,
     line: &mut Vec<Action>,
     eval: Evaluator<'_>,
     best: &mut Option<RemovalCandidate>,
-    unknown: &mut bool,
 ) {
     let opp = me.opponent();
-    if hb_x_removed(state, me, x_slots) {
-        if confirm_holdback_removal(db, turn_start, me, x_slots, line) {
+    if hb_x_removed(state, me, x_ids) {
+        if confirm_holdback_removal(db, turn_start, me, x_ids, line, nodes, budget) {
             let kills_leader = state.winner == Some(opp);
             let opp_value = if kills_leader {
                 eval.wv
@@ -4347,14 +4367,14 @@ fn search_holdback_removal(
         return;
     }
     if *nodes >= budget {
-        *unknown = true;
         return;
     }
+    let remaining = max_depth - line.len() as u32;
     let key = search_key(state);
-    if tt.contains(&key) {
+    if tt.get(&key).is_some_and(|&d| d >= remaining) {
         return;
     }
-    tt.insert(key);
+    tt.insert(key, remaining);
 
     if acting_player(state) != opp
         || matches!(
@@ -4371,16 +4391,13 @@ fn search_holdback_removal(
             continue;
         }
         let Some(next) = try_apply_hb(db, state, &a, nodes, budget, path_keys) else {
-            if *nodes >= budget {
-                *unknown = true;
-            }
             continue;
         };
         line.push(a.clone());
         path_keys.push(search_key(&next));
         search_holdback_removal(
-            db, turn_start, &next, me, x_slots, budget, max_depth, nodes, tt, path_keys, line,
-            eval, best, unknown,
+            db, turn_start, &next, me, x_ids, budget, max_depth, nodes, tt, path_keys, line, eval,
+            best,
         );
         line.pop();
         path_keys.pop();
@@ -4470,7 +4487,7 @@ fn holdback_symmetric_v(
     root: &State,
     turn_start: &State,
     me: PlayerId,
-    x_slots: &[Slot],
+    x_ids: &[u32],
     hbcheck: u32,
     eval: Evaluator<'_>,
     horizon: u32,
@@ -4482,8 +4499,11 @@ fn holdback_symmetric_v(
     let plain = holdback_leaf_value(
         db, root, turn_start, me, eval, horizon, hres, odepth, obeam, dec_stats,
     );
+    if x_ids.is_empty() {
+        return holdback_branch(plain, plain, 0);
+    }
     let (removal, nodes, unknown) =
-        holdback_removal_search(db, turn_start, me, x_slots, hbcheck, eval);
+        holdback_removal_search(db, turn_start, me, x_ids, hbcheck, eval);
     dec_stats.hb_nodes += u64::from(nodes);
     dec_stats.hb_nodes_max = dec_stats.hb_nodes_max.max(u64::from(nodes));
     if unknown {
@@ -4643,21 +4663,18 @@ fn try_holdback_trade(
     }
 
     let mut kill_js: Vec<usize> = Vec::new();
-    let mut x_slots: Vec<Slot> = Vec::new();
     for (j, a) in subset.iter().enumerate() {
         if n[j] == 0 {
             continue;
         }
-        if let Some(slot) = kill_attack_slot(db, &roots[0], a) {
-            if !x_slots.contains(&slot) {
-                x_slots.push(slot);
-            }
+        if is_kill_attack(db, &roots[0], a) {
             kill_js.push(j);
         }
     }
-    if x_slots.is_empty() || kill_js.is_empty() {
+    if kill_js.is_empty() {
         return None;
     }
+    let kill_actions: Vec<&Action> = kill_js.iter().map(|j| &subset[*j]).collect();
 
     dec_stats.hb_checks += 1;
 
@@ -4665,12 +4682,13 @@ fn try_holdback_trade(
     let mut attack_worlds: Vec<Vec<HoldbackBranch>> = vec![Vec::new(); kill_js.len()];
 
     for root in roots.iter() {
+        let x_ids_end = collect_attacker_ids(root, me, &kill_actions);
         let mut after_et = root.clone();
         if apply(db, &mut after_et, Action::EndTurn).is_err() {
             continue;
         }
         let end_branch = holdback_symmetric_v(
-            db, root, &after_et, me, &x_slots, hbcheck, eval, horizon, hres, odepth, obeam,
+            db, root, &after_et, me, &x_ids_end, hbcheck, eval, horizon, hres, odepth, obeam,
             dec_stats,
         );
         if end_branch.removable {
@@ -4683,8 +4701,11 @@ fn try_holdback_trade(
             let branch = if let Some(after) =
                 holdback_after_attack_finish_end(db, root, me, attack, osteps, eval)
             {
+                let x_ids_atk = attack_attacker_id(&after, me, attack)
+                    .map(|id| vec![id])
+                    .unwrap_or_default();
                 holdback_symmetric_v(
-                    db, root, &after, me, &x_slots, hbcheck, eval, horizon, hres, odepth, obeam,
+                    db, root, &after, me, &x_ids_atk, hbcheck, eval, horizon, hres, odepth, obeam,
                     dec_stats,
                 )
             } else {
