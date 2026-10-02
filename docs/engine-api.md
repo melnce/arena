@@ -706,8 +706,9 @@ When `hbcheck>0`, after the normal search path chooses `EndTurn` and at
 least one candidate is a kill attack, `H0::choose` recomputes both
 branches on every root without reusing search numbers. Let `X` be the
 held-back attackers' instance ids (`CardInstance.id`, collected from each
-root's attacker slot; on attack paths `A′`, only ids still on the field
-after the bot's greedy finish). For each state `s` after the
+root's attacker slot on that root). On attack paths `A′`, use the same
+root `X` ids, keeping only those still on the field after the bot's
+greedy finish (`find_field`); if none remain, `removal = plain`. For each state `s` after the
 bot's `EndTurn`, `plain(s)` is the usual search leaf and `removal(s)` is
 the same leaf after the opponent's best sure removal line for `X` (or
 `plain(s)` when none exists); `v(s)=min(plain,removal)`. `End′` applies

@@ -4222,6 +4222,14 @@ fn collect_attacker_ids(state: &State, me: PlayerId, attacks: &[&Action]) -> Vec
     ids
 }
 
+fn filter_x_ids_on_field(state: &State, me: PlayerId, x_ids: &[u32]) -> Vec<u32> {
+    x_ids
+        .iter()
+        .copied()
+        .filter(|&id| state.find_field(me, id).is_some())
+        .collect()
+}
+
 fn hb_x_removed(state: &State, me: PlayerId, x_ids: &[u32]) -> bool {
     x_ids.iter().any(|id| state.find_field(me, *id).is_none())
 }
@@ -4701,9 +4709,7 @@ fn try_holdback_trade(
             let branch = if let Some(after) =
                 holdback_after_attack_finish_end(db, root, me, attack, osteps, eval)
             {
-                let x_ids_atk = attack_attacker_id(&after, me, attack)
-                    .map(|id| vec![id])
-                    .unwrap_or_default();
+                let x_ids_atk = filter_x_ids_on_field(&after, me, &x_ids_end);
                 holdback_symmetric_v(
                     db, root, &after, me, &x_ids_atk, hbcheck, eval, horizon, hres, odepth, obeam,
                     dec_stats,
