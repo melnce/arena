@@ -1,0 +1,6 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:nodes=32000,horizon=3,k=8,net=engine/models/h0-linear-v2.json"
+  }
+]
