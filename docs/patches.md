@@ -22,4 +22,8 @@
 3. Hand-author changed printed text / modes the catalog tool cannot infer.
 4. Update tests (grep card ids in `engine/tests/` and `ui/tests/`).
 5. Add or extend `oracle/cards-as-recorded/` for any card present in committed traces.
-6. Re-pin only where a game or fixture containing a patched card changes outcome; document each row in the PR.
+   Never overwrite an existing file there — it holds the version from when traces and
+   fixtures were recorded. A card patched twice keeps its first, recording-time version.
+6. Recorded fixtures (tkill / tkroll / hbcheck and any future replay fixture) load
+   `load_recorded_db`. A fixture recorded after a patch must not.
+7. Re-pin only where a game or fixture containing a patched card changes outcome; document each row in the PR.

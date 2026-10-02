@@ -152,7 +152,7 @@ fn spec_hbcheck_round_trip() {
 
 #[test]
 fn hbcheck0_identity_smoke() {
-    let db = load_db();
+    let db = load_recorded_db();
     let cap: Value = serde_json::from_str(
         &fs::read_to_string(hbcheck_fixture_dir().join("owner-feline.json")).expect("read"),
     )
@@ -175,7 +175,7 @@ fn hbcheck0_identity_smoke() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn owner_feline_holdback_overrides() {
-    let db = load_db();
+    let db = load_recorded_db();
     let cap: Value = serde_json::from_str(
         &fs::read_to_string(hbcheck_fixture_dir().join("owner-feline.json")).expect("read"),
     )
@@ -248,7 +248,7 @@ fn owner_feline_holdback_overrides() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn positive_fixtures_take_kill() {
-    let db = load_db();
+    let db = load_recorded_db();
     let dir = hbcheck_fixture_dir();
     let mut paths: Vec<PathBuf> = fs::read_dir(&dir)
         .expect("dir")
@@ -289,7 +289,7 @@ fn positive_fixtures_take_kill() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn negative_fixtures_check_without_override() {
-    let db = load_db();
+    let db = load_recorded_db();
     let dir = hbcheck_fixture_dir();
     let mut paths: Vec<PathBuf> = fs::read_dir(&dir)
         .expect("dir")
@@ -404,7 +404,7 @@ fn no_change_when_check_does_not_run() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn holdback_is_deterministic() {
-    let db = load_db();
+    let db = load_recorded_db();
     let cap: Value = serde_json::from_str(
         &fs::read_to_string(hbcheck_fixture_dir().join("owner-feline.json")).expect("read"),
     )
@@ -582,7 +582,7 @@ fn netherworld_lieutenant_second_killer_report() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn holding_back_protects_attacker() {
-    let db = load_db();
+    let db = load_recorded_db();
     let cap: Value = serde_json::from_str(
         &fs::read_to_string(hbcheck_fixture_dir().join("neg-play-100010-ply0036.json"))
             .expect("read"),
@@ -742,7 +742,7 @@ fn print_replay_bucket(name: &str, b: &ReplayBucket) {
 #[test]
 #[ignore = "measurement helper for holdback1 166-moment replay (tools/hbcheck_cost_bench.py)"]
 fn hbcheck_moment_replay_report() {
-    let db = load_db();
+    let db = load_recorded_db();
     let moments = load_moments();
     assert_eq!(moments.len(), 166, "expected 166 holdback1 moments");
     let mut all = ReplayBucket::default();
@@ -1053,6 +1053,7 @@ fn hbcheck_paired_cost_report() {
         &selfplay_rows,
     );
 
+    let recorded_db = load_recorded_db();
     let moments = load_moments();
     assert_eq!(moments.len(), 166);
     let mut moment_rows: Vec<HbBenchRow> = Vec::new();
@@ -1073,10 +1074,10 @@ fn hbcheck_paired_cost_report() {
         }
     }
     for moment in &moments {
-        let (st, seed) = moment_capture(&db, moment);
+        let (st, seed) = moment_capture(&recorded_db, moment);
         for row in &mut moment_rows {
             let (ms, nodes, nodes_per_chk, checks, overrides, removable) =
-                bench_hb_choose(&db, &row.spec, &st, seed);
+                bench_hb_choose(&recorded_db, &row.spec, &st, seed);
             row.decisions += 1;
             row.ms_total += ms;
             row.ms_samples.push(ms);

@@ -44,7 +44,7 @@ jobs:
             "The nightly \`node tools/fetch-official.mjs --check\` failed. Per-card diff is in the workflow log." \
             "${RUN_URL}" "${{ github.event_name }}" "${{ github.ref_name }}" "${{ github.sha }}")"
           if [ -f /tmp/catalog-drift.log ]; then
-            body="${body}\n\`\`\`\n$(tail -n 200 /tmp/catalog-drift.log)\n\`\`\`"
+            body="$(printf '%s\n\n```\n%s\n```' "${body}" "$(tail -n 200 /tmp/catalog-drift.log)")"
           fi
 
           issue="$(gh issue list --label catalog-drift --state open --json number --jq '.[0].number // empty')"
