@@ -108,9 +108,29 @@ impl CardDb {
         Ok(())
     }
 
+    /// Load authored files that **replace** ids already present from `cards/**`.
+    /// Used by the oracle gate to replay traces against recording-time card data.
+    pub fn load_replace_dir(&mut self, dir: impl AsRef<Path>) -> Result<(), LoadError> {
+        let dir = dir.as_ref();
+        if !dir.exists() {
+            return Ok(());
+        }
+        walk_json(dir, &mut |path| self.load_file_replace(path))?;
+        self.rebuild_when_index();
+        self.rebuild_boundary_index();
+        self.rebuild_static_index();
+        self.rebuild_needs_index();
+        Ok(())
+    }
+
     fn load_file(&mut self, path: &Path, skip_existing: bool) -> Result<(), LoadError> {
         let (label, text) = read_entry(path)?;
         self.load_text(&label, &text, skip_existing)
+    }
+
+    fn load_file_replace(&mut self, path: &Path) -> Result<(), LoadError> {
+        let (label, text) = read_entry(path)?;
+        self.load_text_replace(&label, &text)
     }
 
     fn load_catalog_text(&mut self, label: &str, text: &str) -> Result<(), LoadError> {
@@ -173,6 +193,40 @@ impl CardDb {
                         second: label.to_string(),
                     });
                 }
+                if let Some(name) = crest.unbound_refs().into_iter().next() {
+                    return Err(LoadError::UnboundRef {
+                        card: key.clone(),
+                        name,
+                    });
+                }
+                self.paths.insert(key.clone(), PathBuf::from(label));
+                self.crests.insert(key, crest);
+            }
+        }
+        Ok(())
+    }
+
+    fn load_text_replace(&mut self, label: &str, text: &str) -> Result<(), LoadError> {
+        let parsed: CardOrCrest =
+            serde_json::from_str(text).map_err(|source| LoadError::Parse {
+                path: label.to_string(),
+                source,
+            })?;
+        match parsed {
+            CardOrCrest::Card(card) => {
+                let id = card.id();
+                let key = id.as_str();
+                if let Some(name) = card.unbound_refs().into_iter().next() {
+                    return Err(LoadError::UnboundRef {
+                        card: key.clone(),
+                        name,
+                    });
+                }
+                self.paths.insert(key, PathBuf::from(label));
+                self.cards.insert(id, card);
+            }
+            CardOrCrest::Crest(crest) => {
+                let key = crest.id.clone();
                 if let Some(name) = crest.unbound_refs().into_iter().next() {
                     return Err(LoadError::UnboundRef {
                         card: key.clone(),

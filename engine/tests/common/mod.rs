@@ -97,6 +97,15 @@ pub fn load_db() -> CardDb {
     db
 }
 
+/// Card db for oracle trace replay: current pool plus recording-time overrides
+/// for balance-patched cards (`oracle/cards-as-recorded/`).
+pub fn load_oracle_db() -> CardDb {
+    let mut db = load_db();
+    db.load_replace_dir(repo_root().join("oracle/cards-as-recorded"))
+        .expect("oracle overlay");
+    db
+}
+
 pub fn cid(s: &str) -> CardId {
     CardId::parse(s).unwrap_or_else(|| panic!("bad id {s}"))
 }

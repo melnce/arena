@@ -1,0 +1,41 @@
+{
+  "id": "10922110",
+  "name": "Whirlpool Gunner",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10009,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Summon a Dread Pirate's Flag. Add a Gilded Goblet to your hand.\n\nRush",
+  "attack": 3,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Dread Pirate's Flag. Add a Gilded Goblet to your hand.",
+      "effects": [
+        {
+          "printed": "Summon a Dread Pirate's Flag.",
+          "op": "summon",
+          "card": {
+            "named": "90021210"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Add a Gilded Goblet to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021320"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
