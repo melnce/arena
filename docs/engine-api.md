@@ -490,6 +490,14 @@ node budget charged to the pair cap; default `0` = off),
 `tkroll=<u32>` (after a deterministic miss, run [`forced_lethal`] on the
 first determinization and confirm under rerolled dice; only when
 `tkill>0`; default `0` = off),
+`hbcheck=<u32>` (after search chooses `EndTurn` with a kill attack
+available, symmetrically re-score `EndTurn` and each kill attack as
+`v(s)=min(plain,removal)` on a fresh clone after the bot's `EndTurn`
+(`plain` = the usual leaf; `removal` = opponent's best sure removal of
+the held-back attacker set, else `plain`; attack paths also finish the
+bot's turn greedily up to `osteps` before `EndTurn`; bounded removal
+search up to 3 actions and 4 rerolls; applies are outside `node_cap`;
+default `0` = off),
 `osteps=<u32>` (greedy forced-`EndTurn` step;
 default `6`; hard stop is `osteps+3`),
 `wv=<f32>` (saturation bound on every accumulated value; default `80`),
@@ -574,6 +582,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `olsolve` | 0 | after a sweep miss on the opponent's turn, run [`forced_lethal`] with this node budget (charged to the pair cap). `0` = off (today). Only when `olethal=1` and `odepth=0` |
 | `tkill` | 0 | on each own-turn decision (Main, Combat, or Choice) with more than one useful candidate, run [`forced_lethal_det`] on the first determinization before `consensus_lethal` / search. A deterministic kill confirmed on every root is played; applies are outside `node_cap`. `0` = off (today) |
 | `tkroll` | 0 | after a deterministic miss, run [`forced_lethal_accepting`] on the first determinization (every-root × `tkroll` rerolled confirmation inside the search; transposition off). Only when `tkill>0`; uses `tkill`'s budget. `0` = off (today; no effect when `tkill=0`) |
+| `hbcheck` | 0 | after search chooses `EndTurn` with a kill attack available, symmetrically re-score `End′` and each kill attack `A′` as `v(s)=min(plain,removal)` per determinization (bounded opponent removal search up to 3 actions, 4 rerolls per sure line, `hbcheck` applies per root outside `node_cap`; attack paths finish the bot's turn greedily up to `osteps` before `EndTurn`). Play the best kill when its aggregate beats `End′` (`holdback_trade`). `0` = off (today) |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
@@ -692,6 +701,21 @@ budget (transposition off). When an accepted line’s `line[0]` is legal,
 that action is taken and `last_value = wv`. Default `tkroll=0` — no effect
 when `tkill=0`; with `tkill>0` and `tkroll=0`, play is byte-identical
 to deterministic-only `tkill`.
+
+When `hbcheck>0`, after the normal search path chooses `EndTurn` and at
+least one candidate is a kill attack, `H0::choose` recomputes both
+branches on every root without reusing search numbers. Let `X` be the
+held-back attackers (the kill-attack slots). For each state `s` after the
+bot's `EndTurn`, `plain(s)` is the usual search leaf and `removal(s)` is
+the same leaf after the opponent's best sure removal line for `X` (or
+`plain(s)` when none exists); `v(s)=min(plain,removal)`. `End′` applies
+`v` to `root + EndTurn`. Each kill attack `A′` applies `root + A`, lets
+the bot finish its turn greedily up to `osteps`, then `EndTurn`, then
+`v`. Play the kill with the highest `A′` aggregate when it beats `End′`
+(`ChoosePath::HoldbackTrade`). Explain records `end_prime`, per-world
+`plain`/`removal`/`value`/`removable` for `End′` and every `A′`.
+`hb_worlds_removable` counts worlds where `removal < plain` on the
+`End′` branch. Default `hbcheck=0` — play is byte-identical when off.
 
 The owner's standing yardstick (`results` branch, `sweep5/SUMMARY.md`,
 `b79421a`, engine `f7b0a61`, data seed 6, 16 oracle decks, wall 3 h 38)
@@ -843,6 +867,9 @@ every root and played; decision-level rejections when no line was accepted;
 candidate lines rejected during search; budget-starved [`Unknown`] results;
 applies spent; and the per-call maximum (`0` when `tkroll=0` or `tkill=0`;
 the default is `tkroll=0`).
+`hb_checks` / `hb_worlds_removable` / `hb_overrides` / `hb_unknown` are
+held-back-check counters; `hb_nodes` / `hb_nodes_max` are applies spent
+outside `node_cap` (`0` when `hbcheck=0`; the default is `hbcheck=0`).
 `chose_with_lethal_root` is the fraction of searched decisions whose
 chosen candidate had at least one determinization at exactly `-wv`
 (the clamp floor; compared with a small epsilon).
