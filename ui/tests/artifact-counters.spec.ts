@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ART, artShot } from "./helpers.ts";
+import { ART, artShot, openSettings } from "./helpers.ts";
 
 const ANALYZING = "90071130";
 const ANCIENT = "90071140";
@@ -15,7 +15,7 @@ async function boot(page: Page) {
 }
 
 async function importDeck(page: Page, name: string, cards: Record<string, number>) {
-  await page.locator("#settingsBtn").click();
+  await openSettings(page);
   await page.locator("#deckImportFileInput").setInputFiles({
     name,
     mimeType: "application/json",
@@ -27,7 +27,7 @@ async function importDeck(page: Page, name: string, cards: Record<string, number
 }
 
 async function startGame(page: Page, deckId: string) {
-  await page.locator("#settingsBtn").click();
+  await openSettings(page);
   await page.locator("#modeSelect").selectOption("hotseat");
   await page.locator("#seedInput").fill("42");
   await page.locator("#firstSelect").selectOption("a");
@@ -75,22 +75,20 @@ async function playCard(page: Page, card: string) {
   expect(ok, `expected play ${card}`).toBeTruthy();
 }
 
+const ARTIFACT_TOKEN_IDS = [ANALYZING, ANCIENT, MYSTIC];
+
 async function artifactDistinctCount(page: Page): Promise<number> {
-  return page.evaluate(() => {
+  return page.evaluate((tokenIds) => {
     const full = window.__arena!.full() as {
       players: { a: { enter_counts: Record<string, number> } };
     };
-    const db = window.__arena!;
-    const ids = Object.keys(full.players.a.enter_counts ?? {});
-    return ids.filter((id) => {
-      const t = db.cardText(id) as { tribes?: string[]; kind?: string };
-      return t.kind === "follower" && (t.tribes ?? []).includes("artifact");
-    }).length;
-  });
+    const counts = full.players.a.enter_counts ?? {};
+    return tokenIds.filter((id) => (counts[id] ?? 0) > 0).length;
+  }, ARTIFACT_TOKEN_IDS);
 }
 
 async function playArtifactsUntil(page: Page, target: number) {
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 80; i++) {
     const k = await artifactDistinctCount(page);
     if (k >= target) return k;
     const snap = await page.evaluate((tokenIds) => {
@@ -98,17 +96,21 @@ async function playArtifactsUntil(page: Page, target: number) {
         active: string;
         players: { a: { pp: number; hand: Array<{ card: string }> } };
       };
-      const hand = full.players.a.hand.map((c) => c.card);
       const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
       const arts = tokenIds.filter((id) => legal.some((a) => a.play?.card === id));
-      return { active: full.active, pp: full.players.a.pp, arts, hand };
-    }, [ANALYZING, ANCIENT, MYSTIC]);
+      const anyPlay = legal.find((a) => a.play);
+      return {
+        active: full.active,
+        arts,
+        anyPlay: anyPlay?.play?.card ?? null,
+      };
+    }, ARTIFACT_TOKEN_IDS);
     if (snap.active === "a" && snap.arts.length > 0) {
       await playCard(page, snap.arts[0]!);
       continue;
     }
-    if (snap.active === "a") {
-      await endTurn(page);
+    if (snap.active === "a" && snap.anyPlay) {
+      await playCard(page, snap.anyPlay);
       continue;
     }
     await endTurn(page);

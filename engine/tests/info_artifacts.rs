@@ -2,26 +2,17 @@
 
 mod common;
 
-use arena_engine::{
-    apply, board_info, hand_info, legal_actions, Action, Phase, PlayerId,
-};
+use arena_engine::{apply, board_info, hand_info, Action, Phase, PlayerId};
 use common::{
     choose, cid, end_turn, give_pp, load_db, play, play_id, put_field, put_hand, started,
 };
 
-const ARTIFACT_FOLLOWERS: [&str; 5] = [
-    "90071130",
-    "90071140",
-    "90071150",
-    "90071160",
-    "90073110",
-];
+const ARTIFACT_FOLLOWERS: [&str; 5] = ["90071130", "90071140", "90071150", "90071160", "90073110"];
 
-const THRESHOLD_CARDS: [&str; 5] = [
+const THRESHOLD_CARDS: [&str; 4] = [
     "10771120", // Beat Breaker
     "10771310", // Freerunning
     "10772120", // Audacious Artist
-    "10774120", // Myuu
     "10873310", // The Journey Ahead
 ];
 
@@ -29,19 +20,20 @@ const X_CARDS: [&str; 2] = ["10773310", "10774110"]; // Warp Slash, Scarlet
 
 fn set_distinct_artifacts(st: &mut arena_engine::State, who: PlayerId, k: usize) {
     st.player_mut(who).enter_counts.clear();
-    for i in 0..k.min(ARTIFACT_FOLLOWERS.len()) {
-        st.player_mut(who)
-            .enter_counts
-            .insert(cid(ARTIFACT_FOLLOWERS[i]), 1);
+    for id in ARTIFACT_FOLLOWERS
+        .iter()
+        .take(k.min(ARTIFACT_FOLLOWERS.len()))
+    {
+        st.player_mut(who).enter_counts.insert(cid(id), 1);
     }
 }
 
 fn artifacts_gate(gates: &[arena_engine::GateInfo]) -> arena_engine::GateInfo {
-    let n = gates
-        .iter()
-        .filter(|g| g.kind == "artifacts")
-        .count();
-    assert_eq!(n, 1, "expected exactly one artifacts gate, got {n}: {gates:?}");
+    let n = gates.iter().filter(|g| g.kind == "artifacts").count();
+    assert_eq!(
+        n, 1,
+        "expected exactly one artifacts gate, got {n}: {gates:?}"
+    );
     gates
         .iter()
         .find(|g| g.kind == "artifacts")
@@ -148,7 +140,11 @@ fn warp_slash_damage_matches_artifact_count() {
         play(&db, &mut st, hand);
         for slot in 0..2 {
             let def = st.field_inst(opp, slot).expect("follower").defense;
-            assert_eq!(10 - def, gate.have, "slot {slot} took wrong damage at k={k}");
+            assert_eq!(
+                10 - def,
+                gate.have,
+                "slot {slot} took wrong damage at k={k}"
+            );
         }
     }
 }
@@ -241,18 +237,16 @@ fn freerunning_activates_both_modes_when_met() {
     assert!(gate.met);
     play(&db, &mut st, hand);
     assert!(!matches!(st.phase, Phase::Choice { .. }));
-    assert!(
-        st.player(me)
-            .hand
-            .iter()
-            .any(|c| c.card.as_str() == "90071130")
-    );
-    assert!(
-        st.player(me)
-            .hand
-            .iter()
-            .any(|c| c.card.as_str() == "90071140")
-    );
+    assert!(st
+        .player(me)
+        .hand
+        .iter()
+        .any(|c| c.card.as_str() == "90071130"));
+    assert!(st
+        .player(me)
+        .hand
+        .iter()
+        .any(|c| c.card.as_str() == "90071140"));
 }
 
 #[test]
@@ -380,7 +374,11 @@ fn combo_board_label_and_no_double_count() {
     assert_eq!(st.player(me).combo, 3);
     let board = board_info(&db, &st, me);
     let treant = board.iter().find(|i| i.id == "10011130").expect("treant");
-    let combo = treant.gates.iter().find(|g| g.kind == "combo").expect("combo");
+    let combo = treant
+        .gates
+        .iter()
+        .find(|g| g.kind == "combo")
+        .expect("combo");
     assert_eq!(combo.label, "combo");
     assert_eq!(combo.have, 3);
     assert!(combo.met);

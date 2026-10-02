@@ -5,8 +5,7 @@ use serde::Serialize;
 
 use crate::action::{acting_player, Action};
 use crate::apply::{
-    eval_amount, eval_cond, legal_actions, resolve_choose_options, resolve_select,
-    source_card_id,
+    eval_amount, eval_cond, legal_actions, resolve_choose_options, resolve_select, source_card_id,
 };
 use crate::card::{
     Ability, Amount, CardKind, Class, Condition, CounterKey, Effect, FieldHasKind, Filter,
@@ -557,11 +556,27 @@ fn walk_effect(ctx: WalkCtx<'_>, effect: &Effect, gates: &mut Vec<GateInfo>) {
                 match resource {
                     PayResource::Shadows => {
                         let have = ctx.state.player(ctx.player).shadows;
-                        push_gate(gates, "necromancy", "necromancy", need, have, have >= need, true);
+                        push_gate(
+                            gates,
+                            "necromancy",
+                            "necromancy",
+                            need,
+                            have,
+                            have >= need,
+                            true,
+                        );
                     }
                     PayResource::Earth => {
                         let have = ctx.state.player(ctx.player).earth;
-                        push_gate(gates, "earth_rite", "earth rite", need, have, have >= need, true);
+                        push_gate(
+                            gates,
+                            "earth_rite",
+                            "earth rite",
+                            need,
+                            have,
+                            have >= need,
+                            true,
+                        );
                     }
                     PayResource::Pp | PayResource::Faith => {}
                 }
@@ -664,6 +679,7 @@ fn walk_condition(ctx: WalkCtx<'_>, cond: &Condition, gates: &mut Vec<GateInfo>)
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn push_evaluated(
     db: &CardDb,
     cond: &Condition,
@@ -1138,9 +1154,9 @@ fn amount_int(amount: &Amount) -> Option<i32> {
 fn is_artifact_distinct_enter_count(amount: &Amount) -> bool {
     match amount {
         Amount::DistinctNames { distinct_names } => match distinct_names.as_ref() {
-            Amount::EnteredThisMatch { entered_this_match } => filter_is_artifact_follower(
-                entered_this_match,
-            ),
+            Amount::EnteredThisMatch { entered_this_match } => {
+                filter_is_artifact_follower(entered_this_match)
+            }
             _ => false,
         },
         _ => false,

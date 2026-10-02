@@ -2,9 +2,7 @@
 
 use arena_engine::determinize::{determinize_with, Info};
 use arena_engine::policy::Policy;
-use arena_engine::{
-    legal_actions, policy_rng, search_key, Action, AnyPolicy, H0, PlayerId,
-};
+use arena_engine::{legal_actions, policy_rng, search_key, Action, AnyPolicy, PlayerId, H0};
 
 mod common;
 use common::{cid, give_pp, load_db, put_field, put_hand, started};
@@ -22,8 +20,8 @@ fn warp_slash_setup(db: &arena_engine::CardDb, artifact_k: usize) -> (arena_engi
     let opp = PlayerId::B;
     st.player_mut(me).enter_counts.clear();
     const IDS: [&str; 3] = ["90071130", "90071140", "90071150"];
-    for i in 0..artifact_k.min(IDS.len()) {
-        st.player_mut(me).enter_counts.insert(cid(IDS[i]), 1);
+    for id in IDS.iter().take(artifact_k.min(IDS.len())) {
+        st.player_mut(me).enter_counts.insert(cid(id), 1);
     }
     put_field(db, &mut st, opp, "88001110");
     put_field(db, &mut st, opp, "88001120");
@@ -44,12 +42,7 @@ fn determinize_preserves_enter_counts_all_info_modes() {
     let db = load_db();
     let (st, _) = warp_slash_setup(&db, 3);
     let me = PlayerId::A;
-    for info in [
-        Info::Open,
-        Info::Fair,
-        Info::Draws,
-        Info::All,
-    ] {
+    for info in [Info::Open, Info::Fair, Info::Draws, Info::All] {
         for seed in [1u64, 99, 4242] {
             let d = determinize_with(&st, me, seed, info);
             assert_eq!(
@@ -120,10 +113,7 @@ fn h0_values_warp_slash_higher_with_three_artifacts() {
 
     eprintln!(
         "artifacts=3: chosen={} play_warp_root={:.4}; artifacts=0: chosen={} play_warp_root={:.4}",
-        chosen3,
-        val3,
-        chosen0,
-        val0
+        chosen3, val3, chosen0, val0
     );
     assert!(
         val3 > val0,
