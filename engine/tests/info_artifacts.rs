@@ -73,6 +73,7 @@ fn threshold_cards_emit_artifacts_gate_for_k() {
             assert_eq!(gate.need, 3);
             assert_eq!(gate.have, k as i32);
             assert_eq!(gate.met, k >= 3);
+            assert!(gate.glow);
         }
     }
 }
@@ -92,6 +93,7 @@ fn x_cards_emit_artifacts_count_without_threshold() {
             assert_eq!(gate.need, 0);
             assert_eq!(gate.have, k as i32);
             assert!(!gate.met);
+            assert!(!gate.glow);
         }
     }
 }
@@ -135,8 +137,8 @@ fn warp_slash_damage_matches_artifact_count() {
         put_field(&db, &mut st, opp, "88001120");
         for slot in 0..2 {
             if let Some(f) = st.field_inst_mut(opp, slot) {
-                f.defense = 3;
-                f.max_defense = 3;
+                f.defense = 10;
+                f.max_defense = 10;
             }
         }
         give_pp(&mut st, me, 3, 10);
@@ -146,11 +148,7 @@ fn warp_slash_damage_matches_artifact_count() {
         play(&db, &mut st, hand);
         for slot in 0..2 {
             let def = st.field_inst(opp, slot).expect("follower").defense;
-            assert_eq!(
-                3 - def,
-                gate.have,
-                "slot {slot} took wrong damage at k={k}"
-            );
+            assert_eq!(10 - def, gate.have, "slot {slot} took wrong damage at k={k}");
         }
     }
 }
@@ -195,15 +193,10 @@ fn beat_breaker_summons_two_when_met() {
         let hand = put_hand(&db, &mut st, me, "10771120");
         let gate = artifacts_gate(&first_hand_gates(&db, &st, me));
         assert_eq!(gate.met, k >= 3);
+        let before = common::field_count(&st, me);
         play(&db, &mut st, hand);
-        let n = st
-            .player(me)
-            .field
-            .iter()
-            .flatten()
-            .filter(|c| c.card.as_str() == "10771120")
-            .count();
-        assert_eq!(n, expect, "k={k}");
+        let summoned = common::field_count(&st, me) - before - 1;
+        assert_eq!(summoned, expect, "k={k}");
     }
 }
 
@@ -288,6 +281,7 @@ fn myuu_hand_shows_artifacts_without_glow() {
     let _ = put_hand(&db, &mut st, me, "10774120");
     let gate = artifacts_gate(&first_hand_gates(&db, &st, me));
     assert_eq!(gate.have, 3);
+    assert!(!gate.glow);
 }
 
 #[test]
@@ -390,6 +384,7 @@ fn combo_board_label_and_no_double_count() {
     assert_eq!(combo.label, "combo");
     assert_eq!(combo.have, 3);
     assert!(combo.met);
+    assert!(!combo.glow);
 
     end_turn(&db, &mut st);
     let board = board_info(&db, &st, me);

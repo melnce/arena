@@ -5,7 +5,8 @@ use serde::Serialize;
 
 use crate::action::{acting_player, Action};
 use crate::apply::{
-    eval_cond, legal_actions, resolve_choose_options, resolve_select, source_card_id,
+    eval_amount, eval_cond, legal_actions, resolve_choose_options, resolve_select,
+    source_card_id,
 };
 use crate::card::{
     Ability, Amount, CardKind, Class, Condition, CounterKey, Effect, FieldHasKind, Filter,
@@ -26,6 +27,7 @@ pub struct GateInfo {
     pub need: i32,
     pub have: i32,
     pub met: bool,
+    pub glow: bool,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -416,6 +418,8 @@ fn collect_hand_gates(
             id: inst.id,
         },
         zone: Zone::Hand,
+        artifact_glow: true,
+        field_fanfare: false,
     };
     for mode in card.modes() {
         match mode {
@@ -441,6 +445,15 @@ fn collect_hand_gates(
             walk_ability(ctx, a, &mut gates);
         }
     }
+    let ctx_info = WalkCtx {
+        artifact_glow: false,
+        ..ctx
+    };
+    for a in card.abilities() {
+        if !matches!(a, Ability::Fanfare { .. }) {
+            walk_ability(ctx_info, a, &mut gates);
+        }
+    }
     if inst.printed_tags.contains("spellboost")
         || card
             .abilities()
@@ -453,6 +466,7 @@ fn collect_hand_gates(
             "spellboost",
             0,
             inst.spellboost_count,
+            false,
             false,
         );
     }
@@ -479,6 +493,8 @@ fn collect_board_gates(
             id: inst.id,
         },
         zone: Zone::Field,
+        artifact_glow: true,
+        field_fanfare: false,
     };
     for a in card.abilities() {
         walk_ability(ctx, a, &mut gates);
@@ -486,7 +502,14 @@ fn collect_board_gates(
     for a in &inst.granted {
         walk_ability(ctx, a, &mut gates);
     }
-    gates.retain(|g| matches!(g.kind.as_str(), "rally" | "combo" | "overflow"));
+    let unevolved = !inst.evolved && !inst.super_evolved;
+    gates.retain(|g| {
+        matches!(g.kind.as_str(), "rally" | "combo" | "overflow")
+            || (g.kind == "artifacts" && unevolved)
+    });
+    for g in &mut gates {
+        g.glow = false;
+    }
     gates
 }
 
@@ -498,9 +521,15 @@ struct WalkCtx<'a> {
     inst: &'a CardInstance,
     source: SourceRef,
     zone: Zone,
+    artifact_glow: bool,
+    field_fanfare: bool,
 }
 
 fn walk_ability(ctx: WalkCtx<'_>, ability: &Ability, gates: &mut Vec<GateInfo>) {
+    let ctx = WalkCtx {
+        field_fanfare: ctx.zone == Zone::Field && matches!(ability, Ability::Fanfare { .. }),
+        ..ctx
+    };
     if let Some(c) = ability.when_cond() {
         walk_condition(ctx, c, gates);
     }
@@ -528,11 +557,11 @@ fn walk_effect(ctx: WalkCtx<'_>, effect: &Effect, gates: &mut Vec<GateInfo>) {
                 match resource {
                     PayResource::Shadows => {
                         let have = ctx.state.player(ctx.player).shadows;
-                        push_gate(gates, "necromancy", "necromancy", need, have, have >= need);
+                        push_gate(gates, "necromancy", "necromancy", need, have, have >= need, true);
                     }
                     PayResource::Earth => {
                         let have = ctx.state.player(ctx.player).earth;
-                        push_gate(gates, "earth_rite", "earth rite", need, have, have >= need);
+                        push_gate(gates, "earth_rite", "earth rite", need, have, have >= need, true);
                     }
                     PayResource::Pp | PayResource::Faith => {}
                 }
@@ -567,6 +596,9 @@ fn walk_effect(ctx: WalkCtx<'_>, effect: &Effect, gates: &mut Vec<GateInfo>) {
                 walk_effects(ctx, &s.effects, gates);
             }
         }
+        Effect::Damage { amount, .. } => {
+            maybe_push_artifact_x_line(ctx, amount, gates);
+        }
         _ => {}
     }
 }
@@ -593,32 +625,41 @@ fn walk_condition(ctx: WalkCtx<'_>, cond: &Condition, gates: &mut Vec<GateInfo>)
         Condition::Rally { rally } => {
             if let Some(need) = amount_int(&rally.n) {
                 let have = ctx.state.player(ctx.player).rally;
-                push_gate(gates, "rally", "rally", need, have, have >= need);
+                push_gate(gates, "rally", "rally", need, have, have >= need, true);
             }
         }
         Condition::Combo { combo } => {
             if let Some(need) = amount_int(&combo.n) {
-                // `have` is cards already played this turn. Playing this
-                // card counts toward its own Combo threshold (rulebook;
-                // apply.rs increments combo at play time). Tooltip prints
-                // the raw count; `met` uses +1 only while the card is
-                // still in hand.
-                let have = ctx.state.player(ctx.player).combo;
-                let effective = if ctx.zone == Zone::Hand {
-                    have + 1
+                let owners_turn = ctx.state.active == ctx.player;
+                let raw = if owners_turn {
+                    ctx.state.player(ctx.player).combo
                 } else {
-                    have
+                    0
                 };
-                push_gate(gates, "combo", "combo", need, have, effective >= need);
+                let (label, have, met, glow) = if ctx.zone == Zone::Hand {
+                    let have = raw + 1;
+                    ("combo after playing", have, have >= need, true)
+                } else {
+                    ("combo", raw, raw >= need, false)
+                };
+                push_gate(gates, "combo", label, need, have, met, glow);
             }
         }
         Condition::Overflow { overflow } if *overflow => {
             let have = ctx.state.player(ctx.player).pp_max;
-            push_gate(gates, "overflow", "overflow", 7, have, have >= 7);
+            push_gate(gates, "overflow", "overflow", 7, have, have >= 7, true);
         }
         Condition::Overflow { .. } => {}
         other => push_evaluated(
-            ctx.db, other, ctx.state, ctx.player, ctx.inst, ctx.source, gates,
+            ctx.db,
+            other,
+            ctx.state,
+            ctx.player,
+            ctx.inst,
+            ctx.source,
+            ctx.artifact_glow,
+            ctx.field_fanfare,
+            gates,
         ),
     }
 }
@@ -630,6 +671,8 @@ fn push_evaluated(
     player: PlayerId,
     inst: &CardInstance,
     source: SourceRef,
+    artifact_glow: bool,
+    field_fanfare: bool,
     gates: &mut Vec<GateInfo>,
 ) {
     let met = eval_cond(db, state, player, Some(source), cond);
@@ -650,13 +693,13 @@ fn push_evaluated(
             let need = amount_int(&count_at_least.n).unwrap_or(0);
             let label =
                 count_at_least_label(&count_at_least.select, count_at_least.filter.as_ref());
-            push_gate(gates, "countAtLeast", &label, need, have, met);
+            push_gate(gates, "countAtLeast", &label, need, have, met, true);
         }
         Condition::FieldHas { field_has } => {
             let need = field_has.n.as_ref().and_then(amount_int).unwrap_or(1);
             let have = field_has_count(state, player, field_has);
             let label = field_has_label(field_has);
-            push_gate(gates, "fieldHas", &label, need, have, met);
+            push_gate(gates, "fieldHas", &label, need, have, met, true);
         }
         Condition::HandHas { hand_has } => {
             let need = amount_int(&hand_has.n).unwrap_or(0);
@@ -666,7 +709,7 @@ fn push_evaluated(
                 .filter(|c| inst_matches_simple(c, &hand_has.filter))
                 .count() as i32;
             let label = filter_noun(Some(&hand_has.filter), "cards in your hand");
-            push_gate(gates, "handHas", &label, need, have, met);
+            push_gate(gates, "handHas", &label, need, have, met, true);
         }
         Condition::HandSameCostAtLeast {
             hand_same_cost_at_least,
@@ -684,11 +727,12 @@ fn push_evaluated(
                 need,
                 have,
                 met,
+                true,
             );
         }
         Condition::MaxPpAtLeast { max_pp_at_least } => {
             let need = amount_int(&max_pp_at_least.n).unwrap_or(0);
-            push_gate(gates, "maxPpAtLeast", "max PP", need, p.pp_max, met);
+            push_gate(gates, "maxPpAtLeast", "max PP", need, p.pp_max, met, true);
         }
         Condition::LeaderDefenseLte { leader_defense_lte } => {
             let need = amount_int(leader_defense_lte).unwrap_or(0);
@@ -699,6 +743,7 @@ fn push_evaluated(
                 need,
                 p.leader_defense,
                 met,
+                true,
             );
         }
         Condition::EvolvedCountAtLeast {
@@ -712,6 +757,7 @@ fn push_evaluated(
                 need,
                 p.evolves_used,
                 met,
+                true,
             );
         }
         Condition::EnterCountAtLeast {
@@ -738,27 +784,40 @@ fn push_evaluated(
                 need,
                 have,
                 met,
+                true,
             );
         }
         Condition::CounterAtLeast { counter_at_least } => {
             let need = amount_int(&counter_at_least.n).unwrap_or(0);
             let (label, have) = counter_have(p, inst, &counter_at_least.key);
-            push_gate(gates, "counterAtLeast", &label, need, have, met);
+            push_gate(gates, "counterAtLeast", &label, need, have, met, true);
         }
         Condition::AmountAtLeast { amount_at_least } => {
-            let need = amount_int(&amount_at_least.n).unwrap_or(0);
-            let have = amount_int(&amount_at_least.of).unwrap_or(0);
-            push_gate(gates, "amountAtLeast", "amount", need, have, met);
+            let need = eval_amount(db, state, player, Some(source), &amount_at_least.n);
+            let have = eval_amount(db, state, player, Some(source), &amount_at_least.of);
+            if is_artifact_distinct_enter_count(&amount_at_least.of) && !field_fanfare {
+                push_gate(
+                    gates,
+                    "artifacts",
+                    "artifacts",
+                    need,
+                    have,
+                    met,
+                    artifact_glow,
+                );
+            } else {
+                push_gate(gates, "amountAtLeast", "amount", need, have, met, true);
+            }
         }
         Condition::SkyboundArt { skybound_art } => {
             let need = amount_int(&skybound_art.n).unwrap_or(0);
             let have = state.turn as i32 + inst.skybound;
-            push_gate(gates, "skyboundArt", "skybound art", need, have, met);
+            push_gate(gates, "skyboundArt", "skybound art", need, have, met, true);
         }
         Condition::VarAtLeast { var_at_least } => {
             let need = amount_int(&var_at_least.n).unwrap_or(0);
             let have = inst.vars.get(&var_at_least.key).copied().unwrap_or(0);
-            push_gate(gates, "varAtLeast", "variable", need, have, met);
+            push_gate(gates, "varAtLeast", "variable", need, have, met, true);
         }
         Condition::SuperEvolutionUnlocked { .. } => {
             push_gate(
@@ -768,10 +827,11 @@ fn push_evaluated(
                 0,
                 0,
                 met,
+                true,
             );
         }
         Condition::WasFused { .. } => {
-            push_gate(gates, "wasFused", "fused", 0, 0, met);
+            push_gate(gates, "wasFused", "fused", 0, 0, met, true);
         }
         Condition::DeckHasNoDuplicates { .. } => {
             push_gate(
@@ -781,6 +841,7 @@ fn push_evaluated(
                 0,
                 0,
                 met,
+                true,
             );
         }
         Condition::PlayedBaseCostsThisMatch { .. } => {
@@ -791,6 +852,7 @@ fn push_evaluated(
                 0,
                 0,
                 met,
+                true,
             );
         }
         Condition::AttackedLeaderLastTurn { .. } => {
@@ -801,10 +863,11 @@ fn push_evaluated(
                 0,
                 0,
                 met,
+                true,
             );
         }
         Condition::TurnOwner { .. } => {
-            push_gate(gates, "turnOwner", "your turn", 0, 0, met);
+            push_gate(gates, "turnOwner", "your turn", 0, 0, met, true);
         }
         _ => {}
     }
@@ -1072,7 +1135,46 @@ fn amount_int(amount: &Amount) -> Option<i32> {
     }
 }
 
-fn push_gate(gates: &mut Vec<GateInfo>, kind: &str, label: &str, need: i32, have: i32, met: bool) {
+fn is_artifact_distinct_enter_count(amount: &Amount) -> bool {
+    match amount {
+        Amount::DistinctNames { distinct_names } => match distinct_names.as_ref() {
+            Amount::EnteredThisMatch { entered_this_match } => filter_is_artifact_follower(
+                entered_this_match,
+            ),
+            _ => false,
+        },
+        _ => false,
+    }
+}
+
+fn filter_is_artifact_follower(filter: &Filter) -> bool {
+    if filter.kind != Some(FilterKind::Follower) {
+        return false;
+    }
+    match &filter.tribe {
+        Some(TribeOrList::One(Tribe::Artifact)) => true,
+        Some(TribeOrList::Many(ts)) => ts.contains(&Tribe::Artifact),
+        _ => false,
+    }
+}
+
+fn maybe_push_artifact_x_line(ctx: WalkCtx<'_>, amount: &Amount, gates: &mut Vec<GateInfo>) {
+    if ctx.field_fanfare || !is_artifact_distinct_enter_count(amount) {
+        return;
+    }
+    let have = eval_amount(ctx.db, ctx.state, ctx.player, Some(ctx.source), amount);
+    push_gate(gates, "artifacts", "artifacts", 0, have, false, false);
+}
+
+fn push_gate(
+    gates: &mut Vec<GateInfo>,
+    kind: &str,
+    label: &str,
+    need: i32,
+    have: i32,
+    met: bool,
+    glow: bool,
+) {
     if gates
         .iter()
         .any(|g| g.kind == kind && g.label == label && g.need == need)
@@ -1085,5 +1187,6 @@ fn push_gate(gates: &mut Vec<GateInfo>, kind: &str, label: &str, need: i32, have
         need,
         have,
         met,
+        glow,
     });
 }
