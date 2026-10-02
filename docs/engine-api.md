@@ -487,6 +487,9 @@ node budget charged to the pair cap; default `0` = off),
 `tkill=<u32>` (on each own-turn decision — Main, Combat, or Choice — run
 [`forced_lethal_det`] on the first determinization before search; default
 `0` = off),
+`tkroll=<u32>` (after a deterministic miss, run [`forced_lethal`] on the
+first determinization and confirm under rerolled dice; only when
+`tkill>0`; default `0` = off),
 `osteps=<u32>` (greedy forced-`EndTurn` step;
 default `6`; hard stop is `osteps+3`),
 `wv=<f32>` (saturation bound on every accumulated value; default `80`),
@@ -570,6 +573,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `omacro` | 0 | in the greedy opponent reply only, credit a `Play` with the best evolve on the just-played slot when that line scores higher; the play's own `Choose` / `Confirm` resolve inside the same greedy step, and the evolve is applied as part of that step (not counted against `osteps`). Default off |
 | `olsolve` | 0 | after a sweep miss on the opponent's turn, run [`forced_lethal`] with this node budget (charged to the pair cap). `0` = off (today). Only when `olethal=1` and `odepth=0` |
 | `tkill` | 0 | on each own-turn decision (Main, Combat, or Choice) with more than one useful candidate, run [`forced_lethal_det`] on the first determinization before `consensus_lethal` / search. A deterministic kill confirmed on every root is played; applies are outside `node_cap`. `0` = off (today) |
+| `tkroll` | 0 | after a deterministic miss, run [`forced_lethal`] on the first determinization and confirm the line under rerolled dice on every root. Only when `tkill>0`; uses `tkill`'s budget. `0` = off (today; no effect when `tkill=0`) |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
@@ -678,6 +682,16 @@ when every root confirms and `line[0]` is legal, that action is taken
 and `last_value = wv`. Solver applies are outside `node_cap` and do not
 consume the policy rng. Default `tkill=0` — byte-identical to today.
 The check re-runs at every decision of the turn (no line cache).
+
+When `tkill>0` and `tkroll>0`, after the deterministic path misses,
+`H0::choose` runs [`forced_lethal`] on the first determinization. On
+[`LethalVerdict::Lethal`], the line is replayed on every root under
+`tkroll` dice rerolls (seeds derived from `search_key(root)` and the
+reroll index). When every replay kills and `line[0]` is legal, that
+action is taken and `last_value = wv`. One solve, one confirmation — no
+alternative lines when a reroll fails. Default `tkroll=0` — no effect
+when `tkill=0`; with `tkill>0` and `tkroll=0`, play is byte-identical
+to deterministic-only `tkill`.
 
 The owner's standing yardstick (`results` branch, `sweep5/SUMMARY.md`,
 `b79421a`, engine `f7b0a61`, data seed 6, 16 oracle decks, wall 3 h 38)
@@ -821,6 +835,14 @@ kills found on the first world, kills confirmed and played, rejections
 (a root did not confirm or `line[0]` was not legal), budget-starved
 [`Unknown`] results, applies spent, and the per-call maximum
 (`0` when `tkill=0`; the default is `tkill=0`).
+`own_roll_calls` / `own_roll_found` / `own_roll_taken` /
+`own_roll_rejected` / `own_roll_unknown` / `own_roll_nodes` /
+`own_roll_nodes_max` are [`forced_lethal`] runs after a deterministic
+miss, kills found on the first world, kills confirmed under rerolled dice
+and played, rejections (a reroll did not kill or `line[0]` was not
+legal), budget-starved [`Unknown`] results, applies spent, and the
+per-call maximum (`0` when `tkroll=0` or `tkill=0`; the default is
+`tkroll=0`).
 `chose_with_lethal_root` is the fraction of searched decisions whose
 chosen candidate had at least one determinization at exactly `-wv`
 (the clamp floor; compared with a small epsilon).
@@ -1059,7 +1081,7 @@ For `h0`, the dict also carries:
 
 | key | type | meaning |
 |---|---|---|
-| `path` | str | Which `H0::choose` branch decided: `single_legal`, `mulligan`, `one_ply`, `consensus_lethal`, `take_kill`, `search`, or `unscored` (search entered but no `(root, candidate)` pair scored, e.g. with `lcap=1`, the consensus-lethal check spent the entire node cap). |
+| `path` | str | Which `H0::choose` branch decided: `single_legal`, `mulligan`, `one_ply`, `consensus_lethal`, `take_kill`, `take_kill_roll`, `search`, or `unscored` (search entered but no `(root, candidate)` pair scored, e.g. with `lcap=1`, the consensus-lethal check spent the entire node cap). |
 | `k` | int | Determinized roots (`determinizations`; honoured under all `info` modes). |
 | `node_cap` | int | Global node cap for the decision. |
 | `alloc` | str | `fair` or `root`. |
