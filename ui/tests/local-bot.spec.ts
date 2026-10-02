@@ -50,7 +50,7 @@ async function confirmMulligans(page: Page) {
 }
 
 const CHEAT_H0 = "h0:nodes=6000,info=all";
-const SERVER_CHEAT = "h0:nodes=16000,horizon=3,info=all";
+const SERVER_CHEAT = "h0:nodes=32000,horizon=3,k=8,info=all";
 
 async function mockLocalBot(
   page: Page,
