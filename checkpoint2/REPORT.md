@@ -113,3 +113,28 @@ handed kills: cp2 1151, cp1 1127
   line length cp2: mean 5.12, median 5
   line length cp1: mean 4.59, median 4
 ```
+
+## Addendum (2026-10-02): kill turns by type, and the chance-dependent kill turns for replay
+
+`tools/killturns.py cp1=checkpoint cp2=checkpoint2` (kill turn = an auditee turn with at least one `lethal` verdict;
+deterministic = some verdict that turn had `rng_dependent` false; chance-dependent = all of them `rng_dependent`):
+
+| | cp1 | cp2 | cp2 - cp1 (paired, cluster bootstrap on seed) |
+|---|---|---|---|
+| kill turns | 1159 | 1211 | |
+| deterministic | 1072 | 1062 | -10 [-43, +23] |
+| chance-dependent only | 87 (0.075) | 149 (0.123) | +62 [+30, +94] |
+| missed, deterministic turns | 101/1072 = 0.094 | 102/1062 = 0.096 | +0.002 [-0.019, +0.024] |
+| missed, chance-dependent turns | 70/87 = 0.805 | 112/149 = 0.752 | -0.053 [-0.154, +0.046] |
+| missed, all kill turns | 0.148 | 0.177 | +0.029 [+0.003, +0.057] |
+
+`tools/missed_split.py` gives the decision-level split (missed_lethal hits: deterministic 149 vs 155, rng-dependent 253
+vs 137).
+
+`chance_kills.json`: the 118 checkpoint 2 games that contain a chance-dependent-only kill turn (149 turns, 112 missed),
+each with seed, decks (names and card lists), first player, winner, the full action log and the decision records of
+its chance-only kill turns. The audit files keep no action logs, so the games were replayed with the audit's own
+`play_one` on the build of `d5f4310`, pinning `h0:net=engine/models/h0-linear-v2.json` (checkpoint 2's default leaf;
+the keys added since are off by default). Every game is verified: the winner matches the audit record, and at every
+decision of those turns the solver (budget 50 000) re-finds a dice-dependent kill. All 118 verified, no problems.
+Built by `tools/export_chance_kills.py`.
