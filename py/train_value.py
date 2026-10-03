@@ -10,6 +10,14 @@ import time
 from pathlib import Path
 from typing import Any
 
+_RACE_MOD = Path(__file__).resolve().parent / "race.py"
+_race_spec = importlib.util.spec_from_file_location("arena_race", _RACE_MOD)
+assert _race_spec and _race_spec.loader
+_race = importlib.util.module_from_spec(_race_spec)
+_race_spec.loader.exec_module(_race)
+RACE_NAMES = _race.RACE_NAMES
+race_features = _race.race_features
+
 FEATURE_LEN_V1 = 545
 FEATURE_LEN_V2 = 567
 HIST_WIDTH = 96
@@ -68,6 +76,38 @@ def _index_dtype(n_vocab: int):
     import numpy as np
 
     return np.uint16 if n_vocab <= 65535 else np.uint32
+
+
+def _chunk_race_mean_std(features, row_idx, std_floor: float, chunk: int = 2048):
+    """Mean/std of race inputs over training rows."""
+    import numpy as np
+
+    floor = float(std_floor)
+    if row_idx.size == 0:
+        return np.zeros(12, np.float32), np.full(12, floor, np.float32)
+    sum_v = np.zeros(12, np.float64)
+    sum_sq = np.zeros(12, np.float64)
+    n = int(row_idx.size)
+    for start in range(0, n, chunk):
+        sel = row_idx[start : start + chunk]
+        block = race_features(features[sel])
+        sum_v += block.sum(axis=0, dtype=np.float64)
+        sum_sq += np.multiply(block, block, dtype=np.float32).sum(axis=0, dtype=np.float64)
+    mean = (sum_v / n).astype(np.float32)
+    var = np.maximum(sum_sq / n - mean.astype(np.float64) ** 2, 0.0)
+    std = np.maximum(np.sqrt(var).astype(np.float32), floor)
+    return mean, std
+
+
+def _standardize_race_rows(features, row_idx, mean, std, out=None):
+    import numpy as np
+
+    x = (race_features(features[row_idx]) - mean) / std
+    if out is None:
+        return x.astype(np.float32, copy=False)
+    n = row_idx.size
+    out[:n] = x
+    return out[:n]
 
 
 def _chunk_mean_std(features, row_idx, std_floor: float, chunk: int = 2048):
@@ -294,6 +334,13 @@ def predict(spec: dict[str, Any], features, ids):
             count = zone_counts(features, row_idx, zone)
             extra += (zone_w[z][zidx] * count).sum(axis=1)
         pre = x @ w + extra + b
+        if "race" in spec:
+            rb = spec["race"]
+            r = race_features(features)
+            r_x = (r - np.asarray(rb["mean"], dtype=np.float32)) / np.asarray(
+                rb["std"], dtype=np.float32
+            )
+            pre = pre + r_x @ np.asarray(rb["w"], dtype=np.float32)
     else:
         mlp = spec["mlp"]
         emb = np.asarray(mlp["emb"], dtype=np.float32)
@@ -412,27 +459,36 @@ def _zones_json() -> list[dict[str, Any]]:
 
 
 class LinearTorch:
-    def __init__(self, torch, n_feat: int, n_vocab: int):
+    def __init__(self, torch, n_feat: int, n_vocab: int, use_race: bool = False):
         self.torch = torch
         self.w = torch.nn.Parameter(torch.zeros(n_feat))
         self.zone_w = torch.nn.Parameter(torch.zeros(5, n_vocab))
         self.b = torch.nn.Parameter(torch.zeros(1))
+        self.use_race = use_race
+        self.race_w = torch.nn.Parameter(torch.zeros(12)) if use_race else None
 
     def parameters(self):
-        return [self.w, self.zone_w, self.b]
+        out = [self.w, self.zone_w, self.b]
+        if self.race_w is not None:
+            out.append(self.race_w)
+        return out
 
-    def forward(self, x, idx, counts):
+    def forward(self, x, idx, counts, race_x=None):
         extra = (self.zone_w[0][idx[0]] * counts[0]).sum(dim=1)
         extra = extra + (self.zone_w[1][idx[1]] * counts[1]).sum(dim=1)
         extra = extra + (self.zone_w[2][idx[2]] * counts[2]).sum(dim=1)
         extra = extra + (self.zone_w[3][idx[3]] * counts[3]).sum(dim=1)
         extra = extra + (self.zone_w[4][idx[4]] * counts[4]).sum(dim=1)
-        return (x @ self.w + extra + self.b[0]).tanh()
+        pre = x @ self.w + extra + self.b[0]
+        if self.race_w is not None and race_x is not None:
+            pre = pre + race_x @ self.race_w
+        return pre.tanh()
 
     def l2_penalty(self, l2: float):
-        return 0.5 * l2 * (
-            self.w.pow(2).sum() + self.zone_w.pow(2).sum() + self.b.pow(2).sum()
-        )
+        pen = self.w.pow(2).sum() + self.zone_w.pow(2).sum() + self.b.pow(2).sum()
+        if self.race_w is not None:
+            pen = pen + self.race_w.pow(2).sum()
+        return 0.5 * l2 * pen
 
 
 class MlpTorch:
@@ -447,7 +503,7 @@ class MlpTorch:
     def parameters(self):
         return [self.emb, self.w1, self.b1, self.w2, self.b2]
 
-    def forward(self, x, idx, counts):
+    def forward(self, x, idx, counts, race_x=None):
         parts = [x]
         for z in range(5):
             parts.append((self.emb[idx[z]] * counts[z].unsqueeze(-1)).sum(dim=1))
@@ -483,6 +539,9 @@ def train_torch(
     epochs: int,
     l2: float,
     seed: int,
+    use_race: bool = False,
+    race_mean=None,
+    race_std=None,
 ):
     import numpy as np
 
@@ -493,7 +552,7 @@ def train_torch(
     n_feat = features.shape[1]
     n_vocab = len(vocab)
     if spec_arch == "linear":
-        model = LinearTorch(torch, n_feat, n_vocab)
+        model = LinearTorch(torch, n_feat, n_vocab, use_race=use_race)
     else:
         model = MlpTorch(torch, n_feat, n_vocab, hidden, emb)
     opt = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=l2)
@@ -512,6 +571,7 @@ def train_torch(
     rng = torch.Generator()
     rng.manual_seed(seed)
     x_buf = np.empty((BATCH, n_feat), dtype=np.float32)
+    race_buf = np.empty((BATCH, 12), dtype=np.float32) if use_race else None
     epochs_run = 0
     for epoch in range(epochs):
         epochs_run = epoch + 1
@@ -523,7 +583,12 @@ def train_torch(
                 _standardize_rows(features, row_idx, mean, std, x_buf)
             ).to(device)
             idx_b, c_b = _batch_zone_tensors(torch, features, ids, row_idx, vocab, device)
-            pred = model.forward(xb, idx_b, c_b)
+            race_b = None
+            if use_race:
+                race_b = torch.from_numpy(
+                    _standardize_race_rows(features, row_idx, race_mean, race_std, race_buf)
+                ).to(device)
+            pred = model.forward(xb, idx_b, c_b, race_b)
             yb = torch.from_numpy(y_tr_np[b]).to(device)
             loss = torch.mean((pred - yb) ** 2)
             opt.zero_grad(set_to_none=True)
@@ -538,7 +603,12 @@ def train_torch(
                         _standardize_rows(features, hrows, mean, std, x_buf)
                     ).to(device)
                     idx_b, c_b = _batch_zone_tensors(torch, features, ids, hrows, vocab, device)
-                    pred_h = model.forward(xb, idx_b, c_b)
+                    race_b = None
+                    if use_race:
+                        race_b = torch.from_numpy(
+                            _standardize_race_rows(features, hrows, race_mean, race_std, race_buf)
+                        ).to(device)
+                    pred_h = model.forward(xb, idx_b, c_b, race_b)
                     yhb = torch.from_numpy(y_ho_np[hstart : hstart + hrows.size]).to(device)
                     hold_sq += float(torch.sum((pred_h - yhb) ** 2).item())
                 hold_mse = hold_sq / hold_idx.size
@@ -655,6 +725,8 @@ def dump_torch(
     trained_on: dict[str, Any],
     feature_len: int,
     encoding: int,
+    race_mean=None,
+    race_std=None,
 ) -> dict[str, Any]:
     import numpy as np
 
@@ -678,6 +750,14 @@ def dump_torch(
             "zone_w": to_list(model.zone_w),
             "b": float(model.b.detach().cpu().item()),
         }
+        if getattr(model, "race_w", None) is not None:
+            out["race"] = {
+                "version": 1,
+                "names": list(RACE_NAMES),
+                "mean": np.asarray(race_mean, dtype=np.float32).tolist(),
+                "std": np.asarray(race_std, dtype=np.float32).tolist(),
+                "w": to_list(model.race_w),
+            }
     else:
         out["mlp"] = {
             "emb": to_list(model.emb),
@@ -701,6 +781,9 @@ def train_linear_numpy(
     epochs: int,
     l2: float,
     seed: int,
+    use_race: bool = False,
+    race_mean=None,
+    race_std=None,
 ):
     """Manual-gradient Adam for the linear model when torch is missing."""
     import numpy as np
@@ -711,6 +794,7 @@ def train_linear_numpy(
     w = np.zeros(n_feat, dtype=np.float64)
     zone_w = np.zeros((5, n_vocab), dtype=np.float64)
     b = 0.0
+    race_w = np.zeros(12, dtype=np.float64) if use_race else None
     lr = 1e-3
     b1, b2, eps = 0.9, 0.999, 1e-8
     mw = np.zeros_like(w)
@@ -718,9 +802,13 @@ def train_linear_numpy(
     mz = np.zeros_like(zone_w)
     vz = np.zeros_like(zone_w)
     mb = vb = 0.0
+    mrw = vrw = None
+    if race_w is not None:
+        mrw = np.zeros_like(race_w)
+        vrw = np.zeros_like(race_w)
     idx_dtype = _index_dtype(n_vocab)
 
-    def forward_batch(row_idx, w, zone_w, b):
+    def forward_batch(row_idx, w, zone_w, b, rw=None):
         xb = _standardize_rows(features, row_idx, mean, std).astype(np.float64)
         idx_np = id_index_table(vocab, ids[row_idx], dtype=idx_dtype)
         extra = np.zeros(row_idx.size, dtype=np.float64)
@@ -730,9 +818,12 @@ def train_linear_numpy(
             cnt = zone_counts(features, row_idx, zone).astype(np.float64)
             extra += (zone_w[z][zidx] * cnt).sum(axis=1)
         pre = xb @ w + extra + b
+        if rw is not None:
+            rx = _standardize_race_rows(features, row_idx, race_mean, race_std).astype(np.float64)
+            pre = pre + rx @ rw
         return np.tanh(pre), xb, idx_np
 
-    best = (w.copy(), zone_w.copy(), b)
+    best = (w.copy(), zone_w.copy(), b, race_w.copy() if race_w is not None else None)
     best_mse = float("inf")
     best_epoch = 0
     patience = 3
@@ -747,11 +838,17 @@ def train_linear_numpy(
             sel = perm[start : start + BATCH]
             row_idx = train_idx[sel]
             yb = y_tr[sel].astype(np.float64)
-            pred, xb, idx_np = forward_batch(row_idx, w, zone_w, b)
+            pred, xb, idx_np = forward_batch(row_idx, w, zone_w, b, race_w)
             dpred = 2.0 * (pred - yb) / sel.size
             dpre = dpred * (1.0 - pred * pred)
             gw = xb.T @ dpre + l2 * w
             gb = float(dpre.sum() + l2 * b)
+            grw = None
+            if race_w is not None:
+                rx = _standardize_race_rows(features, row_idx, race_mean, race_std).astype(
+                    np.float64
+                )
+                grw = rx.T @ dpre + l2 * race_w
             gz = np.zeros_like(zone_w)
             for z, zone in enumerate(ZONES):
                 sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
@@ -769,12 +866,16 @@ def train_linear_numpy(
             mb = b1 * mb + (1 - b1) * gb
             vb = b2 * vb + (1 - b2) * (gb * gb)
             b -= lr * (mb / (1 - b1**t)) / ((vb / (1 - b2**t)) ** 0.5 + eps)
+            if race_w is not None and grw is not None:
+                mrw[:] = b1 * mrw + (1 - b1) * grw
+                vrw[:] = b2 * vrw + (1 - b2) * (grw * grw)
+                race_w -= lr * (mrw / (1 - b1**t)) / (np.sqrt(vrw / (1 - b2**t)) + eps)
         if hold_idx.size:
-            pred_h, _, _ = forward_batch(hold_idx, w, zone_w, b)
+            pred_h, _, _ = forward_batch(hold_idx, w, zone_w, b, race_w)
             hold_mse = float(np.mean((pred_h - y_all[hold_idx].astype(np.float64)) ** 2))
             if hold_mse < best_mse - 1e-12:
                 best_mse = hold_mse
-                best = (w.copy(), zone_w.copy(), b)
+                best = (w.copy(), zone_w.copy(), b, race_w.copy() if race_w is not None else None)
                 best_epoch = epochs_run
                 patience = 3
             else:
@@ -782,13 +883,14 @@ def train_linear_numpy(
                 if patience <= 0:
                     break
         else:
-            best = (w.copy(), zone_w.copy(), b)
+            best = (w.copy(), zone_w.copy(), b, race_w.copy() if race_w is not None else None)
             best_epoch = epochs_run
-    w, zone_w, b = best
+    w, zone_w, b, race_w = best
     return (
         w.astype(np.float32),
         zone_w.astype(np.float32),
         float(b),
+        race_w.astype(np.float32) if race_w is not None else None,
         {"epochs_run": epochs_run, "best_epoch": best_epoch},
     )
 
@@ -881,6 +983,12 @@ def format_report(report: dict[str, Any]) -> str:
 def train(args: argparse.Namespace) -> dict[str, Any]:
     import numpy as np
 
+    use_race = bool(getattr(args, "race", False))
+    if use_race and args.model == "mlp":
+        raise SystemExit("--race is only supported with --model linear")
+    if use_race and args.optimizer == "lbfgs":
+        raise SystemExit("--optimizer lbfgs with --race is not supported")
+
     if args.optimizer == "lbfgs" and args.model != "linear":
         raise SystemExit("--optimizer lbfgs is only supported with --model linear")
 
@@ -932,6 +1040,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
 
     std_floor = float(args.std_floor)
     mean, std = _chunk_mean_std(features, train_idx, std_floor)
+    race_mean = race_std = None
+    if use_race:
+        race_mean, race_std = _chunk_race_mean_std(features, train_idx, std_floor)
     vocab = build_vocab(ids, train_idx)
     import gc
 
@@ -957,7 +1068,16 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         train_meta.update(lbfgs_meta)
         trained_on_stub: dict[str, Any] = {}
         spec = dump_torch(
-            "linear", model, mean, std, vocab, trained_on_stub, feature_len, encoding
+            "linear",
+            model,
+            mean,
+            std,
+            vocab,
+            trained_on_stub,
+            feature_len,
+            encoding,
+            race_mean,
+            race_std,
         )
     elif torch is not None:
         model, adam_meta = train_torch(
@@ -975,14 +1095,26 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             args.epochs,
             args.l2,
             args.seed,
+            use_race=use_race,
+            race_mean=race_mean,
+            race_std=race_std,
         )
         train_meta.update(adam_meta)
         trained_on_stub: dict[str, Any] = {}
         spec = dump_torch(
-            args.model, model, mean, std, vocab, trained_on_stub, feature_len, encoding
+            args.model,
+            model,
+            mean,
+            std,
+            vocab,
+            trained_on_stub,
+            feature_len,
+            encoding,
+            race_mean,
+            race_std,
         )
     else:
-        w, zone_w, b, adam_meta = train_linear_numpy(
+        w, zone_w, b, race_w, adam_meta = train_linear_numpy(
             features,
             ids,
             train_idx,
@@ -994,6 +1126,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             args.epochs,
             args.l2,
             args.seed,
+            use_race=use_race,
+            race_mean=race_mean,
+            race_std=race_std,
         )
         train_meta.update(adam_meta)
         spec = {
@@ -1008,6 +1143,14 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "linear": {"w": w.tolist(), "zone_w": zone_w.tolist(), "b": b},
             "trained_on": {},
         }
+        if use_race and race_w is not None:
+            spec["race"] = {
+                "version": 1,
+                "names": list(RACE_NAMES),
+                "mean": race_mean.tolist(),
+                "std": race_std.tolist(),
+                "w": race_w.tolist(),
+            }
     train_s = time.perf_counter() - t0
 
     if hold_idx.size:
@@ -1087,6 +1230,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         "search_scale": scale_s,
         "search_rows": search_rows,
         "std_floor": std_floor,
+        **({"race": True} if use_race else {}),
         "holdout": {
             "rows": report["rows_holdout"],
             "games": games_ho,
@@ -1127,6 +1271,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--optimizer", choices=("adam", "lbfgs"), default="adam")
     p.add_argument("--lbfgs-iters", type=int, default=LBFGS_ITERS_DEFAULT)
     p.add_argument("--std-floor", type=float, default=STD_FLOOR)
+    p.add_argument(
+        "--race",
+        action="store_true",
+        help="train optional race block (linear only; not with --optimizer lbfgs)",
+    )
     args = p.parse_args(argv)
     train(args)
     return 0

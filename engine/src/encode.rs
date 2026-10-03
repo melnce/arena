@@ -279,7 +279,64 @@ pub const IDS_OPP_POOL: usize = 9 + HIST_WIDTH + 2 * FIELD_SIZE;
 pub const IDS_OPP_HAND: usize = 9 + 2 * HIST_WIDTH + 2 * FIELD_SIZE;
 pub const IDS_LEN: usize = IDS_OPP_HAND + HAND_LIMIT;
 
-const BOARD_WIDTH: usize = 20;
+pub const BOARD_WIDTH: usize = 20;
+
+/// Non-linear race inputs derived from HP and board attack (encoding 1/2).
+pub const RACE_LEN: usize = 12;
+
+pub const RACE_NAMES: [&str; RACE_LEN] = [
+    "lo5_me",
+    "lo10_me",
+    "threat_me",
+    "near_me",
+    "margin_me",
+    "inter_me",
+    "lo5_opp",
+    "lo10_opp",
+    "threat_opp",
+    "near_opp",
+    "margin_opp",
+    "inter_opp",
+];
+
+const ME_SCALARS: usize = 41;
+const OPP_SCALARS: usize = 70;
+const OWN_BOARD: usize = 153;
+const OPP_BOARD: usize = 253;
+
+fn board_attack(features: &[f32], base: usize) -> f32 {
+    let mut sum = 0.0f32;
+    for slot in 0..FIELD_SIZE {
+        let off = base + slot * BOARD_WIDTH;
+        if features.get(off + 19).copied().unwrap_or(0.0) == 1.0 {
+            sum += features.get(off).copied().unwrap_or(0.0);
+        }
+    }
+    sum
+}
+
+fn race_side(hp: f32, atk: f32) -> [f32; 6] {
+    let lo5 = (5.0 - hp).max(0.0);
+    let lo10 = (10.0 - hp).max(0.0);
+    let threat = if atk >= hp { 1.0 } else { 0.0 };
+    let near = if atk >= hp - 3.0 { 1.0 } else { 0.0 };
+    let margin = (hp - atk).clamp(-5.0, 10.0);
+    let inter = hp * atk / 20.0;
+    [lo5, lo10, threat, near, margin, inter]
+}
+
+/// Pure race inputs from a feature vector (v1 block offsets; no allocation).
+pub fn race_features(features: &[f32]) -> [f32; RACE_LEN] {
+    let me_hp = features.get(ME_SCALARS).copied().unwrap_or(0.0);
+    let opp_hp = features.get(OPP_SCALARS).copied().unwrap_or(0.0);
+    let vs_me = board_attack(features, OPP_BOARD);
+    let vs_opp = board_attack(features, OWN_BOARD);
+    let me = race_side(me_hp, vs_me);
+    let opp = race_side(opp_hp, vs_opp);
+    [
+        me[0], me[1], me[2], me[3], me[4], me[5], opp[0], opp[1], opp[2], opp[3], opp[4], opp[5],
+    ]
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Observation {
