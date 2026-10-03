@@ -1,0 +1,14 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:net=results/sweep37/leaf-all4-race-e2-l2x10-s1.json"
+  },
+  {
+    "index": 2,
+    "spec": "h0:net=results/sweep37/leaf-all4-race-e2-l2x10-s2.json"
+  },
+  {
+    "index": 3,
+    "spec": "h0:net=results/sweep37/leaf-all4-e2-l2x10-s2.json"
+  }
+]

@@ -1,0 +1,103 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\sweep.py",
+    "--tag",
+    "sweep37",
+    "--seed",
+    "1",
+    "--pool",
+    "meta",
+    "--baseline",
+    "h0",
+    "--screen-games",
+    "2",
+    "--final-games",
+    "8",
+    "--final-reverse",
+    "4",
+    "--tp-games",
+    "1",
+    "--finalists",
+    "3",
+    "--candidates",
+    "h0:net=results/sweep37/leaf-all4-race-e2-l2x10-s1.json",
+    "h0:net=results/sweep37/leaf-all4-race-e2-l2x10-s2.json",
+    "h0:net=results/sweep37/leaf-all4-e2-l2x10-s2.json",
+    "--publish"
+  ],
+  "git": "1c551eba7078b79d5207b9862336bdf7bec9478b",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "screen": {
+      "start": "2026-10-03T18:04:40.636620+00:00",
+      "end": "2026-10-03T18:33:29.236280+00:00"
+    },
+    "final": {
+      "start": "2026-10-03T18:33:29.261821+00:00",
+      "end": "2026-10-03T20:14:04.690898+00:00"
+    },
+    "summary": {
+      "start": "2026-10-03T20:14:04.719577+00:00",
+      "end": "2026-10-03T20:14:04.741839+00:00"
+    },
+    "publish": {
+      "start": "2026-10-03T20:14:04.792216+00:00"
+    }
+  },
+  "sizing": {
+    "pool": "meta",
+    "decks": [
+      "meta-abyss-aggro",
+      "meta-abyss-midrange",
+      "meta-dragon-aggro",
+      "meta-dragon-ramp",
+      "meta-forest-combo",
+      "meta-haven-amulet",
+      "meta-haven-evo",
+      "meta-haven-kukishiro",
+      "meta-portal-af",
+      "meta-portal-cutthroat",
+      "meta-portal-evo",
+      "meta-rune-crystal",
+      "meta-rune-spell",
+      "meta-rune-test-subject",
+      "meta-sword-loot",
+      "meta-sword-rally"
+    ],
+    "n_decks": 16,
+    "pairs": 256,
+    "games_per_pair": {
+      "screen": 2,
+      "final": 8,
+      "reverse": 4,
+      "tp": 1
+    },
+    "totals": {
+      "screen": 512,
+      "final": 2048,
+      "reverse": 1024,
+      "tp": 256
+    },
+    "target_games": null,
+    "block": "pool: meta\ndecks: 16 (meta-abyss-aggro, meta-abyss-midrange, meta-dragon-aggro, meta-dragon-ramp, meta-forest-combo, meta-haven-amulet, meta-haven-evo, meta-haven-kukishiro, meta-portal-af, meta-portal-cutthroat, meta-portal-evo, meta-rune-crystal, meta-rune-spell, meta-rune-test-subject, meta-sword-loot, meta-sword-rally)\npairs: 256 (16 x 16, mirrors included)\nscreen    2 games/pair x 256 =   512\nfinal     8 games/pair x 256 =  2048\nreverse   4 games/pair x 256 =  1024\ntp        1 games/pair x 256 =   256"
+  },
+  "finalist_decisions": [
+    {
+      "index": 1,
+      "spec": "h0:net=results/sweep37/leaf-all4-race-e2-l2x10-s1.json",
+      "decision": "finalist"
+    },
+    {
+      "index": 2,
+      "spec": "h0:net=results/sweep37/leaf-all4-race-e2-l2x10-s2.json",
+      "decision": "finalist"
+    },
+    {
+      "index": 3,
+      "spec": "h0:net=results/sweep37/leaf-all4-e2-l2x10-s2.json",
+      "decision": "finalist"
+    }
+  ]
+}
