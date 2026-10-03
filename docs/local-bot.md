@@ -46,12 +46,17 @@ browser still blocks the request, run the UI with `cd ui && npm run dev`.
 Settings → **Use local bot server when available** (on by default; the
 `?localbot=0` query flag also skips the probe and every `/bot` POST).
 In vs-bot the badge next to the policy select should read something like
-`bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8, 28 cpus)`. No server → `bot: browser`.
+`bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000, 28 cpus)`. No server → `bot: browser`.
 The default samples eight worlds at twice the previous node cap. The served bot
 takes a deterministic kill before searching (`tkill`, up to 10 000 solver
 applies outside the node cap; runbook 32 audit at results `e2c8e1d`) and a
 chance-dependent kill only when it holds under eight rerolls on every world
-(`tkroll`; sweep 34 at results `c3daad1`).
+(`tkroll`; sweep 34 at results `c3daad1`). When the search would end the turn
+with a kill attack available, the served bot re-scores End Turn against each
+kill attack, assuming the opponent's best sure removal line (up to 3 actions),
+and attacks when that scores better (`hbcheck`, up to 2 000 applies per root,
+outside the node cap; decision holdback3, sweep 35 `376e3a8` and review10
+`729410e`).
 One vs-bot loop runs per game, so acting while the bot is thinking never
 starts a second one. A reply that arrives after the position has moved is
 dropped and the move is recomputed, and after three such drops in a row
@@ -88,7 +93,7 @@ explicit `k=`, it builds the default four roots (same as the fair bot).
 
 Pick it in Settings → vs-bot policy (listed after **h0 (strong)**). The UI
 sends `h0:nodes=6000,info=all` to the server; the server rewrites that to
-its `--cheat` spec (default `h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8`). Override
+its `--cheat` spec (default `h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000`). Override
 with e.g. `python py/serve.py --cheat "h0:nodes=32000,info=all"`. The
 `GET /health` payload includes `"cheat": "<spec>"` alongside `"strong"`.
 
@@ -102,7 +107,7 @@ server)`).
 Each decision prints one stdout line:
 
 ```
-bot policy=h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
+bot policy=h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
 ```
 
 `hash=ok` means the client's `Game.hash()` matched the replayed
