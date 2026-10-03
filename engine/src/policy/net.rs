@@ -11,7 +11,9 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::encode::{EncodingVersion, Observation, HIST_WIDTH, LEN};
+use crate::encode::{
+    race_features, EncodingVersion, Observation, HIST_WIDTH, LEN, RACE_LEN, RACE_NAMES,
+};
 
 /// One input zone: a run of id slots, optionally weighted by a histogram.
 #[derive(Debug, Clone)]
@@ -45,6 +47,13 @@ struct Mlp {
     b2: f32,
 }
 
+#[derive(Clone)]
+struct Race {
+    mean: Vec<f32>,
+    std: Vec<f32>,
+    w: Vec<f32>,
+}
+
 /// Learned leaf value. `value` returns `scale × tanh(pre-activation)`.
 #[derive(Clone)]
 pub struct ValueNet {
@@ -58,6 +67,7 @@ pub struct ValueNet {
     scale: f32,
     linear: Option<Linear>,
     mlp: Option<Mlp>,
+    race: Option<Race>,
     pub path: String,
 }
 
@@ -136,6 +146,14 @@ impl ValueNet {
         let zones = req_zones(src, obj)?;
         let scale = req_f32(src, obj, "scale")?;
 
+        let race = match obj.get("race") {
+            None | Some(serde_json::Value::Null) => None,
+            Some(_) if arch != NetArch::Linear => {
+                return Err(format!("{src}: field 'race' requires arch 'linear'"));
+            }
+            Some(v) => Some(parse_race(src, v)?),
+        };
+
         let (linear, mlp) = match arch {
             NetArch::Linear => {
                 let lin = obj
@@ -148,6 +166,9 @@ impl ValueNet {
                 (Some(Linear { w, zone_w, b }), None)
             }
             NetArch::Mlp => {
+                if obj.get("race").is_some() {
+                    return Err(format!("{src}: field 'race' requires arch 'linear'"));
+                }
                 let mlp = obj
                     .get("mlp")
                     .and_then(|x| x.as_object())
@@ -190,8 +211,23 @@ impl ValueNet {
             scale,
             linear,
             mlp,
+            race,
             path: src.to_string(),
         }))
+    }
+
+    fn race_linear(&self, obs: &Observation, clip: f32) -> f32 {
+        let Some(race) = self.race.as_ref() else {
+            return 0.0;
+        };
+        let r = race_features(&obs.features);
+        let mut s = 0.0f32;
+        for (j, rv) in r.iter().enumerate() {
+            let x = (*rv - race.mean[j]) / race.std[j];
+            let x = if clip > 0.0 { x.clamp(-clip, clip) } else { x };
+            s += race.w[j] * x;
+        }
+        s
     }
 
     fn id_index(&self, id: u32) -> usize {
@@ -263,17 +299,17 @@ impl ValueNet {
                 (f - mean) / std
             })
             .collect();
-        self.forward(&x, obs)
+        self.forward(&x, obs, 0.0)
     }
 
     /// Like [`value`], but clamps each standardised input to `[-clip, clip]`
     /// before the forward pass when `clip > 0`.
     pub fn value_clipped(&self, obs: &Observation, clip: f32) -> f32 {
         let x = self.standardize(obs, clip);
-        self.forward(&x, obs)
+        self.forward(&x, obs, clip)
     }
 
-    fn forward(&self, x: &[f32], obs: &Observation) -> f32 {
+    fn forward(&self, x: &[f32], obs: &Observation, clip: f32) -> f32 {
         let pre = match self.arch {
             NetArch::Linear => {
                 let lin = self.linear.as_ref().expect("linear weights");
@@ -314,9 +350,56 @@ impl ValueNet {
                         .map(|(wi, hi)| wi * hi)
                         .sum::<f32>()
             }
-        };
+        } + self.race_linear(obs, clip);
         self.scale * pre.tanh()
     }
+}
+
+fn parse_race(src: &str, v: &serde_json::Value) -> Result<Race, String> {
+    let obj = v
+        .as_object()
+        .ok_or_else(|| format!("{src}: bad field 'race'"))?;
+    let version = req_usize(src, obj, "version")?;
+    if version != 1 {
+        return Err(format!("{src}: bad field 'race.version' ({version})"));
+    }
+    let names = obj
+        .get("names")
+        .and_then(|x| x.as_array())
+        .ok_or_else(|| format!("{src}: missing field 'race.names'"))?;
+    if names.len() != RACE_LEN {
+        return Err(format!(
+            "{src}: bad field 'race.names' (len {}, want {RACE_LEN})",
+            names.len()
+        ));
+    }
+    for (i, n) in names.iter().enumerate() {
+        let s = n
+            .as_str()
+            .ok_or_else(|| format!("{src}: bad field 'race.names'"))?;
+        if s != RACE_NAMES[i] {
+            return Err(format!("{src}: bad field 'race.names' (index {i})"));
+        }
+    }
+    let mean = req_f32_vec(src, obj, "mean", RACE_LEN)?;
+    let std = req_f32_vec(src, obj, "std", RACE_LEN)?;
+    let w = req_f32_vec(src, obj, "w", RACE_LEN)?;
+    for (i, s) in std.iter().enumerate() {
+        if !s.is_finite() {
+            return Err(format!("{src}: bad field 'race.std' (index {i})"));
+        }
+        if *s <= 0.0 {
+            return Err(format!("{src}: bad field 'race.std' (index {i})"));
+        }
+    }
+    for (field, vals) in [("mean", &mean), ("w", &w)] {
+        for (i, v) in vals.iter().enumerate() {
+            if !v.is_finite() {
+                return Err(format!("{src}: bad field 'race.{field}' (index {i})"));
+            }
+        }
+    }
+    Ok(Race { mean, std, w })
 }
 
 fn req_str<'a>(

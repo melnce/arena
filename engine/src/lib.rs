@@ -31,7 +31,10 @@ pub use apply::{apply, apply_neutral, legal_actions, new_game, zone_count};
 pub use card::{Card, CardId, CardKind, CardOrCrest};
 pub use db::CardDb;
 pub use determinize::determinize;
-pub use encode::{encode, encode_version, encode_with_vocab, vocab, EncodingVersion, Observation};
+pub use encode::{
+    encode, encode_version, encode_with_vocab, race_features, vocab, EncodingVersion, Observation,
+    BOARD_WIDTH, RACE_LEN, RACE_NAMES,
+};
 pub use error::{Illegal, LoadError, OraclePickNotLegal, ReplayError, Unsupported};
 pub use ids::{AttackTarget, First, PlayerId, Slot};
 pub use info::{
