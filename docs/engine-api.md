@@ -582,7 +582,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `olsolve` | 0 | after a sweep miss on the opponent's turn, run [`forced_lethal`] with this node budget (charged to the pair cap). `0` = off (today). Only when `olethal=1` and `odepth=0` |
 | `tkill` | 0 | on each own-turn decision (Main, Combat, or Choice) with more than one useful candidate, run [`forced_lethal_det`] on the first determinization before `consensus_lethal` / search. A deterministic kill confirmed on every root is played; applies are outside `node_cap`. `0` = off (today) |
 | `tkroll` | 0 | after a deterministic miss, run [`forced_lethal_accepting`] on the first determinization (every-root × `tkroll` rerolled confirmation inside the search; transposition off). Only when `tkill>0`; uses `tkill`'s budget. `0` = off (today; no effect when `tkill=0`) |
-| `hbcheck` | 0 | after search chooses `EndTurn` with a kill attack available, symmetrically re-score `End′` and each kill attack `A′` as `v(s)=min(plain,removal)` per determinization (bounded opponent removal search up to 3 actions, 4 rerolls per sure line, `hbcheck` applies per root outside `node_cap`; attack paths finish the bot's turn greedily up to `osteps` before `EndTurn`). Play the best kill when its aggregate beats `End′` (`holdback_trade`). `0` = off (today) |
+| `hbcheck` | 0 | after search chooses `EndTurn` with a kill attack available, symmetrically re-score `End′` and each kill attack `A′` as `v(s)=min(plain,removal)` per determinization (bounded opponent removal search up to 3 actions, 4 rerolls per sure line, `hbcheck` applies per root outside `node_cap`; attack paths finish the bot's turn greedily up to `osteps` before `EndTurn`). Play the best kill when its aggregate beats `End′` (`holdback_trade`). `0` = off (the default; the served specs use `2000`) |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
@@ -965,14 +965,19 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8`) is the spec used whenever the request's `policy` is an
+`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
 exact token `info=all`. The default samples eight worlds at twice the previous
 node cap. The served bot takes a deterministic kill before searching (`tkill`,
 up to 10 000 solver applies outside the node cap; runbook 32 audit at results
 `e2c8e1d`) and a chance-dependent kill only when it holds under eight rerolls
-on every world (`tkroll`; sweep 34 at results `c3daad1`). `--cheat` (default
-`h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8`)
+on every world (`tkroll`; sweep 34 at results `c3daad1`). When the search would
+end the turn with a kill attack available, the served bot re-scores End Turn
+against each kill attack, assuming the opponent's best sure removal line (up to
+3 actions), and attacks when that scores better (`hbcheck`, up to 2 000 applies
+per root, outside the node cap; decision holdback3, sweep 35 `376e3a8` and
+review10 `729410e`). `--cheat` (default
+`h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000`)
 is used for h0 variants whose keys include `info=all` (full-information
 sparring); same `tkill` / `tkroll` behaviour. `random` / `first-legal` and any non-h0 spec pass through
 unchanged — the server, not the client, decides H0 strength. `--origins` is
@@ -1042,7 +1047,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8, 28 cpus)` or
+select) is `bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000, 28 cpus)` or
 `bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
 selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.
