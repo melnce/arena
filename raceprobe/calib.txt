@@ -1,0 +1,23 @@
+situation (the sample's player)          rows     games   leaf's mean win chance vs actual win rate
+all                                rows 2097905  games 24576  leaf says 0.521  actual 0.513  gap -0.008
+opp board attack >= my HP (threat) rows  250918  games 22790  leaf says 0.297  actual 0.283  gap -0.014
+opp board attack in [HP-3, HP-1]   rows  122251  games 19497  leaf says 0.435  actual 0.423  gap -0.012
+opp board attack < HP-3            rows 1724736  games 24576  leaf says 0.560  actual 0.553  gap -0.007
+my HP <= 5                         rows  128109  games 13421  leaf says 0.324  actual 0.276  gap -0.048
+my HP 6-10                         rows  250741  games 19125  leaf says 0.425  actual 0.419  gap -0.006
+my HP > 10                         rows 1719055  games 24576  leaf says 0.550  actual 0.545  gap -0.006
+my board attack >= opp HP          rows  307181  games 24519  leaf says 0.765  actual 0.770  gap +0.005
+my HP - opp board attack in [-20,-3) rows  135381  games 18566  leaf says 0.238  actual 0.223  gap -0.015
+my HP - opp board attack in [-3,0) rows   80842  games 16146  leaf says 0.358  actual 0.345  gap -0.014
+my HP - opp board attack in [0,3)  rows  112043  games 18840  leaf says 0.419  actual 0.406  gap -0.013
+my HP - opp board attack in [3,6)  rows  142271  games 20666  leaf says 0.465  actual 0.458  gap -0.008
+my HP - opp board attack in [6,10) rows  234289  games 22974  leaf says 0.517  actual 0.517  gap +0.000
+my HP - opp board attack in [10,30) rows 1391500  games 24576  leaf says 0.574  actual 0.565  gap -0.008
+threat, leaf says [0.0,0.3)        rows  154786  games 20182  leaf says 0.111  actual 0.116  gap +0.005
+no threat, leaf says [0.0,0.3)     rows  352773  games 21917  leaf says 0.177  actual 0.193  gap +0.017
+threat, leaf says [0.3,0.5)        rows   38303  games  8922  leaf says 0.392  actual 0.377  gap -0.015
+no threat, leaf says [0.3,0.5)     rows  365190  games 21235  leaf says 0.404  actual 0.412  gap +0.007
+threat, leaf says [0.5,0.7)        rows   25965  games  6971  leaf says 0.596  actual 0.541  gap -0.054
+no threat, leaf says [0.5,0.7)     rows  407978  games 20660  leaf says 0.599  actual 0.581  gap -0.018
+threat, leaf says [0.7,1.0)        rows   31864  games  7371  leaf says 0.845  actual 0.773  gap -0.072
+no threat, leaf says [0.7,1.0)     rows  598795  games 24376  leaf says 0.855  actual 0.832  gap -0.023

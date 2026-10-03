@@ -1,0 +1,33 @@
+rows 2097905, games 24576, vocab 245, columns 1817 (M0 1793, M1 1805), pass 1 50s
+pass 2 (Gram) done 771s
+MSE of predicting 0: 1.000
+lam     10.0: out-of-fold MSE M0 0.71307  M1 0.70876  M1-M0 -0.00431 (se 0.00027, z -15.71)  control M2-M0 +0.00000 (z +2.26)
+lam    100.0: out-of-fold MSE M0 0.71302  M1 0.70872  M1-M0 -0.00430 (se 0.00027, z -15.67)  control M2-M0 +0.00000 (z +2.25)
+lam   1000.0: out-of-fold MSE M0 0.71293  M1 0.70865  M1-M0 -0.00428 (se 0.00027, z -15.55)  control M2-M0 +0.00000 (z +2.18)   <- best M0
+lam  10000.0: out-of-fold MSE M0 0.71420  M1 0.70995  M1-M0 -0.00425 (se 0.00028, z -15.39)  control M2-M0 +0.00000 (z +2.10)
+lam 100000.0: out-of-fold MSE M0 0.72233  M1 0.71771  M1-M0 -0.00462 (se 0.00029, z -16.01)  control M2-M0 +0.00000 (z +1.90)
+  [lam 1000.0] threat_me      rows   250918  mse M0 0.56719  M1 0.55542  diff -0.01177
+  [lam 1000.0] near_me_only   rows   122251  mse M0 0.67744  M1 0.66756  diff -0.00988
+  [lam 1000.0] no_threat_me   rows  1724736  mse M0 0.73664  M1 0.73385  diff -0.00279
+  [lam 1000.0] threat_opp     rows   307181  mse M0 0.52418  M1 0.51375  diff -0.01044
+  [lam 1000.0] hp_me_le5      rows   128109  mse M0 0.57052  M1 0.55090  diff -0.01962
+  [lam 1000.0] hp_me_6_10     rows   250741  mse M0 0.63677  M1 0.62924  diff -0.00753
+  [lam 1000.0] hp_me_gt10     rows  1719055  mse M0 0.73465  M1 0.73199  diff -0.00266
+value of +1 own HP in M0 (linear, everywhere): +0.0415 (result scale, -1..+1)
+race coefficients (per raw unit): {'lo5_me': np.float64(0.0137), 'lo10_me': np.float64(-0.0331), 'threat_me': np.float64(0.0016), 'near_me': np.float64(0.0017), 'margin_me': np.float64(0.013), 'inter_me': np.float64(-0.0233), 'lo5_opp': np.float64(-0.0041), 'lo10_opp': np.float64(0.0387), 'threat_opp': np.float64(0.0414), 'near_opp': np.float64(0.0156), 'margin_opp': np.float64(-0.0097), 'inter_opp': np.float64(0.0304)}
+  M1: value of +1 own HP when the opponent's board has 0 attack: {2: np.float64(0.063), 4: np.float64(0.063), 6: np.float64(0.0768), 8: np.float64(0.0768), 10: np.float64(0.0307), 14: np.float64(0.0307), 18: np.float64(0.0307)}
+  M1: value of +1 own HP when the opponent's board has 3 attack: {2: np.float64(0.0595), 4: np.float64(0.0595), 6: np.float64(0.0716), 8: np.float64(0.0733), 10: np.float64(0.0401), 14: np.float64(0.0272), 18: np.float64(0.0272)}
+  M1: value of +1 own HP when the opponent's board has 6 attack: {2: np.float64(0.056), 4: np.float64(0.056), 6: np.float64(0.0681), 8: np.float64(0.0698), 10: np.float64(0.0366), 14: np.float64(0.0366), 18: np.float64(0.0237)}
+  M1: value of +1 own HP when the opponent's board has 9 attack: {2: np.float64(0.0395), 4: np.float64(0.0525), 6: np.float64(0.0663), 8: np.float64(0.0663), 10: np.float64(0.0331), 14: np.float64(0.0331), 18: np.float64(0.0331)}
+logistic: {
+ "test_rows": 417566,
+ "test_games": 4916,
+ "logloss_M0": 0.5217816750277292,
+ "logloss_M1": 0.5184503774918159,
+ "mse_M0": 0.7048792691854768,
+ "mse_M1": 0.6997123328233725,
+ "diff_logloss": -0.003331297535913072,
+ "se": 0.000577803533063667,
+ "z": -5.765450270353406
+}
+wrote results\raceprobe\net8.json (7783s)
