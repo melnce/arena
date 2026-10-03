@@ -8,8 +8,8 @@
   "token": false,
   "cost": 3,
   "text": "Fanfare: Summon a Dread Pirate's Flag. Add a Gilded Goblet to your hand.\n\nRush",
-  "attack": 4,
-  "defense": 2,
+  "attack": 3,
+  "defense": 1,
   "traits": {
     "rush": true
   },

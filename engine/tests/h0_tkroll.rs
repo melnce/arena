@@ -435,7 +435,7 @@ fn two_storm_lethal_state(db: &CardDb) -> arena_engine::State {
 
 #[test]
 fn confirm_rerolled_rejects_rng_dependent_gamble() {
-    let db = load_db();
+    let db = load_recorded_db();
     let path = tkroll_fixture_dir().join("fb-play-105-ply0079.json");
     let cap: Value =
         serde_json::from_str(&fs::read_to_string(&path).expect("read fixture")).expect("json");
@@ -465,7 +465,7 @@ fn confirm_rerolled_rejects_rng_dependent_gamble() {
 #[test]
 #[ignore = "PR diagnostic: per-root reroll confirmation failures"]
 fn tkroll_fixture_root_diagnostics() {
-    let db = load_db();
+    let db = load_recorded_db();
     let dir = tkroll_fixture_dir();
     for ent in fs::read_dir(&dir).expect("tkroll fixtures dir").flatten() {
         let path = ent.path();
@@ -537,7 +537,7 @@ fn tkroll_fixture_root_diagnostics() {
 
 #[test]
 fn confirm_rerolled_accepts_sure_kill() {
-    let db = load_db();
+    let db = load_recorded_db();
     let path = tkroll_fixture_dir().join("fa-play-174-ply0086.json");
     let cap: Value =
         serde_json::from_str(&fs::read_to_string(&path).expect("read fixture")).expect("json");
@@ -556,7 +556,7 @@ fn confirm_rerolled_accepts_sure_kill() {
 
 #[test]
 fn confirm_rerolled_is_deterministic() {
-    let db = load_db();
+    let db = load_recorded_db();
     let path = tkroll_fixture_dir().join("fa-play-98-ply0071.json");
     let cap: Value =
         serde_json::from_str(&fs::read_to_string(&path).expect("read fixture")).expect("json");
@@ -639,7 +639,7 @@ fn assert_tkroll_takes_kill(db: &CardDb, path: &Path, cap: &Value) -> bool {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn tkroll_positive_fixtures_take_sure_kill() {
-    let db = load_db();
+    let db = load_recorded_db();
     let dir = tkroll_fixture_dir();
     let mut converted = 0usize;
     let mut eligible = 0usize;
@@ -688,7 +688,7 @@ fn tkroll_positive_fixtures_take_sure_kill() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn tkroll_gambles_not_taken_blindly() {
-    let db = load_db();
+    let db = load_recorded_db();
     let dir = tkroll_fixture_dir();
     for ent in fs::read_dir(&dir).expect("tkroll fixtures dir").flatten() {
         let path = ent.path();
@@ -740,6 +740,32 @@ fn tkroll_gambles_not_taken_blindly() {
             );
         }
     }
+}
+
+/// Patched-card fixtures (Disgraceful / Bewitching) were recorded pre-patch.
+/// Without `oracle/cards-as-recorded/` the action trace no longer replays.
+#[test]
+fn sabotage_patched_tkroll_fixture_without_recorded_db_fails() {
+    let path = tkroll_fixture_dir().join("fb-play-122-ply0064.json");
+    let cap: Value =
+        serde_json::from_str(&fs::read_to_string(&path).expect("read fixture")).expect("json");
+    let recorded = load_recorded_db();
+    assert!(
+        assert_tkroll_takes_kill(&recorded, &path, &cap),
+        "recorded db must replay patched tkroll fixture"
+    );
+
+    let current = load_db();
+    let ply = cap["ply"].as_u64().expect("ply") as usize;
+    let replay_ok = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        replay_capture(&current, &cap, ply);
+    }))
+    .is_ok();
+    let takes_kill = replay_ok && assert_tkroll_takes_kill(&current, &path, &cap);
+    assert!(
+        !takes_kill,
+        "patched tkroll fixture must not pass with current card db alone"
+    );
 }
 
 #[derive(Clone)]

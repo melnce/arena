@@ -361,36 +361,36 @@ fn pre_flip_default_bench_identity_seed5() {
             b_wins += 1;
         }
     }
-    assert_eq!(a_wins, 1, "a_wins baseline");
-    assert_eq!(b_wins, 3, "b_wins baseline");
-    assert_eq!(stats.decisions, 220, "decisions baseline");
-    assert_eq!(stats.nodes, 255_901, "nodes baseline");
-    assert_eq!(stats.cap_hits, 30, "cap_hits baseline");
+    assert_eq!(a_wins, 0, "a_wins baseline");
+    assert_eq!(b_wins, 4, "b_wins baseline");
+    assert_eq!(stats.decisions, 207, "decisions baseline");
+    assert_eq!(stats.nodes, 232_747, "nodes baseline");
+    assert_eq!(stats.cap_hits, 29, "cap_hits baseline");
     assert_eq!(stats.pairs_skipped, 0, "pairs_skipped baseline");
-    assert_eq!(stats.candidates, 915, "candidates baseline");
-    assert_eq!(stats.roots, 716, "roots baseline");
-    assert_eq!(stats.opp_leaves, 11_356, "opp_leaves baseline");
-    assert_eq!(stats.opp_cap_hits, 1_450, "opp_cap_hits baseline");
-    assert_eq!(stats.tt_hits, 3_878, "tt_hits baseline");
-    assert_eq!(stats.tt_stores, 35_342, "tt_stores baseline");
+    assert_eq!(stats.candidates, 811, "candidates baseline");
+    assert_eq!(stats.roots, 660, "roots baseline");
+    assert_eq!(stats.opp_leaves, 10_102, "opp_leaves baseline");
+    assert_eq!(stats.opp_cap_hits, 1_236, "opp_cap_hits baseline");
+    assert_eq!(stats.tt_hits, 3_432, "tt_hits baseline");
+    assert_eq!(stats.tt_stores, 32_144, "tt_stores baseline");
     assert_eq!(
-        stats.opp_lethal_checks, 11_356,
+        stats.opp_lethal_checks, 10_102,
         "opp_lethal_checks baseline"
     );
-    assert_eq!(stats.opp_lethal_found, 5_935, "opp_lethal_found baseline");
+    assert_eq!(stats.opp_lethal_found, 5_068, "opp_lethal_found baseline");
     assert_eq!(
-        stats.opp_lethal_evo_found, 326,
+        stats.opp_lethal_evo_found, 295,
         "opp_lethal_evo_found baseline"
     );
-    assert_eq!(stats.opp_lethal_nodes, 58_061, "opp_lethal_nodes baseline");
+    assert_eq!(stats.opp_lethal_nodes, 50_894, "opp_lethal_nodes baseline");
     assert_eq!(
         stats.chose_with_lethal_root, 21,
         "chose_with_lethal_root baseline"
     );
     assert_eq!(
-        stats.cands_with_lethal_root, 172,
+        stats.cands_with_lethal_root, 155,
         "cands_with_lethal_root baseline"
     );
-    assert_eq!(stats.lethal_nodes, 14_705, "lethal_nodes tally");
+    assert_eq!(stats.lethal_nodes, 12_743, "lethal_nodes tally");
     assert_eq!(stats.unscored, 1, "unscored tally");
 }

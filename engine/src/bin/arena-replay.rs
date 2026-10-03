@@ -28,6 +28,7 @@ fn run(path: &str) -> Result<(), ReplayError> {
     let text = fs::read_to_string(path)?;
     let mut db = CardDb::load(".").map_err(|e| ReplayError::Header(e.to_string()))?;
     let _ = db.load_extra_dir("engine/tests/fixtures/cards");
+    let _ = db.load_replace_dir("oracle/cards-as-recorded");
     match replay_trace(&db, &text)? {
         ReplayOutcome::Green => Ok(()),
         ReplayOutcome::Divergence(d) => Err(ReplayError::Diverge {

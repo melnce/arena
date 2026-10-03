@@ -6,7 +6,7 @@
   "set": 10009,
   "rarity": "gold",
   "token": false,
-  "cost": 3,
+  "cost": 4,
   "text": "Select an enemy follower on the field and destroy it. If there are no duplicates in your deck, destroy all enemy followers instead.",
   "abilities": [
     {

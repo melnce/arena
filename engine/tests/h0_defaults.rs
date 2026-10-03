@@ -168,35 +168,35 @@ fn action_trace(
 /// Captured from `h0:net=/tmp/v3.json` on `main@a69b248` (yardstick
 /// candidate); bare `h0` must reproduce them exactly.
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
-    0xd7ac_bc56_d86e_84dd,
-    0xbe95_43fe_4fc0_3f96,
+    0x2246_9fdb_d814_7321,
+    0x6a97_4302_9171_efbc,
     0x120b_7fb2_41cf_3f44,
-    0x871f_8e13_d4a6_c0b4,
-    0xbd46_13fd_4a50_be48,
-    0x8e4e_3568_7a31_644c,
-    0x05d7_3cb4_31fa_02c1,
+    0xfd6c_73d8_9fd1_d09d,
+    0xd9fb_a1c8_8f98_0106,
+    0x783d_f18c_0ca2_89f1,
+    0x3f38_eeac_5db2_59c1,
     0x857a_2b3b_a078_359e,
 ];
 
 /// Pre-v3 default `h0` fingerprints (`main@a69b248`, built-in `h0-linear-v2`).
 const V2_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x9e78_76d1_68f6_7ca1,
-    0x0cde_c89d_1da5_5cf3,
+    0x19e7_2e1b_1adf_b216,
     0x122c_fa71_850c_7637,
-    0xec79_9a62_bfca_6750,
-    0x661e_1e5c_19a5_9461,
-    0x67ef_ff4e_5e77_f58b,
-    0xb42f_c81d_b87e_5b1c,
+    0x9475_f3fc_7d65_58c7,
+    0x3633_2073_4090_3124,
+    0x8f6b_b18b_4445_e0bd,
+    0x5cca_9048_c37e_96c9,
     0x46e6_1033_24ea_959f,
 ];
 
 /// Pre-v2 default `h0` fingerprints (`main@063bdd4`, built-in `h0-linear-v1`).
 const V1_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
-    0x8cd3_2204_3bbb_ebaf,
+    0xe2f8_652b_1c6e_d321,
     0x0c5e_00eb_14bd_ce85,
-    0x09d1_f4dd_e963_0cb7,
-    0x7393_0e18_abe2_6408,
+    0xa024_135f_cf64_4006,
+    0x7099_b9ba_b571_926b,
     0x85c9_38a0_6912_6ff1,
     0x2d18_3971_e453_91ae,
     0x5b5a_5be5_f92e_3c7c,
@@ -206,11 +206,11 @@ const V1_DEFAULT_FINGERPRINTS: [u64; 8] = [
 /// play-time / Pay gating on top of `main@b5b822c`; see module docs.
 const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x8a3c_ed65_9428_71b4,
-    0xf00a_d8f4_4136_9f74,
+    0x5fe8_8bb6_8e5d_65fc,
     0x0c5e_00eb_14bd_ce85,
-    0x3207_d65c_42f5_89a8,
-    0x7393_0e18_abe2_6408,
-    0x8fe4_b401_a51d_973b,
+    0x3d7f_2f1b_9db5_99cc,
+    0x7099_b9ba_b571_926b,
+    0xf0a3_386e_8682_af1e,
     0x953e_ffd4_7650_d22e,
     0x5b5a_5be5_f92e_3c7c,
 ];
@@ -634,6 +634,34 @@ fn print_legacy_fingerprints() {
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);
         let fp = action_fingerprint(&db, "h0:mull=rule,info=fair", *seed, &deck);
+        println!("seed={seed} deck={} fp=0x{:016x}", stems[i], fp);
+    }
+}
+
+#[test]
+#[ignore]
+fn print_v1_net_fingerprints() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let v1 = h0_linear_v1_path();
+    let spec = format!("h0:net={v1}");
+    for (i, seed) in GATE_SEEDS.iter().enumerate() {
+        let deck = load_meta_deck(&stems[i]);
+        let fp = action_fingerprint(&db, &spec, *seed, &deck);
+        println!("seed={seed} deck={} fp=0x{:016x}", stems[i], fp);
+    }
+}
+
+#[test]
+#[ignore]
+fn print_v2_net_fingerprints() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let v2 = h0_linear_v2_path();
+    let spec = format!("h0:net={v2}");
+    for (i, seed) in GATE_SEEDS.iter().enumerate() {
+        let deck = load_meta_deck(&stems[i]);
+        let fp = action_fingerprint(&db, &spec, *seed, &deck);
         println!("seed={seed} deck={} fp=0x{:016x}", stems[i], fp);
     }
 }

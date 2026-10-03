@@ -6,8 +6,8 @@
   "set": 10004,
   "rarity": "gold",
   "token": false,
-  "cost": 6,
-  "text": "Fanfare: Select a Mode to activate.\n1. Super-evolve this follower.\n2. Deal 4 damage to all enemy followers.\n3. Restore 4 defense to your leader.\nEnhance (8): Activate all of them instead.",
+  "cost": 7,
+  "text": "Fanfare: Select a Mode to activate.\n1. Super-evolve this follower.\n2. Deal 4 damage to all enemy followers.\n3. Restore 4 defense to your leader.\nEnhance (9): Activate all of them instead.",
   "attack": 6,
   "defense": 6,
   "abilities": [
@@ -71,8 +71,8 @@
   "modes": [
     {
       "kind": "enhance",
-      "cost": 8,
-      "printed": "Enhance (8): Activate all of them instead.",
+      "cost": 9,
+      "printed": "Enhance (9): Activate all of them instead.",
       "effects": [
         {
           "printed": "Activate all of them instead.",

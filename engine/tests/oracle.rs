@@ -41,7 +41,7 @@ fn oracle_traces() {
         Vec::new()
     };
 
-    let db = load_db();
+    let db = load_recorded_db();
     let files = collect_gz(&traces_dir);
     assert!(
         !files.is_empty(),
@@ -126,7 +126,7 @@ const MAIN_COMPARED_LINES: u32 = 17_995;
 #[test]
 fn bonus_pp_kept_norm_compares_full_trace_depth() {
     let traces_dir = repo_root().join("oracle/traces");
-    let db = load_db();
+    let db = load_recorded_db();
     let mut compared_lines = 0u32;
     for path in collect_gz(&traces_dir) {
         let text = gunzip(&path);
@@ -146,7 +146,7 @@ fn bonus_pp_kept_norm_compares_full_trace_depth() {
 
 #[test]
 fn bonus_pp_kept_norm_does_not_hide_unrelated_divergence() {
-    let db = load_db();
+    let db = load_recorded_db();
     let traces_dir = repo_root().join("oracle/traces");
     let path = traces_dir.join("abyss-p8rfn-mirror/trace-20260910-1.jsonl.gz");
     let text = gunzip(&path);
@@ -178,6 +178,19 @@ fn bonus_pp_kept_norm_does_not_hide_unrelated_divergence() {
             );
         }
         ReplayOutcome::Green => panic!("edited shadows must not be hidden by bonus_pp norm"),
+    }
+}
+
+/// Without the recording-time overlay, patched cards in royal-nattui traces diverge on data.
+#[test]
+fn sabotage_royal_nattui_without_overlay_diverges() {
+    let traces_dir = repo_root().join("oracle/traces");
+    let path = traces_dir.join("royal-nattui-mirror/trace-20260910-0.jsonl.gz");
+    let text = gunzip(&path);
+    let db = load_db();
+    match replay_trace(&db, &text) {
+        Ok(ReplayOutcome::Divergence(_)) | Err(_) => {}
+        Ok(ReplayOutcome::Green) => panic!("patched stats without overlay must not replay green"),
     }
 }
 

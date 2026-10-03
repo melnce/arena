@@ -165,6 +165,9 @@ test("A2 countdown badge updates and evolved art swaps", async ({ page }) => {
   await closeDrawer(page);
   await skipToPp(page, 3);
   await playCard(page, "10922110");
+  const gunner = page.locator("#blueBoard .card[data-card='10922110']").first();
+  await expect(gunner.locator(".card-stats.bottom-left")).toHaveText("4");
+  await expect(gunner.locator(".card-stats.bottom-right")).toHaveText("2");
   const flag = page.locator("#blueBoard .card[data-card='90021210']").first();
   await expect(flag).toBeVisible();
   const before = await flag.locator(".countdown-badge").innerText();

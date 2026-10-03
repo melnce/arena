@@ -97,6 +97,16 @@ pub fn load_db() -> CardDb {
     db
 }
 
+/// Current pool plus recording-time overrides in `oracle/cards-as-recorded/`
+/// for anything recorded before the 2026-09-29 balance patch. Use for oracle
+/// traces and pre-patch fixture replays; generated games use [`load_db`].
+pub fn load_recorded_db() -> CardDb {
+    let mut db = load_db();
+    db.load_replace_dir(repo_root().join("oracle/cards-as-recorded"))
+        .expect("recorded overlay");
+    db
+}
+
 pub fn cid(s: &str) -> CardId {
     CardId::parse(s).unwrap_or_else(|| panic!("bad id {s}"))
 }

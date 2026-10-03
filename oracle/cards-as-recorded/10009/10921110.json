@@ -9,7 +9,7 @@
   "cost": 2,
   "text": "Fanfare: Summon a Dread Pirate's Flag.\n\nEvolve: Add a Gilded Boots to your hand.",
   "attack": 2,
-  "defense": 2,
+  "defense": 1,
   "abilities": [
     {
       "on": "fanfare",

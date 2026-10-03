@@ -1,0 +1,52 @@
+{
+  "id": "10974110",
+  "name": "Cutthroat, Fluxblade Convict",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10009,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 2,
+  "text": "Bane\n\nEvolve: Banish all copies of Cutthroat, Fluxblade Convict from your deck. Then, if there are no duplicates in your deck, gain Crest: Cutthroat, Fluxblade Convict.",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "bane": true
+  },
+  "abilities": [
+    {
+      "on": "evolve",
+      "printed": "Evolve: Banish all copies of Cutthroat, Fluxblade Convict from your deck. Then, if there are no duplicates in your deck, gain Crest: Cutthroat, Fluxblade Convict.",
+      "effects": [
+        {
+          "printed": "Banish all copies of Cutthroat, Fluxblade Convict from your deck.",
+          "op": "banish",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "deck",
+            "kind": "card",
+            "filter": {
+              "card": "10974110"
+            }
+          }
+        },
+        {
+          "printed": "Then, if there are no duplicates in your deck, gain Crest: Cutthroat, Fluxblade Convict.",
+          "op": "if",
+          "cond": {
+            "deckHasNoDuplicates": true
+          },
+          "then": [
+            {
+              "op": "crest",
+              "gain": "crest:10974110",
+              "player": "self"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

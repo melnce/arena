@@ -1,17 +1,20 @@
 {
-  "id": "10972310",
-  "name": "Disgraceful Banishment",
-  "kind": "spell",
-  "class": "portalcraft",
-  "set": 10009,
-  "rarity": "silver",
-  "token": false,
+  "id": "89701006",
+  "name": "QA Disgraceful bane draw after fizzle",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89700,
+  "rarity": "bronze",
+  "token": true,
   "cost": 1,
-  "text": "Select a card in your hand and discard it. Draw a Portalcraft follower with Bane. Then, if there are no duplicates in your deck, draw 2 cards.",
+  "attack": 1,
+  "defense": 1,
+  "text": "Fanfare: Select a card in your hand and discard it. Draw a Portalcraft follower with Bane. Then, if there are no duplicates in your deck, draw 2 cards.",
+  "tribes": [],
   "abilities": [
     {
       "on": "fanfare",
-      "printed": "Select a card in your hand and discard it. Draw a Portalcraft follower with Bane. Then, if there are no duplicates in your deck, draw 2 cards.",
+      "printed": "Fanfare: Select a card in your hand and discard it. Draw a Portalcraft follower with Bane. Then, if there are no duplicates in your deck, draw 2 cards.",
       "effects": [
         {
           "printed": "Select a card in your hand and discard it.",
@@ -48,6 +51,5 @@
         }
       ]
     }
-  ],
-  "tribes": []
+  ]
 }

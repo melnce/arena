@@ -1,6 +1,6 @@
 # Official Cygames per-card Q&A
 
-Fetched 2026-09-09 from https://shadowverse-wb.com (lang=en). 149 Q&A entries across 120 cards (904 catalog ids).
+Fetched 2026-10-02 from https://shadowverse-wb.com (lang=en). 149 Q&A entries across 120 cards (904 catalog ids).
 
 ## 10001210 Detective's Lens
 

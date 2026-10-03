@@ -94,6 +94,8 @@ fn run() -> Result<(), String> {
     let mut db = CardDb::load(&root).map_err(|e| e.to_string())?;
     db.load_extra_dir(root.join("engine/tests/fixtures/cards"))
         .map_err(|e| e.to_string())?;
+    db.load_replace_dir(root.join("oracle/cards-as-recorded"))
+        .map_err(|e| e.to_string())?;
 
     let mut rows = Vec::new();
     let mut unclassified = Vec::new();

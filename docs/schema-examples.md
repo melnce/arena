@@ -1490,7 +1490,7 @@ Printed text:
 Select a Mode to activate.
 1. Summon a Crystalspawn and give it +1/+0 and Storm.
 2. Summon 2 copies of Crystalspawn and give them +1/+0.
-Enhance (5): Activate all of them instead.
+Enhance (6): Activate all of them instead.
 ```
 
 File: `cards/10006/10633310.json`
@@ -1504,8 +1504,8 @@ File: `cards/10006/10633310.json`
   "set": 10006,
   "rarity": "gold",
   "token": false,
-  "cost": 3,
-  "text": "Select a Mode to activate.\n1. Summon a Crystalspawn and give it +1/+0 and Storm.\n2. Summon 2 copies of Crystalspawn and give them +1/+0.\nEnhance (5): Activate all of them instead.",
+  "cost": 4,
+  "text": "Select a Mode to activate.\n1. Summon a Crystalspawn and give it +1/+0 and Storm.\n2. Summon 2 copies of Crystalspawn and give them +1/+0.\nEnhance (6): Activate all of them instead.",
   "tribes": [
     "encroacher"
   ],
@@ -1592,9 +1592,9 @@ File: `cards/10006/10633310.json`
   "modes": [
     {
       "kind": "enhance",
-      "cost": 5,
+      "cost": 6,
       "replacesBase": true,
-      "printed": "Enhance (5): Activate all of them instead.",
+      "printed": "Enhance (6): Activate all of them instead.",
       "effects": [
         {
           "printed": "Activate all of them instead.",

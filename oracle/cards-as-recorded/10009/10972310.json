@@ -7,11 +7,11 @@
   "rarity": "silver",
   "token": false,
   "cost": 1,
-  "text": "Select a card in your hand and discard it. Draw a Portalcraft follower with Bane. Then, if there are no duplicates in your deck, draw 2 cards.",
+  "text": "Select a card in your hand and discard it. Draw a card. If there are no duplicates in your deck, draw 3 instead.",
   "abilities": [
     {
       "on": "fanfare",
-      "printed": "Select a card in your hand and discard it. Draw a Portalcraft follower with Bane. Then, if there are no duplicates in your deck, draw 2 cards.",
+      "printed": "Select a card in your hand and discard it. Draw a card. If there are no duplicates in your deck, draw 3 instead.",
       "effects": [
         {
           "printed": "Select a card in your hand and discard it.",
@@ -24,17 +24,7 @@
           }
         },
         {
-          "printed": "Draw a Portalcraft follower with Bane.",
-          "op": "draw",
-          "count": 1,
-          "filter": {
-            "kind": "follower",
-            "class": "portalcraft",
-            "hasTrait": "bane"
-          }
-        },
-        {
-          "printed": "Then, if there are no duplicates in your deck, draw 2 cards.",
+          "printed": "Draw a card. If there are no duplicates in your deck, draw 3 instead.",
           "op": "if",
           "cond": {
             "deckHasNoDuplicates": true
@@ -42,7 +32,13 @@
           "then": [
             {
               "op": "draw",
-              "count": 2
+              "count": 3
+            }
+          ],
+          "else": [
+            {
+              "op": "draw",
+              "count": 1
             }
           ]
         }

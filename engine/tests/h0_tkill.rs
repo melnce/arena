@@ -285,7 +285,7 @@ fn forced_lethal_det_solver_behaviour() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn audit_fixtures_plain_h0_ends_turn_without_win() {
-    let db = load_db();
+    let db = load_recorded_db();
     for name in AUDIT_PLAIN_MISS {
         let path = tkill_fixture_dir().join(name);
         let cap: Value =
@@ -303,7 +303,7 @@ fn audit_fixtures_plain_h0_ends_turn_without_win() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn tkill_fixtures_take_deterministic_kill() {
-    let db = load_db();
+    let db = load_recorded_db();
     let dir = tkill_fixture_dir();
     let entries = fs::read_dir(&dir).expect("tkill fixtures dir");
     let mut any = false;
@@ -332,7 +332,7 @@ fn tkill_fixtures_take_deterministic_kill() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn choice_phase_kill_followed_through() {
-    let db = load_db();
+    let db = load_recorded_db();
     let path = tkill_fixture_dir().join("9420-ply0072.json");
     let cap: Value =
         serde_json::from_str(&fs::read_to_string(&path).expect("read fixture")).expect("json");

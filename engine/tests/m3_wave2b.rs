@@ -566,9 +566,10 @@ fn new_age_cartographer_exact_copy_from_hand() {
     assert!(field_has(&st, me, "90073120"));
 }
 
-/// Cutthroat's banish-then-crest with a duplicate left in the deck (no crest).
+/// Cutthroat evolve: search-draw then crest iff no duplicates (2026-09-29).
+/// Printed change: "Banish all copies…" → "Draw a Portalcraft follower with Bane."
 #[test]
-fn cutthroat_banish_then_no_crest_if_duplicate_left() {
+fn cutthroat_draw_then_no_crest_if_duplicate_left() {
     let db = load_db();
     let mut st = started(&db, 117);
     let me = PlayerId::A;
@@ -577,7 +578,8 @@ fn cutthroat_banish_then_no_crest_if_duplicate_left() {
     let slot = put_field(&db, &mut st, me, "10974110");
     st.player_mut(me).deck.clear();
     push_deck(&db, &mut st, me, "10974110");
-    push_deck(&db, &mut st, me, "88001110");
+    push_deck(&db, &mut st, me, "10974110");
+    push_deck(&db, &mut st, me, "10974110");
     push_deck(&db, &mut st, me, "88001110");
     apply(
         &db,
@@ -588,17 +590,23 @@ fn cutthroat_banish_then_no_crest_if_duplicate_left() {
         },
     )
     .unwrap();
-    assert!(st
+    let cutthroats = st
         .player(me)
         .deck
         .iter()
-        .all(|c| c.card.as_str() != "10974110"));
+        .chain(st.player(me).hand.iter())
+        .filter(|c| c.card.as_str() == "10974110")
+        .count();
+    assert_eq!(
+        cutthroats, 3,
+        "Draw a Portalcraft follower with Bane — nothing banished (deck + hand)"
+    );
     assert!(
         st.player(me)
             .crests
             .iter()
             .all(|c| c.id != "crest:10974110"),
-        "duplicate vanilla copies remain"
+        "Then, if there are no duplicates… — duplicate remains after draw"
     );
 }
 
