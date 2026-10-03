@@ -1,0 +1,112 @@
+{
+  "arch": "linear",
+  "rows_train": 2097905,
+  "rows_holdout": 0,
+  "games_train": 24576,
+  "games_holdout": 0,
+  "label_balance_train": {
+    "+1": 1076675,
+    "-1": 1021230,
+    "0": 0
+  },
+  "label_balance_holdout": {
+    "+1": 0,
+    "-1": 0,
+    "0": 0
+  },
+  "train_seconds": 52.17224310012534,
+  "net": {
+    "overall": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "<=3": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "4-6": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    ">=7": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    }
+  },
+  "v0": {
+    "overall": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "<=3": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "4-6": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    ">=7": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    }
+  },
+  "search_v": {
+    "overall": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "<=3": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    "4-6": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    },
+    ">=7": {
+      "mse": NaN,
+      "sign_acc": NaN,
+      "auc": NaN,
+      "rows": 0
+    }
+  },
+  "eval": {},
+  "dirs": [
+    "results\\net8\\data-e0",
+    "results\\net8\\data-e10"
+  ],
+  "holdout": 0.0,
+  "seed": 1,
+  "epochs": 2,
+  "target": "outcome",
+  "mix_weight": 0.5,
+  "search_scale": 60.0,
+  "search_rows": 1714409,
+  "std_floor": 0.001,
+  "optimizer": "adam",
+  "epochs_run": 2,
+  "best_epoch": 2
+}
