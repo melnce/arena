@@ -1238,6 +1238,25 @@ leaf costs ~6 µs against v0's 0.15 µs (−14 % throughput on v1). The model
 adds ~59 KB to the engine and to the wasm binary; `ValueNet::load` is
 still the only `std::fs` user and is never called from wasm.
 
+### Optional race block (linear only)
+
+A linear model may carry an optional top-level `"race"` object:
+
+```json
+"race": {"version": 1, "names": [12 names], "mean": [12], "std": [12], "w": [12]}
+```
+
+Valid only with `"arch": "linear"`. The twelve inputs are pure functions of
+the observation's HP scalars and follower attack on each board (see
+`encode::race_features` / `py/race.py`). Names, in order: `lo5_me`, `lo10_me`,
+`threat_me`, `near_me`, `margin_me`, `inter_me`, `lo5_opp`, `lo10_opp`,
+`threat_opp`, `near_opp`, `margin_opp`, `inter_opp`. Forward adds
+`Σ_j w[j] · (r[j] − mean[j]) / std[j]` to the linear pre-activation; with
+`value_clipped` and `clip > 0`, each standardised race input is clamped to
+`[−clip, clip]` like the dense features. Models without a race block are
+unchanged. `py/train_value.py --race` fits the block (linear only; not with
+`--optimizer lbfgs`).
+
 ## Learned mulligan (keep tables)
 
 The default `h0` uses the built-in `mulligan-v1` table

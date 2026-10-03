@@ -66,3 +66,10 @@ Training: `py/train_value.py --model linear --target outcome --holdout 0 --epoch
 sha256 `926ce6021b27f94a49da965d9b7cd3b1b04283acf92d0c372a76b28b85e117b2`
 
 This is the default H0 leaf since this PR. Reach the previous leaf with `h0:net=engine/models/h0-linear-v2.json`.
+
+## Optional race block
+
+Linear models may include an optional `"race"` block (twelve HP / board-attack
+inputs; see `docs/engine-api.md` "Optional race block"). The committed defaults
+(`h0-linear-v1` … `h0-linear-v3`) have no race block. Train one with
+`py/train_value.py --race` on a linear export; gate in play comes after merge.
