@@ -22,8 +22,8 @@ from urllib.parse import urlparse
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
-DEFAULT_STRONG = "h0:nodes=32000,horizon=3,k=8"
-DEFAULT_CHEAT = "h0:nodes=32000,horizon=3,k=8,info=all"
+DEFAULT_STRONG = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8"
+DEFAULT_CHEAT = "h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8"
 DEFAULT_GAMES_DIR = "results/games"
 DEFAULT_ORIGINS = (
     "https://arena-nu-one.vercel.app,"

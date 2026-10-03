@@ -553,8 +553,9 @@ fn combo_hand_gate_counts_the_card_being_played() {
         .iter()
         .find(|g| g.kind == "combo")
         .expect("combo gate");
+    assert_eq!(combo.label, "combo after playing");
     assert_eq!(combo.need, 3);
-    assert_eq!(combo.have, 2, "have is the raw cards-already-played count");
+    assert_eq!(combo.have, 3, "hand combo counts the card being played");
     assert!(combo.met, "playing Treant as the 3rd card meets Combo (3)");
 
     st.player_mut(me).combo = 1;
@@ -564,7 +565,7 @@ fn combo_hand_gate_counts_the_card_being_played() {
         .iter()
         .find(|g| g.kind == "combo")
         .expect("combo gate");
-    assert_eq!(combo.have, 1);
+    assert_eq!(combo.have, 2);
     assert!(!combo.met);
 }
 
@@ -589,6 +590,7 @@ fn combo_board_gate_does_not_double_count() {
         .iter()
         .find(|g| g.kind == "combo")
         .expect("combo gate");
+    assert_eq!(combo.label, "combo");
     assert_eq!(combo.need, 3);
     assert_eq!(
         combo.have, 3,

@@ -136,6 +136,7 @@ export type GateInfo = {
   need: number;
   have: number;
   met: boolean;
+  glow: boolean;
 };
 
 export type HandCardInfo = {

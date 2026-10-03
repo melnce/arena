@@ -8392,7 +8392,7 @@ fn eval_amount_simple(a: &Amount) -> i32 {
     }
 }
 
-fn eval_amount(
+pub(crate) fn eval_amount(
     db: &CardDb,
     state: &State,
     who: PlayerId,
