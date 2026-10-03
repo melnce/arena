@@ -965,12 +965,16 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=32000,horizon=3,k=8`) is the spec used whenever the request's `policy` is an
+`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
 exact token `info=all`. The default samples eight worlds at twice the previous
-node cap. `--cheat` (default `h0:nodes=32000,horizon=3,k=8,info=all`)
+node cap. The served bot takes a deterministic kill before searching (`tkill`,
+up to 10 000 solver applies outside the node cap; runbook 32 audit at results
+`e2c8e1d`) and a chance-dependent kill only when it holds under eight rerolls
+on every world (`tkroll`; sweep 34 at results `c3daad1`). `--cheat` (default
+`h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8`)
 is used for h0 variants whose keys include `info=all` (full-information
-sparring). `random` / `first-legal` and any non-h0 spec pass through
+sparring); same `tkill` / `tkroll` behaviour. `random` / `first-legal` and any non-h0 spec pass through
 unchanged — the server, not the client, decides H0 strength. `--origins` is
 the CORS allow list (default
 `https://arena-nu-one.vercel.app,http://localhost:5173,http://127.0.0.1:5173`);
@@ -1038,7 +1042,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=32000,horizon=3,k=8, 28 cpus)` or
+select) is `bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8, 28 cpus)` or
 `bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
 selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.
