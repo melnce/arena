@@ -56,8 +56,14 @@ export function formatGateLine(gate: GateInfo): string {
   switch (gate.kind) {
     case "necromancy":
       return `Necromancy ${gate.have}/${gate.need}`;
+    case "artifacts":
+      if (gate.need > 0) return `Artifacts ${gate.have}/${gate.need}`;
+      return `Artifacts ${gate.have}`;
     case "combo":
-      return `Combo ${gate.have}`;
+      if (gate.label === "combo after playing") {
+        return `Combo after playing: ${gate.have}/${gate.need}`;
+      }
+      return `Combo: ${gate.have}/${gate.need}`;
     case "rally":
       return `Rally ${gate.have}/${gate.need}`;
     case "earth_rite":
@@ -82,5 +88,5 @@ export function badgeCost(info: HandCardInfo | undefined, fallback: number): num
 }
 
 export function conditionGateMet(gates: GateInfo[] | undefined): boolean {
-  return !!gates?.some((g) => g.met && !isFormGate(g.kind) && g.kind !== "spellboost");
+  return !!gates?.some((g) => g.met && g.glow);
 }
