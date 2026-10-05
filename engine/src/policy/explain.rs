@@ -157,6 +157,10 @@ pub struct ExplainRecord {
     pub wbase_reused: bool,
     /// Present when `lostrank>0` re-ranked a lost turn.
     pub lost_rerank: Option<LostRerankRecord>,
+    /// `indep` or `block` (`deal=` spec key).
+    pub deal: String,
+    /// Shared shuffle seed when `deal=block`; absent otherwise.
+    pub deal_seed: Option<u64>,
 }
 
 impl ExplainRecord {
@@ -176,6 +180,8 @@ impl ExplainRecord {
             wbase: None,
             wbase_reused: false,
             lost_rerank: None,
+            deal: "indep".to_string(),
+            deal_seed: None,
         }
     }
 }

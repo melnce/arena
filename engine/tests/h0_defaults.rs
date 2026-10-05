@@ -811,3 +811,9 @@ fn h0_default_lostrank_is_zero() {
     let h = parse_h0("h0");
     assert_eq!(h.lostrank, 0);
 }
+
+#[test]
+fn h0_default_deal_is_indep() {
+    let h = parse_h0("h0");
+    assert_eq!(h.deal, arena_engine::policy::Deal::Indep);
+}

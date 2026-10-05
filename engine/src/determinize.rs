@@ -73,36 +73,68 @@ pub fn determinize_with_stats(
     info: Info,
     open_stats: Option<&mut OpenStats>,
 ) -> State {
+    determinize_block(state, perspective, seed, 0, 0, info, open_stats, false)
+}
+
+/// Block-deal variant: one shared shuffle of the opponent's unknown pool
+/// per decision; world `i` takes the `i`th consecutive block of `h` (or
+/// `need`) cards. `deal_seed` is ignored when `block` is false.
+#[allow(clippy::too_many_arguments)]
+pub fn determinize_block(
+    state: &State,
+    perspective: PlayerId,
+    root_seed: u64,
+    deal_seed: u64,
+    world: u32,
+    info: Info,
+    open_stats: Option<&mut OpenStats>,
+    block: bool,
+) -> State {
     match info {
         Info::All => {
             let mut out = state.clone();
-            out.rng.reseed(seed);
+            out.rng.reseed(root_seed);
             out
         }
-        Info::Draws => determinize_draws(state, perspective, seed),
+        Info::Draws => {
+            determinize_draws_impl(state, perspective, root_seed, deal_seed, world, block)
+        }
         Info::Fair => {
-            let mut out = determinize_draws(state, perspective, seed);
-            resample_own_deck(&mut out, perspective, seed ^ OWN_DECK_SEED_XOR);
+            let mut out =
+                determinize_draws_impl(state, perspective, root_seed, deal_seed, world, block);
+            resample_own_deck(&mut out, perspective, root_seed ^ OWN_DECK_SEED_XOR);
             out
         }
-        Info::Open => determinize_open(state, perspective, seed, open_stats),
+        Info::Open => determinize_open_impl(
+            state,
+            perspective,
+            root_seed,
+            deal_seed,
+            world,
+            open_stats,
+            block,
+        ),
     }
 }
 
-fn determinize_open(
+fn determinize_open_impl(
     state: &State,
     perspective: PlayerId,
-    seed: u64,
+    root_seed: u64,
+    deal_seed: u64,
+    world: u32,
     open_stats: Option<&mut OpenStats>,
+    block: bool,
 ) -> State {
     let mut out = state.clone();
-    out.rng.reseed(seed);
-    resample_own_deck(&mut out, perspective, seed ^ OWN_DECK_SEED_XOR);
-    let stats = determinize_open_opponent(&mut out, perspective, seed);
+    out.rng.reseed(root_seed);
+    resample_own_deck(&mut out, perspective, root_seed ^ OWN_DECK_SEED_XOR);
+    let stats =
+        determinize_open_opponent(&mut out, perspective, root_seed, deal_seed, world, block);
     if let Some(s) = open_stats {
         *s = stats;
     }
-    out.rng.reseed(seed);
+    out.rng.reseed(root_seed);
     out
 }
 
@@ -119,7 +151,14 @@ struct HiddenSlot {
     index: usize,
 }
 
-fn determinize_open_opponent(out: &mut State, perspective: PlayerId, seed: u64) -> OpenStats {
+fn determinize_open_opponent(
+    out: &mut State,
+    perspective: PlayerId,
+    root_seed: u64,
+    deal_seed: u64,
+    world: u32,
+    block: bool,
+) -> OpenStats {
     let opp = perspective.opponent();
     let (_, additions) = out.player(opp).derive_public_knowledge();
     let mut add_left = counts(&additions);
@@ -197,8 +236,17 @@ fn determinize_open_opponent(out: &mut State, perspective: PlayerId, seed: u64) 
     }
     canon_sort(&mut pool);
 
-    let mut rng = Xoshiro256ss::from_seed(seed);
-    shuffle(&mut pool, &mut rng);
+    if block {
+        let mut rng = Xoshiro256ss::from_seed(deal_seed);
+        shuffle(&mut pool, &mut rng);
+        if !pool.is_empty() {
+            let n = pool.len();
+            pool.rotate_left((world as usize * h) % n);
+        }
+    } else {
+        let mut rng = Xoshiro256ss::from_seed(root_seed);
+        shuffle(&mut pool, &mut rng);
+    }
 
     let mut hidden_drawn = 0u32;
     for inst in pool.drain(..h.min(pool.len())) {
@@ -208,6 +256,11 @@ fn determinize_open_opponent(out: &mut State, perspective: PlayerId, seed: u64) 
         fixed.push(inst);
     }
     out.player_mut(opp).hand = fixed;
+
+    if block {
+        let mut rng = Xoshiro256ss::from_seed(root_seed);
+        shuffle(&mut pool, &mut rng);
+    }
 
     let mut new_deck = Vec::with_capacity(d);
     for inst in pool.drain(..d.min(pool.len())) {
@@ -252,9 +305,16 @@ fn determinize_open_opponent(out: &mut State, perspective: PlayerId, seed: u64) 
     }
 }
 
-fn determinize_draws(state: &State, perspective: PlayerId, seed: u64) -> State {
+fn determinize_draws_impl(
+    state: &State,
+    perspective: PlayerId,
+    root_seed: u64,
+    deal_seed: u64,
+    world: u32,
+    block: bool,
+) -> State {
     let mut out = state.clone();
-    out.rng.reseed(seed);
+    out.rng.reseed(root_seed);
     let opp = perspective.opponent();
     let hand_size = out.player(opp).hand.len();
     let (_, additions) = out.player(opp).derive_public_knowledge();
@@ -279,12 +339,25 @@ fn determinize_draws(state: &State, perspective: PlayerId, seed: u64) -> State {
     canon_sort(&mut stay);
     canon_sort(&mut rest);
 
-    let mut rng = Xoshiro256ss::from_seed(seed);
-    shuffle(&mut rest, &mut rng);
-
     let need = hand_size.saturating_sub(stay.len());
+    if block {
+        let mut rng = Xoshiro256ss::from_seed(deal_seed);
+        shuffle(&mut rest, &mut rng);
+        if !rest.is_empty() {
+            let n = rest.len();
+            rest.rotate_left((world as usize * need) % n);
+        }
+    } else {
+        let mut rng = Xoshiro256ss::from_seed(root_seed);
+        shuffle(&mut rest, &mut rng);
+    }
+
     let take = need.min(rest.len());
     stay.extend(rest.drain(..take));
+    if block {
+        let mut rng = Xoshiro256ss::from_seed(root_seed);
+        shuffle(&mut rest, &mut rng);
+    }
     out.player_mut(opp).hand = stay;
     out.player_mut(opp).deck = rest;
     out

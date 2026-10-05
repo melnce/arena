@@ -20,7 +20,7 @@ use crate::action::{acting_player, to_neutral, Action};
 use crate::apply::{apply, legal_actions};
 use crate::card::{CardId, CardKind};
 use crate::db::CardDb;
-use crate::determinize::{determinize_with, determinize_with_stats, OpenStats};
+use crate::determinize::{determinize_block, OpenStats};
 
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
@@ -423,6 +423,16 @@ pub enum Wseed {
     Turn,
 }
 
+/// How opponent unknown hands are dealt across determinizations.
+/// Default [`Deal::Indep`] shuffles independently per root; [`Deal::Block`]
+/// deals consecutive blocks from one shared shuffle.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Deal {
+    #[default]
+    Indep,
+    Block,
+}
+
 #[derive(Debug, Clone)]
 struct TurnWorldCache {
     turn: u32,
@@ -560,6 +570,8 @@ pub struct H0 {
     /// candidate is a sure loss in every world, re-rank by the position at
     /// the end of the bot's own turn with the opponent reply off.
     pub lostrank: u32,
+    /// Opponent hand dealing across roots. Default [`Deal::Indep`].
+    pub deal: Deal,
     /// Per-turn world base cache (`wseed=turn` only; not in `spec()`).
     turn_world_cache: Option<TurnWorldCache>,
 }
@@ -609,6 +621,7 @@ impl Default for H0 {
             wseed: Wseed::Off,
             wbase: None,
             lostrank: 0,
+            deal: Deal::Indep,
             turn_world_cache: None,
         }
     }
@@ -714,6 +727,14 @@ impl H0 {
 
     fn turn_stable_worlds(&self) -> bool {
         self.wseed == Wseed::Turn || self.wbase.is_some()
+    }
+
+    fn stamp_explain_deal(&self, rec: &mut ExplainRecord, deal_seed: Option<u64>) {
+        rec.deal = match self.deal {
+            Deal::Indep => "indep".to_string(),
+            Deal::Block => "block".to_string(),
+        };
+        rec.deal_seed = deal_seed;
     }
 
     fn root_world_seeds(
@@ -849,6 +870,7 @@ impl Policy for H0 {
                 );
                 rec.chosen_index = 0;
                 rec.tie_set = vec![0];
+                self.stamp_explain_deal(&mut rec, None);
                 self.explain = Some(rec);
             }
             return 0;
@@ -860,6 +882,7 @@ impl Policy for H0 {
                     ExplainRecord::new(ChoosePath::Mulligan, 0, self.node_cap, self.alloc_label());
                 rec.chosen_index = idx;
                 rec.tie_set = vec![idx];
+                self.stamp_explain_deal(&mut rec, None);
                 self.explain = Some(rec);
             }
             return idx;
@@ -883,6 +906,7 @@ impl Policy for H0 {
                 );
                 rec.chosen_index = 0;
                 rec.tie_set = vec![0];
+                self.stamp_explain_deal(&mut rec, None);
                 self.explain = Some(rec);
             }
             return 0;
@@ -897,6 +921,7 @@ impl Policy for H0 {
                 );
                 rec.chosen_index = cand[0];
                 rec.tie_set = vec![cand[0]];
+                self.stamp_explain_deal(&mut rec, None);
                 self.explain = Some(rec);
             }
             return cand[0];
@@ -905,21 +930,48 @@ impl Policy for H0 {
         let mut nodes = 0u32;
         let k = self.k();
         let (world_seeds, wbase_used, wbase_reused) = self.root_world_seeds(state, me, k, rng);
+        let block = self.deal == Deal::Block;
+        let deal_seed = if block {
+            if self.turn_stable_worlds() {
+                let base = wbase_used.expect("turn-stable worlds require a base");
+                let mut seed_rng = Xoshiro256ss::from_seed(base);
+                for _ in 0..k {
+                    seed_rng.next_u64();
+                }
+                Some(seed_rng.next_u64())
+            } else {
+                Some(rng.next_u64())
+            }
+        } else {
+            None
+        };
         let mut roots = Vec::with_capacity(k as usize);
-        for seed in world_seeds {
+        for (world, seed) in world_seeds.into_iter().enumerate() {
             if self.info == Info::Open {
                 let mut open = OpenStats::default();
-                roots.push(determinize_with_stats(
+                roots.push(determinize_block(
                     state,
                     me,
                     seed,
+                    deal_seed.unwrap_or(0),
+                    world as u32,
                     self.info,
                     Some(&mut open),
+                    block,
                 ));
                 self.stats.open_hidden += u64::from(open.hidden);
                 self.stats.open_hosts += u64::from(open.hosts);
             } else {
-                roots.push(determinize_with(state, me, seed, self.info));
+                roots.push(determinize_block(
+                    state,
+                    me,
+                    seed,
+                    deal_seed.unwrap_or(0),
+                    world as u32,
+                    self.info,
+                    None,
+                    block,
+                ));
             }
         }
         self.stats.roots += u64::from(k);
@@ -929,6 +981,7 @@ impl Policy for H0 {
                 ExplainRecord::new(ChoosePath::Search, k, self.node_cap, self.alloc_label());
             rec.wbase = wbase_used;
             rec.wbase_reused = wbase_reused;
+            self.stamp_explain_deal(&mut rec, deal_seed);
             Some(rec)
         } else {
             None

@@ -233,6 +233,10 @@ fn encode(state: &State, perspective: PlayerId) -> Observation;
 fn search_key(state: &State) -> u64;
 fn determinize(state: &State, perspective: PlayerId, seed: u64) -> State;
 fn determinize_with(state: &State, perspective: PlayerId, seed: u64, info: Info) -> State;
+fn determinize_block(
+    state: &State, perspective: PlayerId, root_seed: u64, deal_seed: u64, world: u32,
+    info: Info, open_stats: Option<&mut OpenStats>, block: bool,
+) -> State;
 ```
 
 The engine stays perfect-information. `encode` masks. The bot is given the
@@ -422,6 +426,16 @@ Snapshot-neutral like `public_removals` — not in `CanonicalState`,
 `hash`, or `search_key`. Under `info=open`, those instances join the
 opponent's unknown pool and may be dealt back into hand or deck.
 
+With `deal=block` (opt-in), H0 shuffles the opponent's unknown pool once
+per decision (`deal_seed`) and gives world `i` the `i`th consecutive block
+of `h` unknown hand cards (or `need` under `info=draws` / `info=fair`).
+The remainder is shuffled with the root seed before deck / hidden-slot
+split, as in the independent path. Each world's hand is still a uniform
+random subset, so the prior is unchanged; the `k` hands are dealt without
+replacement across worlds so they spread instead of clustering. `info=all`
+is unchanged. [`determinize_block`] implements the deal; `block=false` is
+bit-identical to [`determinize_with`].
+
 ## Policy (M5)
 
 ```text
@@ -586,6 +600,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `wseed` | `off` | turn-stable world seeding. `off` = one determinization seed per root from the caller rng (today). `turn` = one base per `(turn, active, me)` cached across decisions in the same turn; root seed `i` is the `i`th `next_u64()` of `Xoshiro256ss::from_seed(base)` |
 | `wbase` | — | explicit turn base (`u64`); implies turn-stable worlds and skips the cache (for per-call policies such as `bot_action*`) |
 | `lostrank` | 0 | lost-turn tie-break budget. When every scored candidate's aggregate is `≤ −wv + ε` (all lost in every world), re-score each line on the same roots with the opponent reply and lethal stand-in off, spending at most `lostrank` nodes outside `node_cap`, and pick the best aggregate. `0` = off (today) |
+| `deal` | `indep` | opponent unknown-hand dealing across roots. `indep` (default) = independent shuffle per root (today). `block` = one shared shuffle per decision; world `i` takes the `i`th consecutive block of unknown hand cards. With `wseed=turn` or `wbase`, `deal_seed` is the `(k+1)`-th `next_u64()` from `Xoshiro256ss::from_seed(base)`; otherwise one extra draw from the caller rng after the world seeds. Free at play time |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
@@ -1139,6 +1154,8 @@ For `h0`, the dict also carries:
 | `tie_set` | list[int] | Every candidate whose aggregated value equals the maximum; the chosen index is the lowest. On `unscored`, every candidate. |
 | `wbase` | int \| null | Turn base used when `wseed=turn` or `wbase` is set; absent when `wseed=off` and no `wbase`. |
 | `wbase_reused` | bool | `true` when `wbase` came from the per-turn cache (`wseed=turn`). |
+| `deal` | str | `indep` or `block` (`deal=` spec key). |
+| `deal_seed` | int \| null | Shared shuffle seed when `deal=block`; absent when `deal=indep`. |
 | `lost_rerank` | object \| null | When `lostrank>0` re-ranked a lost turn: `{aggregates, nodes, chosen_index}` (`aggregates` in candidate order; `chosen_index` is the legal index picked). Absent when the trigger did not fire. |
 
 Each candidate entry:
