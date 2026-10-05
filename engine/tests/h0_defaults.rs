@@ -793,3 +793,21 @@ fn default_uses_builtin_mulligan_table_on_meta_decks() {
     assert_eq!(mull_fallback, 0, "every meta deck must hit the table");
     assert!(mull_table > 0, "builtin table must be used");
 }
+
+#[test]
+fn h0_default_wseed_is_off() {
+    let h = parse_h0("h0");
+    assert_eq!(h.wseed, arena_engine::policy::Wseed::Off);
+}
+
+#[test]
+fn h0_default_wbase_is_none() {
+    let h = parse_h0("h0");
+    assert!(h.wbase.is_none());
+}
+
+#[test]
+fn h0_default_lostrank_is_zero() {
+    let h = parse_h0("h0");
+    assert_eq!(h.lostrank, 0);
+}

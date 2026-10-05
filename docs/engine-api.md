@@ -583,6 +583,9 @@ streams and output as before). `H0` is a determinized search bot:
 | `tkill` | 0 | on each own-turn decision (Main, Combat, or Choice) with more than one useful candidate, run [`forced_lethal_det`] on the first determinization before `consensus_lethal` / search. A deterministic kill confirmed on every root is played; applies are outside `node_cap`. `0` = off (today) |
 | `tkroll` | 0 | after a deterministic miss, run [`forced_lethal_accepting`] on the first determinization (every-root × `tkroll` rerolled confirmation inside the search; transposition off). Only when `tkill>0`; uses `tkill`'s budget. `0` = off (today; no effect when `tkill=0`) |
 | `hbcheck` | 0 | after search chooses `EndTurn` with a kill attack available, symmetrically re-score `End′` and each kill attack `A′` as `v(s)=min(plain,removal)` per determinization (bounded opponent removal search up to 3 actions, 4 rerolls per sure line, `hbcheck` applies per root outside `node_cap`; attack paths finish the bot's turn greedily up to `osteps` before `EndTurn`). Play the best kill when its aggregate beats `End′` (`holdback_trade`). `0` = off (the default; the served specs use `2000`) |
+| `wseed` | `off` | turn-stable world seeding. `off` = one determinization seed per root from the caller rng (today). `turn` = one base per `(turn, active, me)` cached across decisions in the same turn; root seed `i` is the `i`th `next_u64()` of `Xoshiro256ss::from_seed(base)` |
+| `wbase` | — | explicit turn base (`u64`); implies turn-stable worlds and skips the cache (for per-call policies such as `bot_action*`) |
+| `lostrank` | 0 | lost-turn tie-break budget. When every scored candidate's aggregate is `≤ −wv + ε` (all lost in every world), re-score each line on the same roots with the opponent reply and lethal stand-in off, spending at most `lostrank` nodes outside `node_cap`, and pick the best aggregate. `0` = off (today) |
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
@@ -1134,6 +1137,9 @@ For `h0`, the dict also carries:
 | `candidates` | list | One entry per root candidate, in candidate order. |
 | `chosen_index` | int | Index in `legal` of the chosen action. |
 | `tie_set` | list[int] | Every candidate whose aggregated value equals the maximum; the chosen index is the lowest. On `unscored`, every candidate. |
+| `wbase` | int \| null | Turn base used when `wseed=turn` or `wbase` is set; absent when `wseed=off` and no `wbase`. |
+| `wbase_reused` | bool | `true` when `wbase` came from the per-turn cache (`wseed=turn`). |
+| `lost_rerank` | object \| null | When `lostrank>0` re-ranked a lost turn: `{aggregates, nodes, chosen_index}` (`aggregates` in candidate order; `chosen_index` is the legal index picked). Absent when the trigger did not fire. |
 
 Each candidate entry:
 

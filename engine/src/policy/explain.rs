@@ -127,6 +127,15 @@ pub struct CandidateRecord {
     pub n: u32,
 }
 
+/// Lost-turn re-rank summary when `lostrank>0` fired.
+#[derive(Debug, Clone, Serialize)]
+pub struct LostRerankRecord {
+    /// Re-scored aggregate per root candidate (subset order).
+    pub aggregates: Vec<f32>,
+    pub nodes: u32,
+    pub chosen_index: usize,
+}
+
 /// Full explain record for one `choose` call.
 #[derive(Debug, Clone, Serialize)]
 pub struct ExplainRecord {
@@ -142,6 +151,12 @@ pub struct ExplainRecord {
     pub chosen_index: usize,
     pub tie_set: Vec<usize>,
     pub holdback: Option<HoldbackRecord>,
+    /// Turn-stable world base when `wseed=turn` or `wbase` is set.
+    pub wbase: Option<u64>,
+    /// `true` when `wbase` came from the per-turn cache.
+    pub wbase_reused: bool,
+    /// Present when `lostrank>0` re-ranked a lost turn.
+    pub lost_rerank: Option<LostRerankRecord>,
 }
 
 impl ExplainRecord {
@@ -158,6 +173,9 @@ impl ExplainRecord {
             chosen_index: 0,
             tie_set: Vec::new(),
             holdback: None,
+            wbase: None,
+            wbase_reused: false,
+            lost_rerank: None,
         }
     }
 }
