@@ -34,7 +34,7 @@ the player to act after the mulligans; the same method reproduces review9's colu
 
 ## Game 12 was restarted once, and only the replayed line is captured
 
-The owner made a mistake in game 12 and restarted it. He replayed his own moves exactly as before up to that point and
+The owner made a mistake in game 12 and restarted it, replayed the same moves exactly as before up to that point, and
 played on from there.
 
 - **Same game, same id.** The restart reused the seed, decks and `game_id`. serve.py overwrites a non-final capture with

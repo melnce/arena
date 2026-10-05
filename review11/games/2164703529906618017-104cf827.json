@@ -1,0 +1,888 @@
+{
+  "v": 1,
+  "game_id": "2164703529906618017-104cf827",
+  "seed": 2164703529906618017,
+  "deckA": {
+    "10031210": 3,
+    "10403120": 2,
+    "10433310": 3,
+    "10733110": 3,
+    "10803310": 3,
+    "10833110": 3,
+    "10834110": 3,
+    "10931110": 3,
+    "10931310": 2,
+    "10932110": 3,
+    "10932310": 3,
+    "10933110": 3,
+    "10933310": 3,
+    "10934110": 3
+  },
+  "deckB": {
+    "10031210": 3,
+    "10403120": 2,
+    "10433310": 3,
+    "10733110": 3,
+    "10803310": 3,
+    "10833110": 3,
+    "10834110": 3,
+    "10931110": 3,
+    "10931310": 2,
+    "10932110": 3,
+    "10932310": 3,
+    "10933110": 3,
+    "10933310": 3,
+    "10934110": 3
+  },
+  "first": "coin",
+  "actions": [
+    {
+      "mulligan": {
+        "player": "b",
+        "swap": [
+          true,
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "mulligan": {
+        "player": "a",
+        "swap": [
+          true,
+          true,
+          false,
+          true
+        ]
+      }
+    },
+    {
+      "fuse": {
+        "host_pos": 2,
+        "partner_pos": [],
+        "player": "b"
+      },
+      "bot_value": 30.854320526123047
+    },
+    {
+      "choose": {
+        "option": {
+          "card": "10931310"
+        },
+        "player": "b"
+      },
+      "bot_value": 30.884403228759766
+    },
+    {
+      "confirm": {
+        "player": "b"
+      },
+      "bot_value": 27.604326248168945
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "fuse": {
+        "host_pos": 1,
+        "partner_pos": [],
+        "player": "b"
+      },
+      "bot_value": 21.417966842651367
+    },
+    {
+      "choose": {
+        "option": {
+          "card": "10932310"
+        },
+        "player": "b"
+      },
+      "bot_value": 25.978242874145508
+    },
+    {
+      "confirm": {
+        "player": "b"
+      },
+      "bot_value": 21.902599334716797
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      },
+      "bot_value": 31.501155853271484
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 0,
+        "card": "10931110"
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 0,
+        "target": {
+          "slot": 0
+        }
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10932310",
+        "hand_pos": 1,
+        "player": "b"
+      },
+      "bot_value": 35.65895462036133
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      },
+      "bot_value": 20.480674743652344
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 2,
+        "card": "10932310"
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 0,
+        "target": {
+          "slot": 0
+        }
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10932110",
+        "hand_pos": 1,
+        "player": "b"
+      },
+      "bot_value": 16.986820220947266
+    },
+    {
+      "fuse": {
+        "host_pos": 1,
+        "partner_pos": [],
+        "player": "b"
+      },
+      "bot_value": 12.487356185913086
+    },
+    {
+      "choose": {
+        "option": {
+          "card": "10031210"
+        },
+        "player": "b"
+      },
+      "bot_value": 16.327468872070312
+    },
+    {
+      "confirm": {
+        "player": "b"
+      },
+      "bot_value": 13.176618576049805
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      },
+      "bot_value": 17.458768844604492
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 1,
+        "card": "10833110"
+      }
+    },
+    {
+      "bonus_pp": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 5,
+        "card": "10931110"
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 1,
+        "target": {
+          "slot": 1
+        }
+      }
+    },
+    {
+      "evolve": {
+        "player": "a",
+        "slot": 0,
+        "super": false
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 0,
+        "target": {
+          "slot": 0
+        }
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 5,
+        "card": "90031310"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10931110",
+        "hand_pos": 2,
+        "player": "b"
+      },
+      "bot_value": 2.8540916442871094
+    },
+    {
+      "play": {
+        "card": "10031210",
+        "hand_pos": 3,
+        "player": "b"
+      },
+      "bot_value": 14.52359390258789
+    },
+    {
+      "attack": {
+        "attacker_slot": 0,
+        "player": "b",
+        "target": {
+          "slot": 0
+        }
+      },
+      "bot_value": 19.0083065032959
+    },
+    {
+      "fuse": {
+        "host_pos": 3,
+        "partner_pos": [],
+        "player": "b"
+      },
+      "bot_value": 2.387310028076172
+    },
+    {
+      "choose": {
+        "option": {
+          "card": "10931110"
+        },
+        "player": "b"
+      },
+      "bot_value": 7.021784782409668
+    },
+    {
+      "confirm": {
+        "player": "b"
+      },
+      "bot_value": 7.0354156494140625
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      },
+      "bot_value": 20.352672576904297
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 6,
+        "card": "10833110"
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 6,
+        "card": "90031310"
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 6,
+        "card": "90031310"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "fuse": {
+        "host_pos": 0,
+        "partner_pos": [],
+        "player": "b"
+      },
+      "bot_value": 29.196407318115234
+    },
+    {
+      "choose": {
+        "option": {
+          "card": "10934110"
+        },
+        "player": "b"
+      },
+      "bot_value": 35.86641311645508
+    },
+    {
+      "confirm": {
+        "player": "b"
+      },
+      "bot_value": 40.47676086425781
+    },
+    {
+      "play": {
+        "card": "10932110",
+        "hand_pos": 2,
+        "player": "b"
+      },
+      "bot_value": 37.002281188964844
+    },
+    {
+      "evolve": {
+        "player": "b",
+        "slot": 3,
+        "super": false
+      },
+      "bot_value": 35.375831604003906
+    },
+    {
+      "attack": {
+        "attacker_slot": 3,
+        "player": "b",
+        "target": {
+          "slot": 0
+        }
+      },
+      "bot_value": 36.06758499145508
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      },
+      "bot_value": 21.726638793945312
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 1,
+        "card": "10803310"
+      }
+    },
+    {
+      "choose": {
+        "player": "a",
+        "option": {
+          "mode": 1
+        }
+      }
+    },
+    {
+      "bonus_pp": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 5,
+        "card": "10933310"
+      }
+    },
+    {
+      "evolve": {
+        "player": "a",
+        "slot": 0,
+        "super": false
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 0,
+        "target": {
+          "slot": 2
+        }
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 0,
+        "target": {
+          "slot": 1
+        }
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10934110",
+        "hand_pos": 0,
+        "player": "b"
+      },
+      "bot_value": 32.67440414428711
+    },
+    {
+      "evolve": {
+        "player": "b",
+        "slot": 1,
+        "super": true
+      },
+      "bot_value": 36.67915344238281
+    },
+    {
+      "attack": {
+        "attacker_slot": 1,
+        "player": "b",
+        "target": {
+          "slot": 0
+        }
+      },
+      "bot_value": 29.155071258544922
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      },
+      "bot_value": 21.978031158447266
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 3,
+        "card": "10931110"
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 0,
+        "target": {
+          "slot": 2
+        }
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 0,
+        "card": "10933310"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "engage": {
+        "player": "b",
+        "slot": 0
+      },
+      "bot_value": 40.43659973144531
+    },
+    {
+      "play": {
+        "card": "10934110",
+        "hand_pos": 0,
+        "player": "b"
+      },
+      "bot_value": 36.30000686645508
+    },
+    {
+      "evolve": {
+        "player": "b",
+        "slot": 1,
+        "super": true
+      },
+      "bot_value": 28.055858612060547
+    },
+    {
+      "attack": {
+        "attacker_slot": 2,
+        "player": "b",
+        "target": "leader"
+      },
+      "bot_value": 32.35011672973633
+    },
+    {
+      "attack": {
+        "attacker_slot": 1,
+        "player": "b",
+        "target": {
+          "slot": 0
+        }
+      },
+      "bot_value": 26.923423767089844
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 0,
+        "card": "10403120"
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 4,
+        "card": "10934110"
+      }
+    },
+    {
+      "evolve": {
+        "player": "a",
+        "slot": 1,
+        "super": true
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 1,
+        "target": {
+          "slot": 1
+        }
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 2,
+        "target": {
+          "slot": 1
+        }
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 2,
+        "target": {
+          "slot": 1
+        }
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10833110",
+        "hand_pos": 2,
+        "player": "b"
+      },
+      "bot_value": 15.282733917236328
+    },
+    {
+      "engage": {
+        "player": "b",
+        "slot": 0
+      },
+      "bot_value": -2.5586299896240234
+    },
+    {
+      "play": {
+        "card": "10931110",
+        "hand_pos": 0,
+        "player": "b"
+      },
+      "bot_value": -0.6189916133880615
+    },
+    {
+      "attack": {
+        "attacker_slot": 2,
+        "player": "b",
+        "target": "leader"
+      },
+      "bot_value": 0.28353017568588257
+    },
+    {
+      "play": {
+        "card": "10931310",
+        "hand_pos": 0,
+        "player": "b"
+      },
+      "bot_value": 6.481120586395264
+    },
+    {
+      "evolve": {
+        "player": "b",
+        "slot": 1,
+        "super": false
+      },
+      "bot_value": 7.71904182434082
+    },
+    {
+      "play": {
+        "card": "10031320",
+        "hand_pos": 2,
+        "player": "b"
+      },
+      "bot_value": 16.654094696044922
+    },
+    {
+      "play": {
+        "card": "90031310",
+        "hand_pos": 0,
+        "player": "b"
+      },
+      "bot_value": 2.183149814605713
+    },
+    {
+      "play": {
+        "card": "90031310",
+        "hand_pos": 0,
+        "player": "b"
+      },
+      "bot_value": -17.846004486083984
+    },
+    {
+      "attack": {
+        "attacker_slot": 1,
+        "player": "b",
+        "target": {
+          "slot": 1
+        }
+      },
+      "bot_value": -0.7443938255310059
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      }
+    },
+    {
+      "fuse": {
+        "player": "a",
+        "host_pos": 2,
+        "partner_pos": []
+      }
+    },
+    {
+      "choose": {
+        "player": "a",
+        "option": {
+          "card": "10031210"
+        }
+      }
+    },
+    {
+      "confirm": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 2,
+        "card": "10933110"
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 3,
+        "card": "10803310"
+      }
+    },
+    {
+      "choose": {
+        "player": "a",
+        "option": {
+          "mode": 1
+        }
+      }
+    },
+    {
+      "evolve": {
+        "player": "a",
+        "slot": 1,
+        "super": true
+      }
+    },
+    {
+      "choose": {
+        "player": "a",
+        "option": {
+          "slot": 2,
+          "player": "a"
+        }
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 1,
+        "target": {
+          "slot": 1
+        }
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 2,
+        "target": "leader"
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 0,
+        "card": "10433310"
+      }
+    },
+    {
+      "choose": {
+        "player": "a",
+        "option": {
+          "slot": 1,
+          "player": "b"
+        }
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 0,
+        "target": "leader"
+      }
+    },
+    {
+      "end_turn": {
+        "player": "a"
+      }
+    },
+    {
+      "play": {
+        "card": "10031320",
+        "hand_pos": 0,
+        "player": "b"
+      },
+      "bot_value": -59.58152770996094
+    },
+    {
+      "play": {
+        "card": "10031320",
+        "hand_pos": 0,
+        "player": "b"
+      },
+      "bot_value": -74.94961547851562
+    },
+    {
+      "play": {
+        "card": "10933310",
+        "hand_pos": 0,
+        "player": "b"
+      },
+      "bot_value": -61.716644287109375
+    },
+    {
+      "attack": {
+        "attacker_slot": 3,
+        "player": "b",
+        "target": {
+          "slot": 0
+        }
+      },
+      "bot_value": -77.18032836914062
+    },
+    {
+      "engage": {
+        "player": "b",
+        "slot": 0
+      },
+      "bot_value": -73.38618469238281
+    },
+    {
+      "end_turn": {
+        "player": "b"
+      }
+    },
+    {
+      "play": {
+        "player": "a",
+        "hand_pos": 2,
+        "card": "10933310"
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 2,
+        "target": "leader"
+      }
+    },
+    {
+      "attack": {
+        "player": "a",
+        "attacker_slot": 0,
+        "target": "leader"
+      }
+    }
+  ],
+  "policy": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000",
+  "strong": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000",
+  "engine": "1c551eb",
+  "updated": "2026-10-04T12:48:50Z",
+  "final": true,
+  "winner": "a",
+  "finished": "2026-10-04T12:48:50Z",
+  "humanSide": "a"
+}
