@@ -823,3 +823,15 @@ fn h0_default_deal_is_indep() {
     let h = parse_h0("h0");
     assert_eq!(h.deal, arena_engine::policy::Deal::Indep);
 }
+
+#[test]
+fn h0_default_hread_is_off() {
+    let h = parse_h0("h0");
+    assert!(h.hread.is_none());
+}
+
+#[test]
+fn h0_default_hreadm_is_256() {
+    let h = parse_h0("h0");
+    assert_eq!(h.hreadm, 256);
+}

@@ -16,6 +16,8 @@ mod needs;
 mod net;
 mod record;
 
+use crate::determinize::{HREAD_DELTA, HREAD_EPS_FA, HREAD_EPS_S};
+
 pub use explain::{
     CandidateRecord, ChoosePath, ExplainRecord, LostRerankRecord, PvEnd, PvLeaf, WorldRecord,
 };
@@ -210,8 +212,9 @@ impl AnyPolicy {
     /// / `info=draws` / `info=all` when the information regime is not the
     /// default `open`, `mull=rule` / `mull=random` / `mull=<path>` when the
     /// mulligan mode is not the built-in table, any non-default weight,
-    /// non-default `lcap`, non-default `clip`, non-default `horizon`, and
-    /// non-default `hres`.
+    /// non-default `lcap`, non-default `clip`, non-default `horizon`,
+    /// non-default `hres`, `deal=block`, `hread=on` or custom weights, and
+    /// non-default `hreadm`.
     /// `"h0"` still round-trips to `"h0"`.
     pub fn spec(&self) -> String {
         match self {
@@ -372,6 +375,16 @@ fn h0_spec(h: &H0) -> String {
             Deal::Block => "deal=block".to_string(),
         });
     }
+    if let Some((eps_fa, eps_s, delta)) = h.hread {
+        if (eps_fa, eps_s, delta) == (HREAD_EPS_FA, HREAD_EPS_S, HREAD_DELTA) {
+            parts.push("hread=on".to_string());
+        } else {
+            parts.push(format!("hread={eps_fa}/{eps_s}/{delta}"));
+        }
+    }
+    if h.hreadm != def.hreadm {
+        parts.push(format!("hreadm={}", h.hreadm));
+    }
     match h.mull {
         MullMode::Rule => parts.push("mull=rule".to_string()),
         MullMode::Random => parts.push("mull=random".to_string()),
@@ -422,6 +435,8 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.wbase == b.wbase
         && a.lostrank == b.lostrank
         && a.deal == b.deal
+        && a.hread == b.hread
+        && a.hreadm == b.hreadm
         && weights_eq(&a.weights, &b.weights)
 }
 
@@ -640,6 +655,35 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     "block" => Deal::Block,
                     other => return Err(format!("unknown deal '{other}'")),
                 };
+            }
+            "hread" => {
+                if val == "off" {
+                    h.hread = None;
+                } else if val == "on" {
+                    h.hread = Some((HREAD_EPS_FA, HREAD_EPS_S, HREAD_DELTA));
+                } else {
+                    let parts: Vec<&str> = val.split('/').collect();
+                    if parts.len() != 3 {
+                        return Err(format!("bad hread '{val}'"));
+                    }
+                    let eps_fa: f32 = parse_num(parts[0])?;
+                    let eps_s: f32 = parse_num(parts[1])?;
+                    let delta: f32 = parse_num(parts[2])?;
+                    if !(eps_fa > 0.0 && eps_fa <= 1.0)
+                        || !(eps_s > 0.0 && eps_s <= 1.0)
+                        || !(delta > 0.0 && delta <= 1.0)
+                    {
+                        return Err(format!("hread out of range '{val}'"));
+                    }
+                    h.hread = Some((eps_fa, eps_s, delta));
+                }
+            }
+            "hreadm" => {
+                let v: u32 = parse_num(val)?;
+                if !(1..=4096).contains(&v) {
+                    return Err(format!("hreadm out of range '{val}'"));
+                }
+                h.hreadm = v;
             }
             "mull" => match val {
                 "builtin" => {

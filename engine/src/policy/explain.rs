@@ -163,6 +163,17 @@ pub struct ExplainRecord {
     pub deal: String,
     /// Shared shuffle seed when `deal=block`; absent otherwise.
     pub deal_seed: Option<u64>,
+    /// Hand-reading deal weights when `hread` is on; absent otherwise.
+    pub hread: Option<HreadExplain>,
+}
+
+/// Hand-reading explain fields (`hread` spec key).
+#[derive(Debug, Clone, Serialize)]
+pub struct HreadExplain {
+    pub eps_fa: f32,
+    pub eps_s: f32,
+    pub delta: f32,
+    pub m: u32,
 }
 
 impl ExplainRecord {
@@ -185,6 +196,7 @@ impl ExplainRecord {
             fuse_dropped: 0,
             deal: "indep".to_string(),
             deal_seed: None,
+            hread: None,
         }
     }
 }

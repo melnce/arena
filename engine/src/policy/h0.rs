@@ -20,7 +20,7 @@ use crate::action::{acting_player, to_neutral, Action};
 use crate::apply::{apply, legal_actions};
 use crate::card::{CardId, CardKind};
 use crate::db::CardDb;
-use crate::determinize::{determinize_block, OpenStats};
+use crate::determinize::{determinize_block, HreadDeal, OpenStats};
 
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
@@ -576,6 +576,11 @@ pub struct H0 {
     pub fuseguard: bool,
     /// Opponent hand dealing across roots. Default [`Deal::Indep`].
     pub deal: Deal,
+    /// Hand-reading deal weights for [`Info::Open`]. `None` = off (uniform).
+    /// Tuple is `(eps_fa, eps_s, delta)`.
+    pub hread: Option<(f32, f32, f32)>,
+    /// SIR candidates per world when `hread` is on. Default `256`.
+    pub hreadm: u32,
     /// Per-turn world base cache (`wseed=turn` only; not in `spec()`).
     turn_world_cache: Option<TurnWorldCache>,
 }
@@ -627,6 +632,8 @@ impl Default for H0 {
             lostrank: 0,
             fuseguard: false,
             deal: Deal::Indep,
+            hread: None,
+            hreadm: 256,
             turn_world_cache: None,
         }
     }
@@ -741,6 +748,23 @@ impl H0 {
             Deal::Block => "block".to_string(),
         };
         rec.deal_seed = deal_seed;
+        rec.hread = self
+            .hread
+            .map(|(eps_fa, eps_s, delta)| super::explain::HreadExplain {
+                eps_fa,
+                eps_s,
+                delta,
+                m: self.hreadm,
+            });
+    }
+
+    fn hread_deal(&self) -> Option<HreadDeal> {
+        self.hread.map(|(eps_fa, eps_s, delta)| HreadDeal {
+            eps_fa,
+            eps_s,
+            delta,
+            m: self.hreadm,
+        })
     }
 
     fn root_world_seeds(
@@ -780,6 +804,47 @@ impl H0 {
         let mut seed_rng = Xoshiro256ss::from_seed(base);
         let seeds = (0..k).map(|_| seed_rng.next_u64()).collect();
         (seeds, Some(base), reused)
+    }
+
+    /// Sample `n` opponent hands for the side to move's opponent under this
+    /// spec's `info`, `deal`, and `hread` settings. Root seeds are drawn as
+    /// [`Policy::choose`] would for `k = n`.
+    pub fn sample_opponent_hands(&mut self, state: &State, seed: u64, n: u32) -> Vec<Vec<CardId>> {
+        let me = state.active;
+        let opp = me.opponent();
+        let mut rng = crate::rng::policy_rng(seed);
+        let (world_seeds, wbase_used, _) = self.root_world_seeds(state, me, n, &mut rng);
+        let block = self.deal == Deal::Block && self.hread.is_none();
+        let deal_seed = if block {
+            if self.turn_stable_worlds() {
+                let base = wbase_used.expect("turn-stable worlds require a base");
+                let mut seed_rng = Xoshiro256ss::from_seed(base);
+                for _ in 0..n {
+                    seed_rng.next_u64();
+                }
+                Some(seed_rng.next_u64())
+            } else {
+                Some(rng.next_u64())
+            }
+        } else {
+            None
+        };
+        let mut hands = Vec::with_capacity(world_seeds.len());
+        for (world, wseed) in world_seeds.into_iter().enumerate() {
+            let d = determinize_block(
+                state,
+                me,
+                wseed,
+                deal_seed.unwrap_or(0),
+                world as u32,
+                self.info,
+                None,
+                block,
+                self.hread_deal(),
+            );
+            hands.push(d.player(opp).hand.iter().map(|c| c.card).collect());
+        }
+        hands
     }
 
     /// Leaf value under this spec (`v0` is the historical arithmetic).
@@ -968,6 +1033,7 @@ impl Policy for H0 {
                     self.info,
                     Some(&mut open),
                     block,
+                    self.hread_deal(),
                 ));
                 self.stats.open_hidden += u64::from(open.hidden);
                 self.stats.open_hosts += u64::from(open.hosts);
@@ -981,6 +1047,7 @@ impl Policy for H0 {
                     self.info,
                     None,
                     block,
+                    self.hread_deal(),
                 ));
             }
         }
