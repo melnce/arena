@@ -1735,6 +1735,40 @@ enum GreedyPick {
     PlayMacro { index: usize, evolve: Action },
 }
 
+fn greedy_action_indices(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    legal: &[Action],
+    bpp1: u32,
+    bpp2: u32,
+    skip_noop_fuse: bool,
+) -> Vec<usize> {
+    let useful: Vec<usize> = legal
+        .iter()
+        .enumerate()
+        .filter(|(_, a)| useful_action(state, me, a, bpp1, bpp2))
+        .map(|(i, _)| i)
+        .collect();
+    if !skip_noop_fuse {
+        return useful;
+    }
+    let mut dropped = 0u32;
+    let mut kept = Vec::with_capacity(useful.len());
+    for &i in &useful {
+        if fuse_action_is_noop(db, state, me, &legal[i]) {
+            dropped += 1;
+        } else {
+            kept.push(i);
+        }
+    }
+    if dropped > 0 && !kept.is_empty() {
+        kept
+    } else {
+        useful
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn greedy_index(
     db: &CardDb,
@@ -1745,16 +1779,16 @@ fn greedy_index(
     cap: u32,
     line: &[u64],
     eval: Evaluator<'_>,
+    skip_noop_fuse: bool,
 ) -> usize {
-    let mut best_i = 0usize;
+    let indices = greedy_action_indices(db, state, me, legal, eval.bpp1, eval.bpp2, skip_noop_fuse);
+    let mut best_i = indices.first().copied().unwrap_or(0);
     let mut best_v = f32::NEG_INFINITY;
-    for (i, a) in legal.iter().enumerate() {
+    for i in indices {
         if *nodes >= cap {
             break;
         }
-        if !useful_action(state, me, a, eval.bpp1, eval.bpp2) {
-            continue;
-        }
+        let a = &legal[i];
         let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
             continue;
         };
@@ -1898,7 +1932,7 @@ fn greedy_resolve_choices(
         if legal.is_empty() {
             return false;
         }
-        let i = greedy_index(db, state, &legal, me, nodes, cap, line, eval);
+        let i = greedy_index(db, state, &legal, me, nodes, cap, line, eval, false);
         let Some(next) = try_apply(db, state, &legal[i], nodes, cap, line) else {
             return false;
         };
@@ -2240,7 +2274,7 @@ fn resolve_bot_choices(
         if legal.is_empty() {
             return false;
         }
-        let i = greedy_index(db, state, &legal, me, nodes, work_cap, line, eval);
+        let i = greedy_index(db, state, &legal, me, nodes, work_cap, line, eval, false);
         let Some(next) = try_apply(db, state, &legal[i], nodes, work_cap, line) else {
             return false;
         };
@@ -2318,6 +2352,7 @@ fn finish_bot_turn_horizon(
             line,
             eval,
             track.as_deref_mut(),
+            eval.fuseguard,
         );
     } else if !resolve_bot_choices(
         db,
@@ -2925,6 +2960,7 @@ fn opponent_reply(
                 line,
                 eval,
                 track.as_deref_mut(),
+                false,
             );
         }
         if *nodes >= cap {
@@ -3064,7 +3100,7 @@ fn search_opp_expand(
             }
             return v;
         }
-        let i = greedy_index(db, state, &legal, me, nodes, cap, line, eval);
+        let i = greedy_index(db, state, &legal, me, nodes, cap, line, eval, false);
         let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
         if let Some(t) = track.as_deref_mut() {
             t.push(legal[i].clone());
@@ -3243,6 +3279,7 @@ fn greedy_until_end(
     line: &[u64],
     eval: Evaluator<'_>,
     mut track: Option<&mut PvTracker>,
+    skip_noop_fuse: bool,
 ) {
     let mut steps = 0u32;
     let mut line = line.to_vec();
@@ -3268,7 +3305,17 @@ fn greedy_until_end(
                 break;
             }
         }
-        let i = greedy_index(db, state, &legal, who, nodes, cap, &line, eval);
+        let i = greedy_index(
+            db,
+            state,
+            &legal,
+            who,
+            nodes,
+            cap,
+            &line,
+            eval,
+            skip_noop_fuse,
+        );
         let Some(next) = try_apply(db, state, &legal[i], nodes, cap, &line) else {
             break;
         };
@@ -4880,7 +4927,17 @@ fn holdback_bot_finish(
         if legal.is_empty() {
             break;
         }
-        let i = greedy_index(db, state, &legal, me, &mut nodes, cap, &line, eval);
+        let i = greedy_index(
+            db,
+            state,
+            &legal,
+            me,
+            &mut nodes,
+            cap,
+            &line,
+            eval,
+            eval.fuseguard,
+        );
         let a = legal[i].clone();
         let ended = matches!(a, Action::EndTurn);
         if apply(db, state, a).is_err() {
@@ -5208,4 +5265,239 @@ fn board_score(p: &PlayerState) -> f32 {
         }
     }
     s
+}
+
+#[cfg(test)]
+mod fuse_guard_greedy_tests {
+    use std::path::Path;
+
+    use super::*;
+    use crate::apply::{apply, legal_actions, new_game};
+    use crate::db::CardDb;
+    use crate::ids::{First, PlayerId};
+    use crate::state::GameConfig;
+    use crate::CardInstance;
+
+    fn test_db() -> CardDb {
+        let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest.join("..");
+        let mut db = CardDb::load(&root).expect("cards");
+        db.load_extra_dir(manifest.join("tests/fixtures/cards"))
+            .expect("fixture cards");
+        db
+    }
+
+    fn pad_deck(ids: &[&str]) -> Vec<CardId> {
+        let mut v: Vec<CardId> = ids.iter().map(|s| CardId::parse(s).expect("id")).collect();
+        let pad = CardId::parse("88001110").expect("pad");
+        while v.len() < 40 {
+            v.push(pad);
+        }
+        v
+    }
+
+    fn started(db: &CardDb, seed: u64) -> State {
+        let mut state = new_game(
+            db,
+            GameConfig {
+                seed,
+                deck_a: pad_deck(&["10931110"]),
+                deck_b: pad_deck(&["10931110"]),
+                first: First::A,
+                opening_hands: None,
+            },
+        )
+        .expect("new_game");
+        apply(db, &mut state, Action::MulliganConfirm { swap: [false; 4] }).expect("mull A");
+        apply(db, &mut state, Action::MulliganConfirm { swap: [false; 4] }).expect("mull B");
+        state
+    }
+
+    fn clear_hand(state: &mut State, who: PlayerId) {
+        state.player_mut(who).hand.clear();
+    }
+
+    fn put_hand(db: &CardDb, state: &mut State, who: PlayerId, id: &str) -> u8 {
+        let card = db.card(CardId::parse(id).expect("id")).expect("card");
+        let inst = CardInstance::from_card(card, state.alloc_id());
+        let pos = state.player(who).hand.len() as u8;
+        state.player_mut(who).hand.push(inst);
+        pos
+    }
+
+    fn give_pp(state: &mut State, who: PlayerId, pp: i32, pp_max: i32) {
+        let p = state.player_mut(who);
+        p.pp_max = pp_max;
+        p.pp = pp;
+    }
+
+    /// Sephie at 0 PP with a fuse partner in hand: the v0 leaf scores a smaller hand.
+    fn sephie_noop_greedy_state(db: &CardDb) -> (State, PlayerId) {
+        let me = PlayerId::A;
+        let mut state = started(db, 77_001);
+        clear_hand(&mut state, me);
+        put_hand(db, &mut state, me, "10934110");
+        put_hand(db, &mut state, me, "88001110");
+        give_pp(&mut state, me, 0, 10);
+        assert!(state.active == me);
+        assert!(matches!(state.phase, Phase::Main));
+        (state, me)
+    }
+
+    fn greedy_h0(fuseguard: bool) -> H0 {
+        H0 {
+            fuseguard,
+            value: ValueVersion::V0,
+            osteps: 1,
+            olethal: false,
+            oevo: false,
+            net: None,
+            ..H0::default()
+        }
+    }
+
+    fn in_fuse_partners(state: &State, me: PlayerId) -> bool {
+        matches!(
+            state.phase,
+            Phase::Choice {
+                player,
+                node: ChoiceNode::FusePartners { .. },
+                ..
+            } if player == me
+        )
+    }
+
+    fn greedy_took_noop_fuse(before: &State, after: &State, me: PlayerId) -> bool {
+        in_fuse_partners(after, me) || after.player(me).hand.len() < before.player(me).hand.len()
+    }
+
+    #[test]
+    fn greedy_until_end_skips_noop_fuse_when_guard_on() {
+        let db = test_db();
+        let (state, me) = sephie_noop_greedy_state(&db);
+        let legal = legal_actions(&db, &state);
+        assert!(
+            legal.iter().any(|a| matches!(a, Action::Fuse { .. })),
+            "fuse must be legal"
+        );
+        let mut nodes = 0u32;
+        let line = vec![search_key(&state)];
+
+        let h0_on = greedy_h0(true);
+        let mut on = state.clone();
+        greedy_until_end(
+            &db,
+            &mut on,
+            me,
+            &mut nodes,
+            u32::MAX,
+            &line,
+            h0_on.evaluator(&db, &[]),
+            None,
+            true,
+        );
+        assert!(
+            !greedy_took_noop_fuse(&state, &on, me),
+            "fuseguard on must not greedily fuse"
+        );
+
+        let h0_off = greedy_h0(false);
+        let mut off = state.clone();
+        nodes = 0;
+        greedy_until_end(
+            &db,
+            &mut off,
+            me,
+            &mut nodes,
+            u32::MAX,
+            &line,
+            h0_off.evaluator(&db, &[]),
+            None,
+            false,
+        );
+        assert!(
+            greedy_took_noop_fuse(&state, &off, me),
+            "fuseguard off must greedily fuse"
+        );
+    }
+
+    #[test]
+    fn finish_bot_turn_horizon_skips_noop_fuse_when_guard_on() {
+        let db = test_db();
+        let (state, me) = sephie_noop_greedy_state(&db);
+        let mut nodes = 0u32;
+        let mut line = vec![search_key(&state)];
+
+        let h0_on = greedy_h0(true);
+        let mut on = state.clone();
+        assert!(
+            finish_bot_turn_horizon(
+                &db,
+                &mut on,
+                me,
+                3,
+                &mut nodes,
+                u32::MAX,
+                &mut line,
+                h0_on.evaluator(&db, &[]),
+                None,
+            ),
+            "horizon finish"
+        );
+        assert!(
+            !greedy_took_noop_fuse(&state, &on, me),
+            "finish_bot_turn_horizon must not greedily fuse with fuseguard on"
+        );
+
+        let h0_off = greedy_h0(false);
+        let mut off = state.clone();
+        nodes = 0;
+        line = vec![search_key(&state)];
+        assert!(
+            finish_bot_turn_horizon(
+                &db,
+                &mut off,
+                me,
+                3,
+                &mut nodes,
+                u32::MAX,
+                &mut line,
+                h0_off.evaluator(&db, &[]),
+                None,
+            ),
+            "horizon finish"
+        );
+        assert!(
+            greedy_took_noop_fuse(&state, &off, me),
+            "finish_bot_turn_horizon must greedily fuse with fuseguard off"
+        );
+    }
+
+    #[test]
+    fn holdback_bot_finish_skips_noop_fuse_when_guard_on() {
+        let db = test_db();
+        let (state, me) = sephie_noop_greedy_state(&db);
+
+        let h0_on = greedy_h0(true);
+        let mut on = state.clone();
+        assert!(holdback_bot_finish(
+            &db,
+            &mut on,
+            me,
+            1,
+            h0_on.evaluator(&db, &[])
+        ));
+        assert!(
+            !greedy_took_noop_fuse(&state, &on, me),
+            "holdback_bot_finish must not greedily fuse with fuseguard on"
+        );
+
+        let h0_off = greedy_h0(false);
+        let mut off = state.clone();
+        let _ = holdback_bot_finish(&db, &mut off, me, 1, h0_off.evaluator(&db, &[]));
+        assert!(
+            greedy_took_noop_fuse(&state, &off, me),
+            "holdback_bot_finish must greedily fuse with fuseguard off"
+        );
+    }
 }
