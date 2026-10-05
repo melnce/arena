@@ -1,0 +1,23 @@
+sweep 39 + 39b, combined per arm (RUNBOOK-sweep39.md rule: combined better -> served bot becomes the candidate; otherwise no change).
+command: python combine_finals.py results/sweep39:c01 results/sweep39b:c01   (tool: sweep31b/tools/combine_finals.py)
+
+results/sweep39:c01: candidate h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000 vs h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000
+  main     0.5190 (1063/2048) [0.4974, 0.5406]  Elo +13.2 [-1.8, +28.3]
+  reverse  0.5215 (534/1024) [0.4909, 0.5519]  Elo +14.9 [-6.3, +36.2]
+  pooled   0.5199 (1597/3072) [0.5022, 0.5375]  Elo +13.8 [+1.5, +26.1]
+results/sweep39b:c01: candidate h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000 vs h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000
+  main     0.5161 (1057/2048) [0.4945, 0.5377]  Elo +11.2 [-3.9, +26.3]
+  reverse  0.4971 (509/1024) [0.4665, 0.5276]  Elo -2.0 [-23.3, +19.2]
+  pooled   0.5098 (1566/3072) [0.4921, 0.5274]  Elo +6.8 [-5.5, +19.1]
+
+COMBINED (results/sweep39:c01 + results/sweep39b:c01):
+  main     0.5176 (2120/4096) [0.5023, 0.5329]  Elo +12.2 [+1.6, +22.9]
+  reverse  0.5093 (1043/2048) [0.4876, 0.5309]  Elo +6.4 [-8.6, +21.5]
+  pooled   0.5148 (3163/6144) [0.5023, 0.5273]  Elo +10.3 [+1.6, +19.0]
+  better (combined main low > 0.50 and reverse low > 0.50): False
+
+verdict: NOT better (combined reverse low 0.4876 <= 0.50) -> no change; the served bot stays h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8 (+hbcheck=2000 pending WT); k=16 stays a key.
+
+tp (games/s, actions/game; owner games on serve.py did not overlap any tp stage):
+  sweep39   baseline 0.0886  89.1   candidate 0.0502  90.6   ratio 0.57x
+  sweep39b  baseline 0.0855  89.5   candidate 0.0552  87.0   ratio 0.65x
