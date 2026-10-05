@@ -252,6 +252,10 @@ impl PyGame {
                         "chosen_index": explain_json.get("chosen_index"),
                         "tie_set": explain_json.get("tie_set"),
                         "holdback": explain_json.get("holdback"),
+                        "wbase": explain_json.get("wbase"),
+                        "wbase_reused": explain_json.get("wbase_reused"),
+                        "lost_rerank": explain_json.get("lost_rerank"),
+                        "fuse_dropped": explain_json.get("fuse_dropped"),
                     }),
                 )
             }

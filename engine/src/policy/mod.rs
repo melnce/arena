@@ -9,6 +9,7 @@
 //! budget. `Policy` is object-safe so WASM can hold `Box<dyn Policy>`.
 
 mod explain;
+mod fuse_guard;
 mod h0;
 mod mulligan;
 mod needs;
@@ -18,6 +19,7 @@ mod record;
 pub use explain::{
     CandidateRecord, ChoosePath, ExplainRecord, LostRerankRecord, PvEnd, PvLeaf, WorldRecord,
 };
+pub use fuse_guard::fuse_is_noop;
 pub use h0::{
     builtin_mulligan, builtin_net, fuse_completion_partner_sets, Alloc, Info, MullMode,
     SearchStats, ValueVersion, Weights, Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0,
@@ -144,7 +146,9 @@ impl AnyPolicy {
     /// first determinization before search; default `0` = off),
     /// `tkroll=<u32>` (after a deterministic miss, run [`forced_lethal`] on the
     /// first determinization and confirm under rerolled dice on every root;
-    /// only when `tkill>0`; default `0` = off), `hbcheck=<u32>` (after search
+    /// only when `tkill>0`; default `0` = off), `fuseguard=0|1` (drop no-op
+    /// fuses from the bot's own root candidates and own-turn search; default
+    /// `0` = off), `hbcheck=<u32>` (after search
     /// chooses `EndTurn` with a kill attack available, re-score `EndTurn` per
     /// root with a bounded opponent removal search; applies are outside
     /// `node_cap`; default `0` = off), `osteps=<u32>`
@@ -199,6 +203,7 @@ impl AnyPolicy {
     /// `oevo=0` when the evolve branch is off, non-default `okill`,
     /// `omacro=1` when the greedy reply fuses play→evolve, non-default `olsolve`,
     /// non-default `tkill`, non-default `tkroll`, non-default `hbcheck`,
+    /// `fuseguard=1` when on,
     /// non-default `wv`,
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
     /// when the allocator is the pre-#46 root-major spend, `info=fair`
@@ -275,6 +280,9 @@ fn h0_spec(h: &H0) -> String {
     }
     if h.hbcheck != def.hbcheck {
         parts.push(format!("hbcheck={}", h.hbcheck));
+    }
+    if h.fuseguard {
+        parts.push("fuseguard=1".to_string());
     }
     if h.osteps != def.osteps {
         parts.push(format!("osteps={}", h.osteps));
@@ -386,6 +394,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.tkill == b.tkill
         && a.tkroll == b.tkroll
         && a.hbcheck == b.hbcheck
+        && a.fuseguard == b.fuseguard
         && a.osteps == b.osteps
         && a.wv == b.wv
         && a.pess == b.pess
@@ -505,6 +514,13 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             "hbcheck" => {
                 let v: u32 = parse_num(val)?;
                 h.hbcheck = v;
+            }
+            "fuseguard" => {
+                h.fuseguard = match val {
+                    "0" => false,
+                    "1" => true,
+                    other => return Err(format!("unknown fuseguard '{other}'")),
+                };
             }
             "wv" => h.wv = parse_num(val)?,
             "pess" => {
