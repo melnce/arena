@@ -40,6 +40,7 @@ use super::explain::{
     CandidateRecord, ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord,
     HoldbackRecord, Line, LostRerankRecord, PvEnd, PvTracker,
 };
+use super::fuse_guard::{filter_cand_fuseguard, fuse_action_is_noop};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum HorizonCutoff {
@@ -168,6 +169,7 @@ struct Evaluator<'a> {
     bpp1: u32,
     bpp2: u32,
     bppv: f32,
+    fuseguard: bool,
 }
 
 impl Evaluator<'_> {
@@ -560,6 +562,8 @@ pub struct H0 {
     /// candidate is a sure loss in every world, re-rank by the position at
     /// the end of the bot's own turn with the opponent reply off.
     pub lostrank: u32,
+    /// Drop no-op fuses from the bot's own root candidates and own-turn search.
+    pub fuseguard: bool,
     /// Per-turn world base cache (`wseed=turn` only; not in `spec()`).
     turn_world_cache: Option<TurnWorldCache>,
 }
@@ -609,6 +613,7 @@ impl Default for H0 {
             wseed: Wseed::Off,
             wbase: None,
             lostrank: 0,
+            fuseguard: false,
             turn_world_cache: None,
         }
     }
@@ -677,6 +682,7 @@ impl H0 {
             bpp1: self.bpp1,
             bpp2: self.bpp2,
             bppv: self.bppv,
+            fuseguard: self.fuseguard,
         }
     }
 
@@ -872,6 +878,8 @@ impl Policy for H0 {
             .filter(|(_, a)| useful_action(state, me, a, self.bpp1, self.bpp2))
             .map(|(i, _)| i)
             .collect();
+        let (cand, fuse_dropped) =
+            filter_cand_fuseguard(db, state, me, self.fuseguard, legal, cand);
         self.stats.candidates += cand.len() as u64;
         if cand.is_empty() {
             if recording {
@@ -883,6 +891,7 @@ impl Policy for H0 {
                 );
                 rec.chosen_index = 0;
                 rec.tie_set = vec![0];
+                rec.fuse_dropped = fuse_dropped;
                 self.explain = Some(rec);
             }
             return 0;
@@ -897,6 +906,7 @@ impl Policy for H0 {
                 );
                 rec.chosen_index = cand[0];
                 rec.tie_set = vec![cand[0]];
+                rec.fuse_dropped = fuse_dropped;
                 self.explain = Some(rec);
             }
             return cand[0];
@@ -929,6 +939,7 @@ impl Policy for H0 {
                 ExplainRecord::new(ChoosePath::Search, k, self.node_cap, self.alloc_label());
             rec.wbase = wbase_used;
             rec.wbase_reused = wbase_reused;
+            rec.fuse_dropped = fuse_dropped;
             Some(rec)
         } else {
             None
@@ -2715,14 +2726,37 @@ fn search_own(
         return v;
     }
 
-    let mut scored: Vec<(f32, State, u64, Vec<Action>)> = Vec::with_capacity(legal.len());
-    for a in &legal {
+    let useful_indices: Vec<usize> = legal
+        .iter()
+        .enumerate()
+        .filter(|(_, a)| useful_action(state, me, a, eval.bpp1, eval.bpp2))
+        .map(|(i, _)| i)
+        .collect();
+    let action_indices = if eval.fuseguard {
+        let mut dropped = 0u32;
+        let mut kept = Vec::with_capacity(useful_indices.len());
+        for &i in &useful_indices {
+            if fuse_action_is_noop(db, state, me, &legal[i]) {
+                dropped += 1;
+            } else {
+                kept.push(i);
+            }
+        }
+        if dropped > 0 && !kept.is_empty() {
+            kept
+        } else {
+            useful_indices
+        }
+    } else {
+        useful_indices
+    };
+
+    let mut scored: Vec<(f32, State, u64, Vec<Action>)> = Vec::with_capacity(action_indices.len());
+    for i in action_indices {
         if *nodes >= cap {
             break;
         }
-        if !useful_action(state, me, a, eval.bpp1, eval.bpp2) {
-            continue;
-        }
+        let a = &legal[i];
         if fusemacro && matches!(a, Action::Fuse { .. }) {
             let Some((v, s, k, prefix)) =
                 best_fuse_main_child(db, state, a, me, nodes, cap, line, eval, stats)

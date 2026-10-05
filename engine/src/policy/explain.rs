@@ -157,6 +157,8 @@ pub struct ExplainRecord {
     pub wbase_reused: bool,
     /// Present when `lostrank>0` re-ranked a lost turn.
     pub lost_rerank: Option<LostRerankRecord>,
+    /// Root fuse candidates dropped when `fuseguard=1` (0 when off).
+    pub fuse_dropped: u32,
 }
 
 impl ExplainRecord {
@@ -176,6 +178,7 @@ impl ExplainRecord {
             wbase: None,
             wbase_reused: false,
             lost_rerank: None,
+            fuse_dropped: 0,
         }
     }
 }
