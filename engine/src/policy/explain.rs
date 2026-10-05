@@ -159,6 +159,10 @@ pub struct ExplainRecord {
     pub lost_rerank: Option<LostRerankRecord>,
     /// Root fuse candidates dropped when `fuseguard=1` (0 when off).
     pub fuse_dropped: u32,
+    /// `indep` or `block` (`deal=` spec key).
+    pub deal: String,
+    /// Shared shuffle seed when `deal=block`; absent otherwise.
+    pub deal_seed: Option<u64>,
 }
 
 impl ExplainRecord {
@@ -179,6 +183,8 @@ impl ExplainRecord {
             wbase_reused: false,
             lost_rerank: None,
             fuse_dropped: 0,
+            deal: "indep".to_string(),
+            deal_seed: None,
         }
     }
 }

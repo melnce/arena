@@ -96,6 +96,21 @@ def test_served_spec_accepts_turn_world_keys(db, extra: str) -> None:
     assert isinstance(act, dict)
 
 
+def test_block_deal_explain_fields(db) -> None:
+    import arena
+
+    states = _collect_states(db, 1)
+    assert states, "need a mid-game decision"
+    game = states[0]
+    base = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000"
+    block = game.bot_action_explain(f"{base},deal=block", 99)
+    assert block["deal"] == "block"
+    assert isinstance(block["deal_seed"], int)
+    indep = game.bot_action_explain(base, 99)
+    assert indep["deal"] == "indep"
+    assert indep["deal_seed"] is None
+
+
 def test_opaque_policy(db) -> None:
     import arena
 

@@ -21,7 +21,7 @@ pub use explain::{
 };
 pub use fuse_guard::fuse_is_noop;
 pub use h0::{
-    builtin_mulligan, builtin_net, fuse_completion_partner_sets, Alloc, Info, MullMode,
+    builtin_mulligan, builtin_net, fuse_completion_partner_sets, Alloc, Deal, Info, MullMode,
     SearchStats, ValueVersion, Weights, Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0,
 };
 pub use mulligan::{
@@ -366,6 +366,12 @@ fn h0_spec(h: &H0) -> String {
     if h.lostrank != def.lostrank {
         parts.push(format!("lostrank={}", h.lostrank));
     }
+    if h.deal != def.deal {
+        parts.push(match h.deal {
+            Deal::Indep => unreachable!(),
+            Deal::Block => "deal=block".to_string(),
+        });
+    }
     match h.mull {
         MullMode::Rule => parts.push("mull=rule".to_string()),
         MullMode::Random => parts.push("mull=random".to_string()),
@@ -415,6 +421,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.wseed == b.wseed
         && a.wbase == b.wbase
         && a.lostrank == b.lostrank
+        && a.deal == b.deal
         && weights_eq(&a.weights, &b.weights)
 }
 
@@ -626,6 +633,13 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     return Err(format!("lostrank out of range '{val}'"));
                 }
                 h.lostrank = v;
+            }
+            "deal" => {
+                h.deal = match val {
+                    "indep" => Deal::Indep,
+                    "block" => Deal::Block,
+                    other => return Err(format!("unknown deal '{other}'")),
+                };
             }
             "mull" => match val {
                 "builtin" => {
