@@ -258,6 +258,7 @@ impl PyGame {
                         "fuse_dropped": explain_json.get("fuse_dropped"),
                         "deal": explain_json.get("deal"),
                         "deal_seed": explain_json.get("deal_seed"),
+                        "hread": explain_json.get("hread"),
                     }),
                 )
             }
@@ -303,6 +304,26 @@ impl PyGame {
     #[getter]
     fn terminal(&self) -> bool {
         self.state.winner.is_some() || matches!(self.state.phase, Phase::Terminal)
+    }
+
+    /// Sample `n` opponent hands for the side to move's opponent under the
+    /// policy's `info`, `deal`, and `hread` settings.
+    #[pyo3(signature = (policy, seed, n))]
+    fn sample_opponent_hands(&self, policy: &str, seed: u64, n: u32) -> PyResult<Vec<Vec<String>>> {
+        let parsed = AnyPolicy::parse_spec(policy)
+            .map_err(|e| py_err_msg(format!("unknown policy {policy}: {e}")))?;
+        match parsed {
+            AnyPolicy::H0(mut h0) => {
+                let hands = h0.sample_opponent_hands(&self.state, seed, n);
+                Ok(hands
+                    .into_iter()
+                    .map(|hand| hand.iter().map(|c| c.0.to_string()).collect())
+                    .collect())
+            }
+            _ => Err(py_err_msg(format!(
+                "sample_opponent_hands requires an h0 policy, got {policy}"
+            ))),
+        }
     }
 
     fn clone(&self) -> Self {
