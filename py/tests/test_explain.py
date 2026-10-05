@@ -72,6 +72,30 @@ def test_explain_matches_bot_action(db, spec: str) -> None:
         assert exp["chosen_index"] == min(exp["tie_set"])
 
 
+SERVED_SPEC = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000"
+
+
+@pytest.mark.parametrize(
+    "extra",
+    (
+        "wseed=turn",
+        "wbase=1",
+        "lostrank=2000",
+    ),
+)
+def test_served_spec_accepts_turn_world_keys(db, extra: str) -> None:
+    import arena
+
+    spec = f"{SERVED_SPEC},{extra}"
+    root = Path(__file__).resolve().parents[2]
+    deck = json.loads(
+        (root / "engine" / "tests" / "fixtures" / "decks" / "basic-neutral-forest.json").read_text()
+    )
+    game = arena.Game(db, 42, deck, deck, first="a")
+    act = game.bot_action(spec, 99)
+    assert isinstance(act, dict)
+
+
 def test_opaque_policy(db) -> None:
     import arena
 

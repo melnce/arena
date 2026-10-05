@@ -38,7 +38,7 @@ use crate::trace::{ChooseOptionJson, NeutralAction};
 
 use super::explain::{
     CandidateRecord, ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord,
-    HoldbackRecord, Line, PvEnd, PvTracker,
+    HoldbackRecord, Line, LostRerankRecord, PvEnd, PvTracker,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -158,6 +158,9 @@ struct Evaluator<'a> {
     omacro: bool,
     olsolve: u32,
     osteps: u32,
+    /// When `false`, search scores the leaf at the bot's turn end instead of
+    /// running the opponent reply (lost-turn re-rank only).
+    opp_reply: bool,
     net: Option<&'a ValueNet>,
     vocab: &'a [CardId],
     encoding: EncodingVersion,
@@ -411,6 +414,24 @@ impl SearchStats {
     }
 }
 
+/// Turn-stable world seeding for [`H0`]. Default [`Wseed::Off`] draws one
+/// seed per root from the caller rng; [`Wseed::Turn`] caches a per-turn base.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Wseed {
+    #[default]
+    Off,
+    Turn,
+}
+
+#[derive(Debug, Clone)]
+struct TurnWorldCache {
+    turn: u32,
+    active: PlayerId,
+    me: PlayerId,
+    base: u64,
+    step_counter: u64,
+}
+
 /// How [`H0::choose`] spends `node_cap` across `(root, candidate)` pairs.
 /// [`Alloc::Root`] is today's root-major spend (later pairs skipped when
 /// the cap binds). [`Alloc::Fair`] gives each remaining pair a share.
@@ -530,6 +551,17 @@ pub struct H0 {
     pub horizon: u32,
     /// Reserve node budget for horizon finish-and-reply (default `200`).
     pub hres: u32,
+    /// Turn-stable world seeding. `off` = one seed per root (today); `turn` =
+    /// one base per `(turn, active, me)` cached across decisions in the turn.
+    pub wseed: Wseed,
+    /// Explicit turn base (implies turn-stable worlds; skips the cache).
+    pub wbase: Option<u64>,
+    /// Lost-turn tie-break budget. `0` = off (today). When every scored
+    /// candidate is a sure loss in every world, re-rank by the position at
+    /// the end of the bot's own turn with the opponent reply off.
+    pub lostrank: u32,
+    /// Per-turn world base cache (`wseed=turn` only; not in `spec()`).
+    turn_world_cache: Option<TurnWorldCache>,
 }
 
 impl Default for H0 {
@@ -574,6 +606,10 @@ impl Default for H0 {
             bppv: 0.0,
             horizon: 0,
             hres: DEFAULT_HRES,
+            wseed: Wseed::Off,
+            wbase: None,
+            lostrank: 0,
+            turn_world_cache: None,
         }
     }
 }
@@ -627,6 +663,7 @@ impl H0 {
             omacro: self.omacro,
             olsolve: self.olsolve,
             osteps: self.osteps,
+            opp_reply: true,
             net: self.net.as_deref(),
             vocab: root_vocab,
             encoding: self
@@ -673,6 +710,49 @@ impl H0 {
             Alloc::Root => "root",
             Alloc::Fair => "fair",
         }
+    }
+
+    fn turn_stable_worlds(&self) -> bool {
+        self.wseed == Wseed::Turn || self.wbase.is_some()
+    }
+
+    fn root_world_seeds(
+        &mut self,
+        state: &State,
+        me: PlayerId,
+        k: u32,
+        rng: &mut Xoshiro256ss,
+    ) -> (Vec<u64>, Option<u64>, bool) {
+        if !self.turn_stable_worlds() {
+            let seeds = (0..k).map(|_| rng.next_u64()).collect();
+            return (seeds, None, false);
+        }
+        let (base, reused) = if let Some(base) = self.wbase {
+            (base, false)
+        } else {
+            let cache_ok = self.turn_world_cache.as_ref().is_some_and(|c| {
+                c.turn == state.turn
+                    && c.active == state.active
+                    && c.me == me
+                    && state.step_counter >= c.step_counter
+            });
+            if cache_ok {
+                (self.turn_world_cache.as_ref().unwrap().base, true)
+            } else {
+                let base = rng.next_u64();
+                self.turn_world_cache = Some(TurnWorldCache {
+                    turn: state.turn,
+                    active: state.active,
+                    me,
+                    base,
+                    step_counter: state.step_counter,
+                });
+                (base, false)
+            }
+        };
+        let mut seed_rng = Xoshiro256ss::from_seed(base);
+        let seeds = (0..k).map(|_| seed_rng.next_u64()).collect();
+        (seeds, Some(base), reused)
     }
 
     /// Leaf value under this spec (`v0` is the historical arithmetic).
@@ -824,32 +904,32 @@ impl Policy for H0 {
         let subset: Vec<Action> = cand.iter().map(|&i| legal[i].clone()).collect();
         let mut nodes = 0u32;
         let k = self.k();
+        let (world_seeds, wbase_used, wbase_reused) = self.root_world_seeds(state, me, k, rng);
         let mut roots = Vec::with_capacity(k as usize);
-        for _ in 0..k {
+        for seed in world_seeds {
             if self.info == Info::Open {
                 let mut open = OpenStats::default();
                 roots.push(determinize_with_stats(
                     state,
                     me,
-                    rng.next_u64(),
+                    seed,
                     self.info,
                     Some(&mut open),
                 ));
                 self.stats.open_hidden += u64::from(open.hidden);
                 self.stats.open_hosts += u64::from(open.hosts);
             } else {
-                roots.push(determinize_with(state, me, rng.next_u64(), self.info));
+                roots.push(determinize_with(state, me, seed, self.info));
             }
         }
         self.stats.roots += u64::from(k);
         let mut dec_stats = SearchStats::default();
         let mut explain_rec = if recording {
-            Some(ExplainRecord::new(
-                ChoosePath::Search,
-                k,
-                self.node_cap,
-                self.alloc_label(),
-            ))
+            let mut rec =
+                ExplainRecord::new(ChoosePath::Search, k, self.node_cap, self.alloc_label());
+            rec.wbase = wbase_used;
+            rec.wbase_reused = wbase_reused;
+            Some(rec)
         } else {
             None
         };
@@ -1128,9 +1208,45 @@ impl Policy for H0 {
                 }
                 let pick_last_value = finite(best_v, self.wv);
                 let unscored_inc = if !any_scored { 1 } else { 0 };
-                let (chosen, hb_override, pick_last_value) = if self.hbcheck > 0
+                let mut lost_rerank_rec: Option<LostRerankRecord> = None;
+                let (pick_i, pick_last_value) = if self.lostrank > 0
                     && any_scored
-                    && matches!(subset[best_i], Action::EndTurn)
+                    && all_cands_lost(&n, &acc, &worst, self.pess, self.wv)
+                {
+                    if let Some((j, lv, spent, aggregates)) = try_lost_rerank(
+                        self.lostrank,
+                        self.pess,
+                        self.horizon,
+                        self.hres,
+                        db,
+                        &roots,
+                        &subset,
+                        me,
+                        eval,
+                        odepth,
+                        obeam,
+                        self.fusemacro,
+                        self.depth,
+                        self.beam,
+                        &mut dec_stats,
+                    ) {
+                        lost_rerank_rec = Some(LostRerankRecord {
+                            aggregates,
+                            nodes: spent,
+                            chosen_index: cand[j],
+                        });
+                        (j, lv)
+                    } else {
+                        (best_i, pick_last_value)
+                    }
+                } else {
+                    (best_i, pick_last_value)
+                };
+                let (chosen, hb_override, pick_last_value) = if lost_rerank_rec.is_some() {
+                    (cand[pick_i], false, pick_last_value)
+                } else if self.hbcheck > 0
+                    && any_scored
+                    && matches!(subset[pick_i], Action::EndTurn)
                 {
                     match try_holdback_trade(
                         self.hbcheck,
@@ -1143,7 +1259,7 @@ impl Policy for H0 {
                         &subset,
                         &cand,
                         &n,
-                        best_i,
+                        pick_i,
                         me,
                         eval,
                         odepth,
@@ -1152,18 +1268,20 @@ impl Policy for H0 {
                         &mut dec_stats,
                     ) {
                         Some((idx, lv)) => (idx, true, lv),
-                        None => (cand[best_i], false, pick_last_value),
+                        None => (cand[pick_i], false, pick_last_value),
                     }
                 } else {
-                    (cand[best_i], false, pick_last_value)
+                    (cand[pick_i], false, pick_last_value)
                 };
                 self.stats.pairs_skipped += pairs_skipped_add;
                 self.stats.unscored += unscored_inc;
                 self.last_value = Some(pick_last_value);
                 if let Some(rec) = &mut explain_rec {
                     rec.chosen_index = chosen;
+                    let did_lost_rerank = lost_rerank_rec.is_some();
+                    rec.lost_rerank = lost_rerank_rec;
                     if any_scored {
-                        if hb_override {
+                        if hb_override || did_lost_rerank {
                             rec.tie_set = vec![chosen];
                         } else {
                             rec.tie_set =
@@ -2269,6 +2387,19 @@ fn horizon_score_leaf(
         return v;
     }
 
+    if !eval.opp_reply {
+        let v = eval.value(&reply_state, me);
+        let end = match cutoff {
+            HorizonCutoff::Depth => PvEnd::Depth,
+            HorizonCutoff::Cap => PvEnd::Cap,
+        };
+        if let Some(t) = track.as_mut() {
+            t.pop_to(track_len);
+            t.set_leaf(v, end, &reply_state);
+        }
+        return v;
+    }
+
     let v = opponent_reply(
         db,
         &reply_state,
@@ -2508,6 +2639,13 @@ fn search_own(
         return v;
     }
     if acting_player(state) != me || matches!(state.phase, Phase::Terminal) {
+        if !eval.opp_reply {
+            let v = eval.value(state, me);
+            if let Some(t) = track.as_deref_mut() {
+                t.set_leaf(v, PvEnd::Depth, state);
+            }
+            return v;
+        }
         if let Some(v) = tt_get(tt.as_deref(), state, depth, false, stats) {
             if let Some(t) = track.as_deref_mut() {
                 t.set_tt(v, state);
@@ -4475,6 +4613,131 @@ fn holdback_leaf_value(
     dec_stats.horizon_nodes += hb_stats.horizon_nodes;
     dec_stats.horizon_leaves += hb_stats.horizon_leaves;
     finite(v, eval.wv)
+}
+
+fn all_cands_lost(n: &[u32], acc: &[f32], worst: &[f32], pess: f32, wv: f32) -> bool {
+    const LETHAL_EPS: f32 = 1e-3;
+    let threshold = -wv + LETHAL_EPS;
+    let mut any = false;
+    for (j, &c) in n.iter().enumerate() {
+        if c == 0 {
+            continue;
+        }
+        any = true;
+        if root_agg(acc[j], c, worst[j], pess) > threshold {
+            return false;
+        }
+    }
+    any
+}
+
+#[allow(clippy::too_many_arguments)]
+fn try_lost_rerank(
+    lostrank: u32,
+    pess: f32,
+    horizon: u32,
+    hres: u32,
+    db: &CardDb,
+    roots: &[State],
+    subset: &[Action],
+    me: PlayerId,
+    eval: Evaluator<'_>,
+    odepth: u32,
+    obeam: usize,
+    fusemacro: bool,
+    depth: u32,
+    beam: usize,
+    stats: &mut SearchStats,
+) -> Option<(usize, f32, u32, Vec<f32>)> {
+    let eval_lost = Evaluator {
+        olethal: false,
+        olsolve: 0,
+        opp_reply: false,
+        ..eval
+    };
+    let mut lost_nodes = 0u32;
+    let mut acc = vec![0.0f32; subset.len()];
+    let mut n_acc = vec![0u32; subset.len()];
+    let mut worst = vec![f32::INFINITY; subset.len()];
+    for (r, root) in roots.iter().enumerate() {
+        let root_key = search_key(root);
+        for (j, a) in subset.iter().enumerate() {
+            if lost_nodes >= lostrank {
+                break;
+            }
+            let pairs_left = (roots.len() - r) * subset.len() - j;
+            let remaining = lostrank - lost_nodes;
+            let even = remaining / pairs_left as u32;
+            const MIN_SHARE: u32 = 24;
+            let share = if remaining >= MIN_SHARE.saturating_mul(pairs_left as u32) {
+                even.max(MIN_SHARE)
+            } else {
+                even.max(1)
+            };
+            let cap = lost_nodes.saturating_add(share).min(lostrank);
+            let pair_start = lost_nodes;
+            let Some(s) = try_apply(db, root, a, &mut lost_nodes, cap, &[root_key]) else {
+                continue;
+            };
+            let at_fuse_choice = fusemacro && own_fuse_partners(&s, me).is_some();
+            let search_depth = if at_fuse_choice {
+                depth
+            } else {
+                depth.saturating_sub(1)
+            };
+            let line = vec![root_key, search_key(&s)];
+            let v = if s.winner == Some(me) {
+                eval_lost.wv
+            } else {
+                search_own(
+                    db,
+                    &s,
+                    me,
+                    search_depth,
+                    beam,
+                    &mut lost_nodes,
+                    cap,
+                    &line,
+                    eval_lost,
+                    odepth,
+                    obeam,
+                    stats,
+                    None,
+                    None,
+                    fusemacro,
+                    horizon,
+                    hres,
+                )
+            };
+            let _ = pair_start;
+            let fv = finite(v, eval_lost.wv);
+            acc[j] += fv;
+            if fv < worst[j] {
+                worst[j] = fv;
+            }
+            n_acc[j] += 1;
+        }
+    }
+    let mut best_i = 0usize;
+    let mut best_v = f32::NEG_INFINITY;
+    let mut aggregates = vec![f32::NEG_INFINITY; subset.len()];
+    let mut any = false;
+    for (j, &c) in n_acc.iter().enumerate() {
+        if c == 0 {
+            continue;
+        }
+        any = true;
+        let v = root_agg(acc[j], c, worst[j], pess);
+        aggregates[j] = v;
+        if v > best_v {
+            best_v = v;
+            best_i = j;
+        }
+    }
+    if !any {
+        return None;
+    }
+    Some((best_i, finite(best_v, eval.wv), lost_nodes, aggregates))
 }
 
 fn holdback_branch(plain: f32, removal_plain: f32, line_len: u32) -> HoldbackBranch {

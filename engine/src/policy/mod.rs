@@ -15,10 +15,12 @@ mod needs;
 mod net;
 mod record;
 
-pub use explain::{CandidateRecord, ChoosePath, ExplainRecord, PvEnd, PvLeaf, WorldRecord};
+pub use explain::{
+    CandidateRecord, ChoosePath, ExplainRecord, LostRerankRecord, PvEnd, PvLeaf, WorldRecord,
+};
 pub use h0::{
     builtin_mulligan, builtin_net, fuse_completion_partner_sets, Alloc, Info, MullMode,
-    SearchStats, ValueVersion, Weights, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0,
+    SearchStats, ValueVersion, Weights, Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0,
 };
 pub use mulligan::{
     deck_fingerprint_counts, deck_fingerprint_player, mulligan_seat, DeckMulligan, MulliganTable,
@@ -344,6 +346,18 @@ fn h0_spec(h: &H0) -> String {
     if h.hres != def.hres {
         parts.push(format!("hres={}", h.hres));
     }
+    if h.wseed != def.wseed {
+        parts.push(match h.wseed {
+            Wseed::Off => unreachable!(),
+            Wseed::Turn => "wseed=turn".to_string(),
+        });
+    }
+    if h.wbase != def.wbase {
+        parts.push(format!("wbase={}", h.wbase.unwrap_or(0)));
+    }
+    if h.lostrank != def.lostrank {
+        parts.push(format!("lostrank={}", h.lostrank));
+    }
     match h.mull {
         MullMode::Rule => parts.push("mull=rule".to_string()),
         MullMode::Random => parts.push("mull=random".to_string()),
@@ -389,6 +403,9 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.bppv == b.bppv
         && a.horizon == b.horizon
         && a.hres == b.hres
+        && a.wseed == b.wseed
+        && a.wbase == b.wbase
+        && a.lostrank == b.lostrank
         && weights_eq(&a.weights, &b.weights)
 }
 
@@ -575,6 +592,24 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     return Err(format!("hres out of range '{val}'"));
                 }
                 h.hres = v;
+            }
+            "wseed" => {
+                h.wseed = match val {
+                    "off" => Wseed::Off,
+                    "turn" => Wseed::Turn,
+                    other => return Err(format!("unknown wseed '{other}'")),
+                };
+            }
+            "wbase" => {
+                let v: u64 = parse_num(val)?;
+                h.wbase = Some(v);
+            }
+            "lostrank" => {
+                let v: u32 = parse_num(val)?;
+                if v > 1_000_000 {
+                    return Err(format!("lostrank out of range '{val}'"));
+                }
+                h.lostrank = v;
             }
             "mull" => match val {
                 "builtin" => {
