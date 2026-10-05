@@ -254,6 +254,8 @@ impl PyGame {
                         "holdback": explain_json.get("holdback"),
                         "wbase": explain_json.get("wbase"),
                         "wbase_reused": explain_json.get("wbase_reused"),
+                        "lost_rerank": explain_json.get("lost_rerank"),
+                        "fuse_dropped": explain_json.get("fuse_dropped"),
                         "deal": explain_json.get("deal"),
                         "deal_seed": explain_json.get("deal_seed"),
                     }),
