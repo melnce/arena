@@ -1213,7 +1213,7 @@ impl Policy for H0 {
                     && any_scored
                     && all_cands_lost(&n, &acc, &worst, self.pess, self.wv)
                 {
-                    if let Some((j, lv, spent, aggregates)) = try_lost_rerank(
+                    if let Some((j, _, spent, aggregates)) = try_lost_rerank(
                         self.lostrank,
                         self.pess,
                         self.horizon,
@@ -1235,7 +1235,7 @@ impl Policy for H0 {
                             nodes: spent,
                             chosen_index: cand[j],
                         });
-                        (j, lv)
+                        (j, pick_last_value)
                     } else {
                         (best_i, pick_last_value)
                     }

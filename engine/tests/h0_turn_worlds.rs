@@ -334,6 +334,8 @@ fn lostrank_reranks_lost_turn() {
     let pick1 = on.choose(&db, &st, &legal, &mut rng1);
     let rec1 = on.take_explain().expect("explain");
     assert!(rec1.lost_rerank.is_some(), "lost rerank should fire");
+    assert_eq!(on.last_value(), off.last_value());
+    assert_eq!(off.last_value(), Some(-400.0));
     assert_ne!(pick0, pick1, "lostrank should change the pick");
     let lr = rec1.lost_rerank.unwrap();
     assert_eq!(lr.chosen_index, pick1);
