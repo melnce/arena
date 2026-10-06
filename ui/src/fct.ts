@@ -87,8 +87,7 @@ export function hostFor(target: CombatTarget): HTMLElement | null {
   const board = document.getElementById(`${visual(target.player)}Board`);
   if (!board) return null;
   if (typeof target.id === "number") {
-    const byUid = board.querySelector<HTMLElement>(`.card[data-uid="${target.id}"]`);
-    if (byUid) return byUid;
+    return board.querySelector<HTMLElement>(`.card[data-uid="${target.id}"]`);
   }
   if (typeof target.slot === "number") {
     return board.querySelector<HTMLElement>(`.card[data-slot="${target.slot}"]`);

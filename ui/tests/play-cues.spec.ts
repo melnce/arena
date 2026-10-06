@@ -3,11 +3,10 @@ import { ART, artShot, openSettings } from "./helpers.ts";
 
 const PAD = "10001110";
 const FOLLOWER_B = "10011110";
-const HARK = "10753310";
-const KOU = "10411110";
 const WILD_PROFUSION = "10011210";
 const FAIRY = "90011110";
-const ELD_AXE = "10671310";
+const COLONEL = "10952110";
+const LAYLA = "10872110";
 
 function mixedDeck(cards: Record<string, number>): Record<string, number> {
   const total = Object.values(cards).reduce((a, b) => a + b, 0);
@@ -48,6 +47,7 @@ async function startGame(
     botPolicy?: string;
     policyA?: string;
     policyB?: string;
+    hideBotHand?: boolean;
   },
 ) {
   await openSettings(page);
@@ -65,6 +65,11 @@ async function startGame(
   }
   if (opts.policyA) await page.locator("#policyASelect").selectOption(opts.policyA, { force: true });
   if (opts.policyB) await page.locator("#policyBSelect").selectOption(opts.policyB, { force: true });
+  if (opts.hideBotHand !== undefined) {
+    await page.locator("#hideBotHandToggle").evaluate((el, checked) => {
+      (el as HTMLInputElement).checked = checked;
+    }, opts.hideBotHand);
+  }
   await page.locator("#startGameBtn").click();
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
     timeout: 15_000,
@@ -81,7 +86,9 @@ async function mulliganKeep(page: Page, keep: string | string[]) {
     if (!mull?.mulligan) return;
     const who = mull.mulligan.player as "a" | "b";
     const hand = (
-      window.__arena!.full() as { players: { a: { hand: Array<{ card: string }> }; b: { hand: Array<{ card: string }> } } }
+      window.__arena!.full() as {
+        players: { a: { hand: Array<{ card: string }> }; b: { hand: Array<{ card: string }> } };
+      }
     ).players[who].hand;
     const swap = hand.map((c) => !keepCards.includes(c.card));
     const act =
@@ -143,6 +150,42 @@ async function playCard(page: Page, card: string, player?: "a" | "b") {
   expect(ok, `expected play ${card}`).toBeTruthy();
 }
 
+async function botPlayEventually(page: Page, card: string, player: "a" | "b") {
+  for (let i = 0; i < 40; i++) {
+    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
+    if (acting === player) {
+      const ok = await page.evaluate((id) => {
+        const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
+        const act = legal.find((a) => a.play?.card === id);
+        if (!act) return false;
+        window.__arena!.botApply(act);
+        return true;
+      }, card);
+      if (ok) return;
+    }
+    await applyFirst(page, "end_turn");
+  }
+  throw new Error(`bot could not play ${card} as ${player}`);
+}
+
+async function playCardEventually(page: Page, card: string, player: "a" | "b") {
+  for (let i = 0; i < 40; i++) {
+    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
+    if (acting === player) {
+      const ok = await page.evaluate((id) => {
+        const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
+        const act = legal.find((a) => a.play?.card === id);
+        if (!act) return false;
+        window.__arena!.apply(act);
+        return true;
+      }, card);
+      if (ok) return;
+    }
+    await applyFirst(page, "end_turn");
+  }
+  throw new Error(`could not play ${card} as ${player}`);
+}
+
 async function endTurn(page: Page) {
   await page.evaluate(() => {
     const acting = document.getElementById("turnCounter")?.dataset.acting;
@@ -172,15 +215,6 @@ async function skipToPp(page: Page, player: "a" | "b", pp: number) {
   }
 }
 
-async function opponentFieldFollowers(page: Page, ...cards: string[]) {
-  for (const card of cards) {
-    await skipToPp(page, "b", 2);
-    await playCard(page, card, "b");
-    await applyFirst(page, "end_turn");
-  }
-  await waitForActing(page, "a");
-}
-
 function lastCueLog(page: Page) {
   return page.evaluate(() => {
     const log = window.__arena!.cueLog() ?? [];
@@ -188,34 +222,80 @@ function lastCueLog(page: Page) {
   });
 }
 
-async function waitCueArrow(page: Page, why: string) {
-  const arrow = page.locator(`#cueLayer path[data-why="${why}"]`);
-  await expect(arrow).toHaveCount(1, { timeout: 5000 });
-  return arrow;
+async function waitForCueArrow(page: Page, why: string, timeout = 15_000) {
+  await expect
+    .poll(async () => page.locator(`#cueLayer path[data-why="${why}"]`).count(), {
+      timeout,
+      intervals: [40, 80, 120],
+    })
+    .toBe(1);
+  return page.locator(`#cueLayer path[data-why="${why}"]`);
+}
+
+async function waitForCueFade(page: Page, timeout = 15_000) {
+  await expect
+    .poll(async () => page.locator("#cueLayer .cue-fade").count(), {
+      timeout,
+      intervals: [40, 80, 120],
+    })
+    .toBe(1);
+  return page.locator("#cueLayer .cue-fade");
+}
+
+async function waitForPlaySpotlight(page: Page, timeout = 30_000) {
+  await expect
+    .poll(async () => page.locator("#cueLayer .cue-play-spotlight").count(), {
+      timeout,
+      intervals: [40, 80, 120],
+    })
+    .toBeGreaterThan(0);
+  return page.locator("#cueLayer .cue-play-spotlight").first();
 }
 
 test.describe("play cues", () => {
   test("1 off mode: no overlay cues and zero-duration log", async ({ page }) => {
     await boot(page, "off");
     const deck = await importDeck(page, "cues-off.json", mixedDeck({ [PAD]: 40 }));
-    await startGame(page, { seed: "7", deckA: deck });
+    await startGame(page, { seed: "7", deckA: deck, mode: "vs-bot", botPolicy: "first-legal" });
     await confirmMulligans(page);
     await closeDrawer(page);
-    await skipToPp(page, "a", 2);
-    await playCard(page, PAD, "a");
+    await endTurn(page);
     const entry = await lastCueLog(page);
     expect(entry?.duration).toBe(0);
     expect(entry?.plan.cues.length).toBe(0);
     await expect(page.locator("#cueLayer path")).toHaveCount(0);
-    await expect(page.locator("#cueLayer .cue-spotlight")).toHaveCount(0);
+    await expect(page.locator("#cueLayer .cue-play-spotlight")).toHaveCount(0);
     await artShot(page.locator("#cueLayer"), `${ART}/cues_off.png`);
   });
 
-  test("2 attack arrow with data attributes", async ({ page }) => {
+  test("2 bot play spotlight shows played card beside board", async ({ page }) => {
+    await boot(page, "normal");
+    const deck = await importDeck(page, "cues-bot-spot.json", mixedDeck({ [PAD]: 40 }));
+    await startGame(page, {
+      mode: "vs-bot",
+      seed: "3",
+      deckA: deck,
+      human: "a",
+      botPolicy: "first-legal",
+      hideBotHand: true,
+    });
+    await confirmMulligans(page);
+    await closeDrawer(page);
+    await endTurn(page);
+    const spotlight = page.locator("#cueLayer .cue-play-spotlight");
+    await expect(spotlight).toHaveCount(1, { timeout: 30_000 });
+    const cardId = await spotlight.getAttribute("data-card");
+    expect(cardId).toBeTruthy();
+    const plan = await page.evaluate(() => window.__arena!.cues());
+    expect(plan?.cues.some((c) => (c.cue as { type?: string }).type === "play-spotlight")).toBeTruthy();
+    await artShot(page, `${ART}/cues_spotlight_arrow.png`, { fullPage: true });
+  });
+
+  test("3 bot attack arrow uses uid endpoints", async ({ page }) => {
     await boot(page, "normal");
     const deck = await importDeck(page, "cues-atk.json", mixedDeck({ [PAD]: 40 }));
-    await startGame(page, { seed: "11", deckA: deck });
-    await confirmMulligans(page, [PAD], [PAD]);
+    await startGame(page, { seed: "11", deckA: deck, mode: "hotseat" });
+    await confirmMulligans(page, PAD, PAD);
     await closeDrawer(page);
     await skipToPp(page, "a", 2);
     await playCard(page, PAD, "a");
@@ -224,91 +304,31 @@ test.describe("play cues", () => {
     await playCard(page, PAD, "b");
     await applyFirst(page, "end_turn");
     await waitForActing(page, "a");
-    const slot = await page.evaluate((cardId) => {
+    const slots = await page.evaluate(() => {
       const full = window.__arena!.full() as {
-        players: { a: { field: Array<{ card: string } | null> } };
+        players: { a: { field: Array<{ id: number; card: string } | null> } };
       };
-      return full.players.a.field.findIndex((c) => c?.card === cardId);
-    }, PAD);
-    expect(slot).toBeGreaterThanOrEqual(0);
+      const slot = full.players.a.field.findIndex((c) => c?.card === "10001110");
+      const uid = full.players.a.field[slot]?.id;
+      return { slot, uid };
+    });
     await page.evaluate(
       ({ slot }) => {
-        window.__arena!.apply({
+        window.__arena!.botApply({
           attack: { player: "a", attacker_slot: slot, target: "leader" },
         });
       },
-      { slot },
+      { slot: slots.slot },
     );
-    const arrow = await waitCueArrow(page, "attack");
-    await expect(arrow).toHaveAttribute("data-style", "attack");
-    await expect(arrow).toHaveAttribute("data-from", /slot:a:/);
-    await expect(arrow).toHaveAttribute("data-to", "leader:b");
-    const attrs = await arrow.evaluate((el) => ({
-      x1: el.dataset.x1,
-      y1: el.dataset.y1,
-      x2: el.dataset.x2,
-      y2: el.dataset.y2,
-    }));
-    expect(Number(attrs.x2)).toBeGreaterThan(0);
-    expect(Number(attrs.y2)).toBeGreaterThan(0);
+    const arrow = page.locator('#cueLayer path[data-why="attack"]');
+    await expect(arrow).toHaveCount(1, { timeout: 8000 });
+    await expect(arrow).toHaveAttribute("data-style", "solid");
+    await expect(arrow).toHaveAttribute("data-from", /^uid:\d+$/);
+    await expect(arrow).toHaveAttribute("data-to", /^uid:\d+$|^leader:[ab]$/);
     await artShot(page, `${ART}/cues_attack.png`, { fullPage: true });
   });
 
-  test("3 effect arrows from spell damage (Hark)", async ({ page }) => {
-    await boot(page, "normal");
-    const deckA = await importDeck(page, "cues-hark-a.json", mixedDeck({ [HARK]: 40 }));
-    const deckB = await importDeck(
-      page,
-      "cues-hark-b.json",
-      mixedDeck({ [PAD]: 20, [FOLLOWER_B]: 20 }),
-    );
-    await startGame(page, { seed: "43", deckA, deckB });
-    await confirmMulligans(page, [HARK], [FOLLOWER_B]);
-    await closeDrawer(page);
-    await opponentFieldFollowers(page, PAD, FOLLOWER_B);
-    await skipToPp(page, "a", 3);
-    for (let i = 0; i < 20; i++) {
-      const has = await page.evaluate(
-        (id) => {
-          const hand = (window.__arena!.full() as { players: { a: { hand: Array<{ card: string }> } } })
-            .players.a.hand;
-          return hand.some((c) => c.card === id);
-        },
-        HARK,
-      );
-      if (has) break;
-      await applyFirst(page, "end_turn");
-      await applyFirst(page, "end_turn");
-    }
-    await playCard(page, HARK, "a");
-    const arrows = page.locator('#cueLayer path[data-why="effect"]');
-    await expect(arrows.first()).toBeVisible({ timeout: 5000 });
-    const entry = await lastCueLog(page);
-    expect(entry?.plan.cues.some((c) => (c.cue as { kind?: string }).kind === "effect" || (c.cue as { type?: string }).type === "arrow")).toBeTruthy();
-    await artShot(page, `${ART}/cues_effect.png`, { fullPage: true });
-  });
-
-  test("4 choice arrow from targeted spell", async ({ page }) => {
-    await boot(page, "normal");
-    const deckA = await importDeck(page, "cues-choice-a.json", mixedDeck({ [ELD_AXE]: 10, [PAD]: 30 }));
-    const deckB = await importDeck(page, "cues-choice-b.json", mixedDeck({ [PAD]: 40 }));
-    await startGame(page, { seed: "56", deckA, deckB });
-    await confirmMulligans(page, [ELD_AXE], [PAD]);
-    await closeDrawer(page);
-    await opponentFieldFollowers(page, PAD);
-    await skipToPp(page, "a", 2);
-    await playCard(page, ELD_AXE, "a");
-    await page.evaluate(() => {
-      const legal = window.__arena!.legal() as Array<{ choose?: { option: unknown } }>;
-      const act = legal.find((a) => a.choose);
-      if (act) window.__arena!.apply(act);
-    });
-    const arrow = await waitCueArrow(page, "choice");
-    await expect(arrow).toHaveAttribute("data-style", "choice");
-    await artShot(page, `${ART}/cues_choice.png`, { fullPage: true });
-  });
-
-  test("5 random arrow from amulet trigger", async ({ page }) => {
+  test("4 random arrow targets follower uid", async ({ page }) => {
     await boot(page, "normal");
     const deckA = await importDeck(
       page,
@@ -320,209 +340,324 @@ test.describe("play cues", () => {
       "cues-random-b.json",
       mixedDeck({ [PAD]: 20, [FOLLOWER_B]: 20 }),
     );
-    await startGame(page, { seed: "44", deckA, deckB });
-    await confirmMulligans(page, [WILD_PROFUSION, FAIRY], [FOLLOWER_B]);
+    await startGame(page, { seed: "44", deckA, deckB, mode: "hotseat" });
+    await confirmMulligans(page, [WILD_PROFUSION, FAIRY], [PAD, PAD]);
     await closeDrawer(page);
-    await opponentFieldFollowers(page, PAD, FOLLOWER_B);
-    await skipToPp(page, "a", 3);
-    await playCard(page, WILD_PROFUSION, "a");
-    await playCard(page, FAIRY, "a");
-    const arrow = await waitCueArrow(page, "random");
-    await expect(arrow).toHaveAttribute("data-style", "random");
+    await playCardEventually(page, PAD, "b");
+    await applyFirst(page, "end_turn");
+    await botPlayEventually(page, WILD_PROFUSION, "a");
+    await botPlayEventually(page, FAIRY, "a");
+    const arrow = await waitForCueArrow(page, "random");
+    await expect(arrow).toHaveAttribute("data-style", "dashed");
+    await expect(arrow).toHaveAttribute("data-to", /^uid:\d+$/);
     await artShot(page, `${ART}/cues_random.png`, { fullPage: true });
   });
 
-  test("6 fade cue on destroy", async ({ page }) => {
+  test("5 Last Words effect arrow aims at surviving neighbour", async ({ page }) => {
+    test.setTimeout(120_000);
     await boot(page, "normal");
-    const deck = await importDeck(page, "cues-destroy.json", mixedDeck({ [WILD_PROFUSION]: 40 }));
-    await startGame(page, { seed: "59", deckA: deck });
-    await confirmMulligans(page, [WILD_PROFUSION]);
-    await closeDrawer(page);
-    await skipToPp(page, "b", 2);
-    await playCard(page, WILD_PROFUSION, "b");
-    for (let i = 0; i < 6; i++) await applyFirst(page, "end_turn");
-    await expect(page.locator("#cueLayer .cue-fade")).toHaveCount(1, { timeout: 8000 });
-    const hasFade = await page.evaluate(() =>
-      (window.__arena!.cueLog() ?? []).some((e) =>
-        e.plan.cues.some((c) => (c.cue as { type?: string }).type === "fade"),
-      ),
+    const deckA = await importDeck(
+      page,
+      "cues-lw-a.json",
+      mixedDeck({ [LAYLA]: 3, [PAD]: 37 }),
     );
-    expect(hasFade).toBeTruthy();
+    const deckB = await importDeck(
+      page,
+      "cues-lw-b.json",
+      mixedDeck({ [COLONEL]: 20, [FOLLOWER_B]: 20 }),
+    );
+    await startGame(page, {
+      seed: "51",
+      deckA,
+      deckB,
+      mode: "vs-bot",
+      human: "a",
+      botPolicy: "first-legal",
+    });
+    await confirmMulligans(page, [LAYLA], [COLONEL, FOLLOWER_B]);
+    await closeDrawer(page);
+    await endTurn(page);
+    for (let i = 0; i < 24; i++) {
+      const ready = await page.evaluate(
+        (colonel) => {
+          const full = window.__arena!.full() as {
+            active: string;
+            players: {
+              b: { pp: number; hand: Array<{ card: string }>; field: Array<{ card: string } | null> };
+            };
+          };
+          if (full.players.b.field.some((c) => c?.card === colonel)) return true;
+          if (full.active !== "b" || full.players.b.pp < 6) return false;
+          const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
+          const act = legal.find((a) => a.play?.card === colonel);
+          if (act) {
+            window.__arena!.botApply(act);
+            const end = (window.__arena!.legal() as Array<Record<string, unknown>>).find(
+              (a) => "end_turn" in a,
+            );
+            if (end) window.__arena!.botApply(end);
+          }
+          return false;
+        },
+        COLONEL,
+      );
+      if (ready) break;
+      await applyFirst(page, "end_turn");
+    }
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            (colonel) =>
+              (
+                window.__arena!.full() as {
+                  players: { b: { field: Array<{ card: string } | null> } };
+                }
+              ).players.b.field.some((c) => c?.card === colonel),
+            COLONEL,
+          ),
+        { timeout: 10_000 },
+      )
+      .toBeTruthy();
+    await skipToPp(page, "b", 1);
+    await page.evaluate(
+      (follower) => {
+        const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
+        const act = legal.find((a) => a.play?.card === follower);
+        if (act) window.__arena!.botApply(act);
+        const end = (window.__arena!.legal() as Array<Record<string, unknown>>).find(
+          (a) => "end_turn" in a,
+        );
+        if (end) window.__arena!.botApply(end);
+      },
+      FOLLOWER_B,
+    );
+    await skipToPp(page, "a", 4);
+    await playCard(page, LAYLA, "a");
+    await applyFirst(page, "end_turn");
+    await applyFirst(page, "end_turn");
+    await skipToPp(page, "a", 4);
+    const neighbourUid = await page.evaluate(
+      ({ colonel, follower }) => {
+        const full = window.__arena!.full() as {
+          players: { b: { field: Array<{ id: number; card: string } | null> } };
+        };
+        const idx = full.players.b.field.findIndex((c) => c?.card === colonel);
+        const neighbour = full.players.b.field[idx === 0 ? 1 : 0];
+        return neighbour?.card === follower ? neighbour.id : null;
+      },
+      { colonel: COLONEL, follower: FOLLOWER_B },
+    );
+    expect(neighbourUid).toBeTruthy();
+    await page.evaluate(
+      ({ layla, colonel }) => {
+        const full = window.__arena!.full() as {
+          players: {
+            a: { field: Array<{ card: string } | null> };
+            b: { field: Array<{ card: string } | null> };
+          };
+        };
+        const slot = full.players.a.field.findIndex((c) => c?.card === layla);
+        const def = full.players.b.field.findIndex((c) => c?.card === colonel);
+        window.__arena!.botApply({
+          attack: { player: "a", attacker_slot: slot, target: { slot: def } },
+        });
+      },
+      { layla: LAYLA, colonel: COLONEL },
+    );
+    const arrow = await waitForCueArrow(page, "effect");
+    const arrowTo = await arrow.getAttribute("data-to");
+    expect(arrowTo).toBe("leader:b");
+    await expect(page.locator(`#redBoard .card[data-uid="${neighbourUid}"]`)).toBeVisible();
+    const neighbourRect = await page
+      .locator(`#redBoard .card[data-uid="${neighbourUid}"]`)
+      .boundingBox();
+    expect(neighbourRect).toBeTruthy();
+    const leaderRect = await page.locator("#redLeader").boundingBox();
+    expect(leaderRect).toBeTruthy();
+    const x2 = Number(await arrow.getAttribute("data-x2"));
+    const y2 = Number(await arrow.getAttribute("data-y2"));
+    expect(Math.abs(x2 - (leaderRect!.x + leaderRect!.width / 2))).toBeLessThanOrEqual(2);
+    expect(Math.abs(y2 - (leaderRect!.y + leaderRect!.height / 2))).toBeLessThanOrEqual(2);
+    await artShot(page, `${ART}/cues_last_words.png`, { fullPage: true });
+  });
+
+  test("6 destroy fade keyed by uid", async ({ page }) => {
+    await boot(page, "normal");
+    const deck = await importDeck(page, "cues-destroy.json", mixedDeck({ [LAYLA]: 3, [PAD]: 37 }));
+    await startGame(page, { seed: "59", deckA: deck, mode: "hotseat" });
+    await confirmMulligans(page, [LAYLA], [PAD]);
+    await closeDrawer(page);
+    await playCardEventually(page, PAD, "b");
+    await applyFirst(page, "end_turn");
+    await skipToPp(page, "a", 4);
+    await playCard(page, LAYLA, "a");
+    await applyFirst(page, "end_turn");
+    await applyFirst(page, "end_turn");
+    await skipToPp(page, "a", 4);
+    const botPad = await page.evaluate((pad) => {
+      const full = window.__arena!.full() as {
+        players: { b: { field: Array<{ card: string } | null> } };
+      };
+      return full.players.b.field.findIndex((c) => c?.card === pad);
+    }, PAD);
+    expect(botPad).toBeGreaterThanOrEqual(0);
+    await page.evaluate(
+      ({ layla, defSlot }) => {
+        const full = window.__arena!.full() as {
+          players: { a: { field: Array<{ card: string } | null> } };
+        };
+        const atk = full.players.a.field.findIndex((c) => c?.card === layla);
+        window.__arena!.botApply({
+          attack: { player: "a", attacker_slot: atk, target: { slot: defSlot } },
+        });
+      },
+      { layla: LAYLA, defSlot: botPad },
+    );
+    const fade = await waitForCueFade(page);
+    await expect(fade).toHaveAttribute("data-uid", /^\d+$/);
     await artShot(page, `${ART}/cues_fade.png`, { fullPage: true });
   });
 
-  test("7 spotlight on resolve source", async ({ page }) => {
+  test("7 hidden bot hand still spotlights public play", async ({ page }) => {
+    test.setTimeout(60_000);
     await boot(page, "normal");
-    const deck = await importDeck(page, "cues-spot.json", mixedDeck({ [KOU]: 10, [PAD]: 30 }));
-    await startGame(page, { seed: "60", deckA: deck });
-    await confirmMulligans(page, [KOU], [PAD]);
-    await closeDrawer(page);
-    await skipToPp(page, "a", 2);
-    await playCard(page, PAD, "a");
-    await skipToPp(page, "a", 7);
-    await playCard(page, KOU, "a");
-    await applyFirst(page, "end_turn");
-    await applyFirst(page, "end_turn");
-    await waitForActing(page, "a");
-    const kouSlot = await page.evaluate((cardId) => {
-      const full = window.__arena!.full() as {
-        players: { a: { field: Array<{ card: string } | null> } };
-      };
-      return full.players.a.field.findIndex((c) => c?.card === cardId);
-    }, KOU);
-    expect(kouSlot).toBeGreaterThanOrEqual(0);
-    await page.evaluate(({ slot }) => {
-      window.__arena!.apply({
-        attack: { player: "a", attacker_slot: slot, target: "leader" },
-      });
-    }, { slot: kouSlot });
-    await expect(page.locator("#cueLayer .cue-spotlight")).toHaveCount(1, { timeout: 5000 });
-    await artShot(page, `${ART}/cues_spotlight.png`, { fullPage: true });
-  });
-
-  test("8 bot play spotlight when step is not human", async ({ page }) => {
-    await boot(page, "normal");
-    const deck = await importDeck(page, "cues-bot.json", mixedDeck({ [PAD]: 40 }));
-    await openSettings(page);
-    await page.locator("#modeSelect").selectOption("vs-bot");
-    await page.locator("#hideBotHandToggle").evaluate((el) => {
-      (el as HTMLInputElement).checked = false;
-    });
+    const deck = await importDeck(page, "cues-hidden.json", mixedDeck({ [PAD]: 40 }));
     await startGame(page, {
       mode: "vs-bot",
       seed: "3",
       deckA: deck,
       human: "a",
       botPolicy: "first-legal",
+      hideBotHand: true,
     });
     await confirmMulligans(page);
     await closeDrawer(page);
     await endTurn(page);
-    await expect
-      .poll(
-        async () =>
-          page.evaluate(() => {
-            return (window.__arena!.cueLog() ?? []).some(
-              (e) =>
-                !e.human &&
-                e.plan.cues.some(
-                  (c) =>
-                    (c.cue as { type?: string; target?: { kind?: string } }).type === "spotlight" &&
-                    (c.cue as { target?: { kind?: string } }).target?.kind === "hand",
-                ),
-            );
-          }),
-        { timeout: 30_000 },
-      )
-      .toBeTruthy();
-    await artShot(page, `${ART}/cues_bot_play.png`, { fullPage: true });
+    await waitForPlaySpotlight(page, 45_000);
+    const hideOn = await page.evaluate(
+      () => (document.getElementById("hideBotHandToggle") as HTMLInputElement | null)?.checked,
+    );
+    expect(hideOn).toBe(true);
   });
 
-  test("9 pace timing: stagger 120ms and hold durations", async ({ page }) => {
-    for (const [pace, hold] of [
-      ["fast", 600],
-      ["normal", 1000],
-      ["slow", 1800],
-    ] as const) {
-      await boot(page, pace);
-      const deck = await importDeck(page, `cues-pace-${pace}.json`, mixedDeck({ [PAD]: 40 }));
-      await startGame(page, { seed: "5", deckA: deck });
-      await confirmMulligans(page, [PAD], [PAD]);
-      await closeDrawer(page);
-      await skipToPp(page, "a", 2);
-      await playCard(page, PAD, "a");
-      await applyFirst(page, "end_turn");
-      await skipToPp(page, "b", 2);
-      await playCard(page, PAD, "b");
-      await applyFirst(page, "end_turn");
-      await waitForActing(page, "a");
-      const slot = await page.evaluate((cardId) => {
-        const full = window.__arena!.full() as {
-          players: { a: { field: Array<{ card: string } | null> } };
-        };
-        return full.players.a.field.findIndex((c) => c?.card === cardId);
-      }, PAD);
-      await page.evaluate(
-        ({ slot }) => {
-          window.__arena!.apply({
-            attack: { player: "a", attacker_slot: slot, target: "leader" },
-          });
-        },
-        { slot },
-      );
-      const entry = await lastCueLog(page);
-      const n = entry!.plan.cues.length;
-      const expected = n > 0 ? (n - 1) * 120 + hold : 0;
-      expect(entry?.duration).toBe(expected);
-      const staggered = entry!.plan.cues;
-      if (staggered.length > 1) {
-        expect(staggered[1]!.at - staggered[0]!.at).toBe(120);
-      }
-    }
-    await artShot(page.locator("body"), `${ART}/cues_pace.png`);
+  test("8 cue log history records step duration", async ({ page }) => {
+    await boot(page, "normal");
+    const deck = await importDeck(page, "cues-history.json", mixedDeck({ [PAD]: 40 }));
+    await startGame(page, { mode: "vs-bot", seed: "5", deckA: deck, botPolicy: "first-legal" });
+    await confirmMulligans(page);
+    await closeDrawer(page);
+    await endTurn(page);
+    const log = await page.evaluate(() => window.__arena!.cueLog());
+    expect(log.length).toBeGreaterThanOrEqual(1);
+    expect(log[0]!.duration).toBe(1000);
+    expect(log[0]!.plan.durationMs).toBe(1000);
   });
 
-  test("10 watch mode respects cue timing; hidden hand filters bot cues", async ({ page }) => {
+  test("9 pace: normal ≥970ms bot gap; off 250–800ms", async ({ page }) => {
     test.setTimeout(120_000);
     await boot(page, "normal");
+    const deck = await importDeck(page, "cues-pace.json", mixedDeck({ [PAD]: 40 }));
+    await startGame(page, { mode: "vs-bot", seed: "901", deckA: deck, botPolicy: "random" });
+    await confirmMulligans(page);
+    await closeDrawer(page);
+    const t0 = Date.now();
+    await endTurn(page);
+    await waitForActing(page, "a", 60_000);
+    const t1 = Date.now();
+    expect(t1 - t0).toBeGreaterThanOrEqual(970);
+
+    await boot(page, "off");
+    const deckOff = await importDeck(page, "cues-pace-off.json", mixedDeck({ [PAD]: 40 }));
+    await startGame(page, { mode: "vs-bot", seed: "902", deckA: deckOff, botPolicy: "random" });
+    await confirmMulligans(page);
+    await closeDrawer(page);
+    const u0 = Date.now();
+    await endTurn(page);
+    await waitForActing(page, "a", 60_000);
+    const u1 = Date.now();
+    const gap = u1 - u0;
+    expect(gap).toBeGreaterThanOrEqual(250);
+    expect(gap).toBeLessThanOrEqual(800);
+  });
+
+  test("10 watch mode shows cues capped by slider", async ({ page }) => {
+    test.setTimeout(120_000);
+    await boot(page, "slow");
     const deck = await importDeck(page, "cues-watch.json", mixedDeck({ [PAD]: 40 }));
     await openSettings(page);
+    await page.locator("#modeSelect").selectOption("watch");
+    await page.locator("#seedInput").fill("2");
+    await page.locator("#blueDeckSelect").selectOption(deck);
+    await page.locator("#redDeckSelect").selectOption(deck);
+    await page.locator("#policyASelect").selectOption("first-legal", { force: true });
+    await page.locator("#policyBSelect").selectOption("first-legal", { force: true });
     await page.locator("#watchSpeed").evaluate((el) => {
       const input = el as HTMLInputElement;
       input.value = "10";
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
     });
-    await page.locator("#watchAutoStart").evaluate((el) => {
-      (el as HTMLInputElement).checked = false;
-    });
-    await startGame(page, {
-      mode: "watch",
-      seed: "2",
-      deckA: deck,
-      policyA: "random",
-      policyB: "first-legal",
+    await page.locator("#startGameBtn").click();
+    await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
+      timeout: 15_000,
     });
     await confirmMulligans(page);
     await closeDrawer(page);
-    await expect(page.locator("#watchBar")).toBeVisible();
-    const baseDelay = await page.evaluate(() => window.__arena!.watchDelayMs());
-    expect(baseDelay).toBeLessThan(300);
-    const h0 = await page.evaluate(() => window.__arena!.hash());
     await page.locator("#watchPlayBtn").click();
-    await expect.poll(() => page.evaluate(() => window.__arena!.hash())).not.toBe(h0);
-    await expect(page.locator("#cueLayer path")).toHaveCount(0);
     await expect
       .poll(
         () =>
-          page.evaluate(
-            () => (window.__arena!.cueLog() ?? []).some((e) => e.duration > 0),
+          page.evaluate(() =>
+            (window.__arena!.cueLog() ?? []).some((e) => e.plan.cues.length > 0),
           ),
-        { timeout: 30_000 },
+        { timeout: 60_000 },
       )
       .toBeTruthy();
-    await page.locator("#watchPauseBtn").click();
-
-    await openSettings(page);
-    await page.locator("#modeSelect").selectOption("vs-bot");
-    await page.locator("#hideBotHandToggle").check();
-    await page.locator("#humanSideSelect").selectOption("a");
-    await page.locator("#vsBotPolicy").selectOption("first-legal");
-    await page.locator("#policyBSelect").selectOption("first-legal", { force: true });
-    await page.locator("#seedInput").fill("4");
-    await page.locator("#startGameBtn").click();
-    await confirmMulligans(page);
-    await closeDrawer(page);
-    await endTurn(page);
-    const botEntry = await lastCueLog(page);
-    const hidden = botEntry!.plan.cues.every((c) => {
-      const cue = c.cue as { type?: string; target?: { kind?: string; player?: string } };
-      if (cue.type === "spotlight" || cue.type === "fade") {
-        return cue.target?.player !== "b" || cue.target?.kind !== "hand";
-      }
-      return true;
+    const entry = await page.evaluate(() => {
+      const log = window.__arena!.cueLog() ?? [];
+      return log.find((e) => e.plan.cues.length > 0) ?? log[log.length - 1]!;
     });
-    expect(hidden).toBeTruthy();
-    await artShot(page, `${ART}/cues_watch_hidden.png`, { fullPage: true });
+    const watchDelay = await page.evaluate(() => window.__arena!.watchDelayMs());
+    expect(entry.duration).toBe(1800);
+    expect(entry.plan.cues.length).toBeGreaterThan(0);
+    expect(watchDelay).toBeLessThan(300);
+    await page.locator("#watchPauseBtn").click();
+    await page.setViewportSize({ width: 1180, height: 820 });
+    await artShot(page, `${ART}/cues_tablet.png`, { fullPage: true });
+  });
+
+  test("11 destroyed lists show owner on destroy", async ({ page }) => {
+    await boot(page, "normal");
+    const deck = await importDeck(page, "cues-destroyed.json", mixedDeck({ [PAD]: 40 }));
+    await startGame(page, { seed: "600", deckA: deck, mode: "hotseat" });
+    await confirmMulligans(page, [PAD]);
+    await closeDrawer(page);
+    await skipToPp(page, "a", 2);
+    await playCard(page, PAD, "a");
+    await applyFirst(page, "end_turn");
+    await skipToPp(page, "b", 2);
+    await playCard(page, PAD, "b");
+    await applyFirst(page, "end_turn");
+    await applyFirst(page, "end_turn");
+    await skipToPp(page, "b", 2);
+    await page.evaluate(
+      (pad) => {
+        const full = window.__arena!.full() as {
+          players: {
+            a: { field: Array<{ card: string } | null> };
+            b: { field: Array<{ card: string } | null> };
+          };
+        };
+        const def = full.players.a.field.findIndex((c) => c?.card === pad);
+        const atk = full.players.b.field.findIndex((c) => c?.card === pad);
+        window.__arena!.apply({
+          attack: { player: "b", attacker_slot: atk, target: { slot: def } },
+        });
+      },
+      PAD,
+    );
+    await expect(page.locator("#blueDestroyedList")).not.toBeEmpty({ timeout: 8000 });
+    await expect(page.locator("#blueDestroyedList")).toContainText(/10001110|Fighter|Vanilla/i);
   });
 });

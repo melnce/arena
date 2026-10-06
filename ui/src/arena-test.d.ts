@@ -8,6 +8,7 @@ declare global {
       canRedo(): boolean;
       botAction(policy: string, seed: string | number | bigint): string;
       apply(action: unknown): unknown;
+      botApply(action: unknown): unknown;
       handInfo(player: string): unknown[];
       boardInfo(player: string): unknown[];
       playerInfo(player: string): {
@@ -63,22 +64,17 @@ declare global {
         grantedBy?: string;
         forms?: Array<{ kind: string; cost: number; printed: string }>;
       };
-      cues(): Array<{
-        t: number;
-        human: boolean;
-        duration: number;
-        plan: {
-          cues: Array<{ at: number; cue: unknown }>;
-          totalMs: number;
-        };
-      }>;
+      cues(): {
+        cues: Array<{ at: number; cue: unknown }>;
+        durationMs: number;
+      } | null;
       cueLog(): Array<{
         t: number;
         human: boolean;
         duration: number;
         plan: {
           cues: Array<{ at: number; cue: unknown }>;
-          totalMs: number;
+          durationMs: number;
         };
       }>;
     };

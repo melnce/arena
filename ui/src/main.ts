@@ -4,11 +4,15 @@ import { catalogIds, decks, loadCatalog, lookupText, parseDeckJson } from "./cat
 import {
   clearCueLog,
   clearCues,
+  cueHoldMs,
   cueLog,
+  cues,
   captureCueRects,
+  captureCueRectsBeforePaint,
   planCues,
   playCuePlan,
   readPace,
+  waitForCues,
   type PlayCuesPace,
 } from "./cues.ts";
 import { captureDamageRects, clearFloaters, reflashDamage, spawnFloaters } from "./fct.ts";
@@ -185,6 +189,15 @@ function exposeArena(): void {
       showCombat(events);
       return events;
     },
+    botApply: (actionJson) => {
+      if (!session) throw new Error("no session");
+      const action = (
+        typeof actionJson === "string" ? JSON.parse(actionJson) : actionJson
+      ) as NeutralAction;
+      const events = applyAction(session, action, { human: false });
+      showCombat(events);
+      return events;
+    },
     handInfo: (player) => (session ? sessionHandInfo(session, player as PlayerId) : []),
     boardInfo: (player) => (session ? sessionBoardInfo(session, player as PlayerId) : []),
     playerInfo: (player) =>
@@ -258,7 +271,7 @@ function exposeArena(): void {
     }),
     catalogIds,
     cardText: (id) => lookupText(id),
-    cues: () => cueLog(),
+    cues: () => cues(),
     cueLog: () => cueLog(),
     mountNamedCounter: (vars) => {
       const host = document.getElementById("blueBoard") ?? document.body;
@@ -398,29 +411,46 @@ function showCombat(events: EngineEvent[]): void {
   const showFloaters = floatingTextOn();
   const damageRects = showFloaters ? captureDamageRects(events) : undefined;
   let cuePlan = null;
-  let cueRects: Map<string, DOMRect> | undefined;
-  if (step) {
-    const before = beforeFullFromStep(step);
-    cuePlan = planCues(
-      { action: step.action, events: step.events, human: step.human, before },
-      fullState(session),
-      session.cfg,
-      session.events,
-    );
-    if (cuePlan.cues.length && pace !== "off") cueRects = captureCueRects(cuePlan);
+  const before = step ? beforeFullFromStep(step) : null;
+  const planStep =
+    step && step.events === events
+      ? { action: step.action, events: step.events, human: step.human, before: before! }
+      : null;
+  if (planStep) {
+    cuePlan = planCues(planStep, fullState(session), session.cfg, session.events);
   }
+  const preCueRects =
+    cuePlan && cuePlan.cues.length && pace !== "off" && before
+      ? captureCueRectsBeforePaint(cuePlan, before)
+      : null;
   pending = null;
   paint();
   if (showFloaters) {
     spawnFloaters(events, true, damageRects);
     reflashDamage(events);
   }
-  if (cuePlan && cueRects && pace !== "off" && session.cfg.mode !== "watch") {
-    playCuePlan(cuePlan, pace, cueRects);
+  if (cuePlan && cuePlan.cues.length && pace !== "off" && before) {
+    const after = fullState(session);
+    const cueRects = captureCueRects(cuePlan, before, after, preCueRects ?? undefined);
+    const watchHold = watchCueHoldMs(pace);
+    const holdPace = watchHold > 0 ? ({ ...cuePlan, durationMs: watchHold } as typeof cuePlan) : null;
+    if (session.cfg.mode === "watch") {
+      if (holdPace) playCuePlan(holdPace, pace, cueRects);
+    } else {
+      playCuePlan(cuePlan, pace, cueRects);
+    }
   }
   if (session.cfg.mode === "vs-bot" && session.game.phase() === "terminal") {
     reportFinishedGame(session);
   }
+}
+
+function watchCueHoldMs(pace: PlayCuesPace): number {
+  if (pace === "off") return 0;
+  const setting = cueHoldMs(pace);
+  const watch = watchDelayMs();
+  const hold = Math.min(setting, watch);
+  return hold < 150 ? 0 : hold;
 }
 
 function toast(msg: string): void {
@@ -770,6 +800,7 @@ async function maybeBots(): Promise<void> {
   const s = session;
   botLoopSession = s;
   try {
+    await waitForCues();
     // vs-bot — one engine action per beat so the human can follow.
     let guard = 0;
     let staleRuns = 0;
@@ -794,10 +825,10 @@ async function maybeBots(): Promise<void> {
             events = botStep(s);
             staleRuns = 0;
             showCombat(events);
-            await botBeatDelay();
+            await botBeatDelay(true);
             continue;
           }
-          await botBeatDelay();
+          await botBeatDelay(true);
           continue;
         }
         staleRuns = 0;
@@ -831,22 +862,18 @@ function watchDelayMs(): number {
   return watchDelayMsFromValue(sl ? Number(sl.value) : 5);
 }
 
-function botBeatDelay(): Promise<void> {
+function botBeatDelay(staleRemote = false): Promise<void> {
+  if (staleRemote) {
+    return new Promise<void>((r) => window.setTimeout(r, 280));
+  }
   const log = cueLog();
   const last = log.length ? log[log.length - 1] : null;
-  const ms = last && last.duration > 0 ? last.duration : 280;
+  const ms = last && last.plan.cues.length > 0 ? last.duration : 280;
   return new Promise<void>((r) => window.setTimeout(r, ms));
 }
 
 function watchStepDelayMs(): number {
-  const base = watchDelayMs();
-  const pace = readPace();
-  if (pace === "off") return base;
-  const log = cueLog();
-  const last = log.length ? log[log.length - 1] : null;
-  const cueHold = last?.duration ?? 0;
-  if (base === 0) return cueHold;
-  return Math.max(base, cueHold);
+  return watchDelayMs();
 }
 
 function formatWatchSpeedLabel(delay: number): string {
