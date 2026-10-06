@@ -221,4 +221,310 @@ mod tests {
         let err = g.bot_action("no-such-policy", 1).unwrap_err();
         assert!(err.contains("unknown policy no-such-policy"), "{err}");
     }
+
+    mod event_json {
+        use super::GameInner;
+        use arena_engine::CardInstance;
+        use arena_engine::ids::PlayerId;
+        use arena_engine::{
+            apply, new_game, Action, CardDb, CardId, First, GameConfig, Phase, State,
+        };
+
+        fn pad_deck(ids: &[&str], n: usize) -> Vec<CardId> {
+            let mut v: Vec<CardId> = ids.iter().map(|s| CardId::parse(s).unwrap()).collect();
+            let pad = CardId::parse("10001110").unwrap();
+            while v.len() < n {
+                v.push(pad);
+            }
+            v
+        }
+
+        fn started(db: &CardDb, seed: u64) -> State {
+            let mut state = new_game(
+                db,
+                GameConfig {
+                    seed,
+                    deck_a: pad_deck(&["10001110"], 40),
+                    deck_b: pad_deck(&["10001110"], 40),
+                    first: First::A,
+                    opening_hands: None,
+                },
+            )
+            .expect("new_game");
+            apply(db, &mut state, Action::MulliganConfirm { swap: [false; 4] }).unwrap();
+            apply(db, &mut state, Action::MulliganConfirm { swap: [false; 4] }).unwrap();
+            assert!(matches!(state.phase, Phase::Main));
+            state
+        }
+
+        fn give_pp(state: &mut State, who: PlayerId, pp: i32, pp_max: i32) {
+            let p = state.player_mut(who);
+            p.pp_max = pp_max;
+            p.pp = pp;
+        }
+
+        fn put_hand(db: &CardDb, state: &mut State, who: PlayerId, id: &str) -> u8 {
+            let card = db.card(CardId::parse(id).unwrap()).unwrap();
+            let inst = CardInstance::from_card(card, state.alloc_id());
+            let pos = state.player(who).hand.len() as u8;
+            state.player_mut(who).hand.push(inst);
+            pos
+        }
+
+        fn put_field(db: &CardDb, state: &mut State, who: PlayerId, id: &str) -> u8 {
+            let card = db.card(CardId::parse(id).unwrap()).unwrap();
+            let mut inst = CardInstance::from_card(card, state.alloc_id());
+            inst.flags.summoning_sick = false;
+            let slot = state.player(who).first_empty_slot().unwrap();
+            state.player_mut(who).field[slot as usize] = Some(inst);
+            slot
+        }
+
+        fn slot_id(st: &State, p: PlayerId, slot: u8) -> u32 {
+            st.field_inst(p, slot).expect("field").id
+        }
+
+        fn parse_events(json: &str) -> Vec<Value> {
+            serde_json::from_str(json).expect("events json")
+        }
+
+        fn event_kind(ev: &Value) -> &str {
+            ev.as_object()
+                .and_then(|o| o.keys().next().map(String::as_str))
+                .expect("event object")
+        }
+
+        fn slot_target_has_id(target: &Value) {
+            assert!(target.get("slot").is_some());
+            assert!(target.get("player").is_some());
+            let id = target.get("id").and_then(|v| v.as_u64()).unwrap_or(0);
+            assert!(id > 0, "slot target missing id: {target}");
+        }
+
+        fn check_event_contract(events: &[Value]) {
+            let mut last_resolve: Option<usize> = None;
+            for (i, ev) in events.iter().enumerate() {
+                let kind = event_kind(ev);
+                if kind == "resolve" {
+                    last_resolve = Some(i);
+                }
+                match kind {
+                    "damage" | "restore" => {
+                        let body = &ev[kind];
+                        let target = &body["target"];
+                        if target.get("slot").is_some() {
+                            assert!(last_resolve.is_some(), "missing resolve before {kind} at {i}");
+                            slot_target_has_id(target);
+                        }
+                    }
+                    "random_pick" => {
+                        assert!(last_resolve.is_some(), "missing resolve before random_pick at {i}");
+                        let target = &ev["random_pick"]["target"];
+                        if target.get("slot").is_some() {
+                            slot_target_has_id(target);
+                        }
+                    }
+                    "destroy" => {
+                        let body = &ev["destroy"];
+                        assert!(body["id"].as_u64().unwrap_or(0) > 0, "destroy without id at {i}");
+                        assert!(body["player"].is_string());
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        use serde_json::Value;
+
+        fn play_json(st: &State, who: PlayerId, hand: u8) -> String {
+            let card = st.player(who).hand[hand as usize].card.as_str();
+            format!(
+                r#"{{"play":{{"player":"{}","hand_pos":{hand},"card":"{card}"}}}}"#,
+                who.as_str()
+            )
+        }
+
+        #[test]
+        fn damage_slot_ids_via_apply() {
+            let db = super::super::bundle::card_db();
+            let mut st = started(db, 43);
+            let me = PlayerId::A;
+            let opp = PlayerId::B;
+            let f0 = put_field(db, &mut st, opp, "10001110");
+            let f1 = put_field(db, &mut st, opp, "10011110");
+            let id0 = slot_id(&st, opp, f0);
+            let id1 = slot_id(&st, opp, f1);
+            give_pp(&mut st, me, 10, 10);
+            st.player_mut(me).hand.clear();
+            let h = put_hand(db, &mut st, me, "10753310");
+            let action = play_json(&st, me, h);
+            let mut game = GameInner::from_state_for_test(st);
+            let events = parse_events(&game.apply(&action).unwrap());
+            check_event_contract(&events);
+            let mut ids = Vec::new();
+            for ev in &events {
+                if event_kind(ev) != "damage" {
+                    continue;
+                }
+                let target = &ev["damage"]["target"];
+                if target.get("slot").is_some() {
+                    slot_target_has_id(target);
+                    ids.push(target["id"].as_u64().unwrap() as u32);
+                }
+            }
+            assert!(ids.len() >= 2, "expected multiple slot damages: {ids:?}");
+            assert!(ids.contains(&id0));
+            assert!(ids.contains(&id1));
+        }
+
+        #[test]
+        fn destroy_player_and_id_via_apply() {
+            let db = super::super::bundle::card_db();
+            let mut st = started(db, 59);
+            let opp = PlayerId::B;
+            let slot = put_field(db, &mut st, opp, "10011210");
+            let uid = slot_id(&st, opp, slot);
+            if let Some(c) = st.field_inst_mut(opp, slot) {
+                c.countdown = Some(1);
+            }
+            let mut game = GameInner::from_state_for_test(st);
+            let events = parse_events(
+                &game
+                    .apply(r#"{"end_turn":{"player":"a"}}"#)
+                    .unwrap(),
+            );
+            check_event_contract(&events);
+            let destroy = events
+                .iter()
+                .find(|e| event_kind(e) == "destroy")
+                .map(|e| &e["destroy"])
+                .expect("countdown destroy");
+            assert_eq!(destroy["player"], "b");
+            assert_eq!(destroy["id"].as_u64().unwrap() as u32, uid);
+        }
+
+        #[test]
+        fn random_pick_target_via_apply() {
+            let db = super::super::bundle::card_db();
+            let mut st = started(db, 44);
+            let me = PlayerId::A;
+            let opp = PlayerId::B;
+            put_field(db, &mut st, me, "10011210");
+            put_field(db, &mut st, opp, "10001110");
+            put_field(db, &mut st, opp, "10011110");
+            give_pp(&mut st, me, 10, 10);
+            st.player_mut(me).hand.clear();
+            let h = put_hand(db, &mut st, me, "90011110");
+            let action = play_json(&st, me, h);
+            let mut game = GameInner::from_state_for_test(st);
+            let events = parse_events(&game.apply(&action).unwrap());
+            check_event_contract(&events);
+            let picks: Vec<&Value> = events
+                .iter()
+                .filter(|e| {
+                    event_kind(e) == "random_pick"
+                        && e["random_pick"]["what"] == "random_target"
+                })
+                .map(|e| &e["random_pick"]["target"])
+                .collect();
+            assert_eq!(picks.len(), 1);
+            slot_target_has_id(picks[0]);
+            let dmg_id = events.iter().find_map(|e| {
+                if event_kind(e) != "damage" {
+                    return None;
+                }
+                let target = &e["damage"]["target"];
+                target.get("id").cloned()
+            });
+            assert_eq!(picks[0]["id"], dmg_id.unwrap());
+        }
+
+        #[test]
+        fn resolve_spell_source_before_damage_via_apply() {
+            let db = super::super::bundle::card_db();
+            let mut st = started(db, 48);
+            let me = PlayerId::A;
+            let opp = PlayerId::B;
+            put_field(db, &mut st, opp, "10001110");
+            give_pp(&mut st, me, 10, 10);
+            st.player_mut(me).hand.clear();
+            let h = put_hand(db, &mut st, me, "10753310");
+            let action = play_json(&st, me, h);
+            let mut game = GameInner::from_state_for_test(st);
+            let events = parse_events(&game.apply(&action).unwrap());
+            check_event_contract(&events);
+            let dmg_idx = events
+                .iter()
+                .position(|e| event_kind(e) == "damage")
+                .expect("damage");
+            let resolve_idx = events
+                .iter()
+                .position(|e| {
+                    event_kind(e) == "resolve"
+                        && e["resolve"]["source"]["spell"]["card"] == "10753310"
+                })
+                .expect("spell resolve");
+            assert!(resolve_idx < dmg_idx);
+        }
+
+        #[test]
+        fn choice_offered_spell_source_via_apply() {
+            let db = super::super::bundle::card_db();
+            let mut st = started(db, 56);
+            let me = PlayerId::A;
+            put_field(db, &mut st, PlayerId::B, "10001110");
+            give_pp(&mut st, me, 10, 10);
+            st.player_mut(me).hand.clear();
+            let h = put_hand(db, &mut st, me, "10671310");
+            let action = play_json(&st, me, h);
+            let mut game = GameInner::from_state_for_test(st);
+            let events = parse_events(&game.apply(&action).unwrap());
+            check_event_contract(&events);
+            let offered = events
+                .iter()
+                .find(|e| event_kind(e) == "choice_offered")
+                .map(|e| &e["choice_offered"])
+                .expect("choice_offered");
+            assert!(offered["source"]["spell"].is_object());
+            assert_eq!(offered["source"]["spell"]["card"], "10671310");
+        }
+
+        #[test]
+        fn restore_slot_ids_via_apply() {
+            let db = super::super::bundle::card_db();
+            let mut st = started(db, 61);
+            let me = PlayerId::A;
+            let ally = put_field(db, &mut st, me, "10001110");
+            let ally_id = slot_id(&st, me, ally);
+            if let Some(c) = st.field_inst_mut(me, ally) {
+                c.defense = 1;
+            }
+            let kou = put_field(db, &mut st, me, "10411110");
+            if let Some(c) = st.field_inst_mut(me, kou) {
+                c.flags.attacks_left = 2;
+                c.flags.attacked_this_turn = false;
+            }
+            st.phase = Phase::Main;
+            st.active = me;
+            let mut game = GameInner::from_state_for_test(st);
+            let events = parse_events(
+                &game
+                    .apply(&format!(
+                        r#"{{"attack":{{"player":"a","attacker_slot":{kou},"target":"leader"}}}}"#
+                    ))
+                    .unwrap(),
+            );
+            check_event_contract(&events);
+            let restores: Vec<&Value> = events
+                .iter()
+                .filter(|e| {
+                    event_kind(e) == "restore"
+                        && e["restore"]["target"].get("slot").is_some()
+                })
+                .map(|e| &e["restore"]["target"])
+                .collect();
+            assert!(!restores.is_empty(), "expected slot restore events");
+            assert!(restores.iter().any(|t| t["id"].as_u64() == Some(ally_id as u64)));
+        }
+    }
 }

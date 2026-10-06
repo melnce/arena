@@ -151,6 +151,14 @@ impl GameInner {
     fn legal_len(&self) -> usize {
         legal_actions_neutral(db(), &self.state).len()
     }
+
+    #[cfg(test)]
+    pub fn from_state_for_test(state: State) -> Self {
+        Self {
+            state,
+            policies: RefCell::new(HashMap::new()),
+        }
+    }
 }
 
 fn parse_player(s: &str) -> Result<PlayerId, String> {
