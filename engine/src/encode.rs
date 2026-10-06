@@ -20,6 +20,9 @@ pub const LEN_V1: usize = 353 + 2 * HIST_WIDTH;
 /// Version-2 feature length (v1 block + 18 zone-bonus + 4 bonus-PP features).
 pub const LEN_V2: usize = LEN_V1 + 22;
 
+/// Version-3 feature length (v2 block + amulet/enter/cemetery extras).
+pub const LEN_V3: usize = LEN_V2 + 394;
+
 /// `own_deck_hist` offset + 2 × histogram (version 1).
 pub const LEN: usize = LEN_V1;
 
@@ -238,12 +241,47 @@ pub const LAYOUT_V2_EXTRA: &[LayoutField] = &[
     },
 ];
 
+/// Version-3-only features appended after the version-2 block.
+pub const LAYOUT_V3_EXTRA: &[LayoutField] = &[
+    LayoutField {
+        name: "own_amulet_soon",
+        offset: LEN_V2,
+        width: FIELD_SIZE,
+    },
+    LayoutField {
+        name: "opp_amulet_soon",
+        offset: LEN_V2 + FIELD_SIZE,
+        width: FIELD_SIZE,
+    },
+    LayoutField {
+        name: "own_entered_hist",
+        offset: LEN_V2 + 2 * FIELD_SIZE,
+        width: HIST_WIDTH,
+    },
+    LayoutField {
+        name: "opp_entered_hist",
+        offset: LEN_V2 + 2 * FIELD_SIZE + HIST_WIDTH,
+        width: HIST_WIDTH,
+    },
+    LayoutField {
+        name: "own_cemetery_hist",
+        offset: LEN_V2 + 2 * FIELD_SIZE + 2 * HIST_WIDTH,
+        width: HIST_WIDTH,
+    },
+    LayoutField {
+        name: "opp_cemetery_hist",
+        offset: LEN_V2 + 2 * FIELD_SIZE + 3 * HIST_WIDTH,
+        width: HIST_WIDTH,
+    },
+];
+
 /// Leaf observation encoding version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum EncodingVersion {
     #[default]
     V1 = 1,
     V2 = 2,
+    V3 = 3,
 }
 
 impl EncodingVersion {
@@ -251,6 +289,7 @@ impl EncodingVersion {
         match n {
             1 => Some(Self::V1),
             2 => Some(Self::V2),
+            3 => Some(Self::V3),
             _ => None,
         }
     }
@@ -259,6 +298,14 @@ impl EncodingVersion {
         match self {
             Self::V1 => LEN_V1,
             Self::V2 => LEN_V2,
+            Self::V3 => LEN_V3,
+        }
+    }
+
+    pub fn ids_len(self) -> usize {
+        match self {
+            Self::V1 | Self::V2 => IDS_LEN,
+            Self::V3 => IDS_LEN_V3,
         }
     }
 
@@ -266,6 +313,7 @@ impl EncodingVersion {
         match self {
             Self::V1 => 1,
             Self::V2 => 2,
+            Self::V3 => 3,
         }
     }
 }
@@ -278,6 +326,9 @@ pub const IDS_OWN_BOARD: usize = 9 + HIST_WIDTH + FIELD_SIZE;
 pub const IDS_OPP_POOL: usize = 9 + HIST_WIDTH + 2 * FIELD_SIZE;
 pub const IDS_OPP_HAND: usize = 9 + 2 * HIST_WIDTH + 2 * FIELD_SIZE;
 pub const IDS_LEN: usize = IDS_OPP_HAND + HAND_LIMIT;
+pub const IDS_OWN_CRESTS: usize = IDS_LEN;
+pub const IDS_OPP_CRESTS: usize = IDS_OWN_CRESTS + CREST_CAP;
+pub const IDS_LEN_V3: usize = IDS_OPP_CRESTS + CREST_CAP;
 
 pub const BOARD_WIDTH: usize = 20;
 
@@ -347,9 +398,12 @@ pub struct Observation {
 impl Observation {
     pub const LEN: usize = LEN;
     pub const LEN_V2: usize = LEN_V2;
+    pub const LEN_V3: usize = LEN_V3;
     pub const LAYOUT: &'static [LayoutField] = LAYOUT;
     pub const LAYOUT_V2_EXTRA: &'static [LayoutField] = LAYOUT_V2_EXTRA;
+    pub const LAYOUT_V3_EXTRA: &'static [LayoutField] = LAYOUT_V3_EXTRA;
     pub const IDS_LEN: usize = IDS_LEN;
+    pub const IDS_LEN_V3: usize = IDS_LEN_V3;
     pub const IDS_OPP_HAND: usize = IDS_OPP_HAND;
 }
 
@@ -382,8 +436,9 @@ pub fn encode_with_vocab(
         vocab
     };
     let feat_len = version.feature_len();
+    let ids_len = version.ids_len();
     let mut feat = vec![0.0f32; feat_len];
-    let mut ids = vec![0u32; IDS_LEN];
+    let mut ids = vec![0u32; ids_len];
     let me = perspective;
     let opp = perspective.opponent();
 
@@ -430,7 +485,7 @@ pub fn encode_with_vocab(
     let own_deck = deck_hist(state.player(me), vocab);
     let opp_pool = match version {
         EncodingVersion::V1 => pool_hist(state.player(opp), vocab),
-        EncodingVersion::V2 => strict_pool_hist(state.player(opp), vocab),
+        EncodingVersion::V2 | EncodingVersion::V3 => strict_pool_hist(state.player(opp), vocab),
     };
     for i in 0..HIST_WIDTH {
         feat[353 + i] = own_deck[i];
@@ -441,8 +496,8 @@ pub fn encode_with_vocab(
         }
     }
 
-    if version == EncodingVersion::V2 {
-        let db = db.expect("encoding v2 requires CardDb for printed stats");
+    if matches!(version, EncodingVersion::V2 | EncodingVersion::V3) {
+        let db = db.expect("encoding v2/v3 requires CardDb for printed stats");
         let deck_bonus = zone_bonuses(&state.player(me).deck, db);
         let hand_bonus = zone_bonuses(&state.player(me).hand, db);
         for (i, v) in deck_bonus.iter().chain(hand_bonus.iter()).enumerate() {
@@ -453,6 +508,27 @@ pub fn encode_with_vocab(
         feat[LEN_V1 + 19] = f32::from(state.player(me).can_use_bonus_late());
         feat[LEN_V1 + 20] = f32::from(state.player(opp).can_use_bonus_early(state.active == opp));
         feat[LEN_V1 + 21] = f32::from(state.player(opp).can_use_bonus_late());
+    }
+
+    if version == EncodingVersion::V3 {
+        write_amulet_soon(&mut feat, LEN_V2, &state.player(me).field);
+        write_amulet_soon(&mut feat, LEN_V2 + FIELD_SIZE, &state.player(opp).field);
+        let own_entered = enter_hist(state.player(me), vocab);
+        let opp_entered = enter_hist(state.player(opp), vocab);
+        let empty_hidden = BTreeSet::new();
+        let own_cem = cemetery_hist(state.player(me), vocab, &empty_hidden);
+        let opp_hidden = opponent_hidden_cemetery(state.player(opp));
+        let opp_cem = cemetery_hist(state.player(opp), vocab, &opp_hidden);
+        let off_enter = LEN_V2 + 2 * FIELD_SIZE;
+        let off_own_cem = off_enter + 2 * HIST_WIDTH;
+        for i in 0..HIST_WIDTH {
+            feat[off_enter + i] = own_entered[i];
+            feat[off_enter + HIST_WIDTH + i] = opp_entered[i];
+            feat[off_own_cem + i] = own_cem[i];
+            feat[off_own_cem + HIST_WIDTH + i] = opp_cem[i];
+        }
+        write_crest_ids(&mut ids, IDS_OWN_CRESTS, state.player(me));
+        write_crest_ids(&mut ids, IDS_OPP_CRESTS, state.player(opp));
     }
 
     Observation {
@@ -590,6 +666,68 @@ fn pool_hist(p: &PlayerState, vocab: &[CardId]) -> [f32; HIST_WIDTH] {
         }
     }
     h
+}
+
+fn write_amulet_soon(feat: &mut [f32], off: usize, field: &[Option<CardInstance>; FIELD_SIZE]) {
+    for slot in 0..FIELD_SIZE {
+        feat[off + slot] = match field[slot].as_ref() {
+            Some(c) if c.kind == CardKind::Amulet => match c.countdown {
+                Some(n) => 1.0 / (n.max(1) as f32),
+                None => 0.0,
+            },
+            _ => 0.0,
+        };
+    }
+}
+
+fn enter_hist(p: &PlayerState, vocab: &[CardId]) -> [f32; HIST_WIDTH] {
+    let mut h = [0.0f32; HIST_WIDTH];
+    for (i, &card) in vocab.iter().enumerate() {
+        if let Some(&n) = p.enter_counts.get(&card) {
+            h[i] = n as f32;
+        }
+    }
+    h
+}
+
+fn opponent_hidden_cemetery(p: &PlayerState) -> BTreeSet<u32> {
+    let mut hidden = BTreeSet::new();
+    for &id in &p.hidden_removals {
+        hidden.insert(id);
+    }
+    for &id in &p.hidden_cemetery_restores {
+        hidden.insert(id);
+    }
+    hidden
+}
+
+fn cemetery_hist(p: &PlayerState, vocab: &[CardId], exclude: &BTreeSet<u32>) -> [f32; HIST_WIDTH] {
+    let mut h = [0.0f32; HIST_WIDTH];
+    for c in &p.cemetery {
+        if exclude.contains(&c.id) {
+            continue;
+        }
+        if let Ok(i) = vocab.binary_search(&c.card) {
+            h[i] += 1.0;
+        }
+    }
+    h
+}
+
+fn crest_card_id(id: &str) -> u32 {
+    let rest = id
+        .strip_prefix("crest:")
+        .or_else(|| id.strip_prefix("faith:"))
+        .unwrap_or("");
+    rest.parse().unwrap_or(0)
+}
+
+fn write_crest_ids(ids: &mut [u32], off: usize, p: &PlayerState) {
+    for i in 0..CREST_CAP {
+        if let Some(c) = p.crests.get(i) {
+            ids[off + i] = crest_card_id(&c.id);
+        }
+    }
 }
 
 fn strict_pool_hist(p: &PlayerState, vocab: &[CardId]) -> [f32; HIST_WIDTH] {

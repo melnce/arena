@@ -12,7 +12,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use crate::encode::{
-    race_features, EncodingVersion, Observation, HIST_WIDTH, LEN, RACE_LEN, RACE_NAMES,
+    race_features, EncodingVersion, Observation, HIST_WIDTH, RACE_LEN, RACE_NAMES,
 };
 
 /// One input zone: a run of id slots, optionally weighted by a histogram.
@@ -110,11 +110,6 @@ impl ValueNet {
             .as_object()
             .ok_or_else(|| format!("{src}: expected object"))?;
 
-        let arch = match req_str(src, obj, "arch")? {
-            "linear" => NetArch::Linear,
-            "mlp" => NetArch::Mlp,
-            other => return Err(format!("{src}: bad field 'arch' ({other})")),
-        };
         let feature_len = req_usize(src, obj, "feature_len")?;
         let encoding = match obj.get("encoding") {
             None | Some(serde_json::Value::Null) => EncodingVersion::V1,
@@ -133,6 +128,14 @@ impl ValueNet {
                 feature_len
             ));
         }
+        let arch = match req_str(src, obj, "arch")? {
+            "linear" => NetArch::Linear,
+            "mlp" => NetArch::Mlp,
+            other => return Err(format!("{src}: bad field 'arch' ({other})")),
+        };
+        if encoding == EncodingVersion::V3 && arch != NetArch::Linear {
+            return Err(format!("{src}: encoding 3 requires arch 'linear'"));
+        }
         let feat_mean = req_f32_vec(src, obj, "feat_mean", feature_len)?;
         let feat_std = req_f32_vec(src, obj, "feat_std", feature_len)?;
         let vocab = req_u32_vec(src, obj, "vocab")?;
@@ -143,8 +146,9 @@ impl ValueNet {
             return Err(format!("{src}: bad field 'vocab' (must be ascending)"));
         }
         let vlen = vocab.len();
-        let zones = req_zones(src, obj)?;
+        let zones = req_zones(src, obj, encoding, feature_len)?;
         let scale = req_f32(src, obj, "scale")?;
+        let n_zones = zones.len();
 
         let race = match obj.get("race") {
             None | Some(serde_json::Value::Null) => None,
@@ -161,7 +165,17 @@ impl ValueNet {
                     .and_then(|x| x.as_object())
                     .ok_or_else(|| format!("{src}: missing field 'linear'"))?;
                 let w = req_f32_vec(src, lin, "w", feature_len)?;
-                let zone_w = req_f32_mat(src, lin, "zone_w", 5, vlen)?;
+                let zone_w = req_f32_mat(src, lin, "zone_w", n_zones, vlen)?;
+                if encoding == EncodingVersion::V3 {
+                    for (row, zone) in zone_w.iter().zip(zones.iter()).skip(5) {
+                        if row.first().copied().unwrap_or(0.0) != 0.0 {
+                            return Err(format!(
+                                "{src}: bad field 'zone_w' (index 0 must be 0 for zone '{}')",
+                                zone.name
+                            ));
+                        }
+                    }
+                }
                 let b = req_f32(src, lin, "b")?;
                 (Some(Linear { w, zone_w, b }), None)
             }
@@ -246,9 +260,12 @@ impl ValueNet {
         for (z, zone) in self.zones.iter().enumerate() {
             let table = &zone_w[z];
             for slot in 0..zone.count {
+                let count = self.slot_count(obs, zone, slot);
+                if zone.hist_offset.is_some() && count == 0.0 {
+                    continue;
+                }
                 let id = obs.ids.get(zone.id_offset + slot).copied().unwrap_or(0);
                 let idx = self.id_index(id);
-                let count = self.slot_count(obs, zone, slot);
                 extra += count * table.get(idx).copied().unwrap_or(0.0);
             }
         }
@@ -511,9 +528,49 @@ fn req_f32_mat(
     Ok(out)
 }
 
+fn expected_zone_specs(
+    encoding: EncodingVersion,
+) -> Vec<(&'static str, usize, usize, Option<usize>)> {
+    let mut out = vec![
+        ("own_hand", 0, 9, None),
+        ("own_deck", 9, HIST_WIDTH, Some(353)),
+        ("opp_board", 105, 5, None),
+        ("own_board", 110, 5, None),
+        ("opp_pool", 115, HIST_WIDTH, Some(449)),
+    ];
+    if encoding == EncodingVersion::V3 {
+        out.extend([
+            ("own_crests", 220, 5, None),
+            ("opp_crests", 225, 5, None),
+            ("own_amulet_soon", 110, 5, Some(567)),
+            ("opp_amulet_soon", 105, 5, Some(572)),
+            ("own_entered", 9, HIST_WIDTH, Some(577)),
+            ("opp_entered", 115, HIST_WIDTH, Some(673)),
+            ("own_cemetery", 9, HIST_WIDTH, Some(769)),
+            ("opp_cemetery", 115, HIST_WIDTH, Some(865)),
+        ]);
+    }
+    out
+}
+
 fn req_zones(
     src: &str,
     obj: &serde_json::Map<String, serde_json::Value>,
+    encoding: EncodingVersion,
+    feature_len: usize,
+) -> Result<Vec<ZoneSpec>, String> {
+    if encoding == EncodingVersion::V3 {
+        req_zones_v3(src, obj, feature_len)
+    } else {
+        req_zones_legacy(src, obj, encoding, feature_len)
+    }
+}
+
+fn req_zones_legacy(
+    src: &str,
+    obj: &serde_json::Map<String, serde_json::Value>,
+    encoding: EncodingVersion,
+    feature_len: usize,
 ) -> Result<Vec<ZoneSpec>, String> {
     let arr = obj
         .get("zones")
@@ -522,6 +579,7 @@ fn req_zones(
     if arr.len() != 5 {
         return Err(format!("{src}: bad field 'zones' (want 5)"));
     }
+    let ids_cap = encoding.ids_len();
     let mut out = Vec::with_capacity(5);
     for z in arr {
         let o = z
@@ -534,11 +592,65 @@ fn req_zones(
             None | Some(serde_json::Value::Null) => None,
             Some(v) => Some(as_usize(v).ok_or_else(|| format!("{src}: bad field 'hist_offset'"))?),
         };
-        if id_offset.saturating_add(count) > Observation::IDS_LEN {
+        if id_offset.saturating_add(count) > ids_cap {
             return Err(format!("{src}: bad field 'zones' (id range)"));
         }
         if let Some(h) = hist_offset {
-            if h.saturating_add(count) > LEN || count > HIST_WIDTH {
+            if h.saturating_add(count) > feature_len || count > HIST_WIDTH {
+                return Err(format!("{src}: bad field 'zones' (hist range)"));
+            }
+        }
+        out.push(ZoneSpec {
+            name,
+            id_offset,
+            count,
+            hist_offset,
+        });
+    }
+    Ok(out)
+}
+
+fn req_zones_v3(
+    src: &str,
+    obj: &serde_json::Map<String, serde_json::Value>,
+    feature_len: usize,
+) -> Result<Vec<ZoneSpec>, String> {
+    let expected = expected_zone_specs(EncodingVersion::V3);
+    let arr = obj
+        .get("zones")
+        .and_then(|v| v.as_array())
+        .ok_or_else(|| format!("{src}: missing field 'zones'"))?;
+    if arr.len() != expected.len() {
+        return Err(format!(
+            "{src}: bad field 'zones' (want {})",
+            expected.len()
+        ));
+    }
+    let ids_cap = EncodingVersion::V3.ids_len();
+    let mut out = Vec::with_capacity(expected.len());
+    for (z, (exp_name, exp_id, exp_count, exp_hist)) in arr.iter().zip(expected.iter()) {
+        let o = z
+            .as_object()
+            .ok_or_else(|| format!("{src}: bad field 'zones'"))?;
+        let name = req_str(src, o, "name")?.to_string();
+        let id_offset = req_usize(src, o, "id_offset")?;
+        let count = req_usize(src, o, "count")?;
+        let hist_offset = match o.get("hist_offset") {
+            None | Some(serde_json::Value::Null) => None,
+            Some(v) => Some(as_usize(v).ok_or_else(|| format!("{src}: bad field 'hist_offset'"))?),
+        };
+        if name != *exp_name
+            || id_offset != *exp_id
+            || count != *exp_count
+            || hist_offset != *exp_hist
+        {
+            return Err(format!("{src}: bad field 'zones'"));
+        }
+        if id_offset.saturating_add(count) > ids_cap {
+            return Err(format!("{src}: bad field 'zones' (id range)"));
+        }
+        if let Some(h) = hist_offset {
+            if h.saturating_add(count) > feature_len || count > HIST_WIDTH {
                 return Err(format!("{src}: bad field 'zones' (hist range)"));
             }
         }

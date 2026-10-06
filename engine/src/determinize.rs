@@ -201,6 +201,7 @@ fn determinize_open_opponent(
     hread: Option<HreadDeal>,
 ) -> OpenStats {
     let opp = perspective.opponent();
+    out.player_mut(opp).hidden_cemetery_restores.clear();
     let (_, additions) = out.player(opp).derive_public_knowledge();
     let mut add_left = counts(&additions);
 
@@ -352,7 +353,10 @@ fn determinize_open_opponent(
     let mut banished_restores: Vec<(usize, CardInstance)> = Vec::new();
     for (inst, (zone, index)) in pool.into_iter().zip(slots.iter()) {
         match zone {
-            HiddenZone::Cemetery => cemetery_restores.push((*index, inst)),
+            HiddenZone::Cemetery => {
+                out.player_mut(opp).hidden_cemetery_restores.push(inst.id);
+                cemetery_restores.push((*index, inst));
+            }
             HiddenZone::Banished => banished_restores.push((*index, inst)),
         }
     }

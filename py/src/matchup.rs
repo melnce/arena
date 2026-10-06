@@ -134,7 +134,7 @@ pub fn py_matchup<'py>(
     game_offset: u32,
 ) -> PyResult<Bound<'py, PyAny>> {
     let encoding = EncodingVersion::parse(encoding)
-        .ok_or_else(|| py_err_msg(format!("encoding must be 1 or 2 (got {encoding})")))?;
+        .ok_or_else(|| py_err_msg(format!("encoding must be 1, 2 or 3 (got {encoding})")))?;
     let pol_a = policy_a.unwrap_or(policy);
     let pol_b = policy_b.unwrap_or(policy);
     AnyPolicy::parse_spec(pol_a).map_err(py_err_msg)?;
@@ -531,7 +531,7 @@ fn write_meta(
             })
         })
         .collect();
-    if encoding == EncodingVersion::V2 {
+    if matches!(encoding, EncodingVersion::V2 | EncodingVersion::V3) {
         for f in Observation::LAYOUT_V2_EXTRA {
             layout.push(serde_json::json!({
                 "name": f.name,
@@ -540,12 +540,22 @@ fn write_meta(
             }));
         }
     }
+    if encoding == EncodingVersion::V3 {
+        for f in Observation::LAYOUT_V3_EXTRA {
+            layout.push(serde_json::json!({
+                "name": f.name,
+                "offset": f.offset,
+                "width": f.width,
+            }));
+        }
+    }
     let feature_len = encoding.feature_len();
+    let ids_len = encoding.ids_len();
     let meta = serde_json::json!({
         "samples": samples,
         "encoding": encoding.as_u8(),
         "feature_len": feature_len,
-        "ids_len": Observation::IDS_LEN,
+        "ids_len": ids_len,
         "aux_columns": AUX_COLUMNS,
         "layout": layout,
         "policy_a": policy_a,
