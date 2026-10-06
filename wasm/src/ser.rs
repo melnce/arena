@@ -1,7 +1,7 @@
 //! JSON for `Event` and the full `State`. Engine types are not all `Serialize`.
 
-use arena_engine::card::{CardId, TriggerTag};
-use arena_engine::event::{Event, EventTarget, ZoneLabel};
+use arena_engine::card::CardId;
+use arena_engine::event::{Event, EventSource, EventTarget, ZoneLabel};
 use arena_engine::ids::PlayerId;
 use arena_engine::state::{
     BoundRef, CardInstance, ChoiceNode, CrestInstance, DestroyedRecord, LeaderMod, PendingKind,
@@ -43,14 +43,15 @@ fn event_json(event: &Event) -> Value {
             target,
             amount,
             lethal,
+            unit,
         } => {
-            json!({"damage": {"target": event_target(target), "amount": amount, "lethal": lethal}})
+            json!({"damage": {"target": event_target(target, unit), "amount": amount, "lethal": lethal}})
         }
-        Event::Restore { target, amount } => {
-            json!({"restore": {"target": event_target(target), "amount": amount}})
+        Event::Restore { target, amount, unit } => {
+            json!({"restore": {"target": event_target(target, unit), "amount": amount}})
         }
-        Event::Destroy { slot, card } => {
-            json!({"destroy": {"slot": slot.0, "card": card.as_str()}})
+        Event::Destroy { slot, card, player, id } => {
+            json!({"destroy": {"slot": slot.0, "card": card.as_str(), "player": pl(*player), "id": id}})
         }
         Event::Banish { card, from } => {
             json!({"banish": {"card": card.as_str(), "from": zone_label(*from)}})
@@ -63,11 +64,17 @@ fn event_json(event: &Event) -> Value {
             super_evolve,
             granted,
         } => json!({"evolve": {"slot": slot.0, "super": super_evolve, "granted": granted}}),
-        Event::TriggerFired { on } => json!({"trigger_fired": {"on": trigger_tag(*on)}}),
-        Event::ChoiceOffered { player, node } => json!({
-            "choice_offered": {"player": pl(*player), "node": choice_node(node)}
+        Event::Resolve { source } => json!({"resolve": {"source": event_source(source)}}),
+        Event::ChoiceOffered { player, node, source } => json!({
+            "choice_offered": {
+                "player": pl(*player),
+                "node": choice_node(node),
+                "source": source.as_ref().map(source_ref),
+            }
         }),
-        Event::RandomPick { what } => json!({"random_pick": {"what": what.as_str()}}),
+        Event::RandomPick { what, target, unit } => json!({
+            "random_pick": {"what": what.as_str(), "target": random_pick_target(target, unit)}
+        }),
         Event::Counter { key, value } => json!({"counter": {"key": key, "value": value}}),
         Event::CrestGain { player, id } => json!({"crest_gain": {"player": pl(*player), "id": id}}),
         Event::CrestRemove { player, id } => {
@@ -382,10 +389,36 @@ fn play_form(form: &PlayForm) -> Value {
     }
 }
 
-fn event_target(t: &EventTarget) -> Value {
+fn event_target(t: &EventTarget, unit: &Option<u32>) -> Value {
     match *t {
         EventTarget::Leader(p) => json!({"leader": pl(p)}),
-        EventTarget::Slot(p, s) => json!({"slot": s.0, "player": pl(p)}),
+        EventTarget::Slot(p, s) => {
+            let mut v = json!({"slot": s.0, "player": pl(p)});
+            if let Some(id) = unit {
+                v["id"] = json!(id);
+            }
+            v
+        }
+    }
+}
+
+fn random_pick_target(t: &TargetOpt, unit: &Option<u32>) -> Value {
+    match t {
+        TargetOpt::Slot { player, slot } => {
+            let mut v = json!({"slot": slot, "player": pl(*player)});
+            if let Some(id) = unit {
+                v["id"] = json!(id);
+            }
+            v
+        }
+        other => target_opt(other),
+    }
+}
+
+fn event_source(s: &EventSource) -> Value {
+    match s {
+        EventSource::Ref(r) => source_ref(r),
+        EventSource::Combat { player, id } => json!({"combat": {"player": pl(*player), "id": id}}),
     }
 }
 
@@ -407,10 +440,6 @@ fn pending_kind(k: PendingKind) -> &'static str {
         PendingKind::DiscardSelect => "discard_select",
         PendingKind::EvolveSelect => "evolve_select",
     }
-}
-
-fn trigger_tag(t: TriggerTag) -> Value {
-    serde_json::to_value(t).unwrap_or(json!(format!("{t:?}")))
 }
 
 fn pl(p: PlayerId) -> &'static str {

@@ -3,8 +3,9 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use arena_engine::card::{CardKind, Class, TriggerTag, VarKey};
-use arena_engine::event::{Event, EventTarget, ZoneLabel};
+use arena_engine::card::{CardKind, Class, VarKey};
+use arena_engine::event::{Event, EventSource, EventTarget, ZoneLabel};
+use arena_engine::state::SourceRef;
 use arena_engine::ids::PlayerId;
 use arena_engine::state::TargetOpt;
 use arena_engine::{
@@ -170,14 +171,15 @@ pub fn event_to_value(ev: &Event) -> Value {
             target,
             amount,
             lethal,
+            unit,
         } => {
-            json!({"damage": {"target": event_target(target), "amount": amount, "lethal": lethal}})
+            json!({"damage": {"target": event_target(target, unit), "amount": amount, "lethal": lethal}})
         }
-        Event::Restore { target, amount } => {
-            json!({"restore": {"target": event_target(target), "amount": amount}})
+        Event::Restore { target, amount, unit } => {
+            json!({"restore": {"target": event_target(target, unit), "amount": amount}})
         }
-        Event::Destroy { slot, card } => {
-            json!({"destroy": {"slot": slot.0, "card": card.as_str()}})
+        Event::Destroy { slot, card, player, id } => {
+            json!({"destroy": {"slot": slot.0, "card": card.as_str(), "player": player_str(*player), "id": id}})
         }
         Event::Banish { card, from } => {
             json!({"banish": {"card": card.as_str(), "from": zone_str(*from)}})
@@ -196,14 +198,17 @@ pub fn event_to_value(ev: &Event) -> Value {
                 "granted": granted,
             }
         }),
-        Event::TriggerFired { on } => json!({"trigger_fired": {"on": trigger_tag_str(*on)}}),
-        Event::ChoiceOffered { player, node } => json!({
+        Event::Resolve { source } => json!({"resolve": {"source": event_source_value(source)}}),
+        Event::ChoiceOffered { player, node, source } => json!({
             "choice_offered": {
                 "player": player_str(*player),
                 "node": choice_node_value(node),
+                "source": source.as_ref().map(source_ref_value),
             }
         }),
-        Event::RandomPick { what } => json!({"random_pick": {"what": what.as_str()}}),
+        Event::RandomPick { what, target, unit } => json!({
+            "random_pick": {"what": what.as_str(), "target": random_pick_target_value(target, unit)}
+        }),
         Event::Counter { key, value } => json!({"counter": {"key": key, "value": value}}),
         Event::CrestGain { player, id } => {
             json!({"crest_gain": {"player": player_str(*player), "id": id}})
@@ -234,10 +239,56 @@ fn play_form_value(form: PlayForm) -> Value {
     }
 }
 
-fn event_target(t: &EventTarget) -> Value {
+fn event_target(t: &EventTarget, unit: &Option<u32>) -> Value {
     match t {
         EventTarget::Leader(p) => json!({"leader": player_str(*p)}),
-        EventTarget::Slot(p, s) => json!({"player": player_str(*p), "slot": s.0}),
+        EventTarget::Slot(p, s) => {
+            let mut v = json!({"player": player_str(*p), "slot": s.0});
+            if let Some(id) = unit {
+                v["id"] = json!(id);
+            }
+            v
+        }
+    }
+}
+
+fn random_pick_target_value(t: &TargetOpt, unit: &Option<u32>) -> Value {
+    match t {
+        TargetOpt::Slot { player, slot } => {
+            let mut v = json!({"slot": slot, "player": player_str(*player)});
+            if let Some(id) = unit {
+                v["id"] = json!(id);
+            }
+            v
+        }
+        other => target_opt_value(other),
+    }
+}
+
+fn event_source_value(s: &EventSource) -> Value {
+    match s {
+        EventSource::Ref(r) => source_ref_value(r),
+        EventSource::Combat { player, id } => {
+            json!({"combat": {"player": player_str(*player), "id": id}})
+        }
+    }
+}
+
+fn source_ref_value(s: &SourceRef) -> Value {
+    match *s {
+        SourceRef::Field { player, id } => {
+            json!({"field": {"player": player_str(player), "id": id}})
+        }
+        SourceRef::Hand { player, id } => {
+            json!({"hand": {"player": player_str(player), "id": id}})
+        }
+        SourceRef::Crest { player, index } => {
+            json!({"crest": {"player": player_str(player), "index": index}})
+        }
+        SourceRef::Spell { player, card } => {
+            json!({"spell": {"player": player_str(player), "card": card.as_str()}})
+        }
+        SourceRef::Leader { player } => json!({"leader": player_str(player)}),
     }
 }
 
@@ -248,31 +299,6 @@ fn zone_str(z: ZoneLabel) -> &'static str {
         ZoneLabel::Deck => "deck",
         ZoneLabel::Cemetery => "cemetery",
         ZoneLabel::Crests => "crests",
-    }
-}
-
-fn trigger_tag_str(t: TriggerTag) -> &'static str {
-    match t {
-        TriggerTag::Fanfare => "fanfare",
-        TriggerTag::LastWords => "lastWords",
-        TriggerTag::Evolve => "evolve",
-        TriggerTag::SuperEvolve => "superEvolve",
-        TriggerTag::AnyEvolve => "anyEvolve",
-        TriggerTag::AnySuperEvolve => "anySuperEvolve",
-        TriggerTag::Strike => "strike",
-        TriggerTag::FollowerStrike => "followerStrike",
-        TriggerTag::Clash => "clash",
-        TriggerTag::Enter => "enter",
-        TriggerTag::Leave => "leave",
-        TriggerTag::Discarded => "discarded",
-        TriggerTag::Invoked => "invoked",
-        TriggerTag::Fused => "fused",
-        TriggerTag::Spellboost => "spellboost",
-        TriggerTag::Engage => "engage",
-        TriggerTag::StartOfTurn => "startOfTurn",
-        TriggerTag::EndOfTurn => "endOfTurn",
-        TriggerTag::When => "when",
-        TriggerTag::Enhance => "enhance",
     }
 }
 
