@@ -63,14 +63,24 @@ declare global {
         grantedBy?: string;
         forms?: Array<{ kind: string; cost: number; printed: string }>;
       };
-      cues(): {
-        cues: Array<{ at: number; cue: unknown }>;
-        totalMs: number;
-      } | null;
-      cueLog(): {
-        cues: Array<{ at: number; cue: unknown }>;
-        totalMs: number;
-      } | null;
+      cues(): Array<{
+        t: number;
+        human: boolean;
+        duration: number;
+        plan: {
+          cues: Array<{ at: number; cue: unknown }>;
+          totalMs: number;
+        };
+      }>;
+      cueLog(): Array<{
+        t: number;
+        human: boolean;
+        duration: number;
+        plan: {
+          cues: Array<{ at: number; cue: unknown }>;
+          totalMs: number;
+        };
+      }>;
     };
   }
 }

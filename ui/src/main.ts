@@ -2,7 +2,7 @@ import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
 import { publicUrl } from "./base.ts";
 import { catalogIds, decks, loadCatalog, lookupText, parseDeckJson } from "./catalog.ts";
 import {
-  botBeatMs,
+  clearCueLog,
   clearCues,
   cueLog,
   captureCueRects,
@@ -399,7 +399,7 @@ function showCombat(events: EngineEvent[]): void {
   const damageRects = showFloaters ? captureDamageRects(events) : undefined;
   let cuePlan = null;
   let cueRects: Map<string, DOMRect> | undefined;
-  if (step && pace !== "off") {
+  if (step) {
     const before = beforeFullFromStep(step);
     cuePlan = planCues(
       { action: step.action, events: step.events, human: step.human, before },
@@ -407,7 +407,7 @@ function showCombat(events: EngineEvent[]): void {
       session.cfg,
       session.events,
     );
-    if (cuePlan.cues.length) cueRects = captureCueRects(cuePlan);
+    if (cuePlan.cues.length && pace !== "off") cueRects = captureCueRects(cuePlan);
   }
   pending = null;
   paint();
@@ -415,7 +415,9 @@ function showCombat(events: EngineEvent[]): void {
     spawnFloaters(events, true, damageRects);
     reflashDamage(events);
   }
-  if (cuePlan && cueRects && pace !== "off") playCuePlan(cuePlan, pace, cueRects);
+  if (cuePlan && cueRects && pace !== "off" && session.cfg.mode !== "watch") {
+    playCuePlan(cuePlan, pace, cueRects);
+  }
   if (session.cfg.mode === "vs-bot" && session.game.phase() === "terminal") {
     reportFinishedGame(session);
   }
@@ -581,6 +583,7 @@ function startSession(cfg: SessionConfig): void {
   localBotThinking = false;
   clearFloaters();
   clearCues();
+  clearCueLog();
   disposeSession(session);
   session = createSession(cfg);
   resetZoneCache();
@@ -829,8 +832,9 @@ function watchDelayMs(): number {
 }
 
 function botBeatDelay(): Promise<void> {
-  const pace = readPace();
-  const ms = botBeatMs(pace);
+  const log = cueLog();
+  const last = log.length ? log[log.length - 1] : null;
+  const ms = last && last.duration > 0 ? last.duration : 280;
   return new Promise<void>((r) => window.setTimeout(r, ms));
 }
 
@@ -838,7 +842,9 @@ function watchStepDelayMs(): number {
   const base = watchDelayMs();
   const pace = readPace();
   if (pace === "off") return base;
-  const cueHold = cueLog()?.totalMs ?? 0;
+  const log = cueLog();
+  const last = log.length ? log[log.length - 1] : null;
+  const cueHold = last?.duration ?? 0;
   if (base === 0) return cueHold;
   return Math.max(base, cueHold);
 }

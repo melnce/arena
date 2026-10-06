@@ -13,11 +13,11 @@ export type PlayCuesPace = "off" | "fast" | "normal" | "slow";
 
 export const CUE_PACE: Record<
   Exclude<PlayCuesPace, "off">,
-  { staggerMs: number; holdMs: number; botBeatMs: number }
+  { staggerMs: number; holdMs: number }
 > = {
-  fast: { staggerMs: 90, holdMs: 550, botBeatMs: 200 },
-  normal: { staggerMs: 130, holdMs: 850, botBeatMs: 280 },
-  slow: { staggerMs: 180, holdMs: 1200, botBeatMs: 420 },
+  fast: { staggerMs: 120, holdMs: 600 },
+  normal: { staggerMs: 120, holdMs: 1000 },
+  slow: { staggerMs: 120, holdMs: 1800 },
 };
 
 export type CueTarget =
@@ -56,11 +56,27 @@ type ParsedSource =
   | { kind: "hand"; player: PlayerId; id: number }
   | { kind: "crest"; player: PlayerId; index: number };
 
-let lastCueLog: CuePlan | null = null;
+export type CueLogEntry = {
+  t: number;
+  human: boolean;
+  duration: number;
+  plan: CuePlan;
+};
+
+let cueLogEntries: CueLogEntry[] = [];
 const cueTimers: number[] = [];
 
-export function cueLog(): CuePlan | null {
-  return lastCueLog;
+export function cueLog(): CueLogEntry[] {
+  return cueLogEntries;
+}
+
+function pushCueLog(step: CueStep, plan: CuePlan): void {
+  cueLogEntries.push({
+    t: Date.now(),
+    human: step.human,
+    duration: plan.totalMs,
+    plan,
+  });
 }
 
 export function cueTargetKey(t: CueTarget): string {
@@ -86,9 +102,8 @@ export function planCues(
   config: SessionConfig,
   _sessionEvents: EngineEvent[],
 ): CuePlan {
-  if (config.mode === "watch") return emptyPlan();
   const pace = readPace();
-  if (pace === "off") return emptyPlan();
+  if (pace === "off") return emptyPlan(step);
 
   const cues: PlannedCue[] = [];
   let at = 0;
@@ -144,7 +159,7 @@ export function planCues(
       continue;
     }
 
-    if ("play" in ev) {
+    if ("play" in ev && !step.human) {
       const p = ev.play as { player: PlayerId; card: string };
       if (!handHidden(config, p.player)) {
         const hand = step.before.players[p.player].hand;
@@ -160,14 +175,15 @@ export function planCues(
   }
 
   const hold = cues.length ? CUE_PACE[pace].holdMs : 0;
-  const plan = { cues, totalMs: at + hold };
-  lastCueLog = plan;
+  const tail = cues.length ? cues[cues.length - 1]!.at : 0;
+  const plan = { cues, totalMs: tail + hold };
+  pushCueLog(step, plan);
   return plan;
 }
 
-function emptyPlan(): CuePlan {
+function emptyPlan(step: CueStep): CuePlan {
   const plan = { cues: [], totalMs: 0 };
-  lastCueLog = plan;
+  pushCueLog(step, plan);
   return plan;
 }
 
@@ -381,11 +397,6 @@ export function readPace(): PlayCuesPace {
   return "normal";
 }
 
-export function botBeatMs(pace: PlayCuesPace): number {
-  if (pace === "off") return CUE_PACE.normal.botBeatMs;
-  return CUE_PACE[pace].botBeatMs;
-}
-
 export function collectPlanTargetKeys(plan: CuePlan): Set<string> {
   const keys = new Set<string>();
   for (const { cue } of plan.cues) {
@@ -444,6 +455,10 @@ function centerOf(rect: DOMRect): { x: number; y: number } {
   return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }
 
+export function clearCueLog(): void {
+  cueLogEntries = [];
+}
+
 export function clearCues(): void {
   for (const t of cueTimers) window.clearTimeout(t);
   cueTimers.length = 0;
@@ -454,7 +469,6 @@ export function clearCues(): void {
 export function playCuePlan(plan: CuePlan, pace: PlayCuesPace, rects: Map<string, DOMRect>): void {
   clearCues();
   if (pace === "off" || !plan.cues.length) return;
-  lastCueLog = plan;
   const layer = byId("cueLayer");
   if (!layer) return;
 
@@ -506,9 +520,14 @@ function renderArrow(svg: SVGSVGElement, cue: CueArrow, rects: Map<string, DOMRe
   const b = centerOf(toRect);
   const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
   path.setAttribute("class", `cue-arrow cue-arrow--${cue.kind}`);
-  path.dataset.cueKind = cue.kind;
-  path.dataset.cueFrom = cueTargetKey(cue.from);
-  path.dataset.cueTo = cueTargetKey(cue.to);
+  path.dataset.why = cue.kind;
+  path.dataset.style = cue.kind;
+  path.dataset.from = cueTargetKey(cue.from);
+  path.dataset.to = cueTargetKey(cue.to);
+  path.dataset.x1 = String(Math.round(a.x));
+  path.dataset.y1 = String(Math.round(a.y));
+  path.dataset.x2 = String(Math.round(b.x));
+  path.dataset.y2 = String(Math.round(b.y));
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const cx = a.x + dx * 0.35;
