@@ -17,17 +17,6 @@ fn slot_id(st: &arena_engine::State, p: PlayerId, slot: u8) -> u32 {
 #[test]
 fn compaction_destroy_same_slot_different_ids() {
     let db = load_db();
-    let mut st = started(&db, 41);
-    let opp = PlayerId::B;
-    let a0 = put_field(&db, &mut st, opp, "10011210");
-    let a1 = put_field(&db, &mut st, opp, "10011210");
-    if let Some(c) = st.field_inst_mut(opp, a0) {
-        c.countdown = Some(1);
-    }
-    if let Some(c) = st.field_inst_mut(opp, a1) {
-        c.countdown = Some(1);
-    }
-    // Turn-boundary destroys come from end_turn → B's start tick.
     let mut st = started(&db, 42);
     let opp = PlayerId::B;
     let a0 = put_field(&db, &mut st, opp, "10011210");
@@ -142,7 +131,7 @@ fn random_pick_before_damage() {
 #[test]
 fn random_distinct_picks() {
     let db = load_db();
-    let mut st = started(&db, 45);
+    let mut st = started(&db, 441);
     let me = PlayerId::A;
     let opp = PlayerId::B;
     put_field(&db, &mut st, opp, "88001110");
@@ -164,38 +153,100 @@ fn random_distinct_picks() {
 }
 
 #[test]
-fn random_pick_leader() {
+fn highest_unique_emits_no_random_pick() {
+    let db = load_db();
+    let mut st = started(&db, 45);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, opp, "88001110");
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    let h = put_hand(&db, &mut st, me, "10503310");
+    let events = apply(&db, &mut st, Action::Play { hand: h }).expect("unique highest destroy");
+    let picks = events
+        .iter()
+        .filter(|e| matches!(e, Event::RandomPick { .. }))
+        .count();
+    assert_eq!(
+        picks, 0,
+        "single highest candidate must not emit random_pick"
+    );
+    assert!(
+        events.iter().any(|e| matches!(e, Event::Destroy { .. })),
+        "destroy still happens"
+    );
+}
+
+#[test]
+fn highest_tie_emits_one_random_pick() {
     let db = load_db();
     let mut st = started(&db, 46);
     let me = PlayerId::A;
     let opp = PlayerId::B;
+    put_field(&db, &mut st, opp, "88001200");
+    put_field(&db, &mut st, opp, "88001200");
     give_pp(&mut st, me, 10, 10);
     st.player_mut(me).hand.clear();
-    st.player_mut(me).shadows = 6;
-    let h = put_hand(&db, &mut st, me, "10753310");
-    let events = apply(&db, &mut st, Action::Play { hand: h }).expect("necromancy leader hit");
-    assert!(
-        events.iter().any(|e| matches!(
-            e,
-            Event::RandomPick {
-                target: arena_engine::TargetOpt::Leader { player },
-                ..
-            } if *player == opp
-        )) || events.iter().any(|e| matches!(
-            e,
-            Event::Damage {
-                target: EventTarget::Leader(p),
-                ..
-            } if *p == opp
-        )),
-        "leader random or direct damage"
+    let h = put_hand(&db, &mut st, me, "10503310");
+    let events = apply(&db, &mut st, Action::Play { hand: h }).expect("highest tie destroy");
+    let picks: Vec<_> = events
+        .iter()
+        .filter_map(|e| match e {
+            Event::RandomPick { what, .. } if *what == PickWhat::RandomTarget => Some(()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        picks.len(),
+        1,
+        "tied highest must emit exactly one random_pick"
     );
+}
+
+#[test]
+fn random_pick_leader() {
+    let db = load_db();
+    let mut st = started(&db, 47);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, opp, "88001200");
+    let slot = put_field(&db, &mut st, me, "10524110");
+    if let Some(c) = st.field_inst_mut(me, slot) {
+        c.evolved = true;
+    }
+    st.phase = Phase::Main;
+    st.active = me;
+    let scripted: Vec<Pick> = (0..8)
+        .map(|_| Pick {
+            what: PickWhat::RandomTarget,
+            among: None,
+            chose: PickChose::Id("leader:b".into()),
+        })
+        .collect();
+    st.rng = GameRng::scripted(scripted, 47);
+    let events = apply(&db, &mut st, Action::EndTurn).expect("oluon evolved eot");
+    let pick = events.iter().find_map(|e| match e {
+        Event::RandomPick {
+            target: arena_engine::TargetOpt::Leader { player },
+            ..
+        } => Some(*player),
+        _ => None,
+    });
+    assert_eq!(pick, Some(opp), "random_pick must target enemy leader");
+    let leader_dmg = events.iter().find_map(|e| match e {
+        Event::Damage {
+            target: EventTarget::Leader(p),
+            ..
+        } => Some(*p),
+        _ => None,
+    });
+    assert_eq!(leader_dmg, Some(opp), "next damage must hit that leader");
 }
 
 #[test]
 fn scripted_rng_still_emits_random_pick() {
     let db = load_db();
-    let mut st = started(&db, 47);
+    let mut st = started(&db, 48);
     let me = PlayerId::A;
     let opp = PlayerId::B;
     put_field(&db, &mut st, me, "10011210");
@@ -224,7 +275,7 @@ fn scripted_rng_still_emits_random_pick() {
 #[test]
 fn resolve_spell_before_damage() {
     let db = load_db();
-    let mut st = started(&db, 48);
+    let mut st = started(&db, 481);
     let me = PlayerId::A;
     let opp = PlayerId::B;
     put_field(&db, &mut st, opp, "88001110");
@@ -271,6 +322,51 @@ fn resolve_field_on_fanfare_play() {
         )
     });
     assert!(resolve_idx.is_some(), "field resolve for fanfare");
+}
+
+#[test]
+fn last_words_restore_follows_spell_resolve() {
+    let db = load_db();
+    let mut st = started(&db, 51);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    let col = put_field(&db, &mut st, opp, "10952110");
+    let atk = put_field(&db, &mut st, me, "10872110");
+    st.phase = Phase::Main;
+    st.active = me;
+    let events = apply(
+        &db,
+        &mut st,
+        Action::Attack {
+            attacker: arena_engine::Slot(atk),
+            target: arena_engine::AttackTarget::Slot(arena_engine::Slot(col)),
+        },
+    )
+    .expect("kill colonel");
+    let spell = events.iter().position(|e| {
+        matches!(
+            e,
+            Event::Resolve {
+                source: EventSource::Ref(SourceRef::Spell { player, card }),
+                ..
+            } if *player == opp && card.as_str() == "10952110"
+        )
+    });
+    let restore = events.iter().position(|e| {
+        matches!(
+            e,
+            Event::Restore {
+                target: EventTarget::Leader(p),
+                ..
+            } if *p == opp
+        )
+    });
+    assert!(spell.is_some(), "spell resolve");
+    assert!(restore.is_some(), "restore to bot leader");
+    assert!(
+        spell.unwrap() < restore.unwrap(),
+        "spell resolve must precede restore for cue arrows"
+    );
 }
 
 #[test]
@@ -466,9 +562,12 @@ fn resumed_choose_has_resolve_first() {
 #[test]
 fn choice_offered_sources() {
     let db = load_db();
-    let mut st = started(&db, 56);
     let me = PlayerId::A;
-    put_field(&db, &mut st, PlayerId::B, "88001110");
+    let opp = PlayerId::B;
+
+    // Play-time spell pick.
+    let mut st = started(&db, 56);
+    put_field(&db, &mut st, opp, "88001110");
     give_pp(&mut st, me, 10, 10);
     st.player_mut(me).hand.clear();
     let h = put_hand(&db, &mut st, me, "88001300");
@@ -481,6 +580,69 @@ fn choice_offered_sources() {
         })
         .expect("choice_offered");
     assert!(matches!(offered, SourceRef::Spell { .. }));
+
+    // Fanfare target choice on the played unit.
+    let mut st = started(&db, 561);
+    put_field(&db, &mut st, opp, "88001110");
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    let h = put_hand(&db, &mut st, me, "88001210");
+    let uid = st.player(me).hand[h as usize].id;
+    let events = apply(&db, &mut st, Action::Play { hand: h }).expect("fanfare pick follower");
+    let offered = events
+        .iter()
+        .find_map(|e| match e {
+            Event::ChoiceOffered { source, .. } => *source,
+            _ => None,
+        })
+        .expect("fanfare choice_offered");
+    assert!(matches!(
+        offered,
+        SourceRef::Field { player, id } if player == me && id == uid
+    ));
+
+    // Evolve ability target choice on the evolving unit.
+    let mut st = started(&db, 562);
+    put_field(&db, &mut st, opp, "88001110");
+    let slot = put_field(&db, &mut st, me, "10622110");
+    let uid = slot_id(&st, me, slot);
+    skip_to_player_turn(&db, &mut st, me, 5);
+    st.player_mut(me).ep = 2;
+    let events = apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: arena_engine::Slot(slot),
+            super_evolve: false,
+        },
+    )
+    .expect("evolve pick");
+    let offered = events
+        .iter()
+        .find_map(|e| match e {
+            Event::ChoiceOffered { source, .. } => *source,
+            _ => None,
+        })
+        .expect("evolve choice_offered");
+    assert!(matches!(
+        offered,
+        SourceRef::Field { player, id } if player == me && id == uid
+    ));
+
+    // Fuse partners: no source.
+    let mut st = started(&db, 563);
+    st.player_mut(me).hand.clear();
+    put_hand(&db, &mut st, me, "90071210");
+    put_hand(&db, &mut st, me, "90071220");
+    let events = apply(&db, &mut st, Action::Fuse { host: 0 }).expect("fuse partners");
+    let offered = events
+        .iter()
+        .find_map(|e| match e {
+            Event::ChoiceOffered { source, .. } => Some(source.is_none()),
+            _ => None,
+        })
+        .expect("fuse choice_offered");
+    assert!(offered);
 }
 
 #[test]
@@ -543,55 +705,130 @@ fn check_event_contract(events: &[Event]) -> Option<String> {
     None
 }
 
-#[test]
-fn property_resolve_and_ids_over_soak() {
-    let n: u32 = std::env::var("ARENA_EVENT_SOAK_GAMES")
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(300);
-    let db = load_db();
-    let deck = pad_deck(&["88001110"], 40);
-    let mut policy = policy_rng(99);
-    for g in 0..n {
-        let seed = 10_000 + g as u64;
-        let mut state = new_game(
-            &db,
-            GameConfig {
-                seed,
-                deck_a: deck.clone(),
-                deck_b: deck.clone(),
-                first: First::A,
-                opening_hands: None,
-            },
-        )
-        .expect("new_game");
-        apply(
-            &db,
-            &mut state,
-            Action::MulliganConfirm { swap: [false; 4] },
-        )
-        .unwrap();
-        apply(
-            &db,
-            &mut state,
-            Action::MulliganConfirm { swap: [false; 4] },
-        )
-        .unwrap();
-        let mut actions = 0u32;
-        while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) && actions < 500 {
-            let legal = legal_actions(&db, &state);
-            if legal.is_empty() {
-                break;
-            }
-            let idx = policy.gen_range(legal.len() as u32) as usize;
-            let act = legal[idx].clone();
-            let events = apply(&db, &mut state, act).unwrap_or_else(|e: Illegal| {
-                panic!("game {g} action failed: {e:?}");
-            });
-            if let Some(msg) = check_event_contract(&events) {
-                panic!("game {g} step {actions}: {msg}");
-            }
-            actions += 1;
+fn meta_stems() -> Vec<String> {
+    let text =
+        std::fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS.json");
+    let pools: serde_json::Value = serde_json::from_str(&text).expect("pools json");
+    pools["meta"]
+        .as_array()
+        .expect("meta pool")
+        .iter()
+        .map(|v| v.as_str().expect("deck stem").to_string())
+        .collect()
+}
+
+#[derive(Default, Debug)]
+struct EventSoakCounts {
+    random_pick: u64,
+    ability_damage: u64,
+    restore: u64,
+    resolve: u64,
+    destroy: u64,
+}
+
+fn tally_step_events(events: &[Event], counts: &mut EventSoakCounts) -> Option<String> {
+    if let Some(msg) = check_event_contract(events) {
+        return Some(msg);
+    }
+    let mut last_resolve_combat = false;
+    for e in events {
+        if let Event::Resolve { source, .. } = e {
+            counts.resolve += 1;
+            last_resolve_combat = matches!(source, EventSource::Combat { .. });
+            continue;
+        }
+        match e {
+            Event::RandomPick { .. } => counts.random_pick += 1,
+            Event::Restore { .. } => counts.restore += 1,
+            Event::Destroy { .. } => counts.destroy += 1,
+            Event::Damage { .. } if !last_resolve_combat => counts.ability_damage += 1,
+            _ => {}
         }
     }
+    None
+}
+
+#[test]
+fn property_resolve_and_ids_over_soak() {
+    let per_pair: u32 = std::env::var("ARENA_EVENT_SOAK_GAMES")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(2);
+    let db = load_db();
+    let stems = meta_stems();
+    assert!(!stems.is_empty());
+    let decks: Vec<Vec<arena_engine::CardId>> = stems
+        .iter()
+        .map(|s| load_deck_file(repo_root().join(format!("oracle/decks/{s}.json"))))
+        .collect();
+    let mut counts = EventSoakCounts::default();
+    let mut games = 0u32;
+    for (i, da) in decks.iter().enumerate() {
+        for (j, dbk) in decks.iter().enumerate() {
+            if i == j {
+                continue;
+            }
+            for g in 0..per_pair {
+                let seed = 90_000 + (i as u64) * 1_000 + (j as u64) * 10 + u64::from(g);
+                let mut state = new_game(
+                    &db,
+                    GameConfig {
+                        seed,
+                        deck_a: da.clone(),
+                        deck_b: dbk.clone(),
+                        first: First::A,
+                        opening_hands: None,
+                    },
+                )
+                .expect("new_game");
+                let mut policy = policy_rng(seed);
+                apply(
+                    &db,
+                    &mut state,
+                    Action::MulliganConfirm { swap: [false; 4] },
+                )
+                .unwrap();
+                apply(
+                    &db,
+                    &mut state,
+                    Action::MulliganConfirm { swap: [false; 4] },
+                )
+                .unwrap();
+                let mut actions = 0u32;
+                while state.winner.is_none()
+                    && !matches!(state.phase, Phase::Terminal)
+                    && actions < 500
+                {
+                    let legal = legal_actions(&db, &state);
+                    if legal.is_empty() {
+                        break;
+                    }
+                    let idx = policy.gen_range(legal.len() as u32) as usize;
+                    let act = legal[idx].clone();
+                    let events = apply(&db, &mut state, act).unwrap_or_else(|e: Illegal| {
+                        panic!("game {games} action failed: {e:?}");
+                    });
+                    if let Some(msg) = tally_step_events(&events, &mut counts) {
+                        panic!("game {games} step {actions}: {msg}");
+                    }
+                    actions += 1;
+                }
+                games += 1;
+            }
+        }
+    }
+    eprintln!(
+        "event_soak {games} games: random_pick={} ability_damage={} restore={} resolve={} destroy={}",
+        counts.random_pick,
+        counts.ability_damage,
+        counts.restore,
+        counts.resolve,
+        counts.destroy
+    );
+    assert!(
+        games >= 300,
+        "expected >=300 meta deck-pair games, got {games}"
+    );
+    assert!(counts.random_pick >= 100, "random_pick count too low");
+    assert!(counts.ability_damage >= 100, "ability damage count too low");
 }

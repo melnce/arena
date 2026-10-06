@@ -7749,6 +7749,7 @@ fn resolve_select_rolling(
                 n as usize,
                 p.pick == PoolPick::RandomDistinct,
                 events,
+                true,
             )
         }
         Selector::Pool(p) if p.pick == PoolPick::Highest || p.pick == PoolPick::Lowest => {
@@ -9104,7 +9105,8 @@ fn pick_extremum(
     if !highest {
         return Ok(tied);
     }
-    random_pool_apply(state, tied, 1, false, events)
+    let emit_pick = tied.len() >= 2;
+    random_pool_apply(state, tied, 1, false, events, emit_pick)
 }
 
 fn board_card_survives(c: &CardInstance) -> bool {
@@ -9163,6 +9165,7 @@ fn random_pool_apply(
     n: usize,
     distinct: bool,
     events: &mut Vec<Event>,
+    emit_picks: bool,
 ) -> Result<Vec<TargetOpt>, Illegal> {
     if cands.is_empty() {
         return Ok(Vec::new());
@@ -9253,7 +9256,9 @@ fn random_pool_apply(
         } else {
             PickWhat::RandomTarget
         };
-        emit_random_pick(events, what, &picked, state);
+        if emit_picks {
+            emit_random_pick(events, what, &picked, state);
+        }
         out.push(picked);
     }
     Ok(out)
