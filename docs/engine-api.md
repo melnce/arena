@@ -447,7 +447,10 @@ spending PP get `delta`; otherwise `1`. Defaults: `eps_fa=0.15`, `eps_s=0.5`,
 at each turn end; `CardInstance.hand_since` is the owner's `turn_ends.len()`
 when the card entered the hand. Both are snapshot-neutral (not in
 `CanonicalState`, `hash`, or `search_key`). When `hread` is on it takes
-precedence over `deal=block`.
+precedence over `deal=block`: no shared `deal_seed`, no block shuffle or
+tail reshuffle, and explain omits `deal_seed` even if `deal=block` is set.
+When `hread` is on but there are no unknown hand cards (`h = 0`), the
+`hread=off` shuffle path runs so deck order still varies per root seed.
 
 ## Policy (M5)
 

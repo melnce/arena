@@ -1005,7 +1005,7 @@ impl Policy for H0 {
         let mut nodes = 0u32;
         let k = self.k();
         let (world_seeds, wbase_used, wbase_reused) = self.root_world_seeds(state, me, k, rng);
-        let block = self.deal == Deal::Block;
+        let block = self.deal == Deal::Block && self.hread.is_none();
         let deal_seed = if block {
             if self.turn_stable_worlds() {
                 let base = wbase_used.expect("turn-stable worlds require a base");

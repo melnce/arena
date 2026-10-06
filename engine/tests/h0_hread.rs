@@ -17,6 +17,10 @@ fn parse_h0(spec: &str) -> H0 {
     }
 }
 
+fn zone_ids(items: &[CardInstance]) -> Vec<u32> {
+    items.iter().map(|c| c.id).collect()
+}
+
 #[test]
 fn hread_history_turn_ends_and_hand_since() {
     let db = load_db();
@@ -36,19 +40,30 @@ fn hread_history_turn_ends_and_hand_since() {
     assert_eq!(st.player(PlayerId::A).turn_ends[0].pp_max, 5);
     assert!(!st.player(PlayerId::A).turn_ends[0].board_full);
 
+    let a_hand_before_b_end = st.player(PlayerId::A).hand.len();
     apply(&db, &mut st, Action::EndTurn).expect("B end");
     assert_eq!(st.player(PlayerId::B).turn_ends.len(), 1);
     assert!(st.player(PlayerId::B).turn_ends[0].unspent > 0);
     assert!(st.player(PlayerId::B).turn_ends[0].pp_max >= 4);
+    assert_eq!(
+        st.player(PlayerId::A).hand.len(),
+        a_hand_before_b_end + 1,
+        "A draws at the start of their turn after B ends"
+    );
+    assert_eq!(
+        st.player(PlayerId::A).hand.last().unwrap().hand_since,
+        1,
+        "draw after B's first End Turn"
+    );
 
-    let hand_before = st.player(PlayerId::A).hand.len();
     apply(&db, &mut st, Action::EndTurn).expect("A end 2");
     assert_eq!(st.player(PlayerId::A).turn_ends.len(), 2);
-    let hand_after = st.player(PlayerId::A).hand.len();
-    if hand_after > hand_before {
-        let drawn = &st.player(PlayerId::A).hand[hand_after - 1];
-        assert_eq!(drawn.hand_since, 2);
-    }
+    apply(&db, &mut st, Action::EndTurn).expect("B end 2");
+    assert_eq!(
+        st.player(PlayerId::A).hand.last().unwrap().hand_since,
+        2,
+        "draw after two more End Turns"
+    );
 }
 
 #[test]
@@ -118,6 +133,63 @@ fn hread_weight_fixture(db: &CardDb) -> (State, PlayerId) {
     (st, me)
 }
 
+fn hread_hand_since_fixture(db: &CardDb) -> (State, PlayerId) {
+    let mut st = started(db, 456);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    clear_hand(&mut st, opp);
+    st.player_mut(opp).deck.clear();
+    st.player_mut(opp).hidden_removals.clear();
+    st.player_mut(opp).hidden_removal_cards.clear();
+    st.player_mut(opp).public_hand_additions.clear();
+
+    let cheap = db.card(cid("10061120")).expect("cheap");
+    let pricey = db.card(cid("10954120")).expect("pricey");
+
+    let mut slot_inst = CardInstance::from_card(cheap, st.alloc_id());
+    slot_inst.hand_since = 2;
+    st.player_mut(opp).hand.push(slot_inst);
+
+    st.player_mut(opp).turn_ends = vec![
+        TurnEnd {
+            unspent: 5,
+            pp_max: 5,
+            board_full: false,
+        },
+        TurnEnd {
+            unspent: 5,
+            pp_max: 5,
+            board_full: false,
+        },
+        TurnEnd {
+            unspent: 5,
+            pp_max: 5,
+            board_full: false,
+        },
+    ];
+
+    let pricey_id = st.alloc_id();
+    st.player_mut(opp)
+        .deck
+        .push(CardInstance::from_card(pricey, pricey_id));
+    st.active = me;
+    (st, me)
+}
+
+fn hread_empty_hand_fixture(db: &CardDb) -> (State, PlayerId) {
+    let mut st = started(db, 789);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    clear_hand(&mut st, opp);
+    st.player_mut(opp).hidden_removals.clear();
+    st.player_mut(opp).hidden_removal_cards.clear();
+    st.player_mut(opp).public_hand_additions.clear();
+    assert!(st.player(opp).hand.is_empty());
+    assert!(st.player(opp).deck.len() >= 3);
+    st.active = me;
+    (st, me)
+}
+
 #[test]
 fn hread_weights_favor_expensive_card() {
     let db = load_db();
@@ -160,6 +232,62 @@ fn hread_weights_favor_expensive_card() {
 }
 
 #[test]
+fn hread_dealt_card_carries_slot_hand_since() {
+    let db = load_db();
+    let (st, me) = hread_hand_since_fixture(&db);
+    let hread = HreadDeal {
+        eps_fa: HREAD_EPS_FA,
+        eps_s: HREAD_EPS_S,
+        delta: HREAD_DELTA,
+        m: 256,
+    };
+
+    for seed in [11u64, 22, 33] {
+        let on = determinize_block(&st, me, seed, 0, 0, Info::Open, None, false, Some(hread));
+        assert_eq!(on.player(me.opponent()).hand[0].hand_since, 2);
+        let off = determinize_block(&st, me, seed, 0, 0, Info::Open, None, false, None);
+        assert_eq!(off.player(me.opponent()).hand[0].hand_since, 2);
+    }
+}
+
+#[test]
+fn hread_empty_hand_matches_off_and_shuffles_deck() {
+    let db = load_db();
+    let (st, me) = hread_empty_hand_fixture(&db);
+    let hread = HreadDeal {
+        eps_fa: HREAD_EPS_FA,
+        eps_s: HREAD_EPS_S,
+        delta: HREAD_DELTA,
+        m: 256,
+    };
+
+    for seed in [11u64, 22, 33] {
+        let off = determinize_block(&st, me, seed, 0, 0, Info::Open, None, false, None);
+        let on = determinize_block(&st, me, seed, 0, 0, Info::Open, None, false, Some(hread));
+        assert_eq!(
+            zone_ids(&off.player(me.opponent()).hand),
+            zone_ids(&on.player(me.opponent()).hand)
+        );
+        assert_eq!(
+            zone_ids(&off.player(me.opponent()).deck),
+            zone_ids(&on.player(me.opponent()).deck)
+        );
+    }
+
+    let d11 = zone_ids(
+        &determinize_block(&st, me, 11, 0, 0, Info::Open, None, false, Some(hread))
+            .player(me.opponent())
+            .deck,
+    );
+    let d22 = zone_ids(
+        &determinize_block(&st, me, 22, 0, 0, Info::Open, None, false, Some(hread))
+            .player(me.opponent())
+            .deck,
+    );
+    assert_ne!(d11, d22, "different root seeds must shuffle the deck");
+}
+
+#[test]
 fn hread_deterministic_for_seed() {
     let db = load_db();
     let (st, me) = hread_weight_fixture(&db);
@@ -186,4 +314,24 @@ fn hread_spec_round_trip() {
     let h2 = parse_h0(&spec);
     assert_eq!(h2.hread, Some((HREAD_EPS_FA, HREAD_EPS_S, HREAD_DELTA)));
     assert_eq!(h2.hreadm, 512);
+}
+
+#[test]
+fn hread_parse_rejections() {
+    for bad in [
+        "h0:hread=0/0.5/0.8",
+        "h0:hread=1.5/0.5/0.8",
+        "h0:hread=0.15/0.5",
+        "h0:hread=x",
+        "h0:hreadm=0",
+        "h0:hreadm=4097",
+    ] {
+        assert!(
+            AnyPolicy::parse_spec(bad).is_err(),
+            "{bad} should be rejected"
+        );
+    }
+    let off = parse_h0("h0:hread=off");
+    assert!(off.hread.is_none());
+    assert_eq!(AnyPolicy::H0(off).spec(), "h0");
 }

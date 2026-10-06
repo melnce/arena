@@ -89,3 +89,18 @@ def test_hread_timing_midgame(db, step: int) -> None:
     print(f"step {step}: off={off_ms:.1f}ms on={on_ms:.1f}ms ratio={on_ms/off_ms:.2f}")
 
     assert on_ms < off_ms * 3 + 500
+
+
+@pytest.mark.parametrize("step", (40, 50, 65))
+def test_hread_on_deal_block_inert(db, step: int) -> None:
+    cap = _load_capture("5120746196322041219-5ce21003.json")
+    game = _replay(db, cap, step)
+    seed = 1
+
+    hread_on = game.bot_action_explain(f"{SERVED_SPEC},hread=on", seed)
+    both = game.bot_action_explain(f"{SERVED_SPEC},hread=on,deal=block", seed)
+
+    assert hread_on["chosen"] == both["chosen"]
+    assert hread_on["value"] == both["value"]
+    assert hread_on["nodes"] == both["nodes"]
+    assert both.get("deal_seed") is None

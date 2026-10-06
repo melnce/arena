@@ -280,15 +280,31 @@ fn determinize_open_opponent(
     }
     canon_sort(&mut pool);
 
+    let effective_block = block && hread.is_none();
+    let mut block_deal_ran = false;
     if let Some(hd) = hread {
-        pool = hread_deal_pool(pool, h, &slot_hand_since, &turn_ends, root_seed, hd);
-    } else if block {
+        if h > 0 {
+            pool = hread_deal_pool(&pool, h, &slot_hand_since, &turn_ends, root_seed, hd);
+        } else if effective_block {
+            let mut rng = Xoshiro256ss::from_seed(deal_seed);
+            shuffle(&mut pool, &mut rng);
+            if !pool.is_empty() {
+                let n = pool.len();
+                pool.rotate_left((world as usize * h) % n);
+            }
+            block_deal_ran = true;
+        } else {
+            let mut rng = Xoshiro256ss::from_seed(root_seed);
+            shuffle(&mut pool, &mut rng);
+        }
+    } else if effective_block {
         let mut rng = Xoshiro256ss::from_seed(deal_seed);
         shuffle(&mut pool, &mut rng);
         if !pool.is_empty() {
             let n = pool.len();
             pool.rotate_left((world as usize * h) % n);
         }
+        block_deal_ran = true;
     } else {
         let mut rng = Xoshiro256ss::from_seed(root_seed);
         shuffle(&mut pool, &mut rng);
@@ -307,7 +323,7 @@ fn determinize_open_opponent(
     }
     out.player_mut(opp).hand = fixed;
 
-    if block {
+    if block_deal_ran {
         let mut rng = Xoshiro256ss::from_seed(root_seed);
         shuffle(&mut pool, &mut rng);
     }
@@ -446,7 +462,7 @@ fn canon_sort(items: &mut [CardInstance]) {
     items.sort_by(|a, b| a.card.cmp(&b.card).then(a.id.cmp(&b.id)));
 }
 
-fn shuffle(items: &mut [CardInstance], rng: &mut Xoshiro256ss) {
+fn shuffle<T>(items: &mut [T], rng: &mut Xoshiro256ss) {
     if items.len() < 2 {
         return;
     }
@@ -492,23 +508,10 @@ fn hread_slot_log_weight(
     log_w
 }
 
-fn hread_perm_log_weight(
-    perm: &[CardInstance],
-    h: usize,
-    slot_hand_since: &[u32],
-    turn_ends: &[TurnEnd],
-    hd: HreadDeal,
-) -> f32 {
+fn hread_perm_log_weight_indices(perm: &[usize], h: usize, slot_card_log_w: &[Vec<f32>]) -> f32 {
     let mut log_w = 0.0f32;
-    for s in 0..h.min(perm.len()).min(slot_hand_since.len()) {
-        log_w += hread_slot_log_weight(
-            &perm[s],
-            slot_hand_since[s],
-            turn_ends,
-            hd.eps_fa,
-            hd.eps_s,
-            hd.delta,
-        );
+    for s in 0..h.min(perm.len()).min(slot_card_log_w.len()) {
+        log_w += slot_card_log_w[s][perm[s]];
     }
     log_w
 }
@@ -543,32 +546,45 @@ fn weighted_pick(log_weights: &[f32], rng: &mut Xoshiro256ss) -> usize {
 }
 
 fn hread_deal_pool(
-    pool: Vec<CardInstance>,
+    pool: &[CardInstance],
     h: usize,
     slot_hand_since: &[u32],
     turn_ends: &[TurnEnd],
     root_seed: u64,
     hd: HreadDeal,
 ) -> Vec<CardInstance> {
-    if h == 0 || pool.is_empty() {
-        return pool;
+    assert!(h > 0);
+    let n = pool.len();
+    if n == 0 {
+        return Vec::new();
+    }
+    let slots = h.min(slot_hand_since.len());
+    let mut slot_card_log_w = vec![vec![0.0f32; n]; slots];
+    for s in 0..slots {
+        for p in 0..n {
+            slot_card_log_w[s][p] = hread_slot_log_weight(
+                &pool[p],
+                slot_hand_since[s],
+                turn_ends,
+                hd.eps_fa,
+                hd.eps_s,
+                hd.delta,
+            );
+        }
     }
     let m = hd.m.max(1) as usize;
     let mut rng = Xoshiro256ss::from_seed(root_seed ^ HREAD_SEED_XOR);
-    let mut perms = Vec::with_capacity(m);
     let mut log_weights = Vec::with_capacity(m);
+    let mut perm_indices = Vec::with_capacity(m);
     for _ in 0..m {
-        let mut perm = pool.clone();
-        shuffle(&mut perm, &mut rng);
-        log_weights.push(hread_perm_log_weight(
-            &perm,
-            h,
-            slot_hand_since,
-            turn_ends,
-            hd,
-        ));
-        perms.push(perm);
+        let mut indices: Vec<usize> = (0..n).collect();
+        shuffle(&mut indices, &mut rng);
+        log_weights.push(hread_perm_log_weight_indices(&indices, h, &slot_card_log_w));
+        perm_indices.push(indices);
     }
     let pick = weighted_pick(&log_weights, &mut rng);
-    perms.remove(pick)
+    perm_indices[pick]
+        .iter()
+        .map(|&p| pool[p].clone())
+        .collect()
 }
