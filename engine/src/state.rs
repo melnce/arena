@@ -322,6 +322,11 @@ pub struct PlayerState {
     /// Lets `strict_remaining_pool` add back without looking up cemetery /
     /// banished — required after `Info::Open` determinization moves instances.
     pub hidden_removal_cards: Vec<CardId>,
+    /// Instance ids restored to cemetery slots during `Info::Open`
+    /// determinization. Snapshot-neutral — not in `CanonicalState`, `hash`, or
+    /// `search_key`. Cleared on each determinization. Encoding v3 uses this to
+    /// exclude non-public opponent cemetery cards in search worlds.
+    pub hidden_cemetery_restores: Vec<u32>,
     /// Tokens / returned cards currently in hand or deck that are not
     /// accounted for by `starting_deck − public_removals`. Snapshot-neutral.
     pub public_hand_additions: Vec<CardId>,
@@ -367,6 +372,7 @@ impl PlayerState {
             public_removals: Vec::new(),
             hidden_removals: Vec::new(),
             hidden_removal_cards: Vec::new(),
+            hidden_cemetery_restores: Vec::new(),
             public_hand_additions: Vec::new(),
             turn_ends: Vec::new(),
         }
