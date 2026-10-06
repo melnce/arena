@@ -1,0 +1,30 @@
+pool: --decks
+decks: 1 (meta-rune-test-subject)
+pairs: 1 (1 x 1, mirrors included)
+games   400 games/pair x 1 =   400
+matchup: 1 decks × 400 games = 400 games (seed=1, policy_a=h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1, policy_b=h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000, first=alternate, threads=None)
+Win rate (row = A, col = B; cell = A's win rate)
+                        meta-rune-test-subject
+meta-rune-test-subject                   0.547
+
+First-player win rate / mean turns
+                        meta-rune-test-subject
+meta-rune-test-subject           0.578 /   9.0
+
+A win rate over decisive games, Wilson 95% [lo, hi]
+                        meta-rune-test-subject
+meta-rune-test-subject    0.547 [0.499, 0.596]
+
+=== summary ===
+h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1 vs h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000
+games: 400  decisive: 400  draws: 0
+policy_a win rate: 0.547 [0.499, 0.596]
+first-player win rate: 0.578
+mean turns: 9.01  mean actions: 100.63
+end: lethal=400 deckout=0 turn_cap=0 action_cap=0 no_legal=0 illegal=0
+6079.090s  0.07 games/s  cpus=28
+per deck:
+  meta-rune-test-subject: policy_a (row) 0.547  policy_b (col) 0.453
+
+400 games in 6079.090s (0.1 games/s)
+wrote C:\Users\agban\projects\arena\results\sweep42\c01-final.json

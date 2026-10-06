@@ -1,0 +1,30 @@
+pool: --decks
+decks: 1 (meta-rune-test-subject)
+pairs: 1 (1 x 1, mirrors included)
+games    10 games/pair x 1 =    10
+matchup: 1 decks × 10 games = 10 games (seed=1, policy_a=h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1, policy_b=h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1, first=alternate, threads=None)
+Win rate (row = A, col = B; cell = A's win rate)
+                        meta-rune-test-subject
+meta-rune-test-subject                   0.400
+
+First-player win rate / mean turns
+                        meta-rune-test-subject
+meta-rune-test-subject           0.700 /   9.1
+
+A win rate over decisive games, Wilson 95% [lo, hi]
+                        meta-rune-test-subject
+meta-rune-test-subject    0.400 [0.168, 0.687]
+
+=== summary ===
+h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1 vs h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1
+games: 10  decisive: 10  draws: 0
+policy_a win rate: 0.400 [0.168, 0.687]
+first-player win rate: 0.700
+mean turns: 9.10  mean actions: 103.50
+end: lethal=10 deckout=0 turn_cap=0 action_cap=0 no_legal=0 illegal=0
+287.902s  0.03 games/s  cpus=28
+per deck:
+  meta-rune-test-subject: policy_a (row) 0.400  policy_b (col) 0.600
+
+10 games in 287.902s (0.0 games/s)
+wrote C:\Users\agban\projects\arena\results\sweep42\tp-c01.json

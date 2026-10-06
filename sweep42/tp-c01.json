@@ -1,0 +1,73 @@
+{
+  "decks": [
+    "meta-rune-test-subject"
+  ],
+  "first": "alternate",
+  "games": 10,
+  "games_per_second": 0.03473406039807289,
+  "matrix": {
+    "meta-rune-test-subject": {
+      "meta-rune-test-subject": {
+        "a_games_as_first": 5,
+        "a_wins": 4,
+        "a_wins_as_first": 3,
+        "b_wins": 6,
+        "draws": 0,
+        "end": {
+          "action_cap": 0,
+          "deckout": 0,
+          "illegal": 0,
+          "lethal": 10,
+          "no_legal": 0,
+          "turn_cap": 0
+        },
+        "first_player_wins": 7,
+        "games": 10,
+        "mean_actions": 103.5,
+        "mean_turns": 9.1,
+        "wilson95": [
+          0.16817758120350962,
+          0.6873304525498136
+        ],
+        "wr_decisive": 0.4
+      }
+    }
+  },
+  "policy_a": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1",
+  "policy_b": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1",
+  "seconds": 287.90184289985336,
+  "seed": 1,
+  "summary": {
+    "cpu_count": 28,
+    "decisive": 10,
+    "draws": 0,
+    "end": {
+      "action_cap": 0,
+      "deckout": 0,
+      "illegal": 0,
+      "lethal": 10,
+      "no_legal": 0,
+      "turn_cap": 0
+    },
+    "first_player_win_rate": 0.7,
+    "games": 10,
+    "games_per_second": 0.03473406039807289,
+    "mean_actions": 103.5,
+    "mean_turns": 9.1,
+    "per_deck": {
+      "meta-rune-test-subject": {
+        "policy_a_as_row": 0.4,
+        "policy_b_as_col": 0.6
+      }
+    },
+    "policy_a": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1",
+    "policy_a_win_rate": 0.4,
+    "policy_b": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1",
+    "seconds": 287.90184289985336,
+    "wilson95": [
+      0.16817758120350962,
+      0.6873304525498136
+    ]
+  },
+  "threads": 28
+}

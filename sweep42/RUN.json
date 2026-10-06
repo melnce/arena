@@ -1,0 +1,77 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\sweep.py",
+    "--tag",
+    "sweep42",
+    "--seed",
+    "1",
+    "--decks",
+    "meta-rune-test-subject",
+    "--baseline",
+    "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000",
+    "--screen-games",
+    "40",
+    "--final-games",
+    "400",
+    "--final-reverse",
+    "200",
+    "--tp-games",
+    "10",
+    "--finalists",
+    "1",
+    "--allow-small",
+    "--candidates",
+    "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1",
+    "--publish"
+  ],
+  "git": "9f187a3faacb63c556268be47b0e87e4fd7bd4db",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "screen": {
+      "start": "2026-10-06T06:48:48.987931+00:00",
+      "end": "2026-10-06T07:09:40.974275+00:00"
+    },
+    "final": {
+      "start": "2026-10-06T07:09:40.997114+00:00",
+      "end": "2026-10-06T09:43:09.225020+00:00"
+    },
+    "summary": {
+      "start": "2026-10-06T09:43:09.249016+00:00",
+      "end": "2026-10-06T09:43:09.270955+00:00"
+    },
+    "publish": {
+      "start": "2026-10-06T09:43:09.298917+00:00"
+    }
+  },
+  "sizing": {
+    "pool": "--decks",
+    "decks": [
+      "meta-rune-test-subject"
+    ],
+    "n_decks": 1,
+    "pairs": 1,
+    "games_per_pair": {
+      "screen": 40,
+      "final": 400,
+      "reverse": 200,
+      "tp": 10
+    },
+    "totals": {
+      "screen": 40,
+      "final": 400,
+      "reverse": 200,
+      "tp": 10
+    },
+    "target_games": null,
+    "block": "pool: --decks\ndecks: 1 (meta-rune-test-subject)\npairs: 1 (1 x 1, mirrors included)\nscreen   40 games/pair x 1 =    40\nfinal   400 games/pair x 1 =   400\nreverse 200 games/pair x 1 =   200\ntp       10 games/pair x 1 =    10"
+  },
+  "finalist_decisions": [
+    {
+      "index": 1,
+      "spec": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1",
+      "decision": "finalist"
+    }
+  ]
+}
