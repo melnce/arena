@@ -69,6 +69,7 @@ declare global {
         shownAt: number;
         hiddenAt: number;
       }>;
+      spotlightEnqueue(events: unknown[]): void;
     };
   }
 }

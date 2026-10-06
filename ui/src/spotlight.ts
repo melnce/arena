@@ -125,10 +125,11 @@ function waitMs(ms: number): Promise<void> {
 
 async function drainQueue(): Promise<void> {
   if (busy) return;
+  const token = pump;
   busy = true;
   try {
     while (queue.length > 0) {
-      const token = pump;
+      if (token !== pump) return;
       const next = queue.shift()!;
       if (currentEntry) {
         const elapsed = performance.now() - shownAt;
@@ -136,7 +137,7 @@ async function drainQueue(): Promise<void> {
           await waitMs(MIN_VISIBLE_MS - elapsed);
           if (token !== pump) return;
         }
-        await hideSpotlight();
+        await hideSpotlight(token);
         if (token !== pump) return;
       }
       await showSpotlight(next);
@@ -148,11 +149,14 @@ async function drainQueue(): Promise<void> {
         await waitMs(40);
       }
       if (token !== pump) return;
-      await hideSpotlight();
+      await hideSpotlight(token);
+      if (token !== pump) return;
     }
   } finally {
-    busy = false;
-    if (queue.length > 0) void drainQueue();
+    if (token === pump) {
+      busy = false;
+      if (queue.length > 0) void drainQueue();
+    }
   }
 }
 
@@ -246,10 +250,11 @@ function layoutSpotlight(botPlayer: PlayerId): boolean {
   const maxH = baseH * 1.3;
   const handRect = hand?.getBoundingClientRect() ?? new DOMRect(16, 16, maxW * 2, maxH);
   const blocked = forbiddenRects();
-  let smallest = candidateRect(handRect, maxW, maxH, 0.35);
+  let smallest = candidateRect(handRect, maxW, maxH, 7 / 20);
   let chosen: DOMRect | null = null;
 
-  for (let scale = 1; scale >= 0.35; scale -= 0.05) {
+  for (let i = 20; i >= 7; i--) {
+    const scale = i / 20;
     const candidate = candidateRect(handRect, maxW, maxH, scale);
     smallest = candidate;
     if (fitsSpotlight(candidate, blocked)) {
@@ -320,16 +325,17 @@ async function showSpotlight(play: QueuedPlay): Promise<void> {
   await waitMs(FADE_IN_MS);
 }
 
-async function hideSpotlight(): Promise<void> {
+async function hideSpotlight(token: number): Promise<void> {
   const overlay = document.getElementById("botPlaySpotlight");
   if (!overlay || !overlay.classList.contains("visible")) {
-    finishCurrentEntry();
+    if (token === pump) finishCurrentEntry();
     return;
   }
   overlay.classList.add("hiding");
   overlay.classList.remove("visible");
-  finishCurrentEntry();
+  if (token === pump) finishCurrentEntry();
   await waitMs(FADE_OUT_MS);
+  if (token !== pump) return;
   overlay.classList.remove("hiding");
   overlay.innerHTML = "";
   overlay.setAttribute("aria-hidden", "true");

@@ -280,14 +280,163 @@ test("undo clears the spotlight immediately; redo does not replay it", async ({ 
   await waitSpotlightVisible(page);
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await page.keyboard.press("Control+z");
-  await expect(page.locator("#botPlaySpotlight.visible")).toHaveCount(0);
-  await expect(page.locator("#botPlaySpotlight .spotlight-card")).toHaveCount(0);
+  const cleared = await page.evaluate(() => ({
+    visible: document.querySelectorAll("#botPlaySpotlight.visible").length,
+    cards: document.querySelectorAll("#botPlaySpotlight .spotlight-card").length,
+  }));
+  expect(cleared.visible).toBe(0);
+  expect(cleared.cards).toBe(0);
+  await page.waitForTimeout(600);
   const beforeRedo = await page.evaluate(() => window.__arena!.spotlightLog().length);
   await page.keyboard.press("Control+y");
-  await page.waitForTimeout(400);
-  await expect(page.locator("#botPlaySpotlight.visible")).toHaveCount(0);
-  const afterRedo = await page.evaluate(() => window.__arena!.spotlightLog().length);
-  expect(afterRedo).toBe(beforeRedo);
+  await page.waitForTimeout(1500);
+  const afterRedo = await page.evaluate(() => ({
+    len: window.__arena!.spotlightLog().length,
+    visible: document.querySelectorAll("#botPlaySpotlight.visible").length,
+  }));
+  expect(afterRedo.len).toBe(beforeRedo);
+  expect(afterRedo.visible).toBe(0);
+});
+
+test("fast undo then redo: live bot plays after redo each get one spotlight", async ({ page }) => {
+  test.setTimeout(90_000);
+  await boot(page);
+  const humanDeck = await importDeck(page, "spot-human5b.json", { [ONE_COST]: 40 });
+  const botDeck = await importDeck(page, "spot-bot5b.json", { [ONE_COST]: 40 });
+  await startVsBot(page, { seed: "8484", humanDeck, botDeck, botPolicy: "first-legal" });
+  await confirmHumanMulligan(page, "a");
+  await closeDrawer(page);
+  await endHumanTurn(page, "a");
+  await waitSpotlightVisible(page);
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press("Control+z");
+  await page.keyboard.press("Control+y");
+  const snap = await page.evaluate(() => {
+    const L0 = window.__arena!.spotlightLog().length;
+    const lines = document.getElementById("eventLog")?.textContent?.split("\n") ?? [];
+    let P0 = 0;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const ev = JSON.parse(trimmed) as { play?: { player?: string } };
+        if (ev.play?.player === "b") P0 += 1;
+      } catch {
+        /* skip malformed lines */
+      }
+    }
+    return { L0, P0 };
+  });
+  await page.waitForTimeout(2500);
+  const after = await page.evaluate(() => {
+    const logLen = window.__arena!.spotlightLog().length;
+    const lines = document.getElementById("eventLog")?.textContent?.split("\n") ?? [];
+    let bPlays = 0;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const ev = JSON.parse(trimmed) as { play?: { player?: string } };
+        if (ev.play?.player === "b") bPlays += 1;
+      } catch {
+        /* skip malformed lines */
+      }
+    }
+    return { logLen, bPlays };
+  });
+  expect(after.logLen - snap.L0).toBe(after.bPlays - snap.P0);
+});
+
+test("spotlight stays behind the open settings drawer", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await boot(page);
+  const humanDeck = await importDeck(page, "spot-human-drawer.json", { [ONE_COST]: 40 });
+  const botDeck = await importDeck(page, "spot-bot-drawer.json", { [ONE_COST]: 40 });
+  await startVsBot(page, { seed: "4242", humanDeck, botDeck, botPolicy: "first-legal" });
+  await confirmHumanMulligan(page, "a");
+  await closeDrawer(page);
+  await endHumanTurn(page, "a");
+  await waitSpotlightVisible(page);
+  await openSettings(page);
+  const behindDrawer = await page.evaluate(() => {
+    const overlay = document.getElementById("botPlaySpotlight");
+    if (!overlay) return false;
+    const r = overlay.getBoundingClientRect();
+    const x = r.left + r.width / 2;
+    const y = r.top + r.height / 2;
+    overlay.style.pointerEvents = "auto";
+    const hit = document.elementFromPoint(x, y);
+    overlay.style.pointerEvents = "none";
+    return hit?.closest("#settingsDrawer") != null;
+  });
+  expect(behindDrawer).toBe(true);
+});
+
+const CARD_Z = "10001110";
+
+test("clear during fade-out does not corrupt the next spotlight queue", async ({ page }) => {
+  test.setTimeout(120_000);
+  await boot(page);
+  const humanDeck = await importDeck(page, "spot-human-drain.json", { [ONE_COST]: 40 });
+  const botDeck = await importDeck(page, "spot-bot-drain.json", { [ONE_COST]: 40 });
+  await startVsBot(page, { seed: "5252", humanDeck, botDeck, botPolicy: "first-legal" });
+  await confirmHumanMulligan(page, "a");
+  await closeDrawer(page);
+  await page.evaluate(() => {
+    window.__arena!.spotlightEnqueue([{ play: { player: "b", card: "10052110", form: "normal" } }]);
+  });
+  await waitSpotlightVisible(page);
+  await page.evaluate(
+    async ({ y, z }) => {
+      await new Promise<void>((resolve) => {
+        function waitHiding() {
+          const overlay = document.getElementById("botPlaySpotlight");
+          if (!overlay?.classList.contains("hiding")) {
+            requestAnimationFrame(waitHiding);
+            return;
+          }
+          const toggle = document.getElementById("botPlaySpotlightToggle") as HTMLInputElement;
+          toggle.checked = false;
+          toggle.dispatchEvent(new Event("change", { bubbles: true }));
+          toggle.checked = true;
+          toggle.dispatchEvent(new Event("change", { bubbles: true }));
+          window.__arena!.spotlightEnqueue([
+            { play: { player: "b", card: y, form: "normal" } },
+            { play: { player: "b", card: z, form: { enhance: 2 } } },
+          ]);
+          resolve();
+        }
+        requestAnimationFrame(waitHiding);
+      });
+    },
+    { y: ONE_COST, z: CARD_Z },
+  );
+  const cardCounts = await page.evaluate(async () => {
+    const counts: number[] = [];
+    const start = performance.now();
+    return new Promise<number[]>((resolve) => {
+      function sample() {
+        const overlay = document.getElementById("botPlaySpotlight");
+        if (overlay?.classList.contains("visible")) {
+          counts.push(overlay.querySelectorAll(".spotlight-card").length);
+        }
+        if (performance.now() - start < 3500) requestAnimationFrame(sample);
+        else resolve(counts);
+      }
+      requestAnimationFrame(sample);
+    });
+  });
+  for (const n of cardCounts) expect(n).toBe(1);
+  const log = await page.evaluate(() => window.__arena!.spotlightLog());
+  expect(log.length).toBeGreaterThanOrEqual(3);
+  const yEntry = log[log.length - 2]!;
+  const zEntry = log[log.length - 1]!;
+  expect(yEntry.card).toBe(ONE_COST);
+  expect(zEntry.card).toBe(CARD_Z);
+  expect(yEntry.hiddenAt - yEntry.shownAt).toBeGreaterThanOrEqual(1150);
+  expect(zEntry.hiddenAt - zEntry.shownAt).toBeGreaterThanOrEqual(1150);
+  expect(zEntry.shownAt).toBeGreaterThanOrEqual(yEntry.shownAt);
 });
 
 test("setting off disables spotlight and survives reload", async ({ page }) => {

@@ -1,6 +1,6 @@
 #botPlaySpotlight {
   position: fixed;
-  z-index: 360;
+  z-index: 320;
   pointer-events: none;
   user-select: none;
   opacity: 0;

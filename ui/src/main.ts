@@ -257,6 +257,10 @@ function exposeArena(): void {
     catalogIds,
     cardText: (id) => lookupText(id),
     spotlightLog: () => spotlightLog(),
+    spotlightEnqueue: (events) => {
+      if (!session) throw new Error("no session");
+      enqueueBotSpotlights(events as EngineEvent[], session.cfg.humanSide);
+    },
     mountNamedCounter: (vars) => {
       const host = document.getElementById("blueBoard") ?? document.body;
       const inst = {
