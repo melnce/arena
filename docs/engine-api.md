@@ -390,6 +390,36 @@ encodings, and writes `"encoding"` into the model JSON. Model files may omit
 the declared encoding. `h0-linear-v1.json` has no `encoding` field and is
 unchanged.
 
+Version **3** (961 features, 230 id slots) is opt-in. Features `0..566` and
+ids `0..219` are byte-identical to version 2. Six blocks are appended:
+
+| Name | Offset | Width | Value |
+|---|---:|---:|---|
+| `own_amulet_soon` | 567 | 5 | per own field slot: `1 / max(n, 1)` when the card has `countdown: Some(n)`, else `0` |
+| `opp_amulet_soon` | 572 | 5 | same for the opponent's field |
+| `own_entered_hist` | 577 | 96 | perspective player's `enter_counts[vocab[i]]` |
+| `opp_entered_hist` | 673 | 96 | opponent's `enter_counts` |
+| `own_cemetery_hist` | 769 | 96 | copies of `vocab[i]` in the perspective cemetery |
+| `opp_cemetery_hist` | 865 | 96 | copies in the opponent cemetery, counting only public instances |
+
+Ids `220..224` and `225..229` hold crest card ids (`crest:<card>` /
+`faith:<card>` → `<card>`; `0` when empty or unparseable), in crest-slot
+order. Enter and cemetery histograms use the same 96-card game vocabulary as
+the deck and pool histograms; cards outside it are omitted. Tokens summoned
+straight to the field are not counted in `enter_counts`. The opponent
+cemetery excludes instances in `hidden_removals` and, in search worlds, the
+snapshot-neutral `hidden_cemetery_restores` list recorded when
+`determinize_open_opponent` puts replacement cards back at hidden cemetery
+slots.
+
+Export: `arena.matchup(..., encoding=3)`, `py/matchup.py --encoding 3`, or
+`py/iterate.py --encoding 3` (`mlp` is dropped from the default `--models` and
+refused when given explicitly). Encoding-3 models require `arch: linear` and
+exactly thirteen zones (the five standard zones plus `own_crests`,
+`opp_crests`, `own_amulet_soon`, `opp_amulet_soon`, `own_entered`,
+`opp_entered`, `own_cemetery`, `opp_cemetery`). Rows `5..12` of `zone_w` must
+have index-0 weight exactly `0`.
+
 ## search_key (M5)
 
 `search_key(state) -> u64` is FNV-1a 64 over a hand-rolled little-endian
@@ -1306,6 +1336,29 @@ the observation's HP scalars and follower attack on each board (see
 unchanged. `py/train_value.py --race` fits the block (linear only; not with
 `--optimizer lbfgs`).
 
+### Stacked encoding-3 fit (`--stack-on`)
+
+`py/train_value.py --stack-on BASE.json` fits only the eight new encoding-3
+zones (rows `5..12`) on top of a frozen encoding-2 linear base (`h0-linear-v3`
+or any v2 file with the standard five zones). Requirements: `--model linear`,
+encoding-3 export shards, and a non-empty holdout. Refused with named errors:
+non-v2 `BASE`, `--race`, `--optimizer lbfgs`, `--l2` (use `--l2-grid`), and an
+empty holdout. The base pre-activation (dense features `0..566`, the five
+standard zones, and any race block) is computed exactly as at inference, without
+inverting `atanh`. New dense weights stay zero; index-0 weights in rows
+`5..12` stay zero. When all new weights are zero the output model matches
+`BASE` bit-for-bit on every state.
+
+Deck controls (default on when shards carry `decks` and `games` in
+`meta.json`): one-hot own deck, one-hot opponent deck, and first-player terms
+fitted jointly but omitted from the output model. Use `--no-deck-controls` when
+shard metadata is missing (or to test without them). L2 penalties are chosen by
+coordinate search on `--l2-grid` (default `1e-6` … `1`) over crests, amulets,
+entered, and cemetery groups; ties within `1e-9` keep the larger penalty. The
+optimizer is deterministic full-batch L-BFGS in numpy. The report lists
+holdout MSE after each step, the four penalty choices, and the fifteen largest
+`|weight|` values per new zone.
+
 ## Learned mulligan (keep tables)
 
 The default `h0` uses the built-in `mulligan-v1` table
@@ -1355,13 +1408,13 @@ Model file (one JSON object, f32 values as JSON numbers):
 ```text
 {
   "arch": "linear" | "mlp",
-  "encoding": 1 | 2,          // optional; default 1
-  "feature_len": 545 | 567,     // must match encoding (545 for 1, 567 for 2)
+  "encoding": 1 | 2 | 3,      // optional; default 1
+  "feature_len": 545 | 567 | 961,
   "feat_mean": [feature_len], "feat_std": [feature_len],
   "vocab": [ids ascending, index 0 = 0],
-  "zones": [{"name", "id_offset", "count", "hist_offset" | null} × 5],
+  "zones": [{"name", "id_offset", "count", "hist_offset" | null} × 5 or × 13],
   "scale": 60.0,
-  "linear": {"w": [545], "zone_w": [5][vocab], "b": f}
+  "linear": {"w": [feature_len], "zone_w": [5 or 13][vocab], "b": f}
     | "mlp": {"emb": [vocab][emb], "w1": [hidden][545 + 5·emb],
               "b1": [hidden], "w2": [hidden], "b2": f},
   "trained_on": {"dirs", "rows", "games", "holdout": {…metrics}}

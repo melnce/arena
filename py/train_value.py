@@ -20,7 +20,11 @@ race_features = _race.race_features
 
 FEATURE_LEN_V1 = 545
 FEATURE_LEN_V2 = 567
+FEATURE_LEN_V3 = 961
+IDS_LEN_V3 = 230
 HIST_WIDTH = 96
+IDS_OWN_CRESTS = 220
+IDS_OPP_CRESTS = 225
 IDS_OWN_HAND = 0
 IDS_OWN_DECK = 9
 IDS_OPP_BOARD = 9 + HIST_WIDTH
@@ -52,6 +56,29 @@ ZONES: list[dict[str, Any]] = [
         "hist_offset": OPP_POOL_HIST,
     },
 ]
+
+ZONES_V3: list[dict[str, Any]] = ZONES + [
+    {"name": "own_crests", "id_offset": IDS_OWN_CRESTS, "count": 5, "hist_offset": None},
+    {"name": "opp_crests", "id_offset": IDS_OPP_CRESTS, "count": 5, "hist_offset": None},
+    {"name": "own_amulet_soon", "id_offset": IDS_OWN_BOARD, "count": 5, "hist_offset": 567},
+    {"name": "opp_amulet_soon", "id_offset": IDS_OPP_BOARD, "count": 5, "hist_offset": 572},
+    {"name": "own_entered", "id_offset": IDS_OWN_DECK, "count": HIST_WIDTH, "hist_offset": 577},
+    {"name": "opp_entered", "id_offset": IDS_OPP_POOL, "count": HIST_WIDTH, "hist_offset": 673},
+    {"name": "own_cemetery", "id_offset": IDS_OWN_DECK, "count": HIST_WIDTH, "hist_offset": 769},
+    {"name": "opp_cemetery", "id_offset": IDS_OPP_POOL, "count": HIST_WIDTH, "hist_offset": 865},
+]
+
+STACK_ZONE_GROUPS = ("crests", "amulets", "entered", "cemetery")
+STACK_ZONE_ROWS = {
+    "crests": (5, 7),
+    "amulets": (7, 9),
+    "entered": (9, 11),
+    "cemetery": (11, 13),
+}
+
+
+def zones_for_encoding(encoding: int) -> list[dict[str, Any]]:
+    return ZONES_V3 if encoding == 3 else ZONES
 
 
 def _load_samples():
@@ -446,7 +473,7 @@ def metric_block(pred, labels, turns) -> dict[str, Any]:
     return out
 
 
-def _zones_json() -> list[dict[str, Any]]:
+def _zones_json(encoding: int = 1) -> list[dict[str, Any]]:
     return [
         {
             "name": z["name"],
@@ -454,15 +481,23 @@ def _zones_json() -> list[dict[str, Any]]:
             "count": z["count"],
             "hist_offset": z["hist_offset"],
         }
-        for z in ZONES
+        for z in zones_for_encoding(encoding)
     ]
 
 
 class LinearTorch:
-    def __init__(self, torch, n_feat: int, n_vocab: int, use_race: bool = False):
+    def __init__(
+        self,
+        torch,
+        n_feat: int,
+        n_vocab: int,
+        n_zones: int = 5,
+        use_race: bool = False,
+    ):
         self.torch = torch
+        self.n_zones = n_zones
         self.w = torch.nn.Parameter(torch.zeros(n_feat))
-        self.zone_w = torch.nn.Parameter(torch.zeros(5, n_vocab))
+        self.zone_w = torch.nn.Parameter(torch.zeros(n_zones, n_vocab))
         self.b = torch.nn.Parameter(torch.zeros(1))
         self.use_race = use_race
         self.race_w = torch.nn.Parameter(torch.zeros(12)) if use_race else None
@@ -474,11 +509,9 @@ class LinearTorch:
         return out
 
     def forward(self, x, idx, counts, race_x=None):
-        extra = (self.zone_w[0][idx[0]] * counts[0]).sum(dim=1)
-        extra = extra + (self.zone_w[1][idx[1]] * counts[1]).sum(dim=1)
-        extra = extra + (self.zone_w[2][idx[2]] * counts[2]).sum(dim=1)
-        extra = extra + (self.zone_w[3][idx[3]] * counts[3]).sum(dim=1)
-        extra = extra + (self.zone_w[4][idx[4]] * counts[4]).sum(dim=1)
+        extra = self.torch.zeros(x.shape[0], device=x.device)
+        for z in range(self.n_zones):
+            extra = extra + (self.zone_w[z][idx[z]] * counts[z]).sum(dim=1)
         pre = x @ self.w + extra + self.b[0]
         if self.race_w is not None and race_x is not None:
             pre = pre + race_x @ self.race_w
@@ -512,11 +545,11 @@ class MlpTorch:
         return (h @ self.w2 + self.b2[0]).tanh()
 
 
-def _batch_zone_tensors(torch, features, ids, row_idx, vocab, device):
+def _batch_zone_tensors(torch, features, ids, row_idx, vocab, zones, device):
     idx_np = id_index_table(vocab, ids[row_idx])
     idx = []
     counts = []
-    for zone in ZONES:
+    for zone in zones:
         sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
         idx.append(torch.from_numpy(idx_np[:, sl].astype("int64", copy=False)).to(device))
         c = zone_counts(features, row_idx, zone)
@@ -542,6 +575,7 @@ def train_torch(
     use_race: bool = False,
     race_mean=None,
     race_std=None,
+    encoding: int = 1,
 ):
     import numpy as np
 
@@ -551,8 +585,9 @@ def train_torch(
     device = torch.device("cpu")
     n_feat = features.shape[1]
     n_vocab = len(vocab)
+    zones = zones_for_encoding(encoding)
     if spec_arch == "linear":
-        model = LinearTorch(torch, n_feat, n_vocab, use_race=use_race)
+        model = LinearTorch(torch, n_feat, n_vocab, len(zones), use_race=use_race)
     else:
         model = MlpTorch(torch, n_feat, n_vocab, hidden, emb)
     opt = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=l2)
@@ -582,7 +617,7 @@ def train_torch(
             xb = torch.from_numpy(
                 _standardize_rows(features, row_idx, mean, std, x_buf)
             ).to(device)
-            idx_b, c_b = _batch_zone_tensors(torch, features, ids, row_idx, vocab, device)
+            idx_b, c_b = _batch_zone_tensors(torch, features, ids, row_idx, vocab, zones, device)
             race_b = None
             if use_race:
                 race_b = torch.from_numpy(
@@ -602,7 +637,7 @@ def train_torch(
                     xb = torch.from_numpy(
                         _standardize_rows(features, hrows, mean, std, x_buf)
                     ).to(device)
-                    idx_b, c_b = _batch_zone_tensors(torch, features, ids, hrows, vocab, device)
+                    idx_b, c_b = _batch_zone_tensors(torch, features, ids, hrows, vocab, zones, device)
                     race_b = None
                     if use_race:
                         race_b = torch.from_numpy(
@@ -641,6 +676,7 @@ def train_lbfgs(
     l2: float,
     max_iter: int,
     grad_tol: float,
+    encoding: int = 1,
 ):
     import numpy as np
 
@@ -649,7 +685,8 @@ def train_lbfgs(
     device = torch.device("cpu")
     n_feat = features.shape[1]
     n_vocab = len(vocab)
-    model = LinearTorch(torch, n_feat, n_vocab)
+    zones = zones_for_encoding(encoding)
+    model = LinearTorch(torch, n_feat, n_vocab, len(zones))
     y_tr_np = y_all[train_idx].astype(np.float32, copy=False)
     n = train_idx.size
     function_evals = 0
@@ -668,7 +705,7 @@ def train_lbfgs(
             end = min(start + LBFGS_CHUNK, n)
             row_idx = train_idx[start:end]
             xb = torch.from_numpy(_standardize_rows(features, row_idx, mean, std)).to(device)
-            idx_b, c_b = _batch_zone_tensors(torch, features, ids, row_idx, vocab, device)
+            idx_b, c_b = _batch_zone_tensors(torch, features, ids, row_idx, vocab, zones, device)
             yb = torch.from_numpy(y_tr_np[start:end]).to(device)
             pred = model.forward(xb, idx_b, c_b)
             chunk_loss = torch.sum((pred - yb) ** 2) / n
@@ -740,7 +777,7 @@ def dump_torch(
         "feat_mean": np.asarray(mean, dtype=np.float32).tolist(),
         "feat_std": np.asarray(std, dtype=np.float32).tolist(),
         "vocab": vocab,
-        "zones": _zones_json(),
+        "zones": _zones_json(encoding),
         "scale": SCALE,
         "trained_on": trained_on,
     }
@@ -784,6 +821,7 @@ def train_linear_numpy(
     use_race: bool = False,
     race_mean=None,
     race_std=None,
+    encoding: int = 1,
 ):
     """Manual-gradient Adam for the linear model when torch is missing."""
     import numpy as np
@@ -791,8 +829,10 @@ def train_linear_numpy(
     rng = np.random.RandomState(seed)
     n_feat = features.shape[1]
     n_vocab = len(vocab)
+    zones = zones_for_encoding(encoding)
+    n_zones = len(zones)
     w = np.zeros(n_feat, dtype=np.float64)
-    zone_w = np.zeros((5, n_vocab), dtype=np.float64)
+    zone_w = np.zeros((n_zones, n_vocab), dtype=np.float64)
     b = 0.0
     race_w = np.zeros(12, dtype=np.float64) if use_race else None
     lr = 1e-3
@@ -812,7 +852,7 @@ def train_linear_numpy(
         xb = _standardize_rows(features, row_idx, mean, std).astype(np.float64)
         idx_np = id_index_table(vocab, ids[row_idx], dtype=idx_dtype)
         extra = np.zeros(row_idx.size, dtype=np.float64)
-        for z, zone in enumerate(ZONES):
+        for z, zone in enumerate(zones):
             sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
             zidx = idx_np[:, sl]
             cnt = zone_counts(features, row_idx, zone).astype(np.float64)
@@ -850,7 +890,7 @@ def train_linear_numpy(
                 )
                 grw = rx.T @ dpre + l2 * race_w
             gz = np.zeros_like(zone_w)
-            for z, zone in enumerate(ZONES):
+            for z, zone in enumerate(zones):
                 sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
                 zidx = idx_np[:, sl]
                 cnt = zone_counts(features, row_idx, zone).astype(np.float64)
@@ -924,12 +964,12 @@ def _eval_holdout_plan(
     ev_spec: dict[str, Any],
     data_encoding: int,
     data_feature_len: int,
-) -> tuple[str | None, bool, str | None]:
-    """Return report key, whether to use a v1 column slice, and skip note."""
+) -> tuple[str | None, int | None, str | None]:
+    """Return report key, feature prefix length to slice (if any), and skip note."""
     ev_enc = int(ev_spec.get("encoding", 1))
     ev_fl = int(ev_spec["feature_len"])
     if ev_enc == data_encoding and ev_fl == data_feature_len:
-        return ev_path.name, False, None
+        return ev_path.name, None, None
     if (
         ev_enc == 1
         and data_encoding == 2
@@ -940,8 +980,545 @@ def _eval_holdout_plan(
             f"eval {ev_path.name}: scoring v1 model on leading "
             f"{FEATURE_LEN_V1} columns of v2 rows"
         )
-        return f"{ev_path.name} (v1 block of v2 rows)", True, note
-    return None, False, "encoding mismatch"
+        return f"{ev_path.name} (v1 block of v2 rows)", FEATURE_LEN_V1, note
+    if (
+        ev_enc == 2
+        and data_encoding == 3
+        and ev_fl == FEATURE_LEN_V2
+        and data_feature_len == FEATURE_LEN_V3
+    ):
+        note = (
+            f"eval {ev_path.name}: scoring v2 model on leading "
+            f"{FEATURE_LEN_V2} columns of v3 rows"
+        )
+        return f"{ev_path.name} (v2 block of v3 rows)", FEATURE_LEN_V2, note
+    if (
+        ev_enc == 1
+        and data_encoding == 3
+        and ev_fl == FEATURE_LEN_V1
+        and data_feature_len == FEATURE_LEN_V3
+    ):
+        note = (
+            f"eval {ev_path.name}: scoring v1 model on leading "
+            f"{FEATURE_LEN_V1} columns of v3 rows"
+        )
+        return f"{ev_path.name} (v1 block of v3 rows)", FEATURE_LEN_V1, note
+    return None, None, "encoding mismatch"
+
+
+def compute_pre_activation(spec: dict[str, Any], features, ids):
+    """Linear pre-activation (no tanh, no scale)."""
+    import numpy as np
+
+    fl = int(spec["feature_len"])
+    mean = np.asarray(spec["feat_mean"], dtype=np.float32)
+    std = np.asarray(spec["feat_std"], dtype=np.float32)
+    x = (features[:, :fl].astype(np.float32, copy=False) - mean) / std
+    vocab = [int(v) for v in spec["vocab"]]
+    idx = id_index_table(vocab, ids)
+    zones = spec["zones"]
+    lin = spec["linear"]
+    w = np.asarray(lin["w"], dtype=np.float32)
+    zone_w = np.asarray(lin["zone_w"], dtype=np.float32)
+    b = float(lin["b"])
+    row_idx = np.arange(features.shape[0], dtype=np.int64)
+    extra = np.zeros(features.shape[0], dtype=np.float32)
+    for z, zone in enumerate(zones):
+        sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
+        zidx = idx[:, sl]
+        count = zone_counts(features, row_idx, zone)
+        extra += (zone_w[z][zidx] * count).sum(axis=1)
+    pre = x @ w + extra + b
+    if "race" in spec:
+        rb = spec["race"]
+        r = race_features(features[:, :FEATURE_LEN_V1])
+        r_x = (r - np.asarray(rb["mean"], dtype=np.float32)) / np.asarray(
+            rb["std"], dtype=np.float32
+        )
+        pre = pre + r_x @ np.asarray(rb["w"], dtype=np.float32)
+    return pre.astype(np.float32, copy=False)
+
+
+def _validate_base_model(base: dict[str, Any], path: Path) -> None:
+    if int(base.get("encoding", 1)) != 2:
+        raise SystemExit(f"--stack-on {path}: base must be encoding 2")
+    if base.get("arch") != "linear":
+        raise SystemExit(f"--stack-on {path}: base must be arch linear")
+    if int(base["feature_len"]) != FEATURE_LEN_V2:
+        raise SystemExit(f"--stack-on {path}: base feature_len must be {FEATURE_LEN_V2}")
+    zones = base.get("zones") or []
+    if len(zones) != 5:
+        raise SystemExit(f"--stack-on {path}: base zones must be the standard five")
+    for got, want in zip(zones, _zones_json(2)):
+        if (
+            got.get("name") != want["name"]
+            or int(got.get("id_offset")) != want["id_offset"]
+            or int(got.get("count")) != want["count"]
+            or got.get("hist_offset") != want["hist_offset"]
+        ):
+            raise SystemExit(f"--stack-on {path}: base zones must be the standard five")
+
+
+def _shard_deck_layout(meta: dict[str, Any]) -> tuple[list[str], int]:
+    decks = list(meta.get("decks") or [])
+    games = int(meta.get("games", 0))
+    if not decks or games <= 0:
+        raise ValueError("shard missing decks or games")
+    return decks, games
+
+
+def _row_deck_indices(
+    game_index,
+    side,
+    first_is_me,
+    decks: list[str],
+    games_per_pair: int,
+):
+    import numpy as np
+
+    n = len(decks)
+    gi = np.asarray(game_index, dtype=np.int64)
+    pair = gi // games_per_pair
+    i = pair // n
+    j = pair % n
+    s = np.asarray(side, dtype=np.int64)
+    own = np.where(s == 0, i, j)
+    opp = np.where(s == 0, j, i)
+    return own.astype(np.int32), opp.astype(np.int32), np.asarray(first_is_me, dtype=np.float32)
+
+
+def _stack_vocab(base_vocab: list[int], ids, row_idx) -> list[int]:
+    seen = set(int(v) for v in base_vocab)
+    import numpy as np
+
+    for start in range(0, row_idx.size, 8192):
+        sel = row_idx[start : start + 8192]
+        seen.update(int(x) for x in np.unique(ids[sel]).tolist())
+    rest = sorted(i for i in seen if i != 0)
+    return [0] + rest
+
+
+def _reindex_zone_row(row: list[float], old_vocab: list[int], new_vocab: list[int]) -> list[float]:
+    import numpy as np
+
+    old = np.asarray(row, dtype=np.float64)
+    out = np.zeros(len(new_vocab), dtype=np.float64)
+    for oid, card in enumerate(old_vocab):
+        pos = new_vocab.index(card) if card in new_vocab else 0
+        if pos == 0 and oid != 0:
+            out[0] += old[oid]
+        else:
+            out[pos] += old[oid]
+    return out.astype(np.float32).tolist()
+
+
+def _new_zone_extra(
+    zone_w,
+    ids,
+    features,
+    row_idx,
+    vocab: list[int],
+    zones: list[dict[str, Any]],
+    z_lo: int,
+    z_hi: int,
+):
+    import numpy as np
+
+    idx = id_index_table(vocab, ids[row_idx])
+    extra = np.zeros(row_idx.size, dtype=np.float64)
+    for z in range(z_lo, z_hi):
+        zone = zones[z]
+        sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
+        zidx = idx[:, sl]
+        count = zone_counts(features, row_idx, zone)
+        row_w = zone_w[z - z_lo]
+        for slot in range(int(zone["count"])):
+            c = count[:, slot]
+            ids_s = zidx[:, slot]
+            if zone["hist_offset"] is not None:
+                mask = c > 0
+                if not np.any(mask):
+                    continue
+                extra[mask] += c[mask] * row_w[ids_s[mask]]
+            else:
+                extra += c * row_w[ids_s]
+    return extra
+
+
+def _mse_tanh(pre, y):
+    import numpy as np
+
+    return float(np.mean((np.tanh(pre) - y) ** 2))
+
+
+def _lbfgs_numpy(
+    grad_fn,
+    x0,
+    max_iter: int = 200,
+    grad_tol: float = 1e-6,
+):
+    import numpy as np
+
+    x = x0.astype(np.float64, copy=True)
+    m = 10
+    s_hist: list[np.ndarray] = []
+    y_hist: list[np.ndarray] = []
+    rho_hist: list[float] = []
+    _, g = grad_fn(x)
+    for _ in range(max_iter):
+        if np.linalg.norm(g, ord=np.inf) <= grad_tol:
+            break
+        q = g.copy()
+        for s, y, rho in zip(reversed(s_hist), reversed(y_hist), reversed(rho_hist)):
+            a = rho * float(s @ q)
+            q = q - a * y
+        if s_hist:
+            ys = float(y_hist[-1] @ s_hist[-1])
+            yy = float(y_hist[-1] @ y_hist[-1])
+            h0 = ys / yy if yy > 0 else 1.0
+        else:
+            h0 = 1.0
+        r = h0 * q
+        for s, y, rho in zip(s_hist, y_hist, rho_hist):
+            b = rho * float(y @ r)
+            r = r + (float(s @ q) - b) * s
+        p = -r
+        loss0, g0 = grad_fn(x)
+        step = 1.0
+        for _ls in range(20):
+            x_new = x + step * p
+            loss1, g1 = grad_fn(x_new)
+            if loss1 <= loss0 + 1e-4 * step * float(g0 @ p):
+                s = x_new - x
+                y = g1 - g0
+                x = x_new
+                g = g1
+                if float(s @ y) > 1e-12:
+                    rho = 1.0 / float(s @ y)
+                    s_hist.append(s)
+                    y_hist.append(y)
+                    rho_hist.append(rho)
+                    if len(s_hist) > m:
+                        s_hist.pop(0)
+                        y_hist.pop(0)
+                        rho_hist.pop(0)
+                break
+            step *= 0.5
+        else:
+            break
+    return x
+
+
+def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
+    import hashlib
+    import numpy as np
+
+    base_path = Path(args.stack_on)
+    base = json.loads(base_path.read_text())
+    _validate_base_model(base, base_path)
+    data = load_dirs(args.data, args.max_samples)
+    encoding = int(data["encoding"])
+    if encoding != 3:
+        raise SystemExit("--stack-on requires encoding-3 data")
+    features = data["features"]
+    ids = data["ids"]
+    labels = data["labels"]
+    aux = data["aux"]
+    game_index = data["game_index"]
+    if features.shape[0] == 0:
+        raise SystemExit("no samples in --data")
+    train_idx, hold_idx = split_by_game(game_index, args.holdout, args.seed)
+    if hold_idx.size == 0:
+        raise SystemExit("--stack-on requires a non-empty holdout split")
+
+    metas = [_read_shard_meta(Path(d)) for d in args.data]
+    try:
+        decks, games_per_pair = _shard_deck_layout(metas[0])
+        for m in metas[1:]:
+            d2, g2 = _shard_deck_layout(m)
+            if d2 != decks or g2 != games_per_pair:
+                raise ValueError("mixed deck layout")
+    except ValueError as e:
+        if not getattr(args, "no_deck_controls", False):
+            raise SystemExit(f"--stack-on deck controls: {e} (use --no-deck-controls to skip)")
+        decks, games_per_pair = [], 0
+
+    cols = list(metas[0]["aux_columns"])
+    side = aux[:, cols.index("side")]
+    first_is_me = aux[:, cols.index("first_is_me")]
+    if decks:
+        own_deck, opp_deck, first_col = _row_deck_indices(
+            game_index, side, first_is_me, decks, games_per_pair
+        )
+        n_decks = len(decks)
+        use_deck = True
+    else:
+        own_deck = opp_deck = np.zeros(features.shape[0], dtype=np.int32)
+        first_col = np.zeros(features.shape[0], dtype=np.float32)
+        n_decks = 0
+        use_deck = False
+
+    y_all = labels.astype(np.float32, copy=False)
+    base_pre = compute_pre_activation(base, features, ids)
+    vocab = _stack_vocab([int(v) for v in base["vocab"]], ids, np.arange(features.shape[0]))
+    n_vocab = len(vocab)
+    zones = zones_for_encoding(3)
+    z_lo, z_hi = 5, 13
+    n_zone_w = (z_hi - z_lo) * (n_vocab - 1)
+    n_deck_w = (2 * n_decks + 1) if use_deck else 0
+
+    grid = [float(x) for x in getattr(args, "l2_grid", "1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1").split(",")]
+
+    def unpack(theta):
+        zw = theta[:n_zone_w].reshape(z_hi - z_lo, n_vocab - 1)
+        full = np.zeros((z_hi - z_lo, n_vocab), dtype=np.float64)
+        full[:, 1:] = zw
+        if use_deck:
+            d0 = n_zone_w
+            own_w = theta[d0 : d0 + n_decks]
+            opp_w = theta[d0 + n_decks : d0 + 2 * n_decks]
+            first_w = theta[d0 + 2 * n_decks]
+            return full, own_w, opp_w, first_w
+        return full, None, None, None
+
+    def objective(theta, row_idx, lams, return_grad=False, return_loss=False):
+        zw, own_w, opp_w, first_w = unpack(theta)
+        pre = base_pre[row_idx].astype(np.float64, copy=True)
+        if use_deck:
+            pre += own_w[own_deck[row_idx]]
+            pre += opp_w[opp_deck[row_idx]]
+            pre += first_w * first_col[row_idx]
+        idx = id_index_table(vocab, ids[row_idx])
+        y = y_all[row_idx]
+        pen = 0.0
+        for name, (a, b) in STACK_ZONE_ROWS.items():
+            lam = lams[name]
+            pen += 0.5 * lam * float(np.sum(zw[a - z_lo : b - z_lo, 1:] ** 2))
+        for z in range(z_lo, z_hi):
+            zone = zones[z]
+            sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
+            zidx = idx[:, sl]
+            count = zone_counts(features, row_idx, zone)
+            for slot in range(int(zone["count"])):
+                c = count[:, slot]
+                ids_s = zidx[:, slot]
+                if zone["hist_offset"] is not None:
+                    mask = c > 0
+                    if not np.any(mask):
+                        continue
+                    pre[mask] += c[mask] * zw[z - z_lo, ids_s[mask]]
+                else:
+                    pre += c * zw[z - z_lo, ids_s]
+        loss = float(np.mean((np.tanh(pre) - y) ** 2)) + pen
+        if not return_grad and not return_loss:
+            return loss
+        if return_loss and not return_grad:
+            return loss, np.zeros_like(theta)
+        grad = np.zeros_like(theta)
+        resid = (2.0 / row_idx.size) * (np.tanh(pre) - y) * (1.0 - np.tanh(pre) ** 2)
+        if use_deck:
+            d0 = n_zone_w
+            for d in range(n_decks):
+                grad[d0 + d] = float(np.sum(resid[own_deck[row_idx] == d]))
+                grad[d0 + n_decks + d] = float(np.sum(resid[opp_deck[row_idx] == d]))
+            grad[d0 + 2 * n_decks] = float(np.sum(resid * first_col[row_idx]))
+        off = 0
+        for z in range(z_lo, z_hi):
+            zone = zones[z]
+            sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
+            zidx = idx[:, sl]
+            count = zone_counts(features, row_idx, zone)
+            for slot in range(int(zone["count"])):
+                c = count[:, slot]
+                ids_s = zidx[:, slot]
+                if zone["hist_offset"] is not None:
+                    mask = (c > 0) & (ids_s > 0)
+                    if not np.any(mask):
+                        continue
+                    np.add.at(
+                        grad[off : off + n_vocab - 1],
+                        ids_s[mask] - 1,
+                        resid[mask] * c[mask],
+                    )
+                else:
+                    mask = ids_s > 0
+                    if not np.any(mask):
+                        continue
+                    np.add.at(
+                        grad[off : off + n_vocab - 1],
+                        ids_s[mask] - 1,
+                        resid[mask] * c[mask],
+                    )
+            off += n_vocab - 1
+        for name, (a, b) in STACK_ZONE_ROWS.items():
+            lam = lams[name]
+            for z in range(a, b):
+                g0 = (z - z_lo) * (n_vocab - 1)
+                g1 = g0 + (n_vocab - 1)
+                grad[g0:g1] += lam * zw[z - z_lo, 1:].reshape(-1)
+        if return_loss:
+            return loss, grad
+        return grad
+
+    def fit_rows(row_idx, lams):
+        theta0 = np.zeros(n_zone_w + n_deck_w, dtype=np.float64)
+        if use_deck:
+            theta0[n_zone_w:] = deck_theta
+
+        def fn(x):
+            return objective(x, row_idx, lams, return_grad=True, return_loss=True)
+
+        return _lbfgs_numpy(fn, theta0)
+
+    lams = {g: grid[-1] for g in STACK_ZONE_GROUPS}
+    ho = hold_idx
+    deck_theta = np.zeros(n_deck_w, dtype=np.float64)
+    if use_deck:
+
+        def deck_obj(dw, return_loss=False):
+            pre = base_pre[ho].astype(np.float64)
+            pre += dw[0:n_decks][own_deck[ho]]
+            pre += dw[n_decks : 2 * n_decks][opp_deck[ho]]
+            pre += dw[2 * n_decks] * first_col[ho]
+            loss = _mse_tanh(pre, y_all[ho])
+            if not return_loss:
+                return loss
+            grad = np.zeros_like(dw)
+            resid = (2.0 / ho.size) * (np.tanh(pre) - y_all[ho]) * (1.0 - np.tanh(pre) ** 2)
+            for d in range(n_decks):
+                grad[d] = float(np.sum(resid[own_deck[ho] == d]))
+                grad[n_decks + d] = float(np.sum(resid[opp_deck[ho] == d]))
+            grad[2 * n_decks] = float(np.sum(resid * first_col[ho]))
+            return loss, grad
+
+        deck_theta = _lbfgs_numpy(lambda x: deck_obj(x, return_loss=True), deck_theta)  # noqa: ARG005
+
+    def with_deck(pre, rows):
+        if not use_deck:
+            return pre
+        out = pre.astype(np.float64, copy=True)
+        out += deck_theta[0:n_decks][own_deck[rows]]
+        out += deck_theta[n_decks : 2 * n_decks][opp_deck[rows]]
+        out += deck_theta[2 * n_decks] * first_col[rows]
+        return out
+
+    def pre_from_fit(zw, own_w, opp_w, first_w, rows):
+        pre = base_pre[rows].astype(np.float64, copy=True)
+        if use_deck and own_w is not None:
+            pre += own_w[own_deck[rows]]
+            pre += opp_w[opp_deck[rows]]
+            pre += first_w * first_col[rows]
+        pre += _new_zone_extra(zw, ids, features, rows, vocab, zones, z_lo, z_hi)
+        return pre
+
+    mse_base = _mse_tanh(with_deck(base_pre[ho], ho), y_all[ho])
+    step_mses = [("base+deck", mse_base)]
+    for group in STACK_ZONE_GROUPS:
+        best_lam = lams[group]
+        best_mse = float("inf")
+        for lam in grid:
+            trial = dict(lams)
+            trial[group] = lam
+            theta = fit_rows(np.concatenate([train_idx, hold_idx]), trial)
+            zw, own_w, opp_w, first_w = unpack(theta)
+            mse = _mse_tanh(pre_from_fit(zw, own_w, opp_w, first_w, ho), y_all[ho])
+            if mse < best_mse - 1e-9 or (abs(mse - best_mse) <= 1e-9 and lam > best_lam):
+                best_mse = mse
+                best_lam = lam
+        lams[group] = best_lam
+        step_mses.append((group, best_mse))
+
+    warnings: list[str] = []
+    for g, lam in lams.items():
+        if lam == grid[0]:
+            warnings.append(f"{g} penalty at grid minimum ({lam})")
+        if lam == grid[-1]:
+            warnings.append(f"{g} penalty at grid maximum ({lam})")
+
+    all_idx = np.arange(features.shape[0], dtype=np.int32)
+    theta = fit_rows(all_idx, lams)
+    zw, own_w, opp_w, first_w = unpack(theta)
+
+    base_w = list(base["linear"]["w"])
+    base_mean = list(base["feat_mean"])
+    base_std = list(base["feat_std"])
+    out_w = base_w + [0.0] * (FEATURE_LEN_V3 - len(base_w))
+    out_mean = base_mean + [0.0] * (FEATURE_LEN_V3 - len(base_mean))
+    out_std = base_std + [1.0] * (FEATURE_LEN_V3 - len(base_std))
+    old_vocab = [int(v) for v in base["vocab"]]
+    zone_rows: list[list[float]] = []
+    for z in range(5):
+        zone_rows.append(_reindex_zone_row(base["linear"]["zone_w"][z], old_vocab, vocab))
+    full_zw = np.zeros((13, n_vocab), dtype=np.float32)
+    for z in range(5):
+        full_zw[z] = np.asarray(zone_rows[z], dtype=np.float32)
+    full_zw[z_lo:z_hi] = zw.astype(np.float32)
+
+    spec: dict[str, Any] = {
+        "arch": "linear",
+        "feature_len": FEATURE_LEN_V3,
+        "encoding": 3,
+        "feat_mean": out_mean,
+        "feat_std": out_std,
+        "vocab": vocab,
+        "zones": _zones_json(3),
+        "scale": float(base.get("scale", SCALE)),
+        "linear": {
+            "w": out_w,
+            "zone_w": full_zw.tolist(),
+            "b": float(base["linear"]["b"]),
+        },
+        "trained_on": {
+            "stack_on": str(base_path),
+            "stack_on_sha256": hashlib.sha256(base_path.read_bytes()).hexdigest(),
+            "dirs": [str(Path(d)) for d in args.data],
+            "l2_grid": grid,
+            "l2_choices": lams,
+            "deck_controls": use_deck,
+            "rows": [5, 6, 7, 8, 9, 10, 11, 12],
+        },
+    }
+    if "race" in base:
+        spec["race"] = base["race"]
+
+    top_weights: dict[str, list[tuple[float, int]]] = {}
+    for z in range(z_lo, z_hi):
+        name = zones[z]["name"]
+        pairs = [(float(abs(full_zw[z, i])), vocab[i]) for i in range(1, n_vocab)]
+        pairs.sort(reverse=True)
+        top_weights[name] = pairs[:15]
+
+    report = {
+        "arch": "linear",
+        "stack_on": str(base_path),
+        "holdout_mse_steps": step_mses,
+        "l2_choices": lams,
+        "top_weights": top_weights,
+        "warnings": warnings,
+        "deck_controls": use_deck,
+    }
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(_json_safe(spec)) + "\n")
+    report_path = out.with_suffix(out.suffix + ".report.json")
+    if out.suffix == ".json":
+        report_path = out.with_name(out.stem + ".report.json")
+    report_path.write_text(json.dumps(_json_safe(report), indent=2) + "\n")
+    lines = [
+        f"stack-on {base_path.name}",
+        f"holdout MSE base={mse_base:.6f}",
+    ]
+    for name, mse in step_mses[1:]:
+        lines.append(f"  after {name}: {mse:.6f}")
+    lines.append(f"l2 choices: {lams}")
+    for wname, pairs in top_weights.items():
+        lines.append(f"  {wname}: " + ", ".join(f"{cid}:{w:.4f}" for w, cid in pairs[:5]))
+    for w in warnings:
+        lines.append(f"warning: {w}")
+    text = "\n".join(lines)
+    print(text)
+    print(f"wrote {out} and {report_path}")
+    return report
 
 
 def format_report(report: dict[str, Any]) -> str:
@@ -983,6 +1560,9 @@ def format_report(report: dict[str, Any]) -> str:
 def train(args: argparse.Namespace) -> dict[str, Any]:
     import numpy as np
 
+    if getattr(args, "stack_on", None):
+        return train_stack_on(args)
+
     use_race = bool(getattr(args, "race", False))
     if use_race and args.model == "mlp":
         raise SystemExit("--race is only supported with --model linear")
@@ -993,6 +1573,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         raise SystemExit("--optimizer lbfgs is only supported with --model linear")
 
     data = load_dirs(args.data, args.max_samples)
+    encoding = int(data["encoding"])
+    if encoding == 3 and args.model == "mlp":
+        raise SystemExit("--model mlp is not supported with encoding 3")
 
     torch = _try_torch()
     if args.model == "mlp" and torch is None:
@@ -1002,7 +1585,6 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     if args.optimizer == "lbfgs" and torch is None:
         raise SystemExit("torch is required for --optimizer lbfgs")
     feature_len = int(data["feature_len"])
-    encoding = int(data["encoding"])
     features = data["features"]
     ids = data["ids"]
     labels = data["labels"]
@@ -1064,6 +1646,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             args.l2,
             args.lbfgs_iters,
             LBFGS_GRAD_TOL,
+            encoding=encoding,
         )
         train_meta.update(lbfgs_meta)
         trained_on_stub: dict[str, Any] = {}
@@ -1079,6 +1662,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             race_mean,
             race_std,
         )
+        if encoding == 3:
+            for z in range(5, 13):
+                spec["linear"]["zone_w"][z][0] = 0.0
     elif torch is not None:
         model, adam_meta = train_torch(
             args.model,
@@ -1098,6 +1684,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             use_race=use_race,
             race_mean=race_mean,
             race_std=race_std,
+            encoding=encoding,
         )
         train_meta.update(adam_meta)
         trained_on_stub: dict[str, Any] = {}
@@ -1113,6 +1700,9 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             race_mean,
             race_std,
         )
+        if encoding == 3 and args.model == "linear":
+            for z in range(5, 13):
+                spec["linear"]["zone_w"][z][0] = 0.0
     else:
         w, zone_w, b, race_w, adam_meta = train_linear_numpy(
             features,
@@ -1129,6 +1719,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             use_race=use_race,
             race_mean=race_mean,
             race_std=race_std,
+            encoding=encoding,
         )
         train_meta.update(adam_meta)
         spec = {
@@ -1138,11 +1729,14 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "feat_mean": mean.tolist(),
             "feat_std": std.tolist(),
             "vocab": vocab,
-            "zones": _zones_json(),
+            "zones": _zones_json(encoding),
             "scale": SCALE,
             "linear": {"w": w.tolist(), "zone_w": zone_w.tolist(), "b": b},
             "trained_on": {},
         }
+        if encoding == 3:
+            for z in range(5, 13):
+                zone_w[z][0] = 0.0
         if use_race and race_w is not None:
             spec["race"] = {
                 "version": 1,
@@ -1174,7 +1768,7 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     for path in args.eval or []:
         ev_path = Path(path)
         ev_spec = json.loads(ev_path.read_text())
-        report_key, v1_slice, note = _eval_holdout_plan(
+        report_key, feat_prefix, note = _eval_holdout_plan(
             ev_path, ev_spec, encoding, feature_len
         )
         if report_key is None:
@@ -1188,8 +1782,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             for hstart in range(0, hold_idx.size, BATCH):
                 hrows = hold_idx[hstart : hstart + BATCH]
                 chunk_feat = features[hrows]
-                if v1_slice:
-                    chunk_feat = chunk_feat[:, :FEATURE_LEN_V1]
+                if feat_prefix is not None:
+                    chunk_feat = chunk_feat[:, :feat_prefix]
                 ev_parts.append(predict(ev_spec, chunk_feat, ids[hrows]))
             ev_pred = np.concatenate(ev_parts)
         else:
@@ -1276,7 +1870,31 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="train optional race block (linear only; not with --optimizer lbfgs)",
     )
+    p.add_argument(
+        "--stack-on",
+        default=None,
+        help="encoding-2 linear base model for stacked encoding-3 fit",
+    )
+    p.add_argument(
+        "--no-deck-controls",
+        action="store_true",
+        help="omit per-deck controls during --stack-on (requires shard decks metadata)",
+    )
+    p.add_argument(
+        "--l2-grid",
+        default="1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1",
+        help="comma-separated L2 grid for --stack-on groups",
+    )
     args = p.parse_args(argv)
+    if args.stack_on:
+        if args.model != "linear":
+            raise SystemExit("--stack-on requires --model linear")
+        if args.race:
+            raise SystemExit("--stack-on cannot be used with --race")
+        if args.optimizer == "lbfgs":
+            raise SystemExit("--stack-on cannot be used with --optimizer lbfgs")
+        if args.l2 != 1e-4:
+            raise SystemExit("--stack-on cannot be used with --l2 (use --l2-grid)")
     train(args)
     return 0
 
