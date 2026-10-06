@@ -380,18 +380,40 @@ Every former gap is `ported` or owner-dropped. Owner-dropped form chrome stays l
 
 ---
 
+## 11. Play cues
+
+Animated overlays on each live step (human moves, bot moves, watch auto-play). Driven from `apply` event JSON (`resolve`, `random_pick`, slot `id`s, `destroy.player`). Settings drawer control; persisted in `localStorage`. Disabled in watch mode and when set to Off.
+
+| feature | old tool (file:line) | new client (file:line or "—") | status | gap spec |
+|---|---|---|---|---|
+| Play-cues setting (Off / Fast / Normal / Slow) | — | `ui/index.html:258-264`; `ui/src/main.ts:1358-1371,1448-1451`; `svwb.playCues` | ported | New-only extra. Default **Normal**. |
+| Cues off in watch mode | — | `ui/src/cues.ts:89-91` | ported | Watch uses step/play timing only; no cue layer. |
+| Resolve spotlight (gold ring pulse on source) | — | `ui/src/cues.ts:112-118`; `ui/css/play-cues.css:18-26,64-77` | ported | Yellow `#ffd666` ring + glow, 0.7s pulse on the resolving card / spell source / combat attacker. |
+| Attack arrow (attacker → target) | — | `ui/src/cues.ts:103-104,174-182`; `ui/css/play-cues.css:36-38,79-87` | ported | Orange `#ff8a5c` solid stroke; drawn before event walk. |
+| Choice arrow (source → picked target) | — | `ui/src/cues.ts:106-107,185-193`; `ui/css/play-cues.css:40-42` | ported | Blue `#7ec8ff`; uses `choice_offered.source` or last resolve. |
+| Random-pick arrow (dashed, source → target) | — | `ui/src/cues.ts:122-127`; `ui/css/play-cues.css:44-47` | ported | Purple `#c9a0ff` dashed; only for `random_pick` events after a resolve. |
+| Effect arrow (damage / restore) | — | `ui/src/cues.ts:130-137`; `ui/css/play-cues.css:49-51` | ported | Gold `#ffd666`; source from resolve chain; target from slot `id` when present. |
+| Destroy fade chip | — | `ui/src/cues.ts:140-144`; `ui/css/play-cues.css:53-62,89-97` | ported | Dark card-shaped fade at destroyed slot; uses `destroy.player` + `id`. |
+| Play spotlight (hand card leaving) | — | `ui/src/cues.ts:147-158` | ported | Same gold spotlight as resolve; skipped when hand is hidden (vs-bot). |
+| Target resolution by unit `id` | — | `ui/src/cues.ts:66-80,283-340`; `ui/src/fct.ts` | ported | Slot/hand cues prefer `data-uid` over slot index so board motion does not mis-aim arrows. |
+| Bot / watch pacing waits for cue duration | — | `ui/src/main.ts:418`; `ui/src/cues.ts:384-451` | ported | `botBeatMs(pace)` added to bot timer and watch delay after each step. |
+| `#cueLayer` fixed overlay, pointer-events none | — | `ui/index.html` `#cueLayer`; `ui/css/play-cues.css:1-16` | ported | SVG arrows + fixed spotlight/fade hosts; z-index 70 (above board, below modals). |
+| Stagger + hold timing per pace | — | `ui/src/cues.ts:14-21,95,162-163` | ported | Fast 90/550 ms; Normal 130/850 ms; Slow 180/1200 ms stagger/hold. |
+
+---
+
 ## Status counts
 
 | status | rows |
 |---|---|
-| ported | 204 |
+| ported | 217 |
 | missing | 0 |
 | dropped (by design) | 11 |
 | dropped (not representable) | 1 |
 | dropped (owner decision 2026-09-11) | 2 |
-| **total** | **218** |
+| **total** | **231** |
 
-Counts are feature rows in §§1–10 (the gap list is a reordering, not extra rows). SF (2026-09-11): undo-inside-choice is `ported` (one pick per press); the cyan form-cost badge and form-gate tooltip lines are `dropped (owner decision 2026-09-11)`.
+Counts are feature rows in §§1–11 (the gap list is a reordering, not extra rows). SF (2026-09-11): undo-inside-choice is `ported` (one pick per press); the cyan form-cost badge and form-gate tooltip lines are `dropped (owner decision 2026-09-11)`.
 
 ## Owner decided 2026-09-27
 

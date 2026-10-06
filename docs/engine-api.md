@@ -194,24 +194,31 @@ Legal actions in `Choice` are exactly `Choose(i)` over that list, plus `Confirm`
 
 ## Events
 
-`apply` returns the event log for the trace and the UI. Closed list (M1 may add variants that a pool card forces; each addition is a schema/docs change):
+`apply` returns the event log for the trace and the UI. Each variant serializes to a **one-key** JSON object (`{"draw": …}`, `{"resolve": …}`, …). The log is **output-only**: it is not part of `CanonicalState`, `hash`, or `search_key`. Extra fields and new variants (`resolve`, `random_pick`, slot `id`s, …) must not change legality, RNG consumption, or state transitions (A7 invariance).
+
+Closed list (each addition is a schema/docs change):
 
 ```text
+enum EventSource {
+    Ref(SourceRef),
+    Combat { player: PlayerId, id: u32 },
+}
+
 enum Event {
     Draw { player: PlayerId, card: CardId },
     Mulligan { player: PlayerId, swapped: Vec<CardId> },
     Play { player: PlayerId, card: CardId, form: PlayForm },
     Summon { player: PlayerId, card: CardId, slot: Slot },
     Enter { slot: Slot },
-    Damage { target: Target, amount: i32, lethal: bool },
-    Restore { target: Target, amount: i32 },
-    Destroy { slot: Slot, card: CardId },
+    Damage { target: EventTarget, amount: i32, lethal: bool, unit: Option<u32> },
+    Restore { target: EventTarget, amount: i32, unit: Option<u32> },
+    Destroy { slot: Slot, card: CardId, player: PlayerId, id: u32 },
     Banish { card: CardId, from: Zone },
     Transform { slot: Slot, into: CardId },
     Evolve { slot: Slot, super: bool, granted: bool },
-    TriggerFired { source: Source, on: TriggerTag },
-    ChoiceOffered { player: PlayerId, node: ChoiceNode },
-    RandomPick { what: PickWhat, chose: PickOut },
+    Resolve { source: EventSource },
+    ChoiceOffered { player: PlayerId, node: ChoiceNode, source: Option<SourceRef> },
+    RandomPick { what: PickWhat, target: TargetOpt, unit: Option<u32> },
     Counter { key: CounterKey, value: i32 },
     CrestGain { player: PlayerId, id: CrestId },
     CrestRemove { player: PlayerId, id: CrestId },
@@ -221,6 +228,61 @@ enum Event {
     Win { player: PlayerId },
 }
 ```
+
+(`TriggerFired` was never emitted; removed from the contract.)
+
+### JSON shapes (implemented)
+
+Wire format is identical from `wasm` `apply`, Python `Game.apply`, and trace replay. Keys use snake_case; players are `"a"` / `"b"`.
+
+| Variant | JSON shape |
+|---|---|
+| `draw` | `{player, card}` |
+| `mulligan` | `{player, swapped: [card, …]}` |
+| `play` | `{player, card, form}` — `form` is `"normal"` or `{enhance\|accelerate\|crystallize: paid}` |
+| `summon` | `{player, card, slot}` |
+| `enter` | `{slot}` |
+| `damage` | `{target, amount, lethal}` |
+| `restore` | `{target, amount}` |
+| `destroy` | `{slot, card, player, id}` — `player` is the side that **owned** the card on the field |
+| `banish` | `{card, from}` — `from` ∈ `field\|hand\|deck\|cemetery\|crests` |
+| `transform` | `{slot, into}` |
+| `evolve` | `{slot, super, granted}` |
+| `resolve` | `{source}` — see below |
+| `choice_offered` | `{player, node, source?}` — `node` matches `ChoiceNode`; optional `source` is a `SourceRef` |
+| `random_pick` | `{what, target}` — see below |
+| `counter` | `{key, value}` |
+| `crest_gain` / `crest_remove` | `{player, id}` |
+| `fuse` | `{host, partners: [card, …]}` |
+| `turn_start` | `{player, turn}` |
+| `turn_end` | `{player}` |
+| `win` | `{player}` |
+
+**Targets** (`damage` / `restore` / `random_pick.target`): leader `{leader: "a"\|"b"}`; field slot `{player, slot, id?}`; hand `{hand: {player, pos}}`; deck `{deck: {player, id}}`; bare card `{card}`; mode `{mode}`.
+
+**`resolve.source`:** a `SourceRef` — `{field\|hand\|spell\|crest\|leader: …}` (same shapes as bindings / `full()`) — or combat `{combat: {player, id}}` (attacker instance id).
+
+**Slot `id`:** when the target is a field slot and the instance id is known at emit time, `damage`, `restore`, and `random_pick` include `"id": <u32>`. Leader targets never carry `id`. `destroy` always includes `id > 0`.
+
+### Resolve contract
+
+Before the first **effect** event of each resolving op, the log includes a `resolve` marker naming that op's source. Effect events that require a preceding resolve:
+
+- `damage` or `restore` whose `target` is a field slot (with `id` when known)
+- `random_pick` (field-slot targets only)
+
+Consecutive resolve markers with the **same** source are collapsed (nested spell bodies emit one marker per distinct source). Play-cues and FCT walk the log left-to-right, keeping the latest resolve as the attribution source until the next resolve.
+
+### `random_pick` scope
+
+`random_pick` is emitted only from effect-time random target / deck search rolls (`pick_targets_rolling`), not from draw, coin, reanimate, PP split, or other RNG that only updates `State.picks`. Implemented `what` values:
+
+| `what` | Meaning |
+|---|---|
+| `random_target` | Random follower (or leader when no followers) chosen for an effect |
+| `multiset_pick` | Random pick from a deck multiset search (`among: "deck"`) |
+
+Other `PickWhat` strings exist on `State.picks` for trace/oracle replay but do **not** produce `random_pick` events. Field-slot picks include `target.id` when the instance is on the board; leader/hand/deck/card targets omit it or use the generic `TargetOpt` shape without a resolve requirement.
 
 ## Hash, snapshot, encode
 
@@ -956,7 +1018,7 @@ The WASM binary `include_str!`s every authored `cards/**/*.json` except `cards/o
 |---|---|---|
 | `new Game(seed, deckA, deckB, first)` | `Game` | `seed` is a bigint or number; `deckA` / `deckB` are JSON multisets `{id: n}`; `first` is `"coin"` \| `"a"` \| `"b"` |
 | `legal()` | string | JSON array of `NeutralAction`, same order as `legal_actions` |
-| `apply(action)` | string | JSON array of `Event`; throws a string naming the action and `legal` length on `Illegal` |
+| `apply(action)` | string | JSON array of one-key `Event` objects (see **Events** — `resolve`, slot `id`s, `random_pick`, `destroy.player`, `choice_offered.source`). Output-only: does not change `hash()` or `legal()`. Throws a string naming the action and `legal` length on `Illegal`. |
 | `snapshot()` | string | `CanonicalState` JSON (`snapshot_json`) |
 | `full()` | string | the full `State` as JSON (perfect information; the client masks nothing yet) |
 | `hash()` | string | `u64` as a decimal string |
@@ -1126,7 +1188,7 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | `arena.deck_fingerprint(deck: dict[str, int]) -> str` | Canonical deck fingerprint: distinct ids sorted ascending as `<id>x<count>`, joined with `,`. Same as the engine's `deck_fingerprint_counts`. |
 | `Game(db, seed, deck_a, deck_b, first="coin", opening_hands=None)` | `deck_*` are `{id: count}`; `opening_hands` is the trace header shape. |
 | `Game.legal() -> list[dict]` | `NeutralAction` dicts, engine order. |
-| `Game.apply(action, rng=None) -> list[dict]` | Event dicts. `rng` is the trace line's pick array (replay). Raises `arena.Illegal(str)`. |
+| `Game.apply(action, rng=None) -> list[dict]` | Event dicts (same JSON as wasm `apply`; see **Events**). Output-only extensions must not change `hash()`, `search_key()`, or `legal()`. `rng` is the trace line's pick array (replay). Raises `arena.Illegal(str)`. |
 | `Game.snapshot() -> dict` | `CanonicalState` (`docs/trace-format.md`). |
 | `Game.full() -> dict` | Perfect-information dump of public `State` fields (instance ids, flags, ordered zones). |
 | `Game.hash() -> int` | FNV-1a 64 of the canonical snapshot JSON. |
