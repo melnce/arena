@@ -66,7 +66,6 @@ export type Session = {
     turn: number;
   } | null;
   mulliganSwap: [boolean, boolean, boolean, boolean];
-  suppressFloater: boolean;
   frozen: {
     events: EngineEvent[];
     played: { a: string[]; b: string[] };
@@ -95,7 +94,6 @@ export function createSession(cfg: SessionConfig): Session {
     rerolls: 0,
     checkpoint: null,
     mulliganSwap: [false, false, false, false],
-    suppressFloater: false,
     frozen: { events: [], played: { a: [], b: [] }, destroyed: { a: [], b: [] }, ply: 0 },
   };
 }
@@ -169,40 +167,12 @@ type Derived = {
   ply: number;
 };
 
-function ownersOfDestroyed(before: Game, events: EngineEvent[]): DestroyedEntry[] {
-  let full: FullState | null = null;
-  try {
-    full = JSON.parse(before.full()) as FullState;
-  } catch {
-    full = null;
-  }
-  const used = new Set<string>();
+function ownersOfDestroyed(_before: Game, events: EngineEvent[]): DestroyedEntry[] {
   const out: DestroyedEntry[] = [];
   for (const ev of events) {
     if (!("destroy" in ev)) continue;
-    const d = ev.destroy as { card: string; slot?: number };
-    let owner: PlayerId | null = null;
-    if (full && typeof d.slot === "number") {
-      for (const p of ["a", "b"] as PlayerId[]) {
-        const key = `${p}:${d.slot}:${d.card}`;
-        if (used.has(key)) continue;
-        const inst = full.players[p].field[d.slot];
-        if (inst && inst.card === d.card) {
-          owner = p;
-          used.add(key);
-          break;
-        }
-      }
-    }
-    if (!owner && full) {
-      for (const p of ["a", "b"] as PlayerId[]) {
-        if (full.players[p].field.some((c) => c && c.card === d.card)) {
-          owner = p;
-          break;
-        }
-      }
-    }
-    out.push({ card: d.card, owner: owner ?? "a" });
+    const d = ev.destroy as { card: string; player: PlayerId };
+    out.push({ card: d.card, owner: d.player });
   }
   return out;
 }
@@ -244,7 +214,6 @@ function undoOne(s: Session): boolean {
   s.game = step.before;
   s.botSeq = step.botSeqBefore;
   s.actions.pop();
-  s.suppressFloater = true;
   rebuildDerived(s);
   return true;
 }
@@ -263,7 +232,6 @@ function redoOne(s: Session): boolean {
   s.game = item.after;
   s.botSeq = item.human ? item.botSeqBefore : item.botSeqBefore + 1;
   s.actions.push(item.action);
-  s.suppressFloater = true;
   rebuildDerived(s);
   return true;
 }
@@ -352,7 +320,6 @@ export function restoreCheckpoint(s: Session): boolean {
   s.ply = s.checkpoint.ply;
   s.botSeq = s.checkpoint.botSeq;
   s.rerolls = 0;
-  s.suppressFloater = true;
   return true;
 }
 
@@ -365,7 +332,6 @@ export function rerollCheckpoint(s: Session): boolean {
   const seed = rerollSeed(s.cfg.seed, next);
   s.game.reseed(seed.toString());
   s.actions.push({ reseed: seed.toString() });
-  s.suppressFloater = true;
   return true;
 }
 
@@ -467,7 +433,6 @@ export function replayPosition(log: PositionLog): ReplayPositionResult {
       warning = warning ? `${warning} ${msg}` : msg;
     }
   }
-  s.suppressFloater = true;
   return { session: s, warning };
 }
 

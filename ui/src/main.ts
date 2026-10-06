@@ -1,7 +1,17 @@
 import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
 import { publicUrl } from "./base.ts";
 import { catalogIds, decks, loadCatalog, lookupText, parseDeckJson } from "./catalog.ts";
-import { clearFloaters, reflashDamage, spawnFloaters } from "./fct.ts";
+import {
+  botBeatMs,
+  clearCues,
+  cueLog,
+  captureCueRects,
+  planCues,
+  playCuePlan,
+  readPace,
+  type PlayCuesPace,
+} from "./cues.ts";
+import { captureDamageRects, clearFloaters, reflashDamage, spawnFloaters } from "./fct.ts";
 import { bindPointer } from "./input.ts";
 import { sessionBoardInfo, sessionHandInfo, sessionPlayerInfo } from "./info.ts";
 import * as L from "./legal.ts";
@@ -22,6 +32,7 @@ import {
   canUndo,
   createSession,
   disposeSession,
+  fullState,
   isHumanActing,
   lastLocalBotStepMeta,
   legalActions,
@@ -33,6 +44,7 @@ import {
   setCheckpoint,
   toPositionLog,
   undo,
+  type HistStep,
   type Session,
 } from "./session.ts";
 import { namedCounterValue, renderCard } from "./render/card.ts";
@@ -246,6 +258,8 @@ function exposeArena(): void {
     }),
     catalogIds,
     cardText: (id) => lookupText(id),
+    cues: () => cueLog(),
+    cueLog: () => cueLog(),
     mountNamedCounter: (vars) => {
       const host = document.getElementById("blueBoard") ?? document.body;
       const inst = {
@@ -313,6 +327,7 @@ function applyHistory(fn: (s: Session) => boolean): void {
   window.clearTimeout(watchTimer);
   if (!fn(session)) return;
   clearFloaters();
+  clearCues();
   resetZoneCache();
   pending = null;
   paint();
@@ -368,14 +383,39 @@ function reportFinishedGame(s: Session): void {
   });
 }
 
+function lastHistStep(s: Session): HistStep | null {
+  return s.past.length ? s.past[s.past.length - 1]! : null;
+}
+
+function beforeFullFromStep(step: HistStep) {
+  return JSON.parse(step.before.full()) as import("./types.ts").FullState;
+}
+
 function showCombat(events: EngineEvent[]): void {
   if (!session) return;
-  const show = !session.suppressFloater && floatingTextOn();
-  session.suppressFloater = false;
+  const step = lastHistStep(session);
+  const pace = readPace();
+  const showFloaters = floatingTextOn();
+  const damageRects = showFloaters ? captureDamageRects(events) : undefined;
+  let cuePlan = null;
+  let cueRects: Map<string, DOMRect> | undefined;
+  if (step && pace !== "off") {
+    const before = beforeFullFromStep(step);
+    cuePlan = planCues(
+      { action: step.action, events: step.events, human: step.human, before },
+      fullState(session),
+      session.cfg,
+      session.events,
+    );
+    if (cuePlan.cues.length) cueRects = captureCueRects(cuePlan);
+  }
   pending = null;
-  if (show) spawnFloaters(events, true);
   paint();
-  if (show) reflashDamage(events);
+  if (showFloaters) {
+    spawnFloaters(events, true, damageRects);
+    reflashDamage(events);
+  }
+  if (cuePlan && cueRects && pace !== "off") playCuePlan(cuePlan, pace, cueRects);
   if (session.cfg.mode === "vs-bot" && session.game.phase() === "terminal") {
     reportFinishedGame(session);
   }
@@ -539,6 +579,8 @@ function startSession(cfg: SessionConfig): void {
   localBotGameError = null;
   localBotRemoteCount = 0;
   localBotThinking = false;
+  clearFloaters();
+  clearCues();
   disposeSession(session);
   session = createSession(cfg);
   resetZoneCache();
@@ -749,10 +791,10 @@ async function maybeBots(): Promise<void> {
             events = botStep(s);
             staleRuns = 0;
             showCombat(events);
-            await new Promise<void>((r) => window.setTimeout(r, 280));
+            await botBeatDelay();
             continue;
           }
-          await new Promise<void>((r) => window.setTimeout(r, 280));
+          await botBeatDelay();
           continue;
         }
         staleRuns = 0;
@@ -763,7 +805,7 @@ async function maybeBots(): Promise<void> {
       }
       guard += 1;
       showCombat(events);
-      await new Promise<void>((r) => window.setTimeout(r, 280));
+      await botBeatDelay();
     }
     if (session === s) paint();
   } finally {
@@ -786,6 +828,21 @@ function watchDelayMs(): number {
   return watchDelayMsFromValue(sl ? Number(sl.value) : 5);
 }
 
+function botBeatDelay(): Promise<void> {
+  const pace = readPace();
+  const ms = botBeatMs(pace);
+  return new Promise<void>((r) => window.setTimeout(r, ms));
+}
+
+function watchStepDelayMs(): number {
+  const base = watchDelayMs();
+  const pace = readPace();
+  if (pace === "off") return base;
+  const cueHold = cueLog()?.totalMs ?? 0;
+  if (base === 0) return cueHold;
+  return Math.max(base, cueHold);
+}
+
 function formatWatchSpeedLabel(delay: number): string {
   if (delay <= 0) return "max";
   const sec = delay / 1000;
@@ -801,7 +858,7 @@ function syncWatchSpeedReadout(): void {
 function scheduleWatch(): void {
   window.clearTimeout(watchTimer);
   if (!watchPlaying || !session) return;
-  const delay = watchDelayMs();
+  const delay = watchStepDelayMs();
   const step = () => {
     if (!watchPlaying || !session || session.game.phase() === "terminal") {
       watchPlaying = false;
@@ -1052,6 +1109,8 @@ function initHotkeys(): void {
     if (e.key === "F7") {
       e.preventDefault();
       if (session && restoreCheckpoint(session)) {
+        clearFloaters();
+        clearCues();
         resetZoneCache();
         paint();
         refreshCheckpointStatus();
@@ -1060,6 +1119,8 @@ function initHotkeys(): void {
     if (e.key === "F8") {
       e.preventDefault();
       if (session && rerollCheckpoint(session)) {
+        clearFloaters();
+        clearCues();
         resetZoneCache();
         paint();
         refreshCheckpointStatus();
@@ -1090,6 +1151,8 @@ function loadLogSafely(log: PositionLog): void {
   disposeSession(session);
   session = next;
   pending = null;
+  clearFloaters();
+  clearCues();
   resetZoneCache();
   paint();
 }
@@ -1168,6 +1231,8 @@ function initPositions(): void {
   byId("restoreCheckpointBtn")?.addEventListener("click", () => {
     if (!session) return;
     restoreCheckpoint(session);
+    clearFloaters();
+    clearCues();
     resetZoneCache();
     paint();
     refreshCheckpointStatus();
@@ -1175,6 +1240,8 @@ function initPositions(): void {
   byId("rerollBtn")?.addEventListener("click", () => {
     if (!session) return;
     rerollCheckpoint(session);
+    clearFloaters();
+    clearCues();
     resetZoneCache();
     paint();
     refreshCheckpointStatus();
@@ -1288,13 +1355,20 @@ function restorePersistedToggles(): void {
   const bottom = localStorage.getItem("svwb.activeOnBottom") === "1";
   const fct = localStorage.getItem("svwb.floatingCombatText");
   const localBotStored = localStorage.getItem("svwb.localBot");
+  const playCuesStored = localStorage.getItem("svwb.playCues");
   const bottomBox = byId<HTMLInputElement>("activeOnBottomToggle");
   const fctBox = byId<HTMLInputElement>("floatingCombatTextToggle");
   const localBotBox = byId<HTMLInputElement>("localBotToggle");
+  const playCuesBox = byId<HTMLSelectElement>("playCuesSelect");
   if (bottomBox) bottomBox.checked = bottom;
   document.body.classList.toggle("active-on-bottom", bottom);
   if (fctBox) fctBox.checked = fct == null ? true : fct !== "0";
   if (localBotBox) localBotBox.checked = localBotStored == null ? true : localBotStored !== "0";
+  if (playCuesBox) {
+    const allowed = new Set(["off", "fast", "normal", "slow"]);
+    playCuesBox.value =
+      playCuesStored && allowed.has(playCuesStored) ? playCuesStored : "normal";
+  }
   const speedRaw = localStorage.getItem("svwb.watchSpeed");
   const sl = byId<HTMLInputElement>("watchSpeed");
   if (sl && speedRaw != null) {
@@ -1370,6 +1444,15 @@ async function boot(): Promise<void> {
   byId("floatingCombatTextToggle")?.addEventListener("change", (e) => {
     const on = (e.target as HTMLInputElement).checked;
     localStorage.setItem("svwb.floatingCombatText", on ? "1" : "0");
+  });
+  byId("playCuesSelect")?.addEventListener("change", (e) => {
+    const value = (e.target as HTMLSelectElement).value as PlayCuesPace;
+    try {
+      localStorage.setItem("svwb.playCues", value);
+    } catch {
+      /* quota / private mode */
+    }
+    if (value === "off") clearCues();
   });
   byId("localBotToggle")?.addEventListener("change", (e) => {
     const on = (e.target as HTMLInputElement).checked;

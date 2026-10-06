@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="./css/tooltip.css" />
     <link rel="stylesheet" href="./css/animation.css" />
     <link rel="stylesheet" href="./css/floating-combat-text.css" />
+    <link rel="stylesheet" href="./css/play-cues.css" />
     <link rel="stylesheet" href="./css/client.css" />
     <style>
       .drawer {
@@ -254,6 +255,13 @@
                 <input type="checkbox" id="floatingCombatTextToggle" checked />
                 Floating combat text
               </label>
+              <label for="playCuesSelect">Play cues</label>
+              <select id="playCuesSelect" title="Animated play cues on live steps">
+                <option value="off">Off</option>
+                <option value="fast">Fast</option>
+                <option value="normal" selected>Normal</option>
+                <option value="slow">Slow</option>
+              </select>
             </div>
           </div>
           <p id="bundleMeta" class="checkpoint-status"></p>
@@ -301,6 +309,7 @@
       </section>
     </aside>
 
+    <div id="cueLayer" aria-hidden="true"></div>
     <div id="gameShell">
       <main id="appRoot">
         <section class="side side-red">

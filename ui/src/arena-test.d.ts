@@ -63,6 +63,14 @@ declare global {
         grantedBy?: string;
         forms?: Array<{ kind: string; cost: number; printed: string }>;
       };
+      cues(): {
+        cues: Array<{ at: number; cue: unknown }>;
+        totalMs: number;
+      } | null;
+      cueLog(): {
+        cues: Array<{ at: number; cue: unknown }>;
+        totalMs: number;
+      } | null;
     };
   }
 }
