@@ -1199,7 +1199,7 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | `Game.bot_action_explain(policy, seed) -> dict` | Same decision as `bot_action_value` for `h0` specs, plus a per-candidate explain record (see below). Non-`h0` policies return `{"chosen": NeutralAction, "path": "opaque"}`. Recording does not change the chosen action or node count. |
 | `Game.sample_opponent_hands(policy, seed, n) -> list[list[str]]` | `n` sampled opponent hands (card ids) for the side to move's opponent under the policy's `info`, `deal`, and `hread` settings. Root seeds match `H0::choose`. `h0` only. |
 | `arena.play_random(db, seed, deck_a, deck_b, first="coin") -> dict` | `{winner, turns, actions, first}`. Random-legal + `policy_rng`. |
-| `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False, export=None, export_epsilon=0.0) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)`; both seats share `policy_rng(game seed)` as the bench does. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end, mull_a, mull_b}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). `mull_a` / `mull_b` are each `{"hand": ["<id>", …], "swap": [bool, bool, bool, bool]}` or `null` (pre-mulligan hand in slot order and the confirm mask). With `records=False` the output is byte-identical to before this field was added. Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. `export=None` (default) is byte-identical to today — no extra files, no `"export"` key. `export=<dir>` writes training-sample shards (see Training samples (M5b)) and adds `"export": {dir, samples, games}`; `export_epsilon` is ε-greedy exploration on those games (inner policy still asked first). |
+| `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False, export=None, export_epsilon=0.0, encoding=1, game_offset=0) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)` where `game_index` is the per-pair game index `g`; both seats share `policy_rng(game seed)` as the bench does. Optional `game_offset=K` (default `0`) plays indices `K..K+games−1` instead of `0..games−1` (same seed, first player, and `records[].g`); `export` with `K>0` is refused. When `K>0`, the JSON includes `"game_offset": K`; `K=0` is byte-identical to before. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end, mull_a, mull_b}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). `mull_a` / `mull_b` are each `{"hand": ["<id>", …], "swap": [bool, bool, bool, bool]}` or `null` (pre-mulligan hand in slot order and the confirm mask). With `records=False` the output is byte-identical to before this field was added. Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. `export=None` (default) is byte-identical to today — no extra files, no `"export"` key. `export=<dir>` writes training-sample shards (see Training samples (M5b)) and adds `"export": {dir, samples, games}`; `export_epsilon` is ε-greedy exploration on those games (inner policy still asked first). |
 | `py/stats.py::wilson(k, n, z=1.96) -> (lo, hi)` | Wilson score interval for `k` successes in `n` trials, clipped to `[0, 1]`. `n == 0` → `(0.0, 1.0)`. |
 
 `py/matchup.py` loads `oracle/decks/*.json` (plus `--deck-file` extras in the
@@ -1210,7 +1210,8 @@ games/s, `os.cpu_count()`, per-deck row/column rates). `--policy-a` /
 `--policy-b` default to `--policy`; `--first` defaults to `alternate`.
 `--export <dir>` / `--export-epsilon <f>` (default 0) forward to `matchup`;
 the summary prints `samples: N (k per game)` when exporting.
-`matchup.json` also stores `wilson95` per cell and `summary`.
+`--game-offset K` (default 0) forwards to `arena.matchup`; refused with
+`--export` when `K>0`. `matchup.json` also stores `wilson95` per cell and `summary`.
 
 ## H0 explain (`bot_action_explain`)
 
@@ -1600,7 +1601,7 @@ before any matchup file is written.
 |---|---|---|
 | **screen** | For each candidate `C` vs `--baseline` `B` (default `h0`): `--policy-a C --policy-b B --games` `--screen-games` (default 4 = 1 024 games over the 16 decks), `--seed` (default 1). Once: `--policy B --games` `--tp-games` (default 1) → `tp-baseline`. Per candidate: `--policy C --games <tp-games>` → `tp-cNN`. `--decks` / `--threads` pass through. | `cNN-screen.*`, `tp-cNN.*`, `tp-baseline.*` |
 | **finalists** | Rank by screen rate; keep the top `--finalists` (default 2) among those whose screen interval's **high** end is **above** 0.50 (already lost at ±3 % → no final; high end exactly 0.50 is not above). The choice and the reason for every candidate (`finalist`, `skipped: interval high 0.48 < 0.50`, `not in top 2`) go into `RUN.json` and the summary. | `RUN.json` |
-| **final** | For each finalist: main `--games` `--final-games` (default 16 = 4 096) and reverse `--policy-a B --policy-b C --games` `--final-reverse` (default 8 = 2 048). Optional `--mirrors <deck …>` at `--mirror-games` (default none). | `cNN-final.*`, `cNN-reverse.*`, `cNN-mirror-<deck>.*` |
+| **final** | For each finalist: main `--games` `--final-games` (default 16 = 4 096) and reverse `--policy-a B --policy-b C --games` `--final-reverse` (default 8 = 2 048). Optional `--mirrors <deck …>` at `--mirror-games` (default none). With `--early-stop`, each arm is played in `--stop-chunk` slices via `matchup.py --game-offset`, merged back into the usual `cNN-final.json` / `cNN-reverse.json`; see below. | `cNN-final.*`, `cNN-reverse.*`, `cNN-mirror-<deck>.*`, optional `*.part<N>.*` |
 | **summary** | Written from the JSON files (never by parsing the text). | `SUMMARY.md` |
 | **publish** | Off unless `--publish`. Same flags and worktree / orphan-branch mechanics as `iterate.py` (`--publish-remote`, `--publish-branch`, `--publish-dir`). Copies `<tag>/*.txt`, `*.json`, `SUMMARY.md`; never touches the main working tree; nothing new to commit is not an error. | copy into the results worktree |
 
@@ -1629,7 +1630,30 @@ rate, or `best: none` when there is no finalist.
 
 `py/runlib.py` is the shared home of the helpers both drivers import
 (`verdict`, `format_verdict_line`, `reverse_candidate`, the tee runner,
-the matchup caller, Wilson/rate formatting, and publish / worktree).
+the matchup caller, Wilson/rate formatting, publish / worktree, and the
+`--early-stop` probability / merge helpers).
+
+### Early stopping (`--early-stop`)
+
+Opt-in. Without it, `sweep.py` is byte-identical to before. Flags (all
+require `--early-stop` except as noted):
+
+| flag | default | meaning |
+|---|---|---|
+| `--early-stop` | off | chunked finals with predictive stopping |
+| `--stop-chunk C` | 2 | games per pair per chunk (even; must divide both final arms) |
+| `--stop-thresholds T…` | `0.51` | pooled thresholds the runbook gates on |
+| `--stop-gamma γ` | 0.02 | stop when one decision class reaches probability ≥ 1−γ |
+| `--stop-min-games N` | 1 024 | no stop before N decisive final games this run |
+| `--stop-combine TAG` | none | confirm run: decide on counts combined with `<root>/TAG` |
+
+After each chunk, exact class probabilities (Beta-binomial arms, stdlib
+`math.lgamma` only) decide whether to continue. Chunk files
+`<stem>-final.part<j>.json` merge into the arm JSON unchanged for readers.
+`RUN.json` records `"early_stop"` (flags, per-finalist looks, stop/no-stop);
+`SUMMARY.md` adds one `early stop:` line per finalist. With
+`--stop-combine`, a `## combined with <TAG>` table sums counts from both runs.
+`--mirrors` is refused with `--early-stop`.
 
 ## Blunder review (`py/review.py`)
 

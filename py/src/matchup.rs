@@ -112,6 +112,7 @@ struct GameRow {
         export = None,
         export_epsilon = 0.0,
         encoding = 1,
+        game_offset = 0,
     )
 )]
 #[allow(clippy::too_many_arguments)]
@@ -130,6 +131,7 @@ pub fn py_matchup<'py>(
     export: Option<&str>,
     export_epsilon: f32,
     encoding: u8,
+    game_offset: u32,
 ) -> PyResult<Bound<'py, PyAny>> {
     let encoding = EncodingVersion::parse(encoding)
         .ok_or_else(|| py_err_msg(format!("encoding must be 1 or 2 (got {encoding})")))?;
@@ -155,8 +157,18 @@ pub fn py_matchup<'py>(
     let db = db.inner.clone();
     let n_threads = threads.unwrap_or_else(num_cpus_hint);
     let jobs: Vec<(usize, usize, u32)> = (0..n)
-        .flat_map(|i| (0..n).flat_map(move |j| (0..games).map(move |g| (i, j, g))))
+        .flat_map(|i| {
+            (0..n).flat_map(move |j| {
+                (game_offset..game_offset.saturating_add(games)).map(move |g| (i, j, g))
+            })
+        })
         .collect();
+
+    if game_offset > 0 && export.is_some_and(|p| !p.is_empty()) {
+        return Err(py_err_msg(
+            "export together with a non-zero game_offset is not supported",
+        ));
+    }
 
     let export_dir = match export {
         Some(p) if !p.is_empty() => Some(PathBuf::from(p)),
@@ -287,6 +299,11 @@ pub fn py_matchup<'py>(
         "threads": n_threads,
         "matrix": matrix,
     });
+    if game_offset > 0 {
+        top.as_object_mut()
+            .expect("object")
+            .insert("game_offset".into(), serde_json::json!(game_offset));
+    }
     if records {
         let recs: Vec<serde_json::Value> = rows
             .iter()
