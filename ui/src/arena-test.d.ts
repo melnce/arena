@@ -63,6 +63,13 @@ declare global {
         grantedBy?: string;
         forms?: Array<{ kind: string; cost: number; printed: string }>;
       };
+      spotlightLog(): Array<{
+        card: string;
+        form: "normal" | { enhance: number } | { accelerate: number } | { crystallize: number };
+        shownAt: number;
+        hiddenAt: number;
+      }>;
+      spotlightEnqueue(events: unknown[]): void;
     };
   }
 }
