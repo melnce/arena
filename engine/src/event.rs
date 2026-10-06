@@ -1,9 +1,16 @@
 //! Closed event list from `docs/engine-api.md`.
 
-use crate::card::{CardId, TriggerTag};
+use crate::card::CardId;
 use crate::ids::{PlayerId, Slot};
-use crate::state::{ChoiceNode, PlayForm};
+use crate::state::{ChoiceNode, PlayForm, SourceRef, TargetOpt};
 use crate::trace::PickWhat;
+
+/// Event-only source marker for `resolve` (wraps `SourceRef` or combat attacker).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EventSource {
+    Ref(SourceRef),
+    Combat { player: PlayerId, id: u32 },
+}
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -32,14 +39,18 @@ pub enum Event {
         target: EventTarget,
         amount: i32,
         lethal: bool,
+        unit: Option<u32>,
     },
     Restore {
         target: EventTarget,
         amount: i32,
+        unit: Option<u32>,
     },
     Destroy {
         slot: Slot,
         card: CardId,
+        player: PlayerId,
+        id: u32,
     },
     Banish {
         card: CardId,
@@ -54,15 +65,18 @@ pub enum Event {
         super_evolve: bool,
         granted: bool,
     },
-    TriggerFired {
-        on: TriggerTag,
+    Resolve {
+        source: EventSource,
     },
     ChoiceOffered {
         player: PlayerId,
         node: ChoiceNode,
+        source: Option<SourceRef>,
     },
     RandomPick {
         what: PickWhat,
+        target: TargetOpt,
+        unit: Option<u32>,
     },
     Counter {
         key: String,

@@ -11,7 +11,7 @@ use crate::card::{
 };
 use crate::db::CardDb;
 use crate::error::{Illegal, LoadError, Unsupported};
-use crate::event::{Event, EventTarget, ZoneLabel};
+use crate::event::{Event, EventSource, EventTarget, ZoneLabel};
 use crate::ids::{AttackTarget, First, PlayerId, Slot};
 use crate::rng::GameRng;
 use crate::state::{
@@ -30,6 +30,35 @@ use crate::trace::{NeutralAction, Pick, PickChose, PickWhat};
 /// the field other than it" includes the enemy field. Owner 2026-09-10:
 /// "yes any card". Set `false` to count allied field only (old engine).
 const WORLD_OF_GAMES_COUNTS_EITHER_SIDE: bool = true;
+
+fn push_resolve_marker(events: &mut Vec<Event>, source: EventSource) {
+    if let Some(Event::Resolve { source: last }) = events
+        .iter()
+        .rev()
+        .find(|e| matches!(e, Event::Resolve { .. }))
+    {
+        if *last == source {
+            return;
+        }
+    }
+    events.push(Event::Resolve { source });
+}
+
+fn slot_unit_id(state: &State, player: PlayerId, slot: u8) -> Option<u32> {
+    state.field_inst(player, slot).map(|f| f.id)
+}
+
+fn emit_random_pick(events: &mut Vec<Event>, what: PickWhat, target: &TargetOpt, state: &State) {
+    let unit = match target {
+        TargetOpt::Slot { player, slot } => slot_unit_id(state, *player, *slot),
+        _ => None,
+    };
+    events.push(Event::RandomPick {
+        what,
+        target: target.clone(),
+        unit,
+    });
+}
 
 // =========================================================================
 // Construction
@@ -1644,6 +1673,7 @@ fn apply_fuse_start(
     events.push(Event::ChoiceOffered {
         player: me,
         node: state.phase_node(),
+        source: None,
     });
     Ok(())
 }
@@ -2070,6 +2100,7 @@ fn resume_target(
     }) = state.pending_work.pop()
     {
         restore_event_subject(state, subject.clone(), subject_id);
+        push_resolve_marker(events, EventSource::Ref(source));
         if index < effects.len() {
             let e = effects[index].clone();
             apply_effect_with_targets(db, state, controller, source, &e, &[opt], events)?;
@@ -2109,6 +2140,7 @@ fn resume_target(
                         events.push(Event::ChoiceOffered {
                             player,
                             node: state.phase_node(),
+                            source: Some(source),
                         });
                         return Ok(());
                     }
@@ -2146,7 +2178,7 @@ fn apply_end_turn(db: &CardDb, state: &mut State, events: &mut Vec<Event>) -> Re
     }
     events.push(Event::TurnEnd { player: me });
     // two-phase end sequence — rulebook Start-of-Turn and End-of-Turn Sequences
-    queue_turn_boundary(db, state, me, false);
+    queue_turn_boundary(db, state, me, false, events);
     state
         .pending_work
         .push(WorkFrame::Aftermath(Aftermath::ContinueTurnEnd { step: 7 }));
@@ -2201,7 +2233,7 @@ fn start_turn_full(
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
     begin_turn(state, who, events)?;
-    queue_turn_boundary(db, state, who, true);
+    queue_turn_boundary(db, state, who, true, events);
     state
         .pending_work
         .push(WorkFrame::Aftermath(Aftermath::ContinueTurnStart {
@@ -2210,7 +2242,13 @@ fn start_turn_full(
     Ok(())
 }
 
-fn queue_turn_boundary(db: &CardDb, state: &mut State, whose_turn: PlayerId, start: bool) {
+fn queue_turn_boundary(
+    db: &CardDb,
+    state: &mut State,
+    whose_turn: PlayerId,
+    start: bool,
+    events: &mut Vec<Event>,
+) {
     // One Invoke copy per card id per boundary window (official glossary).
     if start {
         state.invoked_ids.clear();
@@ -2221,7 +2259,7 @@ fn queue_turn_boundary(db: &CardDb, state: &mut State, whose_turn: PlayerId, sta
     if start {
         tick_crests(db, state, own);
         enqueue_boundary(db, state, own, true, Whose::Own, 3, start);
-        tick_amulets(db, state, own);
+        tick_amulets(db, state, own, events);
         enqueue_boundary(db, state, own, false, Whose::Own, 4, start);
         enqueue_boundary(db, state, opp, true, Whose::Opponent, 5, start);
         enqueue_boundary(db, state, opp, false, Whose::Opponent, 6, start);
@@ -2278,7 +2316,7 @@ fn expire_crest(
     Ok(())
 }
 
-fn tick_amulets(db: &CardDb, state: &mut State, who: PlayerId) {
+fn tick_amulets(db: &CardDb, state: &mut State, who: PlayerId, events: &mut Vec<Event>) {
     // Countdown advances once at the owner's start of turn — rulebook Countdown.
     // Capture by instance id: destroy_slot compacts, so a later slot index
     // would hit whoever moved in (E29 / same root as E14).
@@ -2293,7 +2331,7 @@ fn tick_amulets(db: &CardDb, state: &mut State, who: PlayerId) {
     }
     for id in doomed {
         if let Some(slot) = state.find_field(who, id) {
-            let _ = destroy_slot(db, state, who, slot, false, &mut Vec::new());
+            let _ = destroy_slot(db, state, who, slot, false, events);
         }
     }
 }
@@ -3177,6 +3215,7 @@ fn drain_until_quiet(
                     if e40 && index == 0 && !trigger_source_still_present(state, source) {
                         continue;
                     }
+                    push_resolve_marker(events, EventSource::Ref(source));
                     restore_event_subject(state, subject, subject_id);
                     resolve_effect_list(
                         db, state, controller, source, effects, index, e40, events,
@@ -3645,6 +3684,7 @@ fn offer_next_play_pick(
     events.push(Event::ChoiceOffered {
         player: controller,
         node: state.phase_node(),
+        source: Some(source),
     });
     Ok(())
 }
@@ -3824,6 +3864,7 @@ fn reopen_play_target_pick(
     events.push(Event::ChoiceOffered {
         player,
         node: state.phase_node(),
+        source: Some(source),
     });
     Ok(())
 }
@@ -4211,6 +4252,7 @@ fn resolve_effect_list(
         events.push(Event::ChoiceOffered {
             player: controller,
             node: state.phase_node(),
+            source: Some(source),
         });
         return Ok(());
     }
@@ -4711,7 +4753,7 @@ fn apply_effect(
             // Targets for this op only, selected now (E24) — not when the
             // enclosing list started.
             let n = eval_amount(db, state, controller, Some(source), amount);
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             if *split == Some(true) {
                 split_damage(db, state, controller, &ts, n, events)?;
             } else {
@@ -4723,7 +4765,7 @@ fn apply_effect(
         }
         Effect::Restore { select, amount, .. } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             apply_each_captured(state, &ts, |st, t| {
                 restore_opt(db, st, t, n, events);
                 Ok(())
@@ -4744,7 +4786,7 @@ fn apply_effect(
                 .as_ref()
                 .map(|a| eval_amount(db, state, controller, Some(source), a))
                 .unwrap_or(0);
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             apply_each_captured(state, &ts, |st, t| {
                 buff_opt(db, st, t, da, dd, until_end_of_turn.unwrap_or(false));
                 Ok(())
@@ -4752,11 +4794,11 @@ fn apply_effect(
             maybe_bind(state, e, &ts);
         }
         Effect::Select { select, .. } => {
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             maybe_bind(state, e, &ts);
         }
         Effect::Destroy { select, .. } => {
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             maybe_bind(state, e, &ts);
             apply_each_captured(state, &ts, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
@@ -4767,7 +4809,7 @@ fn apply_effect(
             maybe_bind(state, e, &ts);
         }
         Effect::Banish { select, .. } => {
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             maybe_bind(state, e, &ts);
             let bound: Vec<TargetOpt> =
                 ts.iter().filter_map(|t| target_as_card(state, t)).collect();
@@ -4780,13 +4822,13 @@ fn apply_effect(
             }
         }
         Effect::ReturnToHand { select, .. } => {
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             apply_each_captured(state, &ts, |st, t| {
                 bounce_opt(db, st, controller, t, events)
             })?;
         }
         Effect::ReturnToDeck { select, .. } => {
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             let bound: Vec<TargetOpt> =
                 ts.iter().filter_map(|t| target_as_card(state, t)).collect();
             apply_each_captured(state, &ts, |st, t| {
@@ -4829,7 +4871,8 @@ fn apply_effect(
                 CardSource::Copy { copy_of, exact } => {
                     // One resolve: copy each target (Wolfraud's 5 deck
                     // instances). Do not loop `count` times on `ts.first()`.
-                    let ts = resolve_select_rolling(db, state, controller, source, copy_of)?;
+                    let ts =
+                        resolve_select_rolling(db, state, controller, source, copy_of, events)?;
                     for t in &ts {
                         if let Some(h) = copy_target_to_hand(db, state, controller, t, *exact)? {
                             added.push(h);
@@ -4839,7 +4882,9 @@ fn apply_effect(
                 _ => {
                     let n = eval_amount(db, state, controller, Some(source), count).max(0);
                     for _ in 0..n {
-                        if let Some(t) = add_source_to_hand(db, state, controller, source, card)? {
+                        if let Some(t) =
+                            add_source_to_hand(db, state, controller, source, card, events)?
+                        {
                             added.push(t);
                         }
                     }
@@ -4882,7 +4927,7 @@ fn apply_effect(
             maybe_bind(state, e, &drawn);
         }
         Effect::Discard { select, .. } => {
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             bind_discard_as_cards(state, e, &ts);
             apply_each_captured(state, &ts, |st, t| discard_opt(db, st, t, events))?;
         }
@@ -4891,7 +4936,7 @@ fn apply_effect(
             super_evolve,
             ..
         } => {
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             apply_each_captured(state, &ts, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
                     if *player == controller {
@@ -4994,7 +5039,7 @@ fn apply_effect(
         Effect::SpellboostHand { times, select, .. } => {
             let n = eval_amount(db, state, controller, Some(source), times).max(0);
             if let Some(sel) = select {
-                let ts = resolve_select_rolling(db, state, controller, source, sel)?;
+                let ts = resolve_select_rolling(db, state, controller, source, sel, events)?;
                 let ids: Vec<(PlayerId, u32)> = ts
                     .iter()
                     .filter_map(|t| match t {
@@ -5132,7 +5177,7 @@ fn apply_effect(
             apply_invoke(db, state, controller, source, events)?;
         }
         Effect::Transform { select, into, .. } => {
-            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            let ts = resolve_select_rolling(db, state, controller, source, select, events)?;
             apply_each_captured(state, &ts, |st, t| transform_opt(db, st, t, into, events))?;
             maybe_bind(state, e, &ts);
         }
@@ -5330,6 +5375,12 @@ fn combat_damage(
     defender_id: Option<u32>,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
+    events.push(Event::Resolve {
+        source: EventSource::Combat {
+            player: me,
+            id: attacker_id,
+        },
+    });
     let Some(slot) = state.find_field(me, attacker_id) else {
         return Ok(());
     };
@@ -5449,6 +5500,7 @@ fn deal_leader(state: &mut State, who: PlayerId, raw: i32, events: &mut Vec<Even
         target: EventTarget::Leader(who),
         amount: amt,
         lethal,
+        unit: None,
     });
     if lethal {
         check_leader_lethal(state);
@@ -5501,12 +5553,14 @@ fn deal_follower(
         amt = amt.min(cap);
     }
     amt = amt.max(0);
+    let unit = f.id;
     f.defense -= amt;
     let lethal = f.defense <= 0;
     events.push(Event::Damage {
         target: EventTarget::Slot(who, Slot(slot)),
         amount: amt,
         lethal,
+        unit: Some(unit),
     });
     amt
 }
@@ -5516,12 +5570,14 @@ fn restore_opt(db: &CardDb, state: &mut State, t: &TargetOpt, n: i32, events: &m
         TargetOpt::Leader { player } => restore_leader(db, state, *player, n, events),
         TargetOpt::Slot { player, slot } => {
             if let Some(f) = state.field_inst_mut(*player, *slot) {
+                let unit = f.id;
                 let room = (f.max_defense - f.defense).max(0);
                 let g = n.min(room);
                 f.defense += g;
                 events.push(Event::Restore {
                     target: EventTarget::Slot(*player, Slot(*slot)),
                     amount: g,
+                    unit: Some(unit),
                 });
             }
         }
@@ -5537,6 +5593,7 @@ fn restore_leader(db: &CardDb, state: &mut State, who: PlayerId, n: i32, events:
     events.push(Event::Restore {
         target: EventTarget::Leader(who),
         amount: g,
+        unit: None,
     });
     // Any restore effect that resolves counts as "restored", including a
     // 0-heal at max defense (official Q&A Burnite `10144110`).
@@ -5931,6 +5988,8 @@ fn destroy_slot(
     events.push(Event::Destroy {
         slot: Slot(slot),
         card: inst.card,
+        player: who,
+        id: inst.id,
     });
     match inst.kind {
         CardKind::Follower => {
@@ -6445,7 +6504,7 @@ fn summon_source(
             }
         }
         CardSource::Copy { copy_of, exact: ex } => {
-            let ts = resolve_select_rolling(db, state, who, source, copy_of)?;
+            let ts = resolve_select_rolling(db, state, who, source, copy_of, events)?;
             let pick = ts
                 .into_iter()
                 .find(|t| card_id_of(state, t).is_some_and(|id| !used_names.contains(&id)));
@@ -6649,6 +6708,7 @@ fn add_source_to_hand(
     who: PlayerId,
     source: SourceRef,
     src: &CardSource,
+    events: &mut Vec<Event>,
 ) -> Result<Option<TargetOpt>, Illegal> {
     match src {
         CardSource::Named { named } => {
@@ -6660,7 +6720,8 @@ fn add_source_to_hand(
             Ok(push_hand_target(state, who, inst))
         }
         CardSource::Copy { copy_of, exact } => {
-            let ts = resolve_select_rolling(db, state, who, source, copy_of).unwrap_or_default();
+            let ts =
+                resolve_select_rolling(db, state, who, source, copy_of, events).unwrap_or_default();
             let mut last = None;
             for t in &ts {
                 last = copy_target_to_hand(db, state, who, t, *exact)?;
@@ -6740,7 +6801,7 @@ fn transform_slot(
     into: &CardSource,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
-    let Some(mut neu) = materialize_transform(db, state, player, into)? else {
+    let Some(mut neu) = materialize_transform(db, state, player, into, events)? else {
         return Ok(());
     };
     let Some(old) = state.player_mut(player).field[slot as usize].take() else {
@@ -6772,6 +6833,7 @@ fn resolve_transform_into(
     state: &mut State,
     controller: PlayerId,
     into: &CardSource,
+    events: &mut Vec<Event>,
 ) -> Result<Option<ResolvedTransform>, Illegal> {
     match into {
         CardSource::Named { named } => Ok(Some(ResolvedTransform::Fresh(*named))),
@@ -6784,6 +6846,7 @@ fn resolve_transform_into(
                 controller,
                 SourceRef::Leader { player: controller },
                 copy_of,
+                events,
             )?;
             let inst = match ts.first() {
                 Some(TargetOpt::Slot { player, slot }) => state.field_inst(*player, *slot).cloned(),
@@ -6823,8 +6886,9 @@ fn materialize_transform(
     state: &mut State,
     controller: PlayerId,
     into: &CardSource,
+    events: &mut Vec<Event>,
 ) -> Result<Option<CardInstance>, Illegal> {
-    match resolve_transform_into(db, state, controller, into)? {
+    match resolve_transform_into(db, state, controller, into, events)? {
         None => Ok(None),
         Some(ResolvedTransform::Fresh(named)) => {
             let card = db.require_supported(named).map_err(|e| match e {
@@ -6850,7 +6914,7 @@ fn transform_opt(
     match t {
         TargetOpt::Slot { player, slot } => transform_slot(db, state, *player, *slot, into, events),
         TargetOpt::Hand { player, pos } => {
-            let Some(neu) = materialize_transform(db, state, *player, into)? else {
+            let Some(neu) = materialize_transform(db, state, *player, into, events)? else {
                 return Ok(());
             };
             if (*pos as usize) < state.player(*player).hand.len() {
@@ -6859,7 +6923,7 @@ fn transform_opt(
             Ok(())
         }
         TargetOpt::Deck { player, id } => {
-            let Some(mut neu) = materialize_transform(db, state, *player, into)? else {
+            let Some(mut neu) = materialize_transform(db, state, *player, into, events)? else {
                 return Ok(());
             };
             if let Some(c) = state
@@ -7666,6 +7730,7 @@ fn resolve_select_rolling(
     controller: PlayerId,
     source: SourceRef,
     sel: &Selector,
+    events: &mut Vec<Event>,
 ) -> Result<Vec<TargetOpt>, Illegal> {
     match sel {
         Selector::Pool(p) if p.pick == PoolPick::Random || p.pick == PoolPick::RandomDistinct => {
@@ -7678,11 +7743,17 @@ fn resolve_select_rolling(
             if n <= 0 {
                 return Ok(Vec::new());
             }
-            random_pool_apply(state, cands, n as usize, p.pick == PoolPick::RandomDistinct)
+            random_pool_apply(
+                state,
+                cands,
+                n as usize,
+                p.pick == PoolPick::RandomDistinct,
+                events,
+            )
         }
         Selector::Pool(p) if p.pick == PoolPick::Highest || p.pick == PoolPick::Lowest => {
             let cands = pool_target_opts(db, state, controller, source, p);
-            pick_extremum(state, p, cands, p.pick == PoolPick::Highest)
+            pick_extremum(state, p, cands, p.pick == PoolPick::Highest, events)
         }
         _ => Ok(resolve_select(db, state, controller, source, sel)),
     }
@@ -9017,6 +9088,7 @@ fn pick_extremum(
     p: &PoolSelector,
     cands: Vec<TargetOpt>,
     highest: bool,
+    events: &mut Vec<Event>,
 ) -> Result<Vec<TargetOpt>, Illegal> {
     if cands.is_empty() {
         return Ok(cands);
@@ -9032,7 +9104,7 @@ fn pick_extremum(
     if !highest {
         return Ok(tied);
     }
-    random_pool_apply(state, tied, 1, false)
+    random_pool_apply(state, tied, 1, false, events)
 }
 
 fn board_card_survives(c: &CardInstance) -> bool {
@@ -9090,6 +9162,7 @@ fn random_pool_apply(
     cands: Vec<TargetOpt>,
     n: usize,
     distinct: bool,
+    events: &mut Vec<Event>,
 ) -> Result<Vec<TargetOpt>, Illegal> {
     if cands.is_empty() {
         return Ok(Vec::new());
@@ -9175,6 +9248,12 @@ fn random_pool_apply(
                 left.retain(|t| !matches!(t, TargetOpt::Card(x) if x == id));
             }
         }
+        let what = if deck_search {
+            PickWhat::MultisetPick
+        } else {
+            PickWhat::RandomTarget
+        };
+        emit_random_pick(events, what, &picked, state);
         out.push(picked);
     }
     Ok(out)
