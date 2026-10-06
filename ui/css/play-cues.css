@@ -1,0 +1,114 @@
+#cueLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 70;
+  overflow: hidden;
+}
+
+#cueLayer .cue-arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.cue-spotlight {
+  position: fixed;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 2px rgba(255, 214, 102, 0.95),
+    0 0 18px 4px rgba(255, 214, 102, 0.45);
+  animation: cue-spotlight-pulse 0.7s ease-out forwards;
+  pointer-events: none;
+}
+
+.cue-arrow {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0;
+  animation: cue-arrow-draw 0.85s ease-out forwards;
+}
+
+.cue-arrow--attack {
+  stroke: #ff8a5c;
+}
+
+.cue-arrow--choice {
+  stroke: #7ec8ff;
+}
+
+.cue-arrow--random {
+  stroke: #c9a0ff;
+  stroke-dasharray: 6 5;
+}
+
+.cue-arrow--effect {
+  stroke: #ffd666;
+}
+
+.cue-fade {
+  position: fixed;
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(40, 44, 56, 0.92), rgba(24, 26, 32, 0.88));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  opacity: 0.85;
+  animation: cue-fade-out 1.1s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes cue-spotlight-pulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes cue-arrow-draw {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 120;
+    stroke-dasharray: 120;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+    stroke-dasharray: 120;
+  }
+}
+
+@keyframes cue-fade-out {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+    filter: brightness(0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cue-spotlight,
+  .cue-arrow,
+  .cue-fade {
+    animation-duration: 0.01ms !important;
+  }
+}
