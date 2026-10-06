@@ -18,8 +18,8 @@ use crate::state::{
     Aftermath, BoundRef, CardInstance, ChoiceNode, CrestInstance, DestroyedRecord, GameConfig,
     LeaderMod, PendingChoice, PendingKind, PendingPlayChoices, Phase, PlayCapture,
     PlayCapturedTarget, PlayForm, PlayPickState, PlayPickStep, PlayerState, QueuedTrigger,
-    SourceRef, State, TargetOpt, TempTraitGrant, WorkFrame, CREST_CAP, DECK_SIZE, HAND_LIMIT,
-    PP_CAP,
+    SourceRef, State, TargetOpt, TempTraitGrant, TurnEnd, WorkFrame, CREST_CAP, DECK_SIZE,
+    FIELD_SIZE, HAND_LIMIT, PP_CAP,
 };
 use crate::support;
 use crate::trace::{NeutralAction, Pick, PickChose, PickWhat};
@@ -277,9 +277,10 @@ fn draw_one(
 fn add_to_hand(
     state: &mut State,
     who: PlayerId,
-    inst: CardInstance,
+    mut inst: CardInstance,
     hide_deck_draw_overflow: bool,
 ) {
+    inst.hand_since = state.player(who).turn_ends.len() as u32;
     if state.player(who).hand.len() >= HAND_LIMIT {
         overflow_destroy(state, who, inst, hide_deck_draw_overflow);
     } else {
@@ -2133,6 +2134,16 @@ fn resume_target(
 
 fn apply_end_turn(db: &CardDb, state: &mut State, events: &mut Vec<Event>) -> Result<(), Illegal> {
     let me = state.active;
+    {
+        let unspent = state.player(me).usable_pp();
+        let pp_max = state.player(me).pp_max;
+        let board_full = state.player(me).field_count() >= FIELD_SIZE;
+        state.player_mut(me).turn_ends.push(TurnEnd {
+            unspent,
+            pp_max,
+            board_full,
+        });
+    }
     events.push(Event::TurnEnd { player: me });
     // two-phase end sequence — rulebook Start-of-Turn and End-of-Turn Sequences
     queue_turn_boundary(db, state, me, false);

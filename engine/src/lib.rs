@@ -30,7 +30,10 @@ pub use action_id::{legal_ids, legal_mask, ActionId};
 pub use apply::{apply, apply_neutral, legal_actions, new_game, zone_count};
 pub use card::{Card, CardId, CardKind, CardOrCrest};
 pub use db::CardDb;
-pub use determinize::determinize;
+pub use determinize::{
+    determinize, determinize_block, HreadDeal, HREAD_DELTA, HREAD_EPS_FA, HREAD_EPS_S,
+    HREAD_M_DEFAULT,
+};
 pub use encode::{
     encode, encode_version, encode_with_vocab, race_features, vocab, EncodingVersion, Observation,
     BOARD_WIDTH, RACE_LEN, RACE_NAMES,
@@ -59,7 +62,7 @@ pub use search_key::search_key;
 pub use snapshot::{hash, snapshot, snapshot_json};
 pub use state::{
     CardInstance, ChoiceNode, GameConfig, OpeningHands, PendingKind, Phase, PlayForm, PlayerState,
-    State, TargetOpt,
+    State, TargetOpt, TurnEnd,
 };
 pub use support::m1_unsupported_list;
 pub use trace::{

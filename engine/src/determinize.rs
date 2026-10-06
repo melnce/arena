@@ -6,14 +6,32 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::card::CardId;
+use crate::card::{CardId, CardKind};
 use crate::ids::PlayerId;
 use crate::rng::Xoshiro256ss;
-use crate::state::{CardInstance, State};
+use crate::state::{CardInstance, State, TurnEnd};
 
 /// Distinct from the opponent-hand shuffle stream so the two sides do
 /// not correlate under [`Info::Fair`].
 const OWN_DECK_SEED_XOR: u64 = 0x9E37_79B9_7F4A_7C15;
+
+/// Distinct from the root shuffle stream for hand-reading SIR candidates.
+const HREAD_SEED_XOR: u64 = 0xC2B2_AE3D_27D4_EB4F;
+
+/// Hand-reading deal weights (`hread=on` defaults).
+pub const HREAD_EPS_FA: f32 = 0.15;
+pub const HREAD_EPS_S: f32 = 0.5;
+pub const HREAD_DELTA: f32 = 0.8;
+pub const HREAD_M_DEFAULT: u32 = 256;
+
+/// Opt-in hand-reading deal parameters (`hread` spec key).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct HreadDeal {
+    pub eps_fa: f32,
+    pub eps_s: f32,
+    pub delta: f32,
+    pub m: u32,
+}
 
 /// How much hidden information a search root is allowed to know.
 ///
@@ -73,7 +91,17 @@ pub fn determinize_with_stats(
     info: Info,
     open_stats: Option<&mut OpenStats>,
 ) -> State {
-    determinize_block(state, perspective, seed, 0, 0, info, open_stats, false)
+    determinize_block(
+        state,
+        perspective,
+        seed,
+        0,
+        0,
+        info,
+        open_stats,
+        false,
+        None,
+    )
 }
 
 /// Block-deal variant: one shared shuffle of the opponent's unknown pool
@@ -89,6 +117,7 @@ pub fn determinize_block(
     info: Info,
     open_stats: Option<&mut OpenStats>,
     block: bool,
+    hread: Option<HreadDeal>,
 ) -> State {
     match info {
         Info::All => {
@@ -113,10 +142,12 @@ pub fn determinize_block(
             world,
             open_stats,
             block,
+            hread,
         ),
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn determinize_open_impl(
     state: &State,
     perspective: PlayerId,
@@ -125,12 +156,20 @@ fn determinize_open_impl(
     world: u32,
     open_stats: Option<&mut OpenStats>,
     block: bool,
+    hread: Option<HreadDeal>,
 ) -> State {
     let mut out = state.clone();
     out.rng.reseed(root_seed);
     resample_own_deck(&mut out, perspective, root_seed ^ OWN_DECK_SEED_XOR);
-    let stats =
-        determinize_open_opponent(&mut out, perspective, root_seed, deal_seed, world, block);
+    let stats = determinize_open_opponent(
+        &mut out,
+        perspective,
+        root_seed,
+        deal_seed,
+        world,
+        block,
+        hread,
+    );
     if let Some(s) = open_stats {
         *s = stats;
     }
@@ -151,6 +190,7 @@ struct HiddenSlot {
     index: usize,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn determinize_open_opponent(
     out: &mut State,
     perspective: PlayerId,
@@ -158,6 +198,7 @@ fn determinize_open_opponent(
     deal_seed: u64,
     world: u32,
     block: bool,
+    hread: Option<HreadDeal>,
 ) -> OpenStats {
     let opp = perspective.opponent();
     let (_, additions) = out.player(opp).derive_public_knowledge();
@@ -229,6 +270,9 @@ fn determinize_open_opponent(
         .map(|s| (s.inst.id, s.zone, s.index))
         .collect();
 
+    let slot_hand_since: Vec<u32> = unknown_hand.iter().map(|i| i.hand_since).collect();
+    let turn_ends = out.player(opp).turn_ends.clone();
+
     let mut pool = unknown_hand;
     pool.extend(deck);
     for slot in hidden_slots {
@@ -236,28 +280,50 @@ fn determinize_open_opponent(
     }
     canon_sort(&mut pool);
 
-    if block {
+    let effective_block = block && hread.is_none();
+    let mut block_deal_ran = false;
+    if let Some(hd) = hread {
+        if h > 0 {
+            pool = hread_deal_pool(&pool, h, &slot_hand_since, &turn_ends, root_seed, hd);
+        } else if effective_block {
+            let mut rng = Xoshiro256ss::from_seed(deal_seed);
+            shuffle(&mut pool, &mut rng);
+            if !pool.is_empty() {
+                let n = pool.len();
+                pool.rotate_left((world as usize * h) % n);
+            }
+            block_deal_ran = true;
+        } else {
+            let mut rng = Xoshiro256ss::from_seed(root_seed);
+            shuffle(&mut pool, &mut rng);
+        }
+    } else if effective_block {
         let mut rng = Xoshiro256ss::from_seed(deal_seed);
         shuffle(&mut pool, &mut rng);
         if !pool.is_empty() {
             let n = pool.len();
             pool.rotate_left((world as usize * h) % n);
         }
+        block_deal_ran = true;
     } else {
         let mut rng = Xoshiro256ss::from_seed(root_seed);
         shuffle(&mut pool, &mut rng);
     }
 
     let mut hidden_drawn = 0u32;
-    for inst in pool.drain(..h.min(pool.len())) {
+    for (s, inst) in pool.drain(..h.min(pool.len())).enumerate() {
         if r_ids.contains(&inst.id) {
             hidden_drawn += 1;
         }
-        fixed.push(inst);
+        let mut dealt = inst;
+        if s < slot_hand_since.len() {
+            dealt.hand_since = slot_hand_since[s];
+        }
+        fixed.push(dealt);
     }
     out.player_mut(opp).hand = fixed;
 
-    if block {
+    if block_deal_ran {
         let mut rng = Xoshiro256ss::from_seed(root_seed);
         shuffle(&mut pool, &mut rng);
     }
@@ -396,7 +462,7 @@ fn canon_sort(items: &mut [CardInstance]) {
     items.sort_by(|a, b| a.card.cmp(&b.card).then(a.id.cmp(&b.id)));
 }
 
-fn shuffle(items: &mut [CardInstance], rng: &mut Xoshiro256ss) {
+fn shuffle<T>(items: &mut [T], rng: &mut Xoshiro256ss) {
     if items.len() < 2 {
         return;
     }
@@ -404,4 +470,121 @@ fn shuffle(items: &mut [CardInstance], rng: &mut Xoshiro256ss) {
         let j = rng.gen_range((i + 1) as u32) as usize;
         items.swap(i, j);
     }
+}
+
+fn hread_factor(card: &CardInstance, te: &TurnEnd, eps_fa: f32, eps_s: f32, delta: f32) -> f32 {
+    let cost = card.base_cost;
+    if cost <= te.unspent {
+        let playable = card.kind != CardKind::Follower || !te.board_full;
+        if playable {
+            return match card.kind {
+                CardKind::Spell => eps_s,
+                CardKind::Follower | CardKind::Amulet => eps_fa,
+            };
+        }
+    }
+    if cost <= te.pp_max {
+        delta
+    } else {
+        1.0
+    }
+}
+
+fn hread_slot_log_weight(
+    card: &CardInstance,
+    hand_since: u32,
+    turn_ends: &[TurnEnd],
+    eps_fa: f32,
+    eps_s: f32,
+    delta: f32,
+) -> f32 {
+    let mut log_w = 0.0f32;
+    for te in turn_ends.iter().skip(hand_since as usize) {
+        let f = hread_factor(card, te, eps_fa, eps_s, delta);
+        if f != 1.0 {
+            log_w += f.ln();
+        }
+    }
+    log_w
+}
+
+fn hread_perm_log_weight_indices(perm: &[usize], h: usize, slot_card_log_w: &[Vec<f32>]) -> f32 {
+    let mut log_w = 0.0f32;
+    for s in 0..h.min(perm.len()).min(slot_card_log_w.len()) {
+        log_w += slot_card_log_w[s][perm[s]];
+    }
+    log_w
+}
+
+fn weighted_pick(log_weights: &[f32], rng: &mut Xoshiro256ss) -> usize {
+    if log_weights.is_empty() {
+        return 0;
+    }
+    let max_log = log_weights
+        .iter()
+        .copied()
+        .fold(f32::NEG_INFINITY, f32::max);
+    let mut weights = Vec::with_capacity(log_weights.len());
+    let mut sum = 0.0f64;
+    for lw in log_weights {
+        let w = (lw - max_log).exp() as f64;
+        weights.push(w);
+        sum += w;
+    }
+    if sum <= 0.0 {
+        return rng.gen_range(log_weights.len() as u32) as usize;
+    }
+    let u = (rng.next_u64() as f64) / (u64::MAX as f64) * sum;
+    let mut acc = 0.0f64;
+    for (i, w) in weights.iter().enumerate() {
+        acc += *w;
+        if u < acc {
+            return i;
+        }
+    }
+    weights.len() - 1
+}
+
+fn hread_deal_pool(
+    pool: &[CardInstance],
+    h: usize,
+    slot_hand_since: &[u32],
+    turn_ends: &[TurnEnd],
+    root_seed: u64,
+    hd: HreadDeal,
+) -> Vec<CardInstance> {
+    assert!(h > 0);
+    let n = pool.len();
+    if n == 0 {
+        return Vec::new();
+    }
+    let slots = h.min(slot_hand_since.len());
+    let mut slot_card_log_w = vec![vec![0.0f32; n]; slots];
+    for s in 0..slots {
+        for p in 0..n {
+            slot_card_log_w[s][p] = hread_slot_log_weight(
+                &pool[p],
+                slot_hand_since[s],
+                turn_ends,
+                hd.eps_fa,
+                hd.eps_s,
+                hd.delta,
+            );
+        }
+    }
+    let m = hd.m.max(1) as usize;
+    let mut rng = Xoshiro256ss::from_seed(root_seed ^ HREAD_SEED_XOR);
+    let mut log_weights = Vec::with_capacity(m);
+    let mut perm_indices = Vec::with_capacity(m);
+    for _ in 0..m {
+        let mut indices: Vec<usize> = (0..n).collect();
+        shuffle(&mut indices, &mut rng);
+        log_weights.push(hread_perm_log_weight_indices(&indices, h, &slot_card_log_w));
+        perm_indices.push(indices);
+    }
+    let pick = weighted_pick(&log_weights, &mut rng);
+    perm_indices[pick]
+        .iter()
+        .map(|&p| pool[p].clone())
+        .collect()
 }

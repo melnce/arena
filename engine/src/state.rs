@@ -93,6 +93,10 @@ pub struct CardInstance {
     /// Option indices already fired by `choose by: randomUnused` (Slaus).
     /// Not replenished; a later resolution with an empty remainder is a no-op.
     pub choose_used: BTreeSet<u8>,
+    /// Owner's `turn_ends.len()` when this card entered the hand. Irrelevant
+    /// outside the hand. Snapshot-neutral — not in `CanonicalState`, `hash`,
+    /// or `search_key`.
+    pub hand_since: u32,
 }
 
 /// A `grantTraits` that expires at a turn boundary.
@@ -144,6 +148,7 @@ impl CardInstance {
             sequence_index: 0,
             temp_traits: Vec::new(),
             choose_used: BTreeSet::new(),
+            hand_since: 0,
         }
     }
 
@@ -262,6 +267,14 @@ pub struct BonusPp {
     pub locked: bool,
 }
 
+/// One completed turn boundary for hand-reading (`hread`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TurnEnd {
+    pub unspent: i32,
+    pub pp_max: i32,
+    pub board_full: bool,
+}
+
 #[derive(Debug, Clone)]
 pub struct PlayerState {
     pub leader_defense: i32,
@@ -312,6 +325,9 @@ pub struct PlayerState {
     /// Tokens / returned cards currently in hand or deck that are not
     /// accounted for by `starting_deck − public_removals`. Snapshot-neutral.
     pub public_hand_additions: Vec<CardId>,
+    /// Turn-end snapshots for hand-reading (`hread`). Snapshot-neutral —
+    /// not in `CanonicalState`, `hash`, or `search_key`.
+    pub turn_ends: Vec<TurnEnd>,
 }
 
 impl PlayerState {
@@ -352,6 +368,7 @@ impl PlayerState {
             hidden_removals: Vec::new(),
             hidden_removal_cards: Vec::new(),
             public_hand_additions: Vec::new(),
+            turn_ends: Vec::new(),
         }
     }
 

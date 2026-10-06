@@ -155,7 +155,17 @@ fn disjoint_hands_across_worlds() {
     let mut all_ids = BTreeSet::new();
     for world in 0..8u32 {
         let root_seed = 1000 + world as u64;
-        let block = determinize_block(&st, me, root_seed, deal_seed, world, Info::Open, None, true);
+        let block = determinize_block(
+            &st,
+            me,
+            root_seed,
+            deal_seed,
+            world,
+            Info::Open,
+            None,
+            true,
+            None,
+        );
         let indep = determinize_with_stats(&st, me, root_seed, Info::Open, None);
         let ids = unknown_hand_ids(&block, me);
         assert_eq!(ids.len(), 4, "world {world} hand size");
@@ -183,8 +193,8 @@ fn disjoint_hands_across_worlds() {
 fn block_deal_is_deterministic() {
     let db = load_db();
     let (st, me) = block_deal_fixture(&db);
-    let a = determinize_block(&st, me, 7, 99, 3, Info::Open, None, true);
-    let b = determinize_block(&st, me, 7, 99, 3, Info::Open, None, true);
+    let a = determinize_block(&st, me, 7, 99, 3, Info::Open, None, true, None);
+    let b = determinize_block(&st, me, 7, 99, 3, Info::Open, None, true, None);
     assert_eq!(
         unknown_hand_ids(&a, me),
         unknown_hand_ids(&b, me),
@@ -211,8 +221,8 @@ fn block_deal_unbiased_marginals() {
         .map(|c| c.id)
         .collect();
     for deal_seed in 1..=n as u64 {
-        let s0 = determinize_block(&st, me, 1, deal_seed, 0, Info::Open, None, true);
-        let s5 = determinize_block(&st, me, 2, deal_seed, 5, Info::Open, None, true);
+        let s0 = determinize_block(&st, me, 1, deal_seed, 0, Info::Open, None, true, None);
+        let s5 = determinize_block(&st, me, 2, deal_seed, 5, Info::Open, None, true, None);
         for id in unknown_hand_ids(&s0, me) {
             counts0.entry(id).or_insert(0);
             *counts0.get_mut(&id).unwrap() += 1;

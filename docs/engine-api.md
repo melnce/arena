@@ -236,6 +236,7 @@ fn determinize_with(state: &State, perspective: PlayerId, seed: u64, info: Info)
 fn determinize_block(
     state: &State, perspective: PlayerId, root_seed: u64, deal_seed: u64, world: u32,
     info: Info, open_stats: Option<&mut OpenStats>, block: bool,
+    hread: Option<HreadDeal>,
 ) -> State;
 ```
 
@@ -435,6 +436,21 @@ random subset, so the prior is unchanged; the `k` hands are dealt without
 replacement across worlds so they spread instead of clustering. `info=all`
 is unchanged. [`determinize_block`] implements the deal; `block=false` is
 bit-identical to [`determinize_with`].
+
+With `hread=on` (opt-in), `info=open` deals the opponent's unknown hand
+slots by sampling-importance-resampling over `hreadm` candidate permutations
+(default `256`) of the unknown pool. Each slot's weight is a product over
+every turn end the card was held through: cheap playable cards get
+`eps_fa` (follower/amulet) or `eps_s` (spell); cards affordable only after
+spending PP get `delta`; otherwise `1`. Defaults: `eps_fa=0.15`, `eps_s=0.5`,
+`delta=0.8`. `PlayerState.turn_ends` records `{unspent, pp_max, board_full}`
+at each turn end; `CardInstance.hand_since` is the owner's `turn_ends.len()`
+when the card entered the hand. Both are snapshot-neutral (not in
+`CanonicalState`, `hash`, or `search_key`). When `hread` is on it takes
+precedence over `deal=block`: no shared `deal_seed`, no block shuffle or
+tail reshuffle, and explain omits `deal_seed` even if `deal=block` is set.
+When `hread` is on but there are no unknown hand cards (`h = 0`), the
+`hread=off` shuffle path runs so deck order still varies per root seed.
 
 ## Policy (M5)
 
@@ -1119,6 +1135,7 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | `Game.bot_action(policy, seed) -> dict` | One NeutralAction for the acting player (`by_name` + `policy_rng` + `choose`). |
 | `Game.bot_action_value(policy, seed) -> dict` | Same decision as `bot_action`, plus `{"action": NeutralAction, "value": float \| None}` where `value` is the policy's `last_value()` after `choose` (`None` for policies that do not search, e.g. `random`). |
 | `Game.bot_action_explain(policy, seed) -> dict` | Same decision as `bot_action_value` for `h0` specs, plus a per-candidate explain record (see below). Non-`h0` policies return `{"chosen": NeutralAction, "path": "opaque"}`. Recording does not change the chosen action or node count. |
+| `Game.sample_opponent_hands(policy, seed, n) -> list[list[str]]` | `n` sampled opponent hands (card ids) for the side to move's opponent under the policy's `info`, `deal`, and `hread` settings. Root seeds match `H0::choose`. `h0` only. |
 | `arena.play_random(db, seed, deck_a, deck_b, first="coin") -> dict` | `{winner, turns, actions, first}`. Random-legal + `policy_rng`. |
 | `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False, export=None, export_epsilon=0.0) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)`; both seats share `policy_rng(game seed)` as the bench does. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end, mull_a, mull_b}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). `mull_a` / `mull_b` are each `{"hand": ["<id>", …], "swap": [bool, bool, bool, bool]}` or `null` (pre-mulligan hand in slot order and the confirm mask). With `records=False` the output is byte-identical to before this field was added. Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. `export=None` (default) is byte-identical to today — no extra files, no `"export"` key. `export=<dir>` writes training-sample shards (see Training samples (M5b)) and adds `"export": {dir, samples, games}`; `export_epsilon` is ε-greedy exploration on those games (inner policy still asked first). |
 | `py/stats.py::wilson(k, n, z=1.96) -> (lo, hi)` | Wilson score interval for `k` successes in `n` trials, clipped to `[0, 1]`. `n == 0` → `(0.0, 1.0)`. |
@@ -1157,6 +1174,7 @@ For `h0`, the dict also carries:
 | `wbase_reused` | bool | `true` when `wbase` came from the per-turn cache (`wseed=turn`). |
 | `deal` | str | `indep` or `block` (`deal=` spec key). |
 | `deal_seed` | int \| null | Shared shuffle seed when `deal=block`; absent when `deal=indep`. |
+| `hread` | object \| null | When `hread` is on: `{eps_fa, eps_s, delta, m}`. Absent when off. |
 | `lost_rerank` | object \| null | When `lostrank>0` re-ranked a lost turn: `{aggregates, nodes, chosen_index}` (`aggregates` in candidate order; `chosen_index` is the legal index picked). Absent when the trigger did not fire. |
 | `fuse_dropped` | int | Root fuse candidates dropped when `fuseguard=1` (`0` when off). |
 
