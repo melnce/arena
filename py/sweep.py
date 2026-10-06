@@ -847,6 +847,39 @@ class Runner:
         base = f"{c.stem}-final" if arm == "main" else f"{c.stem}-reverse"
         return f"{base}.part{chunk_index + 1}"
 
+    @staticmethod
+    def _prefix_part_numbers(
+        schedule: list[tuple[str, int]],
+        prefix_len: int,
+    ) -> tuple[set[int], set[int]]:
+        """Part numbers (1-based) played in the first *prefix_len* schedule steps."""
+        main_parts: set[int] = set()
+        rev_parts: set[int] = set()
+        for arm, j in schedule[:prefix_len]:
+            part = j + 1
+            if arm == "main":
+                main_parts.add(part)
+            else:
+                rev_parts.add(part)
+        return main_parts, rev_parts
+
+    def _load_arm_chunk_docs_for_parts(
+        self,
+        c: Candidate,
+        arm: str,
+        parts: set[int],
+    ) -> list[dict[str, Any]]:
+        if not parts:
+            return []
+        base = f"{c.stem}-final" if arm == "main" else f"{c.stem}-reverse"
+        out: list[dict[str, Any]] = []
+        for part in sorted(parts):
+            path = self.tag_dir / f"{base}.part{part}.json"
+            if not path.is_file():
+                raise SystemExit(f"early stop: missing chunk {path.name}")
+            out.append(json.loads(path.read_text(encoding="utf-8")))
+        return out
+
     def _load_arm_chunk_docs(self, c: Candidate, arm: str) -> list[dict[str, Any]]:
         prefix = f"{c.stem}-final" if arm == "main" else f"{c.stem}-reverse"
         paths = sorted(
@@ -905,8 +938,12 @@ class Runner:
         self.add_decks(extra)
         return extra
 
-    def _merge_and_write_arm(self, c: Candidate, arm: str) -> dict[str, Any]:
-        chunks = self._load_arm_chunk_docs(c, arm)
+    def _merge_and_write_arm_chunks(
+        self,
+        c: Candidate,
+        arm: str,
+        chunks: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         if not chunks:
             raise SystemExit(f"early stop: no chunks for {c.stem} {arm}")
         names = chunks[0].get("decks") or self._deck_names()
@@ -916,10 +953,15 @@ class Runner:
         out.write_text(json.dumps(merged, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return merged
 
+    def _merge_and_write_arm(self, c: Candidate, arm: str) -> dict[str, Any]:
+        return self._merge_and_write_arm_chunks(c, arm, self._load_arm_chunk_docs(c, arm))
+
     def _early_stop_look(
         self,
         c: Candidate,
         combine: tuple[tuple[int, int], tuple[int, int]] | None,
+        schedule: list[tuple[str, int]],
+        prefix_len: int,
     ) -> dict[str, Any]:
         chunk = self.args.stop_chunk
         pairs = int(self.run.get("sizing", {}).get("pairs") or 0)
@@ -928,18 +970,25 @@ class Runner:
             pairs = len(decks) * len(decks)
         planned_main = self.args.final_games * pairs
         planned_rev = self.args.final_reverse * pairs
-        main_chunks = self._load_arm_chunk_docs(c, "main")
-        rev_chunks = self._load_arm_chunk_docs(c, "reverse")
+        main_parts, rev_parts = self._prefix_part_numbers(schedule, prefix_len)
+        main_chunks = self._load_arm_chunk_docs_for_parts(c, "main", main_parts)
+        rev_chunks = self._load_arm_chunk_docs_for_parts(c, "reverse", rev_parts)
         if main_chunks:
             w_main, n_main = arm_candidate_wins(
-                merge_matchup_arm(main_chunks, list(main_chunks[0].get("decks") or self._deck_names())),
+                merge_matchup_arm(
+                    main_chunks,
+                    list(main_chunks[0].get("decks") or self._deck_names()),
+                ),
                 reverse=False,
             )
         else:
             w_main, n_main = 0, 0
         if rev_chunks:
             w_rev, n_rev = arm_candidate_wins(
-                merge_matchup_arm(rev_chunks, list(rev_chunks[0].get("decks") or self._deck_names())),
+                merge_matchup_arm(
+                    rev_chunks,
+                    list(rev_chunks[0].get("decks") or self._deck_names()),
+                ),
                 reverse=True,
             )
         else:
@@ -1019,7 +1068,7 @@ class Runner:
                 extra = self._chunk_matchup_argv(c, arm, chunk, j * chunk)
                 self._run_chunk_matchup(extra, part_stem, j * chunk)
 
-            look = self._early_stop_look(c, combine)
+            look = self._early_stop_look(c, combine, schedule, step + 1)
             looks.append(look)
             action = "continue"
             if (
@@ -1053,10 +1102,19 @@ class Runner:
             rec["settled_prob"] = last["best_prob"]
         fin_rec[c.stem] = rec
         self.save_run()
-        if self._load_arm_chunk_docs(c, "main"):
-            self._merge_and_write_arm(c, "main")
-        if self._load_arm_chunk_docs(c, "reverse"):
-            self._merge_and_write_arm(c, "reverse")
+        main_parts, rev_parts = self._prefix_part_numbers(schedule, len(looks))
+        if main_parts:
+            self._merge_and_write_arm_chunks(
+                c,
+                "main",
+                self._load_arm_chunk_docs_for_parts(c, "main", main_parts),
+            )
+        if rev_parts:
+            self._merge_and_write_arm_chunks(
+                c,
+                "reverse",
+                self._load_arm_chunk_docs_for_parts(c, "reverse", rev_parts),
+            )
 
     def _early_stop_summary_line(self, c: Candidate) -> str | None:
         early = self.run.get("early_stop") or {}
@@ -1087,10 +1145,10 @@ class Runner:
         )
 
     def _build_combined_section(self) -> list[str]:
-        tag = self.args.stop_combine
+        tag = self.args.stop_combine or (self.run.get("early_stop") or {}).get("combine")
         if not tag:
             return []
-        combine = self.run.get("early_stop", {}).get("combine") or tag
+        combine = tag
         lines = ["", f"## combined with {combine}", ""]
         lines.append("| index | spec | main | reverse | pooled |")
         lines.append("|---|---:|---:|---:|---:|")
@@ -1274,6 +1332,7 @@ class Runner:
         lines.append("|" + "|".join("---" if i <= 1 else "---:" for i in range(len(header))) + "|")
         picks: list[BestPick] = []
         verdicts: list[str] = []
+        early_lines: list[str] = []
         for c in self.finalists():
             main_doc = self.load_json(f"{c.stem}-final.json")
             rev_doc = self.load_json(f"{c.stem}-reverse.json")
@@ -1308,13 +1367,17 @@ class Runner:
             )
             es_line = self._early_stop_summary_line(c)
             if es_line:
-                lines.append(es_line)
+                early_lines.append(es_line)
         lines.append("")
         lines.extend(verdicts)
-        if verdicts:
+        if early_lines:
+            if verdicts:
+                lines.append("")
+            lines.extend(early_lines)
+        if verdicts or early_lines:
             lines.append("")
         lines.append(format_best_line(picks))
-        if self.args.stop_combine or self.run.get("early_stop", {}).get("combine"):
+        if self.args.stop_combine or (self.run.get("early_stop") or {}).get("combine"):
             lines.extend(self._build_combined_section())
         lines.append("")
         return "\n".join(lines)

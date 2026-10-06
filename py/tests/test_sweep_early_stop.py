@@ -31,6 +31,39 @@ _runlib_spec.loader.exec_module(runlib)
 
 FAST = sweep.FAST
 
+_CELL_KEYS = (
+    "games",
+    "a_wins",
+    "b_wins",
+    "draws",
+    "first_player_wins",
+    "a_games_as_first",
+    "a_wins_as_first",
+)
+_END_KEYS = (
+    "lethal",
+    "deckout",
+    "turn_cap",
+    "action_cap",
+    "no_legal",
+    "illegal",
+)
+
+
+def _compare_arm_matrices(plain: dict, early: dict) -> None:
+    assert plain["matrix"].keys() == early["matrix"].keys()
+    for a in plain["matrix"]:
+        assert plain["matrix"][a].keys() == early["matrix"][a].keys()
+        for b in plain["matrix"][a]:
+            pc = plain["matrix"][a][b]
+            ec = early["matrix"][a][b]
+            for key in _CELL_KEYS:
+                assert pc[key] == ec[key]
+            for key in _END_KEYS:
+                assert pc.get("end", {}).get(key, 0) == ec.get("end", {}).get(key, 0)
+            assert pc["mean_turns"] == pytest.approx(ec["mean_turns"], abs=1e-9)
+            assert pc["mean_actions"] == pytest.approx(ec["mean_actions"], abs=1e-9)
+
 
 def _brute_class_probs(
     w_main: int,
@@ -189,32 +222,71 @@ def _simulate_final_decision(
     return early_cls != full_cls, share
 
 
-def test_operating_characteristics(capsys: pytest.CaptureFixture[str]) -> None:
-    rates = [0.46, 0.50, 0.52]
-    runs = 400
+def _operating_characteristics_rows(
+    *,
+    final_games: int,
+    final_reverse: int,
+    pairs: int = 256,
+    chunk: int = 2,
+    gamma: float = 0.02,
+    threshold: float = 0.51,
+    min_games: int = 1024,
+    runs: int = 400,
+    rates: list[float] | None = None,
+) -> list[tuple[float, float, float]]:
+    if rates is None:
+        rates = [0.46, 0.50, 0.52]
     rows: list[tuple[float, float, float]] = []
     for rate in rates:
         diffs = 0
         shares: list[float] = []
         for i in range(runs):
-            diff, share = _simulate_final_decision(rate, seed=10_000 + i)
+            diff, share = _simulate_final_decision(
+                rate,
+                seed=10_000 + i,
+                pairs=pairs,
+                final_games=final_games,
+                final_reverse=final_reverse,
+                chunk=chunk,
+                gamma=gamma,
+                threshold=threshold,
+                min_games=min_games,
+            )
             diffs += int(diff)
             shares.append(share)
         diff_rate = diffs / runs
         mean_share = sum(shares) / len(shares)
         rows.append((rate, mean_share, diff_rate))
-        assert diff_rate <= 0.03, f"rate {rate}: diff {diff_rate:.3f}"
+        assert diff_rate <= 0.03, (
+            f"{final_games}/{final_reverse}: rate {rate}: diff {diff_rate:.3f}"
+        )
         if rate <= 0.46:
-            assert mean_share <= 0.50, f"rate {rate}: share {mean_share:.3f}"
+            assert mean_share <= 0.50, (
+                f"{final_games}/{final_reverse}: rate {rate}: share {mean_share:.3f}"
+            )
         if rate <= 0.50:
-            assert mean_share <= 0.85, f"rate {rate}: share {mean_share:.3f}"
-    print("\noperating characteristics (256 pairs, chunk 2, γ=0.02, threshold 0.51):")
+            assert mean_share <= 0.85, (
+                f"{final_games}/{final_reverse}: rate {rate}: share {mean_share:.3f}"
+            )
+    return rows
+
+
+def _print_operating_table(
+    label: str,
+    rows: list[tuple[float, float, float]],
+) -> None:
+    print(f"\noperating characteristics — {label} (256 pairs, chunk 2, γ=0.02, threshold 0.51):")
     print("| true rate | mean share final | decision differs |")
     print("|---|---:|---:|")
     for rate, share, diff in rows:
         print(f"| {rate:.2f} | {share:.3f} | {100 * diff:.1f} % |")
-    captured = capsys.readouterr()
-    assert "operating characteristics" in captured.out
+
+
+def test_operating_characteristics() -> None:
+    std_rows = _operating_characteristics_rows(final_games=16, final_reverse=8)
+    rb_rows = _operating_characteristics_rows(final_games=8, final_reverse=4)
+    _print_operating_table("16 / 8 (standard sizing)", std_rows)
+    _print_operating_table("8 / 4 (runbook sizing)", rb_rows)
 
 
 def _run_sweep(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -271,6 +343,7 @@ def test_early_stop_min_games_never_stops(es_smoke) -> None:
     )
     assert plain.returncode == 0, plain.stderr or plain.stdout
     plain_main = json.loads((tag / f"{stem}-final.json").read_text())
+    plain_rev = json.loads((tag / f"{stem}-reverse.json").read_text())
     argv = [
         *es_smoke["base_argv"],
         "--early-stop",
@@ -285,10 +358,69 @@ def test_early_stop_min_games_never_stops(es_smoke) -> None:
     run = json.loads((tag / "RUN.json").read_text())
     assert run["early_stop"]["finalists"][stem]["stopped"] is False
     es_main = json.loads((tag / f"{stem}-final.json").read_text())
-    assert plain_main["summary"]["decisive"] == es_main["summary"]["decisive"]
-    assert plain_main["summary"]["policy_a_win_rate"] == pytest.approx(
-        es_main["summary"]["policy_a_win_rate"]
-    )
+    es_rev = json.loads((tag / f"{stem}-reverse.json").read_text())
+    _compare_arm_matrices(plain_main, es_main)
+    _compare_arm_matrices(plain_rev, es_rev)
+
+
+def test_early_stop_resume_prefix_looks(tmp_path: Path) -> None:
+    pytest.importorskip("arena")
+    root = tmp_path / "results"
+    tag = root / "resume"
+    stem = "c01"
+    argv = [
+        "--smoke",
+        "--tag",
+        "resume",
+        "--baseline",
+        FAST,
+        "--candidates",
+        "h0:depth=2,beam=2,k=1,nodes=160,value=v0,tt=0",
+        "--root",
+        str(root),
+        "--final-games",
+        "6",
+        "--final-reverse",
+        "4",
+        "--early-stop",
+        "--stop-min-games",
+        "99999",
+        "--seed",
+        "31415",
+        "--skip-publish",
+    ]
+    full = _run_sweep([*argv, "--force"])
+    assert full.returncode == 0, full.stderr or full.stdout
+    run_path = tag / "RUN.json"
+    run = json.loads(run_path.read_text(encoding="utf-8"))
+    ref_looks = run["early_stop"]["finalists"][stem]["looks"]
+    assert len(ref_looks) >= 4
+
+    schedule = runlib.chunk_arm_schedule(6, 4, 2)
+    prefix_len = 3
+    main_parts, rev_parts = sweep.Runner._prefix_part_numbers(schedule, prefix_len)
+    keep_main = {f"{stem}-final.part{p}.json" for p in main_parts}
+    keep_main |= {p.replace(".json", ".txt") for p in keep_main}
+    keep_rev = {f"{stem}-reverse.part{p}.json" for p in rev_parts}
+    keep_rev |= {p.replace(".json", ".txt") for p in keep_rev}
+    keep = keep_main | keep_rev
+
+    del run["early_stop"]
+    run_path.write_text(json.dumps(run, indent=2) + "\n", encoding="utf-8")
+    for path in tag.glob(f"{stem}-*.part*"):
+        if path.name not in keep:
+            path.unlink()
+    for name in (f"{stem}-final.json", f"{stem}-reverse.json"):
+        p = tag / name
+        if p.is_file():
+            p.unlink()
+
+    resumed = _run_sweep([*argv, "--only", "final"])
+    assert resumed.returncode == 0, resumed.stderr or resumed.stdout
+    run2 = json.loads(run_path.read_text(encoding="utf-8"))
+    got = run2["early_stop"]["finalists"][stem]["looks"]
+    for i in range(prefix_len):
+        assert got[i] == ref_looks[i], f"look {i + 1} differs after resume"
 
 
 def test_early_stop_stops_and_resumes(es_smoke) -> None:
