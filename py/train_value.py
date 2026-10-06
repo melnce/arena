@@ -38,6 +38,7 @@ BATCH = 1024
 LBFGS_CHUNK = 8192
 LBFGS_GRAD_TOL = 1e-7
 LBFGS_ITERS_DEFAULT = 500
+STACK_SEARCH_ROWS_DEFAULT = 300_000
 
 ZONES: list[dict[str, Any]] = [
     {"name": "own_hand", "id_offset": IDS_OWN_HAND, "count": 9, "hist_offset": None},
@@ -91,6 +92,10 @@ def _load_samples():
 
 
 def _try_torch():
+    import os
+
+    if os.environ.get("TORCH_DISABLE"):
+        return None
     try:
         import torch
 
@@ -493,14 +498,24 @@ class LinearTorch:
         n_vocab: int,
         n_zones: int = 5,
         use_race: bool = False,
+        encoding: int = 1,
     ):
         self.torch = torch
         self.n_zones = n_zones
+        self.encoding = encoding
         self.w = torch.nn.Parameter(torch.zeros(n_feat))
         self.zone_w = torch.nn.Parameter(torch.zeros(n_zones, n_vocab))
         self.b = torch.nn.Parameter(torch.zeros(1))
         self.use_race = use_race
         self.race_w = torch.nn.Parameter(torch.zeros(12)) if use_race else None
+        if encoding == 3 and n_zones >= 13:
+            self.zone_w.data[5:13, 0] = 0.0
+
+            def _zero_new_zone_grad(grad):
+                grad[5:13, 0] = 0
+                return grad
+
+            self.zone_w.register_hook(_zero_new_zone_grad)
 
     def parameters(self):
         out = [self.w, self.zone_w, self.b]
@@ -587,7 +602,9 @@ def train_torch(
     n_vocab = len(vocab)
     zones = zones_for_encoding(encoding)
     if spec_arch == "linear":
-        model = LinearTorch(torch, n_feat, n_vocab, len(zones), use_race=use_race)
+        model = LinearTorch(
+            torch, n_feat, n_vocab, len(zones), use_race=use_race, encoding=encoding
+        )
     else:
         model = MlpTorch(torch, n_feat, n_vocab, hidden, emb)
     opt = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=l2)
@@ -629,6 +646,8 @@ def train_torch(
             opt.zero_grad(set_to_none=True)
             loss.backward()
             opt.step()
+            if encoding == 3:
+                model.zone_w.data[5:13, 0] = 0.0
         if has_hold:
             with torch.no_grad():
                 hold_sq = 0.0
@@ -686,7 +705,7 @@ def train_lbfgs(
     n_feat = features.shape[1]
     n_vocab = len(vocab)
     zones = zones_for_encoding(encoding)
-    model = LinearTorch(torch, n_feat, n_vocab, len(zones))
+    model = LinearTorch(torch, n_feat, n_vocab, len(zones), encoding=encoding)
     y_tr_np = y_all[train_idx].astype(np.float32, copy=False)
     n = train_idx.size
     function_evals = 0
@@ -739,6 +758,8 @@ def train_lbfgs(
             return objective_and_grad()
 
         opt.step(closure)
+        if encoding == 3:
+            model.zone_w.data[5:13, 0] = 0.0
         if grad_max <= grad_tol:
             stopped = "tolerance"
             break
@@ -896,6 +917,8 @@ def train_linear_numpy(
                 cnt = zone_counts(features, row_idx, zone).astype(np.float64)
                 np.add.at(gz[z], zidx.reshape(-1), (dpre[:, None] * cnt).reshape(-1))
                 gz[z] += l2 * zone_w[z]
+            if encoding == 3:
+                gz[5:13, 0] = 0.0
             t += 1
             mw[:] = b1 * mw + (1 - b1) * gw
             vw[:] = b2 * vw + (1 - b2) * (gw * gw)
@@ -903,6 +926,7 @@ def train_linear_numpy(
             mz[:] = b1 * mz + (1 - b1) * gz
             vz[:] = b2 * vz + (1 - b2) * (gz * gz)
             zone_w -= lr * (mz / (1 - b1**t)) / (np.sqrt(vz / (1 - b2**t)) + eps)
+            _zero_v3_new_zone_index0(zone_w, encoding)
             mb = b1 * mb + (1 - b1) * gb
             vb = b2 * vb + (1 - b2) * (gb * gb)
             b -= lr * (mb / (1 - b1**t)) / ((vb / (1 - b2**t)) ** 0.5 + eps)
@@ -926,6 +950,7 @@ def train_linear_numpy(
             best = (w.copy(), zone_w.copy(), b, race_w.copy() if race_w is not None else None)
             best_epoch = epochs_run
     w, zone_w, b, race_w = best
+    _zero_v3_new_zone_index0(zone_w, encoding)
     return (
         w.astype(np.float32),
         zone_w.astype(np.float32),
@@ -1102,14 +1127,142 @@ def _reindex_zone_row(row: list[float], old_vocab: list[int], new_vocab: list[in
     import numpy as np
 
     old = np.asarray(row, dtype=np.float64)
-    out = np.zeros(len(new_vocab), dtype=np.float64)
+    empty = float(old[0])
+    out = np.full(len(new_vocab), empty, dtype=np.float64)
+    new_set = set(new_vocab)
     for oid, card in enumerate(old_vocab):
-        pos = new_vocab.index(card) if card in new_vocab else 0
-        if pos == 0 and oid != 0:
-            out[0] += old[oid]
-        else:
-            out[pos] += old[oid]
+        if card not in new_set:
+            continue
+        out[new_vocab.index(card)] = old[oid]
     return out.astype(np.float32).tolist()
+
+
+def _zero_v3_new_zone_index0(zone_w, encoding: int) -> None:
+    if encoding != 3:
+        return
+    import numpy as np
+
+    zw = np.asarray(zone_w)
+    zw[5:13, 0] = 0.0
+
+
+def _subsample_row_idx_by_games(
+    row_idx,
+    game_index,
+    max_rows: int | None,
+    seed: int,
+):
+    import numpy as np
+
+    row_idx = np.asarray(row_idx, dtype=np.int64)
+    if max_rows is None or row_idx.size <= max_rows:
+        return row_idx
+    games = np.unique(game_index[row_idx])
+    rng = np.random.RandomState(seed)
+    perm = rng.permutation(games)
+    picked: list[np.ndarray] = []
+    count = 0
+    for g in perm:
+        rows = row_idx[game_index[row_idx] == g]
+        if count + rows.size > max_rows and count > 0:
+            break
+        picked.append(rows)
+        count += rows.size
+        if count >= max_rows:
+            break
+    if not picked:
+        return row_idx[:max_rows]
+    return np.concatenate(picked).astype(np.int64, copy=False)
+
+
+def _stack_sparse_zones(
+    features,
+    ids,
+    row_idx,
+    vocab: list[int],
+    zones: list[dict[str, Any]],
+    z_lo: int,
+    z_hi: int,
+):
+    """Per new zone: (row, vocab_index, value) with id>0 and value>0 where required."""
+    import numpy as np
+
+    n = row_idx.size
+    idx = id_index_table(vocab, ids[row_idx])
+    out: list[tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+    for z in range(z_lo, z_hi):
+        zone = zones[z]
+        sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
+        zidx = idx[:, sl]
+        count = zone_counts(features, row_idx, zone)
+        rows_all: list[np.ndarray] = []
+        cols_all: list[np.ndarray] = []
+        vals_all: list[np.ndarray] = []
+        for slot in range(int(zone["count"])):
+            c = count[:, slot]
+            ids_s = zidx[:, slot]
+            if zone["hist_offset"] is not None:
+                mask = (c > 0) & (ids_s > 0)
+            else:
+                mask = ids_s > 0
+            if not np.any(mask):
+                continue
+            local = np.flatnonzero(mask)
+            rows_all.append(local)
+            cols_all.append(ids_s[mask].astype(np.int64, copy=False))
+            vals_all.append(c[mask].astype(np.float64, copy=False))
+        if rows_all:
+            out.append(
+                (
+                    np.concatenate(rows_all),
+                    np.concatenate(cols_all),
+                    np.concatenate(vals_all),
+                )
+            )
+        else:
+            out.append(
+                (
+                    np.zeros(0, dtype=np.int64),
+                    np.zeros(0, dtype=np.int64),
+                    np.zeros(0, dtype=np.float64),
+                )
+            )
+    return out
+
+
+def _stack_zone_extra_sparse(zw, sparse):
+    import numpy as np
+
+    extra = np.zeros(sparse["n"], dtype=np.float64)
+    for zi, (rows, cols, vals) in enumerate(sparse["zones"]):
+        if rows.size:
+            extra[rows] += vals * zw[zi, cols]
+    return extra
+
+
+def _stack_coordinate_search(
+    grid: list[float],
+    groups: tuple[str, ...],
+    fit_rows,
+    score_mse,
+    lams_init: dict[str, float],
+):
+    lams = dict(lams_init)
+    step_mses: list[tuple[str, float]] = []
+    for group in groups:
+        best_lam = lams[group]
+        best_mse = float("inf")
+        for lam in grid:
+            trial = dict(lams)
+            trial[group] = lam
+            theta = fit_rows(trial)
+            mse = score_mse(theta)
+            if mse < best_mse - 1e-9 or (abs(mse - best_mse) <= 1e-9 and lam > best_lam):
+                best_mse = mse
+                best_lam = lam
+        lams[group] = best_lam
+        step_mses.append((group, best_mse))
+    return lams, step_mses
 
 
 def _new_zone_extra(
@@ -1268,6 +1421,23 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
     n_deck_w = (2 * n_decks + 1) if use_deck else 0
 
     grid = [float(x) for x in getattr(args, "l2_grid", "1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1").split(",")]
+    stack_search_rows = int(
+        getattr(args, "stack_search_rows", STACK_SEARCH_ROWS_DEFAULT)
+    )
+    tr = train_idx
+    ho = hold_idx
+    search_tr = _subsample_row_idx_by_games(tr, game_index, stack_search_rows, args.seed)
+
+    def _prepare(rows):
+        return {
+            "n": int(rows.size),
+            "base_pre": base_pre[rows].astype(np.float64, copy=False),
+            "y": y_all[rows],
+            "own_deck": own_deck[rows],
+            "opp_deck": opp_deck[rows],
+            "first_col": first_col[rows],
+            "zones": _stack_sparse_zones(features, ids, rows, vocab, zones, z_lo, z_hi),
+        }
 
     def unpack(theta):
         zw = theta[:n_zone_w].reshape(z_hi - z_lo, n_vocab - 1)
@@ -1281,74 +1451,38 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
             return full, own_w, opp_w, first_w
         return full, None, None, None
 
-    def objective(theta, row_idx, lams, return_grad=False, return_loss=False):
+    def objective(theta, prep, lams, return_grad=False, return_loss=False):
         zw, own_w, opp_w, first_w = unpack(theta)
-        pre = base_pre[row_idx].astype(np.float64, copy=True)
+        pre = prep["base_pre"].astype(np.float64, copy=True)
         if use_deck:
-            pre += own_w[own_deck[row_idx]]
-            pre += opp_w[opp_deck[row_idx]]
-            pre += first_w * first_col[row_idx]
-        idx = id_index_table(vocab, ids[row_idx])
-        y = y_all[row_idx]
+            pre += own_w[prep["own_deck"]]
+            pre += opp_w[prep["opp_deck"]]
+            pre += first_w * prep["first_col"]
+        pre += _stack_zone_extra_sparse(zw, prep)
+        y = prep["y"]
+        n = prep["n"]
         pen = 0.0
         for name, (a, b) in STACK_ZONE_ROWS.items():
             lam = lams[name]
             pen += 0.5 * lam * float(np.sum(zw[a - z_lo : b - z_lo, 1:] ** 2))
-        for z in range(z_lo, z_hi):
-            zone = zones[z]
-            sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
-            zidx = idx[:, sl]
-            count = zone_counts(features, row_idx, zone)
-            for slot in range(int(zone["count"])):
-                c = count[:, slot]
-                ids_s = zidx[:, slot]
-                if zone["hist_offset"] is not None:
-                    mask = c > 0
-                    if not np.any(mask):
-                        continue
-                    pre[mask] += c[mask] * zw[z - z_lo, ids_s[mask]]
-                else:
-                    pre += c * zw[z - z_lo, ids_s]
         loss = float(np.mean((np.tanh(pre) - y) ** 2)) + pen
         if not return_grad and not return_loss:
             return loss
         if return_loss and not return_grad:
             return loss, np.zeros_like(theta)
         grad = np.zeros_like(theta)
-        resid = (2.0 / row_idx.size) * (np.tanh(pre) - y) * (1.0 - np.tanh(pre) ** 2)
+        resid = (2.0 / n) * (np.tanh(pre) - y) * (1.0 - np.tanh(pre) ** 2)
         if use_deck:
             d0 = n_zone_w
+            od, opd, fc = prep["own_deck"], prep["opp_deck"], prep["first_col"]
             for d in range(n_decks):
-                grad[d0 + d] = float(np.sum(resid[own_deck[row_idx] == d]))
-                grad[d0 + n_decks + d] = float(np.sum(resid[opp_deck[row_idx] == d]))
-            grad[d0 + 2 * n_decks] = float(np.sum(resid * first_col[row_idx]))
+                grad[d0 + d] = float(np.sum(resid[od == d]))
+                grad[d0 + n_decks + d] = float(np.sum(resid[opd == d]))
+            grad[d0 + 2 * n_decks] = float(np.sum(resid * fc))
         off = 0
-        for z in range(z_lo, z_hi):
-            zone = zones[z]
-            sl = slice(int(zone["id_offset"]), int(zone["id_offset"]) + int(zone["count"]))
-            zidx = idx[:, sl]
-            count = zone_counts(features, row_idx, zone)
-            for slot in range(int(zone["count"])):
-                c = count[:, slot]
-                ids_s = zidx[:, slot]
-                if zone["hist_offset"] is not None:
-                    mask = (c > 0) & (ids_s > 0)
-                    if not np.any(mask):
-                        continue
-                    np.add.at(
-                        grad[off : off + n_vocab - 1],
-                        ids_s[mask] - 1,
-                        resid[mask] * c[mask],
-                    )
-                else:
-                    mask = ids_s > 0
-                    if not np.any(mask):
-                        continue
-                    np.add.at(
-                        grad[off : off + n_vocab - 1],
-                        ids_s[mask] - 1,
-                        resid[mask] * c[mask],
-                    )
+        for zi, (rows, cols, vals) in enumerate(prep["zones"]):
+            if rows.size:
+                np.add.at(grad[off : off + n_vocab - 1], cols - 1, resid[rows] * vals)
             off += n_vocab - 1
         for name, (a, b) in STACK_ZONE_ROWS.items():
             lam = lams[name]
@@ -1360,38 +1494,44 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
             return loss, grad
         return grad
 
-    def fit_rows(row_idx, lams):
+    def fit_rows(row_idx, lams, deck_start=None):
+        prep = _prepare(row_idx)
         theta0 = np.zeros(n_zone_w + n_deck_w, dtype=np.float64)
-        if use_deck:
-            theta0[n_zone_w:] = deck_theta
+        if use_deck and deck_start is not None:
+            theta0[n_zone_w:] = deck_start
 
         def fn(x):
-            return objective(x, row_idx, lams, return_grad=True, return_loss=True)
+            return objective(x, prep, lams, return_grad=True, return_loss=True)
 
         return _lbfgs_numpy(fn, theta0)
 
     lams = {g: grid[-1] for g in STACK_ZONE_GROUPS}
-    ho = hold_idx
     deck_theta = np.zeros(n_deck_w, dtype=np.float64)
     if use_deck:
+        tr_prep = _prepare(tr)
 
-        def deck_obj(dw, return_loss=False):
-            pre = base_pre[ho].astype(np.float64)
-            pre += dw[0:n_decks][own_deck[ho]]
-            pre += dw[n_decks : 2 * n_decks][opp_deck[ho]]
-            pre += dw[2 * n_decks] * first_col[ho]
-            loss = _mse_tanh(pre, y_all[ho])
+        def deck_obj(dw, prep_fit, return_loss=False):
+            pre = prep_fit["base_pre"].astype(np.float64, copy=True)
+            pre += dw[0:n_decks][prep_fit["own_deck"]]
+            pre += dw[n_decks : 2 * n_decks][prep_fit["opp_deck"]]
+            pre += dw[2 * n_decks] * prep_fit["first_col"]
+            loss = float(np.mean((np.tanh(pre) - prep_fit["y"]) ** 2))
             if not return_loss:
                 return loss
             grad = np.zeros_like(dw)
-            resid = (2.0 / ho.size) * (np.tanh(pre) - y_all[ho]) * (1.0 - np.tanh(pre) ** 2)
+            resid = (2.0 / prep_fit["n"]) * (np.tanh(pre) - prep_fit["y"]) * (
+                1.0 - np.tanh(pre) ** 2
+            )
             for d in range(n_decks):
-                grad[d] = float(np.sum(resid[own_deck[ho] == d]))
-                grad[n_decks + d] = float(np.sum(resid[opp_deck[ho] == d]))
-            grad[2 * n_decks] = float(np.sum(resid * first_col[ho]))
+                grad[d] = float(np.sum(resid[prep_fit["own_deck"] == d]))
+                grad[n_decks + d] = float(np.sum(resid[prep_fit["opp_deck"] == d]))
+            grad[2 * n_decks] = float(np.sum(resid * prep_fit["first_col"]))
             return loss, grad
 
-        deck_theta = _lbfgs_numpy(lambda x: deck_obj(x, return_loss=True), deck_theta)  # noqa: ARG005
+        deck_theta = _lbfgs_numpy(
+            lambda x: deck_obj(x, tr_prep, return_loss=True),
+            deck_theta,
+        )
 
     def with_deck(pre, rows):
         if not use_deck:
@@ -1402,31 +1542,31 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
         out += deck_theta[2 * n_decks] * first_col[rows]
         return out
 
-    def pre_from_fit(zw, own_w, opp_w, first_w, rows):
-        pre = base_pre[rows].astype(np.float64, copy=True)
+    def pre_from_fit(theta, rows):
+        zw, own_w, opp_w, first_w = unpack(theta)
+        prep = _prepare(rows)
+        pre = prep["base_pre"].astype(np.float64, copy=True)
         if use_deck and own_w is not None:
-            pre += own_w[own_deck[rows]]
-            pre += opp_w[opp_deck[rows]]
-            pre += first_w * first_col[rows]
-        pre += _new_zone_extra(zw, ids, features, rows, vocab, zones, z_lo, z_hi)
+            pre += own_w[prep["own_deck"]]
+            pre += opp_w[prep["opp_deck"]]
+            pre += first_w * prep["first_col"]
+        pre += _stack_zone_extra_sparse(zw, prep)
         return pre
 
     mse_base = _mse_tanh(with_deck(base_pre[ho], ho), y_all[ho])
     step_mses = [("base+deck", mse_base)]
-    for group in STACK_ZONE_GROUPS:
-        best_lam = lams[group]
-        best_mse = float("inf")
-        for lam in grid:
-            trial = dict(lams)
-            trial[group] = lam
-            theta = fit_rows(np.concatenate([train_idx, hold_idx]), trial)
-            zw, own_w, opp_w, first_w = unpack(theta)
-            mse = _mse_tanh(pre_from_fit(zw, own_w, opp_w, first_w, ho), y_all[ho])
-            if mse < best_mse - 1e-9 or (abs(mse - best_mse) <= 1e-9 and lam > best_lam):
-                best_mse = mse
-                best_lam = lam
-        lams[group] = best_lam
-        step_mses.append((group, best_mse))
+    def fit_search(lams):
+        return fit_rows(search_tr, lams, deck_start=deck_theta)
+
+    def score_theta(theta):
+        return _mse_tanh(pre_from_fit(theta, ho), y_all[ho])
+
+    t_search = time.perf_counter()
+    lams, group_mses = _stack_coordinate_search(
+        grid, STACK_ZONE_GROUPS, fit_search, score_theta, lams
+    )
+    search_s = time.perf_counter() - t_search
+    step_mses.extend(group_mses)
 
     warnings: list[str] = []
     for g, lam in lams.items():
@@ -1436,7 +1576,9 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
             warnings.append(f"{g} penalty at grid maximum ({lam})")
 
     all_idx = np.arange(features.shape[0], dtype=np.int32)
-    theta = fit_rows(all_idx, lams)
+    t_refit = time.perf_counter()
+    theta = fit_rows(all_idx, lams, deck_start=deck_theta)
+    refit_s = time.perf_counter() - t_refit
     zw, own_w, opp_w, first_w = unpack(theta)
 
     base_w = list(base["linear"]["w"])
@@ -1475,6 +1617,8 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
             "l2_grid": grid,
             "l2_choices": lams,
             "deck_controls": use_deck,
+            "stack_search_rows": int(search_tr.size),
+            "stack_timing": {"search_seconds": search_s, "refit_seconds": refit_s},
             "rows": [5, 6, 7, 8, 9, 10, 11, 12],
         },
     }
@@ -1496,6 +1640,8 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
         "top_weights": top_weights,
         "warnings": warnings,
         "deck_controls": use_deck,
+        "stack_timing": {"search_seconds": search_s, "refit_seconds": refit_s},
+        "stack_search_rows": int(search_tr.size),
     }
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -1662,9 +1808,6 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             race_mean,
             race_std,
         )
-        if encoding == 3:
-            for z in range(5, 13):
-                spec["linear"]["zone_w"][z][0] = 0.0
     elif torch is not None:
         model, adam_meta = train_torch(
             args.model,
@@ -1700,9 +1843,6 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             race_mean,
             race_std,
         )
-        if encoding == 3 and args.model == "linear":
-            for z in range(5, 13):
-                spec["linear"]["zone_w"][z][0] = 0.0
     else:
         w, zone_w, b, race_w, adam_meta = train_linear_numpy(
             features,
@@ -1734,9 +1874,6 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             "linear": {"w": w.tolist(), "zone_w": zone_w.tolist(), "b": b},
             "trained_on": {},
         }
-        if encoding == 3:
-            for z in range(5, 13):
-                zone_w[z][0] = 0.0
         if use_race and race_w is not None:
             spec["race"] = {
                 "version": 1,
@@ -1884,6 +2021,12 @@ def main(argv: list[str] | None = None) -> int:
         "--l2-grid",
         default="1e-6,1e-5,1e-4,1e-3,1e-2,1e-1,1",
         help="comma-separated L2 grid for --stack-on groups",
+    )
+    p.add_argument(
+        "--stack-search-rows",
+        type=int,
+        default=STACK_SEARCH_ROWS_DEFAULT,
+        help="max training rows for --stack-on penalty search (whole games)",
     )
     args = p.parse_args(argv)
     if args.stack_on:
