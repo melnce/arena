@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -21,6 +22,9 @@ from stats import wilson  # noqa: E402
 HALF = 0.5
 
 TeeFn = Callable[..., None]
+
+DecisionClass = tuple[bool, int]
+ClassProbs = dict[DecisionClass, float]
 
 
 def repo_root() -> Path:
@@ -209,6 +213,291 @@ def rate_ci(rate: float, ci: tuple[float, float]) -> str:
     return f"{rate:.3f} [{ci[0]:.3f}, {ci[1]:.3f}]"
 
 
+def validate_stop_chunk(chunk: int, final_games: int, final_reverse: int) -> None:
+    if chunk <= 0 or chunk % 2 != 0:
+        raise SystemExit(f"--stop-chunk {chunk} must be a positive even integer")
+    for name, total in ("--final-games", final_games), ("--final-reverse", final_reverse):
+        if total % chunk != 0:
+            raise SystemExit(
+                f"--stop-chunk {chunk} must divide {name} ({total}); "
+                f"got remainder {total % chunk}"
+            )
+
+
+def chunk_arm_schedule(main_total: int, reverse_total: int, chunk: int) -> list[tuple[str, int]]:
+    """Interleave main/reverse chunks; ties favour main."""
+    main_n = main_total // chunk
+    rev_n = reverse_total // chunk
+    schedule: list[tuple[str, int]] = []
+    mi = ri = 0
+    while mi < main_n or ri < rev_n:
+        if ri >= rev_n:
+            schedule.append(("main", mi))
+            mi += 1
+        elif mi >= main_n:
+            schedule.append(("reverse", ri))
+            ri += 1
+        else:
+            main_share = mi / main_n
+            rev_share = ri / rev_n
+            if main_share <= rev_share:
+                schedule.append(("main", mi))
+                mi += 1
+            else:
+                schedule.append(("reverse", ri))
+                ri += 1
+    return schedule
+
+
+def decision_class(
+    w_main: int,
+    n_main: int,
+    w_rev: int,
+    n_rev: int,
+    thresholds: list[float],
+) -> DecisionClass:
+    """Return (verdict_is_better, pooled_thresholds_reached)."""
+    main_rate = w_main / n_main if n_main else 0.0
+    main_ci = wilson(w_main, n_main)
+    rev_rate = w_rev / n_rev if n_rev else 0.0
+    rev_ci = wilson(w_rev, n_rev)
+    is_better = verdict(main_rate, main_ci, rev_rate, rev_ci) == "better"
+    n_pool = n_main + n_rev
+    pool_rate = (w_main + w_rev) / n_pool if n_pool else 0.0
+    reached = sum(1 for t in thresholds if pool_rate >= t)
+    return is_better, reached
+
+
+def format_decision_class(
+    cls: DecisionClass,
+    thresholds: list[float],
+) -> str:
+    is_better, reached = cls
+    verdict_words = "better" if is_better else "not better"
+    if not thresholds:
+        return verdict_words
+    if reached <= 0:
+        thresh_s = ", ".join(f"< {t:g}" for t in thresholds)
+        return f"{verdict_words}, pooled {thresh_s}"
+    hit = thresholds[reached - 1]
+    return f"{verdict_words}, pooled ≥ {hit:g}"
+
+
+def _log_beta(a: float, b: float) -> float:
+    return math.lgamma(a) + math.lgamma(b) - math.lgamma(a + b)
+
+
+def beta_binomial_log_pmf(k: int, r: int, w: int, n: int) -> float:
+    """Log P(X=k) for additional wins X in r remaining trials after w/n observed."""
+    alpha = 1.0 + w
+    beta = 1.0 + n - w
+    return (
+        math.lgamma(r + 1)
+        - math.lgamma(k + 1)
+        - math.lgamma(r - k + 1)
+        + _log_beta(k + alpha, r - k + beta)
+        - _log_beta(alpha, beta)
+    )
+
+
+def _prefix_sums(probs: list[float]) -> list[float]:
+    out = [0.0]
+    for p in probs:
+        out.append(out[-1] + p)
+    return out
+
+
+def _pmf_list(r: int, w: int, n: int) -> list[float]:
+    return [math.exp(beta_binomial_log_pmf(k, r, w, n)) for k in range(r + 1)]
+
+
+def _wilson_low(w: int, n: int) -> float:
+    return wilson(w, n)[0]
+
+
+def _min_wins_for_low(n: int, total: int, cutoff: float = HALF) -> int:
+    """Smallest wins w with Wilson low > cutoff, or total+1 if none."""
+    if total <= 0 or _wilson_low(total, total) <= cutoff:
+        return total + 1
+    lo, hi = 0, total
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if _wilson_low(mid, total) > cutoff:
+            hi = mid
+        else:
+            lo = mid + 1
+    return lo
+
+
+def _pool_count_for_extra(
+    base_w: int,
+    pool_n: int,
+    extra: int,
+    thresholds: list[float],
+) -> int:
+    if pool_n <= 0:
+        return 0
+    pool_w = base_w + extra
+    return sum(1 for t in thresholds if pool_w / pool_n >= t)
+
+
+def class_probabilities(
+    w_main: int,
+    n_main: int,
+    r_main: int,
+    w_rev: int,
+    n_rev: int,
+    r_rev: int,
+    thresholds: list[float],
+    *,
+    combine_main: tuple[int, int] | None = None,
+    combine_rev: tuple[int, int] | None = None,
+) -> ClassProbs:
+    """Exact class probabilities via independent Beta-binomial arms."""
+    if combine_main is not None:
+        w_main += combine_main[0]
+        n_main += combine_main[1]
+    if combine_rev is not None:
+        w_rev += combine_rev[0]
+        n_rev += combine_rev[1]
+
+    nf_main = n_main + r_main
+    nf_rev = n_rev + r_rev
+    pm_m = _pmf_list(r_main, w_main, n_main)
+    pm_r = _pmf_list(r_rev, w_rev, n_rev)
+    prefix_r = _prefix_sums(pm_r)
+    base_w = w_main + w_rev
+    pool_n = nf_main + nf_rev
+    max_count = len(thresholds)
+    nc = max_count + 1
+    acc = [0.0] * (2 * nc)
+
+    main_ok = [_wilson_low(w_main + km, nf_main) > HALF for km in range(r_main + 1)]
+    rev_ok = [_wilson_low(w_rev + kr, nf_rev) > HALF for kr in range(r_rev + 1)]
+    rev_flip = next((kr for kr in range(r_rev + 1) if rev_ok[kr]), r_rev + 1)
+
+    def kr_mass(lo: int, hi: int) -> float:
+        lo = max(0, lo)
+        hi = min(r_rev, hi)
+        if lo > hi:
+            return 0.0
+        return prefix_r[hi + 1] - prefix_r[lo]
+
+    for km, p in enumerate(pm_m):
+        if p == 0.0:
+            continue
+        breaks = {0, r_rev + 1, rev_flip}
+        for t in thresholds:
+            breaks.add(max(0, min(r_rev + 1, math.ceil(t * pool_n - base_w - km))))
+        ordered = sorted(breaks)
+        for i in range(len(ordered) - 1):
+            lo, hi = ordered[i], ordered[i + 1] - 1
+            if lo > hi:
+                continue
+            kr_mid = lo
+            count = _pool_count_for_extra(base_w, pool_n, km + kr_mid, thresholds)
+            idx = int(main_ok[km] and rev_ok[kr_mid]) * nc + count
+            acc[idx] += p * kr_mass(lo, hi)
+
+    probs: ClassProbs = {}
+    for better in (False, True):
+        for count in range(nc):
+            mass = acc[int(better) * nc + count]
+            if mass > 0.0:
+                probs[(better, count)] = mass
+    total = sum(probs.values())
+    if total <= 0:
+        return probs
+    return {k: v / total for k, v in probs.items()}
+
+
+def merge_matchup_arm(chunks: list[dict[str, Any]], names: list[str]) -> dict[str, Any]:
+    """Merge chunked matchup JSON into one arm file."""
+    if not chunks:
+        raise ValueError("merge_matchup_arm needs at least one chunk")
+    from matchup import add_wilson95, summarize  # noqa: WPS433
+
+    base = dict(chunks[0])
+    matrix: dict[str, dict[str, dict[str, Any]]] = {
+        a: {b: {} for b in names} for a in names
+    }
+    end_keys = (
+        "lethal",
+        "deckout",
+        "turn_cap",
+        "action_cap",
+        "no_legal",
+        "illegal",
+    )
+    for a in names:
+        for b in names:
+            matrix[a][b] = {
+                "games": 0,
+                "a_wins": 0,
+                "b_wins": 0,
+                "draws": 0,
+                "first_player_wins": 0,
+                "a_games_as_first": 0,
+                "a_wins_as_first": 0,
+                "mean_turns": 0.0,
+                "mean_actions": 0.0,
+                "end": {k: 0 for k in end_keys},
+            }
+    total_games = 0
+    secs = 0.0
+    for doc in chunks:
+        secs += float(doc.get("seconds", 0.0))
+        for a in names:
+            for b in names:
+                src = doc["matrix"][a][b]
+                dst = matrix[a][b]
+                g = int(src["games"])
+                if g <= 0:
+                    continue
+                total_games += g
+                for key in ("games", "a_wins", "b_wins", "draws", "first_player_wins", "a_games_as_first", "a_wins_as_first"):
+                    dst[key] += int(src[key])
+                dst["mean_turns"] += float(src["mean_turns"]) * g
+                dst["mean_actions"] += float(src["mean_actions"]) * g
+                for ek in end_keys:
+                    dst["end"][ek] += int(src.get("end", {}).get(ek, 0))
+    for a in names:
+        for b in names:
+            dst = matrix[a][b]
+            g = int(dst["games"])
+            if g > 0:
+                dst["mean_turns"] /= g
+                dst["mean_actions"] /= g
+    add_wilson95(matrix, names)
+    per_pair_games = int(matrix[names[0]][names[0]]["games"]) if names else 0
+    result = {
+        "seed": base["seed"],
+        "games": per_pair_games,
+        "policy_a": base["policy_a"],
+        "policy_b": base["policy_b"],
+        "first": base["first"],
+        "threads": base.get("threads"),
+        "matrix": matrix,
+        "decks": names,
+    }
+    if "game_offset" in base:
+        result["game_offset"] = base["game_offset"]
+    summary = summarize(result, names, secs, total_games)
+    result["seconds"] = secs
+    result["games_per_second"] = total_games / secs if secs > 0 else 0.0
+    result["summary"] = summary
+    return result
+
+
+def arm_candidate_wins(doc: dict[str, Any], *, reverse: bool) -> tuple[int, int]:
+    """Return (candidate_wins, decisive_games) for a main or reverse arm JSON."""
+    summary, matrix = _summary_and_matrix(doc)
+    w_a, n = _a_decisive_counts(doc, "")
+    if reverse:
+        return n - w_a, n
+    return w_a, n
+
+
 def run_tee(argv: list[str], log_path: Path, append: bool = False) -> None:
     print(argv, flush=True)
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -243,6 +532,7 @@ def matchup_argv(
     out_json: Path,
     seed: int | None = None,
     threads: int | None = None,
+    game_offset: int | None = None,
 ) -> list[str]:
     cmd = py_tool(py_dir, "matchup.py")
     cmd.extend(extra)
@@ -251,6 +541,8 @@ def matchup_argv(
         cmd.extend(["--seed", str(seed)])
     if threads is not None:
         cmd.extend(["--threads", str(threads)])
+    if game_offset is not None and game_offset > 0:
+        cmd.extend(["--game-offset", str(game_offset)])
     return cmd
 
 

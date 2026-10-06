@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""One-command policy-spec sweep: screen → finalists → final → summary → publish."""
+"""One-command policy-spec sweep: screen → finalists → final → summary → publish.
+
+With ``--early-stop``, the final stage plays main/reverse in chunks and stops
+each finalist once a decision class reaches probability ≥ 1 − γ (default γ=0.02).
+Chunk files ``<stem>-final.part<j>.json`` merge into the arm files unchanged for
+downstream readers. See ``--stop-chunk``, ``--stop-thresholds``, ``--stop-gamma``,
+``--stop-min-games``, and ``--stop-combine``.
+"""
 
 from __future__ import annotations
 
@@ -20,14 +27,20 @@ from matchup import (  # noqa: E402
     load_extra_deck_files,
     resolve_selected_decks,
 )
+from stats import wilson  # noqa: E402
 from runlib import (  # noqa: E402
+    arm_candidate_wins,
+    chunk_arm_schedule,
+    class_probabilities,
     flag_given,
+    format_decision_class,
     format_verdict_line,
     git_head,
     load_run,
     mark_end as runlib_mark_end,
     mark_start as runlib_mark_start,
     matchup_argv,
+    merge_matchup_arm,
     new_run,
     pooled_candidate,
     publish_output_exist,
@@ -38,6 +51,7 @@ from runlib import (  # noqa: E402
     run_tee,
     save_run as runlib_save_run,
     stage_seconds,
+    validate_stop_chunk,
     verdict,
 )
 
@@ -469,6 +483,42 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "explicit flags still override"
         ),
     )
+    p.add_argument(
+        "--early-stop",
+        action="store_true",
+        help="chunked finals with predictive early stopping (opt-in)",
+    )
+    p.add_argument(
+        "--stop-chunk",
+        type=int,
+        default=2,
+        help="games per pair per chunk with --early-stop (default: 2, must be even)",
+    )
+    p.add_argument(
+        "--stop-thresholds",
+        type=float,
+        nargs="+",
+        default=[0.51],
+        help="pooled thresholds for the stop rule (default: 0.51)",
+    )
+    p.add_argument(
+        "--stop-gamma",
+        type=float,
+        default=0.02,
+        help="stop when a class reaches probability ≥ 1 − γ (default: 0.02)",
+    )
+    p.add_argument(
+        "--stop-min-games",
+        type=int,
+        default=1024,
+        help="no early stop before this many final games for the candidate (default: 1024)",
+    )
+    p.add_argument(
+        "--stop-combine",
+        default=None,
+        metavar="TAG",
+        help="confirm run: decide on counts combined with <root>/TAG",
+    )
     args = p.parse_args(raw)
     args._argv = raw
     if flag_given(raw, "--target-games"):
@@ -500,7 +550,33 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             args.baseline = FAST
     if not flag_given(raw, "--pool") and not flag_given(raw, "--decks") and not args.decks:
         args.pool = DEFAULT_POOL
+    _validate_early_stop_args(args, raw)
     return args
+
+
+def _validate_early_stop_args(args: argparse.Namespace, raw: list[str]) -> None:
+    early_only = (
+        "--stop-chunk",
+        "--stop-thresholds",
+        "--stop-gamma",
+        "--stop-min-games",
+        "--stop-combine",
+    )
+    if not args.early_stop:
+        for name in early_only:
+            if flag_given(raw, name):
+                raise SystemExit(f"{name} requires --early-stop")
+        return
+    if args.mirrors:
+        raise SystemExit("--mirrors is not supported with --early-stop")
+    if args.stop_gamma <= 0 or args.stop_gamma >= 0.5:
+        raise SystemExit(f"--stop-gamma must satisfy 0 < γ < 0.5 (got {args.stop_gamma})")
+    if args.stop_min_games < 1:
+        raise SystemExit("--stop-min-games must be a positive integer")
+    for t in args.stop_thresholds:
+        if t <= 0 or t >= 1:
+            raise SystemExit(f"--stop-thresholds values must lie in (0, 1) (got {t})")
+    validate_stop_chunk(args.stop_chunk, args.final_games, args.final_reverse)
 
 
 def requested_stages(args: argparse.Namespace) -> list[str]:
@@ -699,6 +775,372 @@ class Runner:
     def publish_ready(self) -> bool:
         return publish_output_exist(self.publish_dir, self.args.tag, self.tag_dir)
 
+    def _deck_names(self) -> list[str]:
+        pool_name, decks = load_sweep_decks(self.repo, self.args.decks, self.args.pool)
+        del pool_name
+        return list(decks.keys())
+
+    def _record_early_stop_config(self) -> None:
+        self.run["early_stop"] = {
+            "chunk": self.args.stop_chunk,
+            "thresholds": list(self.args.stop_thresholds),
+            "gamma": self.args.stop_gamma,
+            "min_games": self.args.stop_min_games,
+            "combine": self.args.stop_combine,
+            "finalists": self.run.get("early_stop", {}).get("finalists", {}),
+        }
+        self.save_run()
+
+    def _load_combine_arm_counts(
+        self, c: Candidate
+    ) -> tuple[tuple[int, int], tuple[int, int]]:
+        tag = self.args.stop_combine
+        assert tag
+        comb_dir = (self.root / tag).resolve()
+        run_path = comb_dir / "RUN.json"
+        cands_path = comb_dir / "candidates.json"
+        if not run_path.is_file():
+            raise SystemExit(f"--stop-combine {tag!r}: missing {run_path}")
+        if not cands_path.is_file():
+            raise SystemExit(f"--stop-combine {tag!r}: missing {cands_path}")
+        comb_run = json.loads(run_path.read_text(encoding="utf-8"))
+        comb_baseline = None
+        argv = comb_run.get("argv") or []
+        for i, tok in enumerate(argv):
+            if tok == "--baseline" and i + 1 < len(argv):
+                comb_baseline = argv[i + 1]
+                break
+        if comb_baseline != self.args.baseline:
+            raise SystemExit(
+                f"--stop-combine {tag!r}: baseline {comb_baseline!r} "
+                f"≠ this run's {self.args.baseline!r}"
+            )
+        comb_cands = json.loads(cands_path.read_text(encoding="utf-8"))
+        match = next((x for x in comb_cands if x.get("spec") == c.spec), None)
+        if match is None:
+            raise SystemExit(
+                f"--stop-combine {tag!r}: no finalist with candidate spec {c.spec!r}"
+            )
+        stem = f"c{int(match['index']):02d}"
+        main_path = comb_dir / f"{stem}-final.json"
+        rev_path = comb_dir / f"{stem}-reverse.json"
+        if not main_path.is_file() or not rev_path.is_file():
+            raise SystemExit(f"--stop-combine {tag!r}: missing arm files for {stem}")
+        main_doc = json.loads(main_path.read_text(encoding="utf-8"))
+        rev_doc = json.loads(rev_path.read_text(encoding="utf-8"))
+        if main_doc.get("policy_b") != self.args.baseline:
+            raise SystemExit(
+                f"--stop-combine {tag!r}: {stem}-final baseline "
+                f"{main_doc.get('policy_b')!r} ≠ {self.args.baseline!r}"
+            )
+        if rev_doc.get("policy_a") != self.args.baseline:
+            raise SystemExit(
+                f"--stop-combine {tag!r}: {stem}-reverse baseline "
+                f"{rev_doc.get('policy_a')!r} ≠ {self.args.baseline!r}"
+            )
+        return (
+            arm_candidate_wins(main_doc, reverse=False),
+            arm_candidate_wins(rev_doc, reverse=True),
+        )
+
+    def _chunk_part_stem(self, c: Candidate, arm: str, chunk_index: int) -> str:
+        base = f"{c.stem}-final" if arm == "main" else f"{c.stem}-reverse"
+        return f"{base}.part{chunk_index + 1}"
+
+    def _load_arm_chunk_docs(self, c: Candidate, arm: str) -> list[dict[str, Any]]:
+        prefix = f"{c.stem}-final" if arm == "main" else f"{c.stem}-reverse"
+        paths = sorted(
+            self.tag_dir.glob(f"{prefix}.part*.json"),
+            key=lambda p: int(p.stem.rsplit("part", 1)[1]),
+        )
+        return [json.loads(p.read_text(encoding="utf-8")) for p in paths]
+
+    def _run_chunk_matchup(
+        self,
+        extra: list[str],
+        part_stem: str,
+        game_offset: int,
+    ) -> None:
+        out_json = self.tag_dir / f"{part_stem}.json"
+        log = self.tag_dir / f"{part_stem}.txt"
+        if not self.args.force and out_json.is_file():
+            print(f"skip: {part_stem}", flush=True)
+            return
+        cmd = matchup_argv(
+            self.py_dir,
+            extra,
+            out_json,
+            seed=self.args.seed,
+            threads=self.args.threads,
+            game_offset=game_offset,
+        )
+        self.tee(cmd, log, "final")
+
+    def _chunk_matchup_argv(
+        self,
+        c: Candidate,
+        arm: str,
+        games: int,
+        offset: int,
+    ) -> list[str]:
+        baseline = self.args.baseline
+        if arm == "main":
+            extra = [
+                "--policy-a",
+                c.spec,
+                "--policy-b",
+                baseline,
+                "--games",
+                str(games),
+            ]
+        else:
+            extra = [
+                "--policy-a",
+                baseline,
+                "--policy-b",
+                c.spec,
+                "--games",
+                str(games),
+            ]
+        self.add_decks(extra)
+        return extra
+
+    def _merge_and_write_arm(self, c: Candidate, arm: str) -> dict[str, Any]:
+        chunks = self._load_arm_chunk_docs(c, arm)
+        if not chunks:
+            raise SystemExit(f"early stop: no chunks for {c.stem} {arm}")
+        names = chunks[0].get("decks") or self._deck_names()
+        merged = merge_matchup_arm(chunks, list(names))
+        stem = f"{c.stem}-final" if arm == "main" else f"{c.stem}-reverse"
+        out = self.tag_dir / f"{stem}.json"
+        out.write_text(json.dumps(merged, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return merged
+
+    def _early_stop_look(
+        self,
+        c: Candidate,
+        combine: tuple[tuple[int, int], tuple[int, int]] | None,
+    ) -> dict[str, Any]:
+        chunk = self.args.stop_chunk
+        pairs = int(self.run.get("sizing", {}).get("pairs") or 0)
+        if pairs <= 0:
+            _, decks = load_sweep_decks(self.repo, self.args.decks, self.args.pool)
+            pairs = len(decks) * len(decks)
+        planned_main = self.args.final_games * pairs
+        planned_rev = self.args.final_reverse * pairs
+        main_chunks = self._load_arm_chunk_docs(c, "main")
+        rev_chunks = self._load_arm_chunk_docs(c, "reverse")
+        if main_chunks:
+            w_main, n_main = arm_candidate_wins(
+                merge_matchup_arm(main_chunks, list(main_chunks[0].get("decks") or self._deck_names())),
+                reverse=False,
+            )
+        else:
+            w_main, n_main = 0, 0
+        if rev_chunks:
+            w_rev, n_rev = arm_candidate_wins(
+                merge_matchup_arm(rev_chunks, list(rev_chunks[0].get("decks") or self._deck_names())),
+                reverse=True,
+            )
+        else:
+            w_rev, n_rev = 0, 0
+        r_main = planned_main - n_main
+        r_rev = planned_rev - n_rev
+        comb_main = combine[0] if combine else None
+        comb_rev = combine[1] if combine else None
+        probs = class_probabilities(
+            w_main,
+            n_main,
+            r_main,
+            w_rev,
+            n_rev,
+            r_rev,
+            list(self.args.stop_thresholds),
+            combine_main=comb_main,
+            combine_rev=comb_rev,
+        )
+        best_cls = max(probs, key=lambda k: probs[k])
+        best_p = probs[best_cls]
+        games_so_far = n_main + n_rev
+        return {
+            "main_games": n_main,
+            "main_planned": planned_main,
+            "reverse_games": n_rev,
+            "reverse_planned": planned_rev,
+            "main_rate": w_main / n_main if n_main else 0.0,
+            "reverse_rate": w_rev / n_rev if n_rev else 0.0,
+            "class_probs": {
+                format_decision_class(k, self.args.stop_thresholds): v for k, v in sorted(probs.items())
+            },
+            "best_class": format_decision_class(best_cls, self.args.stop_thresholds),
+            "best_prob": best_p,
+            "games_this_run": games_so_far,
+        }
+
+    def _log_early_stop_look(self, c: Candidate, look: dict[str, Any], action: str) -> None:
+        thresh = ", ".join(f"{t:g}" for t in self.args.stop_thresholds)
+        print(
+            f"early stop {c.stem} look: "
+            f"main {look['main_games']}/{look['main_planned']} "
+            f"({look['main_rate']:.3f}) "
+            f"reverse {look['reverse_games']}/{look['reverse_planned']} "
+            f"({look['reverse_rate']:.3f}) "
+            f"classes={look['class_probs']} "
+            f"{action} "
+            f"(γ={self.args.stop_gamma}, thresholds {thresh})",
+            flush=True,
+        )
+
+    def _finalist_early_stop(
+        self,
+        c: Candidate,
+        combine: tuple[tuple[int, int], tuple[int, int]] | None,
+    ) -> None:
+        schedule = chunk_arm_schedule(
+            self.args.final_games,
+            self.args.final_reverse,
+            self.args.stop_chunk,
+        )
+        chunk = self.args.stop_chunk
+        early = self.run.setdefault("early_stop", {})
+        fin_rec = early.setdefault("finalists", {})
+        rec = dict(fin_rec.get(c.stem) or {})
+        looks: list[dict[str, Any]] = []
+        stopped = False
+        stopped_at: int | None = rec.get("stopped_at_look")
+        gamma_cutoff = 1.0 - self.args.stop_gamma
+
+        for step, (arm, j) in enumerate(schedule):
+            look_num = step + 1
+            if stopped_at is not None and look_num > stopped_at:
+                break
+            part_stem = self._chunk_part_stem(c, arm, j)
+            if stopped_at is None or look_num <= stopped_at:
+                extra = self._chunk_matchup_argv(c, arm, chunk, j * chunk)
+                self._run_chunk_matchup(extra, part_stem, j * chunk)
+
+            look = self._early_stop_look(c, combine)
+            looks.append(look)
+            action = "continue"
+            if (
+                stopped_at is None
+                and look["games_this_run"] >= self.args.stop_min_games
+                and (
+                    look["reverse_games"] > 0
+                    or int(look.get("reverse_planned") or 0) == 0
+                )
+                and look["best_prob"] >= gamma_cutoff
+            ):
+                stopped = True
+                stopped_at = look_num
+                action = "stop"
+            elif stopped_at is not None and look_num == stopped_at:
+                action = "stop"
+            self._log_early_stop_look(c, look, action)
+            if stopped:
+                break
+
+        rec["looks"] = looks
+        rec["stopped"] = stopped or stopped_at is not None
+        if stopped_at is not None:
+            rec["stopped_at_look"] = stopped_at
+            last = looks[stopped_at - 1]
+            rec["settled_class"] = last["best_class"]
+            rec["settled_prob"] = last["best_prob"]
+        elif looks:
+            last = looks[-1]
+            rec["settled_class"] = last["best_class"]
+            rec["settled_prob"] = last["best_prob"]
+        fin_rec[c.stem] = rec
+        self.save_run()
+        if self._load_arm_chunk_docs(c, "main"):
+            self._merge_and_write_arm(c, "main")
+        if self._load_arm_chunk_docs(c, "reverse"):
+            self._merge_and_write_arm(c, "reverse")
+
+    def _early_stop_summary_line(self, c: Candidate) -> str | None:
+        early = self.run.get("early_stop") or {}
+        rec = (early.get("finalists") or {}).get(c.stem)
+        if not rec:
+            return None
+        looks = rec.get("looks") or []
+        if not looks:
+            return None
+        last = looks[-1]
+        gamma = early.get("gamma", self.args.stop_gamma)
+        thresh = early.get("thresholds", self.args.stop_thresholds)
+        thresh_s = ", ".join(f"{t:g}" for t in thresh)
+        if rec.get("stopped"):
+            stop_look = int(rec.get("stopped_at_look") or len(looks))
+            stop_data = looks[stop_look - 1]
+            return (
+                f"early stop: stopped after {stop_data['main_games']}/"
+                f"{stop_data['main_planned']} main and "
+                f"{stop_data['reverse_games']}/{stop_data['reverse_planned']} reverse games — "
+                f"{rec.get('settled_class', stop_data['best_class'])} settled at "
+                f"P = {rec.get('settled_prob', stop_data['best_prob']):.3f} "
+                f"(γ {gamma}, thresholds {thresh_s})"
+            )
+        return (
+            f"early stop: ran to the end (largest class probability at the last look "
+            f"{last.get('best_prob', 0.0):.3f})"
+        )
+
+    def _build_combined_section(self) -> list[str]:
+        tag = self.args.stop_combine
+        if not tag:
+            return []
+        combine = self.run.get("early_stop", {}).get("combine") or tag
+        lines = ["", f"## combined with {combine}", ""]
+        lines.append("| index | spec | main | reverse | pooled |")
+        lines.append("|---|---:|---:|---:|---:|")
+        verdicts: list[str] = []
+        comb_dir = (self.root / tag).resolve()
+        for c in self.finalists():
+            combine_counts = self._load_combine_arm_counts(c)
+            main_doc = self.load_json(f"{c.stem}-final.json")
+            rev_doc = self.load_json(f"{c.stem}-reverse.json")
+            comb_stem = None
+            comb_cands = json.loads((comb_dir / "candidates.json").read_text(encoding="utf-8"))
+            match = next((x for x in comb_cands if x.get("spec") == c.spec), None)
+            if match:
+                comb_stem = f"c{int(match['index']):02d}"
+            if comb_stem:
+                comb_main = json.loads((comb_dir / f"{comb_stem}-final.json").read_text())
+                comb_rev = json.loads((comb_dir / f"{comb_stem}-reverse.json").read_text())
+            else:
+                comb_main = comb_rev = None
+            w_main, n_main = arm_candidate_wins(main_doc, reverse=False)
+            w_rev, n_rev = arm_candidate_wins(rev_doc, reverse=True)
+            if comb_main and comb_rev:
+                wc_m, nc_m = arm_candidate_wins(comb_main, reverse=False)
+                wc_r, nc_r = arm_candidate_wins(comb_rev, reverse=True)
+                w_main += wc_m
+                n_main += nc_m
+                w_rev += wc_r
+                n_rev += nc_r
+            del combine_counts
+            main_rate = w_main / n_main if n_main else 0.0
+            main_ci = wilson(w_main, n_main)
+            rev_rate = w_rev / n_rev if n_rev else 0.0
+            rev_ci = wilson(w_rev, n_rev)
+            pool_w = w_main + w_rev
+            pool_n = n_main + n_rev
+            pool_rate = pool_w / pool_n if pool_n else 0.0
+            pool_ci = wilson(pool_w, pool_n)
+            lines.append(
+                f"| {c.index} | `{c.spec}` | {rate_ci(main_rate, main_ci)} | "
+                f"{rate_ci(rev_rate, rev_ci)} | {rate_ci(pool_rate, pool_ci)} |"
+            )
+            verdicts.append(
+                format_verdict_line(
+                    c.spec, main_rate, main_ci, rev_rate, rev_ci, pool_rate, pool_ci
+                )
+            )
+        lines.append("")
+        lines.extend(verdicts)
+        return lines
+
     def stage_screen(self) -> None:
         if not self.args.force and self.screen_outputs_exist():
             print("skip: screen", flush=True)
@@ -732,40 +1174,48 @@ class Runner:
             return
         finals = self.finalists()
         self.mark_start("final")
-        baseline = self.args.baseline
-        for c in finals:
-            main = [
-                "--policy-a",
-                c.spec,
-                "--policy-b",
-                baseline,
-                "--games",
-                str(self.args.final_games),
-            ]
-            self.add_decks(main)
-            self.run_matchup(main, f"{c.stem}-final", "final")
-            rev = [
-                "--policy-a",
-                baseline,
-                "--policy-b",
-                c.spec,
-                "--games",
-                str(self.args.final_reverse),
-            ]
-            self.add_decks(rev)
-            self.run_matchup(rev, f"{c.stem}-reverse", "final")
-            for deck in self.args.mirrors:
-                mir = [
+        if self.args.early_stop:
+            self._record_early_stop_config()
+            for c in finals:
+                cand_combine = (
+                    self._load_combine_arm_counts(c) if self.args.stop_combine else None
+                )
+                self._finalist_early_stop(c, cand_combine)
+        else:
+            baseline = self.args.baseline
+            for c in finals:
+                main = [
                     "--policy-a",
                     c.spec,
                     "--policy-b",
                     baseline,
                     "--games",
-                    str(self.args.mirror_games),
-                    "--decks",
-                    deck,
+                    str(self.args.final_games),
                 ]
-                self.run_matchup(mir, f"{c.stem}-mirror-{deck}", "final")
+                self.add_decks(main)
+                self.run_matchup(main, f"{c.stem}-final", "final")
+                rev = [
+                    "--policy-a",
+                    baseline,
+                    "--policy-b",
+                    c.spec,
+                    "--games",
+                    str(self.args.final_reverse),
+                ]
+                self.add_decks(rev)
+                self.run_matchup(rev, f"{c.stem}-reverse", "final")
+                for deck in self.args.mirrors:
+                    mir = [
+                        "--policy-a",
+                        c.spec,
+                        "--policy-b",
+                        baseline,
+                        "--games",
+                        str(self.args.mirror_games),
+                        "--decks",
+                        deck,
+                    ]
+                    self.run_matchup(mir, f"{c.stem}-mirror-{deck}", "final")
         self.mark_end("final")
 
     def stage_summary(self) -> None:
@@ -856,11 +1306,16 @@ class Runner:
                     c.spec, main_rate, main_ci, rev_rate, rev_ci, pool_rate, pool_ci
                 )
             )
+            es_line = self._early_stop_summary_line(c)
+            if es_line:
+                lines.append(es_line)
         lines.append("")
         lines.extend(verdicts)
         if verdicts:
             lines.append("")
         lines.append(format_best_line(picks))
+        if self.args.stop_combine or self.run.get("early_stop", {}).get("combine"):
+            lines.extend(self._build_combined_section())
         lines.append("")
         return "\n".join(lines)
 
