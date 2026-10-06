@@ -58,7 +58,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--encoding",
         type=int,
         default=1,
-        choices=(1, 2),
+        choices=(1, 2, 3),
         help="observation encoding for export shards (default 1; forwarded to matchup.py)",
     )
     p.add_argument("--decks", nargs="*", default=None, help="restrict matchup decks (passed through)")
@@ -111,6 +111,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     args = p.parse_args(raw)
     args._argv = raw
+    if args.encoding == 3:
+        if flag_given(raw, "--models") and "mlp" in args.models:
+            raise SystemExit("--models mlp is not supported with --encoding 3")
+        if not flag_given(raw, "--models") and "mlp" in args.models:
+            args.models = [m for m in args.models if m != "mlp"]
+            print(
+                "note: encoding 3 is linear only; mlp omitted from default --models",
+                flush=True,
+            )
     if args.smoke:
         if not flag_given(raw, "--decks"):
             args.decks = ["basic-forest", "basic-rune"]
@@ -189,6 +198,12 @@ class Runner:
             if ev_enc == 2 and data_enc == 1:
                 print(
                     f"skip eval {Path(p).name}: encoding mismatch (model 2, data 1)",
+                    flush=True,
+                )
+                continue
+            if ev_enc == 1 and data_enc == 3:
+                print(
+                    f"skip eval {Path(p).name}: encoding mismatch (model 1, data 3)",
                     flush=True,
                 )
                 continue

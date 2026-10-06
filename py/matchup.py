@@ -357,7 +357,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--encoding",
         type=int,
         default=1,
-        choices=(1, 2),
+        choices=(1, 2, 3),
         help="observation encoding version for export shards (default 1)",
     )
     parser.add_argument("--out", default="matchup.json")
