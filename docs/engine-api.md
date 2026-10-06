@@ -613,7 +613,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `tkill` | 0 | on each own-turn decision (Main, Combat, or Choice) with more than one useful candidate, run [`forced_lethal_det`] on the first determinization before `consensus_lethal` / search. A deterministic kill confirmed on every root is played; applies are outside `node_cap`. `0` = off (today) |
 | `tkroll` | 0 | after a deterministic miss, run [`forced_lethal_accepting`] on the first determinization (every-root × `tkroll` rerolled confirmation inside the search; transposition off). Only when `tkill>0`; uses `tkill`'s budget. `0` = off (today; no effect when `tkill=0`) |
 | `hbcheck` | 0 | after search chooses `EndTurn` with a kill attack available, symmetrically re-score `End′` and each kill attack `A′` as `v(s)=min(plain,removal)` per determinization (bounded opponent removal search up to 3 actions, 4 rerolls per sure line, `hbcheck` applies per root outside `node_cap`; attack paths finish the bot's turn greedily up to `osteps` before `EndTurn`). Play the best kill when its aggregate beats `End′` (`holdback_trade`). `0` = off (the default; the served specs use `2000`) |
-| `fuseguard` | 0 | drop no-op fuses from the bot's own root candidates and own-turn search (`search_own` at every horizon). A fuse is no-op when every `fused` trigger only demands unaffordable PP, the host has no latent `wasFused` value, and the hand is not full (`HAND_LIMIT`). Not applied in the opponent reply or lethal searches (`tkill` / `tkroll` / `olsolve`). If dropping would leave no action, the list is unchanged. `1` = on |
+| `fuseguard` | 0 | drop no-op fuses from the bot's own root candidates and own-turn search (`search_own` at every horizon). A fuse is no-op when every `fused` trigger only demands unaffordable PP, the host has no latent `wasFused` value, and the hand is not full (`HAND_LIMIT`). Not applied in the opponent reply or lethal searches (`tkill` / `tkroll` / `olsolve`). If dropping would leave no action, the list is unchanged. `1` = on; the served specs use `1` |
 | `wseed` | `off` | turn-stable world seeding. `off` = one determinization seed per root from the caller rng (today). `turn` = one base per `(turn, active, me)` cached across decisions in the same turn; root seed `i` is the `i`th `next_u64()` of `Xoshiro256ss::from_seed(base)` |
 | `wbase` | — | explicit turn base (`u64`); implies turn-stable worlds and skips the cache (for per-call policies such as `bot_action*`) |
 | `lostrank` | 0 | lost-turn tie-break budget. When every scored candidate's aggregate is `≤ −wv + ε` (all lost in every world), re-score each line on the same roots with the opponent reply and lethal stand-in off, spending at most `lostrank` nodes outside `node_cap`, and pick the best aggregate. `0` = off (today) |
@@ -1000,7 +1000,7 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000`) is the spec used whenever the request's `policy` is an
+`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
 exact token `info=all`. The default samples eight worlds at twice the previous
 node cap. The served bot takes a deterministic kill before searching (`tkill`,
@@ -1011,8 +1011,11 @@ end the turn with a kill attack available, the served bot re-scores End Turn
 against each kill attack, assuming the opponent's best sure removal line (up to
 3 actions), and attacks when that scores better (`hbcheck`, up to 2 000 applies
 per root, outside the node cap; decision holdback3, sweep 35 `376e3a8` and
-review10 `729410e`). `--cheat` (default
-`h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000`)
+review10 `729410e`). The served bot drops no-op fuses (a fuse whose every
+`fused` effect needs PP it cannot pay, with no `wasFused` ability, hand below 9;
+sweep 42, results `fdd50ab`, pooled 0.567, +46.6 Elo in the Test Subject mirror).
+`--cheat` (default
+`h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1`)
 is used for h0 variants whose keys include `info=all` (full-information
 sparring); same `tkill` / `tkroll` behaviour. `random` / `first-legal` and any non-h0 spec pass through
 unchanged — the server, not the client, decides H0 strength. `--origins` is
@@ -1082,7 +1085,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000, 28 cpus)` or
+select) is `bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1, 28 cpus)` or
 `bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
 selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.

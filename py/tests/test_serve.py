@@ -36,8 +36,8 @@ def _load_serve():
 
 serve = _load_serve()
 
-DEFAULT_STRONG = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000"
-DEFAULT_CHEAT = "h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000"
+DEFAULT_STRONG = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1"
+DEFAULT_CHEAT = "h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1"
 CHEAT_SPEC = "h0:nodes=200,info=all"
 
 
@@ -82,6 +82,88 @@ def test_default_cheat_constant_and_parse_args(db, root: Path) -> None:
 )
 def test_effective_policy(requested: str, expected: str) -> None:
     assert serve.effective_policy(requested, "h0:nodes=16000", CHEAT_SPEC) == expected
+
+
+END_TURN_A = {"end_turn": {"player": "a"}}
+
+
+def _end_turn_a() -> dict:
+    return {"end_turn": {"player": "a"}}
+
+
+def test_annotate_bot_values_single_candidate_end_turn() -> None:
+    """A valued End Turn at ply 5 must not attach to an earlier identical step."""
+    end2 = _end_turn_a()
+    end5 = _end_turn_a()
+    pending = {2: (end2, None), 5: (end5, 12.5)}
+    record = {
+        "actions": [
+            {"play": {"card": "x", "player": "a"}},
+            {"play": {"card": "y", "player": "b"}},
+            end2,
+            {"play": {"card": "z", "player": "a"}},
+            {"play": {"card": "w", "player": "b"}},
+            end5,
+        ]
+    }
+    serve.annotate_bot_values(record, pending)
+    assert "bot_value" not in record["actions"][2]
+    assert record["actions"][5]["bot_value"] == 12.5
+
+
+def test_annotate_bot_values_undo_replaces_ply() -> None:
+    """After undo, only plies still in the log are annotated."""
+    act3 = {"play": {"card": "c", "player": "a"}}
+    act4 = {"attack": {"attacker": "1", "target": "2"}}
+    pending = {3: (act3, 1.0), 4: (act4, 2.0)}
+    record = {
+        "actions": [
+            {"play": {"card": "a", "player": "a"}},
+            {"play": {"card": "b", "player": "b"}},
+            {"play": {"card": "x", "player": "a"}},
+            act3,
+            act4,
+            _end_turn_a(),
+        ]
+    }
+    serve.annotate_bot_values(record, pending)
+    assert record["actions"][3]["bot_value"] == 1.0
+    assert record["actions"][4]["bot_value"] == 2.0
+    assert "bot_value" not in record["actions"][5]
+    assert 6 not in pending
+
+
+def test_annotate_bot_values_reseed_at_ply() -> None:
+    """A reseed at the stored ply attaches the value to the next action."""
+    act = {"play": {"card": "after", "player": "a"}}
+    pending = {2: (act, 3.0)}
+    record = {
+        "actions": [
+            {"play": {"card": "a", "player": "a"}},
+            {"play": {"card": "b", "player": "b"}},
+            {"reseed": "42"},
+            act,
+        ]
+    }
+    serve.annotate_bot_values(record, pending)
+    assert "bot_value" not in record["actions"][2]
+    assert record["actions"][3]["bot_value"] == 3.0
+
+
+def test_annotate_bot_values_mismatch_attaches_nothing() -> None:
+    """A step body that differs from the stored action gets no value."""
+    stored = {"play": {"card": "expected", "player": "a"}}
+    pending = {2: (stored, 1.0)}
+    record = {
+        "actions": [
+            {"play": {"card": "a", "player": "a"}},
+            {"play": {"card": "b", "player": "b"}},
+            {"play": {"card": "other", "player": "a"}},
+        ]
+    }
+    serve.annotate_bot_values(record, pending)
+    for step in record["actions"]:
+        assert "bot_value" not in step
 
 
 def _decks(root: Path) -> tuple[dict[str, int], dict[str, int]]:

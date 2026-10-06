@@ -22,8 +22,8 @@ from urllib.parse import urlparse
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
-DEFAULT_STRONG = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000"
-DEFAULT_CHEAT = "h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000"
+DEFAULT_STRONG = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1"
+DEFAULT_CHEAT = "h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1"
 DEFAULT_GAMES_DIR = "results/games"
 DEFAULT_ORIGINS = (
     "https://arena-nu-one.vercel.app,"
@@ -195,26 +195,46 @@ def _actions_match(a: Any, b: Any) -> bool:
     )
 
 
+def _step_body(step: dict[str, Any]) -> dict[str, Any]:
+    return {k: v for k, v in step.items() if k not in ("value", "bot_value")}
+
+
+def _resolve_ply_step(actions: list[Any], ply: int) -> dict[str, Any] | None:
+    if ply >= len(actions):
+        return None
+    step = actions[ply]
+    if not isinstance(step, dict):
+        return None
+    if "reseed" in step:
+        for j in range(ply + 1, len(actions)):
+            next_step = actions[j]
+            if isinstance(next_step, dict) and "reseed" not in next_step:
+                return next_step
+        return None
+    return step
+
+
 def annotate_bot_values(
     record: dict[str, Any],
-    pending: list[tuple[Any, float]],
+    pending: dict[int, tuple[Any, float | None]],
 ) -> None:
-    """Attach stored bot root values to matching actions in the capture."""
+    """Attach stored bot root values to matching actions at the decision ply."""
     actions = record.get("actions")
     if not isinstance(actions, list) or not pending:
         return
-    idx = 0
-    for step in actions:
-        if idx >= len(pending):
-            break
-        if not isinstance(step, dict):
+    for ply, (act, val) in pending.items():
+        if ply >= len(actions):
             continue
-        act, val = pending[idx]
-        body = {k: v for k, v in step.items() if k not in ("value", "bot_value")}
-        if _actions_match(body, act):
-            if "bot_value" not in step and "value" not in step:
-                step["bot_value"] = val
-            idx += 1
+        step = _resolve_ply_step(actions, ply)
+        if step is None:
+            continue
+        if not _actions_match(_step_body(step), act):
+            continue
+        if val is None:
+            continue
+        if "bot_value" in step or "value" in step:
+            continue
+        step["bot_value"] = val
 
 
 def maybe_write_game(
@@ -293,7 +313,7 @@ class ServerContext:
         self.version = version
         self.games_dir = games_dir
         self.lock = threading.Lock()
-        self.bot_values: dict[str, list[tuple[Any, float]]] = {}
+        self.bot_values: dict[str, dict[int, tuple[Any, float | None]]] = {}
 
 
 def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
@@ -456,10 +476,11 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
                 else:
                     action = decided
                     root_value = None
-                if isinstance(root_value, (int, float)):
-                    ctx.bot_values.setdefault(game_id, []).append(
-                        (action, float(root_value))
-                    )
+                ply = len(actions)
+                stored_val = (
+                    float(root_value) if isinstance(root_value, (int, float)) else None
+                )
+                ctx.bot_values.setdefault(game_id, {})[ply] = (action, stored_val)
             except arena.Illegal as e:
                 self._bot_line(policy, turn, t_ms, hash_ok, game_id)
                 self._error(400, str(e))
@@ -490,7 +511,7 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
             human_side = recorded_human_side(body)
             if human_side:
                 capture["humanSide"] = human_side
-            annotate_bot_values(capture, ctx.bot_values.get(game_id) or [])
+            annotate_bot_values(capture, ctx.bot_values.get(game_id) or {})
             maybe_write_game(
                 ctx.games_dir,
                 capture,
@@ -547,7 +568,7 @@ def make_handler(ctx: ServerContext) -> type[BaseHTTPRequestHandler]:
             human_side = recorded_human_side(body)
             if human_side:
                 capture["humanSide"] = human_side
-            annotate_bot_values(capture, ctx.bot_values.get(game_id) or [])
+            annotate_bot_values(capture, ctx.bot_values.get(game_id) or {})
             maybe_write_game(
                 ctx.games_dir,
                 capture,
