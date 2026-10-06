@@ -954,3 +954,126 @@ def test_epochs_run_and_best_epoch(db, root: Path, tmp_path: Path) -> None:
     report0 = json.loads(_report_path(out0).read_text())
     assert report0["epochs_run"] == 5
     assert report0["best_epoch"] == 5
+
+
+V3_AUX = [
+    "game_index",
+    "decision_index",
+    "side",
+    "turn",
+    "phase",
+    "v0",
+    "legal_len",
+    "chosen",
+    "random",
+    "first_is_me",
+    "search_v",
+]
+V3_CREST = 10714110
+
+
+def _write_v3_train_shard(dir: Path, n: int, *, games: int = 8, rows_per_game: int = 16) -> None:
+    feat = np.zeros((n, 961), dtype="<f4")
+    ids = np.zeros((n, 230), dtype="<u4")
+    labels = np.full(n, 0.05, dtype="<f4")
+    aux = np.zeros((n, len(V3_AUX)), dtype="<f4")
+    for i in range(n):
+        g = i // rows_per_game
+        aux[i, 0] = g
+        aux[i, 2] = float(i % 2)
+        aux[i, 3] = 4.0
+        aux[i, 9] = float(g % 2)
+        if int(aux[i, 2]) == 0:
+            ids[i, 220] = V3_CREST
+            labels[i] = 0.25
+    dir.mkdir(parents=True, exist_ok=True)
+    feat.tofile(dir / "features.f32le")
+    ids.tofile(dir / "ids.u32le")
+    labels.tofile(dir / "labels.f32le")
+    aux.tofile(dir / "aux.f32le")
+    meta = {
+        "samples": n,
+        "feature_len": 961,
+        "ids_len": 230,
+        "encoding": 3,
+        "aux_columns": V3_AUX,
+        "layout": [],
+        "decks": ["deck-a", "deck-b"],
+        "games": games,
+    }
+    (dir / "meta.json").write_text(json.dumps(meta) + "\n")
+
+
+def _engine_loads_model(model_path: Path) -> None:
+    env = {**dict(__import__("os").environ), "ARENA_MODEL_PATH": str(model_path)}
+    r = subprocess.run(
+        [
+            "cargo",
+            "test",
+            "--release",
+            "--test",
+            "encoding_v3",
+            "v3_model_from_env_loads",
+            "--",
+            "--exact",
+        ],
+        cwd=str(Path(__file__).resolve().parents[2] / "engine"),
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+def _assert_v3_holdout_predict_parity(
+    spec: dict, data_dir: Path, holdout: float, seed: int, report: dict
+) -> None:
+    loaded = train_value.load_dirs([str(data_dir)])
+    _, hold_idx = train_value.split_by_game(loaded["game_index"], holdout, seed)
+    assert hold_idx.size > 0
+    pred = train_value.predict(spec, loaded["features"][hold_idx], loaded["ids"][hold_idx])
+    pred_unit = pred / float(spec["scale"])
+    y = loaded["labels"][hold_idx].astype(np.float64)
+    mse = float(np.mean((pred_unit - y) ** 2))
+    assert abs(mse - report["net"]["overall"]["mse"]) < 1e-5
+
+
+@pytest.mark.parametrize("optimizer", ["numpy", "adam", "lbfgs"])
+def test_encoding3_full_fit_paths(tmp_path: Path, optimizer: str) -> None:
+    data = tmp_path / "v3data"
+    _write_v3_train_shard(data, 256, games=16, rows_per_game=16)
+    out = tmp_path / f"v3-{optimizer}.json"
+    cmd = [
+        sys.executable,
+        str(_TRAIN),
+        "--data",
+        str(data),
+        "--model",
+        "linear",
+        "--out",
+        str(out),
+        "--holdout",
+        "0.25",
+        "--seed",
+        "5",
+        "--epochs",
+        "8",
+        "--l2",
+        "1e-4",
+    ]
+    env = dict(__import__("os").environ)
+    if optimizer == "lbfgs":
+        cmd.extend(["--optimizer", "lbfgs", "--lbfgs-iters", "30"])
+    elif optimizer == "numpy":
+        env["TORCH_DISABLE"] = "1"
+    r = subprocess.run(cmd, capture_output=True, text=True, cwd=str(_TRAIN.parents[1]), env=env)
+    assert r.returncode == 0, r.stdout + r.stderr
+    spec = json.loads(out.read_text())
+    assert spec["encoding"] == 3
+    zw = np.asarray(spec["linear"]["zone_w"], dtype=np.float32)
+    assert zw.shape[0] == 13
+    assert np.max(np.abs(zw[5:13, 0])) < 1e-12
+    report = json.loads(_report_path(out).read_text())
+    assert report["rows_holdout"] > 0
+    _engine_loads_model(out)
+    _assert_v3_holdout_predict_parity(spec, data, 0.25, 5, report)

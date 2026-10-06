@@ -464,6 +464,51 @@ fn v3_parser_rejects_mlp() {
 }
 
 #[test]
+fn v3_model_from_env_loads() {
+    let Ok(path) = std::env::var("ARENA_MODEL_PATH") else {
+        return;
+    };
+    let text = std::fs::read_to_string(&path).expect("read model");
+    let _ = ValueNet::from_json(&text).expect("load trainer model");
+}
+
+#[test]
+fn v3_trainer_stack_unknown_vocab_matches_base() {
+    use std::process::Command;
+
+    let db = load_db();
+    let base = ValueNet::from_json(include_str!("../models/h0-linear-v3.json")).expect("base");
+    let tmp = std::env::temp_dir();
+    let data = tmp.join("arena-v3-trainer-unk-data");
+    let out = tmp.join("arena-v3-trainer-unk-stack.json");
+    let _ = std::fs::remove_dir_all(&data);
+    let _ = std::fs::remove_file(&out);
+    let script = repo_root().join("engine/tests/fixtures/stack_unknown_vocab_train.py");
+    let status = Command::new("python3")
+        .arg(&script)
+        .arg(&data)
+        .arg(&out)
+        .status()
+        .expect("python trainer");
+    assert!(status.success(), "trainer subprocess failed");
+
+    let stacked_text = std::fs::read_to_string(&out).expect("stack json");
+    let stacked = ValueNet::from_json(&stacked_text).expect("stacked model");
+    let mut st = started_decks(&db, 42, &["88001140"], &["90031210"]);
+    let me = PlayerId::A;
+    let card = cid("88001140");
+    let inst = arena_engine::state::CardInstance::from_card(
+        db.card(card).expect("card"),
+        st.alloc_id(),
+    );
+    st.player_mut(me).hand.push(inst);
+    let obs = encode_version(&st, me, EncodingVersion::V3, Some(&db));
+    let v_base = base.value(&obs);
+    let v_stack = stacked.value(&obs);
+    assert_eq!(v_base.to_bits(), v_stack.to_bits(), "unknown vocab card value");
+}
+
+#[test]
 fn v1_v2_v3_leaf_and_race_models_still_load() {
     let _ = ValueNet::from_json(include_str!("../models/h0-linear-v1.json")).expect("v1");
     let _ = ValueNet::from_json(include_str!("../models/h0-linear-v2.json")).expect("v2");
