@@ -204,6 +204,7 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | feature | old tool (file:line) | new client (file:line or "—") | status | gap spec |
 |---|---|---|---|---|
 | FCT toggle in settings, default on, persist `svwb.floatingCombatText` (code-read) | `index.html:366-371`; `src/ui/floatingCombatText.ts:13-56`; `src/boot/floatingCombatText.ts` | `ui/index.html:228-231`; `ui/src/main.ts:712-719,778-781` | ported | Persisted as `svwb.floatingCombatText` (`"1"` / `"0"`). Default on. |
+| Vs-bot bot-play spotlight (card art + name, optional form chip, 1.5s overlay over bot hand) | — | `ui/src/spotlight.ts`; `ui/css/play-spotlight.css`; `ui/index.html` `#botPlaySpotlightToggle` | ported | Live bot steps only in vs-bot; toggle `svwb.botPlaySpotlight` (default on). Clears on undo/redo, checkpoint restore/reroll, and new game. |
 | FCT `−N` red `--color-danger`, `+N` green `--color-success`, 1.35s rise, 130ms stagger (code-read) | `css/floating-combat-text.css:5-61`; `src/ui/floatingCombatText.ts:16-17,136-139` | `ui/css/floating-combat-text.css:10-38`; `ui/src/fct.ts:4,13-35` | ported | 
 | Max 4 floaters per target; stack `--float-stack-index` (code-read) | `src/ui/floatingCombatText.ts:17,130` | `ui/src/fct.ts:5,75-85` | ported | Cap 4 per host; `--float-stack-index` × 18px. |
 | Leader FCT from the leader strip centre (code-read) | `src/ui/floatingCombatText.ts:62-66,203-245` | `ui/src/fct.ts:43-45` (`#blueLeader` / `#redLeader`) | ported | 
