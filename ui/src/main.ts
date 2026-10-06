@@ -37,6 +37,12 @@ import {
 } from "./session.ts";
 import { namedCounterValue, renderCard } from "./render/card.ts";
 import { rerollSeed } from "./reroll.ts";
+import {
+  clearBotSpotlight,
+  enqueueBotSpotlights,
+  resetSpotlightSession,
+  spotlightLog,
+} from "./spotlight.ts";
 import { readShareParams, writeShareParams } from "./share.ts";
 import type {
   EngineEvent,
@@ -210,6 +216,7 @@ function exposeArena(): void {
       if (!session) return false;
       const ok = restoreCheckpoint(session);
       if (ok) {
+        clearBotSpotlight();
         resetZoneCache();
         paint();
         refreshCheckpointStatus();
@@ -220,6 +227,7 @@ function exposeArena(): void {
       if (!session) return false;
       const ok = rerollCheckpoint(session);
       if (ok) {
+        clearBotSpotlight();
         resetZoneCache();
         paint();
         refreshCheckpointStatus();
@@ -246,6 +254,7 @@ function exposeArena(): void {
     }),
     catalogIds,
     cardText: (id) => lookupText(id),
+    spotlightLog: () => spotlightLog(),
     mountNamedCounter: (vars) => {
       const host = document.getElementById("blueBoard") ?? document.body;
       const inst = {
@@ -312,6 +321,7 @@ function applyHistory(fn: (s: Session) => boolean): void {
   watchPlaying = false;
   window.clearTimeout(watchTimer);
   if (!fn(session)) return;
+  clearBotSpotlight();
   clearFloaters();
   resetZoneCache();
   pending = null;
@@ -539,6 +549,7 @@ function startSession(cfg: SessionConfig): void {
   localBotGameError = null;
   localBotRemoteCount = 0;
   localBotThinking = false;
+  resetSpotlightSession();
   disposeSession(session);
   session = createSession(cfg);
   resetZoneCache();
@@ -749,6 +760,7 @@ async function maybeBots(): Promise<void> {
             events = botStep(s);
             staleRuns = 0;
             showCombat(events);
+            enqueueBotSpotlights(events, s.cfg.humanSide);
             await new Promise<void>((r) => window.setTimeout(r, 280));
             continue;
           }
@@ -763,6 +775,7 @@ async function maybeBots(): Promise<void> {
       }
       guard += 1;
       showCombat(events);
+      enqueueBotSpotlights(events, s.cfg.humanSide);
       await new Promise<void>((r) => window.setTimeout(r, 280));
     }
     if (session === s) paint();
@@ -1052,6 +1065,7 @@ function initHotkeys(): void {
     if (e.key === "F7") {
       e.preventDefault();
       if (session && restoreCheckpoint(session)) {
+        clearBotSpotlight();
         resetZoneCache();
         paint();
         refreshCheckpointStatus();
@@ -1060,6 +1074,7 @@ function initHotkeys(): void {
     if (e.key === "F8") {
       e.preventDefault();
       if (session && rerollCheckpoint(session)) {
+        clearBotSpotlight();
         resetZoneCache();
         paint();
         refreshCheckpointStatus();
@@ -1090,6 +1105,7 @@ function loadLogSafely(log: PositionLog): void {
   disposeSession(session);
   session = next;
   pending = null;
+  clearBotSpotlight();
   resetZoneCache();
   paint();
 }
@@ -1168,6 +1184,7 @@ function initPositions(): void {
   byId("restoreCheckpointBtn")?.addEventListener("click", () => {
     if (!session) return;
     restoreCheckpoint(session);
+    clearBotSpotlight();
     resetZoneCache();
     paint();
     refreshCheckpointStatus();
@@ -1175,6 +1192,7 @@ function initPositions(): void {
   byId("rerollBtn")?.addEventListener("click", () => {
     if (!session) return;
     rerollCheckpoint(session);
+    clearBotSpotlight();
     resetZoneCache();
     paint();
     refreshCheckpointStatus();
@@ -1287,13 +1305,16 @@ function initWatch(): void {
 function restorePersistedToggles(): void {
   const bottom = localStorage.getItem("svwb.activeOnBottom") === "1";
   const fct = localStorage.getItem("svwb.floatingCombatText");
+  const spotlight = localStorage.getItem("svwb.botPlaySpotlight");
   const localBotStored = localStorage.getItem("svwb.localBot");
   const bottomBox = byId<HTMLInputElement>("activeOnBottomToggle");
   const fctBox = byId<HTMLInputElement>("floatingCombatTextToggle");
+  const spotlightBox = byId<HTMLInputElement>("botPlaySpotlightToggle");
   const localBotBox = byId<HTMLInputElement>("localBotToggle");
   if (bottomBox) bottomBox.checked = bottom;
   document.body.classList.toggle("active-on-bottom", bottom);
   if (fctBox) fctBox.checked = fct == null ? true : fct !== "0";
+  if (spotlightBox) spotlightBox.checked = spotlight == null ? true : spotlight !== "0";
   if (localBotBox) localBotBox.checked = localBotStored == null ? true : localBotStored !== "0";
   const speedRaw = localStorage.getItem("svwb.watchSpeed");
   const sl = byId<HTMLInputElement>("watchSpeed");
@@ -1370,6 +1391,11 @@ async function boot(): Promise<void> {
   byId("floatingCombatTextToggle")?.addEventListener("change", (e) => {
     const on = (e.target as HTMLInputElement).checked;
     localStorage.setItem("svwb.floatingCombatText", on ? "1" : "0");
+  });
+  byId("botPlaySpotlightToggle")?.addEventListener("change", (e) => {
+    const on = (e.target as HTMLInputElement).checked;
+    localStorage.setItem("svwb.botPlaySpotlight", on ? "1" : "0");
+    if (!on) clearBotSpotlight();
   });
   byId("localBotToggle")?.addEventListener("change", (e) => {
     const on = (e.target as HTMLInputElement).checked;
