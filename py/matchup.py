@@ -361,11 +361,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="observation encoding version for export shards (default 1)",
     )
     parser.add_argument("--out", default="matchup.json")
+    parser.add_argument(
+        "--game-offset",
+        type=int,
+        default=0,
+        help="first game index per pair (default 0; games K..K+games-1)",
+    )
     parser.add_argument("--cards", default=None, help="cards/ or repo root (default: repo cards/)")
     args = parser.parse_args(raw)
     args._argv = raw
+    if args.game_offset < 0:
+        raise SystemExit("--game-offset must be >= 0")
     if flag_given(raw, "--pool") and flag_given(raw, "--decks"):
         raise SystemExit("--pool cannot be combined with --decks")
+    if args.export and args.game_offset:
+        raise SystemExit("--export cannot be combined with a non-zero --game-offset")
     if not flag_given(raw, "--pool") and not flag_given(raw, "--decks"):
         args.pool = DEFAULT_POOL
     return args
@@ -393,7 +403,9 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"matchup: {len(names)} decks × {args.games} games = {total} games "
         f"(seed={args.seed}, policy_a={policy_a}, policy_b={policy_b}, "
-        f"first={args.first}, threads={args.threads})",
+        f"first={args.first}, threads={args.threads}"
+        + (f", game_offset={args.game_offset}" if args.game_offset else "")
+        + ")",
         file=sys.stderr,
     )
     t0 = time.perf_counter()
@@ -411,6 +423,7 @@ def main(argv: list[str] | None = None) -> int:
         export=args.export,
         export_epsilon=args.export_epsilon,
         encoding=args.encoding,
+        game_offset=args.game_offset,
     )
     secs = time.perf_counter() - t0
     gps = total / secs if secs > 0 else 0.0
