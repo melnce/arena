@@ -321,7 +321,7 @@ function requestPaint(): void {
   });
 }
 
-/** Undo / redo path — never calls maybeBots (replay uses stored snapshots). */
+/** Undo / redo path — replays stored snapshots; resumes vs-bot when redo stack is empty and the bot is to act. */
 function applyHistory(fn: (s: Session) => boolean): void {
   if (!session) return;
   watchPlaying = false;
@@ -333,6 +333,14 @@ function applyHistory(fn: (s: Session) => boolean): void {
   resetZoneCache();
   pending = null;
   paint();
+  if (
+    session.cfg.mode === "vs-bot" &&
+    session.future.length === 0 &&
+    session.game.phase() !== "terminal" &&
+    !isHumanActing(session)
+  ) {
+    void maybeBots();
+  }
 }
 
 function paintSafe(): void {

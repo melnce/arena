@@ -287,15 +287,42 @@ test("undo clears the spotlight immediately; redo does not replay it", async ({ 
   expect(cleared.visible).toBe(0);
   expect(cleared.cards).toBe(0);
   await page.waitForTimeout(600);
-  const beforeRedo = await page.evaluate(() => window.__arena!.spotlightLog().length);
   await page.keyboard.press("Control+y");
-  await page.waitForTimeout(1500);
-  const afterRedo = await page.evaluate(() => ({
-    len: window.__arena!.spotlightLog().length,
-    visible: document.querySelectorAll("#botPlaySpotlight.visible").length,
-  }));
-  expect(afterRedo.len).toBe(beforeRedo);
-  expect(afterRedo.visible).toBe(0);
+  const snap = await page.evaluate(() => {
+    const L0 = window.__arena!.spotlightLog().length;
+    const lines = document.getElementById("eventLog")?.textContent?.split("\n") ?? [];
+    let P0 = 0;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const ev = JSON.parse(trimmed) as { play?: { player?: string } };
+        if (ev.play?.player === "b") P0 += 1;
+      } catch {
+        /* skip malformed lines */
+      }
+    }
+    return { L0, P0 };
+  });
+  await waitHumanTurn(page, "a");
+  const after = await page.evaluate(() => {
+    const logLen = window.__arena!.spotlightLog().length;
+    const lines = document.getElementById("eventLog")?.textContent?.split("\n") ?? [];
+    let bPlays = 0;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const ev = JSON.parse(trimmed) as { play?: { player?: string } };
+        if (ev.play?.player === "b") bPlays += 1;
+      } catch {
+        /* skip malformed lines */
+      }
+    }
+    return { logLen, bPlays };
+  });
+  expect(after.logLen - snap.L0).toBe(after.bPlays - snap.P0);
+  expect(after.bPlays - snap.P0).toBeGreaterThanOrEqual(1);
 });
 
 test("fast undo then redo: live bot plays after redo each get one spotlight", async ({ page }) => {
