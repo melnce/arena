@@ -73,6 +73,8 @@ let localBotRemoteCount = 0;
 let localBotThinking = false;
 /** The vs-bot loop that currently owns `session`, or null. */
 let botLoopSession: Session | null = null;
+/** Bumped on undo/redo and session resets so stale `maybeBots` loops stop. */
+let botLoopGen = 0;
 /** Session already POSTed to `/game`, or null. Reset in `startSession`. */
 let reportedGameFor: Session | null = null;
 let watchTimer = 0;
@@ -320,6 +322,8 @@ function applyHistory(fn: (s: Session) => boolean): void {
   if (!session) return;
   watchPlaying = false;
   window.clearTimeout(watchTimer);
+  botLoopGen += 1;
+  botLoopSession = null;
   if (!fn(session)) return;
   clearBotSpotlight();
   clearFloaters();
@@ -544,6 +548,7 @@ async function startFromForm(): Promise<void> {
 
 function startSession(cfg: SessionConfig): void {
   watchPlaying = false;
+  botLoopGen += 1;
   botLoopSession = null;
   reportedGameFor = null;
   localBotGameError = null;
@@ -734,12 +739,19 @@ async function maybeBots(): Promise<void> {
   }
   if (botLoopSession === session) return;
   const s = session;
+  const gen = botLoopGen;
   botLoopSession = s;
   try {
     // vs-bot — one engine action per beat so the human can follow.
     let guard = 0;
     let staleRuns = 0;
-    while (session === s && !isHumanActing(s) && s.game.phase() !== "terminal" && guard < 80) {
+    while (
+      session === s &&
+      gen === botLoopGen &&
+      !isHumanActing(s) &&
+      s.game.phase() !== "terminal" &&
+      guard < 80
+    ) {
       const useLocal = shouldUseLocalBot(s);
       if (useLocal) {
         localBotThinking = true;
@@ -748,7 +760,7 @@ async function maybeBots(): Promise<void> {
       let events = useLocal
         ? await botStepRemote(s, `${LOCAL_BOT_HOST}/bot`, { isCurrent: () => session === s })
         : botStep(s);
-      if (session !== s) break;
+      if (session !== s || gen !== botLoopGen) break;
       if (useLocal) {
         const meta = lastLocalBotStepMeta();
         if (meta.stale) {
@@ -762,9 +774,11 @@ async function maybeBots(): Promise<void> {
             showCombat(events);
             enqueueBotSpotlights(events, s.cfg.humanSide);
             await new Promise<void>((r) => window.setTimeout(r, 280));
+            if (gen !== botLoopGen) break;
             continue;
           }
           await new Promise<void>((r) => window.setTimeout(r, 280));
+          if (gen !== botLoopGen) break;
           continue;
         }
         staleRuns = 0;
@@ -777,6 +791,7 @@ async function maybeBots(): Promise<void> {
       showCombat(events);
       enqueueBotSpotlights(events, s.cfg.humanSide);
       await new Promise<void>((r) => window.setTimeout(r, 280));
+      if (gen !== botLoopGen) break;
     }
     if (session === s) paint();
   } finally {
@@ -1104,6 +1119,8 @@ function loadLogSafely(log: PositionLog): void {
   }
   disposeSession(session);
   session = next;
+  botLoopGen += 1;
+  botLoopSession = null;
   pending = null;
   clearBotSpotlight();
   resetZoneCache();
