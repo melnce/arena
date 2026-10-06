@@ -185,6 +185,42 @@ test.describe("vs-bot bot resumes after redo", () => {
     await expect(page.locator("#redoBtn")).toBeEnabled();
   });
 
+  test("redo stack kept when the bot is to act", async ({ page }) => {
+    test.setTimeout(90_000);
+    await boot(page);
+    const humanDeck = await importDeck(page, "resume-human-4b.json", { [ONE_COST]: 40 });
+    const botDeck = await importDeck(page, "resume-bot-4b.json", { [ONE_COST]: 40 });
+    await startVsBot(page, {
+      seed: "8484",
+      humanDeck,
+      botDeck,
+      human: "a",
+      first: "b",
+      botPolicy: "first-legal",
+      hideBotHand: true,
+    });
+    await closeDrawer(page);
+    await expect
+      .poll(async () => (await page.evaluate(() => window.__arena!.actions().length)) >= 1, {
+        timeout: 15_000,
+      })
+      .toBeTruthy();
+    await page.waitForTimeout(600);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.keyboard.press("Control+z");
+    await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b");
+    await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", "mulligan");
+    expect(await page.evaluate(() => window.__arena!.actions().length)).toBe(0);
+    await expect(page.locator("#redoBtn")).toBeEnabled();
+    await page.waitForTimeout(1500);
+    await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b");
+    expect(await page.evaluate(() => window.__arena!.actions().length)).toBe(0);
+    await expect(page.locator("#redoBtn")).toBeEnabled();
+    await page.keyboard.press("Control+y");
+    expect(await page.evaluate(() => window.__arena!.actions().length)).toBe(1);
+    await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a");
+  });
+
   test("watch mode stays paused after undo/redo", async ({ page }) => {
     test.setTimeout(90_000);
     await boot(page);
