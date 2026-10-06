@@ -796,6 +796,10 @@ async function maybeBots(): Promise<void> {
     if (session === s) paint();
   } finally {
     if (botLoopSession === s) botLoopSession = null;
+    if (gen !== botLoopGen || localBotThinking) {
+      localBotThinking = false;
+      refreshBotBackendBadge();
+    }
   }
 }
 
