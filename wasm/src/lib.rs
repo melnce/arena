@@ -224,8 +224,8 @@ mod tests {
 
     mod event_json {
         use super::GameInner;
-        use arena_engine::CardInstance;
         use arena_engine::ids::PlayerId;
+        use arena_engine::CardInstance;
         use arena_engine::{
             apply, new_game, Action, CardDb, CardId, First, GameConfig, Phase, State,
         };
@@ -313,12 +313,18 @@ mod tests {
                         let body = &ev[kind];
                         let target = &body["target"];
                         if target.get("slot").is_some() {
-                            assert!(last_resolve.is_some(), "missing resolve before {kind} at {i}");
+                            assert!(
+                                last_resolve.is_some(),
+                                "missing resolve before {kind} at {i}"
+                            );
                             slot_target_has_id(target);
                         }
                     }
                     "random_pick" => {
-                        assert!(last_resolve.is_some(), "missing resolve before random_pick at {i}");
+                        assert!(
+                            last_resolve.is_some(),
+                            "missing resolve before random_pick at {i}"
+                        );
                         let target = &ev["random_pick"]["target"];
                         if target.get("slot").is_some() {
                             slot_target_has_id(target);
@@ -326,7 +332,10 @@ mod tests {
                     }
                     "destroy" => {
                         let body = &ev["destroy"];
-                        assert!(body["id"].as_u64().unwrap_or(0) > 0, "destroy without id at {i}");
+                        assert!(
+                            body["id"].as_u64().unwrap_or(0) > 0,
+                            "destroy without id at {i}"
+                        );
                         assert!(body["player"].is_string());
                     }
                     _ => {}
@@ -388,11 +397,7 @@ mod tests {
                 c.countdown = Some(1);
             }
             let mut game = GameInner::from_state_for_test(st);
-            let events = parse_events(
-                &game
-                    .apply(r#"{"end_turn":{"player":"a"}}"#)
-                    .unwrap(),
-            );
+            let events = parse_events(&game.apply(r#"{"end_turn":{"player":"a"}}"#).unwrap());
             check_event_contract(&events);
             let destroy = events
                 .iter()
@@ -422,8 +427,7 @@ mod tests {
             let picks: Vec<&Value> = events
                 .iter()
                 .filter(|e| {
-                    event_kind(e) == "random_pick"
-                        && e["random_pick"]["what"] == "random_target"
+                    event_kind(e) == "random_pick" && e["random_pick"]["what"] == "random_target"
                 })
                 .map(|e| &e["random_pick"]["target"])
                 .collect();
@@ -518,13 +522,14 @@ mod tests {
             let restores: Vec<&Value> = events
                 .iter()
                 .filter(|e| {
-                    event_kind(e) == "restore"
-                        && e["restore"]["target"].get("slot").is_some()
+                    event_kind(e) == "restore" && e["restore"]["target"].get("slot").is_some()
                 })
                 .map(|e| &e["restore"]["target"])
                 .collect();
             assert!(!restores.is_empty(), "expected slot restore events");
-            assert!(restores.iter().any(|t| t["id"].as_u64() == Some(ally_id as u64)));
+            assert!(restores
+                .iter()
+                .any(|t| t["id"].as_u64() == Some(ally_id as u64)));
         }
     }
 }

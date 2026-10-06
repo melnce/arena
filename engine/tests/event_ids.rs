@@ -1,11 +1,11 @@
 //! Event output: unit ids, random picks, resolve markers, choice sources.
 
 use arena_engine::event::{Event, EventSource, EventTarget};
+use arena_engine::state::SourceRef;
 use arena_engine::{
     apply, legal_actions, new_game, policy_rng, Action, First, GameConfig, GameRng, Illegal, Phase,
     Pick, PickChose, PickWhat, PlayerId,
 };
-use arena_engine::state::SourceRef;
 
 mod common;
 use common::*;
@@ -44,7 +44,9 @@ fn compaction_destroy_same_slot_different_ids() {
     let destroys: Vec<_> = events
         .iter()
         .filter_map(|e| match e {
-            Event::Destroy { slot, player, id, .. } => Some((slot.0, *player, *id)),
+            Event::Destroy {
+                slot, player, id, ..
+            } => Some((slot.0, *player, *id)),
             _ => None,
         })
         .collect();
@@ -82,7 +84,10 @@ fn damage_ids_on_area_hit() {
             _ => None,
         })
         .collect();
-    assert!(slot_damages.len() >= 2, "hits multiple followers: {slot_damages:?}");
+    assert!(
+        slot_damages.len() >= 2,
+        "hits multiple followers: {slot_damages:?}"
+    );
     for (_, _, uid) in &slot_damages {
         assert!(uid.is_some());
     }
@@ -208,9 +213,9 @@ fn scripted_rng_still_emits_random_pick() {
     );
     let events = apply(&db, &mut st, Action::Play { hand: h }).expect("scripted pick");
     assert!(
-        events
-            .iter()
-            .any(|e| matches!(e, Event::RandomPick { what, .. } if *what == PickWhat::RandomTarget)),
+        events.iter().any(
+            |e| matches!(e, Event::RandomPick { what, .. } if *what == PickWhat::RandomTarget)
+        ),
         "random_pick under scripted RNG"
     );
     assert!(st.picks.is_empty(), "scripted emit list stays empty");
@@ -233,13 +238,15 @@ fn resolve_spell_before_damage() {
         .expect("damage");
     let resolve_idx = events
         .iter()
-        .position(|e| matches!(
-            e,
-            Event::Resolve {
-                source: EventSource::Ref(SourceRef::Spell { .. }),
-                ..
-            }
-        ))
+        .position(|e| {
+            matches!(
+                e,
+                Event::Resolve {
+                    source: EventSource::Ref(SourceRef::Spell { .. }),
+                    ..
+                }
+            )
+        })
         .expect("spell resolve");
     assert!(resolve_idx < dmg_idx);
 }
@@ -291,10 +298,12 @@ fn last_words_spell_after_destroy() {
     .expect("kill colonel");
     let destroy_pos = events
         .iter()
-        .position(|e| matches!(
-            e,
-            Event::Destroy { id, .. } if *id == col_id
-        ))
+        .position(|e| {
+            matches!(
+                e,
+                Event::Destroy { id, .. } if *id == col_id
+            )
+        })
         .expect("destroy colonel");
     let lw_resolve = events.iter().position(|e| {
         matches!(
@@ -324,13 +333,15 @@ fn nested_single_resolve_marker() {
         .collect();
     let spell_resolves = resolves
         .iter()
-        .filter(|e| matches!(
-            e,
-            Event::Resolve {
-                source: EventSource::Ref(SourceRef::Spell { .. }),
-                ..
-            }
-        ))
+        .filter(|e| {
+            matches!(
+                e,
+                Event::Resolve {
+                    source: EventSource::Ref(SourceRef::Spell { .. }),
+                    ..
+                }
+            )
+        })
         .count();
     assert_eq!(spell_resolves, 1, "one marker for nested spell ops");
 }
@@ -357,13 +368,15 @@ fn combat_resolve_before_damage() {
     .expect("attack leader");
     let combat_idx = events
         .iter()
-        .position(|e| matches!(
-            e,
-            Event::Resolve {
-                source: EventSource::Combat { player, id },
-                ..
-            } if *player == me && *id == atk_id
-        ))
+        .position(|e| {
+            matches!(
+                e,
+                Event::Resolve {
+                    source: EventSource::Combat { player, id },
+                    ..
+                } if *player == me && *id == atk_id
+            )
+        })
         .expect("combat resolve");
     let dmg_idx = events
         .iter()
@@ -421,9 +434,9 @@ fn strike_then_combat_markers() {
                 if *player == me && *id == atk_id
         )
     });
-    let combat_pos = markers.iter().position(|s| {
-        matches!(s, EventSource::Combat { player, id } if *player == me && *id == atk_id)
-    });
+    let combat_pos = markers.iter().position(
+        |s| matches!(s, EventSource::Combat { player, id } if *player == me && *id == atk_id),
+    );
     assert!(field_pos.unwrap() < combat_pos.unwrap());
 }
 
@@ -463,7 +476,7 @@ fn choice_offered_sources() {
     let offered = events
         .iter()
         .find_map(|e| match e {
-            Event::ChoiceOffered { source, .. } => source.clone(),
+            Event::ChoiceOffered { source, .. } => *source,
             _ => None,
         })
         .expect("choice_offered");
@@ -552,8 +565,18 @@ fn property_resolve_and_ids_over_soak() {
             },
         )
         .expect("new_game");
-        apply(&db, &mut state, Action::MulliganConfirm { swap: [false; 4] }).unwrap();
-        apply(&db, &mut state, Action::MulliganConfirm { swap: [false; 4] }).unwrap();
+        apply(
+            &db,
+            &mut state,
+            Action::MulliganConfirm { swap: [false; 4] },
+        )
+        .unwrap();
+        apply(
+            &db,
+            &mut state,
+            Action::MulliganConfirm { swap: [false; 4] },
+        )
+        .unwrap();
         let mut actions = 0u32;
         while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) && actions < 500 {
             let legal = legal_actions(&db, &state);

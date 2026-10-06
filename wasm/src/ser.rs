@@ -47,10 +47,19 @@ fn event_json(event: &Event) -> Value {
         } => {
             json!({"damage": {"target": event_target(target, unit), "amount": amount, "lethal": lethal}})
         }
-        Event::Restore { target, amount, unit } => {
+        Event::Restore {
+            target,
+            amount,
+            unit,
+        } => {
             json!({"restore": {"target": event_target(target, unit), "amount": amount}})
         }
-        Event::Destroy { slot, card, player, id } => {
+        Event::Destroy {
+            slot,
+            card,
+            player,
+            id,
+        } => {
             json!({"destroy": {"slot": slot.0, "card": card.as_str(), "player": pl(*player), "id": id}})
         }
         Event::Banish { card, from } => {
@@ -65,7 +74,11 @@ fn event_json(event: &Event) -> Value {
             granted,
         } => json!({"evolve": {"slot": slot.0, "super": super_evolve, "granted": granted}}),
         Event::Resolve { source } => json!({"resolve": {"source": event_source(source)}}),
-        Event::ChoiceOffered { player, node, source } => json!({
+        Event::ChoiceOffered {
+            player,
+            node,
+            source,
+        } => json!({
             "choice_offered": {
                 "player": pl(*player),
                 "node": choice_node(node),

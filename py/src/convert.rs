@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 
 use arena_engine::card::{CardKind, Class, VarKey};
 use arena_engine::event::{Event, EventSource, EventTarget, ZoneLabel};
-use arena_engine::state::SourceRef;
 use arena_engine::ids::PlayerId;
+use arena_engine::state::SourceRef;
 use arena_engine::state::TargetOpt;
 use arena_engine::{
     CardDb, CardId, ChoiceNode, Illegal, LoadError, OpeningHands, Phase, PlayForm, State,
@@ -175,10 +175,19 @@ pub fn event_to_value(ev: &Event) -> Value {
         } => {
             json!({"damage": {"target": event_target(target, unit), "amount": amount, "lethal": lethal}})
         }
-        Event::Restore { target, amount, unit } => {
+        Event::Restore {
+            target,
+            amount,
+            unit,
+        } => {
             json!({"restore": {"target": event_target(target, unit), "amount": amount}})
         }
-        Event::Destroy { slot, card, player, id } => {
+        Event::Destroy {
+            slot,
+            card,
+            player,
+            id,
+        } => {
             json!({"destroy": {"slot": slot.0, "card": card.as_str(), "player": player_str(*player), "id": id}})
         }
         Event::Banish { card, from } => {
@@ -199,7 +208,11 @@ pub fn event_to_value(ev: &Event) -> Value {
             }
         }),
         Event::Resolve { source } => json!({"resolve": {"source": event_source_value(source)}}),
-        Event::ChoiceOffered { player, node, source } => json!({
+        Event::ChoiceOffered {
+            player,
+            node,
+            source,
+        } => json!({
             "choice_offered": {
                 "player": player_str(*player),
                 "node": choice_node_value(node),
