@@ -557,7 +557,63 @@ fn req_zones(
     encoding: EncodingVersion,
     feature_len: usize,
 ) -> Result<Vec<ZoneSpec>, String> {
-    let expected = expected_zone_specs(encoding);
+    if encoding == EncodingVersion::V3 {
+        req_zones_v3(src, obj, feature_len)
+    } else {
+        req_zones_legacy(src, obj, encoding, feature_len)
+    }
+}
+
+fn req_zones_legacy(
+    src: &str,
+    obj: &serde_json::Map<String, serde_json::Value>,
+    encoding: EncodingVersion,
+    feature_len: usize,
+) -> Result<Vec<ZoneSpec>, String> {
+    let arr = obj
+        .get("zones")
+        .and_then(|v| v.as_array())
+        .ok_or_else(|| format!("{src}: missing field 'zones'"))?;
+    if arr.len() != 5 {
+        return Err(format!("{src}: bad field 'zones' (want 5)"));
+    }
+    let ids_cap = encoding.ids_len();
+    let mut out = Vec::with_capacity(5);
+    for z in arr {
+        let o = z
+            .as_object()
+            .ok_or_else(|| format!("{src}: bad field 'zones'"))?;
+        let name = req_str(src, o, "name")?.to_string();
+        let id_offset = req_usize(src, o, "id_offset")?;
+        let count = req_usize(src, o, "count")?;
+        let hist_offset = match o.get("hist_offset") {
+            None | Some(serde_json::Value::Null) => None,
+            Some(v) => Some(as_usize(v).ok_or_else(|| format!("{src}: bad field 'hist_offset'"))?),
+        };
+        if id_offset.saturating_add(count) > ids_cap {
+            return Err(format!("{src}: bad field 'zones' (id range)"));
+        }
+        if let Some(h) = hist_offset {
+            if h.saturating_add(count) > feature_len || count > HIST_WIDTH {
+                return Err(format!("{src}: bad field 'zones' (hist range)"));
+            }
+        }
+        out.push(ZoneSpec {
+            name,
+            id_offset,
+            count,
+            hist_offset,
+        });
+    }
+    Ok(out)
+}
+
+fn req_zones_v3(
+    src: &str,
+    obj: &serde_json::Map<String, serde_json::Value>,
+    feature_len: usize,
+) -> Result<Vec<ZoneSpec>, String> {
+    let expected = expected_zone_specs(EncodingVersion::V3);
     let arr = obj
         .get("zones")
         .and_then(|v| v.as_array())
@@ -568,7 +624,7 @@ fn req_zones(
             expected.len()
         ));
     }
-    let ids_cap = encoding.ids_len();
+    let ids_cap = EncodingVersion::V3.ids_len();
     let mut out = Vec::with_capacity(expected.len());
     for (z, (exp_name, exp_id, exp_count, exp_hist)) in arr.iter().zip(expected.iter()) {
         let o = z
