@@ -108,6 +108,11 @@ jobs:
             filter: ""
             ignored: false
             timeout: 15
+          - suite: encoding_v3
+            test: encoding_v3
+            filter: ""
+            ignored: false
+            timeout: 15
           - suite: h0_info
             test: h0_info
             filter: ""
@@ -231,6 +236,7 @@ jobs:
             "record": 15,
             "h0_defaults": 20,
             "encode_v2": 15,
+            "encoding_v3": 15,
             "h0_info": 25,
             "h0_lcap_clip": 20,
             "h0_oevo": 25,
@@ -332,6 +338,7 @@ jobs:
             "record": 15,
             "h0_defaults": 20,
             "encode_v2": 15,
+            "encoding_v3": 15,
             "h0_info": 25,
             "h0_lcap_clip": 20,
             "h0_oevo": 25,
