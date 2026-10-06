@@ -156,9 +156,23 @@ test("bot play spotlight shows the played card and clears after ~1.5s", async ({
   await waitSpotlightVisible(page);
   const card = await page.locator("#botPlaySpotlight .spotlight-card").getAttribute("data-card");
   expect(card).toBeTruthy();
+  expect(card).toBe(ONE_COST);
+  const playCard = await page.evaluate(() => {
+    const lines = document.getElementById("eventLog")?.textContent?.split("\n") ?? [];
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const line = lines[i]?.trim();
+      if (!line) continue;
+      const ev = JSON.parse(line) as { play?: { player?: string; card?: string } };
+      if (ev.play?.player === "b") return ev.play.card ?? null;
+    }
+    return null;
+  });
+  expect(playCard).toBe(ONE_COST);
+  expect(card).toBe(playCard);
   const log = await page.evaluate(() => window.__arena!.spotlightLog());
   expect(log.length).toBeGreaterThanOrEqual(1);
   expect(log[0]!.card).toBe(card);
+  expect(log[0]!.card).toBe(ONE_COST);
   const img = page.locator("#botPlaySpotlight .spotlight-img");
   const hasFallback = await page.locator("#botPlaySpotlight .card-fallback").count();
   if (hasFallback) {

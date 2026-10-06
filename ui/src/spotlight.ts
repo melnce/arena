@@ -215,7 +215,26 @@ function clampRect(left: number, top: number, w: number, h: number): DOMRect {
   return new DOMRect(x, y, w, h);
 }
 
-function layoutSpotlight(botPlayer: PlayerId): DOMRect {
+function candidateRect(handRect: DOMRect, maxW: number, maxH: number, scale: number): DOMRect {
+  const w = maxW * scale;
+  const h = maxH * scale;
+  const left = handRect.left + Math.min(handRect.width * 0.08, 16);
+  const top = handRect.top + (handRect.height - h) / 2;
+  return clampRect(left, top, w, h);
+}
+
+function fitsSpotlight(rect: DOMRect, blocked: DOMRect[]): boolean {
+  return !blocked.some((b) => rectsOverlap(rect, b));
+}
+
+function applySpotlightRect(overlay: HTMLElement, rect: DOMRect): void {
+  overlay.style.left = `${rect.left}px`;
+  overlay.style.top = `${rect.top}px`;
+  overlay.style.width = `${rect.width}px`;
+  overlay.style.height = `${rect.height}px`;
+}
+
+function layoutSpotlight(botPlayer: PlayerId): boolean {
   const hand = document.getElementById(visual(botPlayer) === "blue" ? "blueHand" : "redHand");
   const overlay = ensureOverlay();
   const ref = hand?.querySelector<HTMLElement>(".card");
@@ -227,25 +246,22 @@ function layoutSpotlight(botPlayer: PlayerId): DOMRect {
   const maxH = baseH * 1.3;
   const handRect = hand?.getBoundingClientRect() ?? new DOMRect(16, 16, maxW * 2, maxH);
   const blocked = forbiddenRects();
-  let best = clampRect(handRect.left + 8, handRect.top + (handRect.height - maxH) / 2, maxW, maxH);
+  let smallest = candidateRect(handRect, maxW, maxH, 0.35);
+  let chosen: DOMRect | null = null;
 
   for (let scale = 1; scale >= 0.35; scale -= 0.05) {
-    const w = maxW * scale;
-    const h = maxH * scale;
-    const left = handRect.left + Math.min(handRect.width * 0.08, 16);
-    const top = handRect.top + (handRect.height - h) / 2;
-    const candidate = clampRect(left, top, w, h);
-    if (!blocked.some((b) => rectsOverlap(candidate, b))) {
-      best = candidate;
+    const candidate = candidateRect(handRect, maxW, maxH, scale);
+    smallest = candidate;
+    if (fitsSpotlight(candidate, blocked)) {
+      chosen = candidate;
       break;
     }
   }
 
-  overlay.style.left = `${best.left}px`;
-  overlay.style.top = `${best.top}px`;
-  overlay.style.width = `${best.width}px`;
-  overlay.style.height = `${best.height}px`;
-  return best;
+  const rect = chosen ?? smallest;
+  if (!fitsSpotlight(rect, blocked)) return false;
+  applySpotlightRect(overlay, rect);
+  return true;
 }
 
 function renderSpotlightCard(play: QueuedPlay): void {
@@ -284,17 +300,23 @@ function renderSpotlightCard(play: QueuedPlay): void {
 }
 
 async function showSpotlight(play: QueuedPlay): Promise<void> {
-  const overlay = ensureOverlay();
   const botPlayer: PlayerId = humanSide === "a" ? "b" : "a";
+  const now = performance.now();
+  currentEntry = { card: play.card, form: play.form, shownAt: now, hiddenAt: 0 };
+  log.push(currentEntry);
+  if (!layoutSpotlight(botPlayer)) {
+    currentEntry.hiddenAt = now;
+    finishCurrentEntry();
+    return;
+  }
+  const overlay = ensureOverlay();
   renderSpotlightCard(play);
-  layoutSpotlight(botPlayer);
   overlay.setAttribute("aria-hidden", "false");
   overlay.classList.remove("hiding");
   void overlay.offsetWidth;
   overlay.classList.add("visible");
-  shownAt = performance.now();
-  currentEntry = { card: play.card, form: play.form, shownAt, hiddenAt: 0 };
-  log.push(currentEntry);
+  shownAt = now;
+  currentEntry.shownAt = now;
   await waitMs(FADE_IN_MS);
 }
 
