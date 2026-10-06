@@ -354,9 +354,7 @@ fn determinize_open_opponent(
     for (inst, (zone, index)) in pool.into_iter().zip(slots.iter()) {
         match zone {
             HiddenZone::Cemetery => {
-                out.player_mut(opp)
-                    .hidden_cemetery_restores
-                    .push(inst.id);
+                out.player_mut(opp).hidden_cemetery_restores.push(inst.id);
                 cemetery_restores.push((*index, inst));
             }
             HiddenZone::Banished => banished_restores.push((*index, inst)),

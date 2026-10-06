@@ -528,7 +528,9 @@ fn req_f32_mat(
     Ok(out)
 }
 
-fn expected_zone_specs(encoding: EncodingVersion) -> Vec<(&'static str, usize, usize, Option<usize>)> {
+fn expected_zone_specs(
+    encoding: EncodingVersion,
+) -> Vec<(&'static str, usize, usize, Option<usize>)> {
     let mut out = vec![
         ("own_hand", 0, 9, None),
         ("own_deck", 9, HIST_WIDTH, Some(353)),

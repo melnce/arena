@@ -668,11 +668,7 @@ fn pool_hist(p: &PlayerState, vocab: &[CardId]) -> [f32; HIST_WIDTH] {
     h
 }
 
-fn write_amulet_soon(
-    feat: &mut [f32],
-    off: usize,
-    field: &[Option<CardInstance>; FIELD_SIZE],
-) {
+fn write_amulet_soon(feat: &mut [f32], off: usize, field: &[Option<CardInstance>; FIELD_SIZE]) {
     for slot in 0..FIELD_SIZE {
         feat[off + slot] = match field[slot].as_ref() {
             Some(c) if c.kind == CardKind::Amulet => match c.countdown {
@@ -705,11 +701,7 @@ fn opponent_hidden_cemetery(p: &PlayerState) -> BTreeSet<u32> {
     hidden
 }
 
-fn cemetery_hist(
-    p: &PlayerState,
-    vocab: &[CardId],
-    exclude: &BTreeSet<u32>,
-) -> [f32; HIST_WIDTH] {
+fn cemetery_hist(p: &PlayerState, vocab: &[CardId], exclude: &BTreeSet<u32>) -> [f32; HIST_WIDTH] {
     let mut h = [0.0f32; HIST_WIDTH];
     for c in &p.cemetery {
         if exclude.contains(&c.id) {

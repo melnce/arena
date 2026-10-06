@@ -1236,7 +1236,7 @@ def _stack_zone_extra_sparse(zw, sparse):
     extra = np.zeros(sparse["n"], dtype=np.float64)
     for zi, (rows, cols, vals) in enumerate(sparse["zones"]):
         if rows.size:
-            extra[rows] += vals * zw[zi, cols]
+            np.add.at(extra, rows, vals * zw[zi, cols])
     return extra
 
 
@@ -1579,6 +1579,8 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
     t_refit = time.perf_counter()
     theta = fit_rows(all_idx, lams, deck_start=deck_theta)
     refit_s = time.perf_counter() - t_refit
+    final_holdout_mse = _mse_tanh(pre_from_fit(theta, ho), y_all[ho])
+    step_mses.append(("final", final_holdout_mse))
     zw, own_w, opp_w, first_w = unpack(theta)
 
     base_w = list(base["linear"]["w"])
@@ -1632,10 +1634,11 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
         pairs.sort(reverse=True)
         top_weights[name] = pairs[:15]
 
-    report = {
+    report: dict[str, Any] = {
         "arch": "linear",
         "stack_on": str(base_path),
         "holdout_mse_steps": step_mses,
+        "holdout_mse_final": final_holdout_mse,
         "l2_choices": lams,
         "top_weights": top_weights,
         "warnings": warnings,
@@ -1643,6 +1646,12 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
         "stack_timing": {"search_seconds": search_s, "refit_seconds": refit_s},
         "stack_search_rows": int(search_tr.size),
     }
+    if use_deck and own_w is not None and opp_w is not None and first_w is not None:
+        report["deck_theta"] = {
+            "own": own_w.astype(np.float64).tolist(),
+            "opp": opp_w.astype(np.float64).tolist(),
+            "first": float(first_w),
+        }
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(_json_safe(spec)) + "\n")

@@ -57,7 +57,7 @@ fn write_h0_v3_zero_stack_file(path: &std::path::Path) -> std::sync::Arc<ValueNe
         .as_array()
         .expect("zone_w")
         .iter()
-        .map(|row| f32_list(row))
+        .map(f32_list)
         .collect();
     let mut zone_w = base_zw;
     for _ in 5..13 {
@@ -160,30 +160,38 @@ fn v3_block_values_on_constructed_states() {
     let mut st = started_decks(&db, 9, &["90031210"], &["90031210"]);
     let me = PlayerId::A;
     let opp = me.opponent();
-    st.player_mut(me).crests.push(arena_engine::state::CrestInstance {
-        id: "crest:10714110".into(),
-        countdown: Some(2),
-        faith: false,
-        once_used: vec![],
-        granted_order: 1,
-        granted: vec![],
-        choose_used: Default::default(),
-    });
-    st.player_mut(opp).crests.push(arena_engine::state::CrestInstance {
-        id: "faith:10554110".into(),
-        countdown: None,
-        faith: true,
-        once_used: vec![],
-        granted_order: 1,
-        granted: vec![],
-        choose_used: Default::default(),
-    });
+    st.player_mut(me)
+        .crests
+        .push(arena_engine::state::CrestInstance {
+            id: "crest:10714110".into(),
+            countdown: Some(2),
+            faith: false,
+            once_used: vec![],
+            granted_order: 1,
+            granted: vec![],
+            choose_used: Default::default(),
+        });
+    st.player_mut(opp)
+        .crests
+        .push(arena_engine::state::CrestInstance {
+            id: "faith:10554110".into(),
+            countdown: None,
+            faith: true,
+            once_used: vec![],
+            granted_order: 1,
+            granted: vec![],
+            choose_used: Default::default(),
+        });
     let amulet_id = cid("90031210");
-    let mut own_amulet =
-        arena_engine::state::CardInstance::from_card(db.card(amulet_id).expect("card"), st.alloc_id());
+    let mut own_amulet = arena_engine::state::CardInstance::from_card(
+        db.card(amulet_id).expect("card"),
+        st.alloc_id(),
+    );
     own_amulet.countdown = Some(3);
-    let mut opp_amulet =
-        arena_engine::state::CardInstance::from_card(db.card(amulet_id).expect("card"), st.alloc_id());
+    let mut opp_amulet = arena_engine::state::CardInstance::from_card(
+        db.card(amulet_id).expect("card"),
+        st.alloc_id(),
+    );
     opp_amulet.countdown = Some(1);
     st.player_mut(me).field[0] = Some(own_amulet);
     st.player_mut(opp).field[0] = Some(opp_amulet);
@@ -252,25 +260,15 @@ fn v3_open_worlds_match_real_state() {
                 }
                 states_with_hidden += 1;
                 let root_vocab = vocab(&state);
-                let real = encode_with_vocab(
-                    &state,
-                    me,
-                    &root_vocab,
-                    EncodingVersion::V3,
-                    Some(&db),
-                );
+                let real =
+                    encode_with_vocab(&state, me, &root_vocab, EncodingVersion::V3, Some(&db));
                 let ref_extra = &real.features[V3_EXTRA_OFF..V3_EXTRA_OFF + V3_EXTRA_LEN];
                 let ref_crests = &real.ids[220..230];
                 for w in 0..OPEN_WORLDS {
                     worlds_checked += 1;
                     let world = determinize_with(&state, me, seed * 1_000 + w, Info::Open);
-                    let enc = encode_with_vocab(
-                        &world,
-                        me,
-                        &root_vocab,
-                        EncodingVersion::V3,
-                        Some(&db),
-                    );
+                    let enc =
+                        encode_with_vocab(&world, me, &root_vocab, EncodingVersion::V3, Some(&db));
                     let extra = &enc.features[V3_EXTRA_OFF..V3_EXTRA_OFF + V3_EXTRA_LEN];
                     let crests = &enc.ids[220..230];
                     if extra != ref_extra || crests != ref_crests {
@@ -293,7 +291,10 @@ fn v3_open_worlds_match_real_state() {
         seed += 1;
     }
     assert!(states_with_hidden >= 20, "got {states_with_hidden}");
-    assert_eq!(mismatches, 0, "world mismatches={mismatches}");
+    assert_eq!(
+        mismatches, 0,
+        "world mismatches={mismatches} worlds={worlds_checked}"
+    );
 }
 
 #[test]
@@ -497,15 +498,17 @@ fn v3_trainer_stack_unknown_vocab_matches_base() {
     let mut st = started_decks(&db, 42, &["88001140"], &["90031210"]);
     let me = PlayerId::A;
     let card = cid("88001140");
-    let inst = arena_engine::state::CardInstance::from_card(
-        db.card(card).expect("card"),
-        st.alloc_id(),
-    );
+    let inst =
+        arena_engine::state::CardInstance::from_card(db.card(card).expect("card"), st.alloc_id());
     st.player_mut(me).hand.push(inst);
     let obs = encode_version(&st, me, EncodingVersion::V3, Some(&db));
     let v_base = base.value(&obs);
     let v_stack = stacked.value(&obs);
-    assert_eq!(v_base.to_bits(), v_stack.to_bits(), "unknown vocab card value");
+    assert_eq!(
+        v_base.to_bits(),
+        v_stack.to_bits(),
+        "unknown vocab card value"
+    );
 }
 
 #[test]
@@ -660,9 +663,7 @@ fn v3_h0_decision_ms() {
         ("h0-v2 builtin", SERVED),
         (
             "h0-v3 zero-stack",
-            &format!(
-                "{stack_spec},nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000"
-            ),
+            &format!("{stack_spec},nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000"),
         ),
     ];
     for (name, spec) in specs {

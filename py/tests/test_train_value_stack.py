@@ -51,6 +51,8 @@ def _write_v3_shard(
     deck_signal: bool = False,
     unknown_base_ids: bool = False,
     noise_crests: bool = False,
+    noise_labels_random: bool = False,
+    multi_zone: bool = False,
 ) -> None:
     feat = np.zeros((n, 961), dtype="<f4")
     ids = np.zeros((n, 230), dtype="<u4")
@@ -80,13 +82,25 @@ def _write_v3_shard(
             ids[i, 9] = UNKNOWN_CARD
         if noise_crests:
             rng = np.random.RandomState(i + 99)
-            labels[i] = float(rng.uniform(-0.5, 0.5))
+            labels[i] = float(rng.uniform(-0.5, 0.5)) if noise_labels_random else 0.05
             for slot in range(5):
                 ids[i, 220 + slot] = int(rng.choice([CREST_ID, 10714120, 10554110]))
                 feat[i, 577 + slot] = float(rng.randint(1, 4))
                 feat[i, 673 + slot] = float(rng.randint(1, 4))
                 feat[i, 769 + slot] = float(rng.randint(1, 4))
                 feat[i, 865 + slot] = float(rng.randint(1, 4))
+        if multi_zone:
+            ids[i, 220] = CREST_ID
+            ids[i, 221] = 10714120
+            ids[i, 222] = 10554110
+            cards = [CARD_A, CARD_B, 90031110, 90031310]
+            for j, card in enumerate(cards):
+                feat[i, 577 + j] = 1.0
+                feat[i, 673 + j] = 1.0
+                ids[i, 9 + j] = card
+                feat[i, 769 + j] = 2.0
+                feat[i, 865 + j] = 1.0
+            labels[i] = 0.2 if side == 0 else -0.1
     dir.mkdir(parents=True, exist_ok=True)
     feat.tofile(dir / "features.f32le")
     ids.tofile(dir / "ids.u32le")
@@ -302,7 +316,9 @@ def test_stack_noise_penalty_leaky_search_fails(tmp_path: Path) -> None:
     import numpy as np
 
     data = tmp_path / "noise"
-    _write_v3_shard(data, 512, games=32, rows_per_game=16, noise_crests=True)
+    _write_v3_shard(
+        data, 512, games=32, rows_per_game=16, noise_crests=True, noise_labels_random=True
+    )
     loaded = train_value.load_dirs([str(data)])
     features = loaded["features"]
     ids = loaded["ids"]
@@ -411,3 +427,173 @@ def test_stack_unknown_base_ids_match_base_pre(tmp_path: Path) -> None:
     pred = train_value.predict(spec, features, ids)
     base_pred = train_value.predict(base, features[:, :567], ids[:, :220])
     assert float(np.max(np.abs(pred - base_pred))) < 1e-4
+
+
+def _stack_zone_extra_sparse_broken(zw, sparse):
+    extra = np.zeros(sparse["n"], dtype=np.float64)
+    for zi, (rows, cols, vals) in enumerate(sparse["zones"]):
+        if rows.size:
+            extra[rows] += vals * zw[zi, cols]
+    return extra
+
+
+def test_stack_zone_extra_sparse_repeated_rows() -> None:
+    sparse = {
+        "n": 1,
+        "zones": [
+            (
+                np.array([0, 0], dtype=np.int64),
+                np.array([3, 5], dtype=np.int64),
+                np.array([1.0, 1.0], dtype=np.float64),
+            )
+        ]
+        + [
+            (
+                np.zeros(0, dtype=np.int64),
+                np.zeros(0, dtype=np.int64),
+                np.zeros(0, dtype=np.float64),
+            )
+        ]
+        * 7,
+    }
+    zw = np.zeros((8, 10), dtype=np.float64)
+    zw[0, 3] = 0.3
+    zw[0, 5] = 0.5
+    got = train_value._stack_zone_extra_sparse(zw, sparse)
+    assert float(got[0]) == pytest.approx(0.8)
+    broken = _stack_zone_extra_sparse_broken(zw, sparse)
+    assert float(broken[0]) == pytest.approx(0.5)
+
+
+def _stack_holdout_mse_with_deck(
+    spec: dict,
+    report: dict,
+    data: Path,
+    holdout: float,
+    seed: int,
+) -> float:
+    base = json.loads(ENGINE_MODEL.read_text())
+    loaded = train_value.load_dirs([str(data)])
+    features = loaded["features"]
+    ids = loaded["ids"]
+    labels = loaded["labels"]
+    game_index = loaded["game_index"]
+    aux = loaded["aux"]
+    _, hold_idx = train_value.split_by_game(game_index, holdout, seed)
+    base_pre = train_value.compute_pre_activation(base, features, ids)
+    vocab = spec["vocab"]
+    zones = train_value.zones_for_encoding(3)
+    zw = np.asarray(spec["linear"]["zone_w"], dtype=np.float64)[5:13]
+    prep = {
+        "n": int(hold_idx.size),
+        "zones": train_value._stack_sparse_zones(
+            features, ids, hold_idx, vocab, zones, 5, 13
+        ),
+    }
+    pre_ho = base_pre[hold_idx].astype(np.float64, copy=True)
+    pre_ho += train_value._stack_zone_extra_sparse(zw, prep)
+    if report.get("deck_controls"):
+        meta = json.loads((data / "meta.json").read_text())
+        decks, games_per_pair = train_value._shard_deck_layout(meta)
+        cols = list(meta["aux_columns"])
+        side = aux[:, cols.index("side")]
+        first_is_me = aux[:, cols.index("first_is_me")]
+        own_deck, opp_deck, first_col = train_value._row_deck_indices(
+            game_index, side, first_is_me, decks, games_per_pair
+        )
+        deck = report["deck_theta"]
+        own_w = np.asarray(deck["own"], dtype=np.float64)
+        opp_w = np.asarray(deck["opp"], dtype=np.float64)
+        first_w = float(deck["first"])
+        pre_ho += own_w[own_deck[hold_idx]]
+        pre_ho += opp_w[opp_deck[hold_idx]]
+        pre_ho += first_w * first_col[hold_idx]
+    return train_value._mse_tanh(pre_ho, labels[hold_idx])
+
+
+def _multi_zone_holdout_checks(spec: dict, data: Path, holdout: float, seed: int) -> None:
+    base = json.loads(ENGINE_MODEL.read_text())
+    loaded = train_value.load_dirs([str(data)])
+    features = loaded["features"]
+    ids = loaded["ids"]
+    game_index = loaded["game_index"]
+    _, hold_idx = train_value.split_by_game(game_index, holdout, seed)
+    assert hold_idx.size > 0
+    base_pre = train_value.compute_pre_activation(base, features, ids)
+    out_pre = train_value.compute_pre_activation(spec, features, ids)
+    expected_new = (out_pre - base_pre)[hold_idx]
+    vocab = spec["vocab"]
+    zones = train_value.zones_for_encoding(3)
+    zw = np.asarray(spec["linear"]["zone_w"], dtype=np.float64)[5:13]
+    prep = {
+        "n": int(hold_idx.size),
+        "zones": train_value._stack_sparse_zones(
+            features, ids, hold_idx, vocab, zones, 5, 13
+        ),
+    }
+    sparse_new = train_value._stack_zone_extra_sparse(zw, prep)
+    dense_new = train_value._new_zone_extra(
+        zw, ids, features, hold_idx, vocab, zones, 5, 13
+    )
+    assert float(np.max(np.abs(sparse_new - dense_new))) < 1e-9
+    assert float(np.max(np.abs(sparse_new - expected_new))) < 1e-6
+
+
+def test_stack_multi_zone_holdout_parity(tmp_path: Path) -> None:
+    data = tmp_path / "multi"
+    _write_v3_shard(
+        data,
+        512,
+        games=32,
+        rows_per_game=16,
+        multi_zone=True,
+        decks=["deck-a", "deck-b"],
+    )
+    out = tmp_path / "multi.json"
+    train_value.train(
+        _stack_args(
+            tmp_path,
+            data,
+            out,
+            no_deck_controls=False,
+            l2_grid="1e-4,1e-2,1",
+            seed=17,
+        )
+    )
+    spec = json.loads(out.read_text())
+    report = json.loads(out.with_name(out.stem + ".report.json").read_text())
+    _multi_zone_holdout_checks(spec, data, 0.25, 17)
+    mse = _stack_holdout_mse_with_deck(spec, report, data, 0.25, 17)
+    final_mse = report["holdout_mse_final"]
+    assert abs(mse - final_mse) < 1e-5
+
+
+def test_stack_multi_zone_holdout_parity_broken_sparse_fails(tmp_path: Path) -> None:
+    data = tmp_path / "multi"
+    _write_v3_shard(
+        data,
+        256,
+        games=16,
+        rows_per_game=16,
+        multi_zone=True,
+        decks=["deck-a", "deck-b"],
+    )
+    out = tmp_path / "multi.json"
+    train_value.train(
+        _stack_args(
+            tmp_path,
+            data,
+            out,
+            no_deck_controls=False,
+            l2_grid="1e-4,1e-2",
+            seed=19,
+        )
+    )
+    spec = json.loads(out.read_text())
+    orig = train_value._stack_zone_extra_sparse
+    train_value._stack_zone_extra_sparse = _stack_zone_extra_sparse_broken
+    try:
+        with pytest.raises(AssertionError):
+            _multi_zone_holdout_checks(spec, data, 0.25, 19)
+    finally:
+        train_value._stack_zone_extra_sparse = orig
