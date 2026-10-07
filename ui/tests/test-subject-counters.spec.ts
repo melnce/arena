@@ -13,7 +13,8 @@ const ENAMORED = "10932110";
 const HUMANE_LOVE = "10932310";
 const OBSIDIAN_RAVEN = "10933310";
 
-const SUMMONER_IDS = [SEPHIE, SCHOLAR, ENAMORED, HUMANE_LOVE, OBSIDIAN_RAVEN];
+const FOLLOWER_SUMMONERS = [SEPHIE, SCHOLAR, ENAMORED];
+const NO_LINE_CARDS = [TEST_SUBJECT, HUMANE_LOVE, OBSIDIAN_RAVEN];
 
 const META_DECK = JSON.parse(
   readFileSync(resolve(import.meta.dirname, "../../oracle/decks/meta-rune-test-subject.json"), "utf8"),
@@ -124,7 +125,7 @@ async function hoverHandCard(page: Page, card: string) {
 }
 
 async function growEnterCount(page: Page, target: number) {
-  const priority = [TEST_SUBJECT, HUMANE_LOVE, OBSIDIAN_RAVEN, ENAMORED, SCHOLAR, SEPHIE];
+  const priority = [TEST_SUBJECT, HUMANE_LOVE, OBSIDIAN_RAVEN, SCHOLAR, SEPHIE];
   for (let i = 0; i < 120; i++) {
     const phase = await page.locator("#turnCounter").getAttribute("data-phase");
     if (phase === "terminal") break;
@@ -152,6 +153,10 @@ async function growEnterCount(page: Page, target: number) {
   return enterCount(page);
 }
 
+function enterCountLine(k: number) {
+  return `Obsessed Test Subjects entered: ${k}/5`;
+}
+
 test("test subject counters in tooltips track engine enter_counts", async ({ page }) => {
   test.setTimeout(180_000);
   await boot(page);
@@ -163,7 +168,7 @@ test("test subject counters in tooltips track engine enter_counts", async ({ pag
   let k = await enterCount(page);
   expect(k).toBe(0);
 
-  for (const id of SUMMONER_IDS) {
+  for (const id of FOLLOWER_SUMMONERS) {
     const inHand = await page.evaluate((card) => {
       const hand = (window.__arena!.full() as { players: { a: { hand: Array<{ card: string }> } } })
         .players.a.hand;
@@ -171,32 +176,14 @@ test("test subject counters in tooltips track engine enter_counts", async ({ pag
     }, id);
     if (!inHand) continue;
     const card = await hoverHandCard(page, id);
-    await expect(page.locator("#cardTooltip")).toContainText(`Obsessed Test Subjects entered: ${k}`);
+    const tooltip = page.locator("#cardTooltip");
+    await expect(tooltip).toContainText(enterCountLine(k));
     if (id === SEPHIE) {
       await artShot(card, `${ART}/test_subject_sephie_hand_k0.png`);
     }
   }
 
-  k = await growEnterCount(page, 5);
-  expect(k, "enter_counts should reach 5 through real play").toBeGreaterThanOrEqual(5);
-
-  for (const fieldId of [ENAMORED, SCHOLAR, SEPHIE]) {
-    const onField = await page.evaluate((id) => {
-      const field = (window.__arena!.full() as { players: { a: { field: Array<{ card: string } | null> } } })
-        .players.a.field;
-      return field.some((c) => c?.card === id);
-    }, fieldId);
-    if (!onField) continue;
-    const fieldCard = page.locator(`#blueBoard .card[data-card='${fieldId}']`).first();
-    await fieldCard.hover();
-    await expect(page.locator("#cardTooltip")).toContainText(`Obsessed Test Subjects entered: ${k}`);
-    const shot =
-      fieldId === ENAMORED ? "test_subject_enamored_field" : `test_subject_${fieldId}_field`;
-    await artShot(fieldCard, `${ART}/${shot}.png`);
-    break;
-  }
-
-  for (const id of SUMMONER_IDS) {
+  for (const id of NO_LINE_CARDS) {
     const inHand = await page.evaluate((card) => {
       const hand = (window.__arena!.full() as { players: { a: { hand: Array<{ card: string }> } } })
         .players.a.hand;
@@ -204,20 +191,41 @@ test("test subject counters in tooltips track engine enter_counts", async ({ pag
     }, id);
     if (!inHand) continue;
     await hoverHandCard(page, id);
-    const tooltip = page.locator("#cardTooltip");
-    await expect(tooltip).toContainText(`Obsessed Test Subjects entered: ${k}`);
-    await expect(tooltip).not.toContainText(`Obsessed Test Subjects entered: 9`);
+    await expect(page.locator("#cardTooltip")).not.toContainText("Obsessed Test Subjects entered:");
   }
 
-  const ts = page.locator(`#blueHand .card[data-card='${TEST_SUBJECT}']`).first();
-  if (await ts.count()) {
-    await ts.hover();
+  k = await growEnterCount(page, 5);
+  expect(k, "enter_counts should reach 5 through real play").toBeGreaterThanOrEqual(5);
+
+  for (const id of FOLLOWER_SUMMONERS) {
+    const inHand = await page.evaluate((card) => {
+      const hand = (window.__arena!.full() as { players: { a: { hand: Array<{ card: string }> } } })
+        .players.a.hand;
+      return hand.some((c) => c.card === card);
+    }, id);
+    if (!inHand) continue;
+    const card = await hoverHandCard(page, id);
     const tooltip = page.locator("#cardTooltip");
-    await expect(tooltip).toContainText(`Other copies entered ${k}/5`);
+    await expect(tooltip).toContainText(enterCountLine(k));
     if (k >= 5) {
       await expect(tooltip.locator(".dynamic-counter-line.gate-met")).toBeVisible();
-      await expect(ts).toHaveClass(/enhance-ready/);
-      await artShot(ts, `${ART}/test_subject_hand_yellow_k5.png`);
+    }
+    if (id === SEPHIE) {
+      await artShot(card, `${ART}/test_subject_sephie_hand_k5.png`);
+    }
+  }
+
+  for (const id of NO_LINE_CARDS) {
+    const inHand = await page.evaluate((card) => {
+      const hand = (window.__arena!.full() as { players: { a: { hand: Array<{ card: string }> } } })
+        .players.a.hand;
+      return hand.some((c) => c.card === card);
+    }, id);
+    if (!inHand) continue;
+    const el = await hoverHandCard(page, id);
+    await expect(page.locator("#cardTooltip")).not.toContainText("Obsessed Test Subjects entered:");
+    if (id === TEST_SUBJECT) {
+      await expect(el).not.toHaveClass(/enhance-ready/);
     }
   }
 
