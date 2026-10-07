@@ -193,6 +193,7 @@ test.describe("vs-bot turn ping", () => {
     test.setTimeout(120_000);
     await boot(page);
     await setupVsBotHumanFirst(page);
+    await page.waitForTimeout(800);
     expect(await turnPings(page)).toBe(0);
 
     await endHumanTurn(page, "a");

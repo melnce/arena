@@ -820,7 +820,7 @@ async function maybeBots(): Promise<void> {
       s.cfg.mode === "vs-bot" &&
       isHumanActing(s) &&
       s.game.phase() !== "terminal" &&
-      turnPingOn()
+      true
     ) {
       playTurnPing();
     }
