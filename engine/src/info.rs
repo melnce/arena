@@ -443,7 +443,7 @@ fn collect_hand_gates(
         }
     }
     for a in card.abilities() {
-        if matches!(a, Ability::Fanfare { .. } | Ability::Enter { .. }) {
+        if matches!(a, Ability::Fanfare { .. }) {
             walk_ability(ctx, a, &mut gates);
         }
     }
@@ -456,8 +456,8 @@ fn collect_hand_gates(
             let mut extra = Vec::new();
             walk_ability(ctx_info, a, &mut extra);
             for g in extra {
-                if g.kind == "artifacts" || g.kind == "enterCount" {
-                    push_gate(&mut gates, &g.kind, &g.label, g.need, g.have, g.met, false);
+                if g.kind == "artifacts" {
+                    gates.push(GateInfo { glow: false, ..g });
                 }
             }
         }
@@ -631,7 +631,10 @@ fn walk_effect(ctx: WalkCtx<'_>, effect: &Effect, gates: &mut Vec<GateInfo>) {
             card: CardSource::Named { named },
             controller,
             ..
-        } if card_has_self_enter_count_gate(ctx.db, *named) => {
+        } if source_is_follower(ctx.db, ctx.inst)
+            && card_has_self_enter_count_gate(ctx.db, *named) =>
+        {
+            let need = enter_count_threshold(ctx.db, *named).unwrap_or(0);
             let side = match controller {
                 Some(Controller::Opponent) => ctx.player.opponent(),
                 _ => ctx.player,
@@ -644,7 +647,7 @@ fn walk_effect(ctx: WalkCtx<'_>, effect: &Effect, gates: &mut Vec<GateInfo>) {
                 .copied()
                 .unwrap_or(0);
             let label = enter_count_summon_label(ctx.db, *named);
-            push_gate(gates, "enterCount", &label, 0, have, false, false);
+            push_gate(gates, "enterCount", &label, need, have, have >= need, false);
         }
         _ => {}
     }
@@ -825,12 +828,15 @@ fn push_evaluated(
             if enter_count_at_least.other == Some(true) {
                 have = have.saturating_sub(1);
             }
-            let (label, glow) = if enter_count_at_least.other == Some(true) {
-                ("other copies entered", met)
-            } else {
-                ("enters this match", true)
-            };
-            push_gate(gates, "enterCountAtLeast", label, need, have, met, glow);
+            push_gate(
+                gates,
+                "enterCountAtLeast",
+                "enters this match",
+                need,
+                have,
+                met,
+                true,
+            );
         }
         Condition::CounterAtLeast { counter_at_least } => {
             let need = amount_int(&counter_at_least.n).unwrap_or(0);
@@ -1210,6 +1216,60 @@ fn filter_is_artifact_follower(filter: &Filter) -> bool {
         Some(TribeOrList::One(Tribe::Artifact)) => true,
         Some(TribeOrList::Many(ts)) => ts.contains(&Tribe::Artifact),
         _ => false,
+    }
+}
+
+fn source_is_follower(db: &CardDb, inst: &CardInstance) -> bool {
+    db.card(inst.card)
+        .map(|c| c.kind() == CardKind::Follower)
+        .unwrap_or(false)
+}
+
+fn enter_count_threshold(db: &CardDb, card_id: CardId) -> Option<i32> {
+    let Ok(card) = db.card(card_id) else {
+        return None;
+    };
+    for ability in card.abilities() {
+        if let Some(n) = enter_count_at_least_threshold(card_id, ability.when_cond()) {
+            return Some(n);
+        }
+    }
+    for mode in card.modes() {
+        match mode {
+            Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => {
+                for effect in effects {
+                    if let Some(n) = enter_count_at_least_threshold(card_id, effect.when_cond()) {
+                        return Some(n);
+                    }
+                }
+            }
+            Mode::Crystallize { abilities, .. } => {
+                if let Some(abs) = abilities {
+                    for a in abs {
+                        if let Some(n) = enter_count_at_least_threshold(card_id, a.when_cond()) {
+                            return Some(n);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn enter_count_at_least_threshold(card_id: CardId, cond: Option<&Condition>) -> Option<i32> {
+    match cond {
+        Some(Condition::EnterCountAtLeast {
+            enter_count_at_least,
+        }) if enter_count_at_least.card == card_id => amount_int(&enter_count_at_least.n),
+        Some(Condition::All { all }) => all
+            .iter()
+            .find_map(|c| enter_count_at_least_threshold(card_id, Some(c))),
+        Some(Condition::Any { any }) => any
+            .iter()
+            .find_map(|c| enter_count_at_least_threshold(card_id, Some(c))),
+        Some(Condition::Not { not }) => enter_count_at_least_threshold(card_id, Some(not)),
+        _ => None,
     }
 }
 
