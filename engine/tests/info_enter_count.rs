@@ -3,9 +3,7 @@
 mod common;
 
 use arena_engine::{apply, board_info, hand_info, Action, PlayerId};
-use common::{
-    choose, cid, end_turn, give_pp, load_db, play, play_id, put_field, put_hand, started,
-};
+use common::{cid, give_pp, load_db, play, put_field, put_hand, started};
 
 const TEST_SUBJECT: &str = "10931110";
 
