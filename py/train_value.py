@@ -1612,12 +1612,16 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
         if lam == grid[-1]:
             warnings.append(f"{g} penalty at grid maximum ({lam})")
 
+    t_train_refit = time.perf_counter()
+    theta_train = fit_rows(tr, lams, deck_start=deck_theta)
+    train_refit_s = time.perf_counter() - t_train_refit
+    final_holdout_mse = _mse_tanh(pre_from_fit(theta_train, ho), y_all[ho])
+    step_mses.append(("final (training rows)", final_holdout_mse))
+
     all_idx = np.arange(features.shape[0], dtype=np.int32)
     t_refit = time.perf_counter()
     theta = fit_rows(all_idx, lams, deck_start=deck_theta)
     refit_s = time.perf_counter() - t_refit
-    final_holdout_mse = _mse_tanh(pre_from_fit(theta, ho), y_all[ho])
-    step_mses.append(("final", final_holdout_mse))
     zw, own_w, opp_w, first_w = unpack(theta)
 
     base_w = list(base["linear"]["w"])
@@ -1657,7 +1661,11 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
             "l2_choices": lams,
             "deck_controls": use_deck,
             "stack_search_rows": int(search_tr.size),
-            "stack_timing": {"search_seconds": search_s, "refit_seconds": refit_s},
+            "stack_timing": {
+                "search_seconds": search_s,
+                "train_refit_seconds": train_refit_s,
+                "refit_seconds": refit_s,
+            },
             "rows": [5, 6, 7, 8, 9, 10, 11, 12],
         },
     }
@@ -1667,8 +1675,8 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
     top_weights: dict[str, list[tuple[float, int]]] = {}
     for z in range(z_lo, z_hi):
         name = zones[z]["name"]
-        pairs = [(float(abs(full_zw[z, i])), vocab[i]) for i in range(1, n_vocab)]
-        pairs.sort(reverse=True)
+        pairs = [(float(full_zw[z, i]), vocab[i]) for i in range(1, n_vocab)]
+        pairs.sort(key=lambda p: (-abs(p[0]), p[1]))
         top_weights[name] = pairs[:15]
 
     report: dict[str, Any] = {
@@ -1680,7 +1688,11 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
         "top_weights": top_weights,
         "warnings": warnings,
         "deck_controls": use_deck,
-        "stack_timing": {"search_seconds": search_s, "refit_seconds": refit_s},
+        "stack_timing": {
+            "search_seconds": search_s,
+            "train_refit_seconds": train_refit_s,
+            "refit_seconds": refit_s,
+        },
         "stack_search_rows": int(search_tr.size),
     }
     if use_deck and own_w is not None and opp_w is not None and first_w is not None:
@@ -1702,6 +1714,9 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
     ]
     for name, mse in step_mses[1:]:
         lines.append(f"  after {name}: {mse:.6f}")
+    lines.append(
+        "  (written leaf refit uses all rows; its holdout score is in-sample)"
+    )
     lines.append(f"l2 choices: {lams}")
     for wname, pairs in top_weights.items():
         lines.append(f"  {wname}: " + ", ".join(f"{cid}:{w:.4f}" for w, cid in pairs[:5]))

@@ -434,6 +434,249 @@ def test_target_games_uneven_pool_ceils() -> None:
     assert sizing.reverse.total == 82 * 25
 
 
+def _stub_matchup_json(argv: list[str]) -> None:
+    try:
+        out_i = argv.index("--out")
+    except ValueError:
+        return
+    path = Path(argv[out_i + 1])
+    if path.is_file():
+        return
+    decks = ["basic-forest", "basic-rune"]
+    cell = {
+        "games": 1,
+        "a_wins": 1,
+        "b_wins": 0,
+        "draws": 0,
+        "first_player_wins": 1,
+        "a_games_as_first": 1,
+        "a_wins_as_first": 1,
+        "mean_turns": 1.0,
+        "mean_actions": 1.0,
+        "end": {},
+    }
+    matrix = {a: {b: dict(cell) for b in decks} for a in decks}
+    doc = {
+        "seed": 1,
+        "policy_a": CAND_NODES,
+        "policy_b": FAST,
+        "first": "alternate",
+        "matrix": matrix,
+        "decks": decks,
+        "summary": {
+            "games": len(decks) * len(decks),
+            "decisive": len(decks) * len(decks),
+            "draws": 0,
+            "policy_a_win_rate": 1.0,
+            "wilson95": [0.0, 1.0],
+            "games_per_second": 1.0,
+        },
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(doc) + "\n")
+
+
+def test_final_matchup_argv_carries_game_offset(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pytest.importorskip("arena")
+    root = tmp_path / "results"
+    captured: list[list[str]] = []
+
+    def fake_tee(argv: list[str], log_path: Path, append: bool = False) -> None:
+        captured.append(list(argv))
+        _stub_matchup_json(argv)
+
+    monkeypatch.setattr(sweep, "run_tee", fake_tee)
+    assert (
+        sweep.main(
+            [
+                "--smoke",
+                "--tag",
+                "off",
+                "--baseline",
+                FAST,
+                "--candidates",
+                CAND_NODES,
+                "--root",
+                str(root),
+                "--screen-games",
+                "2",
+                "--final-games",
+                "2",
+                "--final-reverse",
+                "2",
+                "--seed",
+                "11",
+                "--skip-publish",
+                "--force",
+            ]
+        )
+        == 0
+    )
+    finals = [
+        c
+        for c in captured
+        if "matchup.py" in " ".join(c) and "-final" in " ".join(c) and ".part" not in " ".join(c)
+    ]
+    reverses = [c for c in captured if "matchup.py" in " ".join(c) and "-reverse" in " ".join(c)]
+    assert finals and reverses
+    for cmd in finals + reverses:
+        assert "--game-offset" in cmd
+        assert cmd[cmd.index("--game-offset") + 1] == "2"
+
+
+def test_final_screen_games_zero_no_offset(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pytest.importorskip("arena")
+    root = tmp_path / "results"
+    captured: list[list[str]] = []
+
+    def fake_tee(argv: list[str], log_path: Path, append: bool = False) -> None:
+        captured.append(list(argv))
+        _stub_matchup_json(argv)
+
+    monkeypatch.setattr(sweep, "run_tee", fake_tee)
+    assert (
+        sweep.main(
+            [
+                "--smoke",
+                "--tag",
+                "zoff",
+                "--baseline",
+                FAST,
+                "--candidates",
+                CAND_NODES,
+                "--root",
+                str(root),
+                "--screen-games",
+                "0",
+                "--final-games",
+                "1",
+                "--final-reverse",
+                "1",
+                "--allow-small",
+                "--skip-publish",
+                "--force",
+            ]
+        )
+        == 0
+    )
+    finals = [
+        c
+        for c in captured
+        if "matchup.py" in " ".join(c) and "-final" in " ".join(c) and ".part" not in " ".join(c)
+    ]
+    assert finals
+    for cmd in finals:
+        assert "--game-offset" not in cmd
+    run = json.loads((root / "zoff" / "RUN.json").read_text())
+    assert run["final_game_offset"] == 0
+
+
+def test_resume_without_final_game_offset_uses_zero(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pytest.importorskip("arena")
+    root = tmp_path / "results"
+    tag = root / "legacy"
+    tag.mkdir(parents=True)
+    (tag / "candidates.json").write_text(
+        json.dumps([{"index": 1, "spec": CAND_NODES}]) + "\n"
+    )
+    run = {
+        "argv": ["sweep.py"],
+        "git": "deadbeef",
+        "stages": {},
+        "finalist_decisions": [
+            {"index": 1, "spec": CAND_NODES, "decision": "finalist"},
+        ],
+    }
+    (tag / "RUN.json").write_text(json.dumps(run) + "\n")
+    captured: list[list[str]] = []
+
+    def fake_tee(argv: list[str], log_path: Path, append: bool = False) -> None:
+        captured.append(list(argv))
+        _stub_matchup_json(argv)
+
+    monkeypatch.setattr(sweep, "run_tee", fake_tee)
+    assert (
+        sweep.main(
+            [
+                "--tag",
+                "legacy",
+                "--baseline",
+                FAST,
+                "--candidates",
+                CAND_NODES,
+                "--root",
+                str(root),
+                "--decks",
+                "basic-forest",
+                "basic-rune",
+                "--screen-games",
+                "2",
+                "--final-games",
+                "1",
+                "--final-reverse",
+                "1",
+                "--skip-screen",
+                "--allow-small",
+                "--skip-summary",
+                "--skip-publish",
+                "--force",
+                "--only",
+                "final",
+            ]
+        )
+        == 0
+    )
+    finals = [c for c in captured if "matchup.py" in " ".join(c) and "c01-final" in " ".join(c)]
+    assert finals
+    for cmd in finals:
+        assert "--game-offset" not in cmd
+
+
+def test_final_first_chunk_differs_from_screen(tmp_path: Path) -> None:
+    pytest.importorskip("arena")
+    root = tmp_path / "results"
+    argv = [
+        "--smoke",
+        "--tag",
+        "sep",
+        "--baseline",
+        FAST,
+        "--candidates",
+        CAND_NODES,
+        "--root",
+        str(root),
+        "--screen-games",
+        "2",
+        "--final-games",
+        "4",
+        "--final-reverse",
+        "2",
+        "--early-stop",
+        "--stop-min-games",
+        "99999",
+        "--seed",
+        "424242",
+        "--skip-publish",
+        "--force",
+    ]
+    r = _run_sweep(argv)
+    assert r.returncode == 0, r.stderr or r.stdout
+    tag = root / "sep"
+    screen = json.loads((tag / "c01-screen.json").read_text())
+    part1 = json.loads((tag / "c01-final.part1.json").read_text())
+    assert screen["matrix"] != part1["matrix"]
+    run = json.loads((tag / "RUN.json").read_text())
+    assert run["final_game_offset"] == 2
+    summary = (tag / "SUMMARY.md").read_text()
+    assert "final games per pair: 2 … 5" in summary
+
+
 def test_sizing_block_lists_running_stages() -> None:
     args = _parse("--target-games", "4096")
     sizing = sweep.compute_sizing(args, 7, SWEEP8_DECKS)
