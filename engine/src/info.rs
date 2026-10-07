@@ -15,7 +15,8 @@ use crate::card::{
 use crate::db::CardDb;
 use crate::ids::{AttackTarget, PlayerId};
 use crate::state::{
-    CardInstance, ChoiceNode, Phase, PlayForm, SourceRef, State, TargetOpt, WorkFrame,
+    CardInstance, ChoiceNode, PendingKind, Phase, PlayForm, PlayPickStep, SourceRef, State,
+    TargetOpt, WorkFrame,
 };
 use crate::support;
 
@@ -77,12 +78,24 @@ pub struct ModeChoiceInfo {
 /// option's `printed` text for the active `Effect::Choose` (indexed by mode).
 pub fn mode_choice_info(db: &CardDb, state: &State) -> Option<ModeChoiceInfo> {
     let Phase::Choice {
-        node: ChoiceNode::Modes { .. },
+        node: ChoiceNode::Modes { pending, .. },
         ..
     } = &state.phase
     else {
         return None;
     };
+    if pending.kind == PendingKind::PlaySelect {
+        if let Some(play) = &state.pending_play_choices {
+            if let Some(PlayPickStep::Mode(e)) = play.steps.get(play.step_idx) {
+                let opts = resolve_choose_options(db, state, play.source, e)?;
+                let card_id = source_card_id(state, play.source)?;
+                return Some(ModeChoiceInfo {
+                    source: card_id.as_str(),
+                    options: opts.into_iter().map(|o| o.printed).collect(),
+                });
+            }
+        }
+    }
     let WorkFrame::Effects {
         source,
         effects,
