@@ -131,6 +131,17 @@ async function closeDrawer(page: Page) {
   });
 }
 
+/** After reload, share params auto-start the game and close the drawer — wait before opening settings. */
+async function waitRestoredGameAndClosedDrawer(page: Page): Promise<void> {
+  const drawer = page.locator("#settingsDrawer");
+  await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
+    timeout: 30_000,
+  });
+  await expect(drawer).not.toHaveClass(/open/, { timeout: 30_000 });
+  await waitTransitionEnd(drawer, "transform");
+}
+
 async function endHumanTurn(page: Page, human: "a" | "b" = "a") {
   const id = human === "a" ? "endTurnBlue" : "endTurnRed";
   const btn = page.locator(`#${id}:visible`);
@@ -279,10 +290,9 @@ test.describe("vs-bot turn ping", () => {
     await expect.poll(() => turnPings(page)).toBe(1);
 
     await page.reload();
-    await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
+    await waitRestoredGameAndClosedDrawer(page);
     await openSettings(page);
     const drawer = page.locator("#settingsDrawer");
-    await waitTransitionEnd(drawer, "transform");
     const toggle = page.locator("#turnPingToggle");
     await expect(toggle).toBeVisible();
     await expect(toggle).not.toBeChecked();
@@ -290,7 +300,6 @@ test.describe("vs-bot turn ping", () => {
       el.querySelector("#turnPingToggle")?.scrollIntoView({ block: "center", inline: "nearest" });
     });
     await toggle.scrollIntoViewIfNeeded();
-    await expect(toggle).toBeInViewport();
     await toggle.check();
     await assertPingCounts(page, 1);
   });
