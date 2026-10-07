@@ -73,7 +73,7 @@ export function formatGateLine(gate: GateInfo): string {
     case "spellboost":
       return `Spellboost ${gate.have}`;
     case "enterCount":
-      return `${gate.label}: ${gate.have}`;
+      return `${gate.label}: ${gate.have}/${gate.need}`;
     default:
       break;
   }
