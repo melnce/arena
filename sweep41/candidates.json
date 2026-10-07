@@ -1,0 +1,10 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,hread=on"
+  },
+  {
+    "index": 2,
+    "spec": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,deal=block"
+  }
+]
