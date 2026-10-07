@@ -1,0 +1,11 @@
+v3 (served on 3742a1b) seed 1: path search chosen end_turn | attack slot3->slot0 21.93/-1.11  attack slot3->slot1 33.48/-13.92  attack slot4->slot0 19.22/-2.11  attack slot4->slot1 33.79/-12.94  end_turn 40.99/13.93 | ends ['opp_reply', 'tt']
+   deal: "indep"
+   hread: null | wbase: null
+v3 (served on 3742a1b) seed 2: path search chosen end_turn | attack slot3->slot0 31.05/0.79  attack slot3->slot1 36.27/15.78  attack slot4->slot0 30.63/-0.20  attack slot4->slot1 36.45/15.78  end_turn 37.81/13.93 | ends ['opp_reply', 'tt']
+v3 (served on 3742a1b) seed 3: path holdback_trade chosen attack slot3->slot0 | attack slot3->slot0 37.27/0.79  attack slot3->slot1 38.20/4.85  attack slot4->slot0 29.55/-7.86  attack slot4->slot1 38.43/5.27  end_turn 45.00/23.76 | ends ['opp_reply', 'tt']
+v4 (default from ed574a4) seed 1: path search chosen end_turn | attack slot3->slot0 25.50/4.24  attack slot3->slot1 36.22/-8.56  attack slot4->slot0 23.07/3.26  attack slot4->slot1 36.52/-7.55  end_turn 43.39/18.93 | ends ['opp_reply', 'tt']
+v4 (default from ed574a4) seed 2: path search chosen end_turn | attack slot3->slot0 34.17/5.86  attack slot3->slot1 39.48/21.13  attack slot4->slot0 33.77/4.88  attack slot4->slot1 39.60/21.13  end_turn 40.69/18.93 | ends ['opp_reply', 'tt']
+v4 (default from ed574a4) seed 3: path holdback_trade chosen attack slot3->slot0 | attack slot3->slot0 39.77/5.86  attack slot3->slot1 41.08/10.83  attack slot4->slot0 32.64/-1.87  attack slot4->slot1 41.28/11.23  end_turn 47.07/28.15 | ends ['opp_reply', 'tt']
+v3, info=all seed 1: path search chosen attack slot3->slot1 | attack slot3->slot0 5.82/5.82  attack slot3->slot1 56.13/55.39  attack slot4->slot0 4.84/4.84  attack slot4->slot1 56.13/55.39  end_turn 23.76/23.76 | ends ['opp_reply']
+v3, info=all seed 2: path search chosen attack slot4->slot1 | attack slot3->slot0 3.88/-4.35  attack slot3->slot1 50.91/13.70  attack slot4->slot0 2.89/-5.33  attack slot4->slot1 50.99/14.38  end_turn 23.76/23.76 | ends ['opp_reply']
+v3, info=all seed 3: path search chosen attack slot4->slot1 | attack slot3->slot0 4.47/0.43  attack slot3->slot1 50.80/13.70  attack slot4->slot0 3.49/-0.56  attack slot4->slot1 50.88/14.38  end_turn 23.76/23.76 | ends ['opp_reply']

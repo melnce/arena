@@ -1,0 +1,12 @@
+3:world ends seen. usage (repo root): python s12_knobs.py [extra-key-set ...]   (default: the five sets in knobs.txt)"""
+17:EXTRAS = sys.argv[1:] or ['okill=7', 'olsolve=4000', 'omacro=1', 'okill=7,olsolve=4000,omacro=1', 'info=all,okill=7,olsolve=4000,omacro=1']
+18:for extra in EXTRAS:
+odepth=1 seed 1: path search chosen end_turn | attack slot3->slot0 35.42  attack slot3->slot1 33.80  attack slot4->slot0 33.91  attack slot4->slot1 34.16  end_turn 42.66 | end_turn world ends {'opp_search': 8}
+odepth=1 seed 2: path search chosen end_turn | attack slot3->slot0 35.17  attack slot3->slot1 34.45  attack slot4->slot0 34.01  attack slot4->slot1 34.35  end_turn 39.77 | end_turn world ends {'opp_search': 8}
+odepth=1 seed 3: path search chosen end_turn | attack slot3->slot0 35.53  attack slot3->slot1 32.99  attack slot4->slot0 33.71  attack slot4->slot1 33.11  end_turn 42.84 | end_turn world ends {'opp_search': 8}
+odepth=2 seed 1: path search chosen end_turn | attack slot3->slot0 8.31  attack slot3->slot1 11.56  attack slot4->slot0 7.58  attack slot4->slot1 11.24  end_turn 20.59 | end_turn world ends {'opp_search': 8}
+odepth=2 seed 2: path search chosen end_turn | attack slot3->slot0 11.48  attack slot3->slot1 13.68  attack slot4->slot0 9.95  attack slot4->slot1 13.68  end_turn 21.72 | end_turn world ends {'opp_search': 8}
+odepth=2 seed 3: path search chosen end_turn | attack slot3->slot0 6.65  attack slot3->slot1 10.90  attack slot4->slot0 6.04  attack slot4->slot1 10.57  end_turn 19.85 | end_turn world ends {'opp_search': 8}
+odepth=1,obeam=6 seed 1: path search chosen end_turn | attack slot3->slot0 33.05  attack slot3->slot1 33.80  attack slot4->slot0 31.64  attack slot4->slot1 34.16  end_turn 39.81 | end_turn world ends {'opp_search': 8}
+odepth=1,obeam=6 seed 2: path search chosen end_turn | attack slot3->slot0 35.17  attack slot3->slot1 34.45  attack slot4->slot0 34.01  attack slot4->slot1 34.35  end_turn 39.77 | end_turn world ends {'opp_search': 8}
+odepth=1,obeam=6 seed 3: path search chosen end_turn | attack slot3->slot0 32.29  attack slot3->slot1 32.99  attack slot4->slot0 31.84  attack slot4->slot1 33.11  end_turn 39.05 | end_turn world ends {'opp_search': 8}

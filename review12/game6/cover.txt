@@ -1,0 +1,6 @@
+distinct cards left in the owner deck: 13 ['Alchemic Flare', 'Ecstatic Scholar', 'Enamored Researcher', 'Humane Love', 'Lyria, Skydestined', 'Miscalculated Experiment', 'Obsessed Test Subject', 'Obsidian Raven', 'Sweet Abomination', 'Tetra & Ladica, Forest BFFs', 'Tico, Mysterian Spellcrafter', 'Wills United', "Witch's New Brew"]
+not reached by draws (reseeds None, 1-15): ['Enamored Researcher', 'Miscalculated Experiment', 'Tetra & Ladica, Forest BFFs']
+reseed 18: owner draws 'Enamored Researcher' -> owner win this turn: False (213802 states)
+reseed 19: owner draws 'Tetra & Ladica, Forest BFFs' -> owner win this turn: False (58047 states)
+reseed 20: owner draws 'Miscalculated Experiment' -> owner win this turn: False (131424 states)
+left uncovered: []

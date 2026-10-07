@@ -1,0 +1,14 @@
+served seed 1: bot line ['end_turn'] | Sephie alive True | owner win on turn 9: True (the actual line by card)
+served seed 2: bot line ['end_turn'] | Sephie alive True | owner win on turn 9: True (the actual line by card)
+served seed 3: bot line ['attack slot3->slot0', 'end_turn'] | Sephie alive True | owner win on turn 9: True (the actual line by card)
+served seed 4: bot line ['end_turn'] | Sephie alive True | owner win on turn 9: True (the actual line by card)
+served seed 5: bot line ['attack slot4->slot1', 'attack slot3->slot1', 'end_turn'] | Sephie alive False | owner win on turn 9: False (220404 states)
+served seed 6: bot line ['attack slot3->slot1', 'attack slot3->slot1', 'end_turn'] | Sephie alive False | owner win on turn 9: False (220404 states)
+served: owner wins on turn 9 after 4 of 6 bot seeds
+olsolve=4000 seed 1: bot line ['attack slot4->slot1', 'attack slot3->slot1', 'end_turn'] | Sephie alive False | owner win on turn 9: False (220404 states)
+olsolve=4000 seed 2: bot line ['attack slot3->slot0', 'end_turn'] | Sephie alive True | owner win on turn 9: True (the actual line by card)
+olsolve=4000 seed 3: bot line ['attack slot4->slot1', 'attack slot3->slot1', 'end_turn'] | Sephie alive False | owner win on turn 9: False (220404 states)
+olsolve=4000 seed 4: bot line ['attack slot4->slot1', 'attack slot3->slot1', 'end_turn'] | Sephie alive False | owner win on turn 9: False (220404 states)
+olsolve=4000 seed 5: bot line ['attack slot4->slot1', 'attack slot3->slot1', 'end_turn'] | Sephie alive False | owner win on turn 9: False (220404 states)
+olsolve=4000 seed 6: bot line ['end_turn'] | Sephie alive True | owner win on turn 9: True (the actual line by card)
+olsolve=4000: owner wins on turn 9 after 2 of 6 bot seeds
