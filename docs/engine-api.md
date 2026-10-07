@@ -1359,8 +1359,11 @@ shard metadata is missing (or to test without them). L2 penalties are chosen by
 coordinate search on `--l2-grid` (default `1e-6` … `1`) over crests, amulets,
 entered, and cemetery groups; ties within `1e-9` keep the larger penalty. The
 optimizer is deterministic full-batch L-BFGS in numpy. The report lists
-holdout MSE after each step, the four penalty choices, and the fifteen largest
-`|weight|` values per new zone.
+holdout MSE after each penalty-group step, then a **final (training rows)**
+line from a refit on training rows only (holdout never seen), then an all-rows
+refit for the written leaf (that leaf's holdout score is in-sample). The four
+penalty choices and the fifteen largest-magnitude weights per new zone are
+stored with their **signed** values.
 
 ## Learned mulligan (keep tables)
 
@@ -1595,7 +1598,7 @@ before any matchup file is written.
 |---|---|---|
 | **screen** | For each candidate `C` vs `--baseline` `B` (default `h0`): `--policy-a C --policy-b B --games` `--screen-games` (default 4 = 1 024 games over the 16 decks), `--seed` (default 1). Once: `--policy B --games` `--tp-games` (default 1) → `tp-baseline`. Per candidate: `--policy C --games <tp-games>` → `tp-cNN`. `--decks` / `--threads` pass through. | `cNN-screen.*`, `tp-cNN.*`, `tp-baseline.*` |
 | **finalists** | Rank by screen rate; keep the top `--finalists` (default 2) among those whose screen interval's **high** end is **above** 0.50 (already lost at ±3 % → no final; high end exactly 0.50 is not above). The choice and the reason for every candidate (`finalist`, `skipped: interval high 0.48 < 0.50`, `not in top 2`) go into `RUN.json` and the summary. | `RUN.json` |
-| **final** | For each finalist: main `--games` `--final-games` (default 16 = 4 096) and reverse `--policy-a B --policy-b C --games` `--final-reverse` (default 8 = 2 048). Optional `--mirrors <deck …>` at `--mirror-games` (default none). With `--early-stop`, each arm is played in `--stop-chunk` slices via `matchup.py --game-offset`, merged back into the usual `cNN-final.json` / `cNN-reverse.json`; see below. | `cNN-final.*`, `cNN-reverse.*`, `cNN-mirror-<deck>.*`, optional `*.part<N>.*` |
+| **final** | For each finalist: main `--games` `--final-games` (default 16 = 4 096) and reverse `--policy-a B --policy-b C --games` `--final-reverse` (default 8 = 2 048). Optional `--mirrors <deck …>` at `--mirror-games` (default none). Since this change, every final matchup passes `--game-offset` = `--screen-games` so games start after the screen's; main and reverse still share deals (roles swapped). `RUN.json` records `final_game_offset`; older runs without it resume at offset 0. With `--early-stop`, chunk `j` uses offset `S + j × chunk`; see below. | `cNN-final.*`, `cNN-reverse.*`, `cNN-mirror-<deck>.*`, optional `*.part<N>.*` |
 | **summary** | Written from the JSON files (never by parsing the text). | `SUMMARY.md` |
 | **publish** | Off unless `--publish`. Same flags and worktree / orphan-branch mechanics as `iterate.py` (`--publish-remote`, `--publish-branch`, `--publish-dir`). Copies `<tag>/*.txt`, `*.json`, `SUMMARY.md`; never touches the main working tree; nothing new to commit is not an error. | copy into the results worktree |
 
@@ -1615,7 +1618,8 @@ override.
 per stage); a **screen** table sorted by rate (index, spec, rate +
 Wilson interval, games, throughput g/s vs baseline, finalist decision);
 a **final** table (index, spec, main rate + interval, reverse as the
-candidate's rate with the interval flipped, mirrors); a `verdict:` line
+candidate's rate with the interval flipped, mirrors), preceded by the per-pair
+game range (`final games per pair: S … S+F−1, after the screen's`); a `verdict:` line
 per finalist by the standing rule (`better` if both low ends > 0.50;
 `worse` if the main high end < 0.50; `coin flip` if both intervals
 contain 0.50; else `unclear (…)`); and a last line

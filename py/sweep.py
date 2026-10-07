@@ -633,7 +633,9 @@ class Runner:
         data = load_run(self.run_path)
         if data is not None:
             return data
-        return new_run(self._argv_list(), self.repo)
+        run = new_run(self._argv_list(), self.repo)
+        run["final_game_offset"] = int(self.args.screen_games)
+        return run
 
     def save_run(self) -> None:
         runlib_save_run(self.run_path, self.run, self._argv_list(), self.repo)
@@ -679,7 +681,19 @@ class Runner:
     def matchup_exists(self, stem: str) -> bool:
         return (self.tag_dir / f"{stem}.json").is_file()
 
-    def run_matchup(self, extra: list[str], out_stem: str, stage: str) -> None:
+    def final_game_offset(self) -> int:
+        """Per-pair game index where the final stage starts (after the screen)."""
+        if "final_game_offset" in self.run:
+            return int(self.run["final_game_offset"])
+        return 0
+
+    def run_matchup(
+        self,
+        extra: list[str],
+        out_stem: str,
+        stage: str,
+        game_offset: int | None = None,
+    ) -> None:
         out_json = self.tag_dir / f"{out_stem}.json"
         log = self.tag_dir / f"{out_stem}.txt"
         if not self.args.force and out_json.is_file():
@@ -691,6 +705,7 @@ class Runner:
             out_json,
             seed=self.args.seed,
             threads=self.args.threads,
+            game_offset=game_offset,
         )
         self.tee(cmd, log, stage)
 
@@ -1051,6 +1066,7 @@ class Runner:
             self.args.stop_chunk,
         )
         chunk = self.args.stop_chunk
+        base_offset = self.final_game_offset()
         early = self.run.setdefault("early_stop", {})
         fin_rec = early.setdefault("finalists", {})
         rec = dict(fin_rec.get(c.stem) or {})
@@ -1065,8 +1081,9 @@ class Runner:
                 break
             part_stem = self._chunk_part_stem(c, arm, j)
             if stopped_at is None or look_num <= stopped_at:
-                extra = self._chunk_matchup_argv(c, arm, chunk, j * chunk)
-                self._run_chunk_matchup(extra, part_stem, j * chunk)
+                game_off = base_offset + j * chunk
+                extra = self._chunk_matchup_argv(c, arm, chunk, game_off)
+                self._run_chunk_matchup(extra, part_stem, game_off)
 
             look = self._early_stop_look(c, combine, schedule, step + 1)
             looks.append(look)
@@ -1232,6 +1249,7 @@ class Runner:
             return
         finals = self.finalists()
         self.mark_start("final")
+        offset = self.final_game_offset()
         if self.args.early_stop:
             self._record_early_stop_config()
             for c in finals:
@@ -1251,7 +1269,7 @@ class Runner:
                     str(self.args.final_games),
                 ]
                 self.add_decks(main)
-                self.run_matchup(main, f"{c.stem}-final", "final")
+                self.run_matchup(main, f"{c.stem}-final", "final", game_offset=offset)
                 rev = [
                     "--policy-a",
                     baseline,
@@ -1261,7 +1279,7 @@ class Runner:
                     str(self.args.final_reverse),
                 ]
                 self.add_decks(rev)
-                self.run_matchup(rev, f"{c.stem}-reverse", "final")
+                self.run_matchup(rev, f"{c.stem}-reverse", "final", game_offset=offset)
                 for deck in self.args.mirrors:
                     mir = [
                         "--policy-a",
@@ -1273,7 +1291,9 @@ class Runner:
                         "--decks",
                         deck,
                     ]
-                    self.run_matchup(mir, f"{c.stem}-mirror-{deck}", "final")
+                    self.run_matchup(
+                        mir, f"{c.stem}-mirror-{deck}", "final", game_offset=offset
+                    )
         self.mark_end("final")
 
     def stage_summary(self) -> None:
@@ -1326,6 +1346,14 @@ class Runner:
         lines.append("")
         lines.append("## final")
         lines.append("")
+        off = self.final_game_offset()
+        fg = int(self.args.final_games)
+        if fg > 0:
+            lines.append(
+                f"final games per pair: {off} … {off + fg - 1} "
+                f"(after the screen's {off} game{'s' if off != 1 else ''} per pair)"
+            )
+            lines.append("")
         header = ["index", "spec", "main", "reverse", "pooled"]
         header.extend(self.args.mirrors)
         lines.append("| " + " | ".join(header) + " |")

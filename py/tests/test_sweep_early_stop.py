@@ -535,6 +535,121 @@ def test_stop_combine_table(tmp_path: Path) -> None:
     assert f"pooled {pool_rate:.3f} [{pool_ci[0]:.3f}, {pool_ci[1]:.3f}]" in summary
 
 
+def test_early_stop_chunk_argv_game_offset(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    pytest.importorskip("arena")
+    root = tmp_path / "results"
+    captured: list[list[str]] = []
+
+    def fake_tee(argv: list[str], log_path: Path, append: bool = False) -> None:
+        captured.append(list(argv))
+        try:
+            out_i = argv.index("--out")
+        except ValueError:
+            return
+        path = Path(argv[out_i + 1])
+        if path.is_file():
+            return
+        decks = ["basic-forest", "basic-rune"]
+        cell = {
+            "games": 1,
+            "a_wins": 1,
+            "b_wins": 0,
+            "draws": 0,
+            "first_player_wins": 1,
+            "a_games_as_first": 1,
+            "a_wins_as_first": 1,
+            "mean_turns": 1.0,
+            "mean_actions": 1.0,
+            "end": {},
+        }
+        matrix = {a: {b: dict(cell) for b in decks} for a in decks}
+        doc = {
+            "seed": 1,
+            "policy_a": "h0:depth=2,beam=2,k=1,nodes=160,value=v0,tt=0",
+            "policy_b": FAST,
+            "first": "alternate",
+            "matrix": matrix,
+            "decks": decks,
+            "summary": {
+                "games": len(decks) * len(decks),
+                "decisive": len(decks) * len(decks),
+                "draws": 0,
+                "policy_a_win_rate": 1.0,
+                "wilson95": [0.0, 1.0],
+                "games_per_second": 1.0,
+            },
+        }
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(doc) + "\n")
+
+    monkeypatch.setattr(sweep, "run_tee", fake_tee)
+    (root / "esoff").mkdir(parents=True, exist_ok=True)
+    (root / "esoff" / "candidates.json").write_text(
+        json.dumps(
+            [{"index": 1, "spec": "h0:depth=2,beam=2,k=1,nodes=160,value=v0,tt=0"}]
+        )
+        + "\n"
+    )
+    (root / "esoff" / "RUN.json").write_text(
+        json.dumps(
+            {
+                "argv": [],
+                "final_game_offset": 2,
+                "finalist_decisions": [
+                    {
+                        "index": 1,
+                        "spec": "h0:depth=2,beam=2,k=1,nodes=160,value=v0,tt=0",
+                        "decision": "finalist",
+                    }
+                ],
+            }
+        )
+        + "\n"
+    )
+    assert (
+        sweep.main(
+            [
+                "--smoke",
+                "--tag",
+                "esoff",
+                "--baseline",
+                FAST,
+                "--candidates",
+                "h0:depth=2,beam=2,k=1,nodes=160,value=v0,tt=0",
+                "--root",
+                str(root),
+                "--screen-games",
+                "2",
+                "--final-games",
+                "4",
+                "--final-reverse",
+                "4",
+                "--early-stop",
+                "--stop-chunk",
+                "2",
+                "--stop-min-games",
+                "99999",
+                "--skip-screen",
+                "--skip-summary",
+                "--skip-publish",
+                "--force",
+                "--only",
+                "final",
+            ]
+        )
+        == 0
+    )
+    chunks = [c for c in captured if "matchup.py" in c[1] and ".part" in " ".join(c)]
+    assert chunks
+    offsets = []
+    for cmd in chunks:
+        assert "--game-offset" in cmd
+        offsets.append(int(cmd[cmd.index("--game-offset") + 1]))
+    assert sorted(set(offsets)) == [2, 4]
+
+
 def test_defaults_without_early_stop_unchanged() -> None:
     args = sweep.parse_args(["--tag", "t", "--candidates", "h0"])
     assert args.early_stop is False
