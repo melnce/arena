@@ -1,5 +1,5 @@
 //! H0: depth-limited beam search. The default leaf is the built-in
-//! `h0-linear-v3` value net; `value=v0` is the historical hand-written
+//! `h0-linear-v4` value net; `value=v0` is the historical hand-written
 //! arithmetic. [`H0::fast`] keeps `value=v0` and `tt=0`.
 //!
 //! Search starts from `K = max(1, determinizations)` roots produced by
@@ -95,7 +95,7 @@ impl Default for Weights {
 }
 
 /// Which leaf value `H0` uses. Default is [`ValueVersion::Net`] (the
-/// built-in `h0-linear-v3` model). [`ValueVersion::V0`] is the
+/// built-in `h0-linear-v4` model). [`ValueVersion::V0`] is the
 /// hand-written leaf the bot used before the net became the default.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ValueVersion {
@@ -108,9 +108,9 @@ pub enum ValueVersion {
     Net,
 }
 
-const BUILTIN_NET_JSON: &str = include_str!("../../models/h0-linear-v3.json");
-/// Committed name of the built-in value model (`engine/models/h0-linear-v3.json`).
-pub const BUILTIN_NET_NAME: &str = "h0-linear-v3";
+const BUILTIN_NET_JSON: &str = include_str!("../../models/h0-linear-v4.json");
+/// Committed name of the built-in value model (`engine/models/h0-linear-v4.json`).
+pub const BUILTIN_NET_NAME: &str = "h0-linear-v4";
 static BUILTIN_NET: OnceLock<Arc<ValueNet>> = OnceLock::new();
 
 const BUILTIN_MULLIGAN_JSON: &str = include_str!("../../models/mulligan-v1.json");
@@ -118,7 +118,7 @@ const BUILTIN_MULLIGAN_JSON: &str = include_str!("../../models/mulligan-v1.json"
 pub const BUILTIN_MULLIGAN_NAME: &str = "mulligan-v1";
 static BUILTIN_MULLIGAN: OnceLock<Arc<MulliganTable>> = OnceLock::new();
 
-/// The built-in `h0-linear-v3` model, parsed once. A parse failure is a
+/// The built-in `h0-linear-v4` model, parsed once. A parse failure is a
 /// build defect.
 pub fn builtin_net() -> Arc<ValueNet> {
     BUILTIN_NET

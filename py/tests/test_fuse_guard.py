@@ -22,7 +22,12 @@ _spec.loader.exec_module(_mod)
 audit = _mod
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "review11"
-SERVED_SPEC = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000"
+_ROOT = Path(__file__).resolve().parents[2]
+_V3_NET = _ROOT / "engine" / "models" / "h0-linear-v3.json"
+# Pin v3 leaf: this suite tests fuseguard, not the default net.
+SERVED_SPEC = (
+    f"h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,net={_V3_NET}"
+)
 
 
 def _load_capture(name: str) -> dict[str, Any]:

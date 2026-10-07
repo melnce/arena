@@ -14,8 +14,8 @@
 //!
 //! On this branch, `h0:mull=rule,info=fair,net=<v1 path>` must match those pins;
 //! bare `h0` must match `h0:mull=engine/models/mulligan-v1.json,info=open` and
-//! `h0:net=<v3 path>` (the yardstick candidate); `h0:net=<v2 path>` reproduces
-//! the pre-v3 default pins.
+//! `h0:net=<v4 path>` (the yardstick candidate); `h0:net=<v3 path>` reproduces
+//! the pre-v4 default pins; `h0:net=<v2 path>` reproduces the pre-v3 default pins.
 //!
 //! `print_legacy_fingerprints` uses `h0:mull=rule,info=fair` (not bare `h0`).
 //!
@@ -165,9 +165,21 @@ fn action_trace(
 }
 
 /// Default `h0` action fingerprints on eight meta-deck / seed pairs.
-/// Captured from `h0:net=/tmp/v3.json` on `main@a69b248` (yardstick
+/// Captured from `h0:net=/tmp/v4.json` on `main@3742a1b` (yardstick
 /// candidate); bare `h0` must reproduce them exactly.
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
+    0x2246_9fdb_d814_7321,
+    0x8867_a7c5_74fc_8fa9,
+    0x649a_13b2_5e6f_3115,
+    0xf257_1914_6cd5_5f83,
+    0x3917_513b_bba7_4346,
+    0x2cc7_6a3f_9f68_61e1,
+    0x7dfb_9a9f_fc91_c0b1,
+    0x8a65_79b5_792c_ac4d,
+];
+
+/// Pre-v4 default `h0` fingerprints (`main@3742a1b`, built-in `h0-linear-v3`).
+const V3_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x2246_9fdb_d814_7321,
     0x6a97_4302_9171_efbc,
     0x120b_7fb2_41cf_3f44,
@@ -619,9 +631,10 @@ fn trace_bonus_pp_divergence_cases() {
 fn print_default_fingerprints() {
     let db = load_db();
     let stems = meta_deck_stems();
+    let spec = std::env::var("H0_SPEC").unwrap_or_else(|_| "h0".into());
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);
-        let fp = action_fingerprint(&db, "h0", *seed, &deck);
+        let fp = action_fingerprint(&db, &spec, *seed, &deck);
         println!("seed={seed} deck={} fp=0x{:016x}", stems[i], fp);
     }
 }
@@ -659,6 +672,34 @@ fn print_v2_net_fingerprints() {
     let stems = meta_deck_stems();
     let v2 = h0_linear_v2_path();
     let spec = format!("h0:net={v2}");
+    for (i, seed) in GATE_SEEDS.iter().enumerate() {
+        let deck = load_meta_deck(&stems[i]);
+        let fp = action_fingerprint(&db, &spec, *seed, &deck);
+        println!("seed={seed} deck={} fp=0x{:016x}", stems[i], fp);
+    }
+}
+
+#[test]
+#[ignore]
+fn print_v3_net_fingerprints() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let v3 = h0_linear_v3_path();
+    let spec = format!("h0:net={v3}");
+    for (i, seed) in GATE_SEEDS.iter().enumerate() {
+        let deck = load_meta_deck(&stems[i]);
+        let fp = action_fingerprint(&db, &spec, *seed, &deck);
+        println!("seed={seed} deck={} fp=0x{:016x}", stems[i], fp);
+    }
+}
+
+#[test]
+#[ignore]
+fn print_v4_net_fingerprints() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let v4 = h0_linear_v4_path();
+    let spec = format!("h0:net={v4}");
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);
         let fp = action_fingerprint(&db, &spec, *seed, &deck);
@@ -723,6 +764,25 @@ fn v1_net_matches_pre_v2_default_fingerprints() {
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
+fn v3_net_matches_pre_v4_default_fingerprints() {
+    let db = load_db();
+    let stems = meta_deck_stems();
+    let v3 = h0_linear_v3_path();
+    let spec = format!("h0:net={v3}");
+    assert_eq!(stems.len(), 16);
+    for (i, seed) in GATE_SEEDS.iter().enumerate() {
+        let deck = load_meta_deck(&stems[i]);
+        let got = action_fingerprint(&db, &spec, *seed, &deck);
+        assert_eq!(
+            got, V3_DEFAULT_FINGERPRINTS[i],
+            "v3 net fingerprint seed={seed} deck={}",
+            stems[i]
+        );
+    }
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
 fn v2_net_matches_pre_v3_default_fingerprints() {
     let db = load_db();
     let stems = meta_deck_stems();
@@ -748,9 +808,9 @@ fn default_matches_explicit_builtin_table_and_open() {
         .join("engine/models/mulligan-v1.json")
         .display()
         .to_string();
-    let v3 = h0_linear_v3_path();
+    let v4 = h0_linear_v4_path();
     let explicit_mull = format!("h0:mull={table},info=open");
-    let explicit_net = format!("h0:net={v3}");
+    let explicit_net = format!("h0:net={v4}");
     let stems = meta_deck_stems();
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);

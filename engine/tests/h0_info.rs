@@ -986,7 +986,7 @@ fn other_info_modes_play_unchanged_on_meta_games() {
     const SEED: u64 = 99;
     check_meta_play_baseline(
         &db,
-        "h0",
+        &with_v3_net("h0"),
         SEED,
         &[
             (Some(PlayerId::A), 18, 171),
@@ -996,7 +996,7 @@ fn other_info_modes_play_unchanged_on_meta_games() {
     );
     check_meta_play_baseline(
         &db,
-        "h0:info=fair",
+        &with_v3_net("h0:info=fair"),
         SEED,
         &[
             (Some(PlayerId::A), 16, 149),
@@ -1006,7 +1006,7 @@ fn other_info_modes_play_unchanged_on_meta_games() {
     );
     check_meta_play_baseline(
         &db,
-        "h0:info=draws",
+        &with_v3_net("h0:info=draws"),
         SEED,
         &[
             (Some(PlayerId::B), 11, 106),
@@ -1016,7 +1016,7 @@ fn other_info_modes_play_unchanged_on_meta_games() {
     );
     check_meta_play_baseline(
         &db,
-        "h0:nodes=6000",
+        &with_v3_net("h0:nodes=6000"),
         SEED,
         &[
             (Some(PlayerId::B), 6, 59),

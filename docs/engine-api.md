@@ -523,9 +523,10 @@ loser's `leader_defense <= 0`; otherwise a decided game is `Deckout`. No
 Any subset of the H0 keys; omitted keys take [`H0::default`].
 `k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
 `H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1|net`
-(default `net` = the built-in `h0-linear-v3`; `value=v0` is the
+(default `net` = the built-in `h0-linear-v4`; `value=v0` is the
 hand-written leaf the bot used before this default), `net=<path>`
-(override with `net=engine/models/h0-linear-v2.json` for the previous leaf;
+(override with `net=engine/models/h0-linear-v3.json` for the previous leaf;
+`net=engine/models/h0-linear-v2.json` for the v2 leaf;
 `net=engine/models/h0-linear-v1.json` for the v1 leaf),
 (overrides the built-in; only meaningful with `value=net`;
 `h0:net=<path>` alone means `h0:value=net,net=<path>`; the path
@@ -624,7 +625,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `beam` | 4 | top-k by value each ply |
 | `determinizations` | 4 | opponent-reply samples |
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
-| `value` | `net` (built-in `h0-linear-v3`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
+| `value` | `net` (built-in `h0-linear-v4`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
 | `net` | — | path to a `net.json` overriding the built-in model |
 | `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
 | `w_earth` | 0.35 | v1: saturated earth sigils (cap 6) |
@@ -956,7 +957,7 @@ Value: leader-defense difference, board (atk+def with Ward/Storm/evolved
 weights), hand size, next-turn PP / EP / SEP, crest / countdown presence;
 terminal = ±∞ on a single root, finite-clamped when averaging. That
 arithmetic is `value=v0`. The default leaf is the built-in
-`h0-linear-v3` net (`value=net`, encoding 2). `value=v1` adds
+`h0-linear-v4` net (`value=net`, encoding 3). `value=v1` adds
 saturated shadows / earth / faith / rally, spellboost counters on cards
 that print Spellboost, a threshold-shaped “live” bonus for hand cards
 that pay those resources or check Rally, and a count of Last Words
@@ -1291,25 +1292,26 @@ dependency, not of the extension.
 
 ## Learned value (M5b-lite)
 
-The default H0 leaf is the built-in `h0-linear-v3` model
-(`engine/models/h0-linear-v3.json`, encoding 2, 567 features, 245-id
-vocab), `include_str!`-embedded and parsed once through `OnceLock`
+The default H0 leaf is the built-in `h0-linear-v4` model
+(`engine/models/h0-linear-v4.json`, encoding 3, 961 features, 245-id
+vocab, 13 zones), `include_str!`-embedded and parsed once through `OnceLock`
 (`builtin_net()` / `BUILTIN_NET_NAME`). Provenance and the immutability
 rule live in `engine/models/README.md`: model files are measured
 artifacts — a retrained model is a new file with a new name and becomes
-the default only after it beats the current default on the yardstick.
-The sweep-28 yardstick (`h0:net=<this file>` vs `h0` = v2): sweep 28
-(seed 1; results `9ecf4bb`) main 0.5181 (2 048), reverse 0.5283 (1 024),
-pooled 0.5215; sweep 28b (seed 3; results `6d3e271`) main 0.5181 (4 096),
-reverse 0.5205 (2 048), pooled 0.5189; combined main 0.5181 [0.5056, 0.5305]
-(6 144 games), reverse 0.5231 [0.5054, 0.5407] (3 072), pooled 0.5197
-[0.5095, 0.5299] = +13.7 Elo [+6.6, +20.8]. The search, the
-determinization, and the opponent model stay exactly as they are.
+the default only after it passes the owner's yardstick bar.
+The sweep-43 yardstick (`h0:net=<this file>` vs `h0` = v3, all 16 meta
+decks; results `193f48a`, engine `3742a1b`): main 784 / 1 536 = 0.5104,
+reverse 496 / 1 024 = 0.4844, pooled 1 280 / 2 560 = 0.5000
+[0.4806, 0.5194] = +0.0 Elo [−13.5, +13.5] — promoted under the
+"not worse" bar (pooled ≥ 0.49), not the `better` rule v2 and v3 passed;
+throughput 1.03×. The search, the determinization, and the opponent model
+stay exactly as they are.
 `value=v0` is the hand-written leaf the bot used before learned defaults
 and is byte-identical to that arithmetic. `h0:value=net` (no path) keeps
 the built-in — it is the same as `"h0"`. `net=<path>` overrides the
 built-in (`h0:net=<path>` alone means `h0:value=net,net=<path>`); use
-`net=engine/models/h0-linear-v2.json` for the previous default leaf;
+`net=engine/models/h0-linear-v3.json` for the previous default leaf;
+`net=engine/models/h0-linear-v2.json` for the v2 leaf;
 `net=engine/models/h0-linear-v1.json` for the v1 leaf.
 `net=` with `value=v0` or `value=v1` is a parse error naming both keys
 (`net= requires value=net`). A missing file is a parse error naming the
@@ -1368,7 +1370,7 @@ stored with their **signed** values.
 ## Learned mulligan (keep tables)
 
 The default `h0` uses the built-in `mulligan-v1` table
-(`engine/models/mulligan-v1.json`, embedded like `h0-linear-v3`). `mull=builtin`
+(`engine/models/mulligan-v1.json`, embedded like `h0-linear-v4`). `mull=builtin`
 requests it explicitly; `mull=rule` restores cost ≥ 4 send back.
 `mull=random` explores uniformly. `mull=<path>` loads a JSON keep table at
 parse time (same path rules as `net=`). At the bot's own mulligan the engine
