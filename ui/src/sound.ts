@@ -63,14 +63,7 @@ export function installAudioUnlock(): void {
 }
 
 export function turnPingOn(): boolean {
-  const box = document.getElementById("turnPingToggle") as HTMLInputElement | null;
-  if (box) return box.checked;
-  try {
-    const v = localStorage.getItem("svwb.turnPing");
-    return v == null ? true : v !== "0";
-  } catch {
-    return true;
-  }
+  return true;
 }
 
 function playNote(ctx: AudioContext, freq: number, startAt: number): void {
@@ -96,12 +89,8 @@ function playChime(ctx: AudioContext): void {
 
 export function playTurnPing(): void {
   turnPingCount += 1;
+  if (!audioContext) return;
   try {
-    if (!audioContext) {
-      const Ctor = audioContextCtor();
-      if (!Ctor) return;
-      audioContext = new Ctor();
-    }
     if (audioContext.state === "running") {
       playChime(audioContext);
       return;

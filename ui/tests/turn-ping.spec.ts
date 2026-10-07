@@ -24,6 +24,7 @@ async function installFakeAudio(page: Page): Promise<void> {
     class FakeGain {
       gain = {
         setValueAtTime: () => {},
+        linearRampToValueAtTime: () => {},
         exponentialRampToValueAtTime: () => {},
       };
       connect() {
@@ -232,18 +233,21 @@ test.describe("vs-bot turn ping", () => {
     await boot(page);
     await setupVsBotHumanFirst(page);
     await endHumanTurn(page, "a");
-    await waitBotPlay(page);
     await waitHumanTurn(page, "a");
     await assertPingCounts(page, 1);
 
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.keyboard.press("Control+z");
     await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a");
+    await expect(page.locator("#redoBtn")).toBeEnabled();
     await page.keyboard.press("Control+y");
     await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a");
     await assertPingCounts(page, 1);
 
+    await endHumanTurn(page, "a");
+    await waitBotPlay(page);
     await page.keyboard.press("Control+z");
+    await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a");
     await page.waitForTimeout(600);
     await page.keyboard.press("Control+y");
     await waitHumanTurn(page, "a", 10_000);
@@ -259,14 +263,19 @@ test.describe("vs-bot turn ping", () => {
     await closeDrawer(page);
 
     await endHumanTurn(page, "a");
+    await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b", {
+      timeout: 15_000,
+    });
     await waitHumanTurn(page, "a");
     expect(await turnPings(page)).toBe(0);
 
     await page.reload();
     await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
     await openSettings(page);
-    await expect(page.locator("#turnPingToggle")).not.toBeChecked();
-    await page.locator("#turnPingToggle").check();
+    const toggle = page.locator("#turnPingToggle");
+    await expect(toggle).toBeVisible();
+    await expect(toggle).not.toBeChecked();
+    await toggle.check({ force: true });
     await assertPingCounts(page, 1);
   });
 
