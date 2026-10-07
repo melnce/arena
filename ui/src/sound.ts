@@ -18,7 +18,7 @@ function removeUnlockListeners(listeners: UnlockListener[]): void {
 }
 
 function audioContextCtor(): typeof AudioContext | null {
-  const w = window as Window & { webkitAudioContext?: typeof AudioContext };
+  const w = window as typeof globalThis & { webkitAudioContext?: typeof AudioContext };
   return w.AudioContext ?? w.webkitAudioContext ?? null;
 }
 
