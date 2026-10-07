@@ -72,6 +72,8 @@ export function formatGateLine(gate: GateInfo): string {
       return gate.met ? "Overflow ✓" : "Overflow";
     case "spellboost":
       return `Spellboost ${gate.have}`;
+    case "enterCount":
+      return `${gate.label}: ${gate.have}`;
     default:
       break;
   }
