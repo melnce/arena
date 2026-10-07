@@ -603,6 +603,8 @@ const ITSURUGI: &str = "10854110";
 const CRYSTALSPAWN: &str = "10631110";
 const GOLDEN_KNIGHT: &str = "10423110";
 const BITTERSWEET: &str = "10852310";
+const SWEET_ABOMINATION: &str = "10733110";
+const MAGIC_SEDIMENT: &str = "90031210";
 
 const ITSURUGI_FANFARE: [&str; 2] = [
     "1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.",
@@ -619,6 +621,10 @@ const BITTERSWEET_OPTIONS: [&str; 4] = [
     "2. Restore 2 defense to your leader.",
     "3. Deal 3 damage to a random enemy follower.",
     "4. Gain 4 shadows.",
+];
+const SWEET_ABOMINATION_MODES: [&str; 2] = [
+    "1. Deal 3 damage to all enemy followers.",
+    "2. Draw 2 cards.",
 ];
 
 fn assert_modes_open(st: &arena_engine::State) {
@@ -721,4 +727,58 @@ fn mode_choice_info_none_without_modes_node() {
     let db = load_db();
     let st = started(&db, 5);
     assert_eq!(mode_choice_info(&db, &st), None);
+}
+
+#[test]
+fn mode_choice_info_sweet_abomination_play() {
+    let db = load_db();
+    let mut st = started(&db, 10);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    put_field(&db, &mut st, me, MAGIC_SEDIMENT);
+    st.player_mut(me).earth = 3;
+    give_pp(&mut st, me, 5, 5);
+    play_id(&db, &mut st, me, SWEET_ABOMINATION);
+    assert_modes_open(&st);
+    let info = mode_choice_info(&db, &st).expect("play-time modes");
+    assert_eq!(info.source, SWEET_ABOMINATION);
+    assert_eq!(info.options.as_slice(), SWEET_ABOMINATION_MODES);
+}
+
+#[test]
+fn mode_choice_info_sweet_abomination_evolve() {
+    let db = load_db();
+    let mut st = started(&db, 11);
+    let me = PlayerId::A;
+    skip_to_player_turn(&db, &mut st, me, 5);
+    st.player_mut(me).hand.clear();
+    put_field(&db, &mut st, me, MAGIC_SEDIMENT);
+    st.player_mut(me).earth = 3;
+    st.player_mut(me).ep = 1;
+    give_pp(&mut st, me, 5, 5);
+    play_id(&db, &mut st, me, SWEET_ABOMINATION);
+    assert_modes_open(&st);
+    choose(&db, &mut st, 0);
+    let slot = st
+        .player(me)
+        .field
+        .iter()
+        .position(|c| {
+            c.as_ref()
+                .is_some_and(|c| c.card.as_str() == SWEET_ABOMINATION)
+        })
+        .expect("sweet abomination on field") as u8;
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: Slot(slot),
+            super_evolve: false,
+        },
+    )
+    .expect("evolve sweet abomination");
+    assert_modes_open(&st);
+    let info = mode_choice_info(&db, &st).expect("evolve modes");
+    assert_eq!(info.source, SWEET_ABOMINATION);
+    assert_eq!(info.options.as_slice(), SWEET_ABOMINATION_MODES);
 }

@@ -3,12 +3,18 @@ import { ART, artShot, openSettings } from "./helpers.ts";
 
 const ITSURUGI = "10854110";
 const CRYSTALSPAWN = "10631110";
+const WITCHS_NEW_BREW = "10031210";
+const SWEET_ABOMINATION = "10733110";
 
 const FANFARE_MODES = [
   "1. Deal 4 damage to the enemy leader. Restore 4 defense to your leader.",
   "2. Deal 5 damage to all enemy followers. Recover 1 evolution point.",
 ];
 const EVOLVE_MODES = ["1. Draw 2 cards.", "2. Recover 2 play points."];
+const SWEET_ABOMINATION_MODES = [
+  "1. Deal 3 damage to all enemy followers.",
+  "2. Draw 2 cards.",
+];
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -146,6 +152,25 @@ async function clickMode(page: Page, label: string) {
   }, label);
   await expect(page.locator(".choice-modal")).toBeHidden({ timeout: 5000 });
 }
+
+test("mode labels: sweet abomination play-time earth rite", async ({ page }) => {
+  await boot(page);
+  const deck = await importDeck(page, "sweet-abomination.json", {
+    [WITCHS_NEW_BREW]: 20,
+    [SWEET_ABOMINATION]: 20,
+  });
+  await startGame(page, deck);
+  await confirmMulligans(page);
+  await closeDrawer(page);
+
+  await fastForwardUntilPlayable(page, WITCHS_NEW_BREW);
+  await playCard(page, WITCHS_NEW_BREW);
+  await fastForwardUntilPlayable(page, SWEET_ABOMINATION);
+  await playCard(page, SWEET_ABOMINATION);
+  const playLabels = await modeButtonTexts(page);
+  expect(playLabels).toEqual(SWEET_ABOMINATION_MODES);
+  await artShot(page.locator(".choice-modal"), `${ART}/sweet_abomination_play_mode_labels.png`);
+});
 
 test("mode labels: fanfare then evolve after another play", async ({ page }) => {
   await boot(page);

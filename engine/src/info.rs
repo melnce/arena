@@ -8,14 +8,15 @@ use crate::apply::{
     eval_amount, eval_cond, legal_actions, resolve_choose_options, resolve_select, source_card_id,
 };
 use crate::card::{
-    Ability, Amount, CardKind, Class, Condition, CounterKey, Effect, FieldHasKind, Filter,
-    FilterKind, Mode, NamedCounter, PayResource, Selector, SelectorKind, Side, Tribe, TribeOrList,
-    VarKey, Zone,
+    Ability, Amount, CardId, CardKind, CardSource, Class, Condition, Controller, CounterKey,
+    Effect, FieldHasKind, Filter, FilterKind, Mode, NamedCounter, PayResource, Selector,
+    SelectorKind, Side, Tribe, TribeOrList, VarKey, Zone,
 };
 use crate::db::CardDb;
 use crate::ids::{AttackTarget, PlayerId};
 use crate::state::{
-    CardInstance, ChoiceNode, Phase, PlayForm, SourceRef, State, TargetOpt, WorkFrame,
+    CardInstance, ChoiceNode, PendingKind, Phase, PlayForm, PlayPickStep, SourceRef, State,
+    TargetOpt, WorkFrame,
 };
 use crate::support;
 
@@ -77,12 +78,24 @@ pub struct ModeChoiceInfo {
 /// option's `printed` text for the active `Effect::Choose` (indexed by mode).
 pub fn mode_choice_info(db: &CardDb, state: &State) -> Option<ModeChoiceInfo> {
     let Phase::Choice {
-        node: ChoiceNode::Modes { .. },
+        node: ChoiceNode::Modes { pending, .. },
         ..
     } = &state.phase
     else {
         return None;
     };
+    if pending.kind == PendingKind::PlaySelect {
+        if let Some(play) = &state.pending_play_choices {
+            if let Some(PlayPickStep::Mode(e)) = play.steps.get(play.step_idx) {
+                let opts = resolve_choose_options(db, state, play.source, e)?;
+                let card_id = source_card_id(state, play.source)?;
+                return Some(ModeChoiceInfo {
+                    source: card_id.as_str(),
+                    options: opts.into_iter().map(|o| o.printed).collect(),
+                });
+            }
+        }
+    }
     let WorkFrame::Effects {
         source,
         effects,
@@ -513,8 +526,10 @@ fn collect_board_gates(
     }
     let unevolved = !inst.evolved && !inst.super_evolved;
     gates.retain(|g| {
-        matches!(g.kind.as_str(), "rally" | "combo" | "overflow")
-            || (g.kind == "artifacts" && unevolved)
+        matches!(
+            g.kind.as_str(),
+            "rally" | "combo" | "overflow" | "enterCount"
+        ) || (g.kind == "artifacts" && unevolved)
     });
     for g in &mut gates {
         g.glow = false;
@@ -624,6 +639,28 @@ fn walk_effect(ctx: WalkCtx<'_>, effect: &Effect, gates: &mut Vec<GateInfo>) {
         }
         Effect::Damage { amount, .. } => {
             maybe_push_artifact_x_line(ctx, amount, gates);
+        }
+        Effect::Summon {
+            card: CardSource::Named { named },
+            controller,
+            ..
+        } if source_is_follower(ctx.db, ctx.inst)
+            && card_has_self_enter_count_gate(ctx.db, *named) =>
+        {
+            let need = enter_count_threshold(ctx.db, *named).unwrap_or(0);
+            let side = match controller {
+                Some(Controller::Opponent) => ctx.player.opponent(),
+                _ => ctx.player,
+            };
+            let have = ctx
+                .state
+                .player(side)
+                .enter_counts
+                .get(named)
+                .copied()
+                .unwrap_or(0);
+            let label = enter_count_summon_label(ctx.db, *named);
+            push_gate(gates, "enterCount", &label, need, have, have >= need, false);
         }
         _ => {}
     }
@@ -1193,6 +1230,158 @@ fn filter_is_artifact_follower(filter: &Filter) -> bool {
         Some(TribeOrList::Many(ts)) => ts.contains(&Tribe::Artifact),
         _ => false,
     }
+}
+
+fn source_is_follower(db: &CardDb, inst: &CardInstance) -> bool {
+    db.card(inst.card)
+        .map(|c| c.kind() == CardKind::Follower)
+        .unwrap_or(false)
+}
+
+fn enter_count_threshold(db: &CardDb, card_id: CardId) -> Option<i32> {
+    let Ok(card) = db.card(card_id) else {
+        return None;
+    };
+    for ability in card.abilities() {
+        if let Some(n) = enter_count_at_least_threshold(card_id, ability.when_cond()) {
+            return Some(n);
+        }
+    }
+    for mode in card.modes() {
+        match mode {
+            Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => {
+                for effect in effects {
+                    if let Some(n) = enter_count_at_least_threshold(card_id, effect.when_cond()) {
+                        return Some(n);
+                    }
+                }
+            }
+            Mode::Crystallize { abilities, .. } => {
+                if let Some(abs) = abilities {
+                    for a in abs {
+                        if let Some(n) = enter_count_at_least_threshold(card_id, a.when_cond()) {
+                            return Some(n);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+fn enter_count_at_least_threshold(card_id: CardId, cond: Option<&Condition>) -> Option<i32> {
+    match cond {
+        Some(Condition::EnterCountAtLeast {
+            enter_count_at_least,
+        }) if enter_count_at_least.card == card_id => amount_int(&enter_count_at_least.n),
+        Some(Condition::All { all }) => all
+            .iter()
+            .find_map(|c| enter_count_at_least_threshold(card_id, Some(c))),
+        Some(Condition::Any { any }) => any
+            .iter()
+            .find_map(|c| enter_count_at_least_threshold(card_id, Some(c))),
+        Some(Condition::Not { not }) => enter_count_at_least_threshold(card_id, Some(not)),
+        _ => None,
+    }
+}
+
+fn card_has_self_enter_count_gate(db: &CardDb, card_id: CardId) -> bool {
+    let Ok(card) = db.card(card_id) else {
+        return false;
+    };
+    for ability in card.abilities() {
+        if condition_targets_self_enter_count(card_id, ability.when_cond()) {
+            return true;
+        }
+        if effects_have_self_enter_count(card_id, ability.effects()) {
+            return true;
+        }
+    }
+    for mode in card.modes() {
+        match mode {
+            Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => {
+                if effects_have_self_enter_count(card_id, effects) {
+                    return true;
+                }
+            }
+            Mode::Crystallize { abilities, .. } => {
+                if let Some(abs) = abilities {
+                    for a in abs {
+                        if condition_targets_self_enter_count(card_id, a.when_cond())
+                            || effects_have_self_enter_count(card_id, a.effects())
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+fn condition_targets_self_enter_count(card_id: CardId, cond: Option<&Condition>) -> bool {
+    match cond {
+        Some(Condition::EnterCountAtLeast {
+            enter_count_at_least,
+        }) => enter_count_at_least.card == card_id,
+        Some(Condition::All { all }) => all
+            .iter()
+            .any(|c| condition_targets_self_enter_count(card_id, Some(c))),
+        Some(Condition::Any { any }) => any
+            .iter()
+            .any(|c| condition_targets_self_enter_count(card_id, Some(c))),
+        Some(Condition::Not { not }) => condition_targets_self_enter_count(card_id, Some(not)),
+        _ => false,
+    }
+}
+
+fn effects_have_self_enter_count(card_id: CardId, effects: &[Effect]) -> bool {
+    effects
+        .iter()
+        .any(|e| effect_has_self_enter_count(card_id, e))
+}
+
+fn effect_has_self_enter_count(card_id: CardId, effect: &Effect) -> bool {
+    if condition_targets_self_enter_count(card_id, effect.when_cond()) {
+        return true;
+    }
+    match effect {
+        Effect::Pay { effects, .. }
+        | Effect::Seq { effects, .. }
+        | Effect::Repeat { effects, .. } => effects_have_self_enter_count(card_id, effects),
+        Effect::If {
+            cond,
+            then,
+            else_effects,
+            ..
+        } => {
+            condition_targets_self_enter_count(card_id, Some(cond))
+                || effects_have_self_enter_count(card_id, then)
+                || else_effects
+                    .as_ref()
+                    .is_some_and(|els| effects_have_self_enter_count(card_id, els))
+        }
+        Effect::Choose {
+            options: Some(opts),
+            ..
+        } => opts
+            .iter()
+            .any(|o| effects_have_self_enter_count(card_id, &o.effects)),
+        Effect::Sequence { steps, .. } => steps
+            .iter()
+            .any(|s| effects_have_self_enter_count(card_id, &s.effects)),
+        _ => false,
+    }
+}
+
+fn enter_count_summon_label(db: &CardDb, card_id: CardId) -> String {
+    let name = match db.card(card_id) {
+        Ok(c) => c.name().to_string(),
+        Err(_) => card_id.to_string(),
+    };
+    format!("{name}s entered")
 }
 
 fn maybe_push_artifact_x_line(ctx: WalkCtx<'_>, amount: &Amount, gates: &mut Vec<GateInfo>) {
