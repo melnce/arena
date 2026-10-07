@@ -377,10 +377,7 @@ fn v3_zero_stack_matches_h0_linear_v3() {
             },
         )
         .expect("game");
-        let mut a = match arena_engine::AnyPolicy::parse_spec("h0").expect("h0") {
-            arena_engine::AnyPolicy::H0(h) => h,
-            other => panic!("{other:?}"),
-        };
+        let mut a = parse_h0_v3("h0");
         let mut b = parse_h0_v2(&stacked_spec);
         let mut actions = 0u32;
         while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) && actions < 500 {
