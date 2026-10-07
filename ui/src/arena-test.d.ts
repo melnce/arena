@@ -70,6 +70,8 @@ declare global {
         hiddenAt: number;
       }>;
       spotlightEnqueue(events: unknown[]): void;
+      turnPings(): number;
+      playTurnPing(): void;
     };
   }
 }

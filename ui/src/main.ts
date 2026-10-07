@@ -43,6 +43,7 @@ import {
   resetSpotlightSession,
   spotlightLog,
 } from "./spotlight.ts";
+import { installAudioUnlock, playTurnPing, turnPingOn, turnPings } from "./sound.ts";
 import { readShareParams, writeShareParams } from "./share.ts";
 import type {
   EngineEvent,
@@ -261,6 +262,8 @@ function exposeArena(): void {
       if (!session) throw new Error("no session");
       enqueueBotSpotlights(events as EngineEvent[], session.cfg.humanSide);
     },
+    turnPings: () => turnPings(),
+    playTurnPing: () => playTurnPing(),
     mountNamedCounter: (vars) => {
       const host = document.getElementById("blueBoard") ?? document.body;
       const inst = {
@@ -729,6 +732,14 @@ async function probeLocalBot(): Promise<void> {
   refreshBotBackendBadge();
 }
 
+function botEndedTurnInEvents(events: EngineEvent[], humanSide: PlayerId): boolean {
+  const botSide: PlayerId = humanSide === "a" ? "b" : "a";
+  return events.some((ev) => {
+    const te = ev.turn_end as { player?: string } | undefined;
+    return te?.player === botSide;
+  });
+}
+
 function shouldUseLocalBot(s: Session): boolean {
   if (localBotQueryOff() || !localBotToggleOn() || !localBot || localBotGameError) return false;
   const policy = botPolicyFor(s, s.game.acting() as PlayerId);
@@ -755,6 +766,7 @@ async function maybeBots(): Promise<void> {
     // vs-bot — one engine action per beat so the human can follow.
     let guard = 0;
     let staleRuns = 0;
+    let botEndedTurn = false;
     while (session === s && !isHumanActing(s) && s.game.phase() !== "terminal" && guard < 80) {
       const useLocal = shouldUseLocalBot(s);
       if (useLocal) {
@@ -777,6 +789,7 @@ async function maybeBots(): Promise<void> {
             events = botStep(s);
             staleRuns = 0;
             showCombat(events);
+            if (botEndedTurnInEvents(events, s.cfg.humanSide)) botEndedTurn = true;
             if (session === s && spotlightEpoch === epoch) {
               enqueueBotSpotlights(events, s.cfg.humanSide);
             }
@@ -794,12 +807,23 @@ async function maybeBots(): Promise<void> {
       }
       guard += 1;
       showCombat(events);
+      if (botEndedTurnInEvents(events, s.cfg.humanSide)) botEndedTurn = true;
       if (session === s && spotlightEpoch === epoch) {
         enqueueBotSpotlights(events, s.cfg.humanSide);
       }
       await new Promise<void>((r) => window.setTimeout(r, 280));
     }
     if (session === s) paint();
+    if (
+      session === s &&
+      botEndedTurn &&
+      s.cfg.mode === "vs-bot" &&
+      isHumanActing(s) &&
+      s.game.phase() !== "terminal" &&
+      turnPingOn()
+    ) {
+      playTurnPing();
+    }
   } finally {
     if (botLoopSession === s) botLoopSession = null;
   }
@@ -1328,15 +1352,18 @@ function restorePersistedToggles(): void {
   const bottom = localStorage.getItem("svwb.activeOnBottom") === "1";
   const fct = localStorage.getItem("svwb.floatingCombatText");
   const spotlight = localStorage.getItem("svwb.botPlaySpotlight");
+  const turnPing = localStorage.getItem("svwb.turnPing");
   const localBotStored = localStorage.getItem("svwb.localBot");
   const bottomBox = byId<HTMLInputElement>("activeOnBottomToggle");
   const fctBox = byId<HTMLInputElement>("floatingCombatTextToggle");
   const spotlightBox = byId<HTMLInputElement>("botPlaySpotlightToggle");
+  const turnPingBox = byId<HTMLInputElement>("turnPingToggle");
   const localBotBox = byId<HTMLInputElement>("localBotToggle");
   if (bottomBox) bottomBox.checked = bottom;
   document.body.classList.toggle("active-on-bottom", bottom);
   if (fctBox) fctBox.checked = fct == null ? true : fct !== "0";
   if (spotlightBox) spotlightBox.checked = spotlight == null ? true : spotlight !== "0";
+  if (turnPingBox) turnPingBox.checked = turnPing == null ? true : turnPing !== "0";
   if (localBotBox) localBotBox.checked = localBotStored == null ? true : localBotStored !== "0";
   const speedRaw = localStorage.getItem("svwb.watchSpeed");
   const sl = byId<HTMLInputElement>("watchSpeed");
@@ -1348,6 +1375,7 @@ function restorePersistedToggles(): void {
 }
 
 async function boot(): Promise<void> {
+  installAudioUnlock();
   restorePersistedToggles();
   await init();
   await loadCatalog();
@@ -1418,6 +1446,15 @@ async function boot(): Promise<void> {
     const on = (e.target as HTMLInputElement).checked;
     localStorage.setItem("svwb.botPlaySpotlight", on ? "1" : "0");
     if (!on) clearBotSpotlight();
+  });
+  byId("turnPingToggle")?.addEventListener("change", (e) => {
+    const on = (e.target as HTMLInputElement).checked;
+    try {
+      localStorage.setItem("svwb.turnPing", on ? "1" : "0");
+    } catch {
+      /* quota / private mode */
+    }
+    if (on) playTurnPing();
   });
   byId("localBotToggle")?.addEventListener("change", (e) => {
     const on = (e.target as HTMLInputElement).checked;

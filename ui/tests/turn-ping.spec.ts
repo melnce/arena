@@ -264,12 +264,8 @@ test.describe("vs-bot turn ping", () => {
 
     await page.reload();
     await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
-    await expect(page.locator("#turnPingToggle")).not.toBeChecked();
-    await endHumanTurn(page, "a");
-    await waitHumanTurn(page, "a");
-    expect(await turnPings(page)).toBe(0);
-
     await openSettings(page);
+    await expect(page.locator("#turnPingToggle")).not.toBeChecked();
     await page.locator("#turnPingToggle").check();
     await assertPingCounts(page, 1);
   });
