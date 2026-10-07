@@ -259,6 +259,14 @@ test.describe("vs-bot turn ping", () => {
     test.setTimeout(120_000);
     await boot(page);
     await setupVsBotHumanFirst(page);
+
+    await endHumanTurn(page, "a");
+    await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b", {
+      timeout: 15_000,
+    });
+    await waitHumanTurn(page, "a");
+    await assertPingCounts(page, 1);
+
     await openSettings(page);
     await page.locator("#turnPingToggle").uncheck();
     await closeDrawer(page);
@@ -268,7 +276,7 @@ test.describe("vs-bot turn ping", () => {
       timeout: 15_000,
     });
     await waitHumanTurn(page, "a");
-    expect(await turnPings(page)).toBe(0);
+    await expect.poll(() => turnPings(page)).toBe(1);
 
     await page.reload();
     await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
