@@ -65,11 +65,34 @@ Training: `py/train_value.py --model linear --target outcome --holdout 0 --epoch
 
 sha256 `926ce6021b27f94a49da965d9b7cd3b1b04283acf92d0c372a76b28b85e117b2`
 
-This is the default H0 leaf since this PR. Reach the previous leaf with `h0:net=engine/models/h0-linear-v2.json`.
+This was the default H0 leaf from the `h0-linear-v3` default PR until `h0-linear-v4` shipped. Reach it with `h0:net=engine/models/h0-linear-v3.json`; the previous leaf with `h0:net=engine/models/h0-linear-v2.json`.
+
+# `h0-linear-v4`
+
+The `h0-linear-v4` value model — linear on the 961 standardized features (encoding 3: v3's 567 encoding-2 features plus crest identity, amulet countdowns, enter counts, and the cemetery for both players) plus one per-card weight table per zone over a 245-id vocab; `scale` 60. Thirteen zones: v3's five unchanged, eight stacked rows for the new encoding-3 inputs. The format is documented in `docs/engine-api.md` "Learned value".
+
+## Provenance
+
+Data: `py/iterate.py --tag net10 --encoding 3 --seed 22 --bot h0 --games 48 --only data` (24 576 self-play games, 2 096 983 rows).
+
+Training: `py/train_value.py --data results/net10/data-e0 results/net10/data-e10 --model linear --target outcome --stack-on engine/models/h0-linear-v3.json --seed 1` with penalties crests `1e-6`, amulets `0.1`, entered `1`, cemetery `1` (deck controls during the fit only; not in the file). `trained_on.stack_on_sha256` `c2621ef8e0ea2e98663ca0661b44a3fa4ff59b3b93f807d3f48c04043756a451` is v3's file with CRLF line endings (the owner's Windows checkout); the frozen weights equal v3's exactly.
+
+## Yardstick
+
+`h0:net=<this file>` vs `h0` (= v3), all 16 meta decks (sweep 43, engine `3742a1b`, results `193f48a`):
+
+- main 784 / 1 536 = 0.5104, reverse 496 / 1 024 = 0.4844;
+- **pooled 1 280 / 2 560 = 0.5000 [0.4806, 0.5194], +0.0 Elo [−13.5, +13.5]**;
+- early stop settled "pooled ≥ 0.49";
+- throughput 1.03× (games a little shorter; per action 1.00×).
+
+sha256 `76685509ff4aef49e34ae37793385d40b477d0756b52141299300f4cb85d8c95`
+
+Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
 
 ## Optional race block
 
 Linear models may include an optional `"race"` block (twelve HP / board-attack
 inputs; see `docs/engine-api.md` "Optional race block"). The committed defaults
-(`h0-linear-v1` … `h0-linear-v3`) have no race block. Train one with
+(`h0-linear-v1` … `h0-linear-v4`) have no race block. Train one with
 `py/train_value.py --race` on a linear export; gate in play comes after merge.
