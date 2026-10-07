@@ -145,7 +145,7 @@ export function render(s: Session, hooks: RenderHooks): void {
   renderMulligan(phase, acting, hooks);
   renderEndTurn(full, legal, phase, hooks);
   renderBonus(full, legal);
-  renderHistory(s);
+  renderHistory(s, full);
   renderChoice(s, full, legal, hooks);
   renderTerminal(full, hooks);
   renderEventLog(s);
@@ -735,11 +735,17 @@ function renderBonus(full: FullState, legal: NeutralAction[]): void {
   btn.dataset.player = second;
 }
 
-function renderHistory(s: Session): void {
+function renderHistory(s: Session, full: FullState): void {
   fillHist("bluePlayedList", s.played.a);
   fillHist("redPlayedList", s.played.b);
-  fillHist("blueDestroyedList", s.destroyed.a);
-  fillHist("redDestroyedList", s.destroyed.b);
+  fillHist(
+    "blueDestroyedList",
+    full.players.a.destroyed_history.map((r) => r.card),
+  );
+  fillHist(
+    "redDestroyedList",
+    full.players.b.destroyed_history.map((r) => r.card),
+  );
 }
 
 function fillHist(id: string, ids: string[]): void {
