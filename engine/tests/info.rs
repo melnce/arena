@@ -763,7 +763,10 @@ fn mode_choice_info_sweet_abomination_evolve() {
         .player(me)
         .field
         .iter()
-        .position(|c| c.as_ref().is_some_and(|c| c.card.as_str() == SWEET_ABOMINATION))
+        .position(|c| {
+            c.as_ref()
+                .is_some_and(|c| c.card.as_str() == SWEET_ABOMINATION)
+        })
         .expect("sweet abomination on field") as u8;
     apply(
         &db,
