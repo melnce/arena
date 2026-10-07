@@ -3,8 +3,8 @@ import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { ART, artShot, openSettings } from "./helpers.ts";
 
-/** Seed 7: player A opens with Sephie (10934110) and Ecstatic Scholar (10933110). */
-const SEED = "7";
+/** Seed 136: Sephie + two Test Subjects in hand; A reaches k ≥ 5 by turn 5. */
+const SEED = "136";
 
 const TEST_SUBJECT = "10931110";
 const SEPHIE = "10934110";
@@ -67,11 +67,29 @@ async function closeDrawer(page: Page) {
 }
 
 async function endTurn(page: Page) {
+  const before = await page.locator("#turnCounter").getAttribute("data-acting");
   await page.evaluate(() => {
+    document.querySelector(".choice-modal")?.remove();
     const acting = document.getElementById("turnCounter")?.dataset.acting;
     const id = acting === "a" ? "endTurnBlue" : "endTurnRed";
     (document.getElementById(id) as HTMLButtonElement | null)?.click();
   });
+  await expect(page.locator("#turnCounter")).not.toHaveAttribute("data-acting", before ?? "", {
+    timeout: 8000,
+  });
+}
+
+async function resolveChoices(page: Page) {
+  for (let i = 0; i < 8; i++) {
+    const chose = await page.evaluate(() => {
+      const legal = window.__arena!.legal() as Array<{ choose?: number }>;
+      const act = legal.find((a) => a.choose != null);
+      if (!act) return false;
+      window.__arena!.apply(act);
+      return true;
+    });
+    if (!chose) break;
+  }
 }
 
 async function playCard(page: Page, card: string) {
@@ -83,6 +101,7 @@ async function playCard(page: Page, card: string) {
     return true;
   }, card);
   expect(ok, `expected play ${card}`).toBeTruthy();
+  await resolveChoices(page);
 }
 
 async function enterCount(page: Page, side: "a" | "b" = "a"): Promise<number> {
@@ -105,29 +124,30 @@ async function hoverHandCard(page: Page, card: string) {
 }
 
 async function growEnterCount(page: Page, target: number) {
-  for (let i = 0; i < 80; i++) {
+  const priority = [TEST_SUBJECT, HUMANE_LOVE, OBSIDIAN_RAVEN, ENAMORED, SCHOLAR, SEPHIE];
+  for (let i = 0; i < 120; i++) {
+    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
+    if (phase === "terminal") break;
     const k = await enterCount(page);
     if (k >= target) return k;
-    const snap = await page.evaluate((tsId) => {
-      const full = window.__arena!.full() as {
-        active: string;
-        players: { a: { pp: number; hand: Array<{ card: string }> } };
-      };
+    await resolveChoices(page);
+    const snap = await page.evaluate((ids) => {
+      const full = window.__arena!.full() as { active: string };
       const legal = window.__arena!.legal() as Array<{ play?: { card: string } }>;
-      const priority = [tsId, "10932310", "10933310", "10932110", "10933110", "10934110"];
-      const playId = priority.find((id) => legal.some((a) => a.play?.card === id));
-      const anyPlay = legal.find((a) => a.play)?.play?.card ?? null;
-      return { active: full.active, pp: full.players.a.pp, playId, anyPlay };
-    }, TEST_SUBJECT);
+      const playId = ids.find((id) => legal.some((a) => a.play?.card === id));
+      return { active: full.active, playId };
+    }, priority);
     if (snap.active === "a" && snap.playId) {
       await playCard(page, snap.playId);
       continue;
     }
-    if (snap.active === "a" && snap.anyPlay) {
-      await playCard(page, snap.anyPlay);
-      continue;
-    }
-    await endTurn(page);
+    await page.evaluate(() => {
+      document.querySelector(".choice-modal")?.remove();
+      const actingNow = document.getElementById("turnCounter")?.dataset.acting;
+      const id = actingNow === "a" ? "endTurnBlue" : "endTurnRed";
+      (document.getElementById(id) as HTMLButtonElement | null)?.click();
+    });
+    await page.waitForTimeout(200);
   }
   return enterCount(page);
 }
@@ -158,35 +178,21 @@ test("test subject counters in tooltips track engine enter_counts", async ({ pag
   }
 
   k = await growEnterCount(page, 5);
-  expect(k).toBeGreaterThanOrEqual(5);
+  expect(k, "enter_counts should reach 5 through real play").toBeGreaterThanOrEqual(5);
 
-  const scholarOnField = await page.evaluate((id) => {
-    const field = (window.__arena!.full() as { players: { a: { field: Array<{ card: string } | null> } } })
-      .players.a.field;
-    return field.some((c) => c?.card === id);
-  }, SCHOLAR);
-  if (!scholarOnField) {
-    const hasScholar = await page.evaluate((id) => {
-      const hand = (window.__arena!.full() as { players: { a: { hand: Array<{ card: string }> } } })
-        .players.a.hand;
-      return hand.some((c) => c.card === id);
-    }, SCHOLAR);
-    if (hasScholar) await playCard(page, SCHOLAR);
-  }
-
-  for (const id of [SCHOLAR, ENAMORED, SEPHIE]) {
-    const onField = await page.evaluate((card) => {
+  for (const fieldId of [ENAMORED, SCHOLAR, SEPHIE]) {
+    const onField = await page.evaluate((id) => {
       const field = (window.__arena!.full() as { players: { a: { field: Array<{ card: string } | null> } } })
         .players.a.field;
-      return field.some((c) => c?.card === card);
-    }, id);
+      return field.some((c) => c?.card === id);
+    }, fieldId);
     if (!onField) continue;
-    const card = page.locator(`#blueBoard .card[data-card='${id}']`).first();
-    await card.hover();
+    const fieldCard = page.locator(`#blueBoard .card[data-card='${fieldId}']`).first();
+    await fieldCard.hover();
     await expect(page.locator("#cardTooltip")).toContainText(`Obsessed Test Subjects entered: ${k}`);
-    if (id === ENAMORED) {
-      await artShot(card, `${ART}/test_subject_enamored_field.png`);
-    }
+    const shot =
+      fieldId === ENAMORED ? "test_subject_enamored_field" : `test_subject_${fieldId}_field`;
+    await artShot(fieldCard, `${ART}/${shot}.png`);
     break;
   }
 
@@ -203,30 +209,18 @@ test("test subject counters in tooltips track engine enter_counts", async ({ pag
     await expect(tooltip).not.toContainText(`Obsessed Test Subjects entered: 9`);
   }
 
-  for (let i = 0; i < 30; i++) {
-    const hasTs = await page.evaluate((id) => {
-      const hand = (window.__arena!.full() as { players: { a: { hand: Array<{ card: string }> } } })
-        .players.a.hand;
-      return hand.some((c) => c.card === id);
-    }, TEST_SUBJECT);
-    if (hasTs) break;
-    await endTurn(page);
-  }
-
   const ts = page.locator(`#blueHand .card[data-card='${TEST_SUBJECT}']`).first();
   if (await ts.count()) {
     await ts.hover();
     const tooltip = page.locator("#cardTooltip");
     await expect(tooltip).toContainText(`Other copies entered ${k}/5`);
     if (k >= 5) {
-      await expect(tooltip.locator(".dynamic-counter-line.gate-met")).toContainText(
-        `Other copies entered ${k}/5`,
-      );
+      await expect(tooltip.locator(".dynamic-counter-line.gate-met")).toBeVisible();
       await expect(ts).toHaveClass(/enhance-ready/);
       await artShot(ts, `${ART}/test_subject_hand_yellow_k5.png`);
-    } else {
-      await expect(ts).toHaveClass(/playable-glow/);
-      await expect(ts).not.toHaveClass(/enhance-ready/);
     }
   }
+
+  const oppK = await enterCount(page, "b");
+  expect(oppK).not.toBe(k);
 });

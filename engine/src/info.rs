@@ -457,15 +457,7 @@ fn collect_hand_gates(
             walk_ability(ctx_info, a, &mut extra);
             for g in extra {
                 if g.kind == "artifacts" || g.kind == "enterCount" {
-                    push_gate(
-                        &mut gates,
-                        &g.kind,
-                        &g.label,
-                        g.need,
-                        g.have,
-                        g.met,
-                        false,
-                    );
+                    push_gate(&mut gates, &g.kind, &g.label, g.need, g.have, g.met, false);
                 }
             }
         }
@@ -521,8 +513,10 @@ fn collect_board_gates(
     }
     let unevolved = !inst.evolved && !inst.super_evolved;
     gates.retain(|g| {
-        matches!(g.kind.as_str(), "rally" | "combo" | "overflow" | "enterCount")
-            || (g.kind == "artifacts" && unevolved)
+        matches!(
+            g.kind.as_str(),
+            "rally" | "combo" | "overflow" | "enterCount"
+        ) || (g.kind == "artifacts" && unevolved)
     });
     for g in &mut gates {
         g.glow = false;
@@ -637,22 +631,20 @@ fn walk_effect(ctx: WalkCtx<'_>, effect: &Effect, gates: &mut Vec<GateInfo>) {
             card: CardSource::Named { named },
             controller,
             ..
-        } => {
-            if card_has_self_enter_count_gate(ctx.db, *named) {
-                let side = match controller {
-                    Some(Controller::Opponent) => ctx.player.opponent(),
-                    _ => ctx.player,
-                };
-                let have = ctx
-                    .state
-                    .player(side)
-                    .enter_counts
-                    .get(named)
-                    .copied()
-                    .unwrap_or(0);
-                let label = enter_count_summon_label(ctx.db, *named);
-                push_gate(gates, "enterCount", &label, 0, have, false, false);
-            }
+        } if card_has_self_enter_count_gate(ctx.db, *named) => {
+            let side = match controller {
+                Some(Controller::Opponent) => ctx.player.opponent(),
+                _ => ctx.player,
+            };
+            let have = ctx
+                .state
+                .player(side)
+                .enter_counts
+                .get(named)
+                .copied()
+                .unwrap_or(0);
+            let label = enter_count_summon_label(ctx.db, *named);
+            push_gate(gates, "enterCount", &label, 0, have, false, false);
         }
         _ => {}
     }
@@ -1258,9 +1250,9 @@ fn card_has_self_enter_count_gate(db: &CardDb, card_id: CardId) -> bool {
 
 fn condition_targets_self_enter_count(card_id: CardId, cond: Option<&Condition>) -> bool {
     match cond {
-        Some(Condition::EnterCountAtLeast { enter_count_at_least }) => {
-            enter_count_at_least.card == card_id
-        }
+        Some(Condition::EnterCountAtLeast {
+            enter_count_at_least,
+        }) => enter_count_at_least.card == card_id,
         Some(Condition::All { all }) => all
             .iter()
             .any(|c| condition_targets_self_enter_count(card_id, Some(c))),
@@ -1273,7 +1265,9 @@ fn condition_targets_self_enter_count(card_id: CardId, cond: Option<&Condition>)
 }
 
 fn effects_have_self_enter_count(card_id: CardId, effects: &[Effect]) -> bool {
-    effects.iter().any(|e| effect_has_self_enter_count(card_id, e))
+    effects
+        .iter()
+        .any(|e| effect_has_self_enter_count(card_id, e))
 }
 
 fn effect_has_self_enter_count(card_id: CardId, effect: &Effect) -> bool {
