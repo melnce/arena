@@ -238,7 +238,8 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | Optional set badge on the row (muted `#7a8494` if out of rotation) (code-read) | `src/ui/render.ts:494-503` | `ui/src/render.ts:655-661`; `ui/index.html` `.hist-set` | ported | 11px `Set N` in `#9aa3b2` / `#7a8494` (older). |
 | Hover a row: 198px card-art preview follows the cursor (+18px, clamped) (code-read) | `src/ui/render.ts:534-580`; `index.html:144-147` | `ui/src/render.ts:671-705`; `#historyImgPreview` | ported | 198px art follows the cursor (+18px, clamped 12px). `#0c0e12`, 10px radius, `0 8px 18px`. |
 | Rows are not clickable (hover only) (code-read) | (hover only) | (not clickable) | ported | 
-| Destroyed list is **that side’s lost cards**, not “destroyed by” (code-read) | `src/ui/render.ts:205-211` (`players.*.destroyedHistory`) | `ui/src/session.ts:163-189` | ported | Owner is the side that held the card on the board before the destroy event. | 
+| Destroyed list is **that side’s lost cards**, not “destroyed by” (code-read) | `src/ui/render.ts:205-211` (`players.*.destroyedHistory`) | `ui/src/render.ts:738-748` (`full().players.*.destroyed_history`) | ported | Source is the engine’s per-owner destroyed record (`destroyed_history`), not client-side destroy-event guessing. |
+| F7 / F8 restore keeps Played, Destroyed, ply, and event-log prefix (code-read) | — | `ui/src/session.ts:restoreCheckpoint` resets `frozen` with checkpoint derived state | ported | After restore or reroll, the next action rebuilds from the checkpoint prefix instead of dropping pre-checkpoint history. |
 
 ---
 

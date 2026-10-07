@@ -23,13 +23,10 @@ export function lastLocalBotStepMeta(): LocalBotStepMeta {
 /** Ring limit — same as the old practice tool. */
 export const HISTORY_LIMIT = 200;
 
-export type DestroyedEntry = { card: string; owner: PlayerId };
-
 export type HistStep = {
   before: Game;
   action: NeutralAction;
   events: EngineEvent[];
-  destroyed: DestroyedEntry[];
   human: boolean;
   botSeqBefore: number;
 };
@@ -38,7 +35,6 @@ export type FutureStep = {
   after: Game;
   action: NeutralAction;
   events: EngineEvent[];
-  destroyed: DestroyedEntry[];
   human: boolean;
   botSeqBefore: number;
 };
@@ -51,7 +47,6 @@ export type Session = {
   actions: LogStep[];
   events: EngineEvent[];
   played: { a: string[]; b: string[] };
-  destroyed: { a: string[]; b: string[] };
   ply: number;
   botSeq: number;
   rerolls: number;
@@ -60,7 +55,6 @@ export type Session = {
     actions: LogStep[];
     events: EngineEvent[];
     played: { a: string[]; b: string[] };
-    destroyed: { a: string[]; b: string[] };
     ply: number;
     botSeq: number;
     turn: number;
@@ -70,7 +64,6 @@ export type Session = {
   frozen: {
     events: EngineEvent[];
     played: { a: string[]; b: string[] };
-    destroyed: { a: string[]; b: string[] };
     ply: number;
   };
 };
@@ -89,14 +82,13 @@ export function createSession(cfg: SessionConfig): Session {
     actions: [],
     events: [],
     played: { a: [], b: [] },
-    destroyed: { a: [], b: [] },
     ply: 0,
     botSeq: 0,
     rerolls: 0,
     checkpoint: null,
     mulliganSwap: [false, false, false, false],
     suppressFloater: false,
-    frozen: { events: [], played: { a: [], b: [] }, destroyed: { a: [], b: [] }, ply: 0 },
+    frozen: { events: [], played: { a: [], b: [] }, ply: 0 },
   };
 }
 
@@ -133,7 +125,7 @@ function trimPast(s: Session): void {
   while (s.past.length > HISTORY_LIMIT) {
     const dropped = s.past.shift();
     if (!dropped) continue;
-    ingestEvents(s.frozen, dropped.events, dropped.destroyed);
+    ingestEvents(s.frozen, dropped.events);
     dropped.before.free();
   }
 }
@@ -149,8 +141,7 @@ export function applyAction(
   try {
     const raw = s.game.apply(JSON.stringify(action));
     const events = JSON.parse(raw) as EngineEvent[];
-    const destroyed = ownersOfDestroyed(before, events);
-    s.past.push({ before, action, events, destroyed, human, botSeqBefore });
+    s.past.push({ before, action, events, human, botSeqBefore });
     clearFuture(s);
     s.actions.push(action);
     trimPast(s);
@@ -165,49 +156,10 @@ export function applyAction(
 type Derived = {
   events: EngineEvent[];
   played: { a: string[]; b: string[] };
-  destroyed: { a: string[]; b: string[] };
   ply: number;
 };
 
-function ownersOfDestroyed(before: Game, events: EngineEvent[]): DestroyedEntry[] {
-  let full: FullState | null = null;
-  try {
-    full = JSON.parse(before.full()) as FullState;
-  } catch {
-    full = null;
-  }
-  const used = new Set<string>();
-  const out: DestroyedEntry[] = [];
-  for (const ev of events) {
-    if (!("destroy" in ev)) continue;
-    const d = ev.destroy as { card: string; slot?: number };
-    let owner: PlayerId | null = null;
-    if (full && typeof d.slot === "number") {
-      for (const p of ["a", "b"] as PlayerId[]) {
-        const key = `${p}:${d.slot}:${d.card}`;
-        if (used.has(key)) continue;
-        const inst = full.players[p].field[d.slot];
-        if (inst && inst.card === d.card) {
-          owner = p;
-          used.add(key);
-          break;
-        }
-      }
-    }
-    if (!owner && full) {
-      for (const p of ["a", "b"] as PlayerId[]) {
-        if (full.players[p].field.some((c) => c && c.card === d.card)) {
-          owner = p;
-          break;
-        }
-      }
-    }
-    out.push({ card: d.card, owner: owner ?? "a" });
-  }
-  return out;
-}
-
-function ingestEvents(into: Derived, events: EngineEvent[], destroyed: DestroyedEntry[]): void {
+function ingestEvents(into: Derived, events: EngineEvent[]): void {
   for (const ev of events) {
     into.events.push(ev);
     if ("play" in ev) {
@@ -216,18 +168,14 @@ function ingestEvents(into: Derived, events: EngineEvent[], destroyed: Destroyed
     }
     if ("turn_start" in ev) into.ply += 1;
   }
-  for (const d of destroyed) {
-    into.destroyed[d.owner].push(d.card);
-  }
 }
 
-/** Rebuild played / destroyed / ply / event log from the frozen prefix + remaining past. */
+/** Rebuild played / ply / event log from the frozen prefix + remaining past. */
 function rebuildDerived(s: Session): void {
   s.played = { a: s.frozen.played.a.slice(), b: s.frozen.played.b.slice() };
-  s.destroyed = { a: s.frozen.destroyed.a.slice(), b: s.frozen.destroyed.b.slice() };
   s.events = s.frozen.events.slice();
   s.ply = s.frozen.ply;
-  for (const step of s.past) ingestEvents(s, step.events, step.destroyed);
+  for (const step of s.past) ingestEvents(s, step.events);
 }
 
 function undoOne(s: Session): boolean {
@@ -237,7 +185,6 @@ function undoOne(s: Session): boolean {
     after: s.game,
     action: step.action,
     events: step.events,
-    destroyed: step.destroyed,
     human: step.human,
     botSeqBefore: step.botSeqBefore,
   });
@@ -256,7 +203,6 @@ function redoOne(s: Session): boolean {
     before: s.game,
     action: item.action,
     events: item.events,
-    destroyed: item.destroyed,
     human: item.human,
     botSeqBefore: item.botSeqBefore,
   });
@@ -327,7 +273,6 @@ export function setCheckpoint(s: Session): void {
     actions: s.actions.slice(),
     events: s.events.slice(),
     played: { a: s.played.a.slice(), b: s.played.b.slice() },
-    destroyed: { a: s.destroyed.a.slice(), b: s.destroyed.b.slice() },
     ply: s.ply,
     botSeq: s.botSeq,
     turn: s.game.turn(),
@@ -345,12 +290,13 @@ export function restoreCheckpoint(s: Session): boolean {
   s.actions = s.checkpoint.actions.slice();
   s.events = s.checkpoint.events.slice();
   s.played = { a: s.checkpoint.played.a.slice(), b: s.checkpoint.played.b.slice() };
-  s.destroyed = {
-    a: s.checkpoint.destroyed.a.slice(),
-    b: s.checkpoint.destroyed.b.slice(),
-  };
   s.ply = s.checkpoint.ply;
   s.botSeq = s.checkpoint.botSeq;
+  s.frozen = {
+    events: s.checkpoint.events.slice(),
+    played: { a: s.checkpoint.played.a.slice(), b: s.checkpoint.played.b.slice() },
+    ply: s.checkpoint.ply,
+  };
   s.rerolls = 0;
   s.suppressFloater = true;
   return true;
