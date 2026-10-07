@@ -281,11 +281,16 @@ test.describe("vs-bot turn ping", () => {
     await page.reload();
     await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
     await openSettings(page);
-    await waitTransitionEnd(page.locator("#settingsDrawer"), "transform");
+    const drawer = page.locator("#settingsDrawer");
+    await waitTransitionEnd(drawer, "transform");
     const toggle = page.locator("#turnPingToggle");
     await expect(toggle).toBeVisible();
     await expect(toggle).not.toBeChecked();
+    await drawer.evaluate((el) => {
+      el.querySelector("#turnPingToggle")?.scrollIntoView({ block: "center", inline: "nearest" });
+    });
     await toggle.scrollIntoViewIfNeeded();
+    await expect(toggle).toBeInViewport();
     await toggle.check();
     await assertPingCounts(page, 1);
   });
