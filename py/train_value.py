@@ -1112,6 +1112,39 @@ def _row_deck_indices(
     return own.astype(np.int32), opp.astype(np.int32), np.asarray(first_is_me, dtype=np.float32)
 
 
+def _stack_deck_controls(
+    aux,
+    cols: list[str],
+    decks: list[str],
+    games_per_pair: int,
+):
+    import numpy as np
+
+    n_decks = len(decks)
+    gi = aux[:, cols.index("game_index")].astype(np.int64, copy=False)
+    side = aux[:, cols.index("side")]
+    first_is_me = aux[:, cols.index("first_is_me")]
+    own, opp, first = _row_deck_indices(gi, side, first_is_me, decks, games_per_pair)
+    max_game = n_decks * n_decks * games_per_pair
+    if gi.size and (int(gi.min()) < 0 or int(gi.max()) >= max_game):
+        raise SystemExit(
+            f"--stack-on deck controls: game_index out of range [0, {max_game}) "
+            f"(got min={int(gi.min())}, max={int(gi.max())})"
+        )
+    if own.size and (
+        int(own.min()) < 0
+        or int(own.max()) >= n_decks
+        or int(opp.min()) < 0
+        or int(opp.max()) >= n_decks
+    ):
+        raise SystemExit(
+            f"--stack-on deck controls: deck index out of range [0, {n_decks}) "
+            f"(own min={int(own.min())}, max={int(own.max())}; "
+            f"opp min={int(opp.min())}, max={int(opp.max())})"
+        )
+    return own, opp, first
+
+
 def _stack_vocab(base_vocab: list[int], ids, row_idx) -> list[int]:
     seen = set(int(v) for v in base_vocab)
     import numpy as np
@@ -1385,6 +1418,12 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
         raise SystemExit("--stack-on requires a non-empty holdout split")
 
     metas = [_read_shard_meta(Path(d)) for d in args.data]
+    aux_cols = [list(m["aux_columns"]) for m in metas]
+    if len(set(tuple(c) for c in aux_cols)) > 1:
+        raise SystemExit(
+            "--stack-on requires identical aux_columns across --data folders "
+            + ", ".join(args.data)
+        )
     try:
         decks, games_per_pair = _shard_deck_layout(metas[0])
         for m in metas[1:]:
@@ -1397,11 +1436,9 @@ def train_stack_on(args: argparse.Namespace) -> dict[str, Any]:
         decks, games_per_pair = [], 0
 
     cols = list(metas[0]["aux_columns"])
-    side = aux[:, cols.index("side")]
-    first_is_me = aux[:, cols.index("first_is_me")]
     if decks:
-        own_deck, opp_deck, first_col = _row_deck_indices(
-            game_index, side, first_is_me, decks, games_per_pair
+        own_deck, opp_deck, first_col = _stack_deck_controls(
+            aux, cols, decks, games_per_pair
         )
         n_decks = len(decks)
         use_deck = True

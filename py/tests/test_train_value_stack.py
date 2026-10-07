@@ -568,6 +568,109 @@ def test_stack_multi_zone_holdout_parity(tmp_path: Path) -> None:
     assert abs(mse - final_mse) < 1e-5
 
 
+def test_stack_two_folders_cli_deck_controls(tmp_path: Path) -> None:
+    d1 = tmp_path / "d1"
+    d2 = tmp_path / "d2"
+    _write_v3_shard(d1, 128, games=4, rows_per_game=8, multi_zone=True)
+    _write_v3_shard(d2, 128, games=4, rows_per_game=8, multi_zone=True)
+    out = tmp_path / "two.json"
+    r = _run_stack(
+        [
+            "--data",
+            str(d1),
+            str(d2),
+            "--model",
+            "linear",
+            "--target",
+            "outcome",
+            "--stack-on",
+            str(ENGINE_MODEL),
+            "--seed",
+            "1",
+            "--out",
+            str(out),
+            "--holdout",
+            "0.2",
+        ]
+    )
+    assert r.returncode == 0, r.stderr + r.stdout
+    assert out.is_file()
+    report = json.loads(out.with_name(out.stem + ".report.json").read_text())
+    assert report["deck_controls"] is True
+
+
+def test_stack_deck_controls_helper_two_folders(tmp_path: Path) -> None:
+    d1 = tmp_path / "d1"
+    d2 = tmp_path / "d2"
+    _write_v3_shard(d1, 128, games=4, rows_per_game=8, multi_zone=True)
+    _write_v3_shard(d2, 128, games=4, rows_per_game=8, multi_zone=True)
+    loaded = train_value.load_dirs([str(d1), str(d2)])
+    meta = json.loads((d1 / "meta.json").read_text())
+    cols = list(meta["aux_columns"])
+    decks, games_per_pair = train_value._shard_deck_layout(meta)
+    own, opp, first = train_value._stack_deck_controls(
+        loaded["aux"], cols, decks, games_per_pair
+    )
+    for d in (d1, d2):
+        one = train_value.load_dirs([str(d)])
+        o, p, f = train_value._stack_deck_controls(one["aux"], cols, decks, games_per_pair)
+        if d == d1:
+            own1, opp1, first1 = o, p, f
+        else:
+            own2, opp2, first2 = o, p, f
+    assert np.array_equal(own, np.concatenate([own1, own2]))
+    assert np.array_equal(opp, np.concatenate([opp1, opp2]))
+    assert np.array_equal(first, np.concatenate([first1, first2]))
+    assert int(own.min()) >= 0 and int(own.max()) < 2
+    assert int(opp.min()) >= 0 and int(opp.max()) < 2
+
+
+def test_stack_refuse_mixed_aux_columns(tmp_path: Path) -> None:
+    d1 = tmp_path / "d1"
+    d2 = tmp_path / "d2"
+    _write_v3_shard(d1, 64, games=4, rows_per_game=8)
+    _write_v3_shard(d2, 64, games=4, rows_per_game=8)
+    meta2 = json.loads((d2 / "meta.json").read_text())
+    meta2["aux_columns"] = list(reversed(meta2["aux_columns"]))
+    (d2 / "meta.json").write_text(json.dumps(meta2) + "\n")
+    out = tmp_path / "mixed.json"
+    with pytest.raises(SystemExit, match="identical aux_columns"):
+        train_value.train_stack_on(
+            type(
+                "Args",
+                (),
+                {
+                    "stack_on": str(ENGINE_MODEL),
+                    "data": [str(d1), str(d2)],
+                    "model": "linear",
+                    "out": str(out),
+                    "holdout": 0.2,
+                    "seed": 1,
+                    "max_samples": None,
+                    "no_deck_controls": False,
+                    "l2_grid": "1e-4,1",
+                    "target": "outcome",
+                    "race": False,
+                    "optimizer": "adam",
+                    "l2": 1e-4,
+                    "stack_search_rows": 300_000,
+                },
+            )()
+        )
+
+
+def test_stack_deck_controls_bad_layout(tmp_path: Path) -> None:
+    data = tmp_path / "bad"
+    # 128 rows / 4 rows_per_game = 32 games, but 2 decks * 2 * 4 games = 16 max
+    _write_v3_shard(data, 128, games=4, rows_per_game=4)
+    loaded = train_value.load_dirs([str(data)])
+    meta = json.loads((data / "meta.json").read_text())
+    cols = list(meta["aux_columns"])
+    decks, games_per_pair = train_value._shard_deck_layout(meta)
+    with pytest.raises(SystemExit, match="game_index out of range"):
+        train_value._stack_deck_controls(loaded["aux"], cols, decks, games_per_pair)
+
+
 def test_stack_multi_zone_holdout_parity_broken_sparse_fails(tmp_path: Path) -> None:
     data = tmp_path / "multi"
     _write_v3_shard(
