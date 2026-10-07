@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openSettings } from "./helpers.ts";
+import { openSettings, waitTransitionEnd } from "./helpers.ts";
 
 const ONE_COST = "10052110";
 const SEED = "8484";
@@ -281,10 +281,12 @@ test.describe("vs-bot turn ping", () => {
     await page.reload();
     await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
     await openSettings(page);
+    await waitTransitionEnd(page.locator("#settingsDrawer"), "transform");
     const toggle = page.locator("#turnPingToggle");
     await expect(toggle).toBeVisible();
     await expect(toggle).not.toBeChecked();
-    await toggle.check({ force: true });
+    await toggle.scrollIntoViewIfNeeded();
+    await toggle.check();
     await assertPingCounts(page, 1);
   });
 
