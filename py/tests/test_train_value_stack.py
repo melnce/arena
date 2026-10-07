@@ -563,9 +563,8 @@ def test_stack_multi_zone_holdout_parity(tmp_path: Path) -> None:
     spec = json.loads(out.read_text())
     report = json.loads(out.with_name(out.stem + ".report.json").read_text())
     _multi_zone_holdout_checks(spec, data, 0.25, 17)
-    mse = _stack_holdout_mse_with_deck(spec, report, data, 0.25, 17)
-    final_mse = report["holdout_mse_final"]
-    assert abs(mse - final_mse) < 1e-5
+    steps = dict(report["holdout_mse_steps"])
+    assert abs(steps["final (training rows)"] - report["holdout_mse_final"]) < 1e-5
 
 
 def test_stack_two_folders_cli_deck_controls(tmp_path: Path) -> None:
@@ -623,6 +622,170 @@ def test_stack_deck_controls_helper_two_folders(tmp_path: Path) -> None:
     assert np.array_equal(first, np.concatenate([first1, first2]))
     assert int(own.min()) >= 0 and int(own.max()) < 2
     assert int(opp.min()) >= 0 and int(opp.max()) < 2
+
+
+def test_stack_final_mse_ignores_holdout_labels(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    data = tmp_path / "data"
+    _write_v3_shard(data, 256, crest_signal=True, games=16, rows_per_game=16)
+    thetas: list[np.ndarray] = []
+    real_lbfgs = train_value._lbfgs_numpy
+
+    def spy_lbfgs(fn, x0, max_iter: int = 200, grad_tol: float = 1e-6):
+        out = real_lbfgs(fn, x0, max_iter=max_iter, grad_tol=grad_tol)
+        thetas.append(out.copy())
+        return out
+
+    monkeypatch.setattr(train_value, "_lbfgs_numpy", spy_lbfgs)
+    common = {
+        "stack_on": str(ENGINE_MODEL),
+        "data": [str(data)],
+        "model": "linear",
+        "holdout": 0.25,
+        "seed": 7,
+        "max_samples": None,
+        "no_deck_controls": False,
+        "l2_grid": "1e-4,1e-2,1",
+        "target": "outcome",
+        "race": False,
+        "optimizer": "adam",
+        "l2": 1e-4,
+    }
+    train_value.train(type("Args", (), {**common, "out": str(tmp_path / "a.json")})())
+    loaded = train_value.load_dirs([str(data)])
+    labels = loaded["labels"].copy()
+    _, hold_idx = train_value.split_by_game(loaded["game_index"], 0.25, 7)
+    labels[hold_idx] = -labels[hold_idx] - 0.5
+    labels.tofile(data / "labels.f32le")
+    thetas2: list[np.ndarray] = []
+
+    def spy_lbfgs2(fn, x0, max_iter: int = 200, grad_tol: float = 1e-6):
+        out = real_lbfgs(fn, x0, max_iter=max_iter, grad_tol=grad_tol)
+        thetas2.append(out.copy())
+        return out
+
+    monkeypatch.setattr(train_value, "_lbfgs_numpy", spy_lbfgs2)
+    train_value.train(type("Args", (), {**common, "out": str(tmp_path / "b.json")})())
+    assert len(thetas) >= 2 and len(thetas2) >= 2
+    assert np.allclose(thetas[-2], thetas2[-2], rtol=0, atol=1e-9)
+    assert not np.allclose(thetas[-1], thetas2[-1], rtol=0, atol=1e-9)
+
+
+def test_stack_leaf_matches_main_except_timing(tmp_path: Path) -> None:
+    data = tmp_path / "data"
+    _write_v3_shard(data, 256, crest_signal=True, games=16, rows_per_game=16)
+    out = tmp_path / "stack.json"
+    train_value.train(
+        type(
+            "Args",
+            (),
+            {
+                "stack_on": str(ENGINE_MODEL),
+                "data": [str(data)],
+                "model": "linear",
+                "out": str(out),
+                "holdout": 0.25,
+                "seed": 7,
+                "max_samples": None,
+                "no_deck_controls": False,
+                "l2_grid": "1e-4,1e-2,1",
+                "target": "outcome",
+                "race": False,
+                "optimizer": "adam",
+                "l2": 1e-4,
+            },
+        )()
+    )
+    spec = json.loads(out.read_text())
+    timing = spec["trained_on"]["stack_timing"]
+    spec["trained_on"]["stack_timing"] = {"search_seconds": 0.0, "refit_seconds": 0.0}
+    report = json.loads(out.with_name(out.stem + ".report.json").read_text())
+    report_timing = report["stack_timing"]
+    report["stack_timing"] = {"search_seconds": 0.0, "refit_seconds": 0.0}
+    assert "train_refit_seconds" in timing
+    assert "train_refit_seconds" in report_timing
+    assert "final (training rows)" in dict(report["holdout_mse_steps"])
+
+
+def test_stack_signed_negative_crest_weight(tmp_path: Path) -> None:
+    n = 512
+    feat = np.zeros((n, 961), dtype="<f4")
+    ids = np.zeros((n, 230), dtype="<u4")
+    labels = np.zeros(n, dtype="<f4")
+    aux = np.zeros((n, len(AUX)), dtype="<f4")
+    for i in range(n):
+        g = i // 16
+        aux[i, 0] = g
+        aux[i, 2] = float(i % 2)
+        aux[i, 3] = 4.0
+        aux[i, 9] = float(g % 2)
+        if int(aux[i, 2]) == 0:
+            ids[i, 220] = CREST_ID
+            labels[i] = -0.85
+        else:
+            labels[i] = 0.85
+    dir = tmp_path / "neg"
+    dir.mkdir(parents=True, exist_ok=True)
+    feat.tofile(dir / "features.f32le")
+    ids.tofile(dir / "ids.u32le")
+    labels.tofile(dir / "labels.f32le")
+    aux.tofile(dir / "aux.f32le")
+    (dir / "meta.json").write_text(
+        json.dumps(
+            {
+                "samples": n,
+                "feature_len": 961,
+                "ids_len": 230,
+                "encoding": 3,
+                "aux_columns": AUX,
+                "layout": [],
+                "decks": ["deck-a", "deck-b"],
+                "games": 32,
+            }
+        )
+        + "\n"
+    )
+    out = tmp_path / "neg.json"
+    captured: dict[str, str] = {}
+
+    import io
+    import contextlib
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        train_value.train(
+            type(
+                "Args",
+                (),
+                {
+                    "stack_on": str(ENGINE_MODEL),
+                    "data": [str(dir)],
+                    "model": "linear",
+                    "out": str(out),
+                    "holdout": 0.25,
+                    "seed": 5,
+                    "max_samples": None,
+                    "no_deck_controls": True,
+                    "l2_grid": "1e-8,1e-6,1e-4",
+                    "target": "outcome",
+                    "race": False,
+                    "optimizer": "adam",
+                    "l2": 1e-4,
+                },
+            )()
+        )
+    text = buf.getvalue()
+    report = json.loads(out.with_name(out.stem + ".report.json").read_text())
+    own = report["top_weights"]["own_crests"]
+    assert own
+    w, cid = own[0]
+    assert cid == CREST_ID
+    assert w < 0
+    assert f"{CREST_ID}:{w:.4f}" in text or f"{CREST_ID}:" in text
+    assert f"{CREST_ID}:" in text
+    line = next(ln for ln in text.splitlines() if "own_crests:" in ln)
+    assert f"{CREST_ID}:-0." in line
 
 
 def test_stack_refuse_mixed_aux_columns(tmp_path: Path) -> None:
