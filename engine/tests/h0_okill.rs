@@ -630,9 +630,11 @@ fn okill8_two_storm_fixture() {
     assert_eq!(on.stats.opp_lethal_two_found, 1);
 }
 
-/// Two-play lethal where the second play's face damage only arrives after a mode
-/// choice (Bittersweet Departures: mode 1 plus a second mode). Missed when okill=8 prunes
-/// second plays still in `Phase::Choice` via `play_relevant`.
+/// Two-play lethal through Bittersweet Departures' mode choice (mode 1 plus a second
+/// mode), which `okill=0` and `okill=7` miss and `okill=8` finds. Passes in either
+/// play order (Bittersweet first resolves its choice before relevance). The Choice
+/// fix is pinned by the unit test
+/// `policy::h0::okill_two_choice_second_tests::opp_lethal_two_after_storm_sees_bittersweet_choice_kill`.
 fn two_play_choice_second_lethal_state(db: &CardDb) -> arena_engine::State {
     let mut st = started(db, 43);
     skip_to_player_turn(db, &mut st, PlayerId::B, 1);
