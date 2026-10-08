@@ -17,6 +17,7 @@ use common::*;
 const VANILLA: &str = "88001110";
 const WARD: &str = "10061120";
 const STORM: &str = "10461110";
+const BITTERSWEET: &str = "10852310";
 
 fn parse_h0(spec: &str) -> H0 {
     match AnyPolicy::parse_spec(spec).unwrap_or_else(|e| panic!("{spec}: {e}")) {
@@ -623,6 +624,63 @@ fn okill8_two_storm_fixture() {
     assert!(
         is_neg_wv(nv, WV),
         "okill=8 must see two-play kill, got {nv} found={} two={}",
+        on.stats.opp_lethal_found,
+        on.stats.opp_lethal_two_found
+    );
+    assert_eq!(on.stats.opp_lethal_two_found, 1);
+}
+
+/// Two-play lethal where the second play's face damage only arrives after a mode
+/// choice (Bittersweet Departures: mode 1 plus a second mode). Missed when okill=8 prunes
+/// second plays still in `Phase::Choice` via `play_relevant`.
+fn two_play_choice_second_lethal_state(db: &CardDb) -> arena_engine::State {
+    let mut st = started(db, 43);
+    skip_to_player_turn(db, &mut st, PlayerId::B, 1);
+    clear_hand(&mut st, PlayerId::A);
+    clear_hand(&mut st, PlayerId::B);
+    put_hand(db, &mut st, PlayerId::B, STORM);
+    put_hand(db, &mut st, PlayerId::B, BITTERSWEET);
+    set_round(&mut st, PlayerId::B, 6);
+    give_pp(&mut st, PlayerId::B, 6, 6);
+    st.player_mut(PlayerId::B).ep = 0;
+    st.player_mut(PlayerId::B).sep = 0;
+    st.player_mut(PlayerId::B).evolved_this_turn = false;
+    let storm_attack = st
+        .player(PlayerId::B)
+        .hand
+        .iter()
+        .find(|c| c.card == arena_engine::CardId::parse(STORM).unwrap())
+        .map(|c| c.attack)
+        .expect("Storm in hand");
+    const BITTERSWEET_FACE: i32 = 1;
+    st.player_mut(PlayerId::A).leader_defense = storm_attack + BITTERSWEET_FACE;
+    st.player_mut(PlayerId::B).leader_defense = 20;
+    assert_eq!(st.active, PlayerId::B);
+    st
+}
+
+#[test]
+fn okill8_two_play_choice_second_fixture() {
+    let db = load_db();
+    const WV: f32 = 300.0;
+    let st = two_play_choice_second_lethal_state(&db);
+    let mut off = parse_h0_v1("h0:olethal=1,okill=0,wv=300,lcap=1,clip=0,fusemacro=0");
+    let mut seven = parse_h0_v1("h0:olethal=1,okill=7,wv=300,lcap=1,clip=0,fusemacro=0");
+    let mut on = parse_h0_v1("h0:olethal=1,okill=8,wv=300,lcap=1,clip=0,fusemacro=0");
+    let ov = off.opponent_value(&db, &st, PlayerId::A);
+    let sv = seven.opponent_value(&db, &st, PlayerId::A);
+    let nv = on.opponent_value(&db, &st, PlayerId::A);
+    assert!(
+        !is_neg_wv(ov, WV),
+        "okill=0 must miss two-play kill, got {ov}"
+    );
+    assert!(
+        !is_neg_wv(sv, WV),
+        "okill=7 must miss two-play kill, got {sv}"
+    );
+    assert!(
+        is_neg_wv(nv, WV),
+        "okill=8 must see two-play kill via choice second play, got {nv} found={} two={}",
         on.stats.opp_lethal_found,
         on.stats.opp_lethal_two_found
     );
