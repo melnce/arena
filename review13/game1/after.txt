@@ -1,0 +1,14 @@
+== actual (6/4 hit, now 6/1 in enemy slot 1; the 2/1 in slot 0)
+  served seed 4984932781931433318 (served): chosen attack slot1->enemy slot1 value -10.78 | attack slot1->enemy slot1 -10.78  attack slot0->leader -11.69  attack slot0->enemy slot1 -19.44  attack slot1->enemy slot0 -20.01  attack slot0->enemy slot0 -22.61  end_turn -38.43
+  served seed 1: chosen attack slot1->enemy slot1 value -2.12 | attack slot1->enemy slot1 -2.12  attack slot0->enemy slot1 -9.12  attack slot1->enemy slot0 -9.60  attack slot0->enemy slot0 -11.29  attack slot0->leader -13.88  end_turn -39.60
+  served seed 2: chosen attack slot0->leader value -12.98 | attack slot0->leader -12.98  attack slot1->enemy slot1 -14.48  attack slot0->enemy slot1 -23.69  attack slot0->enemy slot0 -25.11  attack slot1->enemy slot0 -25.24  end_turn -39.81
+  served seed 3: chosen attack slot1->enemy slot1 value -3.66 | attack slot1->enemy slot1 -3.66  attack slot0->leader -6.48  attack slot0->enemy slot1 -10.79  attack slot1->enemy slot0 -14.37  attack slot0->enemy slot0 -15.56  end_turn -35.81
+  info=all seed 4984932781931433318 (served): chosen attack slot0->leader value -11.60 | attack slot0->leader -11.60  attack slot1->enemy slot0 -19.04  attack slot1->enemy slot1 -20.24  attack slot0->enemy slot0 -24.27  attack slot0->enemy slot1 -26.81  end_turn -37.68
+  info=all seed 1: chosen attack slot0->leader value -14.85 | attack slot0->leader -14.85  attack slot1->enemy slot0 -20.38  attack slot1->enemy slot1 -25.58  attack slot0->enemy slot0 -26.91  attack slot0->enemy slot1 -30.40  end_turn -38.90
+== alternative (2/1 killed; the 6/4 in enemy slot 0)
+  served seed 4984932781931433318 (served): chosen attack slot0->leader value -17.34 | attack slot0->leader -17.34  attack slot1->enemy slot0 -18.89  attack slot0->enemy slot0 -23.16  end_turn -36.78
+  served seed 1: chosen attack slot0->leader value -1.89 | attack slot0->leader -1.89  attack slot1->enemy slot0 -3.49  attack slot0->enemy slot0 -11.57  end_turn -40.54
+  served seed 2: chosen attack slot0->leader value -13.94 | attack slot0->leader -13.94  attack slot1->enemy slot0 -14.27  attack slot0->enemy slot0 -25.38  end_turn -36.02
+  served seed 3: chosen attack slot1->enemy slot0 value -4.92 | attack slot1->enemy slot0 -4.92  attack slot0->leader -4.93  attack slot0->enemy slot0 -15.81  end_turn -37.85
+  info=all seed 4984932781931433318 (served): chosen attack slot0->leader value -13.94 | attack slot0->leader -13.94  attack slot1->enemy slot0 -17.71  attack slot0->enemy slot0 -25.39  end_turn -29.75
+  info=all seed 1: chosen attack slot0->leader value -17.68 | attack slot0->leader -17.68  attack slot1->enemy slot0 -22.33  attack slot0->enemy slot0 -28.31  end_turn -30.29

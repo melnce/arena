@@ -1,0 +1,6 @@
+after 27 actions, deal=indep (served): served seed -> end_turn; seeds 1-16: {'attack slot0->enemy slot0': 16}
+after 27 actions, deal=block: served seed -> attack slot0->enemy slot0; seeds 1-16: {'attack slot0->enemy slot0': 16}
+after 38 actions, deal=indep (served): served seed -> choose {"slot": 1}; seeds 1-16: {'choose {"slot": 0}': 10, 'choose {"slot": 1}': 6}
+after 38 actions, deal=block: served seed -> choose {"slot": 1}; seeds 1-16: {'choose {"slot": 0}': 5, 'choose {"slot": 1}': 11}
+after 40 actions, deal=indep (served): served seed -> attack slot0->leader; seeds 1-16: {'attack slot0->enemy slot0': 2, 'attack slot0->leader': 14}
+after 40 actions, deal=block: served seed -> attack slot0->leader; seeds 1-16: {'attack slot0->enemy slot0': 4, 'attack slot0->leader': 12}

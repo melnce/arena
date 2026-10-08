@@ -1,0 +1,5 @@
+actual line (choose slot 1, Feline -> slot 1, Skeleton face), board at the owner's turn 6: {'a': {'hp': 17, 'field': ['Obsessed Test Subject 2/1']}, 'b': {'hp': 17, 'field': ['Skeleton 1/1', 'Highwire Feline 6/1 (evo)', 'Skeleton 1/1', 'Skeleton 1/1']}}
+alternative (choose slot 0, Feline -> the 6/4, Skeleton face), board at the owner's turn 6: {'a': {'hp': 17, 'field': []}, 'b': {'hp': 17, 'field': ['Skeleton 1/1', 'Highwire Feline 6/1 (evo)', 'Skeleton 1/1', 'Skeleton 1/1']}}
+action 47: owner attacker slot 0 -> the bot's leader: 16 -> 14
+action 61: owner attacker slot 2 -> the bot's leader: 14 -> 5
+action 62: owner attacker slot 1 -> the bot's leader: 5 -> 0

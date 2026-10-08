@@ -1,0 +1,20 @@
+actual     : {'a': (18, ['Obsessed Test Subject 2/1']), 'b': (17, ['Skeleton 1/1', 'Highwire Feline 6/1', 'Skeleton 1/1', 'Skeleton 1/1'])}
+alternative: {'a': (18, []), 'b': (17, ['Skeleton 1/1', 'Highwire Feline 6/1', 'Skeleton 1/1', 'Skeleton 1/1'])}
+  served (info=fair) seed 1: Skeleton face with the owner's 2/1 alive -13.88 | without it -3.84 | difference +10.03
+  served (info=fair) seed 2: Skeleton face with the owner's 2/1 alive -15.25 | without it -15.04 | difference +0.21
+  served (info=fair) seed 3: Skeleton face with the owner's 2/1 alive -6.90 | without it -5.68 | difference +1.22
+  served (info=fair) seed 4: Skeleton face with the owner's 2/1 alive -7.48 | without it -10.14 | difference -2.65
+  served (info=fair) seed 5: Skeleton face with the owner's 2/1 alive -15.04 | without it -11.13 | difference +3.91
+  served (info=fair) seed 6: Skeleton face with the owner's 2/1 alive -15.54 | without it -12.87 | difference +2.66
+  served (info=fair) seed 7: Skeleton face with the owner's 2/1 alive -15.17 | without it -4.39 | difference +10.78
+  served (info=fair) seed 8: Skeleton face with the owner's 2/1 alive -20.75 | without it -14.53 | difference +6.22
+  served (info=fair): mean difference (without - with) +4.05; without-it better in 7/8 seeds
+  info=all seed 1: Skeleton face with the owner's 2/1 alive -27.51 | without it -24.40 | difference +3.11
+  info=all seed 2: Skeleton face with the owner's 2/1 alive -6.84 | without it -6.51 | difference +0.33
+  info=all seed 3: Skeleton face with the owner's 2/1 alive -7.21 | without it -4.01 | difference +3.20
+  info=all seed 4: Skeleton face with the owner's 2/1 alive -21.83 | without it -19.41 | difference +2.42
+  info=all seed 5: Skeleton face with the owner's 2/1 alive -11.94 | without it -10.91 | difference +1.03
+  info=all seed 6: Skeleton face with the owner's 2/1 alive -7.00 | without it -6.67 | difference +0.33
+  info=all seed 7: Skeleton face with the owner's 2/1 alive -11.33 | without it -10.31 | difference +1.03
+  info=all seed 8: Skeleton face with the owner's 2/1 alive -17.06 | without it -15.34 | difference +1.72
+  info=all: mean difference (without - with) +1.65; without-it better in 8/8 seeds

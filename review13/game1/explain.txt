@@ -1,0 +1,28 @@
+== decision after 27 actions; the bot played: end_turn (recorded bot_value -2.538071632385254)
+  served seed 4984932781931433313 (= the served seed): path search chosen end_turn | end_turn -2.54/-10.70  attack slot0->enemy slot0 -4.58/-16.67
+  served seed 1: path search chosen attack slot0->enemy slot0 | attack slot0->enemy slot0 7.19/-12.65  end_turn -4.29/-30.05
+  served seed 2: path search chosen attack slot0->enemy slot0 | attack slot0->enemy slot0 9.83/-16.67  end_turn 7.30/-10.70
+  served seed 3: path search chosen attack slot0->enemy slot0 | attack slot0->enemy slot0 2.74/-12.46  end_turn -4.27/-29.90
+  info=all seed 4984932781931433313 (= the served seed): path search chosen attack slot0->enemy slot0 | attack slot0->enemy slot0 1.28/-8.14  end_turn -9.26/-13.52
+  info=all seed 1: path search chosen attack slot0->enemy slot0 | attack slot0->enemy slot0 2.41/0.17  end_turn -10.67/-13.33
+== decision after 38 actions; the bot played: choose {"slot": 1} (recorded bot_value -16.065505981445312)
+  served seed 4984932781931433317 (= the served seed): path search chosen choose {"slot": 1} | choose {"slot": 1} -16.07/-36.07  choose {"slot": 0} -20.95/-38.46
+  served seed 1: path search chosen choose {"slot": 0} | choose {"slot": 0} -0.27/-25.65  choose {"slot": 1} -2.12/-13.91
+  served seed 2: path search chosen choose {"slot": 1} | choose {"slot": 1} -11.23/-25.29  choose {"slot": 0} -13.59/-38.46
+  served seed 3: path search chosen choose {"slot": 1} | choose {"slot": 1} -3.57/-35.48  choose {"slot": 0} -4.58/-38.46
+  info=all seed 4984932781931433317 (= the served seed): path search chosen choose {"slot": 0} | choose {"slot": 0} -2.28/-28.62  choose {"slot": 1} -3.09/-24.49
+  info=all seed 1: path search chosen choose {"slot": 1} | choose {"slot": 1} -14.85/-24.49  choose {"slot": 0} -17.68/-28.62
+== decision after 39 actions; the bot played: attack slot1->enemy slot1 (recorded bot_value -10.784936904907227)
+  served seed 4984932781931433318 (= the served seed): path search chosen attack slot1->enemy slot1 | attack slot1->enemy slot1 -10.78/-38.92  attack slot0->leader -11.69/-39.25  attack slot0->enemy slot1 -19.44/-38.63  attack slot1->enemy slot0 -20.01/-43.08  attack slot0->enemy slot0 -22.61/-43.06  end_turn -38.43/-54.21
+  served seed 1: path search chosen attack slot1->enemy slot1 | attack slot1->enemy slot1 -2.12/-13.91  attack slot0->enemy slot1 -9.12/-33.18  attack slot1->enemy slot0 -9.60/-31.58  attack slot0->enemy slot0 -11.29/-33.18  attack slot0->leader -13.88/-34.04  end_turn -39.60/-54.21
+  served seed 2: path search chosen attack slot0->leader | attack slot0->leader -12.98/-39.25  attack slot1->enemy slot1 -14.48/-38.92  attack slot0->enemy slot1 -23.69/-38.63  attack slot0->enemy slot0 -25.11/-43.06  attack slot1->enemy slot0 -25.24/-43.08  end_turn -39.81/-49.91
+  served seed 3: path search chosen attack slot1->enemy slot1 | attack slot1->enemy slot1 -3.66/-36.19  attack slot0->leader -6.48/-35.88  attack slot0->enemy slot1 -10.79/-35.48  attack slot1->enemy slot0 -14.37/-43.08  attack slot0->enemy slot0 -15.56/-43.06  end_turn -35.81/-54.17
+  info=all seed 4984932781931433318 (= the served seed): path search chosen attack slot0->leader | attack slot0->leader -11.60/-22.30  attack slot1->enemy slot0 -19.04/-22.30  attack slot1->enemy slot1 -20.24/-38.92  attack slot0->enemy slot0 -24.27/-32.68  attack slot0->enemy slot1 -26.81/-38.63  end_turn -37.68/-38.98
+  info=all seed 1: path search chosen attack slot0->leader | attack slot0->leader -14.85/-24.49  attack slot1->enemy slot0 -20.38/-24.49  attack slot1->enemy slot1 -25.58/-38.92  attack slot0->enemy slot0 -26.91/-34.46  attack slot0->enemy slot1 -30.40/-38.63  end_turn -38.90/-39.29
+== decision after 40 actions; the bot played: attack slot0->leader (recorded bot_value -15.247532844543457)
+  served seed 4984932781931433319 (= the served seed): path search chosen attack slot0->leader | attack slot0->leader -15.25/-41.67  end_turn -17.54/-43.28  attack slot0->enemy slot0 -22.24/-39.42
+  served seed 1: path search chosen attack slot0->enemy slot0 | attack slot0->enemy slot0 -12.69/-43.06  attack slot0->leader -13.88/-34.04  end_turn -16.34/-30.45
+  served seed 2: path search chosen attack slot0->leader | attack slot0->leader -15.25/-42.01  end_turn -17.92/-39.27  attack slot0->enemy slot0 -25.74/-43.06
+  served seed 3: path search chosen attack slot0->leader | attack slot0->leader -6.90/-39.25  end_turn -10.40/-36.19  attack slot0->enemy slot0 -15.89/-43.06
+  info=all seed 4984932781931433319 (= the served seed): path search chosen attack slot0->leader | attack slot0->leader -16.33/-42.01  end_turn -18.21/-39.27  attack slot0->enemy slot0 -24.45/-38.92
+  info=all seed 1: path search chosen attack slot0->leader | attack slot0->leader -27.51/-42.01  end_turn -27.54/-39.27  attack slot0->enemy slot0 -31.10/-38.92

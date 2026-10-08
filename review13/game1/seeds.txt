@@ -1,0 +1,3 @@
+after 27 actions, played end_turn (bot_value -2.538071632385254): over seeds 1-32: {'attack slot0->enemy slot0': 32}; seeds reproducing the recorded value: []
+after 38 actions, played choose {"slot": 1} (bot_value -16.065505981445312): over seeds 1-32: {'choose {"slot": 0}': 17, 'choose {"slot": 1}': 15}; seeds reproducing the recorded value: []
+after 40 actions, played attack slot0->leader (bot_value -15.247532844543457): over seeds 1-32: {'attack slot0->enemy slot0': 8, 'attack slot0->leader': 24}; seeds reproducing the recorded value: []
