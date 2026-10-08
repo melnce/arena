@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -657,7 +658,11 @@ def test_stack_final_mse_ignores_holdout_labels(
     labels = loaded["labels"].copy()
     _, hold_idx = train_value.split_by_game(loaded["game_index"], 0.25, 7)
     labels[hold_idx] = -labels[hold_idx] - 0.5
-    labels.tofile(data / "labels.f32le")
+    del loaded
+    data2 = tmp_path / "data2"
+    shutil.copytree(data, data2)
+    labels.tofile(data2 / "labels.f32le")
+    common["data"] = [str(data2)]
     thetas2: list[np.ndarray] = []
 
     def spy_lbfgs2(fn, x0, max_iter: int = 200, grad_tol: float = 1e-6):

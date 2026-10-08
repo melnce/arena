@@ -215,7 +215,8 @@ jobs:
 
   py:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # Push run of PR #122 (2026-10-07) measured 20 m 53 s.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
 
