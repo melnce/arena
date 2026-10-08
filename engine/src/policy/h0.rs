@@ -253,6 +253,8 @@ pub struct SearchStats {
     pub opp_lethal_slot_found: u64,
     /// Sweeps that found lethal through play-through (`okill` bit 4).
     pub opp_lethal_through_found: u64,
+    /// Sweeps that found lethal through two plays (`okill` bit 8).
+    pub opp_lethal_two_found: u64,
     /// Bounded [`forced_lethal`] calls after a sweep miss (`olsolve>0`,
     /// `olethal=1`, `odepth=0`).
     pub opp_solver_calls: u64,
@@ -372,6 +374,7 @@ impl SearchStats {
         self.opp_lethal_ward_found += other.opp_lethal_ward_found;
         self.opp_lethal_slot_found += other.opp_lethal_slot_found;
         self.opp_lethal_through_found += other.opp_lethal_through_found;
+        self.opp_lethal_two_found += other.opp_lethal_two_found;
         self.opp_solver_calls += other.opp_solver_calls;
         self.opp_solver_found += other.opp_solver_found;
         self.opp_solver_unknown += other.opp_solver_unknown;
@@ -3541,6 +3544,10 @@ const SLOT_PREFIX_APPLY_RESERVE: u32 = 48;
 const OKILL_WARD: u32 = 1;
 const OKILL_SLOT: u32 = 2;
 const OKILL_THROUGH: u32 = 4;
+const OKILL_TWO: u32 = 8;
+/// Apply budget for the two-play pass (`okill` bit 8), charged after the
+/// existing sweep shapes miss. 200 is the worst-case envelope — not the mean.
+const OPP_LETHAL_TWO_APPLY_CAP: u32 = 200;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum KillShape {
@@ -3548,6 +3555,7 @@ enum KillShape {
     Ward,
     Slot,
     Through,
+    Two,
 }
 
 fn leader_attackers(db: &CardDb, state: &State) -> Vec<u8> {
@@ -3561,6 +3569,19 @@ fn leader_attackers(db: &CardDb, state: &State) -> Vec<u8> {
             _ => None,
         })
         .collect()
+}
+
+fn face_potential(db: &CardDb, state: &State) -> i32 {
+    let who = acting_player(state);
+    leader_attackers(db, state)
+        .iter()
+        .map(|slot| state.field_inst(who, *slot).map(|f| f.attack).unwrap_or(0))
+        .sum()
+}
+
+fn play_relevant(db: &CardDb, before: &State, after: &State, me: PlayerId) -> bool {
+    face_potential(db, after) > face_potential(db, before)
+        || after.player(me).leader_defense < before.player(me).leader_defense
 }
 
 fn has_leader_attack(db: &CardDb, state: &State) -> bool {
@@ -4064,6 +4085,159 @@ fn standalone_evolve_kills(
     false
 }
 
+/// Resolve the first play's pending choices, then try relevant second plays.
+#[allow(clippy::too_many_arguments)]
+fn opp_lethal_two_after_first(
+    db: &CardDb,
+    before_first: &State,
+    state: &State,
+    me: PlayerId,
+    nodes: &mut u32,
+    two_end: u32,
+    line: &[u64],
+    oevo: bool,
+    play_through: bool,
+    evo_found: &mut bool,
+    through_used: &mut bool,
+) -> bool {
+    if matches!(state.phase, Phase::Choice { .. }) {
+        let legal = legal_actions(db, state);
+        let chooses: Vec<Action> = legal
+            .iter()
+            .filter(|a| matches!(a, Action::Choose(_)))
+            .cloned()
+            .collect();
+        for a in &chooses {
+            if *nodes >= two_end {
+                return false;
+            }
+            let Some(s) = try_apply(db, state, a, nodes, two_end, line) else {
+                continue;
+            };
+            let mut next_line = line.to_vec();
+            next_line.push(search_key(&s));
+            if opp_lethal_two_after_first(
+                db,
+                before_first,
+                &s,
+                me,
+                nodes,
+                two_end,
+                &next_line,
+                oevo,
+                play_through,
+                evo_found,
+                through_used,
+            ) {
+                return true;
+            }
+        }
+        if chooses.is_empty() {
+            if let Some(a) = legal.iter().find(|a| matches!(a, Action::Confirm)) {
+                let Some(s) = try_apply(db, state, a, nodes, two_end, line) else {
+                    return false;
+                };
+                let mut next_line = line.to_vec();
+                next_line.push(search_key(&s));
+                return opp_lethal_two_after_first(
+                    db,
+                    before_first,
+                    &s,
+                    me,
+                    nodes,
+                    two_end,
+                    &next_line,
+                    oevo,
+                    play_through,
+                    evo_found,
+                    through_used,
+                );
+            }
+        }
+        return false;
+    }
+    if !play_relevant(db, before_first, state, me) {
+        return false;
+    }
+    for second in ordered_plays(db, state) {
+        if *nodes >= two_end {
+            return false;
+        }
+        let Some(after_second) = try_apply(db, state, &second, nodes, two_end, line) else {
+            continue;
+        };
+        if !play_relevant(db, state, &after_second, me) {
+            continue;
+        }
+        let mut line2 = line.to_vec();
+        line2.push(search_key(&after_second));
+        let origin_def = state.player(me).leader_defense;
+        let origin_faces = leader_attackers(db, state);
+        if resolve_play_line(
+            db,
+            &after_second,
+            me,
+            origin_def,
+            &origin_faces,
+            nodes,
+            two_end,
+            &line2,
+            oevo,
+            play_through,
+            evo_found,
+            through_used,
+        ) {
+            return true;
+        }
+    }
+    false
+}
+
+/// After the existing sweep shapes miss: try each relevant first `Play` (with
+/// its `Choose`/`Confirm` resolved), then each relevant second `Play`, then
+/// [`resolve_play_line`] on the face line.
+#[allow(clippy::too_many_arguments)]
+fn opp_lethal_two_pass(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    oevo: bool,
+    play_through: bool,
+    evo_found: &mut bool,
+    through_used: &mut bool,
+) -> bool {
+    let two_end = (*nodes).saturating_add(OPP_LETHAL_TWO_APPLY_CAP).min(cap);
+    for first in ordered_plays(db, state) {
+        if *nodes >= two_end {
+            break;
+        }
+        let Some(after_first) = try_apply(db, state, &first, nodes, two_end, line) else {
+            continue;
+        };
+        let mut line1 = line.to_vec();
+        line1.push(search_key(&after_first));
+        if opp_lethal_two_after_first(
+            db,
+            state,
+            &after_first,
+            me,
+            nodes,
+            two_end,
+            &line1,
+            oevo,
+            play_through,
+            evo_found,
+            through_used,
+        ) {
+            return true;
+        }
+    }
+    false
+}
+
 #[allow(clippy::too_many_arguments)]
 fn opp_lethal_sweep_core(
     db: &CardDb,
@@ -4483,6 +4657,25 @@ fn opp_lethal_sweep(
         shape = KillShape::Through;
     }
 
+    if !found
+        && okill & OKILL_TWO != 0
+        && opp_lethal_two_pass(
+            db,
+            state,
+            me,
+            nodes,
+            cap,
+            line,
+            oevo,
+            play_through,
+            &mut evo_found,
+            &mut through_used,
+        )
+    {
+        found = true;
+        shape = KillShape::Two;
+    }
+
     let sweep_applies = *nodes - start;
     stats.opp_lethal_nodes += u64::from(sweep_applies);
     stats.opp_lethal_applies_max = stats.opp_lethal_applies_max.max(u64::from(sweep_applies));
@@ -4495,6 +4688,7 @@ fn opp_lethal_sweep(
             KillShape::Ward => stats.opp_lethal_ward_found += 1,
             KillShape::Slot => stats.opp_lethal_slot_found += 1,
             KillShape::Through => stats.opp_lethal_through_found += 1,
+            KillShape::Two => stats.opp_lethal_two_found += 1,
             KillShape::Base => {}
         }
     }

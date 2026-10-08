@@ -538,8 +538,8 @@ sweep-8b flip; `oevo=0` restores the pre-flip glance path; only
 meaningful with `olethal=1` and `odepth=0`; no hard error for other
 combinations),
 `okill=<u32>` (bitmask of extra kill shapes in the opponent-lethal sweep;
-bit `1` = Ward-break prefix, `2` = slot-freeing trades, `4` = play-through;
-default `0` = off),
+bit `1` = Ward-break prefix, `2` = slot-freeing trades, `4` = play-through,
+`8` = two relevant plays before the face line; default `0` = off),
 `omacro=0|1` (greedy opponent reply credits a `Play` with an evolve on the
 just-played slot; the play's own `Choose` / `Confirm` resolve inside the same
 greedy step; default `0` = off),
@@ -638,7 +638,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `obeam` | 3 | opponent beam (plus `EndTurn` always) |
 | `olethal` | 1 | glance-level opponent-lethal sweep before the greedy line; `0` restores the pre-flip greedy path. Ignored when `odepth≥1` |
 | `oevo` | 1 | extend that sweep with at most one `Evolve` / `super_evolve` per leaf. Only meaningful with `olethal=1` and `odepth=0`. Sweep 8b pooled 0.527 [0.515, 0.540] / +19.0 Elo vs `h0:olethal=1,osteps=6` on the seven real decks (6 174 games). Owner flipped the default on 2026-09-19 |
-| `okill` | 0 | bitmask of extra kill shapes in the opponent-lethal sweep (`olethal=1`, `odepth=0`): bit 1 = Ward-break prefix before the face line; bit 2 = slot-freeing trades when the attacker's field is full; bit 4 = play-through (keep plays that only open evolve lines, and follower on-attacks after the face line). Default off — play is byte-identical to today |
+| `okill` | 0 | bitmask of extra kill shapes in the opponent-lethal sweep (`olethal=1`, `odepth=0`): bit 1 = Ward-break prefix before the face line; bit 2 = slot-freeing trades when the attacker's field is full; bit 4 = play-through (keep plays that only open evolve lines, and follower on-attacks after the face line); bit 8 = two relevant plays before the face line (each play must raise face potential or lower the defender's leader defence; `OPP_LETHAL_TWO_APPLY_CAP` applies on top of the existing sweep cap). Default off — play is byte-identical to today |
 | `omacro` | 0 | in the greedy opponent reply only, credit a `Play` with the best evolve on the just-played slot when that line scores higher; the play's own `Choose` / `Confirm` resolve inside the same greedy step, and the evolve is applied as part of that step (not counted against `osteps`). Default off |
 | `olsolve` | 0 | after a sweep miss on the opponent's turn, run [`forced_lethal`] with this node budget (charged to the pair cap). `0` = off (today). Only when `olethal=1` and `odepth=0` |
 | `tkill` | 0 | on each own-turn decision (Main, Combat, or Choice) with more than one useful candidate, run [`forced_lethal_det`] on the first determinization before `consensus_lethal` / search. A deterministic kill confirmed on every root is played; applies are outside `node_cap`. `0` = off (today) |
