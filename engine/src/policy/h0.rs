@@ -5944,8 +5944,7 @@ mod okill_two_choice_second_tests {
             .position(|c| c.card == CardId::parse(STORM).unwrap())
             .expect("storm") as u8;
         let mut after_storm = root.clone();
-        apply(&db, &mut after_storm, Action::Play { hand: storm_hand })
-            .expect("play storm");
+        apply(&db, &mut after_storm, Action::Play { hand: storm_hand }).expect("play storm");
         assert!(
             face_potential(&db, &after_storm) > face_potential(&db, &root),
             "storm must add face potential for the follow-up line"
