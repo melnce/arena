@@ -1,0 +1,25 @@
+== 12644260486301391828-d90f8eb2 ply 15 turn 4: X 10564110 4/4 -> Y 10931110; played end_turn (bot_value 36.159889221191406)
+  served at the served seed: path search chosen end_turn | end_turn 36.16  attack slot0->enemy slot0 34.52  attack slot0->enemy slot1 25.15  attack slot0->enemy slot2 25.15
+  hbcheck ran (docs/engine-api.md: the kill is played when its A' aggregate beats End'): End' 27.72 vs attack slot0->enemy slot0 A' 24.52  attack slot0->enemy slot1 A' 22.47  attack slot0->enemy slot2 A' 22.47
+  info=all at the served seed: path search chosen attack slot0->enemy slot0 | attack slot0->enemy slot0 43.74  end_turn 43.73  attack slot0->enemy slot1 16.49  attack slot0->enemy slot2 16.49
+  served spec over seeds 1-8: {'end_turn': 6, 'attack slot0->enemy slot0': 1, 'attack slot0->enemy slot1': 1}
+== 12644260486301391828-d90f8eb2 ply 40 turn 6: X 10564110 4/4 -> Y 10833110; played end_turn (bot_value -20.82453155517578)
+  served at the served seed: path search chosen end_turn | end_turn -20.82  attack slot1->enemy slot0 -24.15
+  hbcheck ran (docs/engine-api.md: the kill is played when its A' aggregate beats End'): End' -28.87 vs attack slot1->enemy slot0 A' -32.30
+  info=all at the served seed: path search chosen attack slot1->enemy slot0 | attack slot1->enemy slot0 -18.60  end_turn -28.59
+  served spec over seeds 1-8: {'end_turn': 2, 'attack slot1->enemy slot0': 6}
+== 14600367900189587136-d90f8eb2 ply 69 turn 8: X 10964110 8/8 -> Y 10733110; played end_turn (bot_value -39.832733154296875)
+  served at the served seed: path search chosen end_turn | end_turn -39.83  attack slot1->enemy slot0 -41.60
+  hbcheck ran (docs/engine-api.md: the kill is played when its A' aggregate beats End'): End' -43.76 vs attack slot1->enemy slot0 A' -46.37
+  info=all at the served seed: path search chosen attack slot1->enemy slot0 | attack slot1->enemy slot0 -46.31  end_turn -47.35
+  served spec over seeds 1-8: {'end_turn': 3, 'attack slot1->enemy slot0': 5}
+== 6598261483642061665-d90f8eb2 ply 27 turn 4: X 10564110 4/4 -> Y 10931110; played end_turn (bot_value 45.85194396972656)
+  served at the served seed: path search chosen end_turn | end_turn 45.85  attack slot0->enemy slot0 44.28
+  hbcheck ran (docs/engine-api.md: the kill is played when its A' aggregate beats End'): End' 40.75 vs attack slot0->enemy slot0 A' 38.34
+  info=all at the served seed: path search chosen attack slot0->enemy slot0 | attack slot0->enemy slot0 41.73  end_turn 41.58
+  served spec over seeds 1-8: {'attack slot0->enemy slot0': 8}
+== 6598261483642061665-d90f8eb2 ply 52 turn 6: X 10864120 4/6 -> Y 90031110; played end_turn (bot_value 9.191415786743164)
+  served at the served seed: path search chosen end_turn | end_turn 9.19  attack slot0->enemy slot1 -3.46  attack slot0->enemy slot0 -10.25
+  hbcheck ran (docs/engine-api.md: the kill is played when its A' aggregate beats End'): End' 5.23 vs attack slot0->enemy slot0 A' -20.56  attack slot0->enemy slot1 A' -12.67
+  info=all at the served seed: path search chosen end_turn | end_turn -3.26  attack slot0->enemy slot1 -6.38  attack slot0->enemy slot0 -7.78
+  served spec over seeds 1-8: {'attack slot0->enemy slot1': 2, 'end_turn': 6}
