@@ -5425,11 +5425,7 @@ fn hbk_fresh_seeds_and_deal(
             Some(deal_rng.next_u64())
         } else {
             let mut deal_rng = Xoshiro256ss::from_seed(
-                root_world_seeds
-                    .first()
-                    .copied()
-                    .unwrap_or(0)
-                    ^ HBK_DEAL_XOR,
+                root_world_seeds.first().copied().unwrap_or(0) ^ HBK_DEAL_XOR,
             );
             for _ in 0..hbk {
                 deal_rng.next_u64();

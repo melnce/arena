@@ -108,7 +108,7 @@ fn replay_capture(db: &CardDb, cap: &Value, n: usize) -> arena_engine::State {
 
 fn action_fingerprint(db: &CardDb, spec: &str, seed: u64, deck_a: &[arena_engine::CardId]) -> u64 {
     use arena_engine::trace::fnv1a64;
-    use arena_engine::{apply, acting_player, Phase, PlayerId};
+    use arena_engine::{acting_player, apply, Phase, PlayerId};
 
     let deck_b = load_meta_deck("meta-sword-rally");
     let mut state = new_game(
@@ -251,7 +251,11 @@ fn hbk_default_play_unchanged_gate() {
             } else {
                 continue;
             };
-            assert_eq!(got, want, "{spec} fingerprint seed={seed} deck={}", stems[i]);
+            assert_eq!(
+                got, want,
+                "{spec} fingerprint seed={seed} deck={}",
+                stems[i]
+            );
         }
     }
 }
@@ -334,7 +338,10 @@ fn hbk_no_rng_consumption_when_keeps_end_turn() {
     let rec_on = on.take_explain().expect("explain on");
 
     assert!(
-        rec_on.holdback_resample.as_ref().is_some_and(|r| !r.flipped),
+        rec_on
+            .holdback_resample
+            .as_ref()
+            .is_some_and(|r| !r.flipped),
         "hbk must run but not flip at Zoe moment"
     );
     assert_eq!(rec_off.candidates.len(), rec_on.candidates.len());
