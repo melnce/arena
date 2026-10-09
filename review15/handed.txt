@@ -1,0 +1,28 @@
+== 1068176807631359990-b43e6214 ply 79 (turn 8): recorded end_turn; leaders owner 13, bot 12
+  owner's forced kill after End Turn: lethal (nodes 1239, rng_dependent False): ['attack slot0->leader', 'play 10834110', 'super-evolve slot1', 'attack slot1->leader', 'play 10433310', 'choose {"slot": 0}']
+  the owner did NOT win that turn (game winner a)
+  served at the served seed: path single_legal chosen end_turn | End Turn worlds {} | 
+  +olsolve=4000 at the served seed: path single_legal chosen end_turn | End Turn worlds {} | 
+  one-action alternatives (0): 
+  alternatives that leave the owner no kill: none
+== 1068176807631359990-b43e6214 ply 96 (turn 9): recorded end_turn; leaders owner 11, bot 9
+  owner's forced kill after End Turn: lethal (nodes 1379, rng_dependent False): ['play 10934110', 'attack slot2->enemy slot0', 'super-evolve slot1', 'attack slot1->leader', 'play 10433310', 'choose {"slot": 0}']
+  the owner took a kill that turn (game winner a)
+  served at the served seed: path single_legal chosen end_turn | End Turn worlds {} | 
+  +olsolve=4000 at the served seed: path single_legal chosen end_turn | End Turn worlds {} | 
+  one-action alternatives (0): 
+  alternatives that leave the owner no kill: none
+== 12757697801983742963-b43e6214 ply 98 (turn 9): recorded end_turn; leaders owner 13, bot 16
+  owner's forced kill after End Turn: lethal (nodes 1858, rng_dependent True): ['attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'super-evolve slot1', 'play 10933110', 'play 10933310', 'attack slot1->leader', 'attack slot2->leader', 'attack slot4->leader']
+  the owner took a kill that turn (game winner a)
+  served at the served seed: path single_legal chosen end_turn | End Turn worlds {} | 
+  +olsolve=4000 at the served seed: path single_legal chosen end_turn | End Turn worlds {} | 
+  one-action alternatives (0): 
+  alternatives that leave the owner no kill: none
+== 2374435823510868837-b43e6214 ply 134 (turn 11): recorded end_turn; leaders owner 10, bot 8
+  owner's forced kill after End Turn: lethal (nodes 285, rng_dependent True): ['attack slot1->enemy slot0', 'attack slot2->enemy slot0', '{"engage": {"player": "a", "slot": 0}}', 'play 10933310', 'attack slot2->leader', 'attack slot3->leader']
+  the owner took a kill that turn (game winner a)
+  served at the served seed: path single_legal chosen end_turn | End Turn worlds {} | 
+  +olsolve=4000 at the served seed: path single_legal chosen end_turn | End Turn worlds {} | 
+  one-action alternatives (0): 
+  alternatives that leave the owner no kill: none

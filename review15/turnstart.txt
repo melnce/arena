@@ -1,0 +1,20 @@
+== 1068176807631359990-b43e6214 first decision of the turn (after 86 actions), served seed: path search, chosen play Yidmetra, Eld Sword
+   play Yidmetra, Eld Sword                   -65.78  worlds ending in an opponent kill: 3/8
+   play Centaur Centurion                     -80.00  worlds ending in an opponent kill: 8/8
+   play Mars, Conflagrant Commander           -80.00  worlds ending in an opponent kill: 8/8
+   play Naht & Vince, Force and Order         -80.00  worlds ending in an opponent kill: 8/8
+   play Yidmetra, Eld Sword                   -80.00  worlds ending in an opponent kill: 8/8
+   play Mars, Conflagrant Commander           -80.00  worlds ending in an opponent kill: 8/8
+   play Steelclad Knight                      -80.00  worlds ending in an opponent kill: 8/8
+   play Steelclad Knight                      -80.00  worlds ending in an opponent kill: 8/8
+   play Gildaria, Anathema of Attunement      -80.00  worlds ending in an opponent kill: 8/8
+   end_turn                                   -80.00  worlds ending in an opponent kill: 8/8
+   safe line ['play Mars, Conflagrant Commander', 'play Steelclad Knight', 'attack slot0->enemy slot2', 'attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'end_turn'] -> owner's kill: none (nodes 824); after it: bot 9 HP, field []; owner field []
+== 2374435823510868837-b43e6214 first decision of the turn (after 129 actions), served seed: path search, chosen play Cesar, Accordant Major
+   play Cesar, Accordant Major                 17.19  worlds ending in an opponent kill: 0/8
+   play Steelclad Knight                       12.75  worlds ending in an opponent kill: 0/8
+   play Steelclad Knight                       12.75  worlds ending in an opponent kill: 0/8
+   play Mars, Conflagrant Commander           -80.00  worlds ending in an opponent kill: 8/8
+   play Bunny & Baron, Fate's Bullet          -80.00  worlds ending in an opponent kill: 8/8
+   end_turn                                   -80.00  worlds ending in an opponent kill: 8/8
+   safe line ['play Mars, Conflagrant Commander', 'play Steelclad Knight', 'attack slot0->enemy slot1', 'play Steelclad Knight', 'attack slot0->enemy slot1', 'attack slot0->enemy slot1', 'attack slot0->enemy slot1', 'attack slot0->enemy slot1', 'attack slot0->enemy slot1', 'end_turn'] -> owner's kill: none (nodes 193); after it: bot 8 HP, field []; owner field ["Witch's New Brew 0/0"]

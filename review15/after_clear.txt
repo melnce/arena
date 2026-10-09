@@ -1,0 +1,14 @@
+== 1068176807631359990-b43e6214: after the Mars clear, the owner to move (turn 9)
+  owner: 13 HP, PP 9/9, evolve points 0, super-evolve points 1, field []
+  owner's hand: ['Sephie, Maven Convict', 'Sephie, Maven Convict', 'Alchemic Flare', 'Tetra & Ladica, Forest BFFs', 'Ecstatic Scholar', 'Enamored Researcher', 'Enamored Researcher']
+  bot: 9 HP, field []
+  owner's forced kill: none (nodes 824)
+  most face damage the owner can deal this turn: 8 of 9 (825 states, exhaustive); a line: ['{"play": {"card": "10934110", "hand_pos": 0, "player": "a"}}', '{"evolve": {"player": "a", "slot": 1, "super": true}}', '{"attack": {"attacker_slot": 1, "player": "a", "target": "leader"}}']
+  Alchemic Flare castable: False
+== 2374435823510868837-b43e6214: after the Mars clear, the owner to move (turn 12)
+  owner: 10 HP, PP 10/10, evolve points 0, super-evolve points 0, field ["Witch's New Brew"]
+  owner's hand: ['Sephie, Maven Convict', 'Obsidian Raven', 'Enamored Researcher', "Witch's New Brew"]
+  bot: 8 HP, field []
+  owner's forced kill: none (nodes 193)
+  most face damage the owner can deal this turn: 5 of 8 (159 states, exhaustive); a line: ['{"play": {"card": "10934110", "hand_pos": 0, "player": "a"}}', '{"play": {"card": "10031210", "hand_pos": 2, "player": "a"}}', '{"attack": {"attacker_slot": 1, "player": "a", "target": "leader"}}']
+  Alchemic Flare castable: False

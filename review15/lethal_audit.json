@@ -1,0 +1,6014 @@
+{
+  "bot_seat": "b",
+  "budget": 50000,
+  "first": "alternate",
+  "first_balanced_per_pair": true,
+  "games": 4,
+  "handed_lethal": {
+    "asked": 37,
+    "decisions_with_a_verdict": 33,
+    "lethal": 4,
+    "n": 4,
+    "nodes": 365863,
+    "none": 29,
+    "rate": 0.12121212121212122,
+    "rng_dependent": 2,
+    "unknown": 4,
+    "unknown_rate": 0.10810810810810811
+  },
+  "missed_lethal": {
+    "asked": 175,
+    "decisions_with_a_verdict": 171,
+    "lethal": 5,
+    "n": 0,
+    "nodes": 414880,
+    "none": 166,
+    "rate": 0.0,
+    "rng_dependent": 0,
+    "unknown": 4,
+    "unknown_rate": 0.022857142857142857
+  },
+  "ms_per_decision": 1498.316812724367,
+  "per_deck": {
+    "records": {
+      "handed_lethal": {
+        "asked": 37,
+        "decisions_with_a_verdict": 33,
+        "lethal": 4,
+        "n": 4,
+        "nodes": 365863,
+        "none": 29,
+        "rate": 0.12121212121212122,
+        "rng_dependent": 2,
+        "unknown": 4,
+        "unknown_rate": 0.10810810810810811
+      },
+      "missed_lethal": {
+        "asked": 175,
+        "decisions_with_a_verdict": 171,
+        "lethal": 5,
+        "n": 0,
+        "nodes": 414880,
+        "none": 166,
+        "rate": 0.0,
+        "rng_dependent": 0,
+        "unknown": 4,
+        "unknown_rate": 0.022857142857142857
+      }
+    }
+  },
+  "policy_a": "h0-fast",
+  "policy_b": "h0-fast",
+  "pool": "meta",
+  "records": [
+    {
+      "bot_deck": "records",
+      "decisions": [
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.4179997853934765,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 2,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 7.739800028502941,
+          "nodes": 32,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 2,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.8848998695611954,
+          "nodes": 2,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 5,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.2576000988483429,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 6,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 39.36930000782013,
+          "nodes": 80,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 6,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 2,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3.877699840813875,
+          "nodes": 8,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "ply": 12,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 2,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 237.01469972729683,
+          "nodes": 571,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "ply": 12,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 24.701500311493874,
+          "nodes": 40,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "ply": 16,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 6,
+            "followers": 2,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 12.95970007777214,
+          "nodes": 21,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "ply": 17,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.3183001428842545,
+          "nodes": 3,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "ply": 18,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.5819997750222683,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "ply": 19,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.47639990225434303,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 20,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -3,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 891.8572999536991,
+          "nodes": 2522,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 20,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": 3,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 17.486500088125467,
+          "nodes": 49,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "ply": 28,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 6,
+            "followers": 4,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 11.362300254404545,
+          "nodes": 33,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "ply": 29,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 4,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -6,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 23.492800071835518,
+          "nodes": 23,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "ply": 30,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 7,
+            "followers": 3,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -7,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.2423996813595295,
+          "nodes": 3,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 31,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 3,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -9,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.28060004115104675,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 32,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 3,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -9,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 35.98400019109249,
+          "nodes": 136,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 32,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 11.669000145047903,
+          "nodes": 33,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 39,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 4,
+            "followers": 3,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -4,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 12.099400162696838,
+          "nodes": 27,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 40,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 5,
+            "followers": 4,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -5,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 4.584099631756544,
+          "nodes": 13,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 41,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 5,
+            "followers": 4,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -5,
+          "converted": false,
+          "defense_deficit": 1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.9014999270439148,
+          "nodes": 4,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 42,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 7,
+            "followers": 4,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -7,
+          "converted": false,
+          "defense_deficit": 1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.3063003532588482,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 43,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 7,
+            "followers": 4,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -7,
+          "defense_deficit": 1,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 3767.048900015652,
+          "nodes": 10584,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 43,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": 11,
+          "converted": false,
+          "defense_deficit": 1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 25395.901800133288,
+          "nodes": 50000,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 3,
+            "leader_defense": 19
+          },
+          "ply": 59,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "unknown"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 4,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": 8,
+          "converted": false,
+          "defense_deficit": 1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3113.2934000343084,
+          "nodes": 5866,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 3,
+            "leader_defense": 19
+          },
+          "ply": 60,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 16,
+            "followers": 4,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -4,
+          "converted": false,
+          "defense_deficit": 1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.9690999761223793,
+          "nodes": 4,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 3,
+            "leader_defense": 19
+          },
+          "ply": 61,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 16,
+            "followers": 4,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -4,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.3806999884545803,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 3,
+            "leader_defense": 14
+          },
+          "ply": 62,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 16,
+            "followers": 4,
+            "leader_defense": 18
+          },
+          "board_attack_deficit": -4,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 21833.261500112712,
+          "nodes": 50000,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 3,
+            "leader_defense": 14
+          },
+          "ply": 62,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "unknown"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 19,
+          "converted": false,
+          "defense_deficit": 5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 26285.4917999357,
+          "nodes": 50000,
+          "opp_state": {
+            "board_attack": 19,
+            "followers": 4,
+            "leader_defense": 14
+          },
+          "ply": 73,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "unknown"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 19,
+          "converted": false,
+          "defense_deficit": 5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 20990.009400062263,
+          "nodes": 40549,
+          "opp_state": {
+            "board_attack": 19,
+            "followers": 4,
+            "leader_defense": 14
+          },
+          "ply": 74,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 3,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 11,
+          "converted": false,
+          "defense_deficit": 5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 215.2253999374807,
+          "nodes": 429,
+          "opp_state": {
+            "board_attack": 19,
+            "followers": 4,
+            "leader_defense": 14
+          },
+          "ply": 75,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 3,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 6,
+          "converted": false,
+          "defense_deficit": 5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 64.68590022996068,
+          "nodes": 178,
+          "opp_state": {
+            "board_attack": 19,
+            "followers": 4,
+            "leader_defense": 14
+          },
+          "ply": 76,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 3,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": 4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 7.06679979339242,
+          "nodes": 19,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 3,
+            "leader_defense": 13
+          },
+          "ply": 77,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": 4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.9858999401330948,
+          "nodes": 2,
+          "opp_state": {
+            "board_attack": 7,
+            "followers": 2,
+            "leader_defense": 13
+          },
+          "ply": 78,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 7,
+            "followers": 1,
+            "leader_defense": 12
+          },
+          "board_attack_deficit": -5,
+          "converted": false,
+          "defense_deficit": 1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.27560023590922356,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 13
+          },
+          "ply": 79,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 7,
+            "followers": 1,
+            "leader_defense": 12
+          },
+          "board_attack_deficit": -5,
+          "defense_deficit": 1,
+          "hit": true,
+          "kind": "handed_lethal",
+          "line": [
+            {
+              "attack": {
+                "attacker_slot": 0,
+                "player": "a",
+                "target": "leader"
+              }
+            },
+            {
+              "play": {
+                "card": "10834110",
+                "hand_pos": 4,
+                "player": "a"
+              }
+            },
+            {
+              "evolve": {
+                "player": "a",
+                "slot": 1,
+                "super": true
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 1,
+                "player": "a",
+                "target": "leader"
+              }
+            },
+            {
+              "play": {
+                "card": "10433310",
+                "hand_pos": 3,
+                "player": "a"
+              }
+            },
+            {
+              "choose": {
+                "option": {
+                  "slot": 0
+                },
+                "player": "a"
+              }
+            }
+          ],
+          "line_len": 6,
+          "ms": 441.0764998756349,
+          "nodes": 1239,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 13
+          },
+          "ply": 79,
+          "rng_dependent": false,
+          "turn": 8,
+          "verdict": "lethal"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 14,
+          "converted": false,
+          "defense_deficit": 4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 12344.251400325447,
+          "nodes": 22982,
+          "opp_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 13
+          },
+          "ply": 86,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 13,
+          "converted": false,
+          "defense_deficit": 4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 4401.97979984805,
+          "nodes": 6976,
+          "opp_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 13
+          },
+          "ply": 87,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 2,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 11,
+          "converted": false,
+          "defense_deficit": 4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3151.2249000370502,
+          "nodes": 5869,
+          "opp_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 13
+          },
+          "ply": 88,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 13,
+          "converted": false,
+          "defense_deficit": 4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1152.8890999034047,
+          "nodes": 1979,
+          "opp_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 13
+          },
+          "ply": 89,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 2,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 11,
+          "converted": false,
+          "defense_deficit": 4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 554.9973999150097,
+          "nodes": 1012,
+          "opp_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 13
+          },
+          "ply": 90,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 5,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 1,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 432.3179996572435,
+          "nodes": 878,
+          "opp_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 11
+          },
+          "ply": 91,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 5,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 1,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 198.73470021411777,
+          "nodes": 404,
+          "opp_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 11
+          },
+          "ply": 92,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 5,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": 1,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 71.25520007684827,
+          "nodes": 162,
+          "opp_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 11
+          },
+          "ply": 93,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 5,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": -4,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 6.030399817973375,
+          "nodes": 14,
+          "opp_state": {
+            "board_attack": 9,
+            "followers": 2,
+            "leader_defense": 11
+          },
+          "ply": 94,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 4,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": -4,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.129200216382742,
+          "nodes": 2,
+          "opp_state": {
+            "board_attack": 7,
+            "followers": 1,
+            "leader_defense": 11
+          },
+          "ply": 95,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 3,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": -9,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.3241999074816704,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 11
+          },
+          "ply": 96,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 3,
+            "leader_defense": 9
+          },
+          "board_attack_deficit": -9,
+          "defense_deficit": 2,
+          "hit": true,
+          "kind": "handed_lethal",
+          "line": [
+            {
+              "play": {
+                "card": "10934110",
+                "hand_pos": 0,
+                "player": "a"
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 2,
+                "player": "a",
+                "target": {
+                  "slot": 0
+                }
+              }
+            },
+            {
+              "evolve": {
+                "player": "a",
+                "slot": 1,
+                "super": true
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 1,
+                "player": "a",
+                "target": "leader"
+              }
+            },
+            {
+              "play": {
+                "card": "10433310",
+                "hand_pos": 1,
+                "player": "a"
+              }
+            },
+            {
+              "choose": {
+                "option": {
+                  "slot": 0
+                },
+                "player": "a"
+              }
+            }
+          ],
+          "line_len": 6,
+          "ms": 613.7167001143098,
+          "nodes": 1379,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 11
+          },
+          "ply": 96,
+          "rng_dependent": false,
+          "turn": 9,
+          "verdict": "lethal"
+        }
+      ],
+      "deck_a": "records",
+      "deck_b": "records",
+      "first": "b",
+      "game_id": "1068176807631359990-b43e6214",
+      "handed_lethal": {
+        "asked": 9,
+        "decisions_with_a_verdict": 8,
+        "lethal": 2,
+        "n": 2,
+        "nodes": 66543,
+        "none": 6,
+        "rate": 0.25,
+        "rng_dependent": 0,
+        "unknown": 1,
+        "unknown_rate": 0.1111111111111111
+      },
+      "missed_lethal": {
+        "asked": 41,
+        "decisions_with_a_verdict": 39,
+        "lethal": 0,
+        "n": 0,
+        "nodes": 187585,
+        "none": 39,
+        "rate": 0.0,
+        "rng_dependent": 0,
+        "unknown": 2,
+        "unknown_rate": 0.04878048780487805
+      },
+      "seed": 1068176807631359990,
+      "winner": "a"
+    },
+    {
+      "bot_deck": "records",
+      "decisions": [
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3.6729001440107822,
+          "nodes": 11,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 4,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.8769997879862785,
+          "nodes": 11,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 5,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.2452000044286251,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 6,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 9.686700068414211,
+          "nodes": 39,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 6,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.9609999619424343,
+          "nodes": 7,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 12,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3.897999878972769,
+          "nodes": 4,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 13,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.3969000428915024,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 14,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.3587002865970135,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "ply": 15,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 42.95859998092055,
+          "nodes": 93,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "ply": 15,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 1,
+          "converted": false,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3.767699934542179,
+          "nodes": 7,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "ply": 21,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 4,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.0048998519778252,
+          "nodes": 2,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "ply": 22,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.2764998935163021,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "ply": 23,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 242.31339991092682,
+          "nodes": 604,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "ply": 23,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 17.71469973027706,
+          "nodes": 43,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "ply": 31,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 5,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -5,
+          "converted": false,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.8110998682677746,
+          "nodes": 7,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "ply": 32,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -11,
+          "converted": false,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3.181100357323885,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "ply": 33,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -11,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 1608.2502002827823,
+          "nodes": 3663,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 18
+          },
+          "ply": 33,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 4,
+          "converted": false,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1037.971000187099,
+          "nodes": 2490,
+          "opp_state": {
+            "board_attack": 7,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "ply": 41,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 4,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 320.0157000683248,
+          "nodes": 823,
+          "opp_state": {
+            "board_attack": 7,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 42,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 28.901900164783,
+          "nodes": 79,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 43,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -8,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 6.831599865108728,
+          "nodes": 18,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 44,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -8,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.3538999482989311,
+          "nodes": 3,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 45,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -10,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.27750013396143913,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 46,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -10,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 220.41710000485182,
+          "nodes": 740,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 46,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 886.8991998024285,
+          "nodes": 1702,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 56,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 795.7427999936044,
+          "nodes": 1702,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 57,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 4,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 1,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 87.06230018287897,
+          "nodes": 266,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 58,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 6,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 25.46839974820614,
+          "nodes": 70,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 59,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -4,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 4.802899900823832,
+          "nodes": 13,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 60,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -9,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.6344999894499779,
+          "nodes": 4,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 15
+          },
+          "ply": 61,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 5,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -11,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.3076000139117241,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 15
+          },
+          "ply": 62,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 5,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -11,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 2472.6971997879446,
+          "nodes": 5706,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 15
+          },
+          "ply": 62,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 10,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 734.2745000496507,
+          "nodes": 1372,
+          "opp_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 15
+          },
+          "ply": 72,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 6,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 4,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 33.84590009227395,
+          "nodes": 64,
+          "opp_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 15
+          },
+          "ply": 73,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 1,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 11.914900038391352,
+          "nodes": 25,
+          "opp_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 15
+          },
+          "ply": 74,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 7.021699566394091,
+          "nodes": 20,
+          "opp_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 15
+          },
+          "ply": 75,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -6,
+          "converted": false,
+          "defense_deficit": -6,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.2902002781629562,
+          "nodes": 3,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 76,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 14,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -9,
+          "converted": false,
+          "defense_deficit": -6,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.6115003488957882,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 77,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 14,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -14,
+          "converted": false,
+          "defense_deficit": -7,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.2811998128890991,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 13
+          },
+          "ply": 78,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 14,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -14,
+          "defense_deficit": -7,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 701.1768999509513,
+          "nodes": 1617,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 13
+          },
+          "ply": 78,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 3,
+          "converted": false,
+          "defense_deficit": -7,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 8.78129992634058,
+          "nodes": 20,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 13
+          },
+          "ply": 83,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 6,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": -7,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.2908998653292656,
+          "nodes": 5,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 13
+          },
+          "ply": 84,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 6,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": -7,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.33529987558722496,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 13
+          },
+          "ply": 85,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 6,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "defense_deficit": -7,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 4029.449400026351,
+          "nodes": 10565,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 13
+          },
+          "ply": 85,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "board_attack_deficit": 25,
+          "converted": false,
+          "defense_deficit": -3,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 561.4763000048697,
+          "nodes": 949,
+          "opp_state": {
+            "board_attack": 25,
+            "followers": 5,
+            "leader_defense": 13
+          },
+          "ply": 97,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 3,
+            "leader_defense": 16
+          },
+          "board_attack_deficit": 14,
+          "converted": false,
+          "defense_deficit": -3,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.39299996569752693,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 25,
+            "followers": 5,
+            "leader_defense": 13
+          },
+          "ply": 98,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 3,
+            "leader_defense": 16
+          },
+          "board_attack_deficit": 14,
+          "defense_deficit": -3,
+          "hit": true,
+          "kind": "handed_lethal",
+          "line": [
+            {
+              "attack": {
+                "attacker_slot": 0,
+                "player": "a",
+                "target": {
+                  "slot": 0
+                }
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 0,
+                "player": "a",
+                "target": {
+                  "slot": 0
+                }
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 0,
+                "player": "a",
+                "target": {
+                  "slot": 0
+                }
+              }
+            },
+            {
+              "evolve": {
+                "player": "a",
+                "slot": 1,
+                "super": true
+              }
+            },
+            {
+              "play": {
+                "card": "10933110",
+                "hand_pos": 0,
+                "player": "a"
+              }
+            },
+            {
+              "play": {
+                "card": "10933310",
+                "hand_pos": 0,
+                "player": "a"
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 1,
+                "player": "a",
+                "target": "leader"
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 2,
+                "player": "a",
+                "target": "leader"
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 4,
+                "player": "a",
+                "target": "leader"
+              }
+            }
+          ],
+          "line_len": 9,
+          "ms": 930.500699672848,
+          "nodes": 1858,
+          "opp_state": {
+            "board_attack": 25,
+            "followers": 5,
+            "leader_defense": 13
+          },
+          "ply": 98,
+          "rng_dependent": true,
+          "turn": 10,
+          "verdict": "lethal"
+        }
+      ],
+      "deck_a": "records",
+      "deck_b": "records",
+      "first": "a",
+      "game_id": "12757697801983742963-b43e6214",
+      "handed_lethal": {
+        "asked": 9,
+        "decisions_with_a_verdict": 9,
+        "lethal": 1,
+        "n": 1,
+        "nodes": 24885,
+        "none": 8,
+        "rate": 0.1111111111111111,
+        "rng_dependent": 1,
+        "unknown": 0,
+        "unknown_rate": 0.0
+      },
+      "missed_lethal": {
+        "asked": 38,
+        "decisions_with_a_verdict": 38,
+        "lethal": 0,
+        "n": 0,
+        "nodes": 9723,
+        "none": 38,
+        "rate": 0.0,
+        "rng_dependent": 0,
+        "unknown": 0,
+        "unknown_rate": 0.0
+      },
+      "seed": 12757697801983742963,
+      "winner": "a"
+    },
+    {
+      "bot_deck": "records",
+      "decisions": [
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 18.363799899816513,
+          "nodes": 11,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 3,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.6596998795866966,
+          "nodes": 11,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 4,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.5384000726044178,
+          "nodes": 6,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 5,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.6085997447371483,
+          "nodes": 2,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 6,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 1.9481000490486622,
+          "nodes": 6,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 6,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 2,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3.3562001772224903,
+          "nodes": 12,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 10,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 2,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.817099913954735,
+          "nodes": 10,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 11,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 1,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.5310999006032944,
+          "nodes": 5,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 12,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 1,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.5180998705327511,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 13,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.22300006821751595,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 14,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 32.006199937313795,
+          "nodes": 72,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 14,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 3,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.5979998968541622,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 18,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.26739994063973427,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 19,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 474.0423997864127,
+          "nodes": 1337,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 19,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 30.055700335651636,
+          "nodes": 73,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 2,
+            "leader_defense": 19
+          },
+          "ply": 28,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 4,
+            "followers": 1,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": 1,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 11.553400196135044,
+          "nodes": 15,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 2,
+            "leader_defense": 19
+          },
+          "ply": 29,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 3,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -5,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 9.059600066393614,
+          "nodes": 14,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 2,
+            "leader_defense": 19
+          },
+          "ply": 30,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 3,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -7,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.1590998619794846,
+          "nodes": 2,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 31,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 2,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -8,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.3582998178899288,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 32,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 2,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -8,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 457.0832001045346,
+          "nodes": 1258,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 32,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 86.60369971767068,
+          "nodes": 163,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 39,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 2,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3.3319001086056232,
+          "nodes": 9,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 40,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -5,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.9579001925885677,
+          "nodes": 2,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 41,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -10,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.27459999546408653,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 42,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -10,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 1717.1981004066765,
+          "nodes": 5016,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 42,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 574.1673000156879,
+          "nodes": 1508,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 51,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 680.9981996193528,
+          "nodes": 1508,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 52,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 6,
+            "followers": 1,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -6,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 14.932699967175722,
+          "nodes": 46,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 53,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 1,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -9,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.50410009175539,
+          "nodes": 7,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 54,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 1,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -9,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.2955002710223198,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 55,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 1,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -9,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 1271.5811002999544,
+          "nodes": 3521,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 55,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": 10,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 4031.8390000611544,
+          "nodes": 7817,
+          "opp_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 19
+          },
+          "ply": 61,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 3,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 5.666300188750029,
+          "nodes": 10,
+          "opp_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 19
+          },
+          "ply": 62,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -4,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3.725999966263771,
+          "nodes": 2,
+          "opp_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 19
+          },
+          "ply": 63,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -9,
+          "converted": false,
+          "defense_deficit": 1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.3459998406469822,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "ply": 64,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 14,
+            "followers": 3,
+            "leader_defense": 17
+          },
+          "board_attack_deficit": -9,
+          "defense_deficit": 1,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 21199.73780028522,
+          "nodes": 50000,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "ply": 64,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "unknown"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "board_attack_deficit": 12,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 13072.788500227034,
+          "nodes": 23047,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 2,
+            "leader_defense": 18
+          },
+          "ply": 72,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 4,
+            "leader_defense": 16
+          },
+          "board_attack_deficit": 2,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 251.5680999495089,
+          "nodes": 467,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 2,
+            "leader_defense": 18
+          },
+          "ply": 73,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 16,
+            "followers": 4,
+            "leader_defense": 16
+          },
+          "board_attack_deficit": -4,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 52.25630011409521,
+          "nodes": 103,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 2,
+            "leader_defense": 18
+          },
+          "ply": 74,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 16,
+            "followers": 4,
+            "leader_defense": 16
+          },
+          "board_attack_deficit": -11,
+          "converted": false,
+          "defense_deficit": 1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 12.725800275802612,
+          "nodes": 8,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 17
+          },
+          "ply": 75,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 16,
+            "followers": 4,
+            "leader_defense": 16
+          },
+          "board_attack_deficit": -11,
+          "converted": false,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.1314000003039837,
+          "nodes": 2,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 76,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 3,
+            "leader_defense": 19
+          },
+          "board_attack_deficit": -13,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.31689973548054695,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 14
+          },
+          "ply": 77,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 3,
+            "leader_defense": 19
+          },
+          "board_attack_deficit": -13,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 24225.404699798673,
+          "nodes": 50000,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 14
+          },
+          "ply": 77,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "unknown"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": 10,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 8667.867899872363,
+          "nodes": 14335,
+          "opp_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 14
+          },
+          "ply": 86,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 482.2219996713102,
+          "nodes": 935,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 87,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 298.9082997664809,
+          "nodes": 546,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 88,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": 3,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 61.55230011790991,
+          "nodes": 114,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 89,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 5,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 6.508699618279934,
+          "nodes": 14,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 90,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 5,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.36579975858330727,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 91,
+          "rng_dependent": null,
+          "turn": 9,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 5,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -3,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 26650.38730017841,
+          "nodes": 50000,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 91,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "unknown"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": 14,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 22525.676199700683,
+          "nodes": 50000,
+          "opp_state": {
+            "board_attack": 17,
+            "followers": 4,
+            "leader_defense": 14
+          },
+          "ply": 104,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "unknown"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": 14,
+          "converted": false,
+          "defense_deficit": -3,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 12870.737600140274,
+          "nodes": 50000,
+          "opp_state": {
+            "board_attack": 17,
+            "followers": 4,
+            "leader_defense": 11
+          },
+          "ply": 105,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "unknown"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 16,
+            "followers": 5,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": 1,
+          "converted": false,
+          "defense_deficit": -3,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 4201.518299989402,
+          "nodes": 18206,
+          "opp_state": {
+            "board_attack": 17,
+            "followers": 4,
+            "leader_defense": 11
+          },
+          "ply": 106,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 4,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": 4,
+          "converted": false,
+          "defense_deficit": -3,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2334.0758001431823,
+          "nodes": 9445,
+          "opp_state": {
+            "board_attack": 17,
+            "followers": 4,
+            "leader_defense": 11
+          },
+          "ply": 107,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 18,
+            "followers": 5,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": -3,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 960.2800998836756,
+          "nodes": 3938,
+          "opp_state": {
+            "board_attack": 17,
+            "followers": 4,
+            "leader_defense": 11
+          },
+          "ply": 108,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 14,
+            "followers": 4,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": -3,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 140.94740012660623,
+          "nodes": 582,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 3,
+            "leader_defense": 11
+          },
+          "ply": 109,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 19,
+            "followers": 5,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -7,
+          "converted": false,
+          "defense_deficit": -3,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 42.04090032726526,
+          "nodes": 151,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 3,
+            "leader_defense": 11
+          },
+          "ply": 110,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 19,
+            "followers": 5,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -7,
+          "converted": false,
+          "defense_deficit": -9,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 13.150400016456842,
+          "nodes": 39,
+          "opp_state": {
+            "board_attack": 12,
+            "followers": 3,
+            "leader_defense": 5
+          },
+          "ply": 111,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 16,
+            "followers": 4,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -9,
+          "converted": false,
+          "defense_deficit": -9,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.010100055485964,
+          "nodes": 8,
+          "opp_state": {
+            "board_attack": 7,
+            "followers": 2,
+            "leader_defense": 5
+          },
+          "ply": 112,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 12,
+            "followers": 3,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -10,
+          "converted": false,
+          "defense_deficit": -9,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.3194003365933895,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 5
+          },
+          "ply": 113,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 2,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -9,
+          "converted": false,
+          "defense_deficit": -9,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.13870000839233398,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 5
+          },
+          "ply": 114,
+          "rng_dependent": null,
+          "turn": 10,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 2,
+            "leader_defense": 14
+          },
+          "board_attack_deficit": -9,
+          "defense_deficit": -9,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 1884.4956997781992,
+          "nodes": 10830,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 5
+          },
+          "ply": 114,
+          "rng_dependent": null,
+          "turn": 11,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 8
+          },
+          "board_attack_deficit": 20,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 7416.214199736714,
+          "nodes": 31721,
+          "opp_state": {
+            "board_attack": 20,
+            "followers": 4,
+            "leader_defense": 10
+          },
+          "ply": 129,
+          "rng_dependent": null,
+          "turn": 11,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 3,
+            "leader_defense": 8
+          },
+          "board_attack_deficit": 9,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 12.03049998730421,
+          "nodes": 34,
+          "opp_state": {
+            "board_attack": 20,
+            "followers": 4,
+            "leader_defense": 10
+          },
+          "ply": 130,
+          "rng_dependent": null,
+          "turn": 11,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 4,
+            "leader_defense": 8
+          },
+          "board_attack_deficit": 7,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 8.20189993828535,
+          "nodes": 32,
+          "opp_state": {
+            "board_attack": 20,
+            "followers": 4,
+            "leader_defense": 10
+          },
+          "ply": 131,
+          "rng_dependent": null,
+          "turn": 11,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 15,
+            "followers": 5,
+            "leader_defense": 8
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 5.198199767619371,
+          "nodes": 23,
+          "opp_state": {
+            "board_attack": 20,
+            "followers": 4,
+            "leader_defense": 10
+          },
+          "ply": 132,
+          "rng_dependent": null,
+          "turn": 11,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 4,
+            "leader_defense": 8
+          },
+          "board_attack_deficit": 7,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.9229001589119434,
+          "nodes": 4,
+          "opp_state": {
+            "board_attack": 20,
+            "followers": 4,
+            "leader_defense": 10
+          },
+          "ply": 133,
+          "rng_dependent": null,
+          "turn": 11,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 3,
+            "leader_defense": 8
+          },
+          "board_attack_deficit": 4,
+          "converted": false,
+          "defense_deficit": 2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.1550000160932541,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 15,
+            "followers": 3,
+            "leader_defense": 10
+          },
+          "ply": 134,
+          "rng_dependent": null,
+          "turn": 11,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 11,
+            "followers": 3,
+            "leader_defense": 8
+          },
+          "board_attack_deficit": 4,
+          "defense_deficit": 2,
+          "hit": true,
+          "kind": "handed_lethal",
+          "line": [
+            {
+              "attack": {
+                "attacker_slot": 1,
+                "player": "a",
+                "target": {
+                  "slot": 0
+                }
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 2,
+                "player": "a",
+                "target": {
+                  "slot": 0
+                }
+              }
+            },
+            {
+              "engage": {
+                "player": "a",
+                "slot": 0
+              }
+            },
+            {
+              "play": {
+                "card": "10933310",
+                "hand_pos": 1,
+                "player": "a"
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 2,
+                "player": "a",
+                "target": "leader"
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 3,
+                "player": "a",
+                "target": "leader"
+              }
+            }
+          ],
+          "line_len": 6,
+          "ms": 64.13249997422099,
+          "nodes": 285,
+          "opp_state": {
+            "board_attack": 15,
+            "followers": 3,
+            "leader_defense": 10
+          },
+          "ply": 134,
+          "rng_dependent": true,
+          "turn": 12,
+          "verdict": "lethal"
+        }
+      ],
+      "deck_a": "records",
+      "deck_b": "records",
+      "first": "a",
+      "game_id": "2374435823510868837-b43e6214",
+      "handed_lethal": {
+        "asked": 11,
+        "decisions_with_a_verdict": 8,
+        "lethal": 1,
+        "n": 1,
+        "nodes": 172325,
+        "none": 7,
+        "rate": 0.125,
+        "rng_dependent": 1,
+        "unknown": 3,
+        "unknown_rate": 0.2727272727272727
+      },
+      "missed_lethal": {
+        "asked": 58,
+        "decisions_with_a_verdict": 56,
+        "lethal": 0,
+        "n": 0,
+        "nodes": 214990,
+        "none": 56,
+        "rate": 0.0,
+        "rng_dependent": 0,
+        "unknown": 2,
+        "unknown_rate": 0.034482758620689655
+      },
+      "seed": 2374435823510868837,
+      "winner": "a"
+    },
+    {
+      "bot_deck": "records",
+      "decisions": [
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.38029998540878296,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 2,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.1441999338567257,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 3,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 2.608399838209152,
+          "nodes": 15,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 3,
+          "rng_dependent": null,
+          "turn": 1,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.2260000221431255,
+          "nodes": 9,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 6,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.12010009959340096,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 7,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 11.609000153839588,
+          "nodes": 63,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 7,
+          "rng_dependent": null,
+          "turn": 2,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 1,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -1,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 9.77939972653985,
+          "nodes": 47,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 11,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 2,
+            "followers": 2,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.6604002341628075,
+          "nodes": 20,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 12,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": 0,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.1622998863458633,
+          "nodes": 4,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "ply": 13,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.4604002460837364,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 14,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 38.68510015308857,
+          "nodes": 176,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "ply": 14,
+          "rng_dependent": null,
+          "turn": 3,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 86.78629994392395,
+          "nodes": 473,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 17,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 5,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": -1,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 26.850999798625708,
+          "nodes": 159,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "ply": 18,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 5,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": -2,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 8.811699692159891,
+          "nodes": 48,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 18
+          },
+          "ply": 19,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 5,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": -3,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.0077996887266636,
+          "nodes": 13,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 17
+          },
+          "ply": 20,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 5,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -2,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.6843996234238148,
+          "nodes": 3,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 21,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.12299977242946625,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 22,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 3,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 882.3379999957979,
+          "nodes": 4695,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 22,
+          "rng_dependent": null,
+          "turn": 4,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 19.286199938505888,
+          "nodes": 81,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 32,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3.639000002294779,
+          "nodes": 12,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 33,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 0,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 3.0211000703275204,
+          "nodes": 11,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 34,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 4,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -4,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.47430023550987244,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 35,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -10,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.22489996626973152,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 36,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -10,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 285.58799996972084,
+          "nodes": 1459,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 16
+          },
+          "ply": 36,
+          "rng_dependent": null,
+          "turn": 5,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 3,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 10.448700282722712,
+          "nodes": 43,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 41,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 6,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 1.0783998295664787,
+          "nodes": 7,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 42,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -6,
+          "converted": false,
+          "defense_deficit": -4,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.23530004546046257,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 16
+          },
+          "ply": 43,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -9,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.10279985144734383,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 15
+          },
+          "ply": 44,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 9,
+            "followers": 1,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -9,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 2260.5956997722387,
+          "nodes": 12616,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 15
+          },
+          "ply": 44,
+          "rng_dependent": null,
+          "turn": 6,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 5,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 64.32309979572892,
+          "nodes": 280,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 2,
+            "leader_defense": 15
+          },
+          "ply": 51,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -3,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 29.630900360643864,
+          "nodes": 126,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 2,
+            "leader_defense": 15
+          },
+          "ply": 52,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -8,
+          "converted": false,
+          "defense_deficit": -5,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.979299984872341,
+          "nodes": 18,
+          "opp_state": {
+            "board_attack": 5,
+            "followers": 2,
+            "leader_defense": 15
+          },
+          "ply": 53,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -11,
+          "converted": false,
+          "defense_deficit": -6,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.4304000176489353,
+          "nodes": 2,
+          "opp_state": {
+            "board_attack": 2,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 54,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -13,
+          "converted": false,
+          "defense_deficit": -6,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.13169972226023674,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 14
+          },
+          "ply": 55,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 3,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -13,
+          "defense_deficit": -6,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 7479.284199886024,
+          "nodes": 42888,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 14
+          },
+          "ply": 55,
+          "rng_dependent": null,
+          "turn": 7,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": 3,
+          "converted": false,
+          "defense_deficit": -6,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 72.19679979607463,
+          "nodes": 348,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 62,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 13,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -10,
+          "converted": false,
+          "defense_deficit": -6,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 31.75680013373494,
+          "nodes": 128,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 63,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 20,
+            "followers": 5,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -17,
+          "converted": false,
+          "defense_deficit": -6,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 2.822099719196558,
+          "nodes": 11,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 14
+          },
+          "ply": 64,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 20,
+            "followers": 5,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -17,
+          "converted": false,
+          "defense_deficit": -14,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.7703001610934734,
+          "nodes": 4,
+          "opp_state": {
+            "board_attack": 3,
+            "followers": 1,
+            "leader_defense": 6
+          },
+          "ply": 65,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 17,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -17,
+          "converted": false,
+          "defense_deficit": -14,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line_len": null,
+          "ms": 0.13480009511113167,
+          "nodes": 0,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 6
+          },
+          "ply": 66,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "a",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 17,
+            "followers": 4,
+            "leader_defense": 20
+          },
+          "board_attack_deficit": -17,
+          "defense_deficit": -14,
+          "hit": false,
+          "kind": "handed_lethal",
+          "line_len": null,
+          "ms": 7989.68859994784,
+          "nodes": 40198,
+          "opp_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 6
+          },
+          "ply": 66,
+          "rng_dependent": null,
+          "turn": 8,
+          "verdict": "none"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 0,
+            "followers": 0,
+            "leader_defense": 19
+          },
+          "board_attack_deficit": 9,
+          "converted": true,
+          "defense_deficit": -13,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line": [
+            {
+              "play": {
+                "card": "10021130",
+                "hand_pos": 1,
+                "player": "b"
+              }
+            },
+            {
+              "play": {
+                "card": "10021110",
+                "hand_pos": 3,
+                "player": "b"
+              }
+            },
+            {
+              "evolve": {
+                "player": "b",
+                "slot": 1,
+                "super": false
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 1,
+                "player": "b",
+                "target": {
+                  "slot": 2
+                }
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 0,
+                "player": "b",
+                "target": "leader"
+              }
+            }
+          ],
+          "line_len": 5,
+          "ms": 137.8315999172628,
+          "nodes": 678,
+          "opp_state": {
+            "board_attack": 9,
+            "followers": 2,
+            "leader_defense": 6
+          },
+          "ply": 75,
+          "rng_dependent": false,
+          "turn": 9,
+          "verdict": "lethal"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 7,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "board_attack_deficit": 2,
+          "converted": true,
+          "defense_deficit": -13,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line": [
+            {
+              "play": {
+                "card": "10021110",
+                "hand_pos": 3,
+                "player": "b"
+              }
+            },
+            {
+              "evolve": {
+                "player": "b",
+                "slot": 1,
+                "super": false
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 1,
+                "player": "b",
+                "target": {
+                  "slot": 2
+                }
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 0,
+                "player": "b",
+                "target": "leader"
+              }
+            }
+          ],
+          "line_len": 4,
+          "ms": 4.0237996727228165,
+          "nodes": 27,
+          "opp_state": {
+            "board_attack": 9,
+            "followers": 2,
+            "leader_defense": 6
+          },
+          "ply": 76,
+          "rng_dependent": false,
+          "turn": 9,
+          "verdict": "lethal"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 8,
+            "followers": 2,
+            "leader_defense": 19
+          },
+          "board_attack_deficit": 1,
+          "converted": true,
+          "defense_deficit": -13,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line": [
+            {
+              "evolve": {
+                "player": "b",
+                "slot": 1,
+                "super": false
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 1,
+                "player": "b",
+                "target": {
+                  "slot": 2
+                }
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 0,
+                "player": "b",
+                "target": "leader"
+              }
+            }
+          ],
+          "line_len": 3,
+          "ms": 3.9874999783933163,
+          "nodes": 20,
+          "opp_state": {
+            "board_attack": 9,
+            "followers": 2,
+            "leader_defense": 6
+          },
+          "ply": 77,
+          "rng_dependent": false,
+          "turn": 9,
+          "verdict": "lethal"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 10,
+            "followers": 2,
+            "leader_defense": 19
+          },
+          "board_attack_deficit": -1,
+          "converted": true,
+          "defense_deficit": -13,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line": [
+            {
+              "attack": {
+                "attacker_slot": 1,
+                "player": "b",
+                "target": {
+                  "slot": 2
+                }
+              }
+            },
+            {
+              "attack": {
+                "attacker_slot": 0,
+                "player": "b",
+                "target": "leader"
+              }
+            }
+          ],
+          "line_len": 2,
+          "ms": 0.8625001646578312,
+          "nodes": 5,
+          "opp_state": {
+            "board_attack": 9,
+            "followers": 2,
+            "leader_defense": 6
+          },
+          "ply": 78,
+          "rng_dependent": false,
+          "turn": 9,
+          "verdict": "lethal"
+        },
+        {
+          "acting": "b",
+          "auditee": "b",
+          "auditee_state": {
+            "board_attack": 7,
+            "followers": 1,
+            "leader_defense": 19
+          },
+          "board_attack_deficit": -3,
+          "converted": true,
+          "defense_deficit": -13,
+          "hit": false,
+          "kind": "missed_lethal",
+          "line": [
+            {
+              "attack": {
+                "attacker_slot": 0,
+                "player": "b",
+                "target": "leader"
+              }
+            }
+          ],
+          "line_len": 1,
+          "ms": 0.22860011085867882,
+          "nodes": 1,
+          "opp_state": {
+            "board_attack": 4,
+            "followers": 1,
+            "leader_defense": 6
+          },
+          "ply": 79,
+          "rng_dependent": false,
+          "turn": 9,
+          "verdict": "lethal"
+        }
+      ],
+      "deck_a": "records",
+      "deck_b": "records",
+      "first": "b",
+      "game_id": "6065548863054576576-b43e6214",
+      "handed_lethal": {
+        "asked": 8,
+        "decisions_with_a_verdict": 8,
+        "lethal": 0,
+        "n": 0,
+        "nodes": 102110,
+        "none": 8,
+        "rate": 0.0,
+        "rng_dependent": 0,
+        "unknown": 0,
+        "unknown_rate": 0.0
+      },
+      "missed_lethal": {
+        "asked": 38,
+        "decisions_with_a_verdict": 38,
+        "lethal": 5,
+        "n": 0,
+        "nodes": 2582,
+        "none": 33,
+        "rate": 0.0,
+        "rng_dependent": 0,
+        "unknown": 0,
+        "unknown_rate": 0.0
+      },
+      "seed": 6065548863054576576,
+      "winner": "b"
+    }
+  ],
+  "seed": 1
+}

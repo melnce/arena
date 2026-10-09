@@ -1,0 +1,10 @@
+== 1068176807631359990-b43e6214 turn 8: the bot's turn is actions 73-79: ['play 10722310', 'play 10624110', 'super-evolve slot0', 'attack slot0->enemy slot1', 'attack slot1->enemy slot2', 'attack slot1->enemy slot1', 'end_turn']
+  distinct bot turns searched: 4009 (CAP reached: not exhaustive); owner kill after: lethal 4009, none 0, unknown 0
+== 1068176807631359990-b43e6214 turn 9: the bot's turn is actions 86-96: ['play 10624120', 'play 90021120', 'attack slot1->enemy slot1', 'play 90021120', 'play 10724110', 'play 90024320', 'choose {"slot": 1}', 'attack slot2->enemy slot2', 'attack slot3->enemy slot0', 'attack slot1->enemy slot0', 'end_turn']
+  distinct bot turns searched: 4003 (CAP reached: not exhaustive); owner kill after: lethal 3999, none 4, unknown 0
+  a safe line: ['play 10824120', 'play 90021120', 'attack slot0->enemy slot2', 'attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'end_turn']
+== 12757697801983742963-b43e6214 turn 9: the bot's turn is actions 97-98: ['play 10724120', 'end_turn']
+  distinct bot turns searched: 266 (exhaustive); owner kill after: lethal 266, none 0, unknown 0
+== 2374435823510868837-b43e6214 turn 11: the bot's turn is actions 129-134: ['play 10724120', 'play 90021120', 'play 90021120', 'attack slot3->enemy slot2', 'attack slot3->enemy slot3', 'end_turn']
+  distinct bot turns searched: 4005 (CAP reached: not exhaustive); owner kill after: lethal 4004, none 1, unknown 0
+  a safe line: ['play 10824120', 'play 90021120', 'attack slot0->enemy slot1', 'play 90021120', 'attack slot0->enemy slot1', 'attack slot0->enemy slot1', 'attack slot0->enemy slot1', 'attack slot0->enemy slot1', 'attack slot0->enemy slot1', 'end_turn']
