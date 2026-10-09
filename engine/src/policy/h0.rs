@@ -5438,25 +5438,6 @@ fn hbk_fresh_seeds_and_deal(
     (fresh, deal)
 }
 
-fn hbk_combine_agg(
-    j: usize,
-    acc: &[f32],
-    n: &[u32],
-    worst: &[f32],
-    fresh_acc: &[f32],
-    fresh_n: &[u32],
-    fresh_worst: &[f32],
-    pess: f32,
-) -> f32 {
-    let total_n = n[j] + fresh_n[j];
-    if total_n == 0 {
-        return f32::NEG_INFINITY;
-    }
-    let total_acc = acc[j] + fresh_acc[j];
-    let total_worst = worst[j].min(fresh_worst[j]);
-    root_agg(total_acc, total_n, total_worst, pess)
-}
-
 #[allow(clippy::too_many_arguments)]
 fn score_search_candidate_pair(
     db: &CardDb,
@@ -5481,9 +5462,7 @@ fn score_search_candidate_pair(
     let root_key = search_key(root);
     let cap = pair_cap;
     let pair_nodes_start = nodes;
-    let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key]) else {
-        return None;
-    };
+    let s = try_apply(db, root, a, &mut nodes, cap, &[root_key])?;
     let at_fuse_choice = fusemacro && own_fuse_partners(&s, me).is_some();
     let search_depth = if at_fuse_choice {
         depth
@@ -5639,16 +5618,17 @@ fn try_holdback_resample(
     }
 
     let end_root_only = root_agg(acc[end_j], n[end_j], worst[end_j], pess);
-    let end_combined = hbk_combine_agg(
-        end_j,
-        acc,
-        n,
-        worst,
-        &fresh_acc,
-        &fresh_n,
-        &fresh_worst,
-        pess,
-    );
+    let end_total_n = n[end_j] + fresh_n[end_j];
+    let end_combined = if end_total_n == 0 {
+        f32::NEG_INFINITY
+    } else {
+        root_agg(
+            acc[end_j] + fresh_acc[end_j],
+            end_total_n,
+            worst[end_j].min(fresh_worst[end_j]),
+            pess,
+        )
+    };
 
     let mut resample_cands = vec![HoldbackResampleCandidate {
         legal_index: cand[end_j],
@@ -5659,7 +5639,17 @@ fn try_holdback_resample(
     let mut best_kill: Option<(usize, f32)> = None;
     for j in kill_js {
         let root_only = root_agg(acc[j], n[j], worst[j], pess);
-        let combined = hbk_combine_agg(j, acc, n, worst, &fresh_acc, &fresh_n, &fresh_worst, pess);
+        let total_n = n[j] + fresh_n[j];
+        let combined = if total_n == 0 {
+            f32::NEG_INFINITY
+        } else {
+            root_agg(
+                acc[j] + fresh_acc[j],
+                total_n,
+                worst[j].min(fresh_worst[j]),
+                pess,
+            )
+        };
         resample_cands.push(HoldbackResampleCandidate {
             legal_index: cand[j],
             root_only,
