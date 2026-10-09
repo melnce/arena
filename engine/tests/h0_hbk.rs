@@ -280,7 +280,7 @@ fn hbk_noise_moments_flip() {
         let mut h0 = parse_h0(&served_hbk);
         h0.arm_explain();
         let mut rng = policy_rng(m.bot_seed);
-        let pick_hbk = h0.choose(db, &st, &legal, &mut rng);
+        let pick_hbk = h0.choose(&db, &st, &legal, &mut rng);
         let rec = h0.take_explain().expect("explain");
         if m.expect_flip_with_hbk {
             assert_eq!(
@@ -328,13 +328,13 @@ fn hbk_no_rng_consumption_when_keeps_end_turn() {
     let mut off = parse_h0(SERVED_SPEC);
     off.arm_explain();
     let mut rng_off = policy_rng(m.bot_seed);
-    let _ = off.choose(db, &st, &legal, &mut rng_off);
+    let _ = off.choose(&db, &st, &legal, &mut rng_off);
     let rec_off = off.take_explain().expect("explain off");
 
     let mut on = parse_h0(&served_hbk);
     on.arm_explain();
     let mut rng_on = policy_rng(m.bot_seed);
-    let _ = on.choose(db, &st, &legal, &mut rng_on);
+    let _ = on.choose(&db, &st, &legal, &mut rng_on);
     let rec_on = on.take_explain().expect("explain on");
 
     assert!(
