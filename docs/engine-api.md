@@ -551,6 +551,16 @@ node budget charged to the pair cap; default `0` = off),
 `tkroll=<u32>` (after a deterministic miss, run [`forced_lethal`] on the
 first determinization and confirm under rerolled dice; only when
 `tkill>0`; default `0` = off),
+`hbk=<u32>` (after search chooses `EndTurn` with a kill attack available,
+re-score `EndTurn` and each kill attack on `hbk` fresh determinizations
+(dealt like the root worlds; each fresh seed is one `next_u64()` from
+`Xoshiro256ss::from_seed(root_world_seed[i mod k] XOR constant XOR i)`,
+without consuming the decision rng) and combine those values with the
+root search aggregates; per `(world, candidate)` pair the node budget is
+the root's average share `node_cap / (k × candidates)` with the same
+`MIN_SHARE` floor; applies are outside `node_cap`; runs before `hbcheck`;
+play the best kill when its combined aggregate beats `EndTurn`'s;
+default `0` = off),
 `hbcheck=<u32>` (after search chooses `EndTurn` with a kill attack
 available, symmetrically re-score `EndTurn` and each kill attack as
 `v(s)=min(plain,removal)` on a fresh clone after the bot's `EndTurn`
@@ -643,6 +653,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `olsolve` | 0 | after a sweep miss on the opponent's turn, run [`forced_lethal`] with this node budget (charged to the pair cap). `0` = off (today). Only when `olethal=1` and `odepth=0` |
 | `tkill` | 0 | on each own-turn decision (Main, Combat, or Choice) with more than one useful candidate, run [`forced_lethal_det`] on the first determinization before `consensus_lethal` / search. A deterministic kill confirmed on every root is played; applies are outside `node_cap`. `0` = off (today) |
 | `tkroll` | 0 | after a deterministic miss, run [`forced_lethal_accepting`] on the first determinization (every-root × `tkroll` rerolled confirmation inside the search; transposition off). Only when `tkill>0`; uses `tkill`'s budget. `0` = off (today; no effect when `tkill=0`) |
+| `hbk` | 0 | after search chooses `EndTurn` with a kill attack available, search `EndTurn` and each kill on `hbk` fresh determinizations (same `info` / `deal` / `hread` as the root; seeds independent of the root worlds and not drawn from the decision rng), merge those values with the root aggregates via `root_agg` / `pess`, and play the best kill when its combined aggregate beats `EndTurn`'s (`holdback_resample`). Per-pair budget is `node_cap / (k × candidates)` with the `MIN_SHARE` floor; all applies are outside `node_cap`. Runs before `hbcheck`. `0` = off (today) |
 | `hbcheck` | 0 | after search chooses `EndTurn` with a kill attack available, symmetrically re-score `End′` and each kill attack `A′` as `v(s)=min(plain,removal)` per determinization (bounded opponent removal search up to 3 actions, 4 rerolls per sure line, `hbcheck` applies per root outside `node_cap`; attack paths finish the bot's turn greedily up to `osteps` before `EndTurn`). Play the best kill when its aggregate beats `End′` (`holdback_trade`). `0` = off (the default; the served specs use `2000`) |
 | `fuseguard` | 0 | drop no-op fuses from the bot's own root candidates and own-turn search (`search_own` at every horizon). A fuse is no-op when every `fused` trigger only demands unaffordable PP, the host has no latent `wasFused` value, and the hand is not full (`HAND_LIMIT`). Not applied in the opponent reply or lethal searches (`tkill` / `tkroll` / `olsolve`). If dropping would leave no action, the list is unchanged. `1` = on; the served specs use `1` |
 | `wseed` | `off` | turn-stable world seeding. `off` = one determinization seed per root from the caller rng (today). `turn` = one base per `(turn, active, me)` cached across decisions in the same turn; root seed `i` is the `i`th `next_u64()` of `Xoshiro256ss::from_seed(base)` |
@@ -767,6 +778,14 @@ budget (transposition off). When an accepted line’s `line[0]` is legal,
 that action is taken and `last_value = wv`. Default `tkroll=0` — no effect
 when `tkill=0`; with `tkill>0` and `tkroll=0`, play is byte-identical
 to deterministic-only `tkill`.
+
+When `hbk>0`, after the normal search path chooses `EndTurn` and at least
+one scored candidate is a kill attack, `H0::choose` deals `hbk` fresh
+determinizations, searches `EndTurn` and each kill on those worlds with
+the root's average per-pair budget, merges the results with the root
+aggregates, and plays the best kill when its combined aggregate beats
+`EndTurn`'s (`ChoosePath::HoldbackResample`). This runs before
+`hbcheck`. Default `hbk=0` — play is byte-identical when off.
 
 When `hbcheck>0`, after the normal search path chooses `EndTurn` and at
 least one candidate is a kill attack, `H0::choose` recomputes both

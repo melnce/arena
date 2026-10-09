@@ -150,7 +150,10 @@ impl AnyPolicy {
     /// first determinization and confirm under rerolled dice on every root;
     /// only when `tkill>0`; default `0` = off), `fuseguard=0|1` (drop no-op
     /// fuses from the bot's own root candidates and own-turn search; default
-    /// `0` = off), `hbcheck=<u32>` (after search
+    /// `0` = off), `hbk=<u32>` (after search chooses `EndTurn` with a kill
+    /// attack available, re-score `EndTurn` and each kill on fresh
+    /// determinizations before `hbcheck`; applies are outside `node_cap`;
+    /// default `0` = off), `hbcheck=<u32>` (after search
     /// chooses `EndTurn` with a kill attack available, re-score `EndTurn` per
     /// root with a bounded opponent removal search; applies are outside
     /// `node_cap`; default `0` = off), `osteps=<u32>`
@@ -204,7 +207,8 @@ impl AnyPolicy {
     /// `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
     /// `oevo=0` when the evolve branch is off, non-default `okill`,
     /// `omacro=1` when the greedy reply fuses play→evolve, non-default `olsolve`,
-    /// non-default `tkill`, non-default `tkroll`, non-default `hbcheck`,
+    /// non-default `tkill`, non-default `tkroll`, non-default `hbk`,
+    /// non-default `hbcheck`,
     /// `fuseguard=1` when on,
     /// non-default `wv`,
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
@@ -280,6 +284,9 @@ fn h0_spec(h: &H0) -> String {
     }
     if h.tkroll != def.tkroll {
         parts.push(format!("tkroll={}", h.tkroll));
+    }
+    if h.hbk != def.hbk {
+        parts.push(format!("hbk={}", h.hbk));
     }
     if h.hbcheck != def.hbcheck {
         parts.push(format!("hbcheck={}", h.hbcheck));
@@ -413,6 +420,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.tkill == b.tkill
         && a.tkroll == b.tkroll
         && a.hbcheck == b.hbcheck
+        && a.hbk == b.hbk
         && a.fuseguard == b.fuseguard
         && a.osteps == b.osteps
         && a.wv == b.wv
@@ -536,6 +544,10 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             "hbcheck" => {
                 let v: u32 = parse_num(val)?;
                 h.hbcheck = v;
+            }
+            "hbk" => {
+                let v: u32 = parse_num(val)?;
+                h.hbk = v;
             }
             "fuseguard" => {
                 h.fuseguard = match val {

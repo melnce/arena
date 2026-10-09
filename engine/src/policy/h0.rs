@@ -38,7 +38,8 @@ use crate::trace::{ChooseOptionJson, NeutralAction};
 
 use super::explain::{
     CandidateRecord, ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord,
-    HoldbackRecord, Line, LostRerankRecord, PvEnd, PvTracker,
+    HoldbackRecord, HoldbackResampleCandidate, HoldbackResampleRecord, Line, LostRerankRecord,
+    PvEnd, PvTracker,
 };
 use super::fuse_guard::{filter_cand_fuseguard, fuse_action_is_noop};
 
@@ -349,6 +350,13 @@ pub struct SearchStats {
     pub hb_nodes_max: u64,
     /// Worlds where the held-back budget ran out before any sure removal line.
     pub hb_unknown: u64,
+    /// Decisions where the holdback resample check ran (`hbk>0`, search chose
+    /// `EndTurn` with a kill attack available).
+    pub hbk_checks: u64,
+    /// Kill attacks played instead of `EndTurn` after the holdback resample check.
+    pub hbk_flips: u64,
+    /// `apply`s spent inside holdback resample searches (outside `node_cap`).
+    pub hbk_nodes: u64,
 }
 
 impl SearchStats {
@@ -416,6 +424,9 @@ impl SearchStats {
         self.hb_nodes += other.hb_nodes;
         self.hb_nodes_max = self.hb_nodes_max.max(other.hb_nodes_max);
         self.hb_unknown += other.hb_unknown;
+        self.hbk_checks += other.hbk_checks;
+        self.hbk_flips += other.hbk_flips;
+        self.hbk_nodes += other.hbk_nodes;
     }
 }
 
@@ -519,6 +530,10 @@ pub struct H0 {
     /// `EndTurn` per root with a bounded opponent removal search. Apply budget
     /// per root; all applies are outside `node_cap`. `0` = off (today).
     pub hbcheck: u32,
+    /// After search chooses `EndTurn` with a kill attack available, re-score
+    /// `EndTurn` and each kill on fresh determinizations before `hbcheck`.
+    /// Applies are outside `node_cap`. `0` = off (today).
+    pub hbk: u32,
     /// Greedy-line steps before a forced `EndTurn`. Default `6` is the sweep-5
     /// flip; the hard stop is `osteps + 3` (today: 9).
     pub osteps: u32,
@@ -612,6 +627,7 @@ impl Default for H0 {
             tkill: 0,
             tkroll: 0,
             hbcheck: 0,
+            hbk: 0,
             osteps: 6,
             fusemacro: true,
             net: Some(builtin_net()),
@@ -1008,6 +1024,7 @@ impl Policy for H0 {
         let mut nodes = 0u32;
         let k = self.k();
         let (world_seeds, wbase_used, wbase_reused) = self.root_world_seeds(state, me, k, rng);
+        let root_world_seeds = world_seeds.clone();
         let block = self.deal == Deal::Block && self.hread.is_none();
         let deal_seed = if block {
             if self.turn_stable_worlds() {
@@ -1376,36 +1393,79 @@ impl Policy for H0 {
                 } else {
                     (best_i, pick_last_value)
                 };
-                let (chosen, hb_override, pick_last_value) = if lost_rerank_rec.is_some() {
-                    (cand[pick_i], false, pick_last_value)
-                } else if self.hbcheck > 0
-                    && any_scored
-                    && matches!(subset[pick_i], Action::EndTurn)
-                {
-                    match try_holdback_trade(
-                        self.hbcheck,
-                        self.pess,
-                        self.horizon,
-                        self.hres,
-                        self.osteps,
-                        db,
-                        &roots,
-                        &subset,
-                        &cand,
-                        &n,
-                        pick_i,
-                        me,
-                        eval,
-                        odepth,
-                        obeam,
-                        &mut explain_rec,
-                        &mut dec_stats,
-                    ) {
-                        Some((idx, lv)) => (idx, true, lv),
-                        None => (cand[pick_i], false, pick_last_value),
+                let (chosen, override_path, pick_last_value) = if lost_rerank_rec.is_some() {
+                    (cand[pick_i], None, pick_last_value)
+                } else if any_scored && matches!(subset[pick_i], Action::EndTurn) {
+                    let mut chosen_idx = cand[pick_i];
+                    let mut lv = pick_last_value;
+                    let mut path = None;
+                    if self.hbk > 0 {
+                        if let Some((idx, new_lv)) = try_holdback_resample(
+                            self.hbk,
+                            self.pess,
+                            self.node_cap,
+                            k,
+                            self.depth,
+                            self.beam,
+                            self.tt,
+                            self.info,
+                            self.deal,
+                            self.turn_stable_worlds(),
+                            wbase_used,
+                            &root_world_seeds,
+                            self.hread_deal(),
+                            db,
+                            &roots,
+                            state,
+                            me,
+                            &subset,
+                            &cand,
+                            &acc,
+                            &n,
+                            &worst,
+                            pick_i,
+                            eval,
+                            odepth,
+                            obeam,
+                            self.fusemacro,
+                            self.horizon,
+                            self.hres,
+                            &mut explain_rec,
+                            &mut dec_stats,
+                        ) {
+                            chosen_idx = idx;
+                            lv = new_lv;
+                            path = Some(ChoosePath::HoldbackResample);
+                        }
                     }
+                    if path.is_none() && self.hbcheck > 0 {
+                        if let Some((idx, new_lv)) = try_holdback_trade(
+                            self.hbcheck,
+                            self.pess,
+                            self.horizon,
+                            self.hres,
+                            self.osteps,
+                            db,
+                            &roots,
+                            &subset,
+                            &cand,
+                            &n,
+                            pick_i,
+                            me,
+                            eval,
+                            odepth,
+                            obeam,
+                            &mut explain_rec,
+                            &mut dec_stats,
+                        ) {
+                            chosen_idx = idx;
+                            lv = new_lv;
+                            path = Some(ChoosePath::HoldbackTrade);
+                        }
+                    }
+                    (chosen_idx, path, lv)
                 } else {
-                    (cand[pick_i], false, pick_last_value)
+                    (cand[pick_i], None, pick_last_value)
                 };
                 self.stats.pairs_skipped += pairs_skipped_add;
                 self.stats.unscored += unscored_inc;
@@ -1415,11 +1475,14 @@ impl Policy for H0 {
                     let did_lost_rerank = lost_rerank_rec.is_some();
                     rec.lost_rerank = lost_rerank_rec;
                     if any_scored {
-                        if hb_override || did_lost_rerank {
+                        if override_path.is_some() || did_lost_rerank {
                             rec.tie_set = vec![chosen];
                         } else {
                             rec.tie_set =
                                 tie_set_search(&n, &acc, &worst, self.pess, best_v, &cand);
+                        }
+                        if let Some(p) = override_path {
+                            rec.path = p;
                         }
                     } else {
                         rec.path = ChoosePath::Unscored;
@@ -5316,6 +5379,317 @@ fn holdback_aggregate(branches: &[HoldbackBranch], pess: f32) -> Option<f32> {
         .map(|b| b.value)
         .fold(f32::INFINITY, f32::min);
     Some(root_agg(acc, n, worst, pess))
+}
+
+const HBK_WORLD_XOR: u64 = 0x485b_4b20_5e5e_4b4b;
+const HBK_DEAL_XOR: u64 = 0x7f4a_7c15_9e37_79b9;
+
+fn hbk_pair_share(node_cap: u32, k: u32, candidates: usize) -> u32 {
+    const MIN_SHARE: u32 = 24;
+    let total_pairs = (k as usize) * candidates;
+    if total_pairs == 0 {
+        return 1;
+    }
+    let even = node_cap / total_pairs as u32;
+    if node_cap >= MIN_SHARE.saturating_mul(total_pairs as u32) {
+        even.max(MIN_SHARE)
+    } else {
+        even.max(1)
+    }
+}
+
+fn hbk_fresh_seeds_and_deal(
+    root_world_seeds: &[u64],
+    hbk: u32,
+    block: bool,
+    turn_stable: bool,
+    wbase: Option<u64>,
+) -> (Vec<u64>, Option<u64>) {
+    let fresh: Vec<u64> = (0..hbk)
+        .map(|i| {
+            let base = root_world_seeds
+                .get(i as usize % root_world_seeds.len())
+                .copied()
+                .unwrap_or(0);
+            let mut rng = Xoshiro256ss::from_seed(base ^ HBK_WORLD_XOR ^ i as u64);
+            rng.next_u64()
+        })
+        .collect();
+    let deal = if block {
+        if turn_stable {
+            let base = wbase.expect("turn-stable block deal") ^ HBK_DEAL_XOR;
+            let mut deal_rng = Xoshiro256ss::from_seed(base);
+            for _ in 0..hbk {
+                deal_rng.next_u64();
+            }
+            Some(deal_rng.next_u64())
+        } else {
+            let mut deal_rng = Xoshiro256ss::from_seed(
+                root_world_seeds
+                    .first()
+                    .copied()
+                    .unwrap_or(0)
+                    ^ HBK_DEAL_XOR,
+            );
+            for _ in 0..hbk {
+                deal_rng.next_u64();
+            }
+            Some(deal_rng.next_u64())
+        }
+    } else {
+        None
+    };
+    (fresh, deal)
+}
+
+fn hbk_combine_agg(
+    j: usize,
+    acc: &[f32],
+    n: &[u32],
+    worst: &[f32],
+    fresh_acc: &[f32],
+    fresh_n: &[u32],
+    fresh_worst: &[f32],
+    pess: f32,
+) -> f32 {
+    let total_n = n[j] + fresh_n[j];
+    if total_n == 0 {
+        return f32::NEG_INFINITY;
+    }
+    let total_acc = acc[j] + fresh_acc[j];
+    let total_worst = worst[j].min(fresh_worst[j]);
+    root_agg(total_acc, total_n, total_worst, pess)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn score_search_candidate_pair(
+    db: &CardDb,
+    root: &State,
+    a: &Action,
+    me: PlayerId,
+    pair_cap: u32,
+    eval: Evaluator<'_>,
+    depth: u32,
+    beam: usize,
+    info: Info,
+    odepth: u32,
+    obeam: usize,
+    fusemacro: bool,
+    horizon: u32,
+    hres: u32,
+    hbk_nodes: &mut u64,
+    shared_table: &mut Option<HashMap<(u64, u8, bool), f32>>,
+    root_table: &mut Option<HashMap<(u64, u8, bool), f32>>,
+) -> Option<f32> {
+    let mut nodes = 0u32;
+    let root_key = search_key(root);
+    let cap = pair_cap;
+    let pair_nodes_start = nodes;
+    let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key]) else {
+        return None;
+    };
+    let at_fuse_choice = fusemacro && own_fuse_partners(&s, me).is_some();
+    let search_depth = if at_fuse_choice {
+        depth
+    } else {
+        depth.saturating_sub(1)
+    };
+    let v = if s.winner == Some(me) {
+        eval.wv
+    } else {
+        let line = vec![root_key, search_key(&s)];
+        let mut pair_stats = SearchStats::default();
+        search_own(
+            db,
+            &s,
+            me,
+            search_depth,
+            beam,
+            &mut nodes,
+            cap,
+            &line,
+            eval,
+            odepth,
+            obeam,
+            &mut pair_stats,
+            if info == Info::All {
+                root_table.as_mut()
+            } else {
+                shared_table.as_mut()
+            },
+            None,
+            fusemacro,
+            horizon,
+            hres,
+        )
+    };
+    *hbk_nodes += u64::from(nodes - pair_nodes_start);
+    Some(finite(v, eval.wv))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn try_holdback_resample(
+    hbk: u32,
+    pess: f32,
+    node_cap: u32,
+    k: u32,
+    depth: u32,
+    beam: usize,
+    tt: bool,
+    info: Info,
+    deal: Deal,
+    turn_stable: bool,
+    wbase: Option<u64>,
+    root_world_seeds: &[u64],
+    hread_deal: Option<HreadDeal>,
+    db: &CardDb,
+    roots: &[State],
+    visible: &State,
+    me: PlayerId,
+    subset: &[Action],
+    cand: &[usize],
+    acc: &[f32],
+    n: &[u32],
+    worst: &[f32],
+    end_j: usize,
+    eval: Evaluator<'_>,
+    odepth: u32,
+    obeam: usize,
+    fusemacro: bool,
+    horizon: u32,
+    hres: u32,
+    explain_rec: &mut Option<ExplainRecord>,
+    dec_stats: &mut SearchStats,
+) -> Option<(usize, f32)> {
+    if !matches!(subset[end_j], Action::EndTurn) {
+        return None;
+    }
+
+    let mut kill_js: Vec<usize> = Vec::new();
+    for (j, a) in subset.iter().enumerate() {
+        if n[j] == 0 {
+            continue;
+        }
+        if is_kill_attack(db, &roots[0], a) {
+            kill_js.push(j);
+        }
+    }
+    if kill_js.is_empty() {
+        return None;
+    }
+
+    dec_stats.hbk_checks += 1;
+
+    let block = deal == Deal::Block && hread_deal.is_none();
+    let (fresh_seeds, fresh_deal_seed) =
+        hbk_fresh_seeds_and_deal(root_world_seeds, hbk, block, turn_stable, wbase);
+    let pair_share = hbk_pair_share(node_cap, k, subset.len());
+    let fresh_deal = fresh_deal_seed.unwrap_or(0);
+
+    let mut fresh_acc = vec![0.0f32; subset.len()];
+    let mut fresh_n = vec![0u32; subset.len()];
+    let mut fresh_worst = vec![f32::INFINITY; subset.len()];
+
+    let mut shared_table = if info != Info::All {
+        tt.then(HashMap::new)
+    } else {
+        None
+    };
+
+    for (world, wseed) in fresh_seeds.iter().enumerate() {
+        let mut root_table = if info == Info::All {
+            tt.then(HashMap::new)
+        } else {
+            None
+        };
+        let root = determinize_block(
+            visible,
+            me,
+            *wseed,
+            fresh_deal,
+            world as u32,
+            info,
+            None,
+            block,
+            hread_deal,
+        );
+        for j in std::iter::once(end_j).chain(kill_js.iter().copied()) {
+            if let Some(fv) = score_search_candidate_pair(
+                db,
+                &root,
+                &subset[j],
+                me,
+                pair_share,
+                eval,
+                depth,
+                beam,
+                info,
+                odepth,
+                obeam,
+                fusemacro,
+                horizon,
+                hres,
+                &mut dec_stats.hbk_nodes,
+                &mut shared_table,
+                &mut root_table,
+            ) {
+                fresh_acc[j] += fv;
+                fresh_n[j] += 1;
+                if fv < fresh_worst[j] {
+                    fresh_worst[j] = fv;
+                }
+            }
+        }
+    }
+
+    let end_root_only = root_agg(acc[end_j], n[end_j], worst[end_j], pess);
+    let end_combined = hbk_combine_agg(
+        end_j,
+        acc,
+        n,
+        worst,
+        &fresh_acc,
+        &fresh_n,
+        &fresh_worst,
+        pess,
+    );
+
+    let mut resample_cands = vec![HoldbackResampleCandidate {
+        legal_index: cand[end_j],
+        root_only: end_root_only,
+        combined: end_combined,
+    }];
+
+    let mut best_kill: Option<(usize, f32)> = None;
+    for j in kill_js {
+        let root_only = root_agg(acc[j], n[j], worst[j], pess);
+        let combined = hbk_combine_agg(j, acc, n, worst, &fresh_acc, &fresh_n, &fresh_worst, pess);
+        resample_cands.push(HoldbackResampleCandidate {
+            legal_index: cand[j],
+            root_only,
+            combined,
+        });
+        if best_kill.as_ref().is_none_or(|(_, v)| combined > *v) {
+            best_kill = Some((cand[j], combined));
+        }
+    }
+
+    let flipped = best_kill.as_ref().is_some_and(|(_, v)| *v > end_combined);
+    if let Some(rec) = explain_rec {
+        rec.holdback_resample = Some(HoldbackResampleRecord {
+            fresh_k: hbk,
+            candidates: resample_cands,
+            flipped,
+        });
+    }
+
+    if let Some((idx, agg)) = best_kill {
+        if agg > end_combined {
+            dec_stats.hbk_flips += 1;
+            return Some((idx, agg));
+        }
+    }
+    None
 }
 
 #[allow(clippy::too_many_arguments)]
