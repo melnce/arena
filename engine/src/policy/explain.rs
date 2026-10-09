@@ -24,6 +24,9 @@ pub enum ChoosePath {
     /// Kill attack played after the held-back check overrode `EndTurn`
     /// (`hbcheck>0`).
     HoldbackTrade,
+    /// Kill attack played after the holdback resample check overrode `EndTurn`
+    /// (`hbk>0`).
+    HoldbackResample,
     Search,
     /// Search entered but no `(root, candidate)` pair scored (e.g. the
     /// consensus-lethal check spent the entire node cap).
@@ -116,6 +119,22 @@ pub struct HoldbackRecord {
     pub attacks: Vec<HoldbackAttackRecord>,
 }
 
+/// One candidate's root-only and combined aggregates from `hbk>0`.
+#[derive(Debug, Clone, Serialize)]
+pub struct HoldbackResampleCandidate {
+    pub legal_index: usize,
+    pub root_only: f32,
+    pub combined: f32,
+}
+
+/// Holdback resample summary when `hbk>0` ran on an `EndTurn` choice.
+#[derive(Debug, Clone, Serialize)]
+pub struct HoldbackResampleRecord {
+    pub fresh_k: u32,
+    pub candidates: Vec<HoldbackResampleCandidate>,
+    pub flipped: bool,
+}
+
 /// One root candidate's aggregated scores.
 #[derive(Debug, Clone, Serialize)]
 pub struct CandidateRecord {
@@ -151,6 +170,7 @@ pub struct ExplainRecord {
     pub chosen_index: usize,
     pub tie_set: Vec<usize>,
     pub holdback: Option<HoldbackRecord>,
+    pub holdback_resample: Option<HoldbackResampleRecord>,
     /// Turn-stable world base when `wseed=turn` or `wbase` is set.
     pub wbase: Option<u64>,
     /// `true` when `wbase` came from the per-turn cache.
@@ -190,6 +210,7 @@ impl ExplainRecord {
             chosen_index: 0,
             tie_set: Vec::new(),
             holdback: None,
+            holdback_resample: None,
             wbase: None,
             wbase_reused: false,
             lost_rerank: None,
