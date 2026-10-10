@@ -99,6 +99,34 @@ def test_forced_lethal_export_shape(db, root: Path) -> None:
     assert v1 == v2
 
 
+def test_review15_g4_fuse_kill_forced_lethal(db, root: Path) -> None:
+    import arena
+
+    fx_path = (
+        root
+        / "engine"
+        / "tests"
+        / "fixtures"
+        / "lethal"
+        / "review15-g4-fuse-kill.json"
+    )
+    cap = json.loads(fx_path.read_text(encoding="utf-8"))
+    game = arena.Game(
+        db,
+        cap["seed"],
+        cap["deckA"],
+        cap["deckB"],
+        cap.get("first") or "coin",
+    )
+    for step in cap["actions"]:
+        audit.apply_step(game, step)
+    det = arena.forced_lethal(game, 10_000, det=True)
+    assert det["verdict"] == "lethal"
+    assert det["rng_dependent"] is False
+    roll = arena.forced_lethal(game, 10_000)
+    assert roll["verdict"] == "lethal"
+
+
 def test_audit_game_counts_over_verdicts(db, root: Path) -> None:
     deck_a, deck_b = _decks(root)
     rec = audit.play_one(db, 1, deck_a, deck_b, "a", "h0-fast", "h0-fast")
@@ -262,15 +290,15 @@ _MAIN_RATE_BLOCKS = {
     },
     "missed_lethal": {
         "asked": 66,
-        "decisions_with_a_verdict": 42,
+        "decisions_with_a_verdict": 41,
         "lethal": 0,
         "n": 0,
-        "nodes": 2390,
-        "none": 42,
+        "nodes": 2391,
+        "none": 41,
         "rate": 0.0,
         "rng_dependent": 0,
-        "unknown": 24,
-        "unknown_rate": 0.36363636363636365,
+        "unknown": 25,
+        "unknown_rate": 0.3787878787878788,
     },
 }
 

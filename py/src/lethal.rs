@@ -1,6 +1,6 @@
 //! PyO3 export of [`arena_engine::forced_lethal`].
 
-use arena_engine::{forced_lethal, to_neutral, LethalVerdict};
+use arena_engine::{forced_lethal, forced_lethal_det, to_neutral, LethalVerdict};
 use pyo3::prelude::*;
 
 use crate::convert::{player_str, value_to_py};
@@ -12,14 +12,19 @@ use crate::game::PyGame;
 /// `nodes`, and — only on a kill — `line` (NeutralAction dicts) and
 /// `rng_dependent`. There is no boolean helper.
 #[pyfunction]
-#[pyo3(name = "forced_lethal", signature = (game, budget))]
+#[pyo3(name = "forced_lethal", signature = (game, budget, det = false))]
 pub fn py_forced_lethal<'py>(
     py: Python<'py>,
     game: &PyGame,
     budget: u32,
+    det: bool,
 ) -> PyResult<Bound<'py, PyAny>> {
     let state = game.engine_state();
-    let verdict = forced_lethal(game.engine_db(), state, budget);
+    let verdict = if det {
+        forced_lethal_det(game.engine_db(), state, budget)
+    } else {
+        forced_lethal(game.engine_db(), state, budget)
+    };
     let body = match verdict {
         LethalVerdict::Lethal {
             line,

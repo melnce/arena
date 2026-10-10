@@ -2,12 +2,15 @@
 //! proven `None`, a budget-starved `Unknown`, determinism, and a
 //! fixture set that puts every searchable action kind on the board.
 
-use std::collections::HashSet;
-
+use arena_engine::policy::ChoosePath;
 use arena_engine::{
-    apply, forced_lethal, forced_lethal_det, legal_actions, Action, CardDb, LethalActionKind,
-    LethalVerdict, PlayerId, H0,
+    apply, apply_neutral, confirm_det_lethal_line, forced_lethal, forced_lethal_det, hash,
+    legal_actions, lethal_key, new_game, policy_rng, Action, AnyPolicy, CardDb, CardId, First,
+    GameConfig, LethalActionKind, LethalVerdict, PlayerId, Policy, H0,
 };
+use serde_json::Value;
+use std::collections::{BTreeMap, HashSet};
+use std::fs;
 
 mod common;
 use common::*;
@@ -391,6 +394,271 @@ fn forced_lethal_det_skips_rng_lines() {
         LethalVerdict::Lethal { rng_dependent, .. } => assert!(!rng_dependent),
         other => panic!("expected deterministic Lethal, got {other:?}"),
     }
+}
+
+fn deck_from_json(v: &Value) -> Vec<CardId> {
+    let map = v.as_object().expect("deck object");
+    let mut sorted = BTreeMap::new();
+    for (id, n) in map {
+        sorted.insert(id.clone(), n.as_u64().unwrap_or(0) as usize);
+    }
+    let mut out = Vec::new();
+    for (id, count) in sorted {
+        let cid = CardId::parse(&id).unwrap_or_else(|| panic!("bad id {id}"));
+        out.extend(std::iter::repeat_n(cid, count));
+    }
+    out
+}
+
+fn replay_capture(db: &CardDb, cap: &Value, n: usize) -> arena_engine::State {
+    let seed = cap["seed"].as_u64().expect("seed");
+    let deck_a = deck_from_json(&cap["deckA"]);
+    let deck_b = deck_from_json(&cap["deckB"]);
+    let first = match cap.get("first").and_then(|v| v.as_str()) {
+        Some("b") | Some("B") => First::B,
+        Some("a") | Some("A") => First::A,
+        _ => First::Coin,
+    };
+    let mut st = new_game(
+        db,
+        GameConfig {
+            seed,
+            deck_a,
+            deck_b,
+            first,
+            opening_hands: None,
+        },
+    )
+    .expect("new_game");
+    let actions = cap["actions"].as_array().expect("actions");
+    for step in actions.iter().take(n) {
+        if step.get("reseed").is_some() {
+            st.reseed(step["reseed"].as_u64().expect("reseed"));
+            continue;
+        }
+        let mut body = serde_json::Map::new();
+        for (k, v) in step.as_object().expect("action object") {
+            if k == "value" || k == "bot_value" {
+                continue;
+            }
+            body.insert(k.clone(), v.clone());
+        }
+        let neu: arena_engine::NeutralAction =
+            serde_json::from_value(Value::Object(body)).expect("action");
+        apply_neutral(db, &mut st, &neu).expect("apply_neutral");
+    }
+    st
+}
+
+fn parse_h0(spec: &str) -> H0 {
+    match AnyPolicy::parse_spec(spec).unwrap_or_else(|e| panic!("{spec}: {e}")) {
+        AnyPolicy::H0(h) => h,
+        other => panic!("{spec} parsed as {other:?}"),
+    }
+}
+
+const TETRA_LADICA: &str = "10834110";
+fn review15_fuse_kill_fixture() -> std::path::PathBuf {
+    fixtures_dir().join("lethal/review15-g4-fuse-kill.json")
+}
+const SERVED_TKILL_SPEC: &str =
+    "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1";
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn review15_g4_fuse_kill_found() {
+    let db = load_db();
+    let cap: Value =
+        serde_json::from_str(&fs::read_to_string(review15_fuse_kill_fixture()).unwrap()).unwrap();
+    let ply = cap["ply"].as_u64().expect("ply") as usize;
+    let st = replay_capture(&db, &cap, ply);
+    assert_eq!(st.active, PlayerId::A);
+    assert!(matches!(st.phase, arena_engine::Phase::Main));
+    assert_eq!(st.player(PlayerId::B).leader_defense, 9);
+
+    let det = forced_lethal_det(&db, &st, 10_000);
+    match det {
+        LethalVerdict::Lethal {
+            line,
+            nodes,
+            rng_dependent,
+        } => {
+            assert_eq!(nodes, 6_561);
+            assert!(!rng_dependent);
+            assert!(line.iter().any(|a| matches!(a, Action::Fuse { .. })));
+            let fuse_idx = line
+                .iter()
+                .position(|a| matches!(a, Action::Fuse { .. }))
+                .expect("fuse");
+            assert!(
+                line[fuse_idx + 1..]
+                    .iter()
+                    .any(|a| matches!(a, Action::Choose(_))),
+                "fuse then choose: {line:?}"
+            );
+            assert!(
+                line.iter().any(|a| matches!(a, Action::Confirm)),
+                "line needs confirm: {line:?}"
+            );
+            assert!(confirm_det_lethal_line(&db, &st, PlayerId::A, &line));
+        }
+        other => panic!("expected det lethal, got {other:?}"),
+    }
+
+    let roll = forced_lethal(&db, &st, 10_000);
+    match roll {
+        LethalVerdict::Lethal { nodes, .. } => assert_eq!(nodes, 7_127),
+        other => panic!("expected lethal, got {other:?}"),
+    }
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn review15_g4_h0_takes_kill() {
+    let db = load_db();
+    let cap: Value =
+        serde_json::from_str(&fs::read_to_string(review15_fuse_kill_fixture()).unwrap()).unwrap();
+    let ply = cap["ply"].as_u64().expect("ply") as usize;
+    let st = replay_capture(&db, &cap, ply);
+    let legal = legal_actions(&db, &st);
+    assert!(legal.len() > 1);
+    let mut h0 = parse_h0(SERVED_TKILL_SPEC);
+    h0.arm_explain();
+    let mut rng = policy_rng(1);
+    let pick = h0.choose(&db, &st, &legal, &mut rng);
+    let rec = h0.take_explain().expect("explain");
+    assert_eq!(rec.path, ChoosePath::TakeKill);
+    let tetra = CardId::parse(TETRA_LADICA).unwrap();
+    let chosen = &legal[pick];
+    match chosen {
+        Action::Play { hand } => {
+            assert_eq!(st.player(PlayerId::A).hand[usize::from(*hand)].card, tetra);
+        }
+        other => panic!("expected Play Tetra & Ladica, got {other:?}"),
+    }
+}
+
+/// Pass 1 unchanged on tkill/tkroll fixtures; pass 2 only where the in-flight key differs.
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn forced_lethal_fixture_node_counts() {
+    let db = load_recorded_db();
+    let rows: &[(&str, &str, u32, &str, u32)] = &[
+        ("tkill/1043-ply0115.json", "lethal", 12, "lethal", 12),
+        ("tkill/14-0066.json", "lethal", 1_634, "lethal", 3_129),
+        ("tkill/2790-ply0104.json", "lethal", 2, "lethal", 2),
+        ("tkill/39-0063.json", "lethal", 51, "lethal", 51),
+        ("tkill/60-0091.json", "lethal", 5, "lethal", 5),
+        ("tkill/6889-ply0048.json", "lethal", 4, "lethal", 4),
+        ("tkill/9420-ply0071.json", "lethal", 111, "lethal", 111),
+        ("tkill/9420-ply0072.json", "lethal", 42, "lethal", 42),
+        ("tkroll/fa-play-103-ply0100.json", "none", 513, "lethal", 60),
+        (
+            "tkroll/fa-play-150-ply0086.json",
+            "none",
+            4_605,
+            "lethal",
+            109,
+        ),
+        ("tkroll/fa-play-174-ply0086.json", "none", 97, "lethal", 24),
+        (
+            "tkroll/fa-play-98-ply0071.json",
+            "none",
+            4_584,
+            "lethal",
+            1_429,
+        ),
+        ("tkroll/fb-play-105-ply0079.json", "none", 431, "lethal", 19),
+        (
+            "tkroll/fb-play-122-ply0064.json",
+            "none",
+            1_043,
+            "lethal",
+            237,
+        ),
+        ("tkroll/fb-play-28-ply0114.json", "none", 127, "lethal", 16),
+        ("tkroll/fb-play-386-ply0045.json", "none", 144, "lethal", 40),
+    ];
+    for &(rel, det_verdict, det_nodes, fl_verdict, fl_nodes) in rows {
+        let path = fixtures_dir().join(rel);
+        let cap: Value =
+            serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap_or_else(|e| {
+                panic!("{rel}: {e}");
+            });
+        let ply = cap["ply"].as_u64().expect("ply") as usize;
+        let st = replay_capture(&db, &cap, ply);
+        let det = forced_lethal_det(&db, &st, 10_000);
+        match (det_verdict, det) {
+            ("lethal", LethalVerdict::Lethal { nodes, .. }) => {
+                assert_eq!(nodes, det_nodes, "{rel} det")
+            }
+            ("none", LethalVerdict::None { nodes }) => assert_eq!(nodes, det_nodes, "{rel} det"),
+            ("unknown", LethalVerdict::Unknown { nodes }) => {
+                assert_eq!(nodes, det_nodes, "{rel} det")
+            }
+            (_, other) => panic!("{rel} det: expected {det_verdict}, got {other:?}"),
+        }
+        let fl = forced_lethal(&db, &st, 10_000);
+        match (fl_verdict, fl) {
+            ("lethal", LethalVerdict::Lethal { nodes, .. }) => {
+                assert_eq!(nodes, fl_nodes, "{rel} fl")
+            }
+            ("none", LethalVerdict::None { nodes }) => assert_eq!(nodes, fl_nodes, "{rel} fl"),
+            ("unknown", LethalVerdict::Unknown { nodes }) => {
+                assert_eq!(nodes, fl_nodes, "{rel} fl")
+            }
+            (_, other) => panic!("{rel} fl: expected {fl_verdict}, got {other:?}"),
+        }
+    }
+}
+
+#[test]
+fn lethal_key_properties() {
+    let db = load_db();
+    let mut st = started(&db, 99);
+    skip_to_player_turn(&db, &mut st, PlayerId::A, 2);
+    clear_hand(&mut st, PlayerId::A);
+    assert_eq!(lethal_key(&st), hash(&st));
+
+    let mut fuse = started(&db, 6);
+    clear_hand(&mut fuse, PlayerId::A);
+    put_hand(&db, &mut fuse, PlayerId::A, FUSE_HOST);
+    put_hand(&db, &mut fuse, PlayerId::A, FUSE_PARTNER);
+    put_hand(&db, &mut fuse, PlayerId::A, FUSE_PARTNER);
+    apply(&db, &mut fuse, Action::Fuse { host: 0 }).expect("fuse");
+    assert!(matches!(fuse.phase, arena_engine::Phase::Choice { .. }));
+
+    let h0 = hash(&fuse);
+    let legal = legal_actions(&db, &fuse);
+    let choose = legal
+        .iter()
+        .find(|a| matches!(a, Action::Choose(_)))
+        .expect("choose");
+    let mut after = fuse.clone();
+    apply(&db, &mut after, choose.clone()).expect("choose");
+    assert_eq!(hash(&after), h0);
+    assert_ne!(lethal_key(&after), lethal_key(&fuse));
+
+    let mut picked_ab = fuse.clone();
+    let mut picked_ba = fuse.clone();
+    let set_picked = |st: &mut arena_engine::State, picked: &[u8]| {
+        let arena_engine::Phase::Choice { node, .. } = &mut st.phase else {
+            panic!("choice phase");
+        };
+        let arena_engine::ChoiceNode::FusePartners { picked: p, .. } = node else {
+            panic!("fuse partners");
+        };
+        *p = picked.to_vec();
+    };
+    set_picked(&mut picked_ab, &[0, 1]);
+    set_picked(&mut picked_ba, &[1, 0]);
+    assert_eq!(lethal_key(&picked_ab), lethal_key(&picked_ba));
+
+    let mut inflated = fuse.clone();
+    inflated.step_counter += 100;
+    inflated.next_instance += 50;
+    inflated.crest_order += 7;
+    assert_eq!(lethal_key(&fuse), lethal_key(&inflated));
 }
 
 #[test]
