@@ -613,17 +613,23 @@ fn lethal_key_properties() {
     assert_eq!(hash(&after), h0);
     assert_ne!(lethal_key(&after), lethal_key(&fuse));
 
-    let legal2 = legal_actions(&db, &fuse);
-    let picks: Vec<Action> = legal2
-        .into_iter()
-        .filter(|a| matches!(a, Action::Choose(_)))
-        .collect();
-    assert!(picks.len() >= 2, "need two partner choices");
-    let mut pq = fuse.clone();
-    apply(&db, &mut pq, picks[0].clone()).unwrap();
-    let mut qp = fuse.clone();
-    apply(&db, &mut qp, picks[1].clone()).unwrap();
-    assert_eq!(lethal_key(&pq), lethal_key(&qp));
+    let mut picked_ab = fuse.clone();
+    let mut picked_ba = fuse.clone();
+    let set_picked = |st: &mut arena_engine::State, picked: &[u8]| {
+        let arena_engine::Phase::Choice { node, .. } = &mut st.phase else {
+            panic!("choice phase");
+        };
+        let arena_engine::ChoiceNode::FusePartners {
+            picked: p, ..
+        } = node
+        else {
+            panic!("fuse partners");
+        };
+        *p = picked.to_vec();
+    };
+    set_picked(&mut picked_ab, &[0, 1]);
+    set_picked(&mut picked_ba, &[1, 0]);
+    assert_eq!(lethal_key(&picked_ab), lethal_key(&picked_ba));
 
     let mut inflated = fuse.clone();
     inflated.step_counter += 100;
