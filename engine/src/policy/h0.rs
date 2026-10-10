@@ -54,7 +54,7 @@ use super::net::ValueNet;
 use super::Policy;
 
 /// Opening mulligan mode for [`H0`]. Default [`MullMode::Table`] uses the
-/// built-in `mulligan-v1` keep table; [`MullMode::Rule`] is cost ≥ 4 send back.
+/// built-in `mulligan-v2` keep table; [`MullMode::Rule`] is cost ≥ 4 send back.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum MullMode {
     Rule,
@@ -114,9 +114,9 @@ const BUILTIN_NET_JSON: &str = include_str!("../../models/h0-linear-v4.json");
 pub const BUILTIN_NET_NAME: &str = "h0-linear-v4";
 static BUILTIN_NET: OnceLock<Arc<ValueNet>> = OnceLock::new();
 
-const BUILTIN_MULLIGAN_JSON: &str = include_str!("../../models/mulligan-v1.json");
-/// Committed name of the built-in mulligan table (`engine/models/mulligan-v1.json`).
-pub const BUILTIN_MULLIGAN_NAME: &str = "mulligan-v1";
+const BUILTIN_MULLIGAN_JSON: &str = include_str!("../../models/mulligan-v2.json");
+/// Committed name of the built-in mulligan table (`engine/models/mulligan-v2.json`).
+pub const BUILTIN_MULLIGAN_NAME: &str = "mulligan-v2";
 static BUILTIN_MULLIGAN: OnceLock<Arc<MulliganTable>> = OnceLock::new();
 
 /// The built-in `h0-linear-v4` model, parsed once. A parse failure is a
@@ -130,7 +130,7 @@ pub fn builtin_net() -> Arc<ValueNet> {
         .clone()
 }
 
-/// The built-in `mulligan-v1` keep table, parsed once. A parse failure is a
+/// The built-in `mulligan-v2` keep table, parsed once. A parse failure is a
 /// build defect.
 pub fn builtin_mulligan() -> Arc<MulliganTable> {
     BUILTIN_MULLIGAN

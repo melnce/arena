@@ -390,6 +390,138 @@ def test_publish_fit_includes_all_files(tmp_path: Path, root: Path) -> None:
     assert (published / "observations.csv.gz").read_bytes() == csv_path.read_bytes()
 
 
+def _cards_for_shrink_deck(prefix: str) -> list[tuple[str, int]]:
+    out: list[tuple[str, int]] = []
+    for i in range(10):
+        out.append((f"{prefix}{i:03d}110", 2))
+    for i in range(10):
+        out.append((f"{prefix}{i:03d}310", 5))
+    return out
+
+
+def _write_shrink_run(
+    td: Path,
+    tag_suffix: int,
+    decks: dict[str, list[tuple[str, int]]],
+) -> None:
+    import csv
+    import gzip
+
+    cards_fit: list[dict] = []
+    table_decks: dict[str, dict] = {}
+    for deck, cards in decks.items():
+        fp = f"fp_{deck}"
+        first: dict[str, bool] = {}
+        for cid, cost in cards:
+            rk = cost < 4
+            cards_fit.append(
+                {"deck": deck, "card": cid, "copies": 3, "cost": cost, "rule_keep": rk}
+            )
+            first[cid] = rk
+        table_decks[fp] = {"name": deck, "first": first, "second": dict(first)}
+    td.mkdir(parents=True, exist_ok=True)
+    (td / "fit.json").write_text(json.dumps({"cards": cards_fit}), encoding="utf-8")
+    (td / "table.json").write_text(json.dumps({"version": 1, "decks": table_decks}), encoding="utf-8")
+    rows: list[dict[str, str | int]] = []
+    obs_id = 0
+    for deck, cards in decks.items():
+        deck_ids = [c for c, _ in cards]
+        opp = "deck-b" if deck == "deck-a" else "deck-a"
+        for seat in ("first", "second"):
+            for cid, _cost in cards:
+                fillers = [c for c in deck_ids if c != cid][:3]
+                for kept, won_p in ((True, 0.72), (False, 0.38)):
+                    for rep in range(8):
+                        hand = [cid] + fillers
+                        swap = ["0", "1", "1", "1"]
+                        swap[0] = "0" if kept else "1"
+                        won = 1 if (rep + obs_id + tag_suffix) % 10 < int(won_p * 10) else 0
+                        rows.append(
+                            {
+                                "deck": deck,
+                                "seat": seat,
+                                "opponent_deck": opp,
+                                "opponent_class": "neutral",
+                                "hand": ";".join(hand),
+                                "swap": ";".join(swap),
+                                "won": won,
+                            }
+                        )
+                        obs_id += 1
+    with gzip.open(td / "observations.csv.gz", "wt", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        w.writerows(rows)
+
+
+SHRINK_EXPECTED_PRIOR = {
+    "rule_keep": {
+        "cells": 20,
+        "mu": 0.327656,
+        "tau_seat": 0.0,
+        "tau_shared": 0.097584,
+    },
+    "rule_send_back": {
+        "cells": 20,
+        "mu": 0.4,
+        "tau_seat": 0.0,
+        "tau_shared": 0.030619,
+    },
+}
+
+
+def test_shrink_two_runs(tmp_path: Path) -> None:
+    decks = {
+        "deck-a": _cards_for_shrink_deck("10"),
+        "deck-b": _cards_for_shrink_deck("20"),
+    }
+    for i, tag in enumerate(("run0", "run1")):
+        _write_shrink_run(tmp_path / tag, i, decks)
+    out = tmp_path / "out.json"
+    mulligan_mod.cmd_shrink(
+        argparse.Namespace(
+            tags=["run0", "run1"],
+            root=str(tmp_path),
+            min_n=5,
+            out=str(out),
+            command="shrink",
+            _argv=[],
+        )
+    )
+    table = json.loads(out.read_text(encoding="utf-8"))
+    prior = table["meta"]["prior"]
+    for key, expected in SHRINK_EXPECTED_PRIOR.items():
+        for field, val in expected.items():
+            assert abs(prior[key][field] - val) < 1e-9, (key, field, prior[key][field], val)
+    keeps: list[tuple[str, str, str, bool]] = []
+    for fp in sorted(table["decks"]):
+        entry = table["decks"][fp]
+        for seat in ("first", "second"):
+            for cid in sorted(entry[seat], key=int):
+                keeps.append((entry["name"], seat, cid, entry[seat][cid]))
+    assert len(keeps) == 80
+    assert all(k for *_, k in keeps)
+
+
+def test_shrink_deck_list_mismatch(tmp_path: Path) -> None:
+    decks_a = {"deck-a": _cards_for_shrink_deck("10")}
+    decks_b = {"deck-a": _cards_for_shrink_deck("10"), "deck-b": _cards_for_shrink_deck("20")}
+    _write_shrink_run(tmp_path / "run0", 0, decks_a)
+    _write_shrink_run(tmp_path / "run1", 1, decks_b)
+    out = tmp_path / "out.json"
+    with pytest.raises(SystemExit, match="deck lists differ"):
+        mulligan_mod.cmd_shrink(
+            argparse.Namespace(
+                tags=["run0", "run1"],
+                root=str(tmp_path),
+                min_n=5,
+                out=str(out),
+                command="shrink",
+                _argv=[],
+            )
+        )
+
+
 def test_data_resume_two_chunks(db, arena, tmp_path: Path, root: Path) -> None:
     tag = "resume-test"
     tag_dir = tmp_path / tag

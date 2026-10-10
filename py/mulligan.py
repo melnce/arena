@@ -7,6 +7,7 @@ import argparse
 import csv
 import datetime as dt
 import gzip
+import hashlib
 import json
 import math
 import sys
@@ -59,15 +60,20 @@ def load_card_index(repo: Path) -> dict[str, dict[str, Any]]:
     return out
 
 
+SEATS = ("first", "second")
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     raw = list(sys.argv[1:] if argv is None else argv)
-    if not raw or raw[0] not in {"data", "fit"}:
-        raise SystemExit("usage: mulligan.py data|fit ...")
+    if not raw or raw[0] not in {"data", "fit", "shrink"}:
+        raise SystemExit("usage: mulligan.py data|fit|shrink ...")
     cmd = raw[0]
     rest = raw[1:]
     if cmd == "data":
         return _parse_data(rest)
-    return _parse_fit(rest)
+    if cmd == "fit":
+        return _parse_fit(rest)
+    return _parse_shrink(rest)
 
 
 def _parse_data(argv: list[str]) -> argparse.Namespace:
@@ -107,6 +113,20 @@ def _parse_fit(argv: list[str]) -> argparse.Namespace:
     args = p.parse_args(argv)
     args.command = "fit"
     args._argv = ["fit", *argv]
+    return args
+
+
+def _parse_shrink(argv: list[str]) -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        description="Pool random-keep runs into a shrinkage keep table (empirical Bayes)."
+    )
+    p.add_argument("--tags", nargs="+", required=True, help="data-run tags under --root")
+    p.add_argument("--root", default=None)
+    p.add_argument("--min-n", type=int, default=30)
+    p.add_argument("--out", required=True, help="table to write (engine format, version 1)")
+    args = p.parse_args(argv)
+    args.command = "shrink"
+    args._argv = ["shrink", *argv]
     return args
 
 
@@ -734,6 +754,242 @@ def write_fit_md(
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def _shrink_card_meta(fit_json: Path) -> dict[tuple[str, str], dict[str, Any]]:
+    rows = json.loads(fit_json.read_text(encoding="utf-8"))["cards"]
+    return {
+        (r["deck"], r["card"]): {
+            "copies": int(r["copies"]),
+            "cost": int(r["cost"]),
+            "rule_keep": bool(r["rule_keep"]),
+        }
+        for r in rows
+    }
+
+
+def _shrink_fingerprints(table_json: Path) -> dict[str, str]:
+    t = json.loads(table_json.read_text(encoding="utf-8"))
+    return {entry["name"]: fp for fp, entry in t["decks"].items()}
+
+
+def read_observations_csv(path: Path) -> list[Observation]:
+    out: list[Observation] = []
+    with gzip.open(path, "rt", encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            out.append(
+                Observation(
+                    deck=row["deck"],
+                    seat=row["seat"],
+                    opponent_deck=row["opponent_deck"],
+                    opponent_class=row["opponent_class"],
+                    hand=row["hand"].split(";"),
+                    swap=[s == "1" for s in row["swap"].split(";")],
+                    won=int(row["won"]),
+                )
+            )
+    return out
+
+
+def _shrink_cell_effect(stats: CardStats) -> tuple[float, float]:
+    nk, wk, ns, ws = stats.n_k, stats.wins_k, stats.n_s, stats.wins_s
+    if nk == 0 or ns == 0:
+        return 0.0, math.inf
+    p = min(max((wk + ws) / (nk + ns), 0.1), 0.9)
+    return wk / nk - ws / ns, math.sqrt(p * (1 - p) * (1 / nk + 1 / ns))
+
+
+def _shrink_hyper(groups: dict[bool, list]) -> dict[bool, dict[str, Any]]:
+    out: dict[bool, dict[str, Any]] = {}
+    for g, cells in groups.items():
+        if len(cells) < 10:
+            raise SystemExit(f"too few cells to estimate the prior for rule_keep={g}: {len(cells)}")
+        y1 = [c[0][0] for c in cells]
+        y2 = [c[1][0] for c in cells]
+        ys = y1 + y2
+        se2 = [c[0][1] ** 2 for c in cells] + [c[1][1] ** 2 for c in cells]
+        mu = sum(ys) / len(ys)
+        m1, m2 = sum(y1) / len(y1), sum(y2) / len(y2)
+        cov = sum((a - m1) * (b - m2) for a, b in zip(y1, y2)) / len(y1)
+        var = sum((y - mu) ** 2 for y in ys) / len(ys) - sum(se2) / len(se2)
+        tt2 = max(cov, 0.0)
+        te2 = max(var - tt2, 0.0)
+        out[g] = {"mu": mu, "tt2": tt2, "te2": te2, "cells": len(cells)}
+    return out
+
+
+def _shrink_posterior(
+    h: dict[str, Any], y: tuple[float, float], se: tuple[float, float]
+) -> tuple[float, float]:
+    a = h["tt2"] + h["te2"]
+    b = h["tt2"]
+    big = 1e6
+    r1 = se[0] ** 2 if math.isfinite(se[0]) else big
+    r2 = se[1] ** 2 if math.isfinite(se[1]) else big
+    d1 = (y[0] - h["mu"]) if math.isfinite(se[0]) else 0.0
+    d2 = (y[1] - h["mu"]) if math.isfinite(se[1]) else 0.0
+    m11, m12, m21, m22 = a + r1, b, b, a + r2
+    det = m11 * m22 - m12 * m21
+    i11, i12, i21, i22 = m22 / det, -m12 / det, -m21 / det, m11 / det
+    k11 = a * i11 + b * i21
+    k12 = a * i12 + b * i22
+    k21 = b * i11 + a * i21
+    k22 = b * i12 + a * i22
+    return h["mu"] + k11 * d1 + k12 * d2, h["mu"] + k21 * d1 + k22 * d2
+
+
+def cmd_shrink(args: argparse.Namespace) -> None:
+    repo = repo_root()
+    root = Path(args.root) if args.root else repo / "results"
+    runs = [tag_dir(root, tag) for tag in args.tags]
+
+    metas = [_shrink_card_meta(r / "fit.json") for r in runs]
+    fps = [_shrink_fingerprints(r / "table.json") for r in runs]
+    cost_notes: list[str] = []
+    for r, m, f in zip(runs[1:], metas[1:], fps[1:]):
+        if {k: v["copies"] for k, v in m.items()} != {k: v["copies"] for k, v in metas[0].items()}:
+            raise SystemExit(f"deck lists differ between {runs[0]} and {r}: cannot pool")
+        if f != fps[0]:
+            raise SystemExit(f"deck fingerprints differ between {runs[0]} and {r}: cannot pool")
+    meta, fp_by_name = metas[-1], fps[-1]
+    for r, m in zip(runs[:-1], metas[:-1]):
+        for k, v in sorted(m.items()):
+            if v["cost"] != meta[k]["cost"]:
+                cost_notes.append(
+                    f"cost of {k[0]} {k[1]}: {v['cost']} in {r}, {meta[k]['cost']} in {runs[-1]} (used)"
+                )
+
+    per_seat: dict[tuple[str, str, str], CardStats] = defaultdict(CardStats)
+    excluded_split = 0
+    n_obs: list[int] = []
+    sha: list[str] = []
+    for r in runs:
+        p = r / "observations.csv.gz"
+        obs = read_observations_csv(p)
+        n_obs.append(len(obs))
+        sha.append(hashlib.sha256(p.read_bytes()).hexdigest())
+        stats, excluded = gather_stats(obs)
+        for key, s in stats.items():
+            dst = per_seat[key]
+            dst.n_k += s.n_k
+            dst.wins_k += s.wins_k
+            dst.n_s += s.n_s
+            dst.wins_s += s.wins_s
+            dst.excluded_split += s.excluded_split
+        excluded_split += excluded
+
+    unknown = {(d, c) for (d, _, c) in per_seat} - set(meta)
+    if unknown:
+        raise SystemExit(
+            f"observations name {len(unknown)} (deck, card) pairs that fit.json does not: {sorted(unknown)[:5]}"
+        )
+
+    cell: dict[tuple[str, str], tuple] = {}
+    groups: dict[bool, list] = {True: [], False: []}
+    for (deck, card), m in sorted(meta.items()):
+        s1 = per_seat.get((deck, "first", card), CardStats())
+        s2 = per_seat.get((deck, "second", card), CardStats())
+        e1, e2 = _shrink_cell_effect(s1), _shrink_cell_effect(s2)
+        cell[(deck, card)] = (e1, e2, s1, s2)
+        if min(s1.n_k, s1.n_s, s2.n_k, s2.n_s) >= args.min_n:
+            groups[m["rule_keep"]].append((e1, e2))
+
+    h_prior = _shrink_hyper(groups)
+
+    decks: dict[str, dict[str, Any]] = {}
+    rows: list[tuple] = []
+    for (deck, card), m in sorted(meta.items()):
+        e1, e2, s1, s2 = cell[(deck, card)]
+        pm = _shrink_posterior(h_prior[m["rule_keep"]], (e1[0], e2[0]), (e1[1], e2[1]))
+        fp = fp_by_name[deck]
+        entry = decks.setdefault(fp, {"name": deck, "first": {}, "second": {}})
+        for seat, post, e, s in zip(SEATS, pm, (e1, e2), (s1, s2)):
+            keep = post > 0
+            entry[seat][card] = keep
+            rows.append(
+                (
+                    deck,
+                    seat,
+                    card,
+                    m["cost"],
+                    m["copies"],
+                    m["rule_keep"],
+                    keep,
+                    post,
+                    e[0],
+                    e[1],
+                    s.n_k,
+                    s.n_s,
+                )
+            )
+
+    for entry in decks.values():
+        for seat in SEATS:
+            entry[seat] = {k: entry[seat][k] for k in sorted(entry[seat], key=int)}
+
+    table = {
+        "version": 1,
+        "decks": {fp: decks[fp] for fp in sorted(decks)},
+        "meta": {
+            "learner": "shrink",
+            "tags": list(args.tags),
+            "observations": n_obs,
+            "observations_sha256": sha,
+            "games": sum(n_obs) // 2,
+            "min_n": args.min_n,
+            "prior": {
+                ("rule_keep" if g else "rule_send_back"): {
+                    "mu": round(h["mu"], 6),
+                    "tau_shared": round(math.sqrt(h["tt2"]), 6),
+                    "tau_seat": round(math.sqrt(h["te2"]), 6),
+                    "cells": h["cells"],
+                }
+                for g, h in h_prior.items()
+            },
+            "created": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+        },
+    }
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(table, indent=2) + "\n", encoding="utf-8")
+
+    lines = [
+        f"mull_bayes: {len(runs)} run(s) {', '.join(str(r) for r in runs)}",
+        f"observations {sum(n_obs)} ({' + '.join(map(str, n_obs))}), games {sum(n_obs) // 2}, split copies left out {excluded_split}",
+        *cost_notes,
+    ]
+    for g, h in h_prior.items():
+        name = "rule keep (cost < 4)" if g else "rule send back (cost >= 4)"
+        lines.append(
+            f"prior {name}: mean {h['mu'] * 100:+.2f} pts, shared sd {math.sqrt(h['tt2']) * 100:.2f}, "
+            f"per-seat sd {math.sqrt(h['te2']) * 100:.2f}, from {h['cells']} cards"
+        )
+    dep = sum(1 for r in rows if r[6] != r[5])
+    lines.append(f"decisions: {len(rows)} (deck x seat x card); departures from the rule: {dep}")
+    for r in runs:
+        zt = json.loads((r / "table.json").read_text(encoding="utf-8"))["decks"]
+        diff = sum(
+            1
+            for (deck, seat, card, *_rest) in rows
+            if zt[fp_by_name[deck]][seat].get(card) is not None
+            and zt[fp_by_name[deck]][seat][card] != decks[fp_by_name[deck]][seat][card]
+        )
+        lines.append(f"differs from {r / 'table.json'}: {diff} decisions")
+    lines.append("")
+    lines.append(
+        "deck | seat | card | cost | copies | rule | bayes | shrunk effect (pts) | raw effect (pts) | se | kept / sent"
+    )
+    for row in rows:
+        deck, seat, card, cost, copies, rk, keep, post, e, se, nk, ns = row
+        if keep != rk:
+            lines.append(
+                f"{deck} | {seat} | {card} | {cost} | {copies} | {'keep' if rk else 'send'} | "
+                f"{'keep' if keep else 'send'} | {post * 100:+.2f} | {e * 100:+.2f} | {se * 100:.2f} | {nk} / {ns}"
+            )
+    report = "\n".join(lines) + "\n"
+    out.with_suffix(".txt").write_text(report, encoding="utf-8")
+    print(report, end="")
+    print(f"wrote {out} (sha256 {hashlib.sha256(out.read_bytes()).hexdigest()})")
+
+
 def publish_mulligan(repo: Path, args: argparse.Namespace, td: Path) -> None:
     publish_dir = (
         Path(args.publish_dir)
@@ -767,8 +1023,10 @@ def main() -> None:
     args = parse_args()
     if args.command == "data":
         cmd_data(args)
-    else:
+    elif args.command == "fit":
         cmd_fit(args)
+    else:
+        cmd_shrink(args)
 
 
 if __name__ == "__main__":
