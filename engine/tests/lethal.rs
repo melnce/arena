@@ -2,15 +2,15 @@
 //! proven `None`, a budget-starved `Unknown`, determinism, and a
 //! fixture set that puts every searchable action kind on the board.
 
-use std::collections::{BTreeMap, HashSet};
-use std::fs;
 use arena_engine::policy::ChoosePath;
 use arena_engine::{
     apply, apply_neutral, confirm_det_lethal_line, forced_lethal, forced_lethal_det, hash,
-    legal_actions, lethal_key, new_game, policy_rng, Action, AnyPolicy, CardDb, CardId,
-    First, GameConfig, LethalActionKind, LethalVerdict, PlayerId, Policy, H0,
+    legal_actions, lethal_key, new_game, policy_rng, Action, AnyPolicy, CardDb, CardId, First,
+    GameConfig, LethalActionKind, LethalVerdict, PlayerId, Policy, H0,
 };
 use serde_json::Value;
+use std::collections::{BTreeMap, HashSet};
+use std::fs;
 
 mod common;
 use common::*;
@@ -553,11 +553,29 @@ fn forced_lethal_fixture_node_counts() {
         ("tkill/9420-ply0071.json", "lethal", 111, "lethal", 111),
         ("tkill/9420-ply0072.json", "lethal", 42, "lethal", 42),
         ("tkroll/fa-play-103-ply0100.json", "none", 513, "lethal", 60),
-        ("tkroll/fa-play-150-ply0086.json", "none", 4_605, "lethal", 109),
+        (
+            "tkroll/fa-play-150-ply0086.json",
+            "none",
+            4_605,
+            "lethal",
+            109,
+        ),
         ("tkroll/fa-play-174-ply0086.json", "none", 97, "lethal", 24),
-        ("tkroll/fa-play-98-ply0071.json", "none", 4_584, "lethal", 1_429),
+        (
+            "tkroll/fa-play-98-ply0071.json",
+            "none",
+            4_584,
+            "lethal",
+            1_429,
+        ),
         ("tkroll/fb-play-105-ply0079.json", "none", 431, "lethal", 19),
-        ("tkroll/fb-play-122-ply0064.json", "none", 1_043, "lethal", 237),
+        (
+            "tkroll/fb-play-122-ply0064.json",
+            "none",
+            1_043,
+            "lethal",
+            237,
+        ),
         ("tkroll/fb-play-28-ply0114.json", "none", 127, "lethal", 16),
         ("tkroll/fb-play-386-ply0045.json", "none", 144, "lethal", 40),
     ];
@@ -571,16 +589,24 @@ fn forced_lethal_fixture_node_counts() {
         let st = replay_capture(&db, &cap, ply);
         let det = forced_lethal_det(&db, &st, 10_000);
         match (det_verdict, det) {
-            ("lethal", LethalVerdict::Lethal { nodes, .. }) => assert_eq!(nodes, det_nodes, "{rel} det"),
+            ("lethal", LethalVerdict::Lethal { nodes, .. }) => {
+                assert_eq!(nodes, det_nodes, "{rel} det")
+            }
             ("none", LethalVerdict::None { nodes }) => assert_eq!(nodes, det_nodes, "{rel} det"),
-            ("unknown", LethalVerdict::Unknown { nodes }) => assert_eq!(nodes, det_nodes, "{rel} det"),
+            ("unknown", LethalVerdict::Unknown { nodes }) => {
+                assert_eq!(nodes, det_nodes, "{rel} det")
+            }
             (_, other) => panic!("{rel} det: expected {det_verdict}, got {other:?}"),
         }
         let fl = forced_lethal(&db, &st, 10_000);
         match (fl_verdict, fl) {
-            ("lethal", LethalVerdict::Lethal { nodes, .. }) => assert_eq!(nodes, fl_nodes, "{rel} fl"),
+            ("lethal", LethalVerdict::Lethal { nodes, .. }) => {
+                assert_eq!(nodes, fl_nodes, "{rel} fl")
+            }
             ("none", LethalVerdict::None { nodes }) => assert_eq!(nodes, fl_nodes, "{rel} fl"),
-            ("unknown", LethalVerdict::Unknown { nodes }) => assert_eq!(nodes, fl_nodes, "{rel} fl"),
+            ("unknown", LethalVerdict::Unknown { nodes }) => {
+                assert_eq!(nodes, fl_nodes, "{rel} fl")
+            }
             (_, other) => panic!("{rel} fl: expected {fl_verdict}, got {other:?}"),
         }
     }
@@ -619,10 +645,7 @@ fn lethal_key_properties() {
         let arena_engine::Phase::Choice { node, .. } = &mut st.phase else {
             panic!("choice phase");
         };
-        let arena_engine::ChoiceNode::FusePartners {
-            picked: p, ..
-        } = node
-        else {
+        let arena_engine::ChoiceNode::FusePartners { picked: p, .. } = node else {
             panic!("fuse partners");
         };
         *p = picked.to_vec();
