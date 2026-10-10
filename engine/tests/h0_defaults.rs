@@ -13,7 +13,7 @@
 //! ```
 //!
 //! On this branch, `h0:mull=rule,info=fair,net=<v1 path>` must match those pins;
-//! bare `h0` must match `h0:mull=engine/models/mulligan-v1.json,info=open` and
+//! bare `h0` must match `h0:mull=engine/models/mulligan-v2.json,info=open` and
 //! `h0:net=<v4 path>` (the yardstick candidate); `h0:net=<v3 path>` reproduces
 //! the pre-v4 default pins; `h0:net=<v2 path>` reproduces the pre-v3 default pins.
 //!
@@ -165,17 +165,16 @@ fn action_trace(
 }
 
 /// Default `h0` action fingerprints on eight meta-deck / seed pairs.
-/// Captured from `h0:net=/tmp/v4.json` on `main@3742a1b` (yardstick
-/// candidate); bare `h0` must reproduce them exactly.
+/// Computed on `main@7d7d2d1` with `mulligan-v2` as the built-in table.
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
-    0x2246_9fdb_d814_7321,
+    0x4087_4d81_d117_4ee9,
     0x8867_a7c5_74fc_8fa9,
     0x649a_13b2_5e6f_3115,
     0xf257_1914_6cd5_5f83,
-    0x3917_513b_bba7_4346,
-    0x2cc7_6a3f_9f68_61e1,
-    0x7dfb_9a9f_fc91_c0b1,
-    0x8a65_79b5_792c_ac4d,
+    0x362b_e20c_ddf6_d64c,
+    0x25a8_e316_2fe6_53ad,
+    0xfd90_619b_00c6_58f3,
+    0x28f8_0dd9_b44b_4e7b,
 ];
 
 /// Pre-v4 default `h0` fingerprints (`main@3742a1b`, built-in `h0-linear-v3`).
@@ -749,7 +748,11 @@ fn v1_net_matches_pre_v2_default_fingerprints() {
     let db = load_db();
     let stems = meta_deck_stems();
     let v1 = h0_linear_v1_path();
-    let spec = format!("h0:net={v1}");
+    let mull = repo_root()
+        .join("engine/models/mulligan-v1.json")
+        .display()
+        .to_string();
+    let spec = format!("h0:mull={mull},net={v1}");
     assert_eq!(stems.len(), 16);
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);
@@ -768,7 +771,11 @@ fn v3_net_matches_pre_v4_default_fingerprints() {
     let db = load_db();
     let stems = meta_deck_stems();
     let v3 = h0_linear_v3_path();
-    let spec = format!("h0:net={v3}");
+    let mull = repo_root()
+        .join("engine/models/mulligan-v1.json")
+        .display()
+        .to_string();
+    let spec = format!("h0:mull={mull},net={v3}");
     assert_eq!(stems.len(), 16);
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);
@@ -787,7 +794,11 @@ fn v2_net_matches_pre_v3_default_fingerprints() {
     let db = load_db();
     let stems = meta_deck_stems();
     let v2 = h0_linear_v2_path();
-    let spec = format!("h0:net={v2}");
+    let mull = repo_root()
+        .join("engine/models/mulligan-v1.json")
+        .display()
+        .to_string();
+    let spec = format!("h0:mull={mull},net={v2}");
     assert_eq!(stems.len(), 16);
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);
@@ -805,7 +816,7 @@ fn v2_net_matches_pre_v3_default_fingerprints() {
 fn default_matches_explicit_builtin_table_and_open() {
     let db = load_db();
     let table = repo_root()
-        .join("engine/models/mulligan-v1.json")
+        .join("engine/models/mulligan-v2.json")
         .display()
         .to_string();
     let v4 = h0_linear_v4_path();

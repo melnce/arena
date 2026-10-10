@@ -180,7 +180,7 @@ impl AnyPolicy {
     /// (`c ≥ 0`; standardised-input clamp for the learned leaf; default `5`
     /// is the sweep-10 flip; ignored with `value=v0` / `value=v1`),
     /// `mull=builtin|rule|random|<path>` (opening keep policy; default
-    /// `builtin` is the embedded `mulligan-v1` table; `rule` is cost ≥ 4
+    /// `builtin` is the embedded `mulligan-v2` table; `rule` is cost ≥ 4
     /// send back; `random` draws one `next_u64()` from the rng passed to
     /// `choose` and sends back slot `i` iff bit `i` is set, `i < hand
     /// length`, at most 4 — deterministic for a seed; `<path>` loads a

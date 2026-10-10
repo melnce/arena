@@ -49,6 +49,28 @@ pub fn h0_linear_v4_path() -> String {
         .to_string()
 }
 
+/// Absolute path to the committed `mulligan-v1` table (pre-v2 built-in).
+pub fn mulligan_v1_path() -> String {
+    crate_dir()
+        .join("models/mulligan-v1.json")
+        .display()
+        .to_string()
+}
+
+/// Pin opening keeps to `mulligan-v1` when the spec does not set `mull=`.
+pub fn with_v1_mull(spec: &str) -> String {
+    if spec.contains("mull=") {
+        return spec.to_string();
+    }
+    if spec == "h0" {
+        format!("h0:mull={}", mulligan_v1_path())
+    } else if spec.starts_with("h0:") {
+        format!("h0:mull={},{}", mulligan_v1_path(), &spec[3..])
+    } else {
+        spec.to_string()
+    }
+}
+
 /// Append `net=<v3 path>` when the spec does not already set `net=`.
 pub fn with_v3_net(spec: &str) -> String {
     if spec.contains("net=") || spec.contains("value=v0") || spec.contains("value=v1") {

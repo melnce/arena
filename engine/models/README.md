@@ -90,6 +90,38 @@ sha256 `76685509ff4aef49e34ae37793385d40b477d0756b52141299300f4cb85d8c95`
 
 Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
 
+# `mulligan-v1`
+
+The `mulligan-v1` opening keep table (engine format version 1). Documented in `docs/engine-api.md` "Learned mulligan".
+
+## Provenance
+
+Data: `mull1`, the random-keep run behind sweep 13 (`py/mulligan.py data` + `fit`); z ≥ 1.5 departures from the cost ≥ 4 rule.
+
+Yardstick: sweep 13 pooled 0.521 [0.509, 0.534] / +14.9 Elo vs `mull=rule` on the 16-deck meta pool (6 144 games per candidate). This was the built-in table until `mulligan-v2` shipped. Reach it with `h0:mull=engine/models/mulligan-v1.json`.
+
+sha256 `a500fb7b44ca41ca3c5c4733dace9bf7c230ffda5aafc9a8eaa95a71d16e4e68`
+
+## Rule
+
+Committed files are immutable measured artifacts — a new table is a new file (`mulligan-v2`, …) and becomes the default only after it beats the current default on the registered sweep rule; never regenerate a committed file in place.
+
+# `mulligan-v2`
+
+The `mulligan-v2` opening keep table (engine format version 1). Documented in `docs/engine-api.md` "Learned mulligan".
+
+## Provenance
+
+Data: `mull1` + `mull2` pooled via the shrinkage learner (`py/mulligan.py shrink`, empirical Bayes by rule group).
+
+Yardstick: sweep 46 pooled 0.5094 [0.4999, 0.5188] / +6.5 Elo vs `mulligan-v1` on the 16-deck meta pool (10 752 final games). This is the built-in table since this PR.
+
+sha256 `efbb96a0efac5cc9e9298e2e1bdbcb84fd0605cc47f13d29fa1f4f7374c6dde5`
+
+## Rule
+
+Committed files are immutable measured artifacts — a new table is a new file (`mulligan-v3`, …) and becomes the default only after it beats the current default on the registered sweep rule; never regenerate a committed file in place.
+
 ## Optional race block
 
 Linear models may include an optional `"race"` block (twelve HP / board-attack

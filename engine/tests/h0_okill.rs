@@ -50,36 +50,38 @@ fn review12_fixture(name: &str) -> PathBuf {
 const GATE_SEEDS: [u64; 8] = [11, 23, 37, 41, 53, 67, 79, 97];
 
 /// Default `h0` fingerprints on eight meta-deck / seed pairs (seat B
-/// `meta-sword-rally`). Pinned on `main@ed574a4`.
+/// `meta-sword-rally`). Computed on `main@7d7d2d1` with built-in `mulligan-v2`.
 const DEFAULT_OKILL_GATE_FPS: [u64; 8] = [
-    0x2246_9fdb_d814_7321,
+    0x4087_4d81_d117_4ee9,
     0x8867_a7c5_74fc_8fa9,
     0x649a_13b2_5e6f_3115,
     0xf257_1914_6cd5_5f83,
-    0x3917_513b_bba7_4346,
-    0x2cc7_6a3f_9f68_61e1,
-    0x7dfb_9a9f_fc91_c0b1,
-    0x8a65_79b5_792c_ac4d,
+    0x362b_e20c_ddf6_d64c,
+    0x25a8_e316_2fe6_53ad,
+    0xfd90_619b_00c6_58f3,
+    0x28f8_0dd9_b44b_4e7b,
 ];
 
-/// `h0:okill=7` fingerprints on the same gate pairs. Pinned on `main@ed574a4`.
+/// `h0:okill=7` fingerprints on the same gate pairs. Computed on `main@7d7d2d1`
+/// with built-in `mulligan-v2`.
 const OKILL7_GATE_FPS: [u64; 8] = [
-    0x30c5_3aea_2056_8fa5,
+    0x3344_0a3b_e7f7_4761,
     0x518a_c121_a849_591a,
     0x421d_14c6_1a80_f253,
     0x002a_10c1_1b84_7922,
-    0xf99c_656c_a428_56fd,
-    0x64db_f95d_b4ff_7de8,
-    0xa325_ad5c_60c2_7038,
-    0x2132_7f6e_557c_4256,
+    0xb971_00c3_06c1_81b7,
+    0x25a8_e316_2fe6_53ad,
+    0x6e50_ac90_c116_9b49,
+    0x84f1_4a01_77e6_c228,
 ];
 
-/// Served spec fingerprints (seeds 11, 23, 37). Pinned on `main@ed574a4`.
+/// Served spec fingerprints (seeds 11, 23, 37). Computed on `main@7d7d2d1` with
+/// built-in `mulligan-v2`.
 const SERVED_SPEC: &str =
     "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1";
 const SERVED_GATE_SEEDS: [u64; 3] = [11, 23, 37];
 const SERVED_GATE_FPS: [u64; 3] = [
-    0xe245_2508_3e83_6195,
+    0x2c56_7b73_e593_608a,
     0xcf64_964d_6a48_10c2,
     0x240a_8a8f_d3c7_5241,
 ];
