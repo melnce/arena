@@ -594,7 +594,14 @@ fn lethal_key_properties() {
     clear_hand(&mut st, PlayerId::A);
     assert_eq!(lethal_key(&st), hash(&st));
 
-    let fuse = fuse_choice_state(&db);
+    let mut fuse = started(&db, 6);
+    clear_hand(&mut fuse, PlayerId::A);
+    put_hand(&db, &mut fuse, PlayerId::A, FUSE_HOST);
+    put_hand(&db, &mut fuse, PlayerId::A, FUSE_PARTNER);
+    put_hand(&db, &mut fuse, PlayerId::A, FUSE_PARTNER);
+    apply(&db, &mut fuse, Action::Fuse { host: 0 }).expect("fuse");
+    assert!(matches!(fuse.phase, arena_engine::Phase::Choice { .. }));
+
     let h0 = hash(&fuse);
     let legal = legal_actions(&db, &fuse);
     let choose = legal
