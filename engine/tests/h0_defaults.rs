@@ -39,7 +39,8 @@
 //! | 37 | meta-dragon-aggro | `0xe0ff3ba0823747ae` → `0x0c5e00eb14bdce85` | 88 | match | 79 | 80 | **hashΔ 79:** after Spilling Red `10642310` discard pick (`choose` `90044330`); main `PendingKind::EffectSelect` + faith tick in snapshot; branch `PlaySelect` destroy pick (`step 1/2`, `pending_work=1`). **reconv 80.** **n 88:** `hash@87` match; main attacks; branch plays Spilling Red then play-time discard+destroy picks (`89`–`90`). |
 //! | 41 | meta-dragon-ramp | `0x9e542bf8f4f4ba5c` → `0x09d1f4dde9630cb7` | 47 | match | 17 | 18 | **hashΔ 17:** after Depths of the Eld Sword `90024320` (Enhanced) play; main `EffectSelect` destroy pick with Faith: Yidmetra `faith:10624120` tick first; branch `PlaySelect` + `deferred_rx=1`. **reconv 18.** **n 47:** `hash@46` match; main idx 4 plays Lyria, Skydestined `10403120`; branch idx 2 plays Burnite, Anathema of Ash `10744110`. |
 //! | 53 | meta-forest-combo | `0x7404fbcb4cae7f60` → `0x73930e18abe26408` | 86 | match | 37 | 38 | **hashΔ 37:** after Miroku, Swarmpetal `10514120` play; main `ModeSelect`; branch `PlaySelect` mode + `deferred_rx=1`. **reconv 38.** **n 86:** `hash@85` match; main idx 1 plays Yidmetra, Eld Sword `10624120`; branch idx 8 attacks (`87` plays Depths of the Eld Sword `90024320` Enhanced). |
-//! | 67 | meta-haven-amulet | `0x50a92b69688f99c3` → `0x85c938a069126ff1` | 20 | match | — | — | **n 20:** actions `0..19` identical; `hash@20` match; legal identical (10 actions); main idx 5 attack slot 0; branch idx 2 play Timepiece of Perfection `10762210` (no play-time pick on either root). **explain@20 cand[2]:** worlds 0–2 match (leaf −6.2134); **world[3]** diverges — main hits node cap after engage (`pv_len=2`); branch `pv_len=9` leaf +4.4162 with opp Depths of the Eld Sword `90024320` (Enhanced) `choose` at PV step 5 while Faith: Yidmetra `faith:10624120` is deferred → `root_agg` −6.2134 → −3.5560 (beats main best attack −5.8025). |
+//! | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x86671e5ef842ccfb` | 20 | match | — | — | **Earrings Engage** replicates Fanfare (`10761210`). **n 20:** actions `0..19` identical; `hash@20` match; legal identical (10 actions); main idx 5 attack slot 0; branch idx 2 play Timepiece of Perfection `10762210`. **explain@20 cand[2]:** worlds 0–2 match; **world[3]** diverges — main hits node cap after engage (`pv_len=2`); branch `pv_len=9` with opp Depths Enhanced `choose` while Faith deferred. |
+//! | 97 | meta-haven-kukishiro | `0x28f80dd9b44b4e7b` → `0xf4c105a794883210` | — | — | — | — | **Earrings Engage** (3× `10761210` in deck). |
 //! | 79 | meta-haven-evo | `0x42fbd544e452ebf0` → `0x2d183971e45391ae` | 63 | match | — | — | **n 63:** actions `0..62` identical; `hash@63` match; legal identical (4 actions); main idx 0 play Depths of the Eld Sword `90024320` (Enhanced) → `64` `EffectSelect` destroy; branch idx 1 attack (`64` plays Depths with `PlaySelect` + `deferred_rx=1`). |
 //!
 //! ### legacy `h0:mull=rule,info=fair`
@@ -172,9 +173,9 @@ const DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x649a_13b2_5e6f_3115,
     0xf257_1914_6cd5_5f83,
     0x362b_e20c_ddf6_d64c,
-    0x25a8_e316_2fe6_53ad,
+    0x8667_1e5e_f842_ccfb,
     0xfd90_619b_00c6_58f3,
-    0x28f8_0dd9_b44b_4e7b,
+    0xf4c1_05a7_9488_3210,
 ];
 
 /// Pre-v4 default `h0` fingerprints (`main@3742a1b`, built-in `h0-linear-v3`).
@@ -184,9 +185,9 @@ const V3_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x120b_7fb2_41cf_3f44,
     0xfd6c_73d8_9fd1_d09d,
     0xd9fb_a1c8_8f98_0106,
-    0x783d_f18c_0ca2_89f1,
+    0x8667_1e5e_f842_ccfb,
     0x3f38_eeac_5db2_59c1,
-    0x857a_2b3b_a078_359e,
+    0x275e_455d_3d7d_1d9c,
 ];
 
 /// Pre-v3 default `h0` fingerprints (`main@a69b248`, built-in `h0-linear-v2`).
@@ -196,9 +197,9 @@ const V2_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x122c_fa71_850c_7637,
     0x9475_f3fc_7d65_58c7,
     0x3633_2073_4090_3124,
-    0x8f6b_b18b_4445_e0bd,
+    0x7e55_16aa_84fc_33f7,
     0x5cca_9048_c37e_96c9,
-    0x46e6_1033_24ea_959f,
+    0x0da1_eafe_991c_1463,
 ];
 
 /// Pre-v2 default `h0` fingerprints (`main@063bdd4`, built-in `h0-linear-v1`).
@@ -208,9 +209,9 @@ const V1_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x0c5e_00eb_14bd_ce85,
     0xa024_135f_cf64_4006,
     0x7099_b9ba_b571_926b,
-    0x85c9_38a0_6912_6ff1,
+    0x873c_48b0_bfaa_2256,
     0x2d18_3971_e453_91ae,
-    0x5b5a_5be5_f92e_3c7c,
+    0x46f7_3e8c_9343_c41d,
 ];
 
 /// Pre-flip `h0` action fingerprints (`h0:mull=rule,info=fair`). Re-pinned with
@@ -221,9 +222,9 @@ const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x0c5e_00eb_14bd_ce85,
     0x3d7f_2f1b_9db5_99cc,
     0x7099_b9ba_b571_926b,
-    0xf0a3_386e_8682_af1e,
+    0x464f_d3cf_5bbf_5a40,
     0x953e_ffd4_7650_d22e,
-    0x5b5a_5be5_f92e_3c7c,
+    0x578d_0116_1ef0_b329,
 ];
 
 /// Dump canonical state hash after each h0 decision (ignored).
