@@ -1,0 +1,6 @@
+[
+  {
+    "index": 1,
+    "spec": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,net=results/sweep43/leaf-v3-e3.json"
+  }
+]
