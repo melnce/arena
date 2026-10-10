@@ -164,7 +164,8 @@ where
     let public = hash(state);
     let mut tt: HashMap<(u64, u64), u64> = HashMap::new();
     let mut path_keys: Vec<(u64, u64)> = vec![position_key(state, public, false)];
-    let mut path_lethal: Vec<u64> = vec![lethal_key_with(state, public)];
+    let mut path_lethal: Vec<(u64, u64)> =
+        vec![(lethal_key_with(state, public), state.rng.fingerprint())];
     let mut line: Vec<Action> = Vec::new();
     match search(
         db,
@@ -375,7 +376,7 @@ fn search<F>(
     use_tt: bool,
     use_lethal_key: bool,
     path_keys: &mut Vec<(u64, u64)>,
-    path_lethal: &mut Vec<u64>,
+    path_lethal: &mut Vec<(u64, u64)>,
     inexact: &mut bool,
     line: &mut Vec<Action>,
     rng_so_far: bool,
@@ -443,9 +444,10 @@ where
         let child_public = hash(&s);
         let child_lethal = lethal_key_with(&s, child_public);
         let child_key = position_key(&s, child_public, use_lethal_key);
+        let child_lethal_key = (child_lethal, s.rng.fingerprint());
         if path_keys.contains(&child_key) {
             if !use_lethal_key
-                && !path_lethal.contains(&child_lethal)
+                && !path_lethal.contains(&child_lethal_key)
                 && !(deterministic_only && consumed)
             {
                 *inexact = true;
@@ -467,7 +469,7 @@ where
         }
         path_keys.push(child_key);
         if !use_lethal_key {
-            path_lethal.push(child_lethal);
+            path_lethal.push(child_lethal_key);
         }
         line.push(a);
         let out = search(
