@@ -231,6 +231,7 @@ fn snapshot(state: &State) -> CanonicalState;   // docs/trace-format.md
 
 fn encode(state: &State, perspective: PlayerId) -> Observation;
 fn search_key(state: &State) -> u64;
+fn lethal_key(state: &State) -> u64;
 fn determinize(state: &State, perspective: PlayerId, seed: u64) -> State;
 fn determinize_with(state: &State, perspective: PlayerId, seed: u64, info: Info) -> State;
 fn determinize_block(
@@ -427,6 +428,31 @@ canonical walk of every `State` field **except the RNG**. It differs when
 `choose_used`, `once_used`, hand-zone once-per-turn flags, or the mulligan
 actor differ; clones match; RNG-only reseeds match. Not interchangeable with
 `hash` (the snapshot hash is pinned by the oracle corpus).
+
+`lethal_key(state) -> u64` keys [`forced_lethal`] cycle detection and
+transposition on in-flight positions. At a **quiescent** state (Main phase,
+empty `pending_work` / `queue`, no play-pick or deferred-play state) it
+equals `hash(state)`. Elsewhere it is FNV-1a 64 over the snapshot hash plus
+the same canonical walk as `search_key`, omitting `step_counter`,
+`next_instance`, `crest_order`, `picks`, and both players (the snapshot hash
+covers boards). `FusePartners` and `Modes` choice nodes hash `picked` as a
+sorted set; `MultiPick` keeps pick order.
+
+### forced_lethal (within-turn solver)
+
+`forced_lethal`, `forced_lethal_det`, and `forced_lethal_accepting` share one
+node budget across **two passes**. Pass 1 is the historical search: cycle
+detection and transposition use `(hash(state), rng fingerprint)`. It tracks
+whether that pass was **exact** (every prune would also occur under
+`(lethal_key(state), fingerprint)`). [`LethalVerdict::Lethal`] and
+[`LethalVerdict::Unknown`] from pass 1 are returned unchanged. [`None`] from
+an exact pass 1 is final. When pass 1 returns [`None`] but was inexact, pass
+2 reruns from the root on `(lethal_key, fingerprint)` with a fresh table
+and path; the reported `nodes` count is the sum of both passes. A [`None`]
+no longer hides a cut fuse-partner or other in-flight choice.
+
+Python: `arena.forced_lethal(game, budget, det=False)` — `det=True` runs
+`forced_lethal_det`; the returned dict is unchanged.
 
 ## determinize (M5)
 
@@ -1189,6 +1215,7 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | `Game.bot_action_value(policy, seed) -> dict` | Same decision as `bot_action`, plus `{"action": NeutralAction, "value": float \| None}` where `value` is the policy's `last_value()` after `choose` (`None` for policies that do not search, e.g. `random`). |
 | `Game.bot_action_explain(policy, seed) -> dict` | Same decision as `bot_action_value` for `h0` specs, plus a per-candidate explain record (see below). Non-`h0` policies return `{"chosen": NeutralAction, "path": "opaque"}`. Recording does not change the chosen action or node count. |
 | `Game.sample_opponent_hands(policy, seed, n) -> list[list[str]]` | `n` sampled opponent hands (card ids) for the side to move's opponent under the policy's `info`, `deal`, and `hread` settings. Root seeds match `H0::choose`. `h0` only. |
+| `arena.forced_lethal(game, budget, det=False) -> dict` | Within-turn solver (`verdict`, `nodes`, optional `line` / `rng_dependent`). `det=True` is `forced_lethal_det`. |
 | `arena.play_random(db, seed, deck_a, deck_b, first="coin") -> dict` | `{winner, turns, actions, first}`. Random-legal + `policy_rng`. |
 | `arena.matchup(db, decks, games, seed, policy="random", threads=None, policy_a=None, policy_b=None, first="alternate", records=False, export=None, export_epsilon=0.0, encoding=1, game_offset=0) -> dict` | Every ordered pair including mirrors. `policy_a` / `policy_b` default to `policy` and accept any `parse_spec` string (a bad spec raises `ValueError` with the parser message). `first`: `"alternate"` (default) — game `g` of every pair is `First::A` when `g` is even and `First::B` when odd, so seats are mirrored at equal counts; `"coin"` — today's `First::Coin` (the game seed decides); `"a"` / `"b"`. Seeds are unchanged: `game_seed(seed, pair_index, game_index)` where `game_index` is the per-pair game index `g`; both seats share `policy_rng(game seed)` as the bench does. Optional `game_offset=K` (default `0`) plays indices `K..K+games−1` instead of `0..games−1` (same seed, first player, and `records[].g`); `export` with `K>0` is refused. When `K>0`, the JSON includes `"game_offset": K`; `K=0` is byte-identical to before. Per pair `{games, a_wins, b_wins, draws, first_player_wins, a_games_as_first, a_wins_as_first, mean_turns, mean_actions, end}` where `draws = games − a_wins − b_wins` and `end` counts `{lethal, deckout, turn_cap, action_cap, no_legal, illegal}`. Top level: `seed, games, policy_a, policy_b, first, threads, matrix`. With `records=True`, a list `records` in job order of `{a, b, g, seed, first, winner, turns, actions, end, mull_a, mull_b}` (deck names, `"a"`/`"b"`/`None`, end reason as a string). `mull_a` / `mull_b` are each `{"hand": ["<id>", …], "swap": [bool, bool, bool, bool]}` or `null` (pre-mulligan hand in slot order and the confirm mask). With `records=False` the output is byte-identical to before this field was added. Same seed + same thread count → identical output including `records`; `threads=1` equals `threads=None`. `export=None` (default) is byte-identical to today — no extra files, no `"export"` key. `export=<dir>` writes training-sample shards (see Training samples (M5b)) and adds `"export": {dir, samples, games}`; `export_epsilon` is ε-greedy exploration on those games (inner policy still asked first). |
 | `py/stats.py::wilson(k, n, z=1.96) -> (lo, hi)` | Wilson score interval for `k` successes in `n` trials, clipped to `[0, 1]`. `n == 0` → `(0.0, 1.0)`. |

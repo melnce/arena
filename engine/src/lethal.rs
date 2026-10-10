@@ -42,18 +42,36 @@
 //! invoked on each candidate kill line before returning; rejected lines
 //! continue searching within the same budget and transposition is disabled.
 //!
+//! # Two passes and two keys
+//!
+//! Pass 1 is the historical search: cycle detection and transposition use
+//! `(hash(state), rng fingerprint)` where `hash` is the public snapshot hash
+//! (choice nodes appear only as `"choice"`). Pass 1 also tracks whether it
+//! was **exact**: every cycle cut and every transposition hit would have
+//! happened the same way under [`crate::lethal_key`] plus the fingerprint.
+//!
+//! [`LethalVerdict::Lethal`] and [`LethalVerdict::Unknown`] from pass 1 are
+//! returned unchanged (same line, same node count). [`LethalVerdict::None`]
+//! from an exact pass 1 is final. When pass 1 returns [`LethalVerdict::None`]
+//! but was inexact — it pruned a branch that the in-flight key would have
+//! kept — pass 2 reruns from the root keyed on `(lethal_key(state), fingerprint)`
+//! with a fresh table and path. One budget covers both passes; the reported
+//! node count is the total. A [`LethalVerdict::None`] no longer hides a cut
+//! fuse partner or other in-flight choice.
+//!
 //! Transposition is allowed only for positions already proven `None`
-//! within budget. `Unknown` is never memoised. The table key is
-//! [`crate::search_key`] plus [`crate::GameRng::fingerprint`], so two
-//! boards that differ only in the next roll do not share a `None`.
+//! within budget. `Unknown` is never memoised. Pass 1 stores the snapshot
+//! key with the [`lethal_key`] at proof time; a hit with a different
+//! in-flight key makes pass 1 inexact. Pass 2 memoises on the in-flight key.
 
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 use crate::action::{acting_player, Action};
 use crate::apply::{apply, legal_actions};
 use crate::db::CardDb;
 use crate::ids::{AttackTarget, PlayerId};
 use crate::rng::GameRng;
+use crate::search_key::lethal_key_with;
 use crate::snapshot::hash;
 use crate::state::{Phase, State};
 
@@ -140,11 +158,14 @@ where
 {
     let perspective = acting_player(state);
     let mut nodes = 0u32;
-    let mut tt: HashSet<(u64, u64)> = HashSet::new();
-    let mut path_keys: Vec<(u64, u64)> = vec![pos_key(state)];
-    let mut line: Vec<Action> = Vec::new();
     let use_tt = accept.is_none();
     let mut accept_holder = accept;
+    let mut inexact = false;
+    let public = hash(state);
+    let mut tt: HashMap<(u64, u64), u64> = HashMap::new();
+    let mut path_keys: Vec<(u64, u64)> = vec![position_key(state, public, false)];
+    let mut path_lethal: Vec<u64> = vec![lethal_key_with(state, public)];
+    let mut line: Vec<Action> = Vec::new();
     match search(
         db,
         state,
@@ -153,7 +174,49 @@ where
         &mut nodes,
         &mut tt,
         use_tt,
+        false,
         &mut path_keys,
+        &mut path_lethal,
+        &mut inexact,
+        &mut line,
+        false,
+        0,
+        deterministic_only,
+        &mut accept_holder,
+    ) {
+        Outcome::Lethal { rng_dependent } => {
+            return LethalVerdict::Lethal {
+                line,
+                nodes,
+                rng_dependent: if deterministic_only {
+                    false
+                } else {
+                    rng_dependent
+                },
+            };
+        }
+        Outcome::Unknown => return LethalVerdict::Unknown { nodes },
+        Outcome::None if !inexact => return LethalVerdict::None { nodes },
+        Outcome::None => {}
+    }
+
+    let mut tt2: HashMap<(u64, u64), u64> = HashMap::new();
+    let public = hash(state);
+    path_keys = vec![position_key(state, public, true)];
+    path_lethal.clear();
+    line.clear();
+    match search(
+        db,
+        state,
+        perspective,
+        budget,
+        &mut nodes,
+        &mut tt2,
+        use_tt,
+        true,
+        &mut path_keys,
+        &mut path_lethal,
+        &mut inexact,
         &mut line,
         false,
         0,
@@ -278,11 +341,13 @@ fn action_rank(a: &Action) -> u8 {
     }
 }
 
-fn pos_key(state: &State) -> (u64, u64) {
-    // `hash` is the public snapshot hash: no RNG, no step_counter. Using
-    // `search_key` here would treat every apply as a new node (it folds in
-    // `step_counter`) and a Bonus-PP toggle would recurse forever.
-    (hash(state), state.rng.fingerprint())
+fn position_key(state: &State, public: u64, use_lethal: bool) -> (u64, u64) {
+    let h = if use_lethal {
+        lethal_key_with(state, public)
+    } else {
+        public
+    };
+    (h, state.rng.fingerprint())
 }
 
 fn rng_consumed(before: &GameRng, after: &GameRng) -> bool {
@@ -306,9 +371,12 @@ fn search<F>(
     perspective: PlayerId,
     budget: u32,
     nodes: &mut u32,
-    tt: &mut HashSet<(u64, u64)>,
+    tt: &mut HashMap<(u64, u64), u64>,
     use_tt: bool,
+    use_lethal_key: bool,
     path_keys: &mut Vec<(u64, u64)>,
+    path_lethal: &mut Vec<u64>,
+    inexact: &mut bool,
     line: &mut Vec<Action>,
     rng_so_far: bool,
     ply: u32,
@@ -332,9 +400,16 @@ where
     if ply >= MAX_PLY {
         return Outcome::Unknown;
     }
-    let key = pos_key(state);
-    if use_tt && tt.contains(&key) {
-        return Outcome::None;
+    let public = hash(state);
+    let lethal = lethal_key_with(state, public);
+    let key = position_key(state, public, use_lethal_key);
+    if use_tt {
+        if let Some(&stored_lethal) = tt.get(&key) {
+            if stored_lethal != lethal && !use_lethal_key {
+                *inexact = true;
+            }
+            return Outcome::None;
+        }
     }
 
     let legal = legal_actions(db, state);
@@ -348,7 +423,7 @@ where
 
     if acts.is_empty() {
         if use_tt {
-            tt.insert(key);
+            tt.insert(key, lethal);
         }
         return Outcome::None;
     }
@@ -364,11 +439,19 @@ where
         if apply(db, &mut s, a.clone()).is_err() {
             continue;
         }
-        let child_key = pos_key(&s);
+        let consumed = rng_consumed(&rng_before, &s.rng);
+        let child_public = hash(&s);
+        let child_lethal = lethal_key_with(&s, child_public);
+        let child_key = position_key(&s, child_public, use_lethal_key);
         if path_keys.contains(&child_key) {
+            if !use_lethal_key
+                && !path_lethal.contains(&child_lethal)
+                && !(deterministic_only && consumed)
+            {
+                *inexact = true;
+            }
             continue;
         }
-        let consumed = rng_consumed(&rng_before, &s.rng);
         if deterministic_only && consumed {
             continue;
         }
@@ -383,6 +466,9 @@ where
             continue;
         }
         path_keys.push(child_key);
+        if !use_lethal_key {
+            path_lethal.push(child_lethal);
+        }
         line.push(a);
         let out = search(
             db,
@@ -392,7 +478,10 @@ where
             nodes,
             tt,
             use_tt,
+            use_lethal_key,
             path_keys,
+            path_lethal,
+            inexact,
             line,
             rng_so_far || consumed,
             ply + 1,
@@ -404,11 +493,17 @@ where
             Outcome::Unknown => {
                 line.pop();
                 path_keys.pop();
+                if !use_lethal_key {
+                    path_lethal.pop();
+                }
                 saw_unknown = true;
             }
             Outcome::None => {
                 line.pop();
                 path_keys.pop();
+                if !use_lethal_key {
+                    path_lethal.pop();
+                }
             }
         }
     }
@@ -416,7 +511,7 @@ where
         Outcome::Unknown
     } else {
         if use_tt {
-            tt.insert(key);
+            tt.insert(key, lethal);
         }
         Outcome::None
     }

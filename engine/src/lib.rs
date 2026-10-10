@@ -58,7 +58,7 @@ pub use policy::{
     WorldRecord, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0,
 };
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
-pub use search_key::search_key;
+pub use search_key::{lethal_key, search_key};
 pub use snapshot::{hash, snapshot, snapshot_json};
 pub use state::{
     CardInstance, ChoiceNode, GameConfig, OpeningHands, PendingKind, Phase, PlayForm, PlayerState,

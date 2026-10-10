@@ -116,6 +116,161 @@ pub fn search_key(state: &State) -> u64 {
     fnv1a64(&w.buf)
 }
 
+/// Key for forced_lethal's cycle check and transposition set: the public snapshot hash at a quiescent state,
+/// plus the in-flight state everywhere else.
+pub fn lethal_key(state: &State) -> u64 {
+    lethal_key_with(state, crate::snapshot::hash(state))
+}
+
+pub(crate) fn lethal_key_with(state: &State, public: u64) -> u64 {
+    if is_lethal_quiescent(state) {
+        return public;
+    }
+    let mut w = Writer::new();
+    w.u64(public);
+    w.u8(state.active as u8);
+    w.u8(state.first as u8);
+    w.u32(state.turn);
+    match state.winner {
+        Some(p) => {
+            w.u8(1);
+            w.u8(p as u8);
+        }
+        None => w.u8(0),
+    }
+    hash_phase_lethal(&mut w, &state.phase);
+    w.bool(state.suppress_last_words);
+    match state.pending_play_rally {
+        Some(p) => {
+            w.u8(1);
+            w.u8(p as u8);
+        }
+        None => w.u8(0),
+    }
+    match &state.deferred_play_rx {
+        Some(rx) => {
+            w.u8(1);
+            w.u32(rx.len() as u32);
+            for q in rx {
+                hash_queued(&mut w, q);
+            }
+        }
+        None => w.u8(0),
+    }
+    match &state.play_picks {
+        Some(picks) => {
+            w.u8(1);
+            hash_play_picks(&mut w, picks);
+        }
+        None => w.u8(0),
+    }
+    match &state.pending_play_choices {
+        Some(p) => {
+            w.u8(1);
+            hash_pending_play_choices(&mut w, p);
+        }
+        None => w.u8(0),
+    }
+    hash_opt_target(&mut w, state.event_subject.as_ref());
+    w.u32(state.invoked_ids.len() as u32);
+    for id in &state.invoked_ids {
+        w.card(*id);
+    }
+    match state.event_base_cost {
+        Some(n) => {
+            w.u8(1);
+            w.i32(n);
+        }
+        None => w.u8(0),
+    }
+    match state.event_inst_id {
+        Some(n) => {
+            w.u8(1);
+            w.u32(n);
+        }
+        None => w.u8(0),
+    }
+    w.bool(state.attack_target_is_leader);
+    w.bool(state.bind_append);
+    w.bool(state.attacking_follower);
+    hash_opt_target(&mut w, state.combat_opposing.as_ref());
+    hash_opt_target(&mut w, state.combat_attacker.as_ref());
+    match state.combat_defender_id {
+        Some(n) => {
+            w.u8(1);
+            w.u32(n);
+        }
+        None => w.u8(0),
+    }
+    w.u32(state.pending_work.len() as u32);
+    for frame in &state.pending_work {
+        hash_work(&mut w, frame);
+    }
+    w.u32(state.queue.len() as u32);
+    for q in &state.queue {
+        hash_queued(&mut w, q);
+    }
+    w.u32(state.bindings.len() as u32);
+    for (k, refs) in &state.bindings {
+        w.str(k);
+        w.u32(refs.len() as u32);
+        for r in refs {
+            hash_bound(&mut w, r);
+        }
+    }
+    fnv1a64(&w.buf)
+}
+
+fn is_lethal_quiescent(state: &State) -> bool {
+    matches!(state.phase, Phase::Main)
+        && state.pending_work.is_empty()
+        && state.queue.is_empty()
+        && state.play_picks.is_none()
+        && state.pending_play_choices.is_none()
+        && state.deferred_play_rx.is_none()
+        && state.pending_play_rally.is_none()
+}
+
+fn hash_phase_lethal(w: &mut Writer, phase: &Phase) {
+    match phase {
+        Phase::Choice { player, node } => {
+            let node = match node {
+                ChoiceNode::Modes {
+                    options,
+                    pending,
+                    picked,
+                } => {
+                    let mut picked = picked.clone();
+                    picked.sort_unstable();
+                    ChoiceNode::Modes {
+                        options: options.clone(),
+                        pending: pending.clone(),
+                        picked,
+                    }
+                }
+                ChoiceNode::FusePartners {
+                    host,
+                    options,
+                    picked,
+                } => {
+                    let mut picked = picked.clone();
+                    picked.sort_unstable();
+                    ChoiceNode::FusePartners {
+                        host: *host,
+                        options: options.clone(),
+                        picked,
+                    }
+                }
+                other => other.clone(),
+            };
+            w.u8(3);
+            w.u8(*player as u8);
+            hash_choice(w, &node);
+        }
+        other => hash_phase(w, other),
+    }
+}
+
 struct Writer {
     buf: Vec<u8>,
 }
