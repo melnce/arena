@@ -5,10 +5,10 @@
   at the clear's last decision, line seed: chosen attack slot0->enemy slot1 -48.47 (0/8 worlds end in an owner kill); the line's next move attack slot0->enemy slot1: -48.47 (0/8)
   at the clear's last decision, seed 1: chosen attack slot0->enemy slot1 -49.80 (0/8 worlds end in an owner kill); the line's next move attack slot0->enemy slot1: -49.80 (0/8)
   at the clear's last decision, seed 2: chosen attack slot0->enemy slot1 -51.13 (0/8 worlds end in an owner kill); the line's next move attack slot0->enemy slot1: -51.13 (0/8)
-  reseed 1 at the turn start: owner draws 'Wills United'; owner's forced kill after the clear: none
-  reseed 2 at the turn start: owner draws 'Miscalculated Experiment'; owner's forced kill after the clear: none
-  reseed 3 at the turn start: owner draws 'Wills United'; owner's forced kill after the clear: none
-  reseed 12345 at the turn start: owner draws 'Tetra & Ladica, Forest BFFs'; owner's forced kill after the clear: lethal
+  reseed 1 at the turn start: owner draws 'Wills United'; after the clear: engine forced_lethal none; fuse-aware owner win: False (523 nodes)
+  reseed 2 at the turn start: owner draws 'Miscalculated Experiment'; after the clear: engine forced_lethal none; fuse-aware owner win: False (902 nodes)
+  reseed 3 at the turn start: owner draws 'Wills United'; after the clear: engine forced_lethal none; fuse-aware owner win: False (523 nodes)
+  reseed 12345 at the turn start: owner draws 'Tetra & Ladica, Forest BFFs'; after the clear: engine forced_lethal lethal; fuse-aware owner win: True (96 nodes)
 == 1068176807631359990-b43e6214, bot turn starting after 86 actions; the clear: ['play Mars, Conflagrant Commander', 'play Steelclad Knight', 'attack slot0->enemy slot2', 'attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'attack slot0->enemy slot0', 'end_turn']
   after Mars + Knight, line seed: chosen attack slot0->enemy slot0 -68.58 (4/8 worlds end in an owner kill); the line's next move attack slot0->enemy slot2: -68.73 (4/8)
   after Mars + Knight, seed 1: chosen attack slot0->enemy slot0 -68.54 (4/8 worlds end in an owner kill); the line's next move attack slot0->enemy slot2: -68.69 (4/8)
@@ -16,7 +16,7 @@
   at the clear's last decision, line seed: chosen attack slot0->enemy slot0 -63.43 (2/8 worlds end in an owner kill); the line's next move attack slot0->enemy slot0: -63.43 (2/8)
   at the clear's last decision, seed 1: chosen attack slot0->enemy slot0 -69.07 (4/8 worlds end in an owner kill); the line's next move attack slot0->enemy slot0: -69.07 (4/8)
   at the clear's last decision, seed 2: chosen attack slot0->enemy slot0 -60.83 (1/8 worlds end in an owner kill); the line's next move attack slot0->enemy slot0: -60.83 (1/8)
-  reseed 1 at the turn start: owner draws 'Obsidian Raven'; owner's forced kill after the clear: none
-  reseed 2 at the turn start: owner draws 'Miscalculated Experiment'; owner's forced kill after the clear: none
-  reseed 3 at the turn start: owner draws 'Lyria, Skydestined'; owner's forced kill after the clear: none
-  reseed 12345 at the turn start: owner draws 'Enamored Researcher'; owner's forced kill after the clear: none
+  reseed 1 at the turn start: owner draws 'Obsidian Raven'; after the clear: engine forced_lethal none; fuse-aware owner win: True (1216 nodes)
+  reseed 2 at the turn start: owner draws 'Miscalculated Experiment'; after the clear: engine forced_lethal none; fuse-aware owner win: True (2066 nodes)
+  reseed 3 at the turn start: owner draws 'Lyria, Skydestined'; after the clear: engine forced_lethal none; fuse-aware owner win: True (1869 nodes)
+  reseed 12345 at the turn start: owner draws 'Enamored Researcher'; after the clear: engine forced_lethal none; fuse-aware owner win: True (845 nodes)

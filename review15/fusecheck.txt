@@ -1,0 +1,53 @@
+== 1. after each Mars clear
+  1068176807631359990-b43e6214: owner can win: True (4030 nodes) via ['{"play": {"card": "10834110", "hand_pos": 3, "player": "a"}}', '{"fuse": {"host_pos": 0, "partner_pos": [], "player": "a"}}', '{"choose": {"option": {"card": "10934110"}, "player": "a"}}', '{"choose": {"option": {"card": "10433310"}, "player": "a"}}', '{"choose": {"option": {"card": "10933110"}, "player": "a"}}', '{"confirm": {"player": "a"}}', '{"attack": {"attacker_slot": 0, "player": "a", "target": "leader"}}', '{"evolve": {"player": "a", "slot": 0, "super": true}}', '{"attack": {"attacker_slot": 1, "player": "a", "target": "leader"}}']; most face damage 9 (exhaustive)
+  2374435823510868837-b43e6214: owner can win: False (594 nodes); most face damage 5 (exhaustive)
+== 2. the none-leaves of the two avoidable turns
+  1068176807631359990-b43e6214: 4003 leaves, forced_lethal none at 4
+    fuse-aware: owner can win True (4030 nodes) via ['{"play": {"card": "10834110", "hand_pos": 3, "player": "a"}}', '{"fuse": {"host_pos": 0, "partner_pos": [], "player": "a"}}', '{"choose": {"option": {"card": "10934110"}, "player": "a"}}', '{"choose": {"option": {"card": "10433310"}, "player": "a"}}', '{"choose": {"option": {"card": "10933110"}, "player": "a"}}', '{"confirm": {"player": "a"}}', '{"attack": {"attacker_slot": 0, "player": "a", "target": "leader"}}', '{"evolve": {"player": "a", "slot": 0, "super": true}}', '{"attack": {"attacker_slot": 1, "player": "a", "target": "leader"}}']
+    fuse-aware: owner can win True (4030 nodes) via ['{"play": {"card": "10834110", "hand_pos": 3, "player": "a"}}', '{"fuse": {"host_pos": 0, "partner_pos": [], "player": "a"}}', '{"choose": {"option": {"card": "10934110"}, "player": "a"}}', '{"choose": {"option": {"card": "10433310"}, "player": "a"}}', '{"choose": {"option": {"card": "10933110"}, "player": "a"}}', '{"confirm": {"player": "a"}}', '{"attack": {"attacker_slot": 0, "player": "a", "target": "leader"}}', '{"evolve": {"player": "a", "slot": 0, "super": true}}', '{"attack": {"attacker_slot": 1, "player": "a", "target": "leader"}}']
+    fuse-aware: owner can win True (4030 nodes) via ['{"play": {"card": "10834110", "hand_pos": 3, "player": "a"}}', '{"fuse": {"host_pos": 0, "partner_pos": [], "player": "a"}}', '{"choose": {"option": {"card": "10934110"}, "player": "a"}}', '{"choose": {"option": {"card": "10433310"}, "player": "a"}}', '{"choose": {"option": {"card": "10933110"}, "player": "a"}}', '{"confirm": {"player": "a"}}', '{"attack": {"attacker_slot": 0, "player": "a", "target": "leader"}}', '{"evolve": {"player": "a", "slot": 0, "super": true}}', '{"attack": {"attacker_slot": 1, "player": "a", "target": "leader"}}']
+    fuse-aware: owner can win True (4030 nodes) via ['{"play": {"card": "10834110", "hand_pos": 3, "player": "a"}}', '{"fuse": {"host_pos": 0, "partner_pos": [], "player": "a"}}', '{"choose": {"option": {"card": "10934110"}, "player": "a"}}', '{"choose": {"option": {"card": "10433310"}, "player": "a"}}', '{"choose": {"option": {"card": "10933110"}, "player": "a"}}', '{"confirm": {"player": "a"}}', '{"attack": {"attacker_slot": 0, "player": "a", "target": "leader"}}', '{"evolve": {"player": "a", "slot": 0, "super": true}}', '{"attack": {"attacker_slot": 1, "player": "a", "target": "leader"}}']
+  2374435823510868837-b43e6214: 4005 leaves, forced_lethal none at 1
+    fuse-aware: owner can win False (594 nodes)
+== 3. lethal-audit End Turns with verdict none/unknown
+  1068176807631359990-b43e6214 ply 2 (engine none): owner can win False (337 nodes)
+  1068176807631359990-b43e6214 ply 6 (engine none): owner can win False (761 nodes)
+  1068176807631359990-b43e6214 ply 12 (engine none): owner can win False (7887 nodes)
+  1068176807631359990-b43e6214 ply 20 (engine none): owner can win False (140475 nodes)
+  1068176807631359990-b43e6214 ply 32 (engine none): owner can win False (24873 nodes)
+  1068176807631359990-b43e6214 ply 43 (engine none): owner can win None (2000000 nodes)
+  1068176807631359990-b43e6214 ply 62 (engine unknown): owner can win None (2000000 nodes)
+  12757697801983742963-b43e6214 ply 6 (engine none): owner can win False (2103 nodes)
+  12757697801983742963-b43e6214 ply 15 (engine none): owner can win False (6679 nodes)
+  12757697801983742963-b43e6214 ply 23 (engine none): owner can win False (43213 nodes)
+  12757697801983742963-b43e6214 ply 33 (engine none): owner can win False (153139 nodes)
+  12757697801983742963-b43e6214 ply 46 (engine none): owner can win False (22287 nodes)
+  12757697801983742963-b43e6214 ply 62 (engine none): owner can win False (156901 nodes)
+  12757697801983742963-b43e6214 ply 78 (engine none): owner can win False (34920 nodes)
+  12757697801983742963-b43e6214 ply 85 (engine none): owner can win False (308259 nodes)
+  2374435823510868837-b43e6214 ply 6 (engine none): owner can win False (7 nodes)
+  2374435823510868837-b43e6214 ply 14 (engine none): owner can win False (959 nodes)
+  2374435823510868837-b43e6214 ply 19 (engine none): owner can win False (34891 nodes)
+  2374435823510868837-b43e6214 ply 32 (engine none): owner can win False (13583 nodes)
+  2374435823510868837-b43e6214 ply 42 (engine none): owner can win False (479709 nodes)
+  2374435823510868837-b43e6214 ply 55 (engine none): owner can win False (144075 nodes)
+  2374435823510868837-b43e6214 ply 64 (engine unknown): owner can win False (1512338 nodes)
+  2374435823510868837-b43e6214 ply 77 (engine unknown): owner can win False (1394220 nodes)
+  2374435823510868837-b43e6214 ply 91 (engine unknown): owner can win None (2000000 nodes)
+  2374435823510868837-b43e6214 ply 114 (engine none): owner can win False (1429873 nodes)
+  (stopped here, with games 4, 2 and 3 re-checked; game 1 was finished in parallel by fusecheck_r15_p3.py, below. The
+   stopped run had also reached game 1 plies 3, 7, 14 and 22 with the same verdicts; ply 22 took 4 446 nodes there and
+   4 608 below, so node counts can differ between runs. The cause was not looked into.)
+== 3 (continued, 8 End Turns, parallel)
+  6065548863054576576-b43e6214 ply 3 (engine none): owner can win False (16 nodes)
+  6065548863054576576-b43e6214 ply 7 (engine none): owner can win False (62 nodes)
+  6065548863054576576-b43e6214 ply 14 (engine none): owner can win False (166 nodes)
+  6065548863054576576-b43e6214 ply 22 (engine none): owner can win False (4608 nodes)
+  6065548863054576576-b43e6214 ply 36 (engine none): owner can win False (1890 nodes)
+  6065548863054576576-b43e6214 ply 44 (engine none): owner can win False (34587 nodes)
+  6065548863054576576-b43e6214 ply 55 (engine none): owner can win False (300239 nodes)
+  6065548863054576576-b43e6214 ply 66 (engine none): owner can win False (118070 nodes)
+  re-checked 8; fuse-aware kills found 0; undecided 0
+== 4. Fuse cards in the bot deck
+  Sword Rally cards with Fuse: none
+== total, part 3: 33 End Turns re-checked; fuse-aware kills found 0; no kill 30; undecided at the 2 000 000-node cap 3

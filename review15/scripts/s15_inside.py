@@ -5,10 +5,13 @@ realized RNG. For each (game, turn start, safe line from safe_lines.json):
   prints the chosen action, its value, and how many of the 8 sampled worlds end in an owner kill for the chosen
   candidate and for the line's next action;
 - the clear replayed after reseeding the game RNG at the turn start (seeds 1, 2, 3, 12345): the owner's turn-start draw
-  and whether the owner then has a forced kill (forced_lethal, budget 200 000).
+  and whether the owner then has a kill: the engine's forced_lethal (budget 200 000; misses kills that fuse with
+  partners) and the fuse-aware search (dfs2.py).
 usage (repo root): python s15_inside.py SAFE_LINES.json GAME_ID:FIRST_PLY [...]"""
-import json, sys, glob
+import json, sys, glob, os
 import arena
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from dfs2 import can_win
 
 SPEC = 'h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1'
 A = lambda v: v() if callable(v) else v
@@ -76,5 +79,6 @@ for arg in sys.argv[2:]:
         f = J(g.full())
         drawn = f['players']['a']['hand'][-1]['name'] if f['players']['a']['hand'] else None
         v = arena.forced_lethal(g, 200_000)
-        print(f"  reseed {rs} at the turn start: owner draws {drawn!r}; owner's forced kill after the clear: {v['verdict']}"
-              f"{' (rng-dependent)' if v.get('rng_dependent') else ''}", flush=True)
+        w, n, _ = can_win(g, limit=5_000_000)
+        print(f"  reseed {rs} at the turn start: owner draws {drawn!r}; after the clear: engine forced_lethal {v['verdict']}"
+              f"{' (rng-dependent)' if v.get('rng_dependent') else ''}; fuse-aware owner win: {w} ({n} nodes)", flush=True)

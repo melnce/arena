@@ -2,13 +2,15 @@
   owner: 13 HP, PP 9/9, evolve points 0, super-evolve points 1, field []
   owner's hand: ['Sephie, Maven Convict', 'Sephie, Maven Convict', 'Alchemic Flare', 'Tetra & Ladica, Forest BFFs', 'Ecstatic Scholar', 'Enamored Researcher', 'Enamored Researcher']
   bot: 9 HP, field []
-  owner's forced kill: none (nodes 824)
-  most face damage the owner can deal this turn: 8 of 9 (825 states, exhaustive); a line: ['{"play": {"card": "10934110", "hand_pos": 0, "player": "a"}}', '{"evolve": {"player": "a", "slot": 1, "super": true}}', '{"attack": {"attacker_slot": 1, "player": "a", "target": "leader"}}']
+  engine forced_lethal: none (nodes 824)
+  owner's win (fuse-aware): True (845 nodes) via ['{"play": {"card": "10834110", "hand_pos": 3, "player": "a"}}', '{"attack": {"attacker_slot": 0, "player": "a", "target": "leader"}}', '{"evolve": {"player": "a", "slot": 0, "super": true}}', '{"fuse": {"host_pos": 0, "partner_pos": [], "player": "a"}}', '{"choose": {"option": {"card": "10934110"}, "player": "a"}}', '{"confirm": {"player": "a"}}', '{"attack": {"attacker_slot": 1, "player": "a", "target": "leader"}}']
+  most face damage the owner can deal this turn (fuse-aware): 9 of 9 (22398 states, exhaustive)
   Alchemic Flare castable: False
 == 2374435823510868837-b43e6214: after the Mars clear, the owner to move (turn 12)
   owner: 10 HP, PP 10/10, evolve points 0, super-evolve points 0, field ["Witch's New Brew"]
   owner's hand: ['Sephie, Maven Convict', 'Obsidian Raven', 'Enamored Researcher', "Witch's New Brew"]
   bot: 8 HP, field []
-  owner's forced kill: none (nodes 193)
-  most face damage the owner can deal this turn: 5 of 8 (159 states, exhaustive); a line: ['{"play": {"card": "10934110", "hand_pos": 0, "player": "a"}}', '{"play": {"card": "10031210", "hand_pos": 2, "player": "a"}}', '{"attack": {"attacker_slot": 1, "player": "a", "target": "leader"}}']
+  engine forced_lethal: none (nodes 193)
+  owner's win (fuse-aware): False (415 nodes)
+  most face damage the owner can deal this turn (fuse-aware): 5 of 8 (415 states, exhaustive)
   Alchemic Flare castable: False

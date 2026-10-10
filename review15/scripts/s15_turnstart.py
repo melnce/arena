@@ -3,8 +3,10 @@ served seed: root candidates with their values and how many of each candidate's 
 kill (opp_lethal / opp_solver); then a safe line (from s15_safe.py) replayed with the owner's forced_lethal at a larger
 budget (200 000) to confirm 'none'.
 usage (repo root): python s15_turnstart.py SAFE_LINES.json GAME_ID:FIRST_PLY [...]   (SAFE_LINES.json: {game_id: [actions]})"""
-import json, sys
+import json, sys, os
 import arena
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from dfs2 import can_win
 
 SPEC = 'h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1'
 J = lambda a: json.loads(a) if isinstance(a, str) else a
@@ -55,6 +57,8 @@ for arg in sys.argv[2:]:
         g2.apply(a)
     f = J(g2.full())
     fl = arena.forced_lethal(g2, 200_000)
-    print(f"   safe line {[short(a) for a in line]} -> owner's kill: {fl['verdict']} (nodes {fl['nodes']}); "
+    w, n, wl = can_win(g2, limit=5_000_000)
+    print(f"   safe line {[short(a) for a in line]} -> engine forced_lethal: {fl['verdict']} (nodes {fl['nodes']}); "
+          f"fuse-aware owner win: {w} ({n} nodes){' via ' + str([short(x) if 'fuse' not in x else 'fuse onto hand card ' + str(x['fuse']['host_pos']) for x in wl]) if w else ''}; "
           f"after it: bot {f['players']['b']['leader_defense']} HP, field {[c['name'] + ' ' + str(c['attack']) + '/' + str(c['defense']) for c in f['players']['b']['field'] if c]}; "
           f"owner field {[c['name'] + ' ' + str(c['attack']) + '/' + str(c['defense']) for c in f['players']['a']['field'] if c]}", flush=True)
