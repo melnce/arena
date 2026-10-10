@@ -1076,9 +1076,9 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1`) is the spec used whenever the request's `policy` is an
+`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
-exact token `info=all`. The default samples eight worlds at twice the previous
+exact token `info=all`. The default includes `okill=8` since sweep 48 (2026-10-10). The default samples eight worlds at twice the previous
 node cap. The served bot takes a deterministic kill before searching (`tkill`,
 up to 10 000 solver applies outside the node cap; runbook 32 audit at results
 `e2c8e1d`) and a chance-dependent kill only when it holds under eight rerolls
@@ -1091,7 +1091,7 @@ review10 `729410e`). The served bot drops no-op fuses (a fuse whose every
 `fused` effect needs PP it cannot pay, with no `wasFused` ability, hand below 9;
 sweep 42, results `fdd50ab`, pooled 0.567, +46.6 Elo in the Test Subject mirror).
 `--cheat` (default
-`h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1`)
+`h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8`)
 is used for h0 variants whose keys include `info=all` (full-information
 sparring); same `tkill` / `tkroll` behaviour. `random` / `first-legal` and any non-h0 spec pass through
 unchanged — the server, not the client, decides H0 strength. `--origins` is
@@ -1161,7 +1161,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1, 28 cpus)` or
+select) is `bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8, 28 cpus)` or
 `bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
 selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.
