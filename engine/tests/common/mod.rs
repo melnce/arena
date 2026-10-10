@@ -64,8 +64,8 @@ pub fn with_v1_mull(spec: &str) -> String {
     }
     if spec == "h0" {
         format!("h0:mull={}", mulligan_v1_path())
-    } else if spec.starts_with("h0:") {
-        format!("h0:mull={},{}", mulligan_v1_path(), &spec[3..])
+    } else if let Some(rest) = spec.strip_prefix("h0:") {
+        format!("h0:mull={},{}", mulligan_v1_path(), rest)
     } else {
         spec.to_string()
     }
