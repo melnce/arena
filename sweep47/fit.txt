@@ -1,0 +1,22 @@
+arena-run: sweep47-fit  (2026-10-10 05:20:36)  python py\train_value.py --data results/net11/data-e0 results/net11/data-e10 --model linear --target outcome --stack-on engine/models/h0-linear-v3.json --seed 1 --out results/sweep47/leaf-v3-e3-net11.json
+stack-on h0-linear-v3.json
+holdout MSE base=0.690680
+  after crests: 0.692093
+  after amulets: 0.692093
+  after entered: 0.692093
+  after cemetery: 0.692093
+  after final (training rows): 0.686468
+  (written leaf refit uses all rows; its holdout score is in-sample)
+l2 choices: {'crests': 0.01, 'amulets': 1.0, 'entered': 1.0, 'cemetery': 1.0}
+  own_crests: 10744110:-0.1845, 10634110:0.0654, 10564120:0.0613, 10974110:-0.0546, 10954110:0.0404
+  opp_crests: 10744110:0.1921, 10404110:0.0520, 10634110:-0.0498, 10864110:-0.0422, 10974110:-0.0419
+  own_amulet_soon: 90021210:0.0014, 10503210:0.0009, 10062210:-0.0007, 10661210:-0.0004, 10661110:0.0003
+  opp_amulet_soon: 90021210:-0.0011, 10503210:-0.0007, 10662210:-0.0006, 10661210:0.0005, 10062210:0.0004
+  own_entered: 10833110:0.0031, 10951120:0.0029, 10403120:0.0028, 10722110:-0.0028, 10744110:0.0025
+  opp_entered: 10741110:-0.0036, 10403120:-0.0034, 10944120:-0.0033, 10673110:0.0032, 10744110:-0.0029
+  own_cemetery: 90031310:0.0050, 10031320:-0.0045, 10741110:0.0030, 90064320:0.0028, 10661210:-0.0027
+  opp_cemetery: 90031310:-0.0043, 10644120:-0.0041, 10741110:-0.0041, 10661210:0.0037, 10673110:0.0035
+warning: amulets penalty at grid maximum (1.0)
+warning: entered penalty at grid maximum (1.0)
+warning: cemetery penalty at grid maximum (1.0)
+wrote results\sweep47\leaf-v3-e3-net11.json and results\sweep47\leaf-v3-e3-net11.report.json
