@@ -99,6 +99,14 @@ and a transposition set on the state hash, and reached no cap.
     Researcher, Tetra & Ladica and Miscalculated Experiment.
 - **No win in any of the 19 runs**: 40k–541k states each.
 - Each distinct draw was searched under one RNG state, so other random effects within the turn were not varied.
+- **Re-checked 2026-10-10 with a fuse-aware search; the result stands.** review15 found that a transposition set keyed on
+  the state hash alone prunes every fuse with a partner: choosing a fuse partner does not change the hash. This search
+  had that flaw, and the owner held two fuse hosts (Sephie and Ecstatic Scholar) and Sephie's crest.
+  - `game6/fusecheck.py` re-ran all 13 distinct draws with `dfs2.py`. Its key adds the phase and, in a Choice phase,
+    the legal moves. Fuses are searched with one partner each.
+  - **No win in any of the 13**, each search exhaustive (0.5–4.7 million nodes, under a 5 million cap).
+  - Control: with Sephie alive, it finds the owner's win (13,111 nodes).
+  - Output: `game6/fusecheck.txt`.
 - After that, the owner would sit at 4 HP facing Researcher 4/4 and Test Subjects 6/5 (Storm) and 6/4, with Raven and
   Tico in the bot's hand.
 
@@ -178,7 +186,8 @@ the owner's kill. Outputs are in `knobs.txt` (the first five rows) and `knobs2.t
 | served | End Turn (1, 2, 4); Lyria, then End Turn (3); kill Sephie (5, 6) | **4 of 6** |
 | + `olsolve=4000` | kill Sephie (1, 3, 4, 5); Lyria, then End Turn (2); End Turn (6) | **2 of 6** |
 
-- Every line that kills Sephie leaves the owner without a win (exhaustive, 220,404 states each).
+- Every line that kills Sephie leaves the owner without a win (exhaustive, 220,404 states each; confirmed by the
+  fuse-aware re-check above).
 - Every line that leaves her alive loses to the owner's actual line.
 - So the served bot finds the save in 2 of 6 seeds, and `olsolve=4000` in 4 of 6.
 
