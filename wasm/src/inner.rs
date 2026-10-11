@@ -7,7 +7,7 @@ use arena_engine::action::acting_player;
 use arena_engine::{
     apply_neutral, board_info, by_name, hand_info, hash, legal_actions, legal_actions_neutral,
     mode_choice_info, names, new_game, player_info, policy_rng, snapshot_json, to_neutral, CardDb,
-    CardId, First, GameConfig, NeutralAction, PlayerId, Policy, State,
+    CardId, First, GameConfig, H0Job, NeutralAction, PlayerId, Policy, State,
 };
 
 use crate::bundle::card_db;
@@ -17,6 +17,8 @@ pub struct GameInner {
     state: State,
     /// Cached by policy name. Recreated empty on `clone` (H0 is stateless today).
     policies: RefCell<HashMap<String, Box<dyn Policy>>>,
+    /// In-flight [`H0Job`] for stepped bot decisions on this position.
+    h0_job: RefCell<Option<H0Job>>,
 }
 
 impl Clone for GameInner {
@@ -24,6 +26,7 @@ impl Clone for GameInner {
         Self {
             state: self.state.clone(),
             policies: RefCell::new(HashMap::new()),
+            h0_job: RefCell::new(None),
         }
     }
 }
@@ -47,6 +50,7 @@ impl GameInner {
         Ok(Self {
             state,
             policies: RefCell::new(HashMap::new()),
+            h0_job: RefCell::new(None),
         })
     }
 
@@ -99,6 +103,18 @@ impl GameInner {
 
     pub fn winner(&self) -> Option<String> {
         self.state.winner.map(|p| p.as_str().to_string())
+    }
+
+    pub(crate) fn state(&self) -> &State {
+        &self.state
+    }
+
+    pub(crate) fn clear_h0_job(&self) {
+        *self.h0_job.borrow_mut() = None;
+    }
+
+    pub(crate) fn h0_job_mut(&self) -> std::cell::RefMut<'_, Option<H0Job>> {
+        self.h0_job.borrow_mut()
     }
 
     /// One NeutralAction for the acting player via `engine::policy::by_name`.

@@ -55,7 +55,8 @@ pub use policy::{
     fuse_is_noop, mulligan_seat, names, AnyPolicy, CandidateRecord, CardNeeds, ChoosePath,
     DeckMulligan, ExplainRecord, FirstLegal, MullMode, MulliganTable, NeedsTable, NetArch, Policy,
     PvEnd, PvLeaf, Random, Recorder, Sample, SkippedAmount, ValueNet, ValueVersion, Weights,
-    WorldRecord, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0,
+    WorldRecord, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0, H0Job, JobStep, KillDetOutcome,
+    KillRollOutcome, WorldOutcome, kill_det, kill_roll, run_job_choose, world,
 };
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
 pub use search_key::{lethal_key, search_key};

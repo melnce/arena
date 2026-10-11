@@ -161,6 +161,11 @@ jobs:
           ARENA_FIRST: coin
         run: node wasm/tests/node.test.mjs
 
+      - name: node wasm h0 job
+        env:
+          ARENA_WASM_PKG: wasm/pkg-node
+        run: node wasm/tests/job.test.mjs
+
   ui:
     runs-on: ubuntu-latest
     timeout-minutes: 25
