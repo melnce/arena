@@ -62,11 +62,16 @@ async function startVsBot(
 }
 
 async function confirmMulligans(page: Page) {
-  for (let i = 0; i < 2; i++) {
-    const btn = page.locator(".mulligan-confirm-btn:visible");
-    if ((await btn.count()) === 0) break;
-    await btn.first().click();
-    await expect(btn.first()).toBeHidden({ timeout: 5000 }).catch(() => undefined);
+  for (let i = 0; i < 4; i++) {
+    const clicked = await page.evaluate(() => {
+      const btns = [...document.querySelectorAll<HTMLButtonElement>(".mulligan-confirm-btn")];
+      const vis = btns.find((b) => b.getClientRects().length > 0);
+      if (!vis) return false;
+      vis.click();
+      return true;
+    });
+    if (!clicked) break;
+    await page.waitForTimeout(150);
   }
 }
 
@@ -196,7 +201,9 @@ test("watch rematch takes policyASelect and policyBSelect", async ({ page }) => 
     timeout: 15_000,
   });
   await confirmMulligans(page);
-  await playToGameOver(page);
+  const play = page.locator("#watchPlayBtn");
+  if (await play.isVisible()) await play.click();
+  await expect(page.locator("#gameOverOverlay")).toBeVisible({ timeout: 120_000 });
   await openSettings(page);
   await page.locator("#policyASelect").selectOption("first-legal");
   await page.locator("#policyBSelect").selectOption(STRONG);
