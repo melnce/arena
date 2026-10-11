@@ -167,6 +167,7 @@ fn walk_nested(e: &Effect) -> Option<String> {
 fn source_unsupported(src: &CardSource) -> Option<String> {
     match src {
         CardSource::RandomFrom { .. }
+        | CardSource::RandomNamed { .. }
         | CardSource::Named { .. }
         | CardSource::Copy { .. }
         | CardSource::From { .. } => None,
@@ -201,8 +202,14 @@ fn push_named(id: CardId, out: &mut Vec<CardId>) {
 }
 
 fn collect_from_source(src: &CardSource, out: &mut Vec<CardId>) {
-    if let CardSource::Named { named } = src {
-        push_named(*named, out);
+    match src {
+        CardSource::Named { named } => push_named(*named, out),
+        CardSource::RandomNamed { random_named } => {
+            for id in random_named {
+                push_named(*id, out);
+            }
+        }
+        _ => {}
     }
 }
 

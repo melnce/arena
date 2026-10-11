@@ -4753,11 +4753,9 @@ fn apply_effect(
         }
         Effect::Select { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
-            maybe_bind(state, e, &ts);
         }
         Effect::Destroy { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
-            maybe_bind(state, e, &ts);
             apply_each_captured(state, &ts, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
                     destroy_by_ability(db, st, *player, *slot, events)?;
@@ -4768,7 +4766,6 @@ fn apply_effect(
         }
         Effect::Banish { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
-            maybe_bind(state, e, &ts);
             let bound: Vec<TargetOpt> =
                 ts.iter().filter_map(|t| target_as_card(state, t)).collect();
             apply_each_captured(state, &ts, |st, t| {
@@ -6534,6 +6531,24 @@ fn summon_source(
             taken.flags.summoning_sick = true;
             taken
         }
+        CardSource::RandomNamed { random_named } => {
+            if random_named.is_empty() {
+                return Ok(None);
+            }
+            let keys: Vec<String> = random_named.iter().map(|c| c.as_str()).collect();
+            let mut emit = Vec::new();
+            let i = state
+                .rng
+                .pick_index_among(PickWhat::RandomCard, None, &keys, &mut emit)
+                .map_err(Illegal::OraclePickNotLegal)?;
+            state.picks.extend(emit);
+            let chosen = random_named[i.min(random_named.len() - 1)];
+            let card = db.require_supported(chosen).map_err(|e| match e {
+                LoadError::Unsupported(u) => Illegal::Unsupported(u),
+                _ => Illegal::NotLegal,
+            })?;
+            CardInstance::from_card(card, state.alloc_id())
+        }
     };
     let _ = exact;
     let mut inst = inst;
@@ -6626,6 +6641,12 @@ fn add_source_to_deck(
             let _ = random_from;
             return Ok(None);
         }
+        CardSource::RandomNamed { .. } => {
+            return Err(Illegal::Unsupported(Unsupported {
+                card: who.as_str().into(),
+                construct: "CardSource.randomNamed".into(),
+            }));
+        }
         CardSource::From { .. } => {
             return Err(Illegal::Unsupported(Unsupported {
                 card: who.as_str().into(),
@@ -6674,6 +6695,10 @@ fn add_source_to_hand(
         CardSource::RandomFrom { .. } => Err(Illegal::Unsupported(Unsupported {
             card: who.as_str().into(),
             construct: "CardSource.randomFrom".into(),
+        })),
+        CardSource::RandomNamed { .. } => Err(Illegal::Unsupported(Unsupported {
+            card: who.as_str().into(),
+            construct: "CardSource.randomNamed".into(),
         })),
     }
 }
@@ -6814,6 +6839,10 @@ fn resolve_transform_into(
         CardSource::RandomFrom { .. } => Err(Illegal::Unsupported(Unsupported {
             card: controller.as_str().into(),
             construct: "transform randomFrom".into(),
+        })),
+        CardSource::RandomNamed { .. } => Err(Illegal::Unsupported(Unsupported {
+            card: controller.as_str().into(),
+            construct: "transform randomNamed".into(),
         })),
     }
 }
