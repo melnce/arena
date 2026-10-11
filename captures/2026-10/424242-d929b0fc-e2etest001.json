@@ -1,0 +1,31 @@
+{
+ "v": 1,
+ "game_id": "424242-d929b0fc",
+ "seed": "424242",
+ "deckA": {
+  "10052110": 8
+ },
+ "deckB": {
+  "10052110": 8
+ },
+ "first": "a",
+ "actions": [],
+ "policy": "first-legal",
+ "strong": "(test)",
+ "engine": "(test)",
+ "humanSide": "a",
+ "winner": "a",
+ "final": true,
+ "created": "2026-10-11T21:36:32.000Z",
+ "updated": "2026-10-11T21:36:32.000Z",
+ "finished": "2026-10-11T21:36:32.000Z",
+ "source": "browser",
+ "session_id": "e2etest001",
+ "bot_meta": [],
+ "device": {
+  "cores": 2,
+  "standalone": false,
+  "ua": "reviewer end-to-end test (not a real game)"
+ },
+ "note": "reviewer end-to-end test of /api/capture after PR #139; not a game - ignore"
+}
