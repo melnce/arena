@@ -257,7 +257,7 @@ const REVIEW_MOMENTS: [ReviewMoment; 12] = [
     },
 ];
 
-fn load_engine_fixtures(_db: &CardDb, dir: &Path, filter: fn(&str) -> bool) -> Vec<Case> {
+fn load_engine_fixtures(db: &CardDb, dir: &Path, filter: fn(&str) -> bool) -> Vec<Case> {
     let mut out = Vec::new();
     for ent in fs::read_dir(dir).expect("read_dir") {
         let ent = ent.expect("dir entry");
