@@ -273,6 +273,14 @@ function exposeArena(): void {
     }),
     botWorker: () => botWorkerState(),
     botPool: () => botPoolState(),
+    tryReplayLog: (log) => {
+      try {
+        replayPosition(log as PositionLog);
+        return { ok: true as const };
+      } catch (err) {
+        return { ok: false as const, error: String(err) };
+      }
+    },
     armVsBot: (opts: { humanSide: PlayerId; botPolicy: string }) => {
       if (!session) throw new Error("no session");
       session.cfg.mode = "vs-bot";
