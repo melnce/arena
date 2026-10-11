@@ -171,12 +171,14 @@ function spawnWorkerAt(index: number): Worker {
 
 function ensureWorkerPool(coreCount?: number): void {
   const want = coreCount ?? configuredBotCores();
+  const hadWorkers = workers.some((w) => w != null);
   while (workers.length < want) {
     spawnWorkerAt(workers.length);
   }
   for (let i = 0; i < want; i++) {
     if (!workers[i]) spawnWorkerAt(i);
   }
+  if (!hadWorkers && want > 0) workerGeneration += 1;
 }
 
 export function prewarmBotWorker(): void {
@@ -302,7 +304,6 @@ async function releaseWorker(workerIndex: number, id: number): Promise<void> {
 function respawnWorker(index: number): void {
   workers[index]?.terminate();
   spawnWorkerAt(index);
-  workerGeneration += 1;
 }
 
 async function respawnAndPrepare(

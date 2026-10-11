@@ -4,7 +4,6 @@ import {
   autoBotCores,
   benchDecideAtPosition,
   configuredBotCores,
-  terminateBotWorker,
 } from "./bot-client.ts";
 import { decks, parseDeckJson } from "./catalog.ts";
 import { publicUrl } from "./base.ts";
@@ -29,6 +28,8 @@ const BENCH_POSITIONS: Array<{
 
 const DRIVE_POLICY = "h0:nodes=300";
 
+const deckJsonCache = new Map<string, string>();
+
 let lastBenchJson: unknown = null;
 let benchAbort: AbortController | null = null;
 
@@ -47,10 +48,14 @@ function benchSpec(): string {
 }
 
 async function deckJsonFor(id: string): Promise<string> {
+  const cached = deckJsonCache.get(id);
+  if (cached) return cached;
   const entry = decks().find((d) => d.id === id);
   if (!entry) throw new Error(`unknown deck ${id}`);
   const raw = await fetch(publicUrl(`decks/${entry.file}`)).then((r) => r.text());
-  return JSON.stringify(parseDeckJson(raw));
+  const json = JSON.stringify(parseDeckJson(raw));
+  deckJsonCache.set(id, json);
+  return json;
 }
 
 function median(nums: number[]): number {
@@ -234,7 +239,6 @@ export function initBenchUi(): void {
     void (async () => {
       running = true;
       stopBench();
-      terminateBotWorker();
       benchAbort = new AbortController();
       const signal = benchAbort.signal;
       const spec = benchSpec();
