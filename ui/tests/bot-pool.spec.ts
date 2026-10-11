@@ -1,0 +1,228 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { expect, test, type Page } from "@playwright/test";
+import { openSettings } from "./helpers.ts";
+
+/** CI-sized world-split spec (same family as wasm job tests). */
+export const WORLD_SPLIT_SPEC =
+  "h0:nodes=4000,k=8,horizon=3,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world";
+
+const THINK_CANCEL_QUERY = `localbot=0&botcores=4&botworkerspin=4000`;
+
+async function boot(page: Page, query = "") {
+  await page.goto(`/${query ? `?${query}` : ""}`);
+  await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
+}
+
+async function startVsBot(
+  page: Page,
+  opts: {
+    seed: string;
+    human?: "a" | "b";
+    first?: "a" | "b";
+    botPolicy?: string;
+    query?: string;
+    skipBoot?: boolean;
+  },
+) {
+  if (!opts.skipBoot) {
+    if (opts.query) await boot(page, opts.query);
+    else await boot(page);
+  }
+  await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#seedInput").fill(opts.seed);
+  await page.locator("#firstSelect").selectOption(opts.first ?? "a");
+  await page.locator("#humanSideSelect").selectOption(opts.human ?? "a");
+  await page.locator("#blueDeckSelect").selectOption("basic-forest");
+  await page.locator("#redDeckSelect").selectOption("basic-rune");
+  const policy = opts.botPolicy ?? WORLD_SPLIT_SPEC;
+  await page.locator("#vsBotPolicy").selectOption(policy, { force: true }).catch(async () => {
+    await page.evaluate((pol) => window.__arena!.setSessionBotPolicy(pol), policy);
+  });
+  const human = opts.human ?? "a";
+  const other = human === "b" ? "#policyASelect" : "#policyBSelect";
+  await page.locator(other).selectOption(policy, { force: true });
+  await page.locator("#startGameBtn").click();
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
+    timeout: 15_000,
+  });
+}
+
+async function confirmHumanMulligan(page: Page, human: "a" | "b" = "a") {
+  const id = human === "a" ? "#blueMulliganConfirm" : "#redMulliganConfirm";
+  const btn = page.locator(id);
+  await expect(btn).toBeVisible({ timeout: 15_000 });
+  await btn.click();
+  await expect(btn).toBeHidden({ timeout: 5000 });
+}
+
+async function endHumanTurn(page: Page, human: "a" | "b" = "a") {
+  const id = human === "a" ? "endTurnBlue" : "endTurnRed";
+  const btn = page.locator(`#${id}:visible`);
+  await expect(btn).toHaveCount(1, { timeout: 15_000 });
+  await btn.click();
+}
+
+async function playUntilTurnOrEnd(page: Page, minTurn = 6, human: "a" | "b" = "a") {
+  for (let guard = 0; guard < 40; guard++) {
+    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
+    if (phase === "terminal") break;
+    const turn = Number(await page.locator("#turnCounter").getAttribute("data-turn"));
+    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
+    if (turn >= minTurn) break;
+    if (acting === human) {
+      await endHumanTurn(page, human);
+    } else {
+      await page.waitForTimeout(400);
+    }
+  }
+}
+
+async function actionLog(page: Page): Promise<unknown[]> {
+  return page.evaluate(() => window.__arena!.actions());
+}
+
+async function waitForWorkerThinking(page: Page) {
+  await expect(page.locator("#botBackendBadge")).toContainText("thinking", { timeout: 30_000 });
+  await page.waitForTimeout(650);
+  await expect(page.locator("#botThinking")).toBeVisible({ timeout: 5000 });
+}
+
+function loadKillFixture(): Record<string, unknown> {
+  const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+  const raw = fs.readFileSync(
+    path.join(repo, "engine/tests/fixtures/lethal/review15-g4-fuse-kill.json"),
+    "utf8",
+  );
+  const log = JSON.parse(raw) as Record<string, unknown>;
+  log.v = 1;
+  log.kind = "replay-log";
+  log.seed = String(log.seed);
+  log.deckAId = log.deckAId ?? "imported-a";
+  log.deckBId = log.deckBId ?? "imported-b";
+  return log;
+}
+
+test("same moves for any core count", async ({ page }) => {
+  const baselineBySeed: Record<string, unknown[]> = {};
+  for (const seed of ["11", "12"]) {
+    await startVsBot(page, {
+      seed,
+      botPolicy: WORLD_SPLIT_SPEC,
+      query: "localbot=0&botworker=0",
+    });
+    await confirmHumanMulligan(page, "a");
+    await playUntilTurnOrEnd(page, 6, "a");
+    baselineBySeed[seed] = await actionLog(page);
+  }
+
+  for (const cores of ["1", "2", "3", "4"]) {
+    for (const seed of ["11", "12"]) {
+      await startVsBot(page, {
+        seed,
+        botPolicy: WORLD_SPLIT_SPEC,
+        query: `localbot=0&botcores=${cores}`,
+      });
+      await confirmHumanMulligan(page, "a");
+      await playUntilTurnOrEnd(page, 6, "a");
+      const log = await actionLog(page);
+      expect(log).toEqual(baselineBySeed[seed]);
+    }
+  }
+});
+
+test("pool splits work across cores", async ({ page }) => {
+  const hw = await page.evaluate(() => navigator.hardwareConcurrency ?? 1);
+
+  await startVsBot(page, {
+    seed: "11",
+    botPolicy: WORLD_SPLIT_SPEC,
+    query: "localbot=0&botcores=4",
+  });
+  await confirmHumanMulligan(page, "a");
+  let sawBusy = false;
+  const deadline = Date.now() + 120_000;
+  while (Date.now() < deadline) {
+    const pool = await page.evaluate(() => window.__arena!.botPool());
+    if (pool.busy >= 2) {
+      sawBusy = true;
+      break;
+    }
+    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
+    if (acting === "a") break;
+    await page.waitForTimeout(50);
+  }
+  expect(sawBusy).toBe(true);
+
+  await boot(page, `localbot=0&benchspec=${encodeURIComponent(WORLD_SPLIT_SPEC)}`);
+  await openSettings(page);
+  await page.locator("#benchRunBtn").click();
+  await expect(page.locator("#benchOutput")).toContainText("speed-up:", { timeout: 300_000 });
+  const text = (await page.locator("#benchOutput").textContent()) ?? "";
+  expect(text).toMatch(/same moves/i);
+  if (hw >= 2) {
+    const speedUp = Number(text.match(/speed-up:\s*([\d.]+)/)?.[1] ?? "0");
+    expect(speedUp).toBeGreaterThan(1.3);
+  }
+});
+
+test("cancel terminates every pool worker", async ({ page }) => {
+  await boot(page, THINK_CANCEL_QUERY);
+  await startVsBot(page, {
+    seed: "43",
+    first: "b",
+    human: "a",
+    botPolicy: WORLD_SPLIT_SPEC,
+    skipBoot: true,
+  });
+  await confirmHumanMulligan(page, "a");
+  await waitForWorkerThinking(page);
+  const before = await actionLog(page);
+  await page.keyboard.press("Control+Z");
+  await expect
+    .poll(async () => {
+      const p = await page.evaluate(() => window.__arena!.botPool());
+      return p.alive === 0;
+    })
+    .toBeTruthy({ timeout: 500 });
+  await page.waitForTimeout(2000);
+  const after = await actionLog(page);
+  expect(after).toEqual(before);
+});
+
+test("kill step matches single worker", async ({ page }) => {
+  const fixture = loadKillFixture();
+  const policy = WORLD_SPLIT_SPEC;
+
+  await boot(page, "localbot=0&botcores=4");
+  await page.evaluate(
+    ({ log, pol }) => {
+      window.__arena!.loadLog(log);
+      window.__arena!.armVsBot({ humanSide: "b", botPolicy: pol });
+    },
+    { log: fixture, pol: policy },
+  );
+  await expect
+    .poll(async () => (await actionLog(page)).length, { timeout: 120_000 })
+    .toBeGreaterThan((fixture.actions as unknown[]).length);
+
+  const poolLog = await actionLog(page);
+  const poolBotMove = poolLog[poolLog.length - 1];
+
+  await boot(page, "localbot=0&botworker=0");
+  await page.evaluate(
+    ({ log, pol }) => {
+      window.__arena!.loadLog(log);
+      window.__arena!.armVsBot({ humanSide: "b", botPolicy: pol });
+    },
+    { log: fixture, pol: policy },
+  );
+  await expect
+    .poll(async () => (await actionLog(page)).length, { timeout: 120_000 })
+    .toBeGreaterThan((fixture.actions as unknown[]).length);
+  const syncLog = await actionLog(page);
+  const syncBotMove = syncLog[syncLog.length - 1];
+  expect(poolBotMove).toEqual(syncBotMove);
+});
