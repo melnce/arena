@@ -25,9 +25,9 @@ const DEFAULT_OKILL_GATE_FPS: [u64; 8] = [
     0x649a_13b2_5e6f_3115,
     0xf257_1914_6cd5_5f83,
     0x362b_e20c_ddf6_d64c,
-    0x25a8_e316_2fe6_53ad,
+    0x8667_1e5e_f842_ccfb,
     0xfd90_619b_00c6_58f3,
-    0x28f8_0dd9_b44b_4e7b,
+    0xf4c1_05a7_9488_3210,
 ];
 
 const SERVED_GATE_SEEDS: [u64; 3] = [11, 23, 37];
@@ -263,7 +263,7 @@ fn hbk_default_play_unchanged_gate() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn hbk_noise_moments_flip() {
-    let db = load_db();
+    let db = with_earrings_engage_as_recorded(load_db());
     let served_hbk = format!("{SERVED_SPEC},hbk=16");
     for m in NOISE {
         let (pick_served, legal, _) = decide_moment(&db, &m, SERVED_SPEC);
@@ -301,7 +301,7 @@ fn hbk_noise_moments_flip() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn hbk_consistent_moments_still_end_turn() {
-    let db = load_db();
+    let db = with_earrings_engage_as_recorded(load_db());
     let served_hbk = format!("{SERVED_SPEC},hbk=16");
     for m in CONSISTENT {
         let (pick, legal, _) = decide_moment(&db, &m, &served_hbk);
@@ -317,7 +317,7 @@ fn hbk_consistent_moments_still_end_turn() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn hbk_no_rng_consumption_when_keeps_end_turn() {
-    let db = load_db();
+    let db = with_earrings_engage_as_recorded(load_db());
     let m = &CONSISTENT[0];
     let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("fixture");
     let cap: Value = serde_json::from_str(&raw).expect("json");
