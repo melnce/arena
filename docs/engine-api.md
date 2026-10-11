@@ -601,9 +601,15 @@ default `6`; hard stop is `osteps+3`),
 `pess=<f32>` (pessimism weight on the root mean, in `[0, 1]`; default `0`
 is today's mean; `1` is the worst determinization),
 `tt=0|1` (per-decision transposition table; default `1`),
-`alloc=root|fair` (how the node cap is spent across `(root, candidate)`
+`alloc=root|fair|world` (how the node cap is spent across `(root, candidate)`
 pairs; default `fair` = per-pair share; `alloc=root` restores the
-pre-#46 root-major spend),
+pre-#46 root-major spend; `alloc=world` splits leftover budget evenly
+across determinizations after consensus lethal, then fair-shares within
+each world — results differ from `fair` and are measured before serve),
+`threads=<u32>` (native worker threads for `alloc=world` world search and
+for overlapping own-turn kill solvers when `tkill>0` and `tkroll>0`;
+default `1`; `1..64`; never changes the chosen move, value, explain, or
+stats),
 `info=open|fair|draws|all` (what the search is allowed to know; default
 `open` = deal the opponent only what the bot cannot rule out;
 `fair` = own deck shuffled (hand untouched), opponent resampled —
@@ -694,7 +700,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `fusemacro` | 1 | on the bot's own turn only: at a Main node each `Fuse` contributes one child — its best completion by immediate value (single partners; pairs too for hosts with fuse recipes) — and inside the bot's own `FusePartners` choice every completion is a child with no leaf ever scored inside that choice. Sweep 10 pooled 0.499 [0.486, 0.511] / −1.0 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `mull` | `builtin` (`mulligan-v2`) | opening mulligan: built-in keep table from sweep 46 pooled 0.5094 [0.4999, 0.5188] / +6.5 Elo vs `mulligan-v1` on the 16-deck meta pool (10 752 final games). `engine/models/mulligan-v1.json` remains available via `mull=<path>`. `rule` = cost ≥ 4 send back; `random` = uniform random mask; `<path>` = JSON keep table (see below) |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
-| `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds) |
+| `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds); `world` = even split across worlds after consensus lethal, fair within each world (each world has its own node counter and transposition table) |
+| `threads` | `1` | native-only parallelism: with `alloc=world`, worlds run on up to `min(threads, k)` workers; with `tkill>0` and `tkroll>0`, the deterministic and roll kill solvers overlap. Does not change the chosen index, `last_value`, explain record, or `SearchStats` |
 | `horizon` | 0 | leaf scoring past the bot's own search cutoff. `0` = today (a finished turn at the pair cap, or a mid-turn cutoff at depth 0 / cap, returns the bare masked leaf value). `1` = a turn that is over always gets the opponent reply before the cap check. `2` = a mid-turn cutoff finishes pending bot choices greedily, applies `EndTurn`, then replies. `3` = same as `2` but runs `greedy_until_end` for the bot first. Levels are cumulative. Fallback to the bare value when the turn cannot be ended; counted in `horizon_fallback` |
 | `hres` | 200 | reserve node budget (integer ≥ 1) for horizon finish-and-reply work: `max(remaining pair budget, hres)` nodes are available; only applies up to the pair cap are charged to `node_cap`, the rest go to `horizon_nodes` |
 | `info` | `open` | what the search is allowed to know. `open` (default) = deal the opponent only what the bot cannot rule out. `fair` = shuffle the perspective player's own deck (hand untouched) and resample the opponent's hand/deck — a human with open decklists. `draws` = own side untouched, opponent resampled (the pre-flip path). `all` = true hidden state (opponent hand and both decks' contents); only the RNG is reseeded per root — future draws and random effects stay random. Under `all`, each root gets its own transposition table (`search_key` excludes the RNG, so a shared table would reuse one root's random outcomes). Draws pick uniformly at random from the deck (no "top card" effects), so `fair` vs `draws` deck shuffling does not change which card is drawn. `info` is a search-time knob; `encode` still masks the opponent's hand at the leaf. Sweep 13 pooled 0.499 [0.486, 0.511] / −0.8 Elo vs `info=fair` on the 16-deck meta pool (6 144 games per candidate). Default since this PR |
@@ -1244,7 +1251,7 @@ For `h0`, the dict also carries:
 | `path` | str | Which `H0::choose` branch decided: `single_legal`, `mulligan`, `one_ply`, `consensus_lethal`, `take_kill`, `take_kill_roll`, `search`, or `unscored` (search entered but no `(root, candidate)` pair scored, e.g. with `lcap=1`, the consensus-lethal check spent the entire node cap). |
 | `k` | int | Determinized roots (`determinizations`; honoured under all `info` modes). |
 | `node_cap` | int | Global node cap for the decision. |
-| `alloc` | str | `fair` or `root`. |
+| `alloc` | str | `fair`, `root`, or `world`. |
 | `nodes` | int | Total `apply`s spent. |
 | `nodes_lethal` | int | Nodes spent on the consensus-lethal check before search (0 on other paths). |
 | `horizon_nodes` | int | Reserve applies spent on horizon finish-and-reply (not charged to `node_cap`). |

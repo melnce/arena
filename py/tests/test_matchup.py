@@ -34,6 +34,18 @@ def test_matchup_threads_one_equals_default(db, root: Path) -> None:
     assert one["matrix"] == many["matrix"]
 
 
+def test_matchup_h0_threads_identity(db, root: Path) -> None:
+    import arena
+
+    decks = _two_decks(root)
+    base = "h0:nodes=2000,k=4,alloc=world,threads=1"
+    parallel = "h0:nodes=2000,k=4,alloc=world,threads=4"
+    one = arena.matchup(db, decks, 2, 99, policy=base, threads=1, records=True)
+    many = arena.matchup(db, decks, 2, 99, policy=parallel, threads=1, records=True)
+    assert one["matrix"] == many["matrix"]
+    assert one["records"] == many["records"]
+
+
 def test_play_random_reaches_terminal_or_cap(db, root: Path) -> None:
     import arena
 
