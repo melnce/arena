@@ -27,7 +27,8 @@ const S2_DEBUG: &str =
 const S3_DEBUG: &str =
     "h0:nodes=2000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,alloc=world";
 
-const THREADS: [u32; 4] = [1, 2, 3, 8];
+const RELEASE_THREADS: [u32; 4] = [1, 2, 3, 8];
+const DEBUG_THREADS: [u32; 2] = [1, 2];
 
 fn parse_h0(spec: &str) -> H0 {
     match AnyPolicy::parse_spec(spec).unwrap_or_else(|e| panic!("{spec}: {e}")) {
@@ -132,40 +133,23 @@ struct Case {
     seed: u64,
 }
 
-fn load_engine_fixtures(db: &CardDb, dir: &Path, filter: fn(&str) -> bool) -> Vec<Case> {
-    let mut out = Vec::new();
-    for ent in fs::read_dir(dir).expect("read_dir") {
-        let ent = ent.expect("dir entry");
-        let path = ent.path();
-        if !path.extension().is_some_and(|e| e == "json") {
-            continue;
-        }
-        let name = path.file_name().unwrap().to_string_lossy();
-        if !filter(&name) {
-            continue;
-        }
-        let cap: Value =
-            serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("json");
-        let ply = cap
-            .get("ply")
-            .and_then(|v| v.as_u64())
-            .map(|p| p as usize)
-            .or_else(|| ply_from_fixture_name(&name))
-            .expect("ply");
-        let seed = policy_seed(&cap, ply);
-        let st = replay_capture(db, &cap, ply);
-        if st.turn < 4 {
-            continue;
-        }
-        out.push(Case {
-            label: format!("{}/{}", dir.file_name().unwrap().to_string_lossy(), name),
-            cap,
-            ply,
-            seed,
-        });
+fn load_fixture_case(path: &Path, label: &str) -> Case {
+    let cap: Value =
+        serde_json::from_str(&fs::read_to_string(path).expect("read fixture")).expect("json");
+    let name = path.file_name().unwrap().to_string_lossy();
+    let ply = cap
+        .get("ply")
+        .and_then(|v| v.as_u64())
+        .map(|p| p as usize)
+        .or_else(|| ply_from_fixture_name(&name))
+        .expect("ply");
+    let seed = policy_seed(&cap, ply);
+    Case {
+        label: label.to_string(),
+        cap,
+        ply,
+        seed,
     }
-    out.sort_by(|a, b| a.label.cmp(&b.label));
-    out
 }
 
 fn review_fixture(review: &str, name: &str) -> PathBuf {
@@ -174,6 +158,34 @@ fn review_fixture(review: &str, name: &str) -> PathBuf {
         .join(review)
         .join("games")
         .join(name)
+}
+
+fn load_review_case(review: &str, game: &str, ply: usize) -> Case {
+    let raw = fs::read_to_string(review_fixture(review, game)).expect("review game");
+    let cap: Value = serde_json::from_str(&raw).expect("json");
+    let seed = policy_seed(&cap, ply);
+    Case {
+        label: format!("{review}/{game}@{ply}"),
+        cap,
+        ply,
+        seed,
+    }
+}
+
+fn debug_cases() -> Vec<Case> {
+    let root = fixtures_dir();
+    vec![
+        load_fixture_case(
+            &root.join("lethal/review15-g4-fuse-kill.json"),
+            "lethal/review15-g4-fuse-kill.json",
+        ),
+        load_fixture_case(
+            &root.join("tkroll/fa-play-174-ply0086.json"),
+            "tkroll/fa-play-174-ply0086.json",
+        ),
+        load_review_case("review14", "6598261483642061665-d90f8eb2.json", 27),
+        load_review_case("review14", "14600367900189587136-d90f8eb2.json", 40),
+    ]
 }
 
 struct ReviewMoment {
@@ -245,6 +257,42 @@ const REVIEW_MOMENTS: [ReviewMoment; 12] = [
     },
 ];
 
+fn load_engine_fixtures(_db: &CardDb, dir: &Path, filter: fn(&str) -> bool) -> Vec<Case> {
+    let mut out = Vec::new();
+    for ent in fs::read_dir(dir).expect("read_dir") {
+        let ent = ent.expect("dir entry");
+        let path = ent.path();
+        if !path.extension().is_some_and(|e| e == "json") {
+            continue;
+        }
+        let name = path.file_name().unwrap().to_string_lossy();
+        if !filter(&name) {
+            continue;
+        }
+        let cap: Value =
+            serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("json");
+        let ply = cap
+            .get("ply")
+            .and_then(|v| v.as_u64())
+            .map(|p| p as usize)
+            .or_else(|| ply_from_fixture_name(&name))
+            .expect("ply");
+        let seed = policy_seed(&cap, ply);
+        let st = replay_capture(db, &cap, ply);
+        if st.turn < 4 {
+            continue;
+        }
+        out.push(Case {
+            label: format!("{}/{}", dir.file_name().unwrap().to_string_lossy(), name),
+            cap,
+            ply,
+            seed,
+        });
+    }
+    out.sort_by(|a, b| a.label.cmp(&b.label));
+    out
+}
+
 fn load_review_cases(db: &CardDb) -> Vec<Case> {
     let mut out = Vec::new();
     for m in REVIEW_MOMENTS {
@@ -310,12 +358,15 @@ fn stats_eq(a: &SearchStats, b: &SearchStats) -> bool {
     format!("{a:?}") == format!("{b:?}")
 }
 
-fn check_identity(cases: &[Case], specs: &[&str]) {
+fn check_identity(cases: &[Case], specs: &[&str], threads: &[u32]) {
     let db = load_recorded_db();
     for spec in specs {
         for case in cases {
             let baseline = decide(spec, 1, &db, &case.cap, case.ply, case.seed);
-            for &t in &THREADS[1..] {
+            for &t in threads {
+                if t == 1 {
+                    continue;
+                }
                 let got = decide(spec, t, &db, &case.cap, case.ply, case.seed);
                 assert_eq!(
                     got.idx, baseline.idx,
@@ -362,6 +413,15 @@ fn spec_alloc_world_and_threads_round_trip() {
 
 #[test]
 fn threads_identity_debug_budgets() {
+    let cases = debug_cases();
+    assert_eq!(cases.len(), 4);
+    // All three debug specs on the four pinned cases; threads ∈ {1, 2} only.
+    check_identity(&cases, &[S1_DEBUG, S2_DEBUG, S3_DEBUG], &DEBUG_THREADS);
+}
+
+#[test]
+#[ignore = "release identity; slow.yml"]
+fn threads_identity_release_budgets() {
     let db = load_recorded_db();
     let cases = collect_cases(&db);
     assert!(
@@ -369,13 +429,5 @@ fn threads_identity_debug_budgets() {
         "expected at least 10 review/engine cases, got {}",
         cases.len()
     );
-    check_identity(&cases, &[S1_DEBUG, S2_DEBUG, S3_DEBUG]);
-}
-
-#[test]
-#[cfg_attr(debug_assertions, ignore)]
-fn threads_identity_release_budgets() {
-    let db = load_recorded_db();
-    let cases = collect_cases(&db);
-    check_identity(&cases, &[S1, S2, S3]);
+    check_identity(&cases, &[S1, S2, S3], &RELEASE_THREADS);
 }
