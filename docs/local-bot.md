@@ -172,5 +172,18 @@ Menu entries **h0 (PC strength)** and **h0 (cheater, PC strength)** are read
 from `DEFAULT_STRONG` / `DEFAULT_CHEAT` in this file at UI build time. On a
 tablet they use the worker; full PC specs can take seconds to minutes per move.
 
-The settings drawer **Bot speed test** benchmarks ten fixed positions in a
-separate worker and prints a fingerprint for cross-device comparison.
+The settings drawer **Bot speed test** benchmarks ten fixed positions twice
+(1 core vs your **Bot cores** setting) and prints a fingerprint for
+cross-device comparison.
+
+### Bot cores (browser worker pool)
+
+Settings → **Bot cores**: `Auto (N)`, 1, 2, 4, 6, or 8. Auto uses
+`max(1, min(8, navigator.hardwareConcurrency − 1))`. The choice is stored in
+`localStorage` (`svwb.botCores`). `?botcores=<n>` overrides it for tests.
+
+When the local server is not used, world-split `h0` specs (`alloc=world` in the
+served strong spec) fan out across workers via the H0 job API (`h0JobStart` on
+worker 0, parallel kill/world steps, `h0JobFinish`). `W = 1` is the same as the
+original single-worker path. Test hook: `window.__arena.botPool()` reports
+`{ size, alive, busy, generation }`.
