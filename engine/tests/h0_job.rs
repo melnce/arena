@@ -6,8 +6,9 @@ use std::path::{Path, PathBuf};
 
 use arena_engine::policy::SearchStats;
 use arena_engine::{
-    apply, apply_neutral, legal_actions, new_game, policy_rng, run_job_choose, AnyPolicy, CardDb,
-    First, GameConfig, Phase, PlayerId, Policy, H0,
+    apply, apply_neutral, kill_det, kill_roll, legal_actions, new_game, policy_rng, world,
+    AnyPolicy, CardDb, ChoosePath, First, GameConfig, H0Job, JobStep, KillDetOutcome,
+    KillRollOutcome, Phase, PlayerId, Policy, WorldOutcome, H0,
 };
 use arena_engine::{MAX_ACTIONS, MAX_TURNS};
 use serde_json::Value;
@@ -39,6 +40,7 @@ const STRONG_K16: &str =
 const STRONG_THREADS4: &str =
     "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=4";
 const FAIR_6000: &str = "h0:nodes=6000";
+const WORLD_4000: &str = "h0:nodes=4000,k=4,alloc=world";
 
 fn parse_h0(spec: &str) -> H0 {
     match AnyPolicy::parse_spec(spec).unwrap_or_else(|e| panic!("{spec}: {e}")) {
@@ -321,8 +323,7 @@ fn collect_cases(db: &CardDb) -> Vec<Case> {
 }
 
 fn meta_deck_stems() -> Vec<String> {
-    let text =
-        fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS.json");
+    let text = fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS.json");
     let pools: Value = serde_json::from_str(&text).expect("pools json");
     pools["meta"]
         .as_array()
@@ -353,7 +354,9 @@ fn meta_selfplay_cases(db: &CardDb) -> Vec<Case> {
     for stem in meta_deck_stems() {
         let deck = load_deck_file(repo_root().join(format!("oracle/decks/{stem}.json")));
         for g in 0u64..2 {
-            let seed = 20261011u64.wrapping_add(g * 97).wrapping_add(stem.len() as u64 * 131);
+            let seed = 20261011u64
+                .wrapping_add(g * 97)
+                .wrapping_add(stem.len() as u64 * 131);
             let mut state = new_game(
                 db,
                 GameConfig {
@@ -452,49 +455,84 @@ fn decide_choose(spec: &str, db: &CardDb, case: &Case) -> Outcome {
     }
 }
 
-fn decide_job(
+#[derive(Clone, Copy)]
+enum WorldFeedOrder {
+    Forward,
+    Reverse,
+    Shuffled,
+}
+
+fn serde_round<T: serde::Serialize + serde::de::DeserializeOwned>(v: &T) -> T {
+    serde_json::from_str(&serde_json::to_string(v).unwrap()).unwrap()
+}
+
+fn shuffled_world_order(k: usize, seed: u64) -> Vec<usize> {
+    let mut order: Vec<usize> = (0..k).collect();
+    let mut rng = policy_rng(seed ^ 0x9e37_79b9_7f4a_7c15);
+    for i in (1..order.len()).rev() {
+        let j = (rng.next_u64() as usize) % (i + 1);
+        order.swap(i, j);
+    }
+    order
+}
+
+fn drive_job(
     spec: &str,
     db: &CardDb,
-    case: &Case,
-    reverse_worlds: bool,
-    roll_before_det: bool,
-    serde_roundtrip: bool,
+    st: &arena_engine::State,
+    seed: u64,
+    world_order: WorldFeedOrder,
 ) -> Outcome {
-    let st = case_state(db, case);
-    let (idx, value, stats) = run_job_choose(
-        db,
-        &st,
-        spec,
-        case.seed,
-        reverse_worlds,
-        roll_before_det,
-        serde_roundtrip,
-    )
-    .unwrap_or_else(|e| panic!("job choose: {e}"));
-    Outcome {
-        idx,
-        value_bits: value.map(f32::to_bits),
-        stats,
+    let (mut job, mut step) = H0Job::start(db, st, spec, seed).unwrap_or_else(|e| panic!("{e}"));
+    loop {
+        match step {
+            JobStep::Done { index, value } => {
+                return Outcome {
+                    idx: index as usize,
+                    value_bits: value.map(f32::to_bits),
+                    stats: job.choose_stats(),
+                };
+            }
+            JobStep::Kill { roll } => {
+                if roll {
+                    let out: KillRollOutcome =
+                        serde_round(&kill_roll(db, st, spec, seed).expect("kill_roll"));
+                    step = job.provide_kill_roll(db, out).expect("provide_kill_roll");
+                } else {
+                    let out: KillDetOutcome =
+                        serde_round(&kill_det(db, st, spec, seed).expect("kill_det"));
+                    step = job.provide_kill_det(db, out).expect("provide_kill_det");
+                }
+            }
+            JobStep::AwaitRoll => step = JobStep::Kill { roll: true },
+            JobStep::Worlds { budgets } => {
+                let k = budgets.len();
+                let order: Vec<usize> = match world_order {
+                    WorldFeedOrder::Forward => (0..k).collect(),
+                    WorldFeedOrder::Reverse => (0..k).rev().collect(),
+                    WorldFeedOrder::Shuffled => shuffled_world_order(k, seed),
+                };
+                let mut outs = Vec::with_capacity(k);
+                for r in order {
+                    let wo: WorldOutcome =
+                        serde_round(&world(db, st, spec, seed, r, budgets[r]).expect("world"));
+                    outs.push(wo);
+                }
+                step = job.finish(db, &outs).expect("finish");
+            }
+        }
     }
 }
 
-fn assert_job_matches(
-    spec: &str,
-    case: &Case,
-    db: &CardDb,
-    reverse_worlds: bool,
-    roll_before_det: bool,
-    serde_roundtrip: bool,
-) {
+fn assert_job_matches(spec: &str, case: &Case, db: &CardDb, world_order: WorldFeedOrder) {
     let baseline = decide_choose(spec, db, case);
-    let got = decide_job(spec, db, case, reverse_worlds, roll_before_det, serde_roundtrip);
+    let st = case_state(db, case);
+    let got = drive_job(spec, db, &st, case.seed, world_order);
     assert_eq!(got.idx, baseline.idx, "{} {} idx", spec, case.label);
     assert_eq!(
-        got.value_bits,
-        baseline.value_bits,
+        got.value_bits, baseline.value_bits,
         "{} {} value",
-        spec,
-        case.label
+        spec, case.label
     );
     assert!(
         stats_eq(&got.stats, &baseline.stats),
@@ -506,16 +544,104 @@ fn assert_job_matches(
     );
 }
 
+fn path_name(p: ChoosePath) -> &'static str {
+    match p {
+        ChoosePath::SingleLegal => "single_legal",
+        ChoosePath::Mulligan => "mulligan",
+        ChoosePath::OnePly => "one_ply",
+        ChoosePath::ConsensusLethal => "consensus_lethal",
+        ChoosePath::TakeKill => "take_kill",
+        ChoosePath::TakeKillRoll => "take_kill_roll",
+        ChoosePath::HoldbackTrade => "holdback_trade",
+        ChoosePath::HoldbackResample => "holdback_resample",
+        ChoosePath::Search => "search",
+        ChoosePath::Unscored => "unscored",
+    }
+}
+
+fn log_choose_path_coverage(spec: &str, cases: &[Case], db: &CardDb) {
+    let paths = [
+        "single_legal",
+        "mulligan",
+        "one_ply",
+        "consensus_lethal",
+        "take_kill",
+        "take_kill_roll",
+        "holdback_trade",
+        "holdback_resample",
+        "search",
+        "unscored",
+    ];
+    let mut counts: BTreeMap<&str, usize> = BTreeMap::new();
+    for p in paths {
+        counts.insert(p, 0);
+    }
+    for case in cases {
+        let st = case_state(db, case);
+        let legal = legal_actions(db, &st);
+        let mut h0 = parse_h0(spec);
+        h0.threads = 1;
+        h0.arm_explain();
+        let mut rng = policy_rng(case.seed);
+        h0.choose(db, &st, &legal, &mut rng);
+        let path = h0
+            .take_explain()
+            .map(|e| path_name(e.path))
+            .unwrap_or("missing_explain");
+        counts.entry(path).and_modify(|c| *c += 1).or_insert(1);
+    }
+    eprintln!("choose path coverage for {spec}:");
+    for p in paths {
+        let n = counts.get(p).copied().unwrap_or(0);
+        eprintln!("  {p}: {n}");
+        if n == 0 {
+            eprintln!("  (zero cases on path {p})");
+        }
+    }
+}
+
 fn check_job_identity(cases: &[Case], specs: &[&str]) {
     let db = load_recorded_db();
     for spec in specs {
+        log_choose_path_coverage(spec, cases, &db);
         for case in cases {
-            assert_job_matches(spec, case, &db, false, false, false);
-            assert_job_matches(spec, case, &db, true, false, false);
-            assert_job_matches(spec, case, &db, false, false, true);
-            assert_job_matches(spec, case, &db, false, true, false);
+            assert_job_matches(spec, case, &db, WorldFeedOrder::Forward);
+            assert_job_matches(spec, case, &db, WorldFeedOrder::Reverse);
+            assert_job_matches(spec, case, &db, WorldFeedOrder::Shuffled);
         }
     }
+}
+
+#[test]
+fn kill_roll_buffered_before_det() {
+    let db = load_recorded_db();
+    let root = fixtures_dir();
+    let case = load_fixture_case(
+        &root.join("tkroll/fa-play-174-ply0086.json"),
+        "tkroll/fa-play-174-ply0086.json",
+    );
+    let spec = S1_DEBUG;
+    let baseline = decide_choose(spec, &db, &case);
+    let st = case_state(&db, &case);
+    let (mut job, step) = H0Job::start(&db, &st, spec, case.seed).expect("start");
+    assert!(matches!(step, JobStep::Kill { roll: true }));
+    let roll: KillRollOutcome =
+        serde_round(&kill_roll(&db, &st, spec, case.seed).expect("kill_roll"));
+    let step = job.provide_kill_roll(&db, roll).expect("roll first");
+    assert!(matches!(step, JobStep::Kill { roll: false }));
+    let det: KillDetOutcome = serde_round(&kill_det(&db, &st, spec, case.seed).expect("kill_det"));
+    let step = job.provide_kill_det(&db, det).expect("det");
+    let JobStep::Done { index, value } = step else {
+        panic!("expected done after kill, got {step:?}");
+    };
+    let got = Outcome {
+        idx: index as usize,
+        value_bits: value.map(f32::to_bits),
+        stats: job.choose_stats(),
+    };
+    assert_eq!(got.idx, baseline.idx);
+    assert_eq!(got.value_bits, baseline.value_bits);
+    assert!(stats_eq(&got.stats, &baseline.stats));
 }
 
 #[test]
@@ -531,7 +657,11 @@ fn threads_identity_release_budgets() {
     let db = load_recorded_db();
     let mut cases = collect_cases(&db);
     cases.extend(meta_selfplay_cases(&db));
-    assert!(cases.len() >= 20, "fixture + self-play cases: {}", cases.len());
+    assert!(
+        cases.len() >= 20,
+        "fixture + self-play cases: {}",
+        cases.len()
+    );
     check_job_identity(
         &cases,
         &[
@@ -540,6 +670,7 @@ fn threads_identity_release_budgets() {
             STRONG_K16,
             STRONG_THREADS4,
             FAIR_6000,
+            WORLD_4000,
             "h0",
             S1,
             S2,

@@ -20,7 +20,7 @@ use crate::action::{acting_player, to_neutral, Action};
 use crate::apply::{apply, legal_actions};
 use crate::card::{CardId, CardKind};
 use crate::db::CardDb;
-use crate::determinize::{determinize_block, HreadDeal, OpenStats};
+use crate::determinize::{determinize_block, HreadDeal};
 
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
@@ -39,11 +39,10 @@ use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
 
 use super::explain::{
-    CandidateRecord, ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord,
-    HoldbackRecord, HoldbackResampleCandidate, HoldbackResampleRecord, Line, LostRerankRecord,
-    PvEnd, PvTracker, WorldRecord,
+    ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord, HoldbackRecord,
+    HoldbackResampleCandidate, HoldbackResampleRecord, Line, PvEnd, PvTracker, WorldRecord,
 };
-use super::fuse_guard::{filter_cand_fuseguard, fuse_action_is_noop};
+use super::fuse_guard::fuse_action_is_noop;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum HorizonCutoff {
@@ -1290,132 +1289,19 @@ fn search_world(
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 #[allow(clippy::too_many_arguments)]
-fn try_take_kill_parallel(
+pub(super) fn kill_det_on_roots(
     db: &CardDb,
     roots: &[State],
     legal: &[Action],
     cand: &[usize],
     me: PlayerId,
     budget: u32,
-    tkroll: u32,
     stats: &mut SearchStats,
-) -> Option<(usize, ChoosePath)> {
-    use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-
-    let cancel = AtomicBool::new(false);
-    let roll_lines_rejected = AtomicU32::new(0);
-    std::thread::scope(|s| {
-        let roll_handle = s.spawn(|| {
-            forced_lethal_accepting_cancel(
-                db,
-                &roots[0],
-                budget,
-                |line| {
-                    for root in roots {
-                        let pos_key = search_key(root);
-                        let seeds: Vec<u64> =
-                            (0..tkroll).map(|i| roll_confirm_seed(pos_key, i)).collect();
-                        if !confirm_lethal_line_rerolled(db, root, me, line, &seeds) {
-                            roll_lines_rejected.fetch_add(1, Ordering::Relaxed);
-                            return false;
-                        }
-                    }
-                    true
-                },
-                &cancel,
-            )
-        });
-
-        stats.own_solver_calls += 1;
-        let verdict = forced_lethal_det(db, &roots[0], budget);
-        let nodes = match &verdict {
-            LethalVerdict::Lethal { nodes, .. }
-            | LethalVerdict::None { nodes }
-            | LethalVerdict::Unknown { nodes } => *nodes,
-        };
-        stats.own_solver_nodes += u64::from(nodes);
-        stats.own_solver_nodes_max = stats.own_solver_nodes_max.max(u64::from(nodes));
-        match verdict {
-            LethalVerdict::Lethal { line, .. } => {
-                stats.own_solver_found += 1;
-                let mut all_roots_confirmed = true;
-                for root in roots.iter().skip(1) {
-                    if !confirm_det_lethal_line(db, root, me, &line) {
-                        all_roots_confirmed = false;
-                        break;
-                    }
-                }
-                if all_roots_confirmed {
-                    let first = &line[0];
-                    if let Some(idx) = legal.iter().position(|a| a == first) {
-                        if cand.contains(&idx) {
-                            stats.own_solver_taken += 1;
-                            cancel.store(true, Ordering::Relaxed);
-                            return Some((idx, ChoosePath::TakeKill));
-                        }
-                    }
-                    stats.own_solver_rejected += 1;
-                } else {
-                    stats.own_solver_rejected += 1;
-                }
-            }
-            LethalVerdict::Unknown { .. } => {
-                stats.own_solver_unknown += 1;
-            }
-            LethalVerdict::None { .. } => {}
-        }
-
-        let roll_verdict = roll_handle.join().expect("roll thread join");
-        stats.own_roll_calls += 1;
-        stats.own_roll_lines_rejected += u64::from(roll_lines_rejected.load(Ordering::Relaxed));
-        let roll_nodes = match &roll_verdict {
-            LethalVerdict::Lethal { nodes, .. }
-            | LethalVerdict::None { nodes }
-            | LethalVerdict::Unknown { nodes } => *nodes,
-        };
-        stats.own_roll_nodes += u64::from(roll_nodes);
-        stats.own_roll_nodes_max = stats.own_roll_nodes_max.max(u64::from(roll_nodes));
-        match roll_verdict {
-            LethalVerdict::Lethal { line, .. } => {
-                stats.own_roll_found += 1;
-                let first = &line[0];
-                let Some(idx) = legal.iter().position(|a| a == first) else {
-                    stats.own_roll_rejected += 1;
-                    return None;
-                };
-                if !cand.contains(&idx) {
-                    stats.own_roll_rejected += 1;
-                    return None;
-                }
-                stats.own_roll_taken += 1;
-                Some((idx, ChoosePath::TakeKillRoll))
-            }
-            LethalVerdict::Unknown { .. } => {
-                stats.own_roll_unknown += 1;
-                stats.own_roll_rejected += 1;
-                None
-            }
-            LethalVerdict::None { .. } => {
-                stats.own_roll_rejected += 1;
-                None
-            }
-        }
-    })
-}
-
-#[allow(clippy::too_many_arguments)]
-fn try_take_kill(
-    db: &CardDb,
-    roots: &[State],
-    legal: &[Action],
-    cand: &[usize],
-    me: PlayerId,
-    budget: u32,
-    tkroll: u32,
-    stats: &mut SearchStats,
-) -> Option<(usize, ChoosePath)> {
+) -> (Option<usize>, u32) {
+    if roots.is_empty() {
+        return (None, 0);
+    }
     stats.own_solver_calls += 1;
     let verdict = forced_lethal_det(db, &roots[0], budget);
     let nodes = match &verdict {
@@ -1440,7 +1326,7 @@ fn try_take_kill(
                 if let Some(idx) = legal.iter().position(|a| a == first) {
                     if cand.contains(&idx) {
                         stats.own_solver_taken += 1;
-                        return Some((idx, ChoosePath::TakeKill));
+                        return (Some(idx), nodes);
                     }
                 }
                 stats.own_solver_rejected += 1;
@@ -1453,13 +1339,29 @@ fn try_take_kill(
         }
         LethalVerdict::None { .. } => {}
     }
+    (None, nodes)
+}
 
+#[allow(clippy::too_many_arguments)]
+pub(super) fn kill_roll_on_roots(
+    db: &CardDb,
+    roots: &[State],
+    legal: &[Action],
+    cand: &[usize],
+    me: PlayerId,
+    budget: u32,
+    tkroll: u32,
+    stats: &mut SearchStats,
+    cancel: Option<&std::sync::atomic::AtomicBool>,
+) -> (Option<usize>, u32) {
     if tkroll == 0 {
-        return None;
+        return (None, 0);
     }
-
+    if roots.is_empty() {
+        return (None, 0);
+    }
     stats.own_roll_calls += 1;
-    let roll_verdict = forced_lethal_accepting(db, &roots[0], budget, |line| {
+    let confirm_line = |line: &[Action]| -> bool {
         for root in roots {
             let pos_key = search_key(root);
             let seeds: Vec<u64> = (0..tkroll).map(|i| roll_confirm_seed(pos_key, i)).collect();
@@ -1469,7 +1371,21 @@ fn try_take_kill(
             }
         }
         true
-    });
+    };
+    let roll_verdict = match cancel {
+        Some(cancel) => {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                forced_lethal_accepting_cancel(db, &roots[0], budget, confirm_line, cancel)
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                let _ = cancel;
+                forced_lethal_accepting(db, &roots[0], budget, confirm_line)
+            }
+        }
+        None => forced_lethal_accepting(db, &roots[0], budget, confirm_line),
+    };
     let roll_nodes = match &roll_verdict {
         LethalVerdict::Lethal { nodes, .. }
         | LethalVerdict::None { nodes }
@@ -1483,25 +1399,90 @@ fn try_take_kill(
             let first = &line[0];
             let Some(idx) = legal.iter().position(|a| a == first) else {
                 stats.own_roll_rejected += 1;
-                return None;
+                return (None, roll_nodes);
             };
             if !cand.contains(&idx) {
                 stats.own_roll_rejected += 1;
-                return None;
+                return (None, roll_nodes);
             }
             stats.own_roll_taken += 1;
-            Some((idx, ChoosePath::TakeKillRoll))
+            (Some(idx), roll_nodes)
         }
         LethalVerdict::Unknown { .. } => {
             stats.own_roll_unknown += 1;
             stats.own_roll_rejected += 1;
-            None
+            (None, roll_nodes)
         }
         LethalVerdict::None { .. } => {
             stats.own_roll_rejected += 1;
-            None
+            (None, roll_nodes)
         }
     }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(clippy::too_many_arguments)]
+fn try_take_kill_parallel(
+    db: &CardDb,
+    roots: &[State],
+    legal: &[Action],
+    cand: &[usize],
+    me: PlayerId,
+    budget: u32,
+    tkroll: u32,
+    stats: &mut SearchStats,
+) -> Option<(usize, ChoosePath)> {
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    let cancel = AtomicBool::new(false);
+    std::thread::scope(|s| {
+        let roll_handle = s.spawn(|| {
+            let mut roll_stats = SearchStats::default();
+            let (taken, _) = kill_roll_on_roots(
+                db,
+                roots,
+                legal,
+                cand,
+                me,
+                budget,
+                tkroll,
+                &mut roll_stats,
+                Some(&cancel),
+            );
+            (taken, roll_stats)
+        });
+
+        let (taken, nodes) = kill_det_on_roots(db, roots, legal, cand, me, budget, stats);
+        if let Some(idx) = taken {
+            cancel.store(true, Ordering::Relaxed);
+            return Some((idx, ChoosePath::TakeKill));
+        }
+        let _ = nodes;
+
+        let (roll_taken, roll_stats) = roll_handle.join().expect("roll thread join");
+        stats.accum(&roll_stats);
+        roll_taken.map(|idx| (idx, ChoosePath::TakeKillRoll))
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
+fn try_take_kill(
+    db: &CardDb,
+    roots: &[State],
+    legal: &[Action],
+    cand: &[usize],
+    me: PlayerId,
+    budget: u32,
+    tkroll: u32,
+    stats: &mut SearchStats,
+) -> Option<(usize, ChoosePath)> {
+    let (taken, _) = kill_det_on_roots(db, roots, legal, cand, me, budget, stats);
+    if let Some(idx) = taken {
+        return Some((idx, ChoosePath::TakeKill));
+    }
+    let (roll_taken, _) =
+        kill_roll_on_roots(db, roots, legal, cand, me, budget, tkroll, stats, None);
+    roll_taken.map(|idx| (idx, ChoosePath::TakeKillRoll))
 }
 
 fn consensus_lethal(

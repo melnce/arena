@@ -22,13 +22,12 @@ pub use explain::{
     CandidateRecord, ChoosePath, ExplainRecord, LostRerankRecord, PvEnd, PvLeaf, WorldRecord,
 };
 pub use fuse_guard::fuse_is_noop;
+pub use h0::job::{
+    kill_det, kill_roll, world, H0Job, JobStep, KillDetOutcome, KillRollOutcome, WorldOutcome,
+};
 pub use h0::{
     builtin_mulligan, builtin_net, fuse_completion_partner_sets, Alloc, Deal, Info, MullMode,
     SearchStats, ValueVersion, Weights, Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0,
-};
-pub use h0::job::{
-    kill_det, kill_roll, run_job_choose, world, H0Job, JobStep, KillDetOutcome, KillRollOutcome,
-    WorldOutcome,
 };
 pub use mulligan::{
     deck_fingerprint_counts, deck_fingerprint_player, mulligan_seat, DeckMulligan, MulliganTable,

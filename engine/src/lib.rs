@@ -52,11 +52,11 @@ pub use limits::{MAX_ACTIONS, MAX_TURNS};
 pub use play::{play_game, End, MulliganRecord, Outcome};
 pub use policy::{
     builtin_mulligan, builtin_net, by_name, deck_fingerprint_counts, deck_fingerprint_player,
-    fuse_is_noop, mulligan_seat, names, AnyPolicy, CandidateRecord, CardNeeds, ChoosePath,
-    DeckMulligan, ExplainRecord, FirstLegal, MullMode, MulliganTable, NeedsTable, NetArch, Policy,
-    PvEnd, PvLeaf, Random, Recorder, Sample, SkippedAmount, ValueNet, ValueVersion, Weights,
-    WorldRecord, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0, H0Job, JobStep, KillDetOutcome,
-    KillRollOutcome, WorldOutcome, kill_det, kill_roll, run_job_choose, world,
+    fuse_is_noop, kill_det, kill_roll, mulligan_seat, names, world, AnyPolicy, CandidateRecord,
+    CardNeeds, ChoosePath, DeckMulligan, ExplainRecord, FirstLegal, H0Job, JobStep, KillDetOutcome,
+    KillRollOutcome, MullMode, MulliganTable, NeedsTable, NetArch, Policy, PvEnd, PvLeaf, Random,
+    Recorder, Sample, SkippedAmount, ValueNet, ValueVersion, Weights, WorldOutcome, WorldRecord,
+    BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0,
 };
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
 pub use search_key::{lethal_key, search_key};

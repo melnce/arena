@@ -849,7 +849,11 @@ the bot finish its turn greedily up to `osteps`, then `EndTurn`, then
   `kill_det` / `kill_roll` rebuild roots from `(state, spec, seed)`; the
   coordinator consumes `KillDetOutcome` / `KillRollOutcome` via
   `provide_kill_det` / `provide_kill_roll`. Deterministic kill discards roll
-  stats when it takes (same as native parallel kill).
+  stats when it takes (same as native parallel kill). Workers may finish roll
+  before deterministic kill; the coordinator **buffers** an early
+  `provide_kill_roll` and applies it after `provide_kill_det` when neither
+  outcome takes lethal (same index, value, and `SearchStats` as native
+  `choose`).
 - **Consensus lethal** and **one-ply** stay in-process on the coordinator
   (not split).
 - **`alloc=world`**: `Worlds { budgets }` after lethal; `world(r, budget)` per

@@ -1,8 +1,8 @@
 //! Stepped H0 bot decisions for multi-worker wasm clients.
 
 use arena_engine::{
-    by_name, kill_det, kill_roll, legal_actions, policy_rng, run_job_choose, to_neutral, world,
-    H0Job, JobStep, KillDetOutcome, KillRollOutcome, WorldOutcome,
+    by_name, kill_det, kill_roll, legal_actions, policy_rng, to_neutral, world, H0Job, JobStep,
+    KillDetOutcome, KillRollOutcome, WorldOutcome,
 };
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
@@ -138,7 +138,14 @@ impl Game {
         budget: u32,
     ) -> Result<String, JsValue> {
         let seed = crate::seed_from_js(&seed)?;
-        let out = world(card_db(), self.inner.state(), &policy, seed, r as usize, budget)
+        let out = world(
+            card_db(),
+            self.inner.state(),
+            &policy,
+            seed,
+            r as usize,
+            budget,
+        )
         .map_err(JsValue::from)?;
         serde_json::to_string(&out).map_err(|e| JsValue::from_str(&e.to_string()))
     }
@@ -198,17 +205,34 @@ pub fn job_choose_separate_games(
         return Err("need at least one game".into());
     }
     let db = card_db();
-    let (idx, value, _stats) = run_job_choose(
-        db,
-        games[0].state(),
-        policy,
-        seed,
-        false,
-        false,
-        false,
-    )?;
-    let legal = legal_actions(db, games[0].state());
-    let action = serde_json::to_string(&to_neutral(games[0].state(), &legal[idx]))
-        .map_err(|e| e.to_string())?;
-    Ok((action, value))
+    let state = games[0].state();
+    let (mut job, mut step) = H0Job::start(db, state, policy, seed)?;
+    loop {
+        match step {
+            JobStep::Done { index, value } => {
+                let legal = legal_actions(db, state);
+                let idx = index as usize;
+                let action = serde_json::to_string(&to_neutral(state, &legal[idx]))
+                    .map_err(|e| e.to_string())?;
+                return Ok((action, value));
+            }
+            JobStep::Kill { roll } => {
+                if roll {
+                    let out = kill_roll(db, state, policy, seed)?;
+                    step = job.provide_kill_roll(db, out)?;
+                } else {
+                    let out = kill_det(db, state, policy, seed)?;
+                    step = job.provide_kill_det(db, out)?;
+                }
+            }
+            JobStep::AwaitRoll => step = JobStep::Kill { roll: true },
+            JobStep::Worlds { budgets } => {
+                let mut outs = Vec::with_capacity(budgets.len());
+                for (r, budget) in budgets.iter().enumerate() {
+                    outs.push(world(db, state, policy, seed, r, *budget)?);
+                }
+                step = job.finish(db, &outs)?;
+            }
+        }
+    }
 }
