@@ -307,7 +307,17 @@ fn h0_spec(h: &H0) -> String {
         parts.push("tt=0".to_string());
     }
     if h.alloc != Alloc::Fair {
-        parts.push("alloc=root".to_string());
+        parts.push(format!(
+            "alloc={}",
+            match h.alloc {
+                Alloc::Root => "root",
+                Alloc::Fair => unreachable!(),
+                Alloc::World => "world",
+            }
+        ));
+    }
+    if h.threads != def.threads {
+        parts.push(format!("threads={}", h.threads));
     }
     if h.info != Info::Open {
         parts.push(match h.info {
@@ -427,6 +437,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.pess == b.pess
         && a.tt == b.tt
         && a.alloc == b.alloc
+        && a.threads == b.threads
         && a.info == b.info
         && a.fusemacro == b.fusemacro
         && a.net_path == b.net_path
@@ -575,8 +586,16 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                 h.alloc = match val {
                     "root" => Alloc::Root,
                     "fair" => Alloc::Fair,
+                    "world" => Alloc::World,
                     other => return Err(format!("unknown alloc '{other}'")),
                 }
+            }
+            "threads" => {
+                let v: u32 = parse_num(val)?;
+                if !(1..=64).contains(&v) {
+                    return Err(format!("threads out of range '{val}'"));
+                }
+                h.threads = v;
             }
             "info" => {
                 h.info = match val {

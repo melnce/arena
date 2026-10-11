@@ -8,10 +8,8 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    # Remaining steps measured 13:17 on the #52 runner after the seven
-    # slow binaries moved to `slow.yml`. 20 is the pre-#52 ceiling
-    # (~7 min headroom).
-    timeout-minutes: 20
+    # ≈ 18–19 min measured before #133; two-thirds rule.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 

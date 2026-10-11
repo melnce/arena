@@ -25,6 +25,8 @@ use crate::determinize::{determinize_block, HreadDeal, OpenStats};
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
 use crate::ids::{AttackTarget, PlayerId, Slot};
+#[cfg(not(target_arch = "wasm32"))]
+use crate::lethal::forced_lethal_accepting_cancel;
 use crate::lethal::{
     confirm_det_lethal_line, confirm_lethal_line_rerolled, forced_lethal, forced_lethal_accepting,
     forced_lethal_det, roll_confirm_seed, LethalVerdict,
@@ -39,7 +41,7 @@ use crate::trace::{ChooseOptionJson, NeutralAction};
 use super::explain::{
     CandidateRecord, ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord,
     HoldbackRecord, HoldbackResampleCandidate, HoldbackResampleRecord, Line, LostRerankRecord,
-    PvEnd, PvTracker,
+    PvEnd, PvTracker, WorldRecord,
 };
 use super::fuse_guard::{filter_cand_fuseguard, fuse_action_is_noop};
 
@@ -470,6 +472,9 @@ pub enum Alloc {
     /// Per-pair share of the remaining budget so every candidate is
     /// scored on every determinization (depth is what the share affords).
     Fair,
+    /// After consensus lethal, split leftover budget evenly across worlds;
+    /// within each world, [`Alloc::Fair`]-style per-candidate shares.
+    World,
 }
 
 /// Determinized search bot. With `odepth = 0` (default) the opponent reply is
@@ -483,6 +488,8 @@ pub struct H0 {
     /// How the node cap is split across `(root, candidate)` pairs.
     /// Default [`Alloc::Fair`] is today's per-pair budget share (`c42163b`).
     pub alloc: Alloc,
+    /// Worker threads for native parallel search (`1` = sequential).
+    pub threads: u32,
     /// What the search is allowed to know. Default [`Info::Open`] deals the
     /// opponent only what the bot cannot rule out. `info=fair` restores the
     /// sweep-8b flip (own deck resampled, hand untouched; opponent
@@ -611,6 +618,7 @@ impl Default for H0 {
             determinizations: 4,
             node_cap: 2000,
             alloc: Alloc::Fair,
+            threads: 1,
             info: Info::Open,
             value: ValueVersion::Net,
             weights: Weights::default(),
@@ -754,6 +762,7 @@ impl H0 {
         match self.alloc {
             Alloc::Root => "root",
             Alloc::Fair => "fair",
+            Alloc::World => "world",
         }
     }
 
@@ -1090,16 +1099,48 @@ impl Policy for H0 {
                 Phase::Main | Phase::Combat | Phase::Choice { .. }
             )
         {
-            if let Some((idx, path)) = try_take_kill(
-                db,
-                &roots,
-                legal,
-                &cand,
-                me,
-                self.tkill,
-                self.tkroll,
-                &mut dec_stats,
-            ) {
+            let kill = {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    if self.threads > 1 && self.tkroll > 0 {
+                        try_take_kill_parallel(
+                            db,
+                            &roots,
+                            legal,
+                            &cand,
+                            me,
+                            self.tkill,
+                            self.tkroll,
+                            &mut dec_stats,
+                        )
+                    } else {
+                        try_take_kill(
+                            db,
+                            &roots,
+                            legal,
+                            &cand,
+                            me,
+                            self.tkill,
+                            self.tkroll,
+                            &mut dec_stats,
+                        )
+                    }
+                }
+                #[cfg(target_arch = "wasm32")]
+                {
+                    try_take_kill(
+                        db,
+                        &roots,
+                        legal,
+                        &cand,
+                        me,
+                        self.tkill,
+                        self.tkroll,
+                        &mut dec_stats,
+                    )
+                }
+            };
+            if let Some((idx, path)) = kill {
                 self.last_value = Some(self.wv);
                 if let Some(rec) = &mut explain_rec {
                     rec.path = path;
@@ -1191,39 +1232,122 @@ impl Policy for H0 {
                 let mut attempted = 0u64;
                 let nodes_after_lethal = nodes;
                 let mut cap_exhausted = false;
-                for (r, root) in roots.iter().enumerate() {
-                    let mut root_table = if self.info == Info::All {
-                        self.tt.then(HashMap::new)
-                    } else {
-                        None
+                if self.alloc == Alloc::World {
+                    let leftover = self.node_cap.saturating_sub(nodes_after_lethal);
+                    let base = leftover / k;
+                    let extra = leftover % k;
+                    let mut world_results: Vec<WorldSearchResult> = Vec::with_capacity(roots.len());
+                    let run_world = |r: usize| {
+                        let world_budget = base + if (r as u32) < extra { 1 } else { 0 };
+                        search_world(
+                            db,
+                            &roots[r],
+                            r,
+                            world_budget,
+                            &subset,
+                            me,
+                            self.depth,
+                            self.beam,
+                            self.tt,
+                            self.info,
+                            eval,
+                            odepth,
+                            obeam,
+                            self.fusemacro,
+                            self.horizon,
+                            self.hres,
+                            recording,
+                        )
                     };
-                    let root_key = search_key(root);
-                    for (j, a) in subset.iter().enumerate() {
-                        if nodes >= self.node_cap {
-                            let skipped = (subset.len() - j) as u64
-                                + (roots.len() - r - 1) as u64 * subset.len() as u64;
-                            dec_stats.skipped_worlds += skipped;
-                            if recording {
-                                for explain_cand in explain_cands.iter_mut().skip(j) {
-                                    explain_cand
-                                        .worlds
-                                        .push(PvTracker::skipped_world(r as u32, 0));
-                                }
-                                for rr in (r + 1)..roots.len() {
-                                    for explain_cand in explain_cands.iter_mut() {
-                                        explain_cand
-                                            .worlds
-                                            .push(PvTracker::skipped_world(rr as u32, 0));
+                    #[cfg(not(target_arch = "wasm32"))]
+                    if self.threads > 1 {
+                        use std::sync::atomic::{AtomicUsize, Ordering};
+                        let slots: Vec<std::sync::Mutex<Option<WorldSearchResult>>> = (0..roots
+                            .len())
+                            .map(|_| std::sync::Mutex::new(None))
+                            .collect();
+                        let next = AtomicUsize::new(0);
+                        let workers = self.threads.min(k).max(1) as usize;
+                        std::thread::scope(|s| {
+                            for _ in 0..workers {
+                                s.spawn(|| loop {
+                                    let r = next.fetch_add(1, Ordering::Relaxed);
+                                    if r >= roots.len() {
+                                        break;
                                     }
+                                    let wr = run_world(r);
+                                    *slots[r].lock().unwrap() = Some(wr);
+                                });
+                            }
+                        });
+                        for slot in slots {
+                            world_results.push(slot.lock().unwrap().take().expect("world"));
+                        }
+                    } else {
+                        for r in 0..roots.len() {
+                            world_results.push(run_world(r));
+                        }
+                    }
+                    #[cfg(target_arch = "wasm32")]
+                    for r in 0..roots.len() {
+                        world_results.push(run_world(r));
+                    }
+                    let mut world_nodes_sum = 0u32;
+                    for wr in world_results {
+                        attempted += wr.attempted;
+                        dec_stats.accum(&wr.stats);
+                        dec_stats.skipped_worlds += wr.skipped_worlds;
+                        world_nodes_sum += wr.nodes_spent;
+                        if recording {
+                            for (j, worlds) in wr.explain.into_iter().enumerate() {
+                                for w in worlds {
+                                    explain_cands[j].worlds.push(w);
                                 }
                             }
-                            cap_exhausted = true;
-                            break;
                         }
-                        attempted += 1;
-                        let cap = match self.alloc {
-                            Alloc::Root => self.node_cap,
-                            Alloc::Fair => {
+                        for j in 0..subset.len() {
+                            acc[j] += wr.acc[j];
+                            if wr.n[j] > 0 && wr.worst[j] < worst[j] {
+                                worst[j] = wr.worst[j];
+                            }
+                            n[j] += wr.n[j];
+                        }
+                    }
+                    nodes = nodes_after_lethal + world_nodes_sum;
+                } else {
+                    for (r, root) in roots.iter().enumerate() {
+                        let mut root_table = if self.info == Info::All {
+                            self.tt.then(HashMap::new)
+                        } else {
+                            None
+                        };
+                        let root_key = search_key(root);
+                        for (j, a) in subset.iter().enumerate() {
+                            if nodes >= self.node_cap {
+                                let skipped = (subset.len() - j) as u64
+                                    + (roots.len() - r - 1) as u64 * subset.len() as u64;
+                                dec_stats.skipped_worlds += skipped;
+                                if recording {
+                                    for explain_cand in explain_cands.iter_mut().skip(j) {
+                                        explain_cand
+                                            .worlds
+                                            .push(PvTracker::skipped_world(r as u32, 0));
+                                    }
+                                    for rr in (r + 1)..roots.len() {
+                                        for explain_cand in explain_cands.iter_mut() {
+                                            explain_cand
+                                                .worlds
+                                                .push(PvTracker::skipped_world(rr as u32, 0));
+                                        }
+                                    }
+                                }
+                                cap_exhausted = true;
+                                break;
+                            }
+                            attempted += 1;
+                            let cap = if self.alloc == Alloc::Root {
+                                self.node_cap
+                            } else {
                                 const MIN_SHARE: u32 = 24;
                                 let pairs_left = (k as usize - r) * subset.len() - j;
                                 let remaining = self.node_cap - nodes;
@@ -1235,87 +1359,88 @@ impl Policy for H0 {
                                         even.max(1)
                                     };
                                 nodes.saturating_add(share).min(self.node_cap)
-                            }
-                        };
-                        let pair_nodes_start = nodes;
-                        let mut tracker = if recording {
-                            Some(PvTracker::new(cap))
-                        } else {
-                            None
-                        };
-                        let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key]) else {
-                            if recording {
-                                explain_cands[j]
-                                    .worlds
-                                    .push(PvTracker::skipped_world(r as u32, cap));
-                            }
-                            continue;
-                        };
-                        if let Some(t) = tracker.as_mut() {
-                            t.push(a.clone());
-                        }
-                        let v = if s.winner == Some(me) {
-                            if let Some(t) = tracker.as_mut() {
-                                t.set_leaf(eval.wv, PvEnd::Terminal, &s);
-                            }
-                            eval.wv
-                        } else {
-                            let line = vec![root_key, search_key(&s)];
-                            let at_fuse_choice =
-                                self.fusemacro && own_fuse_partners(&s, me).is_some();
-                            let search_depth = if at_fuse_choice {
-                                self.depth
-                            } else {
-                                self.depth.saturating_sub(1)
                             };
-                            search_own(
-                                db,
-                                &s,
-                                me,
-                                search_depth,
-                                self.beam,
-                                &mut nodes,
-                                cap,
-                                &line,
-                                eval,
-                                odepth,
-                                obeam,
-                                &mut dec_stats,
-                                if self.info == Info::All {
-                                    root_table.as_mut()
+                            let pair_nodes_start = nodes;
+                            let mut tracker = if recording {
+                                Some(PvTracker::new(cap))
+                            } else {
+                                None
+                            };
+                            let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key])
+                            else {
+                                if recording {
+                                    explain_cands[j]
+                                        .worlds
+                                        .push(PvTracker::skipped_world(r as u32, cap));
+                                }
+                                continue;
+                            };
+                            if let Some(t) = tracker.as_mut() {
+                                t.push(a.clone());
+                            }
+                            let v = if s.winner == Some(me) {
+                                if let Some(t) = tracker.as_mut() {
+                                    t.set_leaf(eval.wv, PvEnd::Terminal, &s);
+                                }
+                                eval.wv
+                            } else {
+                                let line = vec![root_key, search_key(&s)];
+                                let at_fuse_choice =
+                                    self.fusemacro && own_fuse_partners(&s, me).is_some();
+                                let search_depth = if at_fuse_choice {
+                                    self.depth
                                 } else {
-                                    shared_table.as_mut()
-                                },
-                                tracker.as_mut(),
-                                self.fusemacro,
-                                self.horizon,
-                                self.hres,
-                            )
-                        };
-                        if let Some(t) = tracker.as_mut() {
-                            t.note_nodes(nodes);
+                                    self.depth.saturating_sub(1)
+                                };
+                                search_own(
+                                    db,
+                                    &s,
+                                    me,
+                                    search_depth,
+                                    self.beam,
+                                    &mut nodes,
+                                    cap,
+                                    &line,
+                                    eval,
+                                    odepth,
+                                    obeam,
+                                    &mut dec_stats,
+                                    if self.info == Info::All {
+                                        root_table.as_mut()
+                                    } else {
+                                        shared_table.as_mut()
+                                    },
+                                    tracker.as_mut(),
+                                    self.fusemacro,
+                                    self.horizon,
+                                    self.hres,
+                                )
+                            };
+                            if let Some(t) = tracker.as_mut() {
+                                t.note_nodes(nodes);
+                            }
+                            let fv = finite(v, eval.wv);
+                            if recording {
+                                let tracker = tracker.unwrap_or_else(|| PvTracker::new(cap));
+                                explain_cands[j].worlds.push(tracker.into_world(
+                                    r as u32,
+                                    v,
+                                    fv,
+                                    false,
+                                    nodes - pair_nodes_start,
+                                    db,
+                                    root,
+                                ));
+                            }
+                            acc[j] += fv;
+                            if fv < worst[j] {
+                                worst[j] = fv;
+                            }
+                            n[j] += 1;
                         }
-                        let fv = finite(v, eval.wv);
-                        if recording {
-                            let tracker = tracker.unwrap_or_else(|| PvTracker::new(cap));
-                            explain_cands[j].worlds.push(tracker.into_world(
-                                r as u32,
-                                v,
-                                fv,
-                                false,
-                                nodes - pair_nodes_start,
-                                db,
-                                root,
-                            ));
+                        if cap_exhausted {
+                            break;
                         }
-                        acc[j] += fv;
-                        if fv < worst[j] {
-                            worst[j] = fv;
-                        }
-                        n[j] += 1;
-                    }
-                    if cap_exhausted {
-                        break;
                     }
                 }
                 let pairs_skipped_add = if nodes_after_lethal < self.node_cap {
@@ -1677,6 +1802,287 @@ fn try_apply(
         return None;
     }
     Some(s)
+}
+
+struct WorldSearchResult {
+    acc: Vec<f32>,
+    n: Vec<u32>,
+    worst: Vec<f32>,
+    nodes_spent: u32,
+    stats: SearchStats,
+    attempted: u64,
+    skipped_worlds: u64,
+    explain: Vec<Vec<WorldRecord>>,
+}
+
+fn fair_world_pair_cap(remaining: u32, pairs_left: usize, nodes_so_far: u32, hard_cap: u32) -> u32 {
+    const MIN_SHARE: u32 = 24;
+    let even = remaining / pairs_left as u32;
+    let share = if remaining >= MIN_SHARE.saturating_mul(pairs_left as u32) {
+        even.max(MIN_SHARE)
+    } else {
+        even.max(1)
+    };
+    nodes_so_far.saturating_add(share).min(hard_cap)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn search_world(
+    db: &CardDb,
+    root: &State,
+    r: usize,
+    world_budget: u32,
+    subset: &[Action],
+    me: PlayerId,
+    depth: u32,
+    beam: usize,
+    tt_on: bool,
+    info: Info,
+    eval: Evaluator<'_>,
+    odepth: u32,
+    obeam: usize,
+    fusemacro: bool,
+    horizon: u32,
+    hres: u32,
+    recording: bool,
+) -> WorldSearchResult {
+    let n_cand = subset.len();
+    let mut acc = vec![0.0f32; n_cand];
+    let mut n = vec![0u32; n_cand];
+    let mut worst = vec![f32::INFINITY; n_cand];
+    let mut explain = if recording {
+        vec![Vec::new(); n_cand]
+    } else {
+        Vec::new()
+    };
+    let mut world_nodes = 0u32;
+    let mut stats = SearchStats::default();
+    let mut attempted = 0u64;
+    let mut skipped_worlds = 0u64;
+    let mut shared_table = if info != Info::All {
+        tt_on.then(HashMap::new)
+    } else {
+        None
+    };
+    let mut root_table = if info == Info::All {
+        tt_on.then(HashMap::new)
+    } else {
+        None
+    };
+    let root_key = search_key(root);
+    for (j, a) in subset.iter().enumerate() {
+        if world_nodes >= world_budget {
+            skipped_worlds += (subset.len() - j) as u64;
+            if recording {
+                for ej in explain.iter_mut().skip(j) {
+                    ej.push(PvTracker::skipped_world(r as u32, 0));
+                }
+            }
+            break;
+        }
+        attempted += 1;
+        let pairs_left = subset.len() - j;
+        let remaining = world_budget - world_nodes;
+        let cap = fair_world_pair_cap(remaining, pairs_left, world_nodes, world_budget);
+        let pair_nodes_start = world_nodes;
+        let mut tracker = if recording {
+            Some(PvTracker::new(cap))
+        } else {
+            None
+        };
+        let Some(s) = try_apply(db, root, a, &mut world_nodes, cap, &[root_key]) else {
+            if recording {
+                explain[j].push(PvTracker::skipped_world(r as u32, cap));
+            }
+            continue;
+        };
+        if let Some(t) = tracker.as_mut() {
+            t.push(a.clone());
+        }
+        let v = if s.winner == Some(me) {
+            if let Some(t) = tracker.as_mut() {
+                t.set_leaf(eval.wv, PvEnd::Terminal, &s);
+            }
+            eval.wv
+        } else {
+            let line = vec![root_key, search_key(&s)];
+            let at_fuse_choice = fusemacro && own_fuse_partners(&s, me).is_some();
+            let search_depth = if at_fuse_choice {
+                depth
+            } else {
+                depth.saturating_sub(1)
+            };
+            search_own(
+                db,
+                &s,
+                me,
+                search_depth,
+                beam,
+                &mut world_nodes,
+                cap,
+                &line,
+                eval,
+                odepth,
+                obeam,
+                &mut stats,
+                if info == Info::All {
+                    root_table.as_mut()
+                } else {
+                    shared_table.as_mut()
+                },
+                tracker.as_mut(),
+                fusemacro,
+                horizon,
+                hres,
+            )
+        };
+        if let Some(t) = tracker.as_mut() {
+            t.note_nodes(world_nodes);
+        }
+        let fv = finite(v, eval.wv);
+        if recording {
+            let tracker = tracker.unwrap_or_else(|| PvTracker::new(cap));
+            explain[j].push(tracker.into_world(
+                r as u32,
+                v,
+                fv,
+                false,
+                world_nodes - pair_nodes_start,
+                db,
+                root,
+            ));
+        }
+        acc[j] += fv;
+        if fv < worst[j] {
+            worst[j] = fv;
+        }
+        n[j] += 1;
+    }
+    WorldSearchResult {
+        acc,
+        n,
+        worst,
+        nodes_spent: world_nodes,
+        stats,
+        attempted,
+        skipped_worlds,
+        explain,
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(clippy::too_many_arguments)]
+fn try_take_kill_parallel(
+    db: &CardDb,
+    roots: &[State],
+    legal: &[Action],
+    cand: &[usize],
+    me: PlayerId,
+    budget: u32,
+    tkroll: u32,
+    stats: &mut SearchStats,
+) -> Option<(usize, ChoosePath)> {
+    use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+
+    let cancel = AtomicBool::new(false);
+    let roll_lines_rejected = AtomicU32::new(0);
+    std::thread::scope(|s| {
+        let roll_handle = s.spawn(|| {
+            forced_lethal_accepting_cancel(
+                db,
+                &roots[0],
+                budget,
+                |line| {
+                    for root in roots {
+                        let pos_key = search_key(root);
+                        let seeds: Vec<u64> =
+                            (0..tkroll).map(|i| roll_confirm_seed(pos_key, i)).collect();
+                        if !confirm_lethal_line_rerolled(db, root, me, line, &seeds) {
+                            roll_lines_rejected.fetch_add(1, Ordering::Relaxed);
+                            return false;
+                        }
+                    }
+                    true
+                },
+                &cancel,
+            )
+        });
+
+        stats.own_solver_calls += 1;
+        let verdict = forced_lethal_det(db, &roots[0], budget);
+        let nodes = match &verdict {
+            LethalVerdict::Lethal { nodes, .. }
+            | LethalVerdict::None { nodes }
+            | LethalVerdict::Unknown { nodes } => *nodes,
+        };
+        stats.own_solver_nodes += u64::from(nodes);
+        stats.own_solver_nodes_max = stats.own_solver_nodes_max.max(u64::from(nodes));
+        match verdict {
+            LethalVerdict::Lethal { line, .. } => {
+                stats.own_solver_found += 1;
+                let mut all_roots_confirmed = true;
+                for root in roots.iter().skip(1) {
+                    if !confirm_det_lethal_line(db, root, me, &line) {
+                        all_roots_confirmed = false;
+                        break;
+                    }
+                }
+                if all_roots_confirmed {
+                    let first = &line[0];
+                    if let Some(idx) = legal.iter().position(|a| a == first) {
+                        if cand.contains(&idx) {
+                            stats.own_solver_taken += 1;
+                            cancel.store(true, Ordering::Relaxed);
+                            return Some((idx, ChoosePath::TakeKill));
+                        }
+                    }
+                    stats.own_solver_rejected += 1;
+                } else {
+                    stats.own_solver_rejected += 1;
+                }
+            }
+            LethalVerdict::Unknown { .. } => {
+                stats.own_solver_unknown += 1;
+            }
+            LethalVerdict::None { .. } => {}
+        }
+
+        let roll_verdict = roll_handle.join().expect("roll thread join");
+        stats.own_roll_calls += 1;
+        stats.own_roll_lines_rejected += u64::from(roll_lines_rejected.load(Ordering::Relaxed));
+        let roll_nodes = match &roll_verdict {
+            LethalVerdict::Lethal { nodes, .. }
+            | LethalVerdict::None { nodes }
+            | LethalVerdict::Unknown { nodes } => *nodes,
+        };
+        stats.own_roll_nodes += u64::from(roll_nodes);
+        stats.own_roll_nodes_max = stats.own_roll_nodes_max.max(u64::from(roll_nodes));
+        match roll_verdict {
+            LethalVerdict::Lethal { line, .. } => {
+                stats.own_roll_found += 1;
+                let first = &line[0];
+                let Some(idx) = legal.iter().position(|a| a == first) else {
+                    stats.own_roll_rejected += 1;
+                    return None;
+                };
+                if !cand.contains(&idx) {
+                    stats.own_roll_rejected += 1;
+                    return None;
+                }
+                stats.own_roll_taken += 1;
+                Some((idx, ChoosePath::TakeKillRoll))
+            }
+            LethalVerdict::Unknown { .. } => {
+                stats.own_roll_unknown += 1;
+                stats.own_roll_rejected += 1;
+                None
+            }
+            LethalVerdict::None { .. } => {
+                stats.own_roll_rejected += 1;
+                None
+            }
+        }
+    })
 }
 
 #[allow(clippy::too_many_arguments)]

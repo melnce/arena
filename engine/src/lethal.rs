@@ -116,7 +116,7 @@ pub enum LethalActionKind {
 /// `budget` is a cap on `apply` calls. `budget == 0` with any expandable
 /// action yields [`LethalVerdict::Unknown`], not [`LethalVerdict::None`].
 pub fn forced_lethal(db: &CardDb, state: &State, budget: u32) -> LethalVerdict {
-    forced_lethal_inner::<fn(&[Action]) -> bool>(db, state, budget, false, None)
+    forced_lethal_inner::<fn(&[Action]) -> bool>(db, state, budget, false, None, None)
 }
 
 /// Exhaustive within-turn search for a **deterministic** kill only.
@@ -126,7 +126,7 @@ pub fn forced_lethal(db: &CardDb, state: &State, budget: u32) -> LethalVerdict {
 /// false`. [`LethalVerdict::None`] is a proof that no deterministic line
 /// exists within budget — not a proof that no kill exists at all.
 pub fn forced_lethal_det(db: &CardDb, state: &State, budget: u32) -> LethalVerdict {
-    forced_lethal_inner::<fn(&[Action]) -> bool>(db, state, budget, true, None)
+    forced_lethal_inner::<fn(&[Action]) -> bool>(db, state, budget, true, None, None)
 }
 
 /// Like [`forced_lethal`], but when a kill is found the search calls
@@ -143,7 +143,23 @@ pub fn forced_lethal_accepting<F>(
 where
     F: FnMut(&[Action]) -> bool,
 {
-    forced_lethal_inner(db, state, budget, false, Some(&mut accept))
+    forced_lethal_inner(db, state, budget, false, Some(&mut accept), None)
+}
+
+/// Like [`forced_lethal_accepting`], but returns [`LethalVerdict::Unknown`] promptly
+/// when `cancel` is set (checked at each `apply`).
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn forced_lethal_accepting_cancel<F>(
+    db: &CardDb,
+    state: &State,
+    budget: u32,
+    mut accept: F,
+    cancel: &std::sync::atomic::AtomicBool,
+) -> LethalVerdict
+where
+    F: FnMut(&[Action]) -> bool,
+{
+    forced_lethal_inner(db, state, budget, false, Some(&mut accept), Some(cancel))
 }
 
 fn forced_lethal_inner<F>(
@@ -152,10 +168,14 @@ fn forced_lethal_inner<F>(
     budget: u32,
     deterministic_only: bool,
     accept: Option<&mut F>,
+    cancel: Option<&std::sync::atomic::AtomicBool>,
 ) -> LethalVerdict
 where
     F: FnMut(&[Action]) -> bool,
 {
+    if cancel.is_some_and(|c| c.load(std::sync::atomic::Ordering::Relaxed)) {
+        return LethalVerdict::Unknown { nodes: 0 };
+    }
     let perspective = acting_player(state);
     let mut nodes = 0u32;
     let use_tt = accept.is_none();
@@ -184,6 +204,7 @@ where
         0,
         deterministic_only,
         &mut accept_holder,
+        cancel,
     ) {
         Outcome::Lethal { rng_dependent } => {
             return LethalVerdict::Lethal {
@@ -223,6 +244,7 @@ where
         0,
         deterministic_only,
         &mut accept_holder,
+        cancel,
     ) {
         Outcome::Lethal { rng_dependent } => LethalVerdict::Lethal {
             line,
@@ -383,10 +405,14 @@ fn search<F>(
     ply: u32,
     deterministic_only: bool,
     accept: &mut Option<&mut F>,
+    cancel: Option<&std::sync::atomic::AtomicBool>,
 ) -> Outcome
 where
     F: FnMut(&[Action]) -> bool,
 {
+    if cancel.is_some_and(|c| c.load(std::sync::atomic::Ordering::Relaxed)) {
+        return Outcome::Unknown;
+    }
     if state.winner == Some(perspective) {
         if lethal_accepted(line, accept) {
             return Outcome::Lethal {
@@ -431,6 +457,9 @@ where
 
     let mut saw_unknown = false;
     for (_, _, a) in acts {
+        if cancel.is_some_and(|c| c.load(std::sync::atomic::Ordering::Relaxed)) {
+            return Outcome::Unknown;
+        }
         if *nodes >= budget {
             return Outcome::Unknown;
         }
@@ -489,6 +518,7 @@ where
             ply + 1,
             deterministic_only,
             accept,
+            cancel,
         );
         match out {
             Outcome::Lethal { rng_dependent } => return Outcome::Lethal { rng_dependent },
