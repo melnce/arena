@@ -46,6 +46,7 @@ jobs:
   # h0_tkroll ~2m38s release tests (cloud-agent 2026-10-02); timeout 15 like h0_tkill
   # h0_hbcheck ~3m30s release tests (cloud-agent 2026-10-02); timeout 15 like h0_tkroll
   # h0_threads ~7m58s release --include-ignored (cloud-agent 2026-10-11, PR #133)
+  # h0_job release identity ~9.3m wall (556s cargo, 2026-10-11 cloud-agent); timeout 15m
   suite:
     name: slow (${{ matrix.suite }})
     runs-on: ubuntu-latest

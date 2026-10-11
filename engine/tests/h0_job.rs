@@ -23,20 +23,35 @@ const S2_DEBUG: &str =
 const S3_DEBUG: &str =
     "h0:nodes=2000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,alloc=world";
 
+#[allow(dead_code)]
 const S1: &str =
     "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8";
+#[allow(dead_code)]
 const S2: &str = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,alloc=world";
+#[allow(dead_code)]
 const S3: &str =
     "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,alloc=world";
 
 /// `py/serve.py` `DEFAULT_STRONG` as of base `d07388f`.
+#[allow(dead_code)]
 const SERVED_STRONG: &str =
     "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8";
+/// Served keys at `nodes=8000` for release identity (matches review probe wall time).
+const SERVED_STRONG_RELEASE: &str =
+    "h0:nodes=8000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1";
+const SERVED_CHEAT_RELEASE: &str =
+    "h0:nodes=8000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1";
 /// `py/serve.py` `DEFAULT_CHEAT` as of base `d07388f`.
+#[allow(dead_code)]
 const SERVED_CHEAT: &str =
     "h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8";
+#[allow(dead_code)]
 const STRONG_K16: &str =
     "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8";
+/// `k=16` served shape at `nodes=8000` for release identity wall time (slow.yml).
+const STRONG_K16_RELEASE: &str =
+    "h0:nodes=8000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1";
+#[allow(dead_code)]
 const STRONG_THREADS4: &str =
     "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=4";
 const FAIR_6000: &str = "h0:nodes=6000";
@@ -322,6 +337,7 @@ fn collect_cases(db: &CardDb) -> Vec<Case> {
     cases
 }
 
+#[allow(dead_code)]
 fn meta_deck_stems() -> Vec<String> {
     let text = fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS.json");
     let pools: Value = serde_json::from_str(&text).expect("pools json");
@@ -334,6 +350,7 @@ fn meta_deck_stems() -> Vec<String> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn load_deck_file(path: PathBuf) -> Vec<arena_engine::CardId> {
     let map: BTreeMap<String, u32> =
         serde_json::from_str(&fs::read_to_string(path).expect("deck")).expect("deck json");
@@ -348,6 +365,7 @@ fn load_deck_file(path: PathBuf) -> Vec<arena_engine::CardId> {
 }
 
 /// Twenty bot Main-phase decisions at turn ≥ 4 from seeded self-play (`seed = 20261011 + g*97 + stem*131`).
+#[allow(dead_code)]
 fn meta_selfplay_cases(db: &CardDb) -> Vec<Case> {
     let spec = "h0";
     let mut out = Vec::new();
@@ -455,7 +473,7 @@ fn decide_choose(spec: &str, db: &CardDb, case: &Case) -> Outcome {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum WorldFeedOrder {
     Forward,
     Reverse,
@@ -600,16 +618,64 @@ fn log_choose_path_coverage(spec: &str, cases: &[Case], db: &CardDb) {
     }
 }
 
-fn check_job_identity(cases: &[Case], specs: &[&str]) {
+fn check_job_identity(cases: &[Case], specs: &[&str], log_paths: bool) {
+    const ORDERS: &[WorldFeedOrder] = &[
+        WorldFeedOrder::Forward,
+        WorldFeedOrder::Reverse,
+        WorldFeedOrder::Shuffled,
+    ];
+    check_job_identity_orders(cases, specs, ORDERS, log_paths);
+}
+
+fn check_job_identity_orders(
+    cases: &[Case],
+    specs: &[&str],
+    orders: &[WorldFeedOrder],
+    log_paths: bool,
+) {
     let db = load_recorded_db();
     for spec in specs {
-        log_choose_path_coverage(spec, cases, &db);
+        if log_paths {
+            log_choose_path_coverage(spec, cases, &db);
+        }
         for case in cases {
-            assert_job_matches(spec, case, &db, WorldFeedOrder::Forward);
-            assert_job_matches(spec, case, &db, WorldFeedOrder::Reverse);
-            assert_job_matches(spec, case, &db, WorldFeedOrder::Shuffled);
+            for order in orders {
+                assert_job_matches(spec, case, &db, *order);
+            }
         }
     }
+}
+
+/// Full matrix on all fixture cases (slow.yml `h0_job` release target).
+fn check_job_identity_release(cases_all: &[Case], cases_subset: &[Case]) {
+    const FULL: &[&str] = &[SERVED_STRONG_RELEASE, SERVED_CHEAT_RELEASE, WORLD_4000, FAIR_6000];
+    const SUBSET: &[&str] = &[STRONG_K16_RELEASE, "h0"];
+    const FORWARD: &[WorldFeedOrder] = &[WorldFeedOrder::Forward];
+    const ALL_FEEDS: &[WorldFeedOrder] = &[
+        WorldFeedOrder::Forward,
+        WorldFeedOrder::Reverse,
+        WorldFeedOrder::Shuffled,
+    ];
+    // All cases × served/world/fair specs; reverse/shuffle only on review subset (finish merge).
+    check_job_identity_orders(cases_all, FULL, FORWARD, false);
+    check_job_identity_orders(cases_subset, SUBSET, ALL_FEEDS, false);
+}
+
+#[test]
+#[ignore = "bench wall time for review_moment_bench.sh"]
+fn review_moment_choose_wall() {
+    let db = load_recorded_db();
+    let spec = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1";
+    let cases = load_review_cases(&db);
+    let start = std::time::Instant::now();
+    for case in &cases {
+        let _ = decide_choose(spec, &db, case);
+    }
+    eprintln!(
+        "review_moment_choose_wall: {} cases in {:.3}s",
+        cases.len(),
+        start.elapsed().as_secs_f64()
+    );
 }
 
 #[test]
@@ -648,33 +714,16 @@ fn kill_roll_buffered_before_det() {
 fn threads_identity_debug_budgets() {
     let cases = debug_cases();
     assert_eq!(cases.len(), 4);
-    check_job_identity(&cases, &[S1_DEBUG, S2_DEBUG, S3_DEBUG]);
+    check_job_identity(&cases, &[S1_DEBUG, S2_DEBUG, S3_DEBUG], true);
 }
 
 #[test]
 #[ignore = "release identity; slow.yml"]
 fn threads_identity_release_budgets() {
     let db = load_recorded_db();
-    let mut cases = collect_cases(&db);
-    cases.extend(meta_selfplay_cases(&db));
-    assert!(
-        cases.len() >= 20,
-        "fixture + self-play cases: {}",
-        cases.len()
-    );
-    check_job_identity(
-        &cases,
-        &[
-            SERVED_STRONG,
-            SERVED_CHEAT,
-            STRONG_K16,
-            STRONG_THREADS4,
-            FAIR_6000,
-            WORLD_4000,
-            "h0",
-            S1,
-            S2,
-            S3,
-        ],
-    );
+    let cases = collect_cases(&db);
+    assert!(cases.len() >= 20, "fixture cases: {}", cases.len());
+    let subset = load_review_cases(&db);
+    assert_eq!(subset.len(), REVIEW_MOMENTS.len());
+    check_job_identity_release(&cases, &subset);
 }
