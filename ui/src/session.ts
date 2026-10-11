@@ -444,7 +444,7 @@ export function botStep(s: Session): EngineEvent[] {
   return botStepWithSeed(s, nextBotSeed(s));
 }
 
-function localBotRequestBody(
+export function localBotRequestBody(
   s: Session,
   policy: string,
   botSeed: string,
