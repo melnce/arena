@@ -12,10 +12,10 @@ test("bot speed test bench", async ({ page }) => {
   const gen0 = await page.evaluate(() => window.__arena!.botWorker().generation);
 
   await page.locator("#benchRunBtn").click();
-  await expect(page.locator("#benchOutput")).toContainText("position 10 / 10", { timeout: 120_000 });
-  const text = await page.locator("#benchOutput").innerText();
-  const lines = text.split("\n").filter((l) => l.match(/^\d+\t/));
-  expect(lines.length).toBe(10);
+  await expect(page.locator("#benchOutput")).toContainText("fingerprint:", { timeout: 120_000 });
+  const text = (await page.locator("#benchOutput").textContent()) ?? "";
+  const rowCount = text.split("\n").filter((l) => /^\d+\t/.test(l)).length;
+  expect(rowCount).toBe(10);
   expect(text).toMatch(/median:/);
   expect(text).toMatch(/fingerprint:/);
 
@@ -23,8 +23,8 @@ test("bot speed test bench", async ({ page }) => {
   expect(fp1).toBeTruthy();
 
   await page.locator("#benchRunBtn").click();
-  await expect(page.locator("#benchOutput")).toContainText("position 10 / 10", { timeout: 120_000 });
-  const text2 = await page.locator("#benchOutput").innerText();
+  await expect(page.locator("#benchOutput")).toContainText("fingerprint:", { timeout: 120_000 });
+  const text2 = (await page.locator("#benchOutput").textContent()) ?? "";
   const fp2 = text2.match(/fingerprint: ([0-9a-f]+)/)?.[1];
   expect(fp2).toBe(fp1);
 

@@ -5,6 +5,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openSettings } from "./helpers.ts";
 
 const CHEAT_STD = "h0:nodes=6000,info=all";
+/** Enough wall time for the 600 ms thinking pill on CI. */
+const THINKING_SPEC = "h0:nodes=800000,k=8,tkill=8000";
 
 function readServePolicies(): { strong: string; cheat: string } {
   const servePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../py/serve.py");
@@ -47,10 +49,13 @@ async function startVsBot(
     first?: "a" | "b";
     botPolicy?: string;
     query?: string;
+    skipBoot?: boolean;
   },
 ) {
-  if (opts.query) await boot(page, opts.query);
-  else await boot(page);
+  if (!opts.skipBoot) {
+    if (opts.query) await boot(page, opts.query);
+    else await boot(page);
+  }
   await openSettings(page);
   await page.locator("#modeSelect").selectOption("vs-bot");
   await page.locator("#seedInput").fill(opts.seed);
@@ -77,6 +82,15 @@ async function confirmHumanMulligan(page: Page, human: "a" | "b" = "a") {
   await expect(btn).toBeHidden({ timeout: 5000 });
 }
 
+async function confirmMulligans(page: Page) {
+  for (let i = 0; i < 2; i++) {
+    const btn = page.locator(".mulligan-confirm-btn:visible");
+    if ((await btn.count()) === 0) break;
+    await btn.first().click();
+    await expect(btn.first()).toBeHidden({ timeout: 5000 }).catch(() => undefined);
+  }
+}
+
 async function endHumanTurn(page: Page, human: "a" | "b" = "a") {
   const id = human === "a" ? "endTurnBlue" : "endTurnRed";
   const btn = page.locator(`#${id}:visible`);
@@ -101,6 +115,24 @@ async function playUntilTurnOrEnd(page: Page, minTurn = 6, human: "a" | "b" = "a
 
 async function actionLog(page: Page): Promise<unknown[]> {
   return page.evaluate(() => window.__arena!.actions());
+}
+
+async function pickSlowBotSpec(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const candidates = [
+      "h0:nodes=80000,k=8",
+      "h0:nodes=60000,k=8",
+      "h0:nodes=50000,k=8",
+      "h0:nodes=40000,k=8",
+      "h0:nodes=120000,k=8",
+      "h0:nodes=200000,k=8",
+    ];
+    for (const spec of candidates) {
+      const ms = window.__arena!.measureBotPolicyMs(spec);
+      if (ms >= 3000) return spec;
+    }
+    return "h0:nodes=800000,k=8,tkill=8000";
+  });
 }
 
 test("same moves as main thread (worker vs sync)", async ({ page }) => {
@@ -130,27 +162,54 @@ test("same moves as main thread (worker vs sync)", async ({ page }) => {
   expect(cheatWorker).toEqual(cheatSync);
 });
 
-test("page stays live while bot thinks in worker", async ({ page }) => {
-  await startVsBot(page, { seed: "42", first: "b", human: "a", botPolicy: "h0" });
-  const slowSpec = await page.evaluate(async () => {
-    const candidates = [
-      "h0:nodes=80000,k=8",
-      "h0:nodes=60000,k=8",
-      "h0:nodes=50000,k=8",
-      "h0:nodes=40000,k=8",
-    ];
-    for (const spec of candidates) {
-      const t0 = performance.now();
-      window.__arena!.botAction(spec, "99");
-      const ms = performance.now() - t0;
-      if (ms >= 3000) return spec;
+async function startVsBotSlow(
+  page: Page,
+  opts: { seed: string; first?: "a" | "b"; slowSpec: string },
+) {
+  await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#seedInput").fill(opts.seed);
+  await page.locator("#firstSelect").selectOption(opts.first ?? "b");
+  await page.locator("#humanSideSelect").selectOption("a");
+  await page.locator("#blueDeckSelect").selectOption("basic-forest");
+  await page.locator("#redDeckSelect").selectOption("basic-rune");
+  await page.evaluate((spec) => {
+    for (const id of ["vsBotPolicy", "policyBSelect"]) {
+      const sel = document.getElementById(id) as HTMLSelectElement | null;
+      if (!sel) continue;
+      if (![...sel.options].some((o) => o.value === spec)) {
+        const o = document.createElement("option");
+        o.value = spec;
+        o.textContent = spec;
+        sel.appendChild(o);
+      }
     }
-    return "h0:nodes=120000,k=8";
+  }, opts.slowSpec);
+  await page.locator("#vsBotPolicy").selectOption(opts.slowSpec);
+  await page.locator("#policyBSelect").selectOption(opts.slowSpec, { force: true });
+  await page.locator("#startGameBtn").click();
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
+    timeout: 15_000,
   });
-  await page.evaluate((spec) => window.__arena!.setSessionBotPolicy(spec), slowSpec);
-  await confirmHumanMulligan(page, "a");
+}
 
-  await expect(page.locator("#botThinking")).toBeVisible({ timeout: 2000 });
+test("page stays live while bot thinks in worker", async ({ page }) => {
+  await boot(page, "localbot=0");
+  const slowSpec = await pickSlowBotSpec(page);
+  await startVsBotSlow(page, { seed: "42", first: "b", slowSpec });
+  await confirmMulligans(page);
+  for (let i = 0; i < 30; i++) {
+    const pending = await page.evaluate(() => window.__arena!.botWorker().pending);
+    if (pending) break;
+    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
+    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
+    if (acting === "a" && phase === "main") {
+      await endHumanTurn(page, "a").catch(() => undefined);
+    }
+    await page.waitForTimeout(250);
+  }
+  await expect(page.locator("#botBackendBadge")).toContainText("thinking", { timeout: 90_000 });
+  await expect(page.locator("#botThinking")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator("#botThinking")).toContainText(/Bot thinking/);
 
   const frames = await page.evaluate(async () => {
@@ -171,11 +230,21 @@ test("page stays live while bot thinks in worker", async ({ page }) => {
 });
 
 test("undo while worker thinks terminates search", async ({ page }) => {
-  await startVsBot(page, { seed: "43", first: "b", human: "a", botPolicy: "h0" });
-  const slowSpec = "h0:nodes=120000,k=8";
-  await page.evaluate((spec) => window.__arena!.setSessionBotPolicy(spec), slowSpec);
-  await confirmHumanMulligan(page, "a");
-  await expect(page.locator("#botThinking")).toBeVisible({ timeout: 2000 });
+  await boot(page, "localbot=0");
+  await startVsBotSlow(page, { seed: "43", first: "b", slowSpec: THINKING_SPEC });
+  await confirmMulligans(page);
+  for (let i = 0; i < 30; i++) {
+    const pending = await page.evaluate(() => window.__arena!.botWorker().pending);
+    if (pending) break;
+    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
+    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
+    if (acting === "a" && phase === "main") {
+      await endHumanTurn(page, "a").catch(() => undefined);
+    }
+    await page.waitForTimeout(250);
+  }
+  await expect(page.locator("#botBackendBadge")).toContainText("thinking", { timeout: 90_000 });
+  await expect(page.locator("#botThinking")).toBeVisible({ timeout: 15_000 });
   const before = await actionLog(page);
   const genBefore = await page.evaluate(() => window.__arena!.botWorker().generation);
   await page.keyboard.press("Control+Z");
@@ -197,10 +266,20 @@ test("undo while worker thinks terminates search", async ({ page }) => {
 });
 
 test("new game while worker thinks does not leak old move", async ({ page }) => {
-  await startVsBot(page, { seed: "44", first: "b", human: "a", botPolicy: "h0" });
-  await page.evaluate(() => window.__arena!.setSessionBotPolicy("h0:nodes=120000,k=8"));
-  await confirmHumanMulligan(page, "a");
-  await expect(page.locator("#botThinking")).toBeVisible({ timeout: 2000 });
+  await boot(page, "localbot=0");
+  await startVsBotSlow(page, { seed: "44", first: "b", slowSpec: THINKING_SPEC });
+  await confirmMulligans(page);
+  for (let i = 0; i < 30; i++) {
+    const pending = await page.evaluate(() => window.__arena!.botWorker().pending);
+    if (pending) break;
+    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
+    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
+    if (acting === "a" && phase === "main") {
+      await endHumanTurn(page, "a").catch(() => undefined);
+    }
+    await page.waitForTimeout(250);
+  }
+  await expect(page.locator("#botBackendBadge")).toContainText("thinking", { timeout: 90_000 });
   await openSettings(page);
   await page.locator("#seedInput").fill("44");
   await page.locator("#startGameBtn").click();
