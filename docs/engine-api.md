@@ -838,6 +838,32 @@ the bot finish its turn greedily up to `osteps`, then `EndTurn`, then
 `hb_worlds_removable` counts worlds where `removal < plain` on the
 `End′` branch. Default `hbcheck=0` — play is byte-identical when off.
 
+### H0 job (`arena_engine::H0Job`)
+
+`H0::choose` is implemented as one in-process decision (`job::choose_sync` →
+`run_h0_decision_mode`). The same logic can be split across wasm workers:
+
+- **Prefix** (single legal, mulligan, candidate filter, fuse guard, root
+  seeds, block deal, determinizations) runs inside `H0Job::start` only.
+- **Kill** (`tkill` / `tkroll` on Main / Combat / Choice): free functions
+  `kill_det` / `kill_roll` rebuild roots from `(state, spec, seed)`; the
+  coordinator consumes `KillDetOutcome` / `KillRollOutcome` via
+  `provide_kill_det` / `provide_kill_roll`. Deterministic kill discards roll
+  stats when it takes (same as native parallel kill).
+- **Consensus lethal** and **one-ply** stay in-process on the coordinator
+  (not split).
+- **`alloc=world`**: `Worlds { budgets }` after lethal; `world(r, budget)` per
+  root on any instance; `finish` merges in world order then runs **suffix**
+  (`lostrank`, `hbk`, `hbcheck`) unchanged.
+- **`alloc=fair` / `root`**: no `Worlds` step — the coordinator runs the full
+  sequential pair loop and returns `Done`.
+
+Contract: for any valid split and world arrival order, the chosen index,
+`last_value`, and `SearchStats` match `H0::choose` on a fresh policy with
+`policy_rng(seed)` (`threads=1` on the job path). Wire types
+`KillDetOutcome`, `KillRollOutcome`, `WorldOutcome` are `serde` JSON-safe
+(`f32` aggregates as `u32` bits in world outcomes).
+
 The owner's standing yardstick (`results` branch, `sweep5/SUMMARY.md`,
 `b79421a`, engine `f7b0a61`, data seed 6, 16 oracle decks, wall 3 h 38)
 flipped the default to the pair:
@@ -1051,6 +1077,12 @@ The WASM binary `include_str!`s every authored `cards/**/*.json` except `cards/o
 | `turn()` | number | round number (`0` during mulligan) |
 | `winner()` | string \| null | `"a"` / `"b"` / `null` |
 | `botAction(policy, seed)` | string | one `NeutralAction` JSON for the acting player. `policy` is any `parse_spec` string (it always was — `by_name` is `parse_spec`; the `Game` caches a `Box<dyn Policy>` keyed by that string). `seed` is a bigint or number. Unknown specs throw a string. |
+| `botActionValue(policy, seed)` | string | `{"action":<NeutralAction>,"value":<number\|null>}` — fresh `H0` per call (like Python `bot_action_value`), with `value` = `last_value()` after `choose`. |
+| `h0JobStart(policy, seed)` | string | Begin a stepped H0 decision on this position. Returns `{"step":"done","action":…,"value":…}`, `{"step":"kill","roll":true\|false}`, `{"step":"await_roll"}`, or `{"step":"worlds","budgets":[…]}`. Replaces any prior job on this `Game`. |
+| `h0KillDet(policy, seed)` / `h0KillRoll(policy, seed)` | string | Run one kill solver on any `Game` at the same position (rebuilds roots from `state` + `spec` + `seed`). JSON `KillDetOutcome` / `KillRollOutcome` (includes `stats`). |
+| `h0JobKillDet(outcomeJson)` / `h0JobKillRoll(outcomeJson)` | string | Feed an outcome from another worker; returns the next step JSON. |
+| `h0JobWorld(policy, seed, r, budget)` | string | One world's `search_world` budget slice; JSON `WorldOutcome` (`acc_bits` / `worst_bits` are raw `f32` bits). |
+| `h0JobFinish(outcomesJson)` | string | Merge world outcomes (any order; each `r` exactly once) and run holdback / lost-rank suffix; returns `{"step":"done",…}`. |
 | `cardText(id)` | string | JSON `{id, name, text, kind, cost, …}` from the baked bundle. Cards also include `crests` and `forms` (see below). Crest / faith ids omit both (do not recurse). |
 | `bundleInfo()` | string | `{cards, crests, bytes}` |
 | `version()` | string | git SHA baked at build, or `"dev"` |
