@@ -39,7 +39,6 @@ declare global {
       };
       setSessionBotPolicy(spec: string): void;
       benchResult(): unknown | null;
-      measureBotPolicyMs(spec: string): number;
       reseed(seed: string | number | bigint): void;
       exportLog(): unknown;
       exportPositionLog(): unknown;

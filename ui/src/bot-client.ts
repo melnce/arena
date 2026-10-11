@@ -15,6 +15,7 @@ let lastMeta: BotWorkerStepMeta = {};
 let worker: Worker | null = null;
 let workerGeneration = 0;
 let pendingId: number | null = null;
+let nextRequestId = 1;
 let permanentError: string | null = null;
 let thinking = false;
 
@@ -35,6 +36,18 @@ function botWorkerQueryFlag(): string | null {
     return new URLSearchParams(location.search).get("botworker");
   } catch {
     return null;
+  }
+}
+
+function botWorkerSpinMs(): number {
+  try {
+    const raw = new URLSearchParams(location.search).get("botworkerspin");
+    if (!raw) return 0;
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return Math.floor(n);
+  } catch {
+    return 0;
   }
 }
 
@@ -88,6 +101,7 @@ function policyUsesWorker(policy: string): boolean {
 
 export function shouldUseBotWorker(s: Session): boolean {
   if (!botWorkerEnabled()) return false;
+  if (s.game.phase() === "mulligan") return false;
   const policy = botPolicyFor(s, s.game.acting() as PlayerId);
   return policyUsesWorker(policy);
 }
@@ -101,16 +115,9 @@ export async function botStepWorker(
   const policy = botPolicyFor(s, acting);
   lastMeta = {};
 
-  if (botWorkerQueryFlag() === "fail") {
-    permanentError = permanentError ?? "forced worker failure (test)";
-    terminateBotWorker();
-    lastMeta = { error: permanentError };
-    return botStepWithSeed(s, seed);
-  }
-
   if (!worker) spawnWorker();
   const w = worker!;
-  const id = (pendingId = Date.now());
+  const id = (pendingId = nextRequestId++);
   thinking = true;
   notifyThinkingChange();
 
@@ -140,7 +147,13 @@ export async function botStepWorker(
   };
 
   const body = localBotRequestBody(s, policy, seed.toString());
-  const req: DecideRequest = { type: "decide", id, ...body };
+  const req: DecideRequest = {
+    type: "decide",
+    id,
+    ...body,
+    spinMs: botWorkerSpinMs(),
+    fail: botWorkerQueryFlag() === "fail",
+  };
 
   return new Promise<EngineEvent[]>((resolve) => {
     let settled = false;

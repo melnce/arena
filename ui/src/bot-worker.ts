@@ -22,6 +22,8 @@ export type DecideRequest = {
   botSeed: string;
   hash: string;
   fail?: boolean;
+  /** Test-only: busy-spin in the worker before `botAction` (`?botworkerspin=`). */
+  spinMs?: number;
 };
 
 export type DecideReply =
@@ -108,6 +110,15 @@ function reachPosition(
   return { game, n, ended: true };
 }
 
+function busySpin(ms: number): void {
+  if (ms <= 0) return;
+  const end = performance.now() + ms;
+  let x = 1;
+  while (performance.now() < end) {
+    x = (x * 1.000001 + 0.1) % 1e9;
+  }
+}
+
 function handleDecide(req: DecideRequest): DecideReply {
   if (req.fail) {
     return { type: "error", id: req.id, message: "forced worker failure (test)" };
@@ -119,6 +130,7 @@ function handleDecide(req: DecideRequest): DecideReply {
     if (h !== req.hash) {
       return { type: "error", id: req.id, message: `hash mismatch (expected ${req.hash}, got ${h})` };
     }
+    busySpin(req.spinMs ?? 0);
     const t0 = performance.now();
     const raw = game.botAction(req.policy, req.botSeed);
     const ms = performance.now() - t0;

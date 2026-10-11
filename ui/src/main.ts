@@ -1,4 +1,4 @@
-import init, { botPolicies, bundleInfo, Game, version } from "../pkg/arena_wasm.js";
+import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
 import { publicUrl } from "./base.ts";
 import { catalogIds, decks, loadCatalog, lookupText, parseDeckJson } from "./catalog.ts";
 import { clearFloaters, reflashDamage, spawnFloaters } from "./fct.ts";
@@ -278,18 +278,6 @@ function exposeArena(): void {
       if (sel) sel.value = spec;
     },
     benchResult: () => benchResult(),
-    measureBotPolicyMs: (spec: string) => {
-      const deckA = JSON.stringify({ "10051110": 40 });
-      const deckB = JSON.stringify({ "10052110": 40 });
-      const game = new Game("1", deckA, deckB, "a");
-      try {
-        const t0 = performance.now();
-        game.botAction(spec, "1");
-        return performance.now() - t0;
-      } finally {
-        game.free();
-      }
-    },
     catalogIds,
     cardText: (id) => lookupText(id),
     spotlightLog: () => spotlightLog(),

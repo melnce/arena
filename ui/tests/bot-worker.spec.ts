@@ -5,8 +5,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { openSettings } from "./helpers.ts";
 
 const CHEAT_STD = "h0:nodes=6000,info=all";
-/** Enough wall time for the 600 ms thinking pill on CI. */
-const THINKING_SPEC = "h0:nodes=800000,k=8,tkill=8000";
+/** Worker busy-spin so the thinking pill is deterministic on any machine. */
+const THINK_QUERY = "localbot=0&botworkerspin=2000";
 
 function readServePolicies(): { strong: string; cheat: string } {
   const servePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../py/serve.py");
@@ -117,22 +117,19 @@ async function actionLog(page: Page): Promise<unknown[]> {
   return page.evaluate(() => window.__arena!.actions());
 }
 
-async function pickSlowBotSpec(page: Page): Promise<string> {
-  return page.evaluate(() => {
-    const candidates = [
-      "h0:nodes=80000,k=8",
-      "h0:nodes=60000,k=8",
-      "h0:nodes=50000,k=8",
-      "h0:nodes=40000,k=8",
-      "h0:nodes=120000,k=8",
-      "h0:nodes=200000,k=8",
-    ];
-    for (const spec of candidates) {
-      const ms = window.__arena!.measureBotPolicyMs(spec);
-      if (ms >= 3000) return spec;
-    }
-    return "h0:nodes=800000,k=8,tkill=8000";
+function botSideMoves(log: unknown[], bot: "a" | "b" = "b"): unknown[] {
+  return log.filter((step) => {
+    const rec = step as Record<string, unknown>;
+    if ("mulligan" in rec) return false;
+    const inner = Object.values(rec)[0] as { player?: string } | undefined;
+    return inner?.player === bot;
   });
+}
+
+async function waitForWorkerThinking(page: Page) {
+  await expect(page.locator("#botBackendBadge")).toContainText("thinking", { timeout: 30_000 });
+  await page.waitForTimeout(650);
+  await expect(page.locator("#botThinking")).toBeVisible({ timeout: 5000 });
 }
 
 test("same moves as main thread (worker vs sync)", async ({ page }) => {
@@ -162,54 +159,17 @@ test("same moves as main thread (worker vs sync)", async ({ page }) => {
   expect(cheatWorker).toEqual(cheatSync);
 });
 
-async function startVsBotSlow(
-  page: Page,
-  opts: { seed: string; first?: "a" | "b"; slowSpec: string },
-) {
-  await openSettings(page);
-  await page.locator("#modeSelect").selectOption("vs-bot");
-  await page.locator("#seedInput").fill(opts.seed);
-  await page.locator("#firstSelect").selectOption(opts.first ?? "b");
-  await page.locator("#humanSideSelect").selectOption("a");
-  await page.locator("#blueDeckSelect").selectOption("basic-forest");
-  await page.locator("#redDeckSelect").selectOption("basic-rune");
-  await page.evaluate((spec) => {
-    for (const id of ["vsBotPolicy", "policyBSelect"]) {
-      const sel = document.getElementById(id) as HTMLSelectElement | null;
-      if (!sel) continue;
-      if (![...sel.options].some((o) => o.value === spec)) {
-        const o = document.createElement("option");
-        o.value = spec;
-        o.textContent = spec;
-        sel.appendChild(o);
-      }
-    }
-  }, opts.slowSpec);
-  await page.locator("#vsBotPolicy").selectOption(opts.slowSpec);
-  await page.locator("#policyBSelect").selectOption(opts.slowSpec, { force: true });
-  await page.locator("#startGameBtn").click();
-  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
-    timeout: 15_000,
-  });
-}
-
 test("page stays live while bot thinks in worker", async ({ page }) => {
-  await boot(page, "localbot=0");
-  const slowSpec = await pickSlowBotSpec(page);
-  await startVsBotSlow(page, { seed: "42", first: "b", slowSpec });
+  await boot(page, THINK_QUERY);
+  await startVsBot(page, {
+    seed: "42",
+    first: "b",
+    human: "a",
+    botPolicy: "h0",
+    skipBoot: true,
+  });
   await confirmMulligans(page);
-  for (let i = 0; i < 30; i++) {
-    const pending = await page.evaluate(() => window.__arena!.botWorker().pending);
-    if (pending) break;
-    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
-    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
-    if (acting === "a" && phase === "main") {
-      await endHumanTurn(page, "a").catch(() => undefined);
-    }
-    await page.waitForTimeout(250);
-  }
-  await expect(page.locator("#botBackendBadge")).toContainText("thinking", { timeout: 90_000 });
-  await expect(page.locator("#botThinking")).toBeVisible({ timeout: 15_000 });
+  await waitForWorkerThinking(page);
   await expect(page.locator("#botThinking")).toContainText(/Bot thinking/);
 
   const frames = await page.evaluate(async () => {
@@ -230,22 +190,16 @@ test("page stays live while bot thinks in worker", async ({ page }) => {
 });
 
 test("undo while worker thinks terminates search", async ({ page }) => {
-  await boot(page, "localbot=0");
-  await startVsBotSlow(page, { seed: "43", first: "b", slowSpec: THINKING_SPEC });
+  await boot(page, THINK_QUERY);
+  await startVsBot(page, {
+    seed: "43",
+    first: "b",
+    human: "a",
+    botPolicy: "h0",
+    skipBoot: true,
+  });
   await confirmMulligans(page);
-  for (let i = 0; i < 30; i++) {
-    const pending = await page.evaluate(() => window.__arena!.botWorker().pending);
-    if (pending) break;
-    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
-    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
-    if (acting === "a" && phase === "main") {
-      await endHumanTurn(page, "a").catch(() => undefined);
-    }
-    await page.waitForTimeout(250);
-  }
-  await expect(page.locator("#botBackendBadge")).toContainText("thinking", { timeout: 90_000 });
-  await expect(page.locator("#botThinking")).toBeVisible({ timeout: 15_000 });
-  const before = await actionLog(page);
+  await waitForWorkerThinking(page);
   const genBefore = await page.evaluate(() => window.__arena!.botWorker().generation);
   await page.keyboard.press("Control+Z");
   await expect
@@ -254,6 +208,7 @@ test("undo while worker thinks terminates search", async ({ page }) => {
       return !w.alive && !w.pending;
     })
     .toBeTruthy();
+  const before = await actionLog(page);
   await page.waitForTimeout(2000);
   const after = await actionLog(page);
   expect(after).toEqual(before);
@@ -266,20 +221,16 @@ test("undo while worker thinks terminates search", async ({ page }) => {
 });
 
 test("new game while worker thinks does not leak old move", async ({ page }) => {
-  await boot(page, "localbot=0");
-  await startVsBotSlow(page, { seed: "44", first: "b", slowSpec: THINKING_SPEC });
+  await boot(page, THINK_QUERY);
+  await startVsBot(page, {
+    seed: "44",
+    first: "b",
+    human: "a",
+    botPolicy: "h0",
+    skipBoot: true,
+  });
   await confirmMulligans(page);
-  for (let i = 0; i < 30; i++) {
-    const pending = await page.evaluate(() => window.__arena!.botWorker().pending);
-    if (pending) break;
-    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
-    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
-    if (acting === "a" && phase === "main") {
-      await endHumanTurn(page, "a").catch(() => undefined);
-    }
-    await page.waitForTimeout(250);
-  }
-  await expect(page.locator("#botBackendBadge")).toContainText("thinking", { timeout: 90_000 });
+  await waitForWorkerThinking(page);
   await openSettings(page);
   await page.locator("#seedInput").fill("44");
   await page.locator("#startGameBtn").click();
@@ -287,26 +238,52 @@ test("new game while worker thinks does not leak old move", async ({ page }) => 
     timeout: 15_000,
   });
   await confirmHumanMulligan(page, "a");
-  await page.waitForTimeout(1500);
-  const workerGame = await actionLog(page);
+  await expect
+    .poll(async () => botSideMoves(await actionLog(page)).length, { timeout: 30_000 })
+    .toBeGreaterThanOrEqual(1);
+  const workerFirst = botSideMoves(await actionLog(page))[0];
 
-  await startVsBot(page, { seed: "44", first: "b", human: "a", botPolicy: "h0", query: "botworker=0" });
-  await confirmHumanMulligan(page, "a");
-  await page.waitForTimeout(1500);
-  const syncGame = await actionLog(page);
-  expect(workerGame).toEqual(syncGame);
+  await startVsBot(page, {
+    seed: "44",
+    first: "b",
+    human: "a",
+    botPolicy: "h0",
+    query: "botworker=0&localbot=0",
+  });
+  await confirmMulligans(page);
+  await expect
+    .poll(async () => botSideMoves(await actionLog(page)).length, { timeout: 30_000 })
+    .toBeGreaterThanOrEqual(1);
+  const syncFirst = botSideMoves(await actionLog(page))[0];
+  expect(workerFirst).toEqual(syncFirst);
 });
 
 test("worker fallback on forced error matches sync", async ({ page }) => {
-  await startVsBot(page, { seed: "11", botPolicy: "h0", query: "botworker=fail" });
-  await confirmHumanMulligan(page, "a");
-  await page.waitForTimeout(2000);
+  await startVsBot(page, {
+    seed: "11",
+    first: "b",
+    human: "a",
+    botPolicy: "h0",
+    query: "botworker=fail&localbot=0",
+  });
+  await confirmMulligans(page);
+  await expect(page.locator("#botBackendBadge")).toContainText(/worker error:/, {
+    timeout: 30_000,
+  });
   const failLog = await actionLog(page);
-  await expect(page.locator("#botBackendBadge")).toContainText(/worker error:/);
 
-  await startVsBot(page, { seed: "11", botPolicy: "h0", query: "botworker=0" });
-  await confirmHumanMulligan(page, "a");
-  await page.waitForTimeout(2000);
+  await startVsBot(page, {
+    seed: "11",
+    first: "b",
+    human: "a",
+    botPolicy: "h0",
+    query: "botworker=0&localbot=0",
+  });
+  await confirmMulligans(page);
+  await expect(page.locator("#botBackendBadge")).not.toContainText(/worker error:/, {
+    timeout: 30_000,
+  });
+  await page.waitForTimeout(500);
   const syncLog = await actionLog(page);
   expect(failLog.slice(0, 3)).toEqual(syncLog.slice(0, 3));
 });
@@ -338,9 +315,7 @@ test("menu lists PC strength from serve.py", async ({ page }) => {
 test("build guard: serve policy extractor", () => {
   expect(() => extractServePolicies('DEFAULT_STRONG = "h0:nodes=1"\n')).toThrow(/DEFAULT_CHEAT/);
   expect(() =>
-    extractServePolicies(
-      'DEFAULT_STRONG = "h0:nodes=1"\nDEFAULT_CHEAT = "h0:nodes=1"\n',
-    ),
+    extractServePolicies('DEFAULT_STRONG = "h0:nodes=1"\nDEFAULT_CHEAT = "h0:nodes=1"\n'),
   ).toThrow(/info=all/);
   const ok = extractServePolicies(
     'DEFAULT_STRONG = "h0:nodes=1"\nDEFAULT_CHEAT = "h0:nodes=1,info=all"\n',

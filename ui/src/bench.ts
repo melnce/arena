@@ -23,6 +23,7 @@ const DRIVE_POLICY = "h0:nodes=300";
 
 let benchWorker: Worker | null = null;
 let lastBenchJson: unknown = null;
+let nextBenchRequestId = 1;
 
 export function benchResult(): unknown | null {
   return lastBenchJson;
@@ -122,7 +123,7 @@ export function initBenchUi(): void {
           targetTurn: p.targetTurn,
         });
       }
-      const id = Date.now();
+      const id = nextBenchRequestId++;
       const req: BenchRequest = {
         type: "bench",
         id,
