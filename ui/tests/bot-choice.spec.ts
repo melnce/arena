@@ -2,11 +2,16 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
+import {
+  CUSTOM_SPEC_MENU_VALUE,
+  fullStrengthPolicyLabel,
+  policyOptionLabel,
+} from "../src/policy-labels.ts";
 import { ART, artShot, openSettings } from "./helpers.ts";
 
 const STRONG = "h0:nodes=6000";
 const THINK_QUERY = "localbot=0&botworkerspin=8000";
-const CUSTOM_MENU = "__custom_spec__";
+const CUSTOM_MENU = CUSTOM_SPEC_MENU_VALUE;
 const CUSTOM_SPEC = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000";
 
 function readPcPolicies(): { strong: string; cheat: string } {
@@ -231,16 +236,58 @@ async function saveCustomSpec(page: Page, spec: string) {
   await page.locator("#customBotSpecSave").click();
 }
 
-test("menu lists renamed full-strength options and custom spec entry", async ({ page }) => {
+test("vsBotPolicy labels match the policy table", async ({ page }) => {
   await boot(page);
   await openSettings(page);
   await page.locator("#modeSelect").selectOption("vs-bot");
-  const labels = await page.locator("#vsBotPolicy option").evaluateAll((opts) =>
-    (opts as HTMLOptionElement[]).map((o) => o.textContent ?? ""),
+  const opts = await page.locator("#vsBotPolicy option").evaluateAll((els) =>
+    (els as HTMLOptionElement[]).map((o) => ({ value: o.value, label: o.textContent ?? "" })),
   );
-  expect(labels).toContain("h0 (full strength, newest)");
-  expect(labels).toContain("h0 (cheater, full strength, newest)");
-  expect(labels).toContain("Custom spec…");
+  const byValue = new Map(opts.map((o) => [o.value, o.label]));
+  expect(byValue.get("random")).toBe(policyOptionLabel("random", PC.strong, PC.cheat));
+  expect(byValue.get("first-legal")).toBe(policyOptionLabel("first-legal", PC.strong, PC.cheat));
+  expect(byValue.get("h0")).toBe(policyOptionLabel("h0", PC.strong, PC.cheat));
+  expect(byValue.get(STRONG)).toBe(policyOptionLabel(STRONG, PC.strong, PC.cheat));
+  expect(byValue.get("h0:nodes=6000,info=all")).toBe(
+    policyOptionLabel("h0:nodes=6000,info=all", PC.strong, PC.cheat),
+  );
+  expect(byValue.get(PC.strong)).toBe(policyOptionLabel(PC.strong, PC.strong, PC.cheat));
+  expect(byValue.get(PC.cheat)).toBe(policyOptionLabel(PC.cheat, PC.strong, PC.cheat));
+  expect(byValue.get(CUSTOM_MENU)).toBe("Custom spec…");
+});
+
+test("full strength label follows nodes= in the spec string", () => {
+  const spec = "h0:nodes=48000,horizon=2";
+  expect(fullStrengthPolicyLabel(spec, false)).toBe("Full strength — 48 000 nodes");
+  expect(fullStrengthPolicyLabel("h0:horizon=2", false)).toBe("Full strength");
+});
+
+test("local server override hint when mocked server is up", async ({ page }) => {
+  await page.route("http://127.0.0.1:8765/**", async (route) => {
+    if (route.request().url().includes("/health")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          ok: true,
+          strong: "h0:nodes=16000",
+          cpus: 8,
+          version: "test",
+        }),
+      });
+      return;
+    }
+    await route.fulfill({ status: 404, body: "not found" });
+  });
+  await boot(page);
+  await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#vsBotPolicy").selectOption(STRONG);
+  const hint = page.locator("#vsBotPolicyHint");
+  await expect(hint).toContainText("Your local bot server is running", { timeout: 10_000 });
+  await expect(hint).toContainText("h0:nodes=16000");
+  await page.locator("#localBotToggle").uncheck();
+  await expect(hint).not.toContainText("Your local bot server is running", { timeout: 5_000 });
 });
 
 test("custom spec: save, reload, start and rematch use spec; badge shows spec", async ({ page }) => {
@@ -309,4 +356,15 @@ test("tablet screenshots: menu, custom error, badge with spec", async ({ page })
   await confirmMulligans(page);
   await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser (${CUSTOM_SPEC})`);
   await artShot(page.locator("#appRoot"), `${ART}/bot_choice_spec_badge.png`);
+});
+
+test("tablet screenshot: policy menu labels", async ({ page }) => {
+  await page.setViewportSize({ width: 1180, height: 820 });
+  await boot(page);
+  await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#vsBotPolicy").evaluate((el) => {
+    (el as HTMLSelectElement).size = 12;
+  });
+  await artShot(page.locator("#vsBotFields"), `${ART}/bot_choice_menu_labels.png`);
 });

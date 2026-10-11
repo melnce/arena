@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
+import { fullStrengthPolicyLabel } from "../src/policy-labels.ts";
 import { openSettings } from "./helpers.ts";
 
 const CHEAT_STD = "h0:nodes=6000,info=all";
@@ -365,10 +366,13 @@ test("menu lists PC strength from serve.py", async ({ page }) => {
       label: el.textContent ?? "",
     })),
   );
-  const cheatIdx = opts.findIndex((o) => o.label.includes("cheater — sees your hand"));
+  const cheatIdx = opts.findIndex((o) => o.value === "h0:nodes=6000,info=all");
   expect(cheatIdx).toBeGreaterThanOrEqual(0);
-  expect(opts[cheatIdx + 1]).toEqual({ value: strong, label: "h0 (full strength, newest)" });
-  expect(opts[cheatIdx + 2]).toEqual({ value: cheat, label: "h0 (cheater, full strength, newest)" });
+  expect(opts[cheatIdx + 1]).toEqual({ value: strong, label: fullStrengthPolicyLabel(strong, false) });
+  expect(opts[cheatIdx + 2]).toEqual({
+    value: cheat,
+    label: fullStrengthPolicyLabel(cheat, true),
+  });
   for (const id of ["#policyASelect", "#policyBSelect"]) {
     const values = await page.locator(`${id} option`).evaluateAll((els) =>
       els.map((el) => (el as HTMLOptionElement).value),

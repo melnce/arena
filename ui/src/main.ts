@@ -67,6 +67,13 @@ import {
   spotlightLog,
 } from "./spotlight.ts";
 import { installAudioUnlock, playTurnPing, turnPingOn, turnPings } from "./sound.ts";
+import {
+  CUSTOM_SPEC_MENU_VALUE,
+  POLICY_CHEAT_H0,
+  POLICY_STRONG_H0,
+  policyOptionLabel,
+  servedFullStrengthTitle,
+} from "./policy-labels.ts";
 import { readShareParams, writeShareParams } from "./share.ts";
 import type {
   EngineEvent,
@@ -522,18 +529,15 @@ function formConfig(): SessionConfig {
  * adds nothing over the budget alone. A later setting is a one-line
  * edit here.
  */
-const STRONG_H0 = "h0:nodes=6000";
+const STRONG_H0 = POLICY_STRONG_H0;
 const STRONG_H0_TITLE =
   "6 000 search nodes per decision — stronger, ~2× slower; default on desktop";
-const CHEAT_H0 = "h0:nodes=6000,info=all";
+const CHEAT_H0 = POLICY_CHEAT_H0;
 const CHEAT_H0_TITLE =
   "Full information: sees your hand and what is left in both decks — not what will be drawn (draws and random effects stay random). For sparring — not a fair opponent.";
 const STANDARD_H0_TITLE = "Default h0 search (~2 000 nodes per decision)";
 const RANDOM_POLICY_TITLE = "Uniform random among legal actions";
 const FIRST_LEGAL_POLICY_TITLE = "First legal action in engine order";
-const SERVED_STRONG_LABEL = "h0 (full strength, newest)";
-const SERVED_CHEAT_LABEL = "h0 (cheater, full strength, newest)";
-const CUSTOM_SPEC_MENU_VALUE = "__custom_spec__";
 const CUSTOM_SPEC_STORAGE_KEY = "svwb.customBotSpec";
 
 let vsBotPolicySelectWired = false;
@@ -932,6 +936,12 @@ function refreshVsBotPolicyHint(): void {
   if (session?.cfg.mode === "vs-bot" && vs.value !== runningVsBotPolicy(session)) {
     lines.push("Applies from the next game (Start or Rematch).");
   }
+  if (localBotWouldOverrideMenu()) {
+    const spec = localBotMenuOverrideSpec(vs.value);
+    lines.push(
+      `Your local bot server is running and plays its own bot (${spec}) for every h0 choice. To play the bot selected here in the browser, turn off “Use local bot server when available”.`,
+    );
+  }
   el.style.whiteSpace = "pre-line";
   el.textContent = lines.join("\n");
 }
@@ -1180,16 +1190,24 @@ function appendPolicyOption(
   sel.appendChild(o);
 }
 
-function servedStrongTitle(): string {
-  return `From py/serve.py at build time (${__SERVED_STRONG__}). Your PC's local server may run an older spec; its badge shows what it actually plays.`;
+function localBotWouldOverrideMenu(): boolean {
+  if (localBotQueryOff() || !localBotToggleOn() || !localBot || localBotGameError) return false;
+  const policy = selectedVsBotPolicy();
+  if (!policy || policy === CUSTOM_SPEC_MENU_VALUE) return false;
+  if (!policy.startsWith("h0")) return false;
+  if (isCheaterPolicy(policy) && !localBot.cheat) return false;
+  return true;
 }
 
-function servedCheatTitle(): string {
-  return `${CHEAT_H0_TITLE} From py/serve.py at build time (${__SERVED_CHEAT__}). Your PC's local server may run an older spec; its badge shows what it actually plays.`;
+function localBotMenuOverrideSpec(menuPolicy: string): string {
+  if (!localBot) return "";
+  if (isCheaterPolicy(menuPolicy) && localBot.cheat) return localBot.cheat;
+  return localBot.strong;
 }
 
 function populatePolicies(): void {
   const names = JSON.parse(botPolicies()) as string[];
+  const label = (value: string) => policyOptionLabel(value, __SERVED_STRONG__, __SERVED_CHEAT__);
   for (const id of ["policyASelect", "policyBSelect", "vsBotPolicy"]) {
     const sel = byId<HTMLSelectElement>(id);
     if (!sel) continue;
@@ -1197,19 +1215,24 @@ function populatePolicies(): void {
     sel.innerHTML = "";
     for (const n of names) {
       if (n === "random") {
-        appendPolicyOption(sel, n, n, RANDOM_POLICY_TITLE);
+        appendPolicyOption(sel, n, label(n), RANDOM_POLICY_TITLE);
       } else if (n === "first-legal") {
-        appendPolicyOption(sel, n, n, FIRST_LEGAL_POLICY_TITLE);
+        appendPolicyOption(sel, n, label(n), FIRST_LEGAL_POLICY_TITLE);
       } else if (n === "h0") {
-        appendPolicyOption(sel, n, "h0 (standard)", STANDARD_H0_TITLE);
+        appendPolicyOption(sel, n, label(n), STANDARD_H0_TITLE);
       } else {
-        appendPolicyOption(sel, n, n);
+        appendPolicyOption(sel, n, label(n));
       }
       if (n === "h0") {
-        appendPolicyOption(sel, STRONG_H0, "h0 (strong)", STRONG_H0_TITLE);
-        appendPolicyOption(sel, CHEAT_H0, "h0 (cheater — sees your hand)", CHEAT_H0_TITLE);
-        appendPolicyOption(sel, __SERVED_STRONG__, SERVED_STRONG_LABEL, servedStrongTitle());
-        appendPolicyOption(sel, __SERVED_CHEAT__, SERVED_CHEAT_LABEL, servedCheatTitle());
+        appendPolicyOption(sel, STRONG_H0, label(STRONG_H0), STRONG_H0_TITLE);
+        appendPolicyOption(sel, CHEAT_H0, label(CHEAT_H0), CHEAT_H0_TITLE);
+        appendPolicyOption(sel, __SERVED_STRONG__, label(__SERVED_STRONG__), servedFullStrengthTitle(__SERVED_STRONG__));
+        appendPolicyOption(
+          sel,
+          __SERVED_CHEAT__,
+          label(__SERVED_CHEAT__),
+          `${CHEAT_H0_TITLE} ${servedFullStrengthTitle(__SERVED_CHEAT__)}`,
+        );
       }
     }
     if (isVs) {
