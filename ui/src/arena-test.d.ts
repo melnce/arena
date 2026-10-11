@@ -83,6 +83,13 @@ declare global {
       playTurnPing(): void;
       captures(): { waiting: number; uploaded: number; lastError: string | null };
       flushCaptures(): Promise<void>;
+      storeCaptureNow(): Promise<void>;
+      captureBotMeta(): Array<{
+        ply: number;
+        backend: "worker" | "main" | "server";
+        ms: number | null;
+        value: number | null;
+      }>;
     };
   }
 }

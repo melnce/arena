@@ -1,3 +1,8 @@
+import { execFileSync } from "node:child_process";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { expect, test } from "@playwright/test";
 import * as captureCore from "../../api/_lib/capture-core.ts";
 
@@ -125,6 +130,7 @@ test("capture API: validation errors", async () => {
     { body: { ...baseCapture(), winner: "draw" }, reason: "winner" },
     { body: { ...baseCapture(), deckA: [] }, reason: "deckA" },
     { body: { ...baseCapture(), created: "not-a-date" }, reason: "created" },
+    { body: { ...baseCapture(), created: "2026-10-11T12:00:00" }, reason: "created lenient" },
   ];
   for (const c of cases) {
     const { res, text } = await post(c.body);
@@ -241,6 +247,13 @@ test("capture API: keep vs replace rules", async () => {
   );
   expect(keepShorter.json.kept).toBe(true);
   expect(keepShorter.puts).toBe(0);
+
+  const keepEqual = await run(
+    baseCapture({ final: true, actions: [{ a: 1 }, { a: 2 }] }),
+    baseCapture({ final: true, actions: [{ a: 1 }, { a: 2 }] }),
+  );
+  expect(keepEqual.json.kept).toBe(true);
+  expect(keepEqual.puts).toBe(0);
 });
 
 test("capture API: 409 retry once", async () => {
@@ -271,4 +284,36 @@ test("capture API: 409 retry once", async () => {
   expect(res.status).toBe(200);
   expect(putCount).toBe(2);
   expect(getCount).toBeGreaterThanOrEqual(2);
+});
+
+test("compiled capture.js POST handler loads (Node ESM)", async () => {
+  const out = mkdtempSync(path.join(tmpdir(), "capture-compile-"));
+  const root = path.resolve(import.meta.dirname, "../..");
+  execFileSync(
+    "npx",
+    [
+      "tsc",
+      path.join(root, "api/capture.ts"),
+      path.join(root, "api/_lib/capture-core.ts"),
+      "--module",
+      "nodenext",
+      "--target",
+      "es2022",
+      "--types",
+      "node",
+      "--skipLibCheck",
+      "--outDir",
+      out,
+    ],
+    { cwd: path.join(root, "ui"), stdio: "pipe" },
+  );
+  const mod = await import(pathToFileURL(path.join(out, "capture.js")).href);
+  const res = await mod.POST(
+    new Request("http://localhost/api/capture", {
+      method: "POST",
+      headers: { "x-capture-key": "any" },
+      body: "{}",
+    }),
+  );
+  expect(res.status).toBe(503);
 });

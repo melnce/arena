@@ -15,6 +15,8 @@ import {
 import { byId } from "./render/ids.ts";
 import { benchResult, initBenchUi } from "./bench.ts";
 import {
+  captureBotMetaForTests,
+  storeCaptureNowForTest,
   captureQueueStats,
   flushCaptures,
   initCaptures,
@@ -300,6 +302,8 @@ function exposeArena(): void {
     playTurnPing: () => playTurnPing(),
     captures: () => captureQueueStats(),
     flushCaptures: () => flushCaptures(),
+    captureBotMeta: () => captureBotMetaForTests(),
+    storeCaptureNow: () => storeCaptureNowForTest(),
     mountNamedCounter: (vars) => {
       const host = document.getElementById("blueBoard") ?? document.body;
       const inst = {
@@ -594,10 +598,10 @@ async function startFromForm(): Promise<void> {
       cfg.policyB = vs;
     }
   }
-  await startSession(cfg);
+  startSession(cfg);
 }
 
-async function startSession(cfg: SessionConfig): Promise<void> {
+function startSession(cfg: SessionConfig): void {
   watchPlaying = false;
   spotlightEpoch += 1;
   botLoopSession = null;
@@ -608,7 +612,7 @@ async function startSession(cfg: SessionConfig): Promise<void> {
   clearBotDecisionPending();
   resetSpotlightSession();
   const previous = session;
-  await onSessionStart(cfg, previous);
+  onSessionStart(cfg, previous);
   disposeSession(session);
   session = createSession(cfg);
   setCaptureSessionRef(session);
@@ -674,7 +678,7 @@ async function rematch(keepSeed: boolean): Promise<void> {
     const seedInput = byId<HTMLInputElement>("seedInput");
     if (seedInput) seedInput.value = cfg.seed.toString();
   }
-  await startSession(cfg);
+  startSession(cfg);
 }
 
 function localBotQueryOff(): boolean {

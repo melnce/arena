@@ -12,6 +12,7 @@ export type FetchFn = typeof fetch;
 const MAX_BODY = 1_048_576;
 const GAME_ID_RE = /^[0-9]+-[0-9a-f]{8}$/;
 const SESSION_ID_RE = /^[0-9a-z]{10}$/;
+const CREATED_ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
 
 export function canonicalDeckJson(deck: Record<string, number>): string {
   const keys = Object.keys(deck).sort();
@@ -83,7 +84,7 @@ export function validateCaptureBody(raw: string): { ok: true; capture: Record<st
   const decks = parseDecks(rec);
   if (typeof decks === "string") return { ok: false, error: decks };
   const created = rec.created;
-  if (typeof created !== "string" || Number.isNaN(Date.parse(created))) {
+  if (typeof created !== "string" || !CREATED_ISO_RE.test(created)) {
     return { ok: false, error: "created must be an ISO timestamp" };
   }
   return { ok: true, capture: rec };
@@ -108,7 +109,7 @@ function shouldKeepStored(stored: Record<string, unknown>, incoming: Record<stri
   if (storedFinal && !incomingFinal) return true;
   const storedLen = actionsLen(stored);
   const incomingLen = actionsLen(incoming);
-  if (storedFinal === incomingFinal && storedLen > incomingLen) return true;
+  if (storedFinal === incomingFinal && storedLen >= incomingLen) return true;
   return false;
 }
 
@@ -236,7 +237,8 @@ export async function handleCapturePost(
   const raw = await request.text();
   const validated = validateCaptureBody(raw);
   if (!validated.ok) {
-    return jsonResponse(400, { error: validated.error });
+    const reason = validated.ok === false ? validated.error : "invalid body";
+    return jsonResponse(400, { error: reason });
   }
   const capture = validated.capture;
   const path = capturePath(capture);
@@ -245,7 +247,7 @@ export async function handleCapturePost(
   }
   try {
     const branchOk = await ensureBranch(cfg, fetchFn);
-    if (!branchOk.ok) {
+    if (branchOk.ok === false) {
       return jsonResponse(502, { error: "GitHub branch error", status: branchOk.status });
     }
     let stored = await readStoredCapture(cfg, path, fetchFn);

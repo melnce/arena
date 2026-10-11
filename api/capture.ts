@@ -1,4 +1,4 @@
-import { handleCapturePost } from "./_lib/capture-core.ts";
+import { handleCapturePost } from "./_lib/capture-core.js";
 
 export async function POST(request: Request): Promise<Response> {
   const cfg = {

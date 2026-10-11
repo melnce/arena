@@ -37,6 +37,12 @@ returned a root value. Other fields align with the local server: `policy`,
 
 `POST /api/capture` (see `api/capture.ts`) validates the body, then commits via
 the GitHub Contents API on branch `captures` (created from `main` if missing).
+The function creates that branch from `main`'s head when it does not exist yet,
+so `vercel.json` on **`main`** must include `"git": {"deploymentEnabled":
+{"captures": false}}` before the first upload — otherwise every capture commit
+would trigger a full Vercel deployment (wasm rebuild). GitHub Actions already
+deploy only from `main` and pull requests.
+
 Existing files are kept when the stored capture is `final` and the upload is
 partial, or when the same `final` flag applies and the stored log is longer.
 

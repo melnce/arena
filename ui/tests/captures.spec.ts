@@ -1,5 +1,4 @@
 import { expect, test, type Page } from "@playwright/test";
-import { makeGameId } from "../src/captures.ts";
 import { openSettings } from "./helpers.ts";
 
 const ONE_COST = "10052110";
@@ -107,12 +106,8 @@ test("finished vs-bot game uploads once with final capture", async ({ page }) =>
   await expect.poll(() => posts.length).toBe(1);
   const body = posts[0]!.body;
   expect(body.final).toBe(true);
-  const decks = {
-    deckA: deck,
-    deckB: deck,
-  };
-  const expectedId = await makeGameId("9001", deck, deck, "a");
-  expect(body.game_id).toBe(expectedId);
+  // cd py && python3 -c "from serve import make_game_id; print(make_game_id(9001, {'10052110': 8}, {'10052110': 8}, 'a'))"
+  expect(body.game_id).toBe("9001-d929b0fc");
   expect(body.actions).toEqual(await page.evaluate(() => window.__arena!.actions()));
   expect(body.humanSide).toBe("a");
   expect(body.winner).toBe(
@@ -133,12 +128,9 @@ test("unfinished game stored as partial when new session starts", async ({ page 
   const botDeck = await importDeck(page, "cap2-bot.json", deck);
   await startVsBot(page, { seed: "77", humanDeck, botDeck, botPolicy: "first-legal", first: "b" });
   await confirmHumanMulligan(page, "a");
-  await page.evaluate(() => {
-    const legal = window.__arena!.legal() as Array<Record<string, unknown>>;
-    const end = legal.find((a) => "end_turn" in a);
-    if (end) window.__arena!.apply(end);
-  });
-  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", { timeout: 20_000 });
+  await endHumanTurn(page, "a");
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b", { timeout: 30_000 });
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", { timeout: 60_000 });
   const session1 = await page.evaluate(() => {
     const caps = window.__arena!.captures();
     return caps;
@@ -228,7 +220,8 @@ async function endHumanTurn(page: Page, human: "a" | "b" = "a") {
 
 test("bot_meta worker and server value", async ({ page }) => {
   test.setTimeout(90_000);
-  await page.route("http://127.0.0.1:8765/**", async (route) => {
+  let botHits = 0;
+  await page.route("**/127.0.0.1:8765/**", async (route) => {
     const url = route.request().url();
     if (url.includes("/health")) {
       await route.fulfill({
@@ -238,6 +231,7 @@ test("bot_meta worker and server value", async ({ page }) => {
       return;
     }
     if (url.includes("/bot")) {
+      botHits += 1;
       const posted = route.request().postDataJSON() as { botSeed?: string };
       const actionJson = await page.evaluate((s) => window.__arena!.botAction("h0", s), posted.botSeed ?? "1");
       await route.fulfill({
@@ -252,39 +246,64 @@ test("bot_meta worker and server value", async ({ page }) => {
     }
     await route.continue();
   });
-  await boot(page, `#capturekey=${CAPTURE_KEY}`);
+  await boot(page, `?botworker=0#capturekey=${CAPTURE_KEY}`);
   const deck = { [ONE_COST]: 40 };
   const humanDeck = await importDeck(page, "cap6-human.json", deck);
   const botDeck = await importDeck(page, "cap6-bot.json", deck);
   await startVsBot(page, { seed: "606", humanDeck, botDeck, botPolicy: "h0", first: "a" });
   await confirmHumanMulligan(page, "a");
+  await expect
+    .poll(async () => page.evaluate(() => window.__arena!.localBot().backend), { timeout: 15_000 })
+    .toBe("server");
   await endHumanTurn(page, "a");
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b", { timeout: 60_000 });
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", { timeout: 120_000 });
-  await startVsBot(page, { seed: "607", humanDeck, botDeck, botPolicy: "h0", first: "a" });
-  await confirmHumanMulligan(page, "a");
-  const meta = await page.evaluate(async () => {
+  expect(botHits).toBeGreaterThan(0);
+  await expect
+    .poll(async () =>
+      page.evaluate(() =>
+        window.__arena!.captureBotMeta().some((m) => m.backend === "server" && m.value === 12.5),
+      ),
+    )
+    .toBe(true);
+  await page.evaluate(async () => {
+    await window.__arena!.storeCaptureNow();
+  });
+  const replayOk = await page.evaluate(() => {
+    const actions = window.__arena!.actions() as Array<Record<string, unknown>>;
+    if (actions.some((a) => "bot_value" in a)) return false;
+    window.__arena!.loadLog(window.__arena!.exportPositionLog());
+    return window.__arena!.hash().length > 0;
+  });
+  expect(replayOk).toBe(true);
+  const stored = await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const req = indexedDB.open("arena-captures");
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
-    const all = await new Promise<unknown[]>((resolve, reject) => {
-      const tx = db.transaction("captures", "readonly");
-      const r = tx.objectStore("captures").getAll();
-      r.onsuccess = () => resolve(r.result as unknown[]);
-      r.onerror = () => reject(r.error);
-    });
+    const all = await new Promise<Array<{ capture?: { actions?: unknown[]; bot_meta?: unknown[] } }>>(
+      (resolve, reject) => {
+        const tx = db.transaction("captures", "readonly");
+        const r = tx.objectStore("captures").getAll();
+        r.onsuccess = () => resolve(r.result as Array<{ capture?: { actions?: unknown[]; bot_meta?: unknown[] } }>);
+        r.onerror = () => reject(r.error);
+      },
+    );
     db.close();
-    const rec = all[all.length - 1] as { capture?: { bot_meta?: unknown[]; actions?: unknown[] } };
-    return { bot_meta: rec?.capture?.bot_meta ?? [], actions: rec?.capture?.actions ?? [] };
+    const rec = all.find((row) =>
+      (row.capture?.actions as Array<Record<string, unknown>> | undefined)?.some(
+        (a) => a.bot_value === 12.5,
+      ),
+    );
+    return {
+      withValue: Boolean(rec),
+      actions: (rec?.capture?.actions ?? []) as Array<Record<string, unknown>>,
+      bot_meta: (rec?.capture?.bot_meta ?? []) as Array<{ backend: string; value: number | null }>,
+    };
   });
-  const serverSteps = (meta.bot_meta as Array<{ backend: string }>).filter((m) => m.backend === "server");
-  expect(serverSteps.length).toBeGreaterThanOrEqual(1);
-  const withValue = (meta.actions as Array<Record<string, unknown>>).some((a) => a.bot_value === 12.5);
-  expect(withValue).toBe(true);
-  const mainSteps = (meta.bot_meta as Array<{ backend: string }>).filter((m) => m.backend === "main");
-  expect(mainSteps.length + serverSteps.length).toBeGreaterThan(0);
+  expect(stored.withValue).toBe(true);
+  expect(stored.bot_meta.some((m) => m.backend === "server" && m.value === 12.5)).toBe(true);
 });
 
 test("bot_meta worker ms with h0 in browser", async ({ page }) => {
@@ -321,6 +340,44 @@ test("bot_meta worker ms with h0 in browser", async ({ page }) => {
   const workers = workerMeta.filter((m) => m.backend === "worker");
   expect(workers.length).toBeGreaterThan(0);
   expect(workers.every((m) => typeof m.ms === "number" && m.ms >= 0)).toBe(true);
+});
+
+test("visibility hidden after terminal keeps final capture on upload", async ({ page }) => {
+  test.setTimeout(120_000);
+  let fail = true;
+  const posts: Array<Record<string, unknown>> = [];
+  await page.route("**/api/capture", async (route) => {
+    posts.push(route.request().postDataJSON() as Record<string, unknown>);
+    if (fail) {
+      await route.fulfill({ status: 503, body: JSON.stringify({ error: "uploads not configured" }) });
+      return;
+    }
+    await route.fulfill({ status: 200, body: JSON.stringify({ ok: true }) });
+  });
+  await boot(page, `?localbot=0#capturekey=${CAPTURE_KEY}`);
+  const deck = { [ONE_COST]: 8 };
+  const humanDeck = await importDeck(page, "cap-vis-human.json", deck);
+  const botDeck = await importDeck(page, "cap-vis-bot.json", deck);
+  await startVsBot(page, { seed: "909", humanDeck, botDeck, botPolicy: "first-legal", first: "a" });
+  await confirmHumanMulligan(page, "a");
+  await playToTerminal(page);
+  const winner = await page.evaluate(
+    () => (window.__arena!.full() as { winner: string | null }).winner,
+  );
+  fail = false;
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "hidden",
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await openSettings(page);
+  await page.locator("#captureUploadNowBtn").click();
+  await expect.poll(() => posts.length, { timeout: 15_000 }).toBeGreaterThanOrEqual(1);
+  expect(posts.every((p) => p.final === true)).toBe(true);
+  expect(posts.some((p) => p.final !== true)).toBe(false);
+  expect(posts[0]!.winner).toBe(winner);
 });
 
 test("export games downloads captures array", async ({ page }) => {
