@@ -46,6 +46,8 @@ jobs:
   # h0_tkroll ~2m38s release tests (cloud-agent 2026-10-02); timeout 15 like h0_tkill
   # h0_hbcheck ~3m30s release tests (cloud-agent 2026-10-02); timeout 15 like h0_tkroll
   # h0_threads ~7m58s release --include-ignored (cloud-agent 2026-10-11, PR #133)
+  # h0_job release identity ~9.3m wall (556s cargo, 2026-10-11 cloud-agent); GitHub runners
+  # ~0.9–1.8× that (see h0_threads/tkroll/hbcheck notes); 556s×1.5+build ≈15m on slow runners → timeout 25m
   suite:
     name: slow (${{ matrix.suite }})
     runs-on: ubuntu-latest
@@ -174,6 +176,11 @@ jobs:
             filter: ""
             ignored: true
             timeout: 15
+          - suite: h0_job
+            test: h0_job
+            filter: ""
+            ignored: true
+            timeout: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -254,7 +261,8 @@ jobs:
             "h0_tkill": 15,
             "h0_tkroll": 15,
             "h0_hbcheck": 15,
-            "h0_threads": 15
+            "h0_threads": 15,
+            "h0_job": 25
           }'
 
           failed_jobs=""
@@ -357,7 +365,8 @@ jobs:
             "h0_tkill": 15,
             "h0_tkroll": 15,
             "h0_hbcheck": 15,
-            "h0_threads": 15
+            "h0_threads": 15,
+            "h0_job": 25
           }'
 
           failed_jobs=""

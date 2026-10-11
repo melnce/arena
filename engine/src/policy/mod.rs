@@ -22,6 +22,9 @@ pub use explain::{
     CandidateRecord, ChoosePath, ExplainRecord, LostRerankRecord, PvEnd, PvLeaf, WorldRecord,
 };
 pub use fuse_guard::fuse_is_noop;
+pub use h0::job::{
+    kill_det, kill_roll, world, H0Job, JobStep, KillDetOutcome, KillRollOutcome, WorldOutcome,
+};
 pub use h0::{
     builtin_mulligan, builtin_net, fuse_completion_partner_sets, Alloc, Deal, Info, MullMode,
     SearchStats, ValueVersion, Weights, Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, H0,
