@@ -36,8 +36,8 @@ def _load_serve():
 
 serve = _load_serve()
 
-DEFAULT_STRONG = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8"
-DEFAULT_CHEAT = "h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8"
+DEFAULT_STRONG = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,alloc=world,threads=8"
+DEFAULT_CHEAT = "h0:nodes=32000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,alloc=world,threads=8"
 CHEAT_SPEC = "h0:nodes=200,info=all"
 
 
