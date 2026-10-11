@@ -4,6 +4,7 @@ import {
   autoBotCores,
   benchDecideAtPosition,
   configuredBotCores,
+  terminateBotWorker,
 } from "./bot-client.ts";
 import { decks, parseDeckJson } from "./catalog.ts";
 import { publicUrl } from "./base.ts";
@@ -59,8 +60,24 @@ function median(nums: number[]): number {
   return sorted[mid];
 }
 
+function canonicalActionJson(actionJson: string | "ended"): string {
+  if (actionJson === "ended") return "ended";
+  const sortKeys = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(sortKeys);
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.keys(value as Record<string, unknown>)
+          .sort()
+          .map((k) => [k, sortKeys((value as Record<string, unknown>)[k])]),
+      );
+    }
+    return value;
+  };
+  return JSON.stringify(sortKeys(JSON.parse(actionJson)));
+}
+
 async function fingerprint(lines: BenchLine[]): Promise<string> {
-  const payload = lines.map((l) => l.actionJson).join("\n");
+  const payload = lines.map((l) => canonicalActionJson(l.actionJson)).join("\n");
   const data = new TextEncoder().encode(payload);
   const hash = await crypto.subtle.digest("SHA-256", data);
   const hex = Array.from(new Uint8Array(hash))
@@ -217,6 +234,7 @@ export function initBenchUi(): void {
     void (async () => {
       running = true;
       stopBench();
+      terminateBotWorker();
       benchAbort = new AbortController();
       const signal = benchAbort.signal;
       const spec = benchSpec();

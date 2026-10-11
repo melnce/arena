@@ -305,6 +305,17 @@ function respawnWorker(index: number): void {
   workerGeneration += 1;
 }
 
+async function respawnAndPrepare(
+  index: number,
+  body: BenchDecideBody,
+  policy: string,
+  botSeed: string,
+  worldSeedBump: number,
+): Promise<void> {
+  respawnWorker(index);
+  await prepareWorker(index, nextRequestId++, body, policy, botSeed, worldSeedBump);
+}
+
 async function runPoolDecide(
   body: BenchDecideBody,
   policy: string,
@@ -315,19 +326,20 @@ async function runPoolDecide(
   const W = coreCount ?? configuredBotCores();
   ensureWorkerPool(W);
   const sabotage = poolSabotageWorldSeed();
+  poolBusy = W;
+  try {
+  if (spinMs > 0) {
+    const end = performance.now() + spinMs;
+    while (performance.now() < end) {
+      await new Promise<void>((r) => window.setTimeout(r, 40));
+    }
+  }
 
   await Promise.all(
     Array.from({ length: W }, (_, i) =>
       prepareWorker(i, nextRequestId++, body, policy, botSeed, sabotage && i > 0 ? 1 : 0),
     ),
   );
-
-  if (spinMs > 0) {
-    const end = performance.now() + spinMs;
-    while (performance.now() < end) {
-      /* main-thread spin for cancel tests */
-    }
-  }
 
   const t0 = performance.now();
   const startMsgId = nextRequestId++;
@@ -380,7 +392,7 @@ async function runPoolDecide(
       const needsRoll =
         start.type === "step" && (JSON.parse(start.stepJson) as { step: string }).step === "await_roll";
       if (!needsRoll) {
-        if (step.roll && W > 1) respawnWorker(1);
+        if (step.roll && W > 1) await respawnAndPrepare(1, body, policy, botSeed, 0);
       } else if (step.roll) {
         if (!rollOutcome) {
           if (rollP) {
@@ -412,7 +424,7 @@ async function runPoolDecide(
             return null;
           },
         );
-        if (W > 1) respawnWorker(1);
+        if (W > 1) await respawnAndPrepare(1, body, policy, botSeed, 0);
       }
       continue;
     }
@@ -443,10 +455,11 @@ async function runPoolDecide(
     if (step.step === "worlds" && step.budgets) {
       const budgets = step.budgets;
       const k = budgets.length;
-      const outcomes: string[] = new Array(k);
+      const outcomes: unknown[] = new Array(k);
       let nextR = 0;
+      const worldWorkers = W <= 1 ? [0] : Array.from({ length: W - 1 }, (_, j) => j + 1);
       await Promise.all(
-        Array.from({ length: W }, async (_, wi) => {
+        worldWorkers.map(async (wi) => {
           while (true) {
             const r = nextR++;
             if (r >= k) break;
@@ -461,7 +474,7 @@ async function runPoolDecide(
               },
             );
             if (out.type !== "outcome") throw new Error("world failed");
-            outcomes[r] = out.outcomeJson;
+            outcomes[r] = JSON.parse(out.outcomeJson);
           }
         }),
       );
@@ -486,6 +499,9 @@ async function runPoolDecide(
     Array.from({ length: W }, (_, i) => releaseWorker(i, nextRequestId++)),
   );
   return { action: start.action, ms };
+  } finally {
+    poolBusy = 0;
+  }
 }
 
 type NeutralActionHolder = { action: import("./types.ts").NeutralAction; ms: number };
