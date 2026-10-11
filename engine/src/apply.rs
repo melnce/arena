@@ -195,6 +195,12 @@ fn commit_play_rally(state: &mut State) {
     }
 }
 
+struct DrawOutcome {
+    card: CardId,
+    entered_hand: bool,
+    hand_pos: Option<u8>,
+}
+
 fn note_draw(db: &CardDb, state: &mut State, who: PlayerId, card: CardId) {
     // Draw appends; "when you draw this card" is the newest copy, not the
     // first same-id already in hand (Swift Staffmaster).
@@ -213,7 +219,7 @@ fn draw_one(
     who: PlayerId,
     filter: Option<&Filter>,
     exclude_names: &[CardId],
-) -> Result<Option<CardId>, Illegal> {
+) -> Result<Option<DrawOutcome>, Illegal> {
     if state.winner.is_some() {
         return Ok(None);
     }
@@ -265,8 +271,24 @@ fn draw_one(
     let mut inst = state.player_mut(who).deck.remove(deck_i);
     inst.flags.summoning_sick = false;
     let id = inst.card;
+    let inst_id = inst.id;
     add_to_hand(state, who, inst, true);
-    Ok(Some(id))
+    let entered_hand = state.player(who).hand.iter().any(|c| c.id == inst_id);
+    let hand_pos = entered_hand
+        .then(|| {
+            state
+                .player(who)
+                .hand
+                .iter()
+                .position(|c| c.id == inst_id)
+                .map(|p| p as u8)
+        })
+        .flatten();
+    Ok(Some(DrawOutcome {
+        card: id,
+        entered_hand,
+        hand_pos,
+    }))
 }
 
 /// Hand limit 9; overflow destroys without Last Words.
@@ -3244,12 +3266,14 @@ fn run_aftermath(
         }
         Aftermath::ContinueTurnStart { step: 8 } => {
             let who = state.active;
-            if let Some(id) = draw_one(state, who, None, &[])? {
+            if let Some(out) = draw_one(state, who, None, &[])? {
                 events.push(Event::Draw {
                     player: who,
-                    card: id,
+                    card: out.card,
                 });
-                note_draw(db, state, who, id);
+                if out.entered_hand {
+                    note_draw(db, state, who, out.card);
+                }
             }
         }
         Aftermath::DrainQueue => drain_queue(db, state, events)?,
@@ -4712,7 +4736,6 @@ fn apply_effect(
             // enclosing list started.
             let n = eval_amount(db, state, controller, Some(source), amount);
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
-            maybe_bind(state, e, &ts);
             if *split == Some(true) {
                 split_damage(db, state, controller, &ts, n, events)?;
             } else {
@@ -4754,9 +4777,11 @@ fn apply_effect(
         }
         Effect::Select { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            maybe_bind(state, e, &ts);
         }
         Effect::Destroy { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            maybe_bind(state, e, &ts);
             apply_each_captured(state, &ts, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
                     destroy_by_ability(db, st, *player, *slot, events)?;
@@ -4767,6 +4792,7 @@ fn apply_effect(
         }
         Effect::Banish { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            maybe_bind(state, e, &ts);
             let bound: Vec<TargetOpt> =
                 ts.iter().filter_map(|t| target_as_card(state, t)).collect();
             apply_each_captured(state, &ts, |st, t| {
@@ -4860,20 +4886,19 @@ fn apply_effect(
             let mut exclude: Vec<CardId> = Vec::new();
             let mut drawn = Vec::new();
             for _ in 0..n {
-                if let Some(id) = draw_one(state, who, filter.as_ref(), &exclude)? {
+                if let Some(out) = draw_one(state, who, filter.as_ref(), &exclude)? {
                     if distinct_names == &Some(true) {
-                        exclude.push(id);
+                        exclude.push(out.card);
                     }
                     events.push(Event::Draw {
                         player: who,
-                        card: id,
+                        card: out.card,
                     });
-                    note_draw(db, state, who, id);
-                    if let Some(pos) = state.player(who).hand.iter().rposition(|c| c.card == id) {
-                        drawn.push(TargetOpt::Hand {
-                            player: who,
-                            pos: pos as u8,
-                        });
+                    if out.entered_hand {
+                        note_draw(db, state, who, out.card);
+                        if let Some(pos) = out.hand_pos {
+                            drawn.push(TargetOpt::Hand { player: who, pos });
+                        }
                     }
                 }
             }
@@ -4890,6 +4915,7 @@ fn apply_effect(
             ..
         } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            maybe_bind(state, e, &ts);
             apply_each_captured(state, &ts, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
                     if *player == controller {
