@@ -9,7 +9,7 @@ import {
 } from "./session.ts";
 import type { EngineEvent, PlayerId } from "./types.ts";
 
-export type BotWorkerStepMeta = { stale?: boolean; error?: string };
+export type BotWorkerStepMeta = { stale?: boolean; error?: string; ms?: number };
 
 let lastMeta: BotWorkerStepMeta = {};
 let worker: Worker | null = null;
@@ -210,6 +210,7 @@ export async function botStepWorker(
         return;
       }
       const events = applyAction(s, data.action, { human: false });
+      lastMeta = { ms: typeof data.ms === "number" && Number.isFinite(data.ms) ? data.ms : undefined };
       finish(events);
     };
 
