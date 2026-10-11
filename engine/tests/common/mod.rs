@@ -157,12 +157,21 @@ pub fn load_db() -> CardDb {
 /// Also loads the Earrings Engage as-recorded overlay (see
 /// `fixtures/as-recorded/earrings-engage-noop/`).
 pub fn load_recorded_db() -> CardDb {
-    with_earrings_engage_as_recorded({
+    with_kukishiro_crest_as_recorded(with_earrings_engage_as_recorded({
         let mut db = load_db();
         db.load_replace_dir(repo_root().join("oracle/cards-as-recorded"))
             .expect("recorded overlay");
         db
-    })
+    }))
+}
+
+/// Recording-time Kukishiro crest used `randomFrom` (deck pull). Chained by
+/// [`load_recorded_db`] after the Earrings Engage overlay.
+pub fn with_kukishiro_crest_as_recorded(db: CardDb) -> CardDb {
+    let mut db = db;
+    db.load_replace_dir(fixtures_dir().join("as-recorded/kukishiro-crest-from-deck"))
+        .expect("kukishiro crest as-recorded");
+    db
 }
 
 /// Recording-time Earrings Engage was a no-op (destroy only). Fixtures pinned at
@@ -470,6 +479,22 @@ pub fn put_deck(db: &CardDb, st: &mut State, who: PlayerId, id: &str) {
     let inst_id = st.alloc_id();
     let inst = CardInstance::from_card(card, inst_id);
     st.player_mut(who).deck.push(inst);
+}
+
+pub fn put_crest(st: &mut State, who: PlayerId, id: &str) {
+    let order = st.crest_order;
+    st.crest_order += 1;
+    st.player_mut(who)
+        .crests
+        .push(arena_engine::state::CrestInstance {
+            id: id.into(),
+            countdown: None,
+            faith: false,
+            once_used: vec![],
+            granted_order: order,
+            granted: vec![],
+            choose_used: Default::default(),
+        });
 }
 
 pub fn play_fresh(db: &CardDb, st: &mut State, who: PlayerId, id: &str) {
