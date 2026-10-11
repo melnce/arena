@@ -75,14 +75,21 @@
 //! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x86671e5ef842ccfb` | 31 | same as default `h0`. |
 //! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0x28f80dd9b44b4e7b` → `0xf4c105a794883210` | 61 | same as default `h0`. |
 //! | `h0_okill` `OKILL7_GATE_FPS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x356d7e0a857b5dec` | 31 | `h0:okill=7`; same as default `h0` seed 67. |
-//! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x0389b4048b50d258` → `0xdf9082c665149cb2` | 44 | `h0:okill=7`; A `play` `10564120` @ n=44 (crest draws); pre-crest branch pin was 0x0389…. |
+//! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x84f14a0177e6c228` → `0x0389b4048b50d258` | 61 | `h0:okill=7`; same as default `h0` seed 97 (Earrings era). |
 //!
 //! ## Kukishiro crest / Sofina / burned-draw re-pins (`main@d1bbc53` → branch)
 //!
+//! Proof (a): recomputed on branch with each gate's own spec (`h0` / `h0:okill=7` via
+//! `action_fingerprint` in `okill_default_play_unchanged_gate`).
+//!
 //! Proof (c): `git checkout origin/main -- engine/src cards/crests/crest-10564120.json`, move
 //! `engine/tests/fixtures/cards/constructs/89201450.json` aside, restore **main** pin constants
-//! for the four rows below, then `cargo test --release --test h0_defaults -- --include-ignored`
-//! → **26 passed**; restore branch engine, crest, construct, and pins.
+//! for the rows below, then:
+//! - `cargo test --release --test h0_defaults -- --include-ignored` → **26 passed**
+//! - `cargo test --release --test h0_okill okill_default_play_unchanged_gate -- --include-ignored`
+//!   with `DEFAULT_OKILL_GATE_FPS[7]` = `0xf4c105a794883210` and `OKILL7_GATE_FPS[7]` =
+//!   `0x0389b4048b50d258` → **1 passed**
+//! Restore branch engine, crest, construct, and pins.
 //!
 //! | table | seed | deck | main → branch | n | note |
 //! |-------|------|------|---------------|---|------|
@@ -90,6 +97,7 @@
 //! | `LEGACY_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x97344d31d7152b48` → `0xb9716918b6f7e319` | 62 | branch A `play` `10564120` hand 0; main A `play` `10461110` hand 2. |
 //! | `V1_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x97344d31d7152b48` → `0xb9716918b6f7e319` | 62 | same as legacy 97. |
 //! | `V3_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x435b799878a022c3` → `0x493b2a4bea8f4ef8` | 54 | branch A `play` `10564120` hand 3; main A `play` `10703110` hand 5. |
+//! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x0389b4048b50d258` → `0xdf9082c665149cb2` | 44 | `h0:okill=7`; branch A `play` `10564120` hand 0; main@d1bbc53 same JSON @ n but crest `randomFrom` (no token summons) → fp differs after Fanfare. |
 //! | `h0_hbk` `DEFAULT_OKILL_GATE_FPS` | 67, 97 | haven | same as `h0_okill` DEFAULT | 31 / 61 | `hbk_default_play_unchanged_gate` uses `load_db()` (current rules). |
 //! | `h0_info` `other_info_modes_play_unchanged_on_meta_games` | 99 | haven-amulet vs dragon-ramp | play tuples in `h0_info.rs` | — | revert proof: `main` `apply.rs` + old tuples → **2 passed** (`other_info_modes_*`, `okill_omacro_*`). |
 //! | `h0_info` `okill_omacro_defaults_play_unchanged_on_meta_games` | 99 | haven-amulet vs dragon-ramp | play tuples in `h0_info.rs` | — | same revert proof as row above. |
