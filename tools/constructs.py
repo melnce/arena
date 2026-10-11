@@ -171,6 +171,7 @@ def enumerate_source_slugs(schema: dict) -> list[str]:
         "source_from",
         "source_randomFrom",
         "source_randomFrom_countGt1",
+        "source_randomNamed",
     ]
 
 
