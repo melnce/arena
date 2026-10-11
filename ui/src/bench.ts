@@ -7,16 +7,16 @@ const BENCH_POSITIONS: Array<{
   deckB: string;
   targetTurn: number;
 }> = [
-  { deckA: "meta-abyss-midrange", deckB: "meta-rune-test-subject", targetTurn: 5 },
-  { deckA: "meta-rune-test-subject", deckB: "meta-sword-rally", targetTurn: 7 },
-  { deckA: "meta-haven-evo", deckB: "meta-abyss-midrange", targetTurn: 5 },
-  { deckA: "meta-dragon-ramp", deckB: "meta-portal-cutthroat", targetTurn: 7 },
-  { deckA: "meta-forest-combo", deckB: "meta-haven-amulet", targetTurn: 5 },
-  { deckA: "meta-sword-loot", deckB: "meta-rune-spell", targetTurn: 7 },
+  { deckA: "meta-abyss-midrange", deckB: "meta-rune-test-subject", targetTurn: 6 },
+  { deckA: "meta-rune-test-subject", deckB: "meta-sword-rally", targetTurn: 4 },
+  { deckA: "meta-haven-evo", deckB: "meta-abyss-midrange", targetTurn: 8 },
+  { deckA: "meta-dragon-ramp", deckB: "meta-portal-cutthroat", targetTurn: 4 },
+  { deckA: "meta-forest-combo", deckB: "meta-haven-amulet", targetTurn: 9 },
+  { deckA: "meta-sword-loot", deckB: "meta-rune-spell", targetTurn: 8 },
   { deckA: "meta-portal-evo", deckB: "meta-dragon-aggro", targetTurn: 5 },
   { deckA: "meta-abyss-aggro", deckB: "meta-rune-crystal", targetTurn: 7 },
   { deckA: "meta-portal-af", deckB: "meta-forest-combo", targetTurn: 5 },
-  { deckA: "meta-sword-rally", deckB: "meta-abyss-aggro", targetTurn: 7 },
+  { deckA: "meta-rune-spell", deckB: "meta-abyss-midrange", targetTurn: 9 },
 ];
 
 const DRIVE_POLICY = "h0:nodes=300";
