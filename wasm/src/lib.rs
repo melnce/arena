@@ -7,6 +7,7 @@ use wasm_bindgen::prelude::*;
 
 mod bundle;
 mod inner;
+mod job;
 mod ser;
 
 use crate::inner::GameInner;
@@ -154,7 +155,7 @@ pub fn version() -> String {
     crate::bundle::version().to_string()
 }
 
-fn seed_from_js(seed: &JsValue) -> Result<u64, JsValue> {
+pub(crate) fn seed_from_js(seed: &JsValue) -> Result<u64, JsValue> {
     if let Some(n) = seed.as_f64() {
         if n.is_finite() && n >= 0.0 {
             return Ok(n as u64);
