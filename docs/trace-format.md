@@ -99,7 +99,7 @@ Every random decision, by outcome.
 ```jsonc
 {"what":"draw","chose":"10131320"}
 {"what":"random_target","among":"enemy_followers","chose":{"slot":2}}
-{"what":"random_card","chose":"10131320"}
+{"what":"random_card","chose":"10131320"}   // `CardSource.randomNamed` summon (uniform among listed ids; `among` omitted)
 {"what":"random_split","chose":[2,0,1]}   // counts for `keys` in schema order (e.g. X,Y,Z); one independent uniform draw per faith point in live play, recorded as the final bucket counts
 {"what":"coin","chose":"a"}
 {"what":"random_unused","chose":{"mode":1}}

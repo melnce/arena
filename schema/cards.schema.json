@@ -1299,6 +1299,23 @@
           "required": [
             "randomFrom"
           ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "randomNamed": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CardId"
+              },
+              "minItems": 2,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "randomNamed"
+          ]
         }
       ]
     },

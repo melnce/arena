@@ -109,6 +109,13 @@ fn construct_source_randomFrom() {
 }
 
 #[test]
+fn construct_source_randomNamed() {
+    let (db, mut st) = db_st();
+    cast(&db, &mut st, "89201450");
+    assert!(field_has(&st, PlayerId::A, "10061120") || field_has(&st, PlayerId::A, "90061110"));
+}
+
+#[test]
 fn construct_source_randomFrom_countGt1() {
     // no-op engine: two copies of the same name, or a single summon
     let (db, mut st) = db_st();

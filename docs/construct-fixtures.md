@@ -122,6 +122,7 @@ Coverage is enforced by `python3 tools/constructs.py --check` (all families).
 | `source_from` | source | `construct_source_from` | `engine/tests/constructs_sources.rs` |
 | `source_randomFrom` | source | `construct_source_randomFrom` | `engine/tests/constructs_sources.rs` |
 | `source_randomFrom_countGt1` | source | `construct_source_randomFrom_countGt1` | `engine/tests/constructs_sources.rs` |
+| `source_randomNamed` | source | `construct_source_randomNamed` | `engine/tests/constructs_sources.rs` |
 | `selector_pick_all` | selector | `construct_selector_pick_all` | `engine/tests/constructs_selectors.rs` |
 | `selector_pick_choose` | selector | `construct_selector_pick_choose` | `engine/tests/constructs_selectors.rs` |
 | `selector_pick_random` | selector | `construct_selector_pick_random` | `engine/tests/constructs_selectors.rs` |

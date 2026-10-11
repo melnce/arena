@@ -80,6 +80,36 @@
 //! | `h0_info` `other_info_modes_play_unchanged_on_meta_games` | 99 | haven-amulet vs dragon-ramp | play tuples in `h0_info.rs` | — | revert proof: `main` `apply.rs` + old tuples → **2 passed** (`other_info_modes_*`, `okill_omacro_*`). |
 //! | `h0_info` `okill_omacro_defaults_play_unchanged_on_meta_games` | 99 | haven-amulet vs dragon-ramp | play tuples in `h0_info.rs` | — | same revert proof as row above. |
 //!
+//! ## Kukishiro crest / Sofina / burned-draw re-pins (`main@d1bbc53` → branch)
+//!
+//! Proof (a): recomputed on branch with each gate's own spec (`h0` / `h0:okill=7` via
+//! `action_fingerprint` in `okill_default_play_unchanged_gate` / `hbk_default_play_unchanged_gate`).
+//!
+//! Proof (c): `git checkout origin/main -- engine/src cards/crests/crest-10564120.json`, move
+//! `engine/tests/fixtures/cards/constructs/89201450.json` aside, restore **main@d1bbc53** pin constants
+//! for every row below, then:
+//! - `cargo test --release --test h0_defaults -- --include-ignored` → **26 passed**
+//! - `cargo test --release --test h0_okill okill_default_play_unchanged_gate -- --include-ignored`
+//!   → **1 passed**
+//! - `cargo test --release --test h0_hbk hbk_default_play_unchanged_gate -- --include-ignored`
+//!   → **1 passed**
+//!
+//! Then restore the branch engine, crest, construct and pins.
+//!
+//! Where the first divergence is a **`meta-sword-rally` (seat B) move**, B's search simulates A's turns
+//! in its worlds, where Kukishiro's crest now summons and a burned draw no longer triggers; proof (c)
+//! ties those rows to this fix.
+//!
+//! | table | seed | deck | main → branch | n | note |
+//! |-------|------|------|---------------|---|------|
+//! | `DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0xf4c105a794883210` → `0x0d242b165f4084c8` | 41 | branch B `play` `10724120` hand 3; main B `play` `10423110` hand 2 (seat-B first diff). |
+//! | `LEGACY_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x97344d31d7152b48` → `0xb9716918b6f7e319` | 62 | branch A `play` `10564120` hand 0; main A `play` `10461110` hand 2. |
+//! | `V1_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x97344d31d7152b48` → `0xb9716918b6f7e319` | 62 | same as legacy 97. |
+//! | `V3_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x435b799878a022c3` → `0x493b2a4bea8f4ef8` | 54 | branch A `play` `10564120` hand 3; main A `play` `10703110` hand 5. |
+//! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0xf4c105a794883210` → `0x0d242b165f4084c8` | 41 | same as `DEFAULT_FINGERPRINTS` 97 (`h0` spec). |
+//! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x0389b4048b50d258` → `0xdf9082c665149cb2` | 44 | `h0:okill=7`; branch A `play` `10564120` hand 0; main A `play` `10962310` hand 4. |
+//! | `h0_hbk` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0xf4c105a794883210` → `0x0d242b165f4084c8` | 41 | same as `DEFAULT_FINGERPRINTS` 97 (`load_db()` gate). |
+//!
 //! ### legacy `h0:mull=rule,info=fair`
 //!
 //! | seed | deck | main@b5b822c → branch | n | hash@n | hashΔ | reconv | proof |
@@ -212,7 +242,7 @@ const DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x362b_e20c_ddf6_d64c,
     0x8667_1e5e_f842_ccfb,
     0xfd90_619b_00c6_58f3,
-    0xf4c1_05a7_9488_3210,
+    0x0d24_2b16_5f40_84c8,
 ];
 
 /// Pre-v4 default `h0` fingerprints (`main@3742a1b`, built-in `h0-linear-v3`).
@@ -224,7 +254,7 @@ const V3_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0xd9fb_a1c8_8f98_0106,
     0x9e4a_4092_a024_a9e7,
     0xfd6a_ac8f_03e9_4988,
-    0x435b_7998_78a0_22c3,
+    0x493b_2a4b_ea8f_4ef8,
 ];
 
 /// Pre-v3 default `h0` fingerprints (`main@a69b248`, built-in `h0-linear-v2`).
@@ -248,7 +278,7 @@ const V1_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x7099_b9ba_b571_926b,
     0xb1ab_e142_aa17_9c09,
     0x1aab_6bac_aa68_cfb1,
-    0x9734_4d31_d715_2b48,
+    0xb971_6918_b6f7_e319,
 ];
 
 /// Pre-flip `h0` action fingerprints (`h0:mull=rule,info=fair`). Re-pinned with
@@ -261,7 +291,7 @@ const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x7099_b9ba_b571_926b,
     0x6af1_5e55_60a1_0a58,
     0x4e0f_0345_4ca1_2711,
-    0x9734_4d31_d715_2b48,
+    0xb971_6918_b6f7_e319,
 ];
 
 /// Dump canonical state hash after each h0 decision (ignored).

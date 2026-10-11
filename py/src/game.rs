@@ -5,8 +5,9 @@ use std::sync::Arc;
 use arena_engine::trace::NeutralAction;
 use arena_engine::trace::Pick;
 use arena_engine::{
-    apply_neutral, by_name, legal_actions, legal_actions_neutral, names, new_game, policy_rng,
-    snapshot_json, to_neutral, AnyPolicy, CardDb, GameConfig, GameRng, Phase, Policy,
+    apply_neutral, by_name, encode_version, encode_with_vocab, legal_actions,
+    legal_actions_neutral, names, new_game, policy_rng, snapshot_json, to_neutral, vocab,
+    AnyPolicy, CardDb, CardId, EncodingVersion, GameConfig, GameRng, Phase, PlayerId, Policy,
 };
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
@@ -307,6 +308,53 @@ impl PyGame {
         self.state.winner.is_some() || matches!(self.state.phase, Phase::Terminal)
     }
 
+    /// Sorted card-id vocabulary for histogram encoding at this state (H0 `root_vocab`).
+    fn vocab(&self) -> Vec<u32> {
+        vocab(&self.state).into_iter().map(|c| c.0).collect()
+    }
+
+    /// Perspective-masked observation (`features`, `ids`) for training / leaf eval.
+    #[pyo3(signature = (player, version=3, vocab=None))]
+    fn encode<'py>(
+        &self,
+        py: Python<'py>,
+        player: &str,
+        version: u8,
+        vocab: Option<Bound<'_, PyAny>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let me = parse_player(player)?;
+        let enc = EncodingVersion::parse(version)
+            .ok_or_else(|| py_err_msg(format!("version must be 1, 2 or 3 (got {version})")))?;
+        let db = &self.db;
+        let obs = match vocab {
+            None => encode_version(&self.state, me, enc, Some(db)),
+            Some(v) if v.is_none() => encode_version(&self.state, me, enc, Some(db)),
+            Some(v) => {
+                let vocab_ids = card_ids_from_list(&v)?;
+                encode_with_vocab(&self.state, me, &vocab_ids, enc, Some(db))
+            }
+        };
+        value_to_py(
+            py,
+            &serde_json::json!({
+                "features": obs.features,
+                "ids": obs.ids,
+            }),
+        )
+    }
+
+    /// H0 leaf value for `player` under `policy` (`h0` specs only).
+    fn evaluate(&self, policy: &str, player: &str) -> PyResult<f32> {
+        let me = parse_player(player)?;
+        let parsed = AnyPolicy::parse_spec(policy).map_err(py_err_msg)?;
+        match parsed {
+            AnyPolicy::H0(h0) => Ok(h0.evaluate(&self.db, &self.state, me)),
+            _ => Err(py_err_msg(format!(
+                "evaluate requires an h0 policy, got {policy}"
+            ))),
+        }
+    }
+
     /// Sample `n` opponent hands for the side to move's opponent under the
     /// policy's `info`, `deal`, and `hread` settings.
     #[pyo3(signature = (policy, seed, n))]
@@ -352,6 +400,39 @@ impl PyGame {
     pub(crate) fn engine_state(&self) -> &arena_engine::State {
         &self.state
     }
+}
+
+fn parse_player(s: &str) -> PyResult<PlayerId> {
+    match s {
+        "a" => Ok(PlayerId::A),
+        "b" => Ok(PlayerId::B),
+        _ => Err(py_err_msg(format!(
+            "player must be \"a\" or \"b\" (got {s})"
+        ))),
+    }
+}
+
+fn card_ids_from_list(obj: &Bound<'_, PyAny>) -> PyResult<Vec<CardId>> {
+    let v = py_to_value(obj)?;
+    let arr = v
+        .as_array()
+        .ok_or_else(|| py_err_msg("vocab must be a list of card ids"))?;
+    let mut out = Vec::with_capacity(arr.len());
+    let mut prev: Option<u32> = None;
+    for item in arr {
+        let n = item
+            .as_u64()
+            .ok_or_else(|| py_err_msg("vocab entries must be integers"))?;
+        let id = u32::try_from(n).map_err(|_| py_err_msg("vocab card id out of range"))?;
+        if let Some(p) = prev {
+            if id <= p {
+                return Err(py_err_msg("vocab must be strictly ascending"));
+            }
+        }
+        prev = Some(id);
+        out.push(CardId(id));
+    }
+    Ok(out)
 }
 
 fn picks_from_py(obj: &Bound<'_, PyAny>) -> PyResult<Vec<Pick>> {
