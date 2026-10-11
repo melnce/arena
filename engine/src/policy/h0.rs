@@ -172,9 +172,23 @@ struct Evaluator<'a> {
     bpp2: u32,
     bppv: f32,
     fuseguard: bool,
+    order_net: Option<&'a ValueNet>,
+    oorder: bool,
 }
 
 impl Evaluator<'_> {
+    /// One-step value for move ordering (`order=` net when set; else leaf).
+    fn pick_value(self, state: &State, val_for: PlayerId, search_me: PlayerId) -> f32 {
+        let use_order = self.order_net.is_some() && (val_for == search_me || self.oorder);
+        if !use_order {
+            return self.value(state, val_for);
+        }
+        if matches!((self.order_net, self.net), (Some(a), Some(b)) if std::ptr::eq(a, b)) {
+            return self.value(state, val_for);
+        }
+        self.order_value(state, val_for)
+    }
+
     /// Raw leaf value (unclipped). Matches main's `Evaluator::value` before bppv.
     fn leaf(self, state: &State, me: PlayerId) -> f32 {
         match self.version {
@@ -207,6 +221,30 @@ impl Evaluator<'_> {
     /// Leaf value plus `bppv` prior (unclipped; `finite` applies at aggregation).
     fn value(self, state: &State, me: PlayerId) -> f32 {
         let v = self.leaf(state, me);
+        if !v.is_finite() {
+            return v;
+        }
+        v + self.bpp_prior(state, me)
+    }
+
+    fn order_leaf(self, state: &State, me: PlayerId) -> f32 {
+        match self.order_net {
+            None => self.leaf(state, me),
+            Some(order_net) => {
+                let obs =
+                    encode_with_vocab(state, me, self.vocab, order_net.encoding, Some(self.db));
+                if self.clip > 0.0 {
+                    order_net.value_clipped(&obs, self.clip)
+                } else {
+                    order_net.value(&obs)
+                }
+            }
+        }
+    }
+
+    /// Order net value plus `bppv` prior (unclipped). Without `order=`, matches [`value`].
+    fn order_value(self, state: &State, me: PlayerId) -> f32 {
+        let v = self.order_leaf(state, me);
         if !v.is_finite() {
             return v;
         }
@@ -557,6 +595,12 @@ pub struct H0 {
     pub clip: f32,
     /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
     pub net_path: Option<String>,
+    /// Move-ordering net (`order=`). Used only where search ranks one-step values.
+    pub order: Option<Arc<ValueNet>>,
+    /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
+    pub order_path: Option<String>,
+    /// With `order=`, also order the opponent model's greedy picks (`oorder=1`).
+    pub oorder: bool,
     /// Opening mulligan mode. Default [`MullMode::Table`] with [`builtin_mulligan`].
     pub mull: MullMode,
     pub mull_table: Option<Arc<MulliganTable>>,
@@ -641,6 +685,9 @@ impl Default for H0 {
             lcap: 0.5,
             clip: 5.0,
             net_path: None,
+            order: None,
+            order_path: None,
+            oorder: false,
             mull: MullMode::Table,
             mull_table: Some(builtin_mulligan()),
             mull_path: None,
@@ -729,6 +776,12 @@ impl H0 {
             bpp2: self.bpp2,
             bppv: self.bppv,
             fuseguard: self.fuseguard,
+            order_net: match (self.order.as_deref(), self.net.as_deref()) {
+                (Some(a), Some(b)) if std::ptr::eq(a, b) => None,
+                (Some(a), _) => Some(a),
+                _ => None,
+            },
+            oorder: self.oorder,
         }
     }
 
@@ -738,7 +791,7 @@ impl H0 {
     }
 
     fn root_vocab(&self, state: &State) -> Vec<CardId> {
-        if self.value == ValueVersion::Net {
+        if self.value == ValueVersion::Net || self.order.is_some() {
             vocab(state)
         } else {
             Vec::new()
@@ -1667,14 +1720,23 @@ fn greedy_index(
     db: &CardDb,
     state: &State,
     legal: &[Action],
-    me: PlayerId,
+    choose_for: PlayerId,
+    search_me: PlayerId,
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
     eval: Evaluator<'_>,
     skip_noop_fuse: bool,
 ) -> usize {
-    let indices = greedy_action_indices(db, state, me, legal, eval.bpp1, eval.bpp2, skip_noop_fuse);
+    let indices = greedy_action_indices(
+        db,
+        state,
+        choose_for,
+        legal,
+        eval.bpp1,
+        eval.bpp2,
+        skip_noop_fuse,
+    );
     let mut best_i = indices.first().copied().unwrap_or(0);
     let mut best_v = f32::NEG_INFINITY;
     for i in indices {
@@ -1685,7 +1747,7 @@ fn greedy_index(
         let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
             continue;
         };
-        let v = eval.value(&s, me);
+        let v = eval.pick_value(&s, choose_for, search_me);
         if v > best_v {
             best_v = v;
             best_i = i;
@@ -1699,7 +1761,8 @@ fn greedy_pick(
     db: &CardDb,
     state: &State,
     legal: &[Action],
-    me: PlayerId,
+    choose_for: PlayerId,
+    search_me: PlayerId,
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
@@ -1712,16 +1775,16 @@ fn greedy_pick(
         if *nodes >= cap {
             break;
         }
-        if !useful_action(state, me, a, eval.bpp1, eval.bpp2) {
+        if !useful_action(state, choose_for, a, eval.bpp1, eval.bpp2) {
             continue;
         }
         let (v, evo) = if macro_evolve && matches!(a, Action::Play { .. }) {
-            score_play_with_macro(db, state, a, me, nodes, cap, line, eval)
+            score_play_with_macro(db, state, a, choose_for, search_me, nodes, cap, line, eval)
         } else {
             let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
                 continue;
             };
-            (eval.value(&s, me), None)
+            (eval.pick_value(&s, choose_for, search_me), None)
         };
         if v > best_v {
             best_v = v;
@@ -1742,7 +1805,8 @@ fn score_play_with_macro(
     db: &CardDb,
     state: &State,
     play: &Action,
-    me: PlayerId,
+    choose_for: PlayerId,
+    search_me: PlayerId,
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
@@ -1753,12 +1817,14 @@ fn score_play_with_macro(
     };
     let mut line2 = line.to_vec();
     line2.push(search_key(&s));
-    if !greedy_resolve_choices(db, &mut s, me, nodes, cap, &mut line2, eval) {
+    if !greedy_resolve_choices(
+        db, &mut s, choose_for, search_me, nodes, cap, &mut line2, eval,
+    ) {
         return (f32::NEG_INFINITY, None);
     }
-    let play_v = eval.value(&s, me);
+    let play_v = eval.pick_value(&s, choose_for, search_me);
     let faces = leader_attackers(db, &s);
-    let prefer = new_follower_slots(state, &s, me);
+    let prefer = new_follower_slots(state, &s, choose_for);
     let mut best_v = play_v;
     let mut best_evo = None;
     if !prefer.is_empty() {
@@ -1781,7 +1847,7 @@ fn score_play_with_macro(
                     continue;
                 };
                 per_slot += 1;
-                let v2 = eval.value(&s2, me);
+                let v2 = eval.pick_value(&s2, choose_for, search_me);
                 if v2 > best_v {
                     best_v = v2;
                     best_evo = Some(a);
@@ -1811,13 +1877,14 @@ fn new_follower_slots(before: &State, after: &State, who: PlayerId) -> Vec<u8> {
 fn greedy_resolve_choices(
     db: &CardDb,
     state: &mut State,
-    me: PlayerId,
+    choose_for: PlayerId,
+    search_me: PlayerId,
     nodes: &mut u32,
     cap: u32,
     line: &mut Vec<u64>,
     eval: Evaluator<'_>,
 ) -> bool {
-    while matches!(state.phase, Phase::Choice { player, .. } if player == me) {
+    while matches!(state.phase, Phase::Choice { player, .. } if player == choose_for) {
         if *nodes >= cap {
             return false;
         }
@@ -1825,7 +1892,9 @@ fn greedy_resolve_choices(
         if legal.is_empty() {
             return false;
         }
-        let i = greedy_index(db, state, &legal, me, nodes, cap, line, eval, false);
+        let i = greedy_index(
+            db, state, &legal, choose_for, search_me, nodes, cap, line, eval, false,
+        );
         let Some(next) = try_apply(db, state, &legal[i], nodes, cap, line) else {
             return false;
         };
@@ -2036,23 +2105,29 @@ fn fuse_overshoot_score(
     end: PvEnd,
 ) -> f32 {
     let singles = fuse_single_partner_completions(state, me);
-    let mut best = f32::NEG_INFINITY;
+    let mut best_order = f32::NEG_INFINITY;
+    let mut best_leaf = f32::NEG_INFINITY;
     let mut best_state = state.clone();
     let mut best_actions = Vec::new();
     for completion in singles {
         if let Some((s, actions)) =
             apply_fuse_completion(db, state, &completion, &mut 0, u32::MAX, line, false, stats)
         {
-            let v = eval.value(&s, me);
-            if v > best {
-                best = v;
+            let order_v = eval.pick_value(&s, me, me);
+            if order_v > best_order {
+                best_order = order_v;
+                best_leaf = if eval.order_net.is_none() {
+                    order_v
+                } else {
+                    eval.value(&s, me)
+                };
                 best_state = s;
                 best_actions = actions;
             }
         }
     }
-    if !best.is_finite() {
-        best = eval.value(state, me);
+    if !best_leaf.is_finite() {
+        best_leaf = eval.value(state, me);
         best_state = state.clone();
         best_actions.clear();
     }
@@ -2061,10 +2136,10 @@ fn fuse_overshoot_score(
         for a in &best_actions {
             t.push(a.clone());
         }
-        t.set_leaf(best, end, &best_state);
+        t.set_leaf(best_leaf, end, &best_state);
         t.pop_to(plen);
     }
-    best
+    best_leaf
 }
 
 /// At a Main node, score every fuse completion but return only the best by
@@ -2092,12 +2167,12 @@ fn best_fuse_main_child(
         else {
             continue;
         };
-        let v = eval.value(&s, me);
-        if best.as_ref().is_none_or(|(bv, _, _, _)| v > *bv) {
+        let order_v = eval.pick_value(&s, me, me);
+        if best.as_ref().is_none_or(|(bv, _, _, _)| order_v > *bv) {
             let mut prefix = vec![fuse_action.clone()];
             prefix.extend(tail);
             let key = search_key(&s);
-            best = Some((v, s, key, prefix));
+            best = Some((order_v, s, key, prefix));
         }
     }
     best
@@ -2167,7 +2242,9 @@ fn resolve_bot_choices(
         if legal.is_empty() {
             return false;
         }
-        let i = greedy_index(db, state, &legal, me, nodes, work_cap, line, eval, false);
+        let i = greedy_index(
+            db, state, &legal, me, me, nodes, work_cap, line, eval, false,
+        );
         let Some(next) = try_apply(db, state, &legal[i], nodes, work_cap, line) else {
             return false;
         };
@@ -2239,6 +2316,7 @@ fn finish_bot_turn_horizon(
         greedy_until_end(
             db,
             state,
+            me,
             me,
             nodes,
             work_cap,
@@ -2716,7 +2794,7 @@ fn search_own(
             return INF;
         }
         let k = search_key(&s);
-        scored.push((eval.value(&s, me), s, k, vec![a.clone()]));
+        scored.push((eval.pick_value(&s, me, me), s, k, vec![a.clone()]));
     }
     scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
     scored.truncate(beam.max(1));
@@ -2837,6 +2915,7 @@ fn opponent_reply(
                 db,
                 &mut s,
                 me.opponent(),
+                me,
                 nodes,
                 cap,
                 line,
@@ -2848,6 +2927,7 @@ fn opponent_reply(
                 db,
                 &mut s,
                 me.opponent(),
+                me,
                 nodes,
                 cap,
                 line,
@@ -2993,7 +3073,7 @@ fn search_opp_expand(
             }
             return v;
         }
-        let i = greedy_index(db, state, &legal, me, nodes, cap, line, eval, false);
+        let i = greedy_index(db, state, &legal, me, me, nodes, cap, line, eval, false);
         let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
         if let Some(t) = track.as_deref_mut() {
             t.push(legal[i].clone());
@@ -3091,7 +3171,7 @@ fn search_opp_expand(
         if matches!(a, Action::EndTurn) {
             end_turn = Some((s, k, a.clone()));
         } else {
-            scored.push((eval.value(&s, opp), s, k, a.clone()));
+            scored.push((eval.pick_value(&s, opp, me), s, k, a.clone()));
         }
     }
     scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
@@ -3167,6 +3247,7 @@ fn greedy_until_end(
     db: &CardDb,
     state: &mut State,
     who: PlayerId,
+    search_me: PlayerId,
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
@@ -3203,6 +3284,7 @@ fn greedy_until_end(
             state,
             &legal,
             who,
+            search_me,
             nodes,
             cap,
             &line,
@@ -3227,6 +3309,7 @@ fn greedy_until_end_omacro(
     db: &CardDb,
     state: &mut State,
     who: PlayerId,
+    search_me: PlayerId,
     nodes: &mut u32,
     cap: u32,
     line: &[u64],
@@ -3257,7 +3340,9 @@ fn greedy_until_end_omacro(
                 break;
             }
         }
-        let pick = greedy_pick(db, state, &legal, who, nodes, cap, &line, eval, true);
+        let pick = greedy_pick(
+            db, state, &legal, who, search_me, nodes, cap, &line, eval, true,
+        );
         let (i, macro_evo) = match pick {
             GreedyPick::Plain(i) => (i, None),
             GreedyPick::PlayMacro { index, evolve } => (index, Some(evolve)),
@@ -3271,7 +3356,7 @@ fn greedy_until_end_omacro(
         line.push(search_key(&next));
         *state = next;
         if matches!(legal[i], Action::Play { .. }) {
-            greedy_resolve_choices(db, state, who, nodes, cap, &mut line, eval);
+            greedy_resolve_choices(db, state, who, search_me, nodes, cap, &mut line, eval);
         }
         if let Some(evo) = macro_evo {
             if let Some(next2) = try_apply(db, state, &evo, nodes, cap, &line) {
@@ -4987,7 +5072,7 @@ fn holdback_apply_action(
     let mut nodes = 0u32;
     let cap = u32::MAX;
     let mut line = vec![search_key(state), search_key(&s)];
-    if !greedy_resolve_choices(db, &mut s, me, &mut nodes, cap, &mut line, eval) {
+    if !greedy_resolve_choices(db, &mut s, me, me, &mut nodes, cap, &mut line, eval) {
         return None;
     }
     Some(s)
@@ -5005,7 +5090,7 @@ fn holdback_bot_finish(
     let mut line = vec![search_key(state)];
     let mut steps = 0u32;
     while bot_turn_still_active(state, me) && steps < osteps {
-        if !greedy_resolve_choices(db, state, me, &mut nodes, cap, &mut line, eval) {
+        if !greedy_resolve_choices(db, state, me, me, &mut nodes, cap, &mut line, eval) {
             return false;
         }
         if !matches!(state.phase, Phase::Main | Phase::Combat) {
@@ -5019,6 +5104,7 @@ fn holdback_bot_finish(
             db,
             state,
             &legal,
+            me,
             me,
             &mut nodes,
             cap,
@@ -5774,6 +5860,7 @@ mod fuse_guard_greedy_tests {
             &db,
             &mut on,
             me,
+            me,
             &mut nodes,
             u32::MAX,
             &line,
@@ -5792,6 +5879,7 @@ mod fuse_guard_greedy_tests {
         greedy_until_end(
             &db,
             &mut off,
+            me,
             me,
             &mut nodes,
             u32::MAX,

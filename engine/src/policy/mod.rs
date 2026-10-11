@@ -261,6 +261,12 @@ fn h0_spec(h: &H0) -> String {
             }
         }
     }
+    if let Some(path) = &h.order_path {
+        parts.push(format!("order={path}"));
+    }
+    if h.oorder && h.order_path.is_some() {
+        parts.push("oorder=1".to_string());
+    }
     if h.odepth != def.odepth {
         parts.push(format!("odepth={}", h.odepth));
     }
@@ -444,6 +450,8 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.info == b.info
         && a.fusemacro == b.fusemacro
         && a.net_path == b.net_path
+        && a.order_path == b.order_path
+        && a.oorder == b.oorder
         && a.lcap == b.lcap
         && a.clip == b.clip
         && a.mull == b.mull
@@ -475,6 +483,7 @@ fn weights_eq(a: &Weights, b: &Weights) -> bool {
 fn parse_h0_params(body: &str) -> Result<H0, String> {
     let mut h = H0::default();
     let mut net_path: Option<String> = None;
+    let mut order_path: Option<String> = None;
     let mut mull_path: Option<String> = None;
     if body.is_empty() {
         return Ok(h);
@@ -507,6 +516,19 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     return Err("missing key 'net'".to_string());
                 }
                 net_path = Some(val.to_string());
+            }
+            "order" => {
+                if val.is_empty() {
+                    return Err("missing key 'order'".to_string());
+                }
+                order_path = Some(val.to_string());
+            }
+            "oorder" => {
+                h.oorder = match val {
+                    "0" => false,
+                    "1" => true,
+                    other => return Err(format!("unknown oorder '{other}'")),
+                };
             }
             "w_shadows" => h.weights.shadows = parse_num(val)?,
             "w_earth" => h.weights.earth = parse_num(val)?,
@@ -760,6 +782,17 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
         (ValueVersion::V0 | ValueVersion::V1, Some(_)) => {
             return Err("net= requires value=net".to_string());
         }
+    }
+    if let Some(path) = order_path {
+        if h.net_path.as_deref() == Some(path.as_str()) {
+            h.order = h.net.clone();
+        } else {
+            h.order = Some(crate::policy::net::ValueNet::load(&path)?);
+        }
+        h.order_path = Some(path);
+    }
+    if h.order.is_none() {
+        h.oorder = false;
     }
     Ok(h)
 }
