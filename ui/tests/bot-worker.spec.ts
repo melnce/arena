@@ -132,6 +132,58 @@ async function waitForWorkerThinking(page: Page) {
   await expect(page.locator("#botThinking")).toBeVisible({ timeout: 5000 });
 }
 
+/** Every ancestor with non-visible overflow must fully contain the pill (Playwright visibility ignores clipping). */
+async function expectBotThinkingNotClipped(page: Page) {
+  const result = await page.evaluate(() => {
+    const pill = document.getElementById("botThinking");
+    if (!pill || pill.hidden) return { ok: false, reason: "pill hidden" };
+    const pillRect = pill.getBoundingClientRect();
+    if (pillRect.width <= 0 || pillRect.height <= 0) {
+      return { ok: false, reason: "pill has no box" };
+    }
+    const clips = (v: string) => v !== "visible";
+    let el: Element | null = pill.parentElement;
+    while (el) {
+      const style = getComputedStyle(el);
+      const clipX = clips(style.overflowX) || clips(style.overflow);
+      const clipY = clips(style.overflowY) || clips(style.overflow);
+      if (clipX || clipY) {
+        const r = el.getBoundingClientRect();
+        if (
+          pillRect.top < r.top ||
+          pillRect.left < r.left ||
+          pillRect.bottom > r.bottom ||
+          pillRect.right > r.right
+        ) {
+          return {
+            ok: false,
+            reason: "clipped",
+            ancestor: `${el.id || el.className || el.tagName}`,
+            pillRect: { top: pillRect.top, bottom: pillRect.bottom },
+            clipRect: { top: r.top, bottom: r.bottom },
+          };
+        }
+      }
+      el = el.parentElement;
+    }
+    return { ok: true };
+  });
+  expect(result.ok, JSON.stringify(result)).toBe(true);
+}
+
+async function startThinkingScenario(page: Page) {
+  await boot(page, "localbot=0&botworkerspin=8000");
+  await startVsBot(page, {
+    seed: "42",
+    first: "b",
+    human: "a",
+    botPolicy: "h0",
+    skipBoot: true,
+  });
+  await confirmMulligans(page);
+  await waitForWorkerThinking(page);
+}
+
 test("same moves as main thread (worker vs sync)", async ({ page }) => {
   for (const seed of ["11", "12"]) {
     await startVsBot(page, { seed, botPolicy: "h0", query: "" });
@@ -157,6 +209,20 @@ test("same moves as main thread (worker vs sync)", async ({ page }) => {
   await playUntilTurnOrEnd(page, 6, "a");
   const cheatSync = await actionLog(page);
   expect(cheatWorker).toEqual(cheatSync);
+});
+
+test.describe("bot thinking pill layout", () => {
+  test("desktop 1440×900: pill not clipped by overflow ancestors", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await startThinkingScenario(page);
+    await expectBotThinkingNotClipped(page);
+  });
+
+  test("iPad landscape 1180×820: pill not clipped by overflow ancestors", async ({ page }) => {
+    await page.setViewportSize({ width: 1180, height: 820 });
+    await startThinkingScenario(page);
+    await expectBotThinkingNotClipped(page);
+  });
 });
 
 test("page stays live while bot thinks in worker", async ({ page }) => {

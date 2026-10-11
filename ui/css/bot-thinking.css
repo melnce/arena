@@ -1,8 +1,8 @@
 #botThinking {
   position: absolute;
   left: 50%;
-  top: 0;
-  transform: translate(-50%, -100%) translateY(-6px);
+  top: 8px;
+  transform: translateX(-50%);
   z-index: 50;
   padding: 4px 10px;
   border-radius: 8px;
@@ -12,6 +12,9 @@
   font-size: 0.82rem;
   white-space: nowrap;
   pointer-events: none;
+  max-width: calc(100% - 12px);
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .turn-controls-core {
