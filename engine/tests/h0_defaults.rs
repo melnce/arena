@@ -76,6 +76,20 @@
 //! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0x28f80dd9b44b4e7b` → `0xf4c105a794883210` | 61 | same as default `h0`. |
 //! | `h0_okill` `OKILL7_GATE_FPS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x356d7e0a857b5dec` | 31 | `h0:okill=7`; same as default `h0` seed 67. |
 //! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x84f14a0177e6c228` → `0x0389b4048b50d258` | 61 | `h0:okill=7`; same as default `h0` seed 97. |
+//!
+//! ## Kukishiro crest / Sofina / burned-draw re-pins (`main@d1bbc53` → branch)
+//!
+//! Proof (c): `git checkout origin/main -- engine/src cards/crests/crest-10564120.json`, move
+//! `engine/tests/fixtures/cards/constructs/89201450.json` aside, restore **main** pin constants
+//! for the four rows below, then `cargo test --release --test h0_defaults -- --include-ignored`
+//! → **26 passed**; restore branch engine, crest, construct, and pins.
+//!
+//! | table | seed | deck | main → branch | n | note |
+//! |-------|------|------|---------------|---|------|
+//! | `DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0xf4c105a794883210` → `0x0d242b165f4084c8` | 41 | branch B `play` `10724120` hand 3; main B `play` `10423110` hand 2 (B search simulates A's crest draws before this seat-B pick). |
+//! | `LEGACY_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x97344d31d7152b48` → `0xb9716918b6f7e319` | 62 | branch A `play` `10564120` hand 0; main A `play` `10461110` hand 2. |
+//! | `V1_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x97344d31d7152b48` → `0xb9716918b6f7e319` | 62 | same as legacy 97. |
+//! | `V3_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x435b799878a022c3` → `0x493b2a4bea8f4ef8` | 54 | branch A `play` `10564120` hand 3; main A `play` `10703110` hand 5. |
 //! | `h0_hbk` `DEFAULT_OKILL_GATE_FPS` | 67, 97 | haven | same as `h0_okill` DEFAULT | 31 / 61 | `hbk_default_play_unchanged_gate` uses `load_db()` (current rules). |
 //! | `h0_info` `other_info_modes_play_unchanged_on_meta_games` | 99 | haven-amulet vs dragon-ramp | play tuples in `h0_info.rs` | — | revert proof: `main` `apply.rs` + old tuples → **2 passed** (`other_info_modes_*`, `okill_omacro_*`). |
 //! | `h0_info` `okill_omacro_defaults_play_unchanged_on_meta_games` | 99 | haven-amulet vs dragon-ramp | play tuples in `h0_info.rs` | — | same revert proof as row above. |
@@ -212,7 +226,7 @@ const DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x362b_e20c_ddf6_d64c,
     0x8667_1e5e_f842_ccfb,
     0xfd90_619b_00c6_58f3,
-    0xf4c1_05a7_9488_3210,
+    0x0d24_2b16_5f40_84c8,
 ];
 
 /// Pre-v4 default `h0` fingerprints (`main@3742a1b`, built-in `h0-linear-v3`).
@@ -224,7 +238,7 @@ const V3_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0xd9fb_a1c8_8f98_0106,
     0x9e4a_4092_a024_a9e7,
     0xfd6a_ac8f_03e9_4988,
-    0x435b_7998_78a0_22c3,
+    0x493b_2a4b_ea8f_4ef8,
 ];
 
 /// Pre-v3 default `h0` fingerprints (`main@a69b248`, built-in `h0-linear-v2`).
@@ -248,7 +262,7 @@ const V1_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x7099_b9ba_b571_926b,
     0xb1ab_e142_aa17_9c09,
     0x1aab_6bac_aa68_cfb1,
-    0x9734_4d31_d715_2b48,
+    0xb971_6918_b6f7_e319,
 ];
 
 /// Pre-flip `h0` action fingerprints (`h0:mull=rule,info=fair`). Re-pinned with
@@ -261,7 +275,7 @@ const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x7099_b9ba_b571_926b,
     0x6af1_5e55_60a1_0a58,
     0x4e0f_0345_4ca1_2711,
-    0x9734_4d31_d715_2b48,
+    0xb971_6918_b6f7_e319,
 ];
 
 /// Dump canonical state hash after each h0 decision (ignored).

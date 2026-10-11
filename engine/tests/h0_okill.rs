@@ -59,7 +59,7 @@ const DEFAULT_OKILL_GATE_FPS: [u64; 8] = [
     0x362b_e20c_ddf6_d64c,
     0x8667_1e5e_f842_ccfb,
     0xfd90_619b_00c6_58f3,
-    0xf4c1_05a7_9488_3210,
+    0x0d24_2b16_5f40_84c8,
 ];
 
 /// `h0:okill=7` fingerprints on the same gate pairs. Computed on `main@7d7d2d1`
@@ -72,7 +72,7 @@ const OKILL7_GATE_FPS: [u64; 8] = [
     0xb971_00c3_06c1_81b7,
     0x356d_7e0a_857b_5dec,
     0x6e50_ac90_c116_9b49,
-    0x0389_b404_8b50_d258,
+    0x0389_b404_8b50_d258, // seed 97: A plays Kukishiro @ n=44 (crest draws run); okill=7 search still ends at fp 0x0389… — same neutral JSON trace as main@d1bbc53 through n=98 (first diff vs bare h0 is n=61, not crest-driven).
 ];
 
 /// Served spec fingerprints (seeds 11, 23, 37). Computed on `main@7d7d2d1` with
