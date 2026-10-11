@@ -1,8 +1,22 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect, test, devices, type Page } from "@playwright/test";
 import { ART, artShot, openSettings } from "./helpers.ts";
 
 const STRONG = "h0:nodes=6000";
 const CHEAT = "h0:nodes=6000,info=all";
+
+function readPcPolicies(): { strong: string; cheat: string } {
+  const servePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../py/serve.py");
+  const text = fs.readFileSync(servePath, "utf8");
+  const strongM = text.match(/^DEFAULT_STRONG = "(.*)"$/m);
+  const cheatM = text.match(/^DEFAULT_CHEAT = "(.*)"$/m);
+  if (!strongM || !cheatM) throw new Error("serve.py policies missing");
+  return { strong: strongM[1], cheat: cheatM[1] };
+}
+
+const PC = readPcPolicies();
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -64,7 +78,15 @@ test("desktop: option list defaults to h0 (strong)", async ({ page }) => {
   await openSettings(page);
   await page.locator("#modeSelect").selectOption("vs-bot");
   const opts = await vsBotOptions(page);
-  expect(opts.map((o) => o.value)).toEqual(["random", "first-legal", "h0", STRONG, CHEAT]);
+  expect(opts.map((o) => o.value)).toEqual([
+    "random",
+    "first-legal",
+    "h0",
+    STRONG,
+    CHEAT,
+    PC.strong,
+    PC.cheat,
+  ]);
   expect(opts[2]?.label).toBe("h0 (standard)");
   expect(opts[3]?.label).toBe("h0 (strong)");
   expect(opts[3]?.title).toContain("6 000 search nodes");

@@ -30,6 +30,15 @@ declare global {
         backend: "server" | "browser";
         error: string | null;
       };
+      botWorker(): {
+        enabled: boolean;
+        alive: boolean;
+        pending: boolean;
+        generation: number;
+        error: string | null;
+      };
+      setSessionBotPolicy(spec: string): void;
+      benchResult(): unknown | null;
       reseed(seed: string | number | bigint): void;
       exportLog(): unknown;
       exportPositionLog(): unknown;
