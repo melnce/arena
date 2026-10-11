@@ -4712,6 +4712,7 @@ fn apply_effect(
             // enclosing list started.
             let n = eval_amount(db, state, controller, Some(source), amount);
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            maybe_bind(state, e, &ts);
             if *split == Some(true) {
                 split_damage(db, state, controller, &ts, n, events)?;
             } else {
