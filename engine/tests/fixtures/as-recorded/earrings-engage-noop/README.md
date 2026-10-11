@@ -15,3 +15,5 @@ and review14 game `6598261483642061665-d90f8eb2` (plies 27, 52, 104).
 
 Only replays of recordings made before the Engage fix should load this overlay. Never use
 it for new recordings or generated games (`load_db()` without this overlay is current rules).
+
+Introduced in PR #132.

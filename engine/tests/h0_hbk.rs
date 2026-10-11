@@ -238,7 +238,7 @@ fn spec_hbk_round_trip() {
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn hbk_default_play_unchanged_gate() {
-    let db = with_earrings_engage_as_recorded(load_db());
+    let db = load_db();
     let stems = meta_deck_stems();
     for (i, seed) in GATE_SEEDS.iter().enumerate() {
         let deck = load_meta_deck(&stems[i]);

@@ -154,6 +154,8 @@ pub fn load_db() -> CardDb {
 /// Current pool plus recording-time overrides in `oracle/cards-as-recorded/`
 /// for anything recorded before the 2026-09-29 balance patch. Use for oracle
 /// traces and pre-patch fixture replays; generated games use [`load_db`].
+/// Also loads the Earrings Engage as-recorded overlay (see
+/// `fixtures/as-recorded/earrings-engage-noop/`).
 pub fn load_recorded_db() -> CardDb {
     with_earrings_engage_as_recorded({
         let mut db = load_db();

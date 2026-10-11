@@ -85,7 +85,15 @@ async function driveEarringsEngageWithHandPick(page: Page): Promise<boolean> {
           const engaged = applyFirst(
             (a) => (a.engage as { slot?: number } | undefined)?.slot === slot,
           );
-          if (engaged && typeof full().phase === "object") return true;
+          if (engaged) {
+            const st2 = full();
+            const earringsGone = earringsSlot() < 0;
+            const handPick = legal().some((a) => {
+              const opt = (a as { choose?: { option?: { card?: string } } }).choose?.option;
+              return typeof opt?.card === "string";
+            });
+            if (earringsGone && handPick && typeof st2.phase === "object") return true;
+          }
         }
         applyFirst((a) => "play" in a);
         applyFirst((a) => "attack" in a);
@@ -99,6 +107,8 @@ async function driveEarringsEngageWithHandPick(page: Page): Promise<boolean> {
     return false;
   }, EARRINGS);
 }
+
+type HandCard = { card: string; id: number };
 
 test("earrings engage replicates fanfare after destroy", async ({ page }) => {
   test.setTimeout(180_000);
@@ -120,10 +130,37 @@ test("earrings engage replicates fanfare after destroy", async ({ page }) => {
   await expect(prompt).toContainText("Select a card in your hand");
   await artShot(prompt, `${ART}/earrings_engage_hand_pick.png`);
 
-  const beforeHand = await page.evaluate(
-    () =>
-      (window.__arena!.full() as { players: { a: { hand: unknown[] } } }).players.a.hand.length,
-  );
+  const before = await page.evaluate(() => {
+    const full = window.__arena!.full() as {
+      players: {
+        a: {
+          hand: HandCard[];
+          deck: HandCard[];
+          field: Array<{ card?: string } | null>;
+        };
+      };
+    };
+    const legal = window.__arena!.legal() as Array<{
+      choose?: { option?: { card?: string; inst?: number } };
+    }>;
+    const pick = legal.find((a) => {
+      const opt = (a as { choose?: { option?: { card?: string } } }).choose?.option;
+      return typeof opt?.card === "string";
+    }) as { choose?: { option?: { card: string } } } | undefined;
+    if (!pick?.choose?.option?.card) throw new Error("no hand pick option");
+    const card = pick.choose.option.card;
+    const deckIdsForCard = full.players.a.deck
+      .filter((c) => c.card === card)
+      .map((c) => c.id);
+    const deckCount = deckIdsForCard.length;
+    return {
+      handLen: full.players.a.hand.length,
+      deckLen: full.players.a.deck.length,
+      pickedCard: card,
+      deckInstanceIdsBefore: deckIdsForCard,
+      deckCountBefore: deckCount,
+    };
+  });
 
   await page.evaluate(() => {
     const legal = window.__arena!.legal() as Array<{ choose?: unknown }>;
@@ -133,25 +170,38 @@ test("earrings engage replicates fanfare after destroy", async ({ page }) => {
   });
   await expect(prompt).toBeHidden({ timeout: 5000 });
 
-  const after = await page.evaluate((earrings) => {
-    const full = window.__arena!.full() as {
-      players: {
-        a: {
-          hand: unknown[];
-          deck: unknown[];
-          field: Array<{ card?: string } | null>;
+  const after = await page.evaluate(
+    ({ pickedCard, deckInstanceIdsBefore }) => {
+      const full = window.__arena!.full() as {
+        players: {
+          a: {
+            hand: HandCard[];
+            deck: HandCard[];
+            field: Array<{ card?: string } | null>;
+          };
         };
       };
-    };
-    return {
-      handLen: full.players.a.hand.length,
-      deckLen: full.players.a.deck.length,
-      earringsOnField: full.players.a.field.some((c) => c?.card === earrings),
-    };
-  }, EARRINGS);
+      const deckForCard = full.players.a.deck.filter((c) => c.card === pickedCard);
+      const beforeSet = new Set(deckInstanceIdsBefore);
+      const newInstances = deckForCard.filter((c) => !beforeSet.has(c.id)).map((c) => c.id);
+      return {
+        handLen: full.players.a.hand.length,
+        deckLen: full.players.a.deck.length,
+        deckCount: deckForCard.length,
+        newInstanceId: newInstances.length === 1 ? newInstances[0] : null,
+        earringsOnField: full.players.a.field.some((c) => c?.card === "10761210"),
+      };
+    },
+    {
+      pickedCard: before.pickedCard,
+      deckInstanceIdsBefore: before.deckInstanceIdsBefore,
+    },
+  );
 
-  expect(after.handLen).toBe(beforeHand);
-  expect(after.deckLen).toBeGreaterThanOrEqual(beforeHand);
+  expect(after.handLen).toBe(before.handLen);
+  expect(after.deckLen).toBe(before.deckLen);
+  expect(after.deckCount).toBe(before.deckCountBefore + 1);
+  expect(after.newInstanceId).not.toBeNull();
   expect(after.earringsOnField).toBe(false);
   await artShot(page.locator("#blueBoard"), `${ART}/earrings_engage_after_pick.png`);
 });

@@ -39,9 +39,38 @@
 //! | 37 | meta-dragon-aggro | `0xe0ff3ba0823747ae` → `0x0c5e00eb14bdce85` | 88 | match | 79 | 80 | **hashΔ 79:** after Spilling Red `10642310` discard pick (`choose` `90044330`); main `PendingKind::EffectSelect` + faith tick in snapshot; branch `PlaySelect` destroy pick (`step 1/2`, `pending_work=1`). **reconv 80.** **n 88:** `hash@87` match; main attacks; branch plays Spilling Red then play-time discard+destroy picks (`89`–`90`). |
 //! | 41 | meta-dragon-ramp | `0x9e542bf8f4f4ba5c` → `0x09d1f4dde9630cb7` | 47 | match | 17 | 18 | **hashΔ 17:** after Depths of the Eld Sword `90024320` (Enhanced) play; main `EffectSelect` destroy pick with Faith: Yidmetra `faith:10624120` tick first; branch `PlaySelect` + `deferred_rx=1`. **reconv 18.** **n 47:** `hash@46` match; main idx 4 plays Lyria, Skydestined `10403120`; branch idx 2 plays Burnite, Anathema of Ash `10744110`. |
 //! | 53 | meta-forest-combo | `0x7404fbcb4cae7f60` → `0x73930e18abe26408` | 86 | match | 37 | 38 | **hashΔ 37:** after Miroku, Swarmpetal `10514120` play; main `ModeSelect`; branch `PlaySelect` mode + `deferred_rx=1`. **reconv 38.** **n 86:** `hash@85` match; main idx 1 plays Yidmetra, Eld Sword `10624120`; branch idx 8 attacks (`87` plays Depths of the Eld Sword `90024320` Enhanced). |
-//! | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x86671e5ef842ccfb` | 20 | match | — | — | **Earrings Engage** replicates Fanfare (`10761210`). **n 20:** actions `0..19` identical; `hash@20` match; legal identical (10 actions); main idx 5 attack slot 0; branch idx 2 play Timepiece of Perfection `10762210`. **explain@20 cand[2]:** worlds 0–2 match; **world[3]** diverges — main hits node cap after engage (`pv_len=2`); branch `pv_len=9` with opp Depths Enhanced `choose` while Faith deferred. |
-//! | 97 | meta-haven-kukishiro | `0x28f80dd9b44b4e7b` → `0xf4c105a794883210` | — | — | — | — | **Earrings Engage** (3× `10761210` in deck). |
+//! | 67 | meta-haven-amulet | `0x50a92b69688f99c3` → `0x85c938a069126ff1` | 20 | match | — | — | **n 20:** actions `0..19` identical; `hash@20` match; legal identical (10 actions); main idx 5 attack slot 0; branch idx 2 play Timepiece of Perfection `10762210` (no play-time pick on either root). **explain@20 cand[2]:** worlds 0–2 match (leaf −6.2134); **world[3]** diverges — main hits node cap after engage (`pv_len=2`); branch `pv_len=9` leaf +4.4162 with opp Depths of the Eld Sword `90024320` (Enhanced) `choose` at PV step 5 while Faith: Yidmetra `faith:10624120` is deferred → `root_agg` −6.2134 → −3.5560 (beats main best attack −5.8025). |
 //! | 79 | meta-haven-evo | `0x42fbd544e452ebf0` → `0x2d183971e45391ae` | 63 | match | — | — | **n 63:** actions `0..62` identical; `hash@63` match; legal identical (4 actions); main idx 0 play Depths of the Eld Sword `90024320` (Enhanced) → `64` `EffectSelect` destroy; branch idx 1 attack (`64` plays Depths with `PlaySelect` + `deferred_rx=1`). |
+//!
+//! ## Earrings Engage re-pins (`main@99b7c05` → branch)
+//!
+//! Sacrifice Engage replicates Fanfare (`10761210`). Gate fingerprints recomputed from each
+//! test's own `h0` spec (not the `print_*` helpers). **`n`** = first neutral-action index
+//! where `dump_gate_actions` differs on `main@99b7c05` vs this branch (`H0_DUMP_SEEDS`,
+//! gate spec). Proof (c): `git show origin/main:engine/src/apply.rs` + `origin/main` pins →
+//! `cargo test --release --test h0_defaults -- --include-ignored` → **26 passed** (2026-10-11).
+//!
+//! | file / table | seed | deck | main@99b7c05 → branch | n | divergence |
+//! |--------------|------|------|------------------------|---|------------|
+//! | `DEFAULT_FINGERPRINTS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x86671e5ef842ccfb` | 31 | branch `engage` slot 2 (`10761210`); main `play` hand 3 `10661210`. Earrings on field at n. |
+//! | `DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x28f80dd9b44b4e7b` → `0xf4c105a794883210` | 61 | branch `attack`; main `play` `10761210`. Earrings on field at n (prior `engage` slot 0 @ 60). |
+//! | `LEGACY_FINGERPRINTS` | 67 | meta-haven-amulet | `0xf0a3386e8682af1e` → `0x6af15e5560a10a58` | 19 | branch `engage` slot 1; main `engage` slot 3. Earrings on field at n. |
+//! | `LEGACY_FINGERPRINTS` | 79 | meta-haven-evo | `0x953effd47650d22e` → `0x4e0f03454ca12711` | 31 | branch B `play` `10723110`; main B `attack` leader. |
+//! | `LEGACY_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x5b5a5be5f92e3c7c` → `0x97344d31d7152b48` | 11 | branch B `attack` leader; main B `attack` slot 1. |
+//! | `V1_DEFAULT_FINGERPRINTS` | 67 | meta-haven-amulet | `0x85c938a069126ff1` → `0xb1abe142aa179c09` | 49 | branch B `play` `90021120`; main B `attack` slot 3 leader. |
+//! | `V1_DEFAULT_FINGERPRINTS` | 79 | meta-haven-evo | `0x2d183971e45391ae` → `0x1aab6bacaa68cfb1` | 55 | branch `choose` `10963210`; main `choose` `10863210`. |
+//! | `V1_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x5b5a5be5f92e3c7c` → `0x97344d31d7152b48` | 11 | same as legacy 97. |
+//! | `V2_DEFAULT_FINGERPRINTS` | 67 | meta-haven-amulet | `0x8f6bb18b4445e0bd` → `0x9b0b1dba8bb63158` | 31 | same as default 67 (`engage` vs `play`). |
+//! | `V2_DEFAULT_FINGERPRINTS` | 79 | meta-haven-evo | `0x5cca9048c37e96c9` → `0x6c3461eed232775e` | 55 | same as V1 79. |
+//! | `V2_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x46e6103324ea959f` → `0xccfa14793ef8e148` | 61 | same as default 97. |
+//! | `V3_DEFAULT_FINGERPRINTS` | 67 | meta-haven-amulet | `0x783df18c0ca289f1` → `0x9e4a4092a024a9e7` | 31 | same as default 67. |
+//! | `V3_DEFAULT_FINGERPRINTS` | 79 | meta-haven-evo | `0x3f38eeac5db259c1` → `0xfd6aac8f03e94988` | 55 | same as V1 79. |
+//! | `V3_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x857a2b3ba078359e` → `0x435b799878a022c3` | 61 | same as default 97. |
+//! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x86671e5ef842ccfb` | 31 | same as default `h0`. |
+//! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0x28f80dd9b44b4e7b` → `0xf4c105a794883210` | 61 | same as default `h0`. |
+//! | `h0_okill` `OKILL7_GATE_FPS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x356d7e0a857b5dec` | 31 | `h0:okill=7`; same action divergence as default 67. |
+//! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x84f14a0177e6c228` → `0x0389b4048b50d258` | 61 | `h0:okill=7`; same as default 97. |
+//! | `h0_hbk` `DEFAULT_OKILL_GATE_FPS` | 67, 97 | haven | same as `h0_okill` DEFAULT | 31 / 61 | `hbk_default_play_unchanged_gate` uses `load_db()` (current rules). |
 //!
 //! ### legacy `h0:mull=rule,info=fair`
 //!
@@ -185,9 +214,9 @@ const V3_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x120b_7fb2_41cf_3f44,
     0xfd6c_73d8_9fd1_d09d,
     0xd9fb_a1c8_8f98_0106,
-    0x8667_1e5e_f842_ccfb,
-    0x3f38_eeac_5db2_59c1,
-    0x275e_455d_3d7d_1d9c,
+    0x9e4a_4092_a024_a9e7,
+    0xfd6a_ac8f_03e9_4988,
+    0x435b_7998_78a0_22c3,
 ];
 
 /// Pre-v3 default `h0` fingerprints (`main@a69b248`, built-in `h0-linear-v2`).
@@ -197,9 +226,9 @@ const V2_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x122c_fa71_850c_7637,
     0x9475_f3fc_7d65_58c7,
     0x3633_2073_4090_3124,
-    0x7e55_16aa_84fc_33f7,
-    0x5cca_9048_c37e_96c9,
-    0x0da1_eafe_991c_1463,
+    0x9b0b_1dba_8bb6_3158,
+    0x6c34_61ee_d232_775e,
+    0xccfa_1479_3ef8_e148,
 ];
 
 /// Pre-v2 default `h0` fingerprints (`main@063bdd4`, built-in `h0-linear-v1`).
@@ -209,9 +238,9 @@ const V1_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x0c5e_00eb_14bd_ce85,
     0xa024_135f_cf64_4006,
     0x7099_b9ba_b571_926b,
-    0x873c_48b0_bfaa_2256,
-    0x2d18_3971_e453_91ae,
-    0x46f7_3e8c_9343_c41d,
+    0xb1ab_e142_aa17_9c09,
+    0x1aab_6bac_aa68_cfb1,
+    0x9734_4d31_d715_2b48,
 ];
 
 /// Pre-flip `h0` action fingerprints (`h0:mull=rule,info=fair`). Re-pinned with
@@ -222,9 +251,9 @@ const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x0c5e_00eb_14bd_ce85,
     0x3d7f_2f1b_9db5_99cc,
     0x7099_b9ba_b571_926b,
-    0x464f_d3cf_5bbf_5a40,
-    0x953e_ffd4_7650_d22e,
-    0x578d_0116_1ef0_b329,
+    0x6af1_5e55_60a1_0a58,
+    0x4e0f_0345_4ca1_2711,
+    0x9734_4d31_d715_2b48,
 ];
 
 /// Dump canonical state hash after each h0 decision (ignored).
