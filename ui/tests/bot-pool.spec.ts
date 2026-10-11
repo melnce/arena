@@ -123,7 +123,6 @@ function loadKillFixture(): Record<string, unknown> {
 }
 
 test("same moves for any core count", async ({ page }) => {
-  test.setTimeout(600_000);
   const baselineBySeed: Record<string, unknown[]> = {};
   for (const seed of ["11", "12"]) {
     await boot(page, "localbot=0&botworker=0");
@@ -154,7 +153,6 @@ test("same moves for any core count", async ({ page }) => {
 });
 
 test("pool splits work across cores", async ({ page }) => {
-  test.setTimeout(600_000);
   const hw = await page.evaluate(() => navigator.hardwareConcurrency ?? 1);
 
   await startVsBot(page, {

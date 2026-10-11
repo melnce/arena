@@ -16,7 +16,7 @@ import {
 } from "./session.ts";
 import type { EngineEvent, PlayerId } from "./types.ts";
 
-export type BotWorkerStepMeta = { stale?: boolean; error?: string };
+export type BotWorkerStepMeta = { stale?: boolean; error?: string; ms?: number };
 
 export type BenchDecideBody = {
   seed: string;
@@ -29,6 +29,8 @@ export type BenchDecideBody = {
 
 let lastMeta: BotWorkerStepMeta = {};
 let workers: Worker[] = [];
+let benchWorkers: Worker[] = [];
+let benchNextRequestId = 1;
 let workerGeneration = 0;
 let pendingId: number | null = null;
 let nextRequestId = 1;
@@ -169,6 +171,22 @@ function spawnWorkerAt(index: number): Worker {
   return w;
 }
 
+function spawnBenchWorkerAt(index: number): Worker {
+  const w = new Worker(new URL("./bot-worker.ts", import.meta.url), { type: "module" });
+  benchWorkers[index] = w;
+  return w;
+}
+
+function ensureBenchWorkerPool(coreCount: number): void {
+  const want = coreCount;
+  while (benchWorkers.length < want) {
+    spawnBenchWorkerAt(benchWorkers.length);
+  }
+  for (let i = 0; i < want; i++) {
+    if (!benchWorkers[i]) spawnBenchWorkerAt(i);
+  }
+}
+
 function ensureWorkerPool(coreCount?: number): void {
   const want = coreCount ?? configuredBotCores();
   const hadWorkers = workers.some((w) => w != null);
@@ -240,7 +258,16 @@ function postAndWait<T extends WorkerOutbound>(
   });
 }
 
+function trackPoolBusy(pool: Worker[]): { done: () => void } {
+  if (pool !== workers) return { done: () => {} };
+  poolBusy += 1;
+  return { done: () => {
+    poolBusy -= 1;
+  } };
+}
+
 async function prepareWorker(
+  pool: Worker[],
   workerIndex: number,
   id: number,
   body: BenchDecideBody,
@@ -248,7 +275,7 @@ async function prepareWorker(
   botSeed: string,
   worldSeedBump: number,
 ): Promise<void> {
-  const w = workers[workerIndex]!;
+  const w = pool[workerIndex]!;
   const req: PrepareRequest = {
     type: "prepare",
     id,
@@ -262,34 +289,35 @@ async function prepareWorker(
     botSeed,
     worldSeedBump,
   };
-  poolBusy += 1;
+  const busy = trackPoolBusy(pool);
   try {
     await postAndWait<PrepareReply>(w, req, id, (data) => {
       if (data.type === "prepared" || data.type === "error") return data as PrepareReply;
       return null;
     });
   } finally {
-    poolBusy -= 1;
+    busy.done();
   }
 }
 
 async function poolJob<T extends PoolJobReply>(
+  pool: Worker[],
   workerIndex: number,
   id: number,
   msg: object,
   match: (data: WorkerOutbound) => T | null,
 ): Promise<T> {
-  const w = workers[workerIndex]!;
-  poolBusy += 1;
+  const w = pool[workerIndex]!;
+  const busy = trackPoolBusy(pool);
   try {
     return await postAndWait<T>(w, msg, id, match);
   } finally {
-    poolBusy -= 1;
+    busy.done();
   }
 }
 
-async function releaseWorker(workerIndex: number, id: number): Promise<void> {
-  const w = workers[workerIndex];
+async function releaseWorker(pool: Worker[], workerIndex: number, id: number): Promise<void> {
+  const w = pool[workerIndex];
   if (!w) return;
   try {
     await postAndWait(w, { type: "release", id }, id, (data) => {
@@ -301,20 +329,23 @@ async function releaseWorker(workerIndex: number, id: number): Promise<void> {
   }
 }
 
-function respawnWorker(index: number): void {
-  workers[index]?.terminate();
-  spawnWorkerAt(index);
+function respawnWorkerInPool(pool: Worker[], index: number): void {
+  pool[index]?.terminate();
+  if (pool === workers) spawnWorkerAt(index);
+  else spawnBenchWorkerAt(index);
 }
 
 async function respawnAndPrepare(
+  pool: Worker[],
+  allocId: () => number,
   index: number,
   body: BenchDecideBody,
   policy: string,
   botSeed: string,
   worldSeedBump: number,
 ): Promise<void> {
-  respawnWorker(index);
-  await prepareWorker(index, nextRequestId++, body, policy, botSeed, worldSeedBump);
+  respawnWorkerInPool(pool, index);
+  await prepareWorker(pool, index, allocId(), body, policy, botSeed, worldSeedBump);
 }
 
 async function runPoolDecide(
@@ -323,11 +354,17 @@ async function runPoolDecide(
   botSeed: string,
   spinMs: number,
   coreCount?: number,
+  opts?: { workerPool?: Worker[]; fail?: boolean },
 ): Promise<NeutralActionHolder> {
+  if (opts?.fail) throw new Error("forced worker failure (test)");
   const W = coreCount ?? configuredBotCores();
-  ensureWorkerPool(W);
+  const pool = opts?.workerPool ?? workers;
+  const gamePool = pool === workers;
+  const allocId = () => (gamePool ? nextRequestId++ : benchNextRequestId++);
+  if (gamePool) ensureWorkerPool(W);
+  else ensureBenchWorkerPool(W);
   const sabotage = poolSabotageWorldSeed();
-  poolBusy = W;
+  if (gamePool) poolBusy = W;
   try {
   if (spinMs > 0) {
     const end = performance.now() + spinMs;
@@ -338,13 +375,22 @@ async function runPoolDecide(
 
   await Promise.all(
     Array.from({ length: W }, (_, i) =>
-      prepareWorker(i, nextRequestId++, body, policy, botSeed, sabotage && i > 0 ? 1 : 0),
+      prepareWorker(
+        pool,
+        i,
+        allocId(),
+        body,
+        policy,
+        botSeed,
+        sabotage && i > 0 ? 1 : 0,
+      ),
     ),
   );
 
   const t0 = performance.now();
-  const startMsgId = nextRequestId++;
+  const startMsgId = allocId();
   let start = await poolJob(
+    pool,
     0,
     startMsgId,
     { type: "h0JobStart", id: startMsgId },
@@ -361,16 +407,16 @@ async function runPoolDecide(
       budgets?: number[];
     };
     if (step.step === "kill") {
-      const detMsgId = nextRequestId++;
-      const detP = poolJob(0, detMsgId, { type: "h0KillDet", id: detMsgId }, (data) => {
+      const detMsgId = allocId();
+      const detP = poolJob(pool, 0, detMsgId, { type: "h0KillDet", id: detMsgId }, (data) => {
         if (data.type === "outcome" || data.type === "error") return data;
         return null;
       });
       let rollOutcome: string | null = null;
       let rollP: Promise<PoolJobReply> | null = null;
       if (step.roll && W > 1) {
-        const rollMsgId = nextRequestId++;
-        rollP = poolJob(1, rollMsgId, { type: "h0KillRoll", id: rollMsgId }, (data) => {
+        const rollMsgId = allocId();
+        rollP = poolJob(pool, 1, rollMsgId, { type: "h0KillRoll", id: rollMsgId }, (data) => {
           if (data.type === "outcome" || data.type === "error") return data;
           return null;
         });
@@ -380,8 +426,9 @@ async function runPoolDecide(
       }
       const det = await detP;
       if (det.type !== "outcome") throw new Error("kill det failed");
-      const feedDetId = nextRequestId++;
+      const feedDetId = allocId();
       start = await poolJob(
+        pool,
         0,
         feedDetId,
         { type: "h0JobKillDet", id: feedDetId, outcome: det.outcomeJson },
@@ -393,7 +440,7 @@ async function runPoolDecide(
       const needsRoll =
         start.type === "step" && (JSON.parse(start.stepJson) as { step: string }).step === "await_roll";
       if (!needsRoll) {
-        if (step.roll && W > 1) await respawnAndPrepare(1, body, policy, botSeed, 0);
+        if (step.roll && W > 1) await respawnAndPrepare(pool, allocId, 1, body, policy, botSeed, 0);
       } else if (step.roll) {
         if (!rollOutcome) {
           if (rollP) {
@@ -401,8 +448,9 @@ async function runPoolDecide(
             if (roll.type !== "outcome") throw new Error("kill roll failed");
             rollOutcome = roll.outcomeJson;
           } else {
-            const rollMsgId = nextRequestId++;
+            const rollMsgId = allocId();
             const roll = await poolJob(
+              pool,
               0,
               rollMsgId,
               { type: "h0KillRoll", id: rollMsgId },
@@ -415,8 +463,9 @@ async function runPoolDecide(
             rollOutcome = roll.outcomeJson;
           }
         }
-        const feedRollId = nextRequestId++;
+        const feedRollId = allocId();
         start = await poolJob(
+          pool,
           0,
           feedRollId,
           { type: "h0JobKillRoll", id: feedRollId, outcome: rollOutcome },
@@ -425,13 +474,14 @@ async function runPoolDecide(
             return null;
           },
         );
-        if (W > 1) await respawnAndPrepare(1, body, policy, botSeed, 0);
+        if (W > 1) await respawnAndPrepare(pool, allocId, 1, body, policy, botSeed, 0);
       }
       continue;
     }
     if (step.step === "await_roll") {
-      const rollMsgId = nextRequestId++;
+      const rollMsgId = allocId();
       const roll = await poolJob(
+        pool,
         0,
         rollMsgId,
         { type: "h0KillRoll", id: rollMsgId },
@@ -441,8 +491,9 @@ async function runPoolDecide(
         },
       );
       if (roll.type !== "outcome") throw new Error("await_roll failed");
-      const feedRollId = nextRequestId++;
+      const feedRollId = allocId();
       start = await poolJob(
+        pool,
         0,
         feedRollId,
         { type: "h0JobKillRoll", id: feedRollId, outcome: roll.outcomeJson },
@@ -458,14 +509,15 @@ async function runPoolDecide(
       const k = budgets.length;
       const outcomes: unknown[] = new Array(k);
       let nextR = 0;
-      const worldWorkers = W <= 1 ? [0] : Array.from({ length: W - 1 }, (_, j) => j + 1);
+      const worldWorkers = Array.from({ length: W }, (_, j) => j);
       await Promise.all(
         worldWorkers.map(async (wi) => {
           while (true) {
             const r = nextR++;
             if (r >= k) break;
-            const msgId = nextRequestId++;
+            const msgId = allocId();
             const out = await poolJob(
+              pool,
               wi,
               msgId,
               { type: "h0JobWorld", id: msgId, r, budget: budgets[r]! },
@@ -479,8 +531,9 @@ async function runPoolDecide(
           }
         }),
       );
-      const finishId = nextRequestId++;
+      const finishId = allocId();
       start = await poolJob(
+        pool,
         0,
         finishId,
         { type: "h0JobFinish", id: finishId, outcomes: JSON.stringify(outcomes) },
@@ -497,11 +550,11 @@ async function runPoolDecide(
   if (start.type !== "decided") throw new Error("pool decide failed");
   const ms = performance.now() - t0;
   await Promise.all(
-    Array.from({ length: W }, (_, i) => releaseWorker(i, nextRequestId++)),
+    Array.from({ length: W }, (_, i) => releaseWorker(pool, i, allocId())),
   );
   return { action: start.action, ms };
   } finally {
-    poolBusy = 0;
+    if (gamePool) poolBusy = 0;
   }
 }
 
@@ -514,9 +567,12 @@ async function runSingleWorkerDecide(
   id: number,
   fail: boolean,
   spinMs: number,
+  workerPool?: Worker[],
 ): Promise<NeutralActionHolder> {
-  ensureWorkerPool();
-  const w = workers[0]!;
+  const pool = workerPool ?? workers;
+  if (pool === workers) ensureWorkerPool();
+  else ensureBenchWorkerPool(1);
+  const w = pool[0]!;
   const req: DecideRequest = {
     type: "decide",
     id,
@@ -606,11 +662,14 @@ export async function botStepWorker(
         const decided =
           W <= 1
             ? await runSingleWorkerDecide(body, policy, seed.toString(), id, fail, spinMs)
-            : await runPoolDecide(body, policy, seed.toString(), spinMs);
+            : await runPoolDecide(body, policy, seed.toString(), spinMs, undefined, { fail });
         if (dropStale()) {
           onStale();
           return;
         }
+        lastMeta = {
+          ms: typeof decided.ms === "number" && Number.isFinite(decided.ms) ? decided.ms : undefined,
+        };
         const events = applyAction(s, decided.action, { human: false });
         finish(events);
       } catch (err) {
@@ -641,11 +700,10 @@ export async function benchDecideAtPosition(
   cores: number,
 ): Promise<{ actionJson: string; ms: number }> {
   if (cores <= 1) {
-    ensureWorkerPool(1);
-    const id = nextRequestId++;
-    const decided = await runSingleWorkerDecide(body, policy, botSeed, id, false, 0);
+    const id = benchNextRequestId++;
+    const decided = await runSingleWorkerDecide(body, policy, botSeed, id, false, 0, benchWorkers);
     return { actionJson: JSON.stringify(decided.action), ms: decided.ms };
   }
-  const decided = await runPoolDecide(body, policy, botSeed, 0, cores);
+  const decided = await runPoolDecide(body, policy, botSeed, 0, cores, { workerPool: benchWorkers });
   return { actionJson: JSON.stringify(decided.action), ms: decided.ms };
 }

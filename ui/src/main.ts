@@ -15,6 +15,19 @@ import {
 import { byId } from "./render/ids.ts";
 import { benchResult, initBenchUi } from "./bench.ts";
 import {
+  captureBotMetaForTests,
+  storeCaptureNowForTest,
+  captureQueueStats,
+  flushCaptures,
+  initCaptures,
+  initCapturesSettingsUi,
+  onGameEnd,
+  onSessionStart,
+  recordBotStep,
+  setCaptureSessionRef,
+  type BotBackend,
+} from "./captures.ts";
+import {
   autoBotCores,
   botPoolState,
   botStepWorker,
@@ -310,6 +323,10 @@ function exposeArena(): void {
     },
     turnPings: () => turnPings(),
     playTurnPing: () => playTurnPing(),
+    captures: () => captureQueueStats(),
+    flushCaptures: () => flushCaptures(),
+    captureBotMeta: () => captureBotMetaForTests(),
+    storeCaptureNow: () => storeCaptureNowForTest(),
     mountNamedCounter: (vars) => {
       const host = document.getElementById("blueBoard") ?? document.body;
       const inst = {
@@ -452,6 +469,7 @@ function showCombat(events: EngineEvent[]): void {
   if (show) reflashDamage(events);
   if (session.cfg.mode === "vs-bot" && session.game.phase() === "terminal") {
     reportFinishedGame(session);
+    void onGameEnd(session);
   }
 }
 
@@ -616,12 +634,14 @@ function startSession(cfg: SessionConfig): void {
   localBotThinking = false;
   clearBotDecisionPending();
   resetSpotlightSession();
+  const previous = session;
+  onSessionStart(cfg, previous);
   disposeSession(session);
   session = createSession(cfg);
-  if (cfg.mode === "vs-bot" && botWorkerEnabled()) {
-    const human = cfg.humanSide;
-    const botPol = human === "a" ? cfg.policyB : cfg.policyA;
-    if (botPol === "h0" || botPol.startsWith("h0:")) {
+  setCaptureSessionRef(session);
+  if (cfg.mode === "vs-bot") {
+    const pol = cfg.policyA;
+    if ((pol === "h0" || pol.startsWith("h0:")) && botWorkerEnabled()) {
       prewarmBotWorker();
     }
   }
@@ -902,6 +922,7 @@ async function maybeBots(): Promise<void> {
           if (staleRuns >= 3) {
             events = botStep(s);
             staleRuns = 0;
+            if (events.length) noteBotStepFromLoop(s, { useLocal, useWorker, usedMainFallback: true });
             showCombat(events);
             if (botEndedTurnInEvents(events, s.cfg.humanSide)) botEndedTurn = true;
             if (session === s && spotlightEpoch === epoch) {
@@ -924,6 +945,7 @@ async function maybeBots(): Promise<void> {
         refreshBotBackendBadge();
       }
       guard += 1;
+      if (events.length) noteBotStepFromLoop(s, { useLocal, useWorker, usedMainFallback: false });
       showCombat(events);
       if (botEndedTurnInEvents(events, s.cfg.humanSide)) botEndedTurn = true;
       if (session === s && spotlightEpoch === epoch) {
@@ -1517,7 +1539,35 @@ function restorePersistedToggles(): void {
   syncWatchSpeedReadout();
 }
 
+function noteBotStepFromLoop(
+  s: Session,
+  opts: { useLocal: boolean; useWorker: boolean; usedMainFallback: boolean },
+): void {
+  let backend: BotBackend = "main";
+  let ms: number | null = null;
+  let value: number | null = null;
+  if (opts.usedMainFallback || (!opts.useLocal && !opts.useWorker)) {
+    backend = "main";
+  } else if (opts.useLocal) {
+    const meta = lastLocalBotStepMeta();
+    if (meta.usedRemote) {
+      backend = "server";
+      ms = meta.ms ?? null;
+      value = meta.value ?? null;
+    } else {
+      backend = "main";
+    }
+  } else if (opts.useWorker) {
+    const meta = lastBotWorkerStepMeta();
+    if (meta.stale) return;
+    backend = "worker";
+    ms = meta.ms ?? null;
+  }
+  recordBotStep(s, backend, ms, value);
+}
+
 async function boot(): Promise<void> {
+  initCaptures();
   installAudioUnlock();
   restorePersistedToggles();
   await init();
@@ -1533,6 +1583,7 @@ async function boot(): Promise<void> {
   initImportDeck();
   initWatch();
   initBenchUi();
+  initCapturesSettingsUi();
   bindTooltips();
   bindPointer({
     play: (p, i) => hooks.onPlay(p, i),

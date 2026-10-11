@@ -288,6 +288,24 @@
             </div>
             <pre id="benchOutput" class="checkpoint-status"></pre>
           </div>
+          <div class="settings-drawer-section">
+            <h3>Game uploads</h3>
+            <p id="captureUploadStatus" class="checkpoint-status">Uploads: off — no key on this device</p>
+            <label class="toolbar-check-label" for="captureUploadToggle">
+              <input type="checkbox" id="captureUploadToggle" checked />
+              Upload my games
+            </label>
+            <div class="toolbar-cluster">
+              <label>
+                Upload key
+                <input id="captureUploadKeyInput" type="password" autocomplete="off" />
+              </label>
+              <button id="captureUploadKeySave" type="button">Save</button>
+              <button id="captureUploadKeyClear" type="button">Clear</button>
+              <button id="captureUploadNowBtn" type="button">Upload now</button>
+              <button id="captureExportBtn" type="button">Export games</button>
+            </div>
+          </div>
           <p id="bundleMeta" class="checkpoint-status"></p>
           <p id="errBanner" class="checkpoint-status"></p>
         </div>
