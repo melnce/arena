@@ -243,7 +243,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 
 ## Card source
 
-`{named: id}` `10724110` · `{copyOf, exact}` Allure `10652310` / Grandeur `10533310` (`exact: true` on printed "exact copy") · Initiation of Rebirth `10901310` / Primal Beast Absorption `10443310` (`exact: false` on printed "a copy") · `{from: Selector}` `10412110` Chloe "Select a follower in your hand and summon it" (the selected instance itself; hand today, legal for a deck selector) · Grandeur `10533310` `exact: true` clones the rolled deck instance (modifiers included) · `{randomFrom: Filter}` `crest:10564120`
+`{named: id}` `10724110` · `{copyOf, exact}` Allure `10652310` / Grandeur `10533310` (`exact: true` on printed "exact copy") · Initiation of Rebirth `10901310` / Primal Beast Absorption `10443310` (`exact: false` on printed "a copy") · `{from: Selector}` `10412110` Chloe "Select a follower in your hand and summon it" (the selected instance itself; hand today, legal for a deck selector) · Grandeur `10533310` `exact: true` clones the rolled deck instance (modifiers included) · `{randomFrom: Filter}` Sophia `10462120` (a random matching card **from your deck**) · `{randomNamed: [id, …]}` Crest: Kukishiro, Mistbloom `crest:10564120` (one listed id at random, fresh instance — not from deck)
 
 `copyOf` always copies (exact or printed) regardless of zone — the original stays. `from` is the move: put that instance onto the field; a full field leaves it where it is.
 

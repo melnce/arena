@@ -1119,6 +1119,11 @@ pub enum CardSource {
         #[serde(rename = "randomFrom")]
         random_from: Filter,
     },
+    /// One of the listed ids, uniformly at random, as a fresh instance (not from deck).
+    RandomNamed {
+        #[serde(rename = "randomNamed")]
+        random_named: Vec<CardId>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2774,6 +2779,7 @@ fn walk_source(src: &CardSource, used: &mut BTreeSet<String>) {
         CardSource::Copy { copy_of, .. } => walk_selector(copy_of, used),
         CardSource::From { from } => walk_selector(from, used),
         CardSource::RandomFrom { random_from } => walk_filter(random_from, used),
+        CardSource::RandomNamed { .. } => {}
         CardSource::Named { .. } => {}
     }
 }
