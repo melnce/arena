@@ -7232,11 +7232,33 @@ fn first_choose_options(effects: &[Effect]) -> Option<Vec<ChooseOption>> {
     None
 }
 
+/// Card id for a `SourceRef`, including last-known information when the instance
+/// left the field. Sacrifice Engage destroys its amulet before the rest of its
+/// printed text resolves; that text still refers to that card (cemetery, then
+/// banished pile, newest first).
 pub(crate) fn source_card_id(state: &State, source: SourceRef) -> Option<CardId> {
     match source {
         SourceRef::Field { player, id } => state
             .find_field(player, id)
-            .and_then(|s| state.field_inst(player, s).map(|c| c.card)),
+            .and_then(|s| state.field_inst(player, s).map(|c| c.card))
+            .or_else(|| {
+                state
+                    .player(player)
+                    .cemetery
+                    .iter()
+                    .rev()
+                    .find(|c| c.id == id)
+                    .map(|c| c.card)
+            })
+            .or_else(|| {
+                state
+                    .player(player)
+                    .banished
+                    .iter()
+                    .rev()
+                    .find(|c| c.id == id)
+                    .map(|c| c.card)
+            }),
         SourceRef::Hand { player, id } => state
             .player(player)
             .hand
@@ -7332,14 +7354,7 @@ fn replicate(
     source: SourceRef,
     key: ReplicateKey,
 ) -> Result<(), Illegal> {
-    let card_id = match source {
-        SourceRef::Field { player, id } => state
-            .find_field(player, id)
-            .and_then(|s| state.field_inst(player, s).map(|c| c.card)),
-        SourceRef::Spell { card, .. } => Some(card),
-        _ => None,
-    };
-    let Some(cid) = card_id else {
+    let Some(cid) = source_card_id(state, source) else {
         return Ok(());
     };
     let card = db.card(cid).map_err(|_| Illegal::NotLegal)?;

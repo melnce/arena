@@ -42,6 +42,44 @@
 //! | 67 | meta-haven-amulet | `0x50a92b69688f99c3` → `0x85c938a069126ff1` | 20 | match | — | — | **n 20:** actions `0..19` identical; `hash@20` match; legal identical (10 actions); main idx 5 attack slot 0; branch idx 2 play Timepiece of Perfection `10762210` (no play-time pick on either root). **explain@20 cand[2]:** worlds 0–2 match (leaf −6.2134); **world[3]** diverges — main hits node cap after engage (`pv_len=2`); branch `pv_len=9` leaf +4.4162 with opp Depths of the Eld Sword `90024320` (Enhanced) `choose` at PV step 5 while Faith: Yidmetra `faith:10624120` is deferred → `root_agg` −6.2134 → −3.5560 (beats main best attack −5.8025). |
 //! | 79 | meta-haven-evo | `0x42fbd544e452ebf0` → `0x2d183971e45391ae` | 63 | match | — | — | **n 63:** actions `0..62` identical; `hash@63` match; legal identical (4 actions); main idx 0 play Depths of the Eld Sword `90024320` (Enhanced) → `64` `EffectSelect` destroy; branch idx 1 attack (`64` plays Depths with `PlaySelect` + `deferred_rx=1`). |
 //!
+//! ## Earrings Engage re-pins (`main@99b7c05` → branch)
+//!
+//! Sacrifice Engage replicates Fanfare (`10761210`). Gate fingerprints recomputed from each
+//! test's own `h0` spec (not the `print_*` helpers). **`n`** is the 0-based index printed
+//! by `dump_gate_actions` (same convention as the play-time table above: first neutral-action
+//! JSON where branch and `main@99b7c05` differ). Proof (c): `git show origin/main:engine/src/apply.rs`
+//! + `origin/main` pins → `cargo test --release --test h0_defaults -- --include-ignored`
+//!   → **26 passed** (2026-10-11).
+//!
+//! Where the first divergence is a **`meta-sword-rally` (seat B) move** before any Earrings
+//! play on that trace, B's search simulates A's turns in its worlds; A's sacrifice Engage now
+//! replicates Fanfare and cycles a hand card, so B's policy picks change — proof (c) ties those
+//! rows to this fix.
+//!
+//! | file / table | seed | deck | main@99b7c05 → branch | n | divergence |
+//! |--------------|------|------|------------------------|---|------------|
+//! | `DEFAULT_FINGERPRINTS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x86671e5ef842ccfb` | 31 | branch `engage` slot 2 (`10761210`); main `play` hand 3 `10661210`. Earrings on field at n. |
+//! | `DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x28f80dd9b44b4e7b` → `0xf4c105a794883210` | 61 | branch A `attack`; main A `play` `10761210` (Earrings on field; prior A `engage` slot 0 @ 60). |
+//! | `LEGACY_FINGERPRINTS` | 67 | meta-haven-amulet | `0xf0a3386e8682af1e` → `0x6af15e5560a10a58` | 19 | branch A `engage` slot 1; main A `engage` slot 3. Earrings on field at n. |
+//! | `LEGACY_FINGERPRINTS` | 79 | meta-haven-evo | `0x953effd47650d22e` → `0x4e0f03454ca12711` | 30 | branch B `play` `10723110`; main B `attack` leader (seat-B first diff). |
+//! | `LEGACY_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x5b5a5be5f92e3c7c` → `0x97344d31d7152b48` | 11 | branch B `attack` leader; main B `attack` slot 1 (seat-B first diff). |
+//! | `V1_DEFAULT_FINGERPRINTS` | 67 | meta-haven-amulet | `0x85c938a069126ff1` → `0xb1abe142aa179c09` | 49 | branch B `play` `90021120`; main B `attack` slot 3 leader (seat-B first diff). |
+//! | `V1_DEFAULT_FINGERPRINTS` | 79 | meta-haven-evo | `0x2d183971e45391ae` → `0x1aab6bacaa68cfb1` | 55 | branch A `choose` `10963210`; main A `choose` `10863210`. |
+//! | `V1_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x5b5a5be5f92e3c7c` → `0x97344d31d7152b48` | 11 | same as legacy 97 (seat-B first diff). |
+//! | `V2_DEFAULT_FINGERPRINTS` | 67 | meta-haven-amulet | `0x8f6bb18b4445e0bd` → `0x9b0b1dba8bb63158` | 48 | branch B `play` `90024330`; main B `attack` slot 2 slot 3 (seat-B first diff). |
+//! | `V2_DEFAULT_FINGERPRINTS` | 79 | meta-haven-evo | `0x5cca9048c37e96c9` → `0x6c3461eed232775e` | 58 | branch B `attack` slot 0 slot 0; main B `attack` slot 1 slot 0 (seat-B first diff). |
+//! | `V2_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x46e6103324ea959f` → `0xccfa14793ef8e148` | 4 | branch B `play` `10021110`; main B `bonus_pp` (seat-B first diff). |
+//! | `V3_DEFAULT_FINGERPRINTS` | 67 | meta-haven-amulet | `0x783df18c0ca289f1` → `0x9e4a4092a024a9e7` | 99 | branch A `engage` slot 1; main A `play` hand 6 `90064320`. Earrings on field at n. |
+//! | `V3_DEFAULT_FINGERPRINTS` | 79 | meta-haven-evo | `0x3f38eeac5db259c1` → `0xfd6aac8f03e94988` | 48 | branch A `engage` slot 0; main A `play` `10863210`. Earrings on field at n. |
+//! | `V3_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x857a2b3ba078359e` → `0x435b799878a022c3` | 4 | branch B `play` `10021110`; main B `bonus_pp` (seat-B first diff). |
+//! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x86671e5ef842ccfb` | 31 | same as default `h0`. |
+//! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0x28f80dd9b44b4e7b` → `0xf4c105a794883210` | 61 | same as default `h0`. |
+//! | `h0_okill` `OKILL7_GATE_FPS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x356d7e0a857b5dec` | 31 | `h0:okill=7`; same as default `h0` seed 67. |
+//! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x84f14a0177e6c228` → `0x0389b4048b50d258` | 61 | `h0:okill=7`; same as default `h0` seed 97. |
+//! | `h0_hbk` `DEFAULT_OKILL_GATE_FPS` | 67, 97 | haven | same as `h0_okill` DEFAULT | 31 / 61 | `hbk_default_play_unchanged_gate` uses `load_db()` (current rules). |
+//! | `h0_info` `other_info_modes_play_unchanged_on_meta_games` | 99 | haven-amulet vs dragon-ramp | play tuples in `h0_info.rs` | — | revert proof: `main` `apply.rs` + old tuples → **2 passed** (`other_info_modes_*`, `okill_omacro_*`). |
+//! | `h0_info` `okill_omacro_defaults_play_unchanged_on_meta_games` | 99 | haven-amulet vs dragon-ramp | play tuples in `h0_info.rs` | — | same revert proof as row above. |
+//!
 //! ### legacy `h0:mull=rule,info=fair`
 //!
 //! | seed | deck | main@b5b822c → branch | n | hash@n | hashΔ | reconv | proof |
@@ -172,9 +210,9 @@ const DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x649a_13b2_5e6f_3115,
     0xf257_1914_6cd5_5f83,
     0x362b_e20c_ddf6_d64c,
-    0x25a8_e316_2fe6_53ad,
+    0x8667_1e5e_f842_ccfb,
     0xfd90_619b_00c6_58f3,
-    0x28f8_0dd9_b44b_4e7b,
+    0xf4c1_05a7_9488_3210,
 ];
 
 /// Pre-v4 default `h0` fingerprints (`main@3742a1b`, built-in `h0-linear-v3`).
@@ -184,9 +222,9 @@ const V3_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x120b_7fb2_41cf_3f44,
     0xfd6c_73d8_9fd1_d09d,
     0xd9fb_a1c8_8f98_0106,
-    0x783d_f18c_0ca2_89f1,
-    0x3f38_eeac_5db2_59c1,
-    0x857a_2b3b_a078_359e,
+    0x9e4a_4092_a024_a9e7,
+    0xfd6a_ac8f_03e9_4988,
+    0x435b_7998_78a0_22c3,
 ];
 
 /// Pre-v3 default `h0` fingerprints (`main@a69b248`, built-in `h0-linear-v2`).
@@ -196,9 +234,9 @@ const V2_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x122c_fa71_850c_7637,
     0x9475_f3fc_7d65_58c7,
     0x3633_2073_4090_3124,
-    0x8f6b_b18b_4445_e0bd,
-    0x5cca_9048_c37e_96c9,
-    0x46e6_1033_24ea_959f,
+    0x9b0b_1dba_8bb6_3158,
+    0x6c34_61ee_d232_775e,
+    0xccfa_1479_3ef8_e148,
 ];
 
 /// Pre-v2 default `h0` fingerprints (`main@063bdd4`, built-in `h0-linear-v1`).
@@ -208,9 +246,9 @@ const V1_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x0c5e_00eb_14bd_ce85,
     0xa024_135f_cf64_4006,
     0x7099_b9ba_b571_926b,
-    0x85c9_38a0_6912_6ff1,
-    0x2d18_3971_e453_91ae,
-    0x5b5a_5be5_f92e_3c7c,
+    0xb1ab_e142_aa17_9c09,
+    0x1aab_6bac_aa68_cfb1,
+    0x9734_4d31_d715_2b48,
 ];
 
 /// Pre-flip `h0` action fingerprints (`h0:mull=rule,info=fair`). Re-pinned with
@@ -221,9 +259,9 @@ const LEGACY_FINGERPRINTS: [u64; 8] = [
     0x0c5e_00eb_14bd_ce85,
     0x3d7f_2f1b_9db5_99cc,
     0x7099_b9ba_b571_926b,
-    0xf0a3_386e_8682_af1e,
-    0x953e_ffd4_7650_d22e,
-    0x5b5a_5be5_f92e_3c7c,
+    0x6af1_5e55_60a1_0a58,
+    0x4e0f_0345_4ca1_2711,
+    0x9734_4d31_d715_2b48,
 ];
 
 /// Dump canonical state hash after each h0 decision (ignored).

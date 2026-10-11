@@ -15,6 +15,12 @@ const SWEET_ABOMINATION_MODES = [
   "1. Deal 3 damage to all enemy followers.",
   "2. Draw 2 cards.",
 ];
+const GEMS = "10463210";
+const ENEMY_FOLLOWER = "10001110";
+const GEMS_ENGAGE_MODES = [
+  "1. Destroy a random enemy follower.",
+  "2. Draw 2 cards.",
+];
 
 async function boot(page: Page) {
   await page.goto("/");
@@ -152,6 +158,79 @@ async function clickMode(page: Page, label: string) {
   }, label);
   await expect(page.locator(".choice-modal")).toBeHidden({ timeout: 5000 });
 }
+
+test("mode labels: gems engage sacrifice", async ({ page }) => {
+  test.setTimeout(120_000);
+  await boot(page);
+  const deck = await importDeck(page, "gems-engage.json", {
+    [GEMS]: 15,
+    [ENEMY_FOLLOWER]: 25,
+  });
+  await startGame(page, deck);
+  await confirmMulligans(page);
+  await closeDrawer(page);
+
+  const ready = await page.evaluate(
+    ({ gems, enemy }) => {
+      const arena = window.__arena!;
+      const ids = { gems, enemy };
+      const full = () =>
+        arena.full() as {
+          active: "a" | "b";
+          phase: string | { choice?: unknown };
+          players: {
+            a: { pp: number; field: Array<{ card?: string } | null> };
+            b: { pp: number; hand: Array<{ card: string }>; field: Array<{ card?: string } | null> };
+          };
+        };
+      const legal = () => arena.legal() as Array<Record<string, unknown>>;
+      const applyFirst = (pred: (a: Record<string, unknown>) => boolean) => {
+        const act = legal().find(pred);
+        if (!act) return false;
+        arena.apply(act);
+        return true;
+      };
+      const endTurn = () => applyFirst((a) => "end_turn" in a);
+      const play = (card: string) =>
+        applyFirst((a) => (a.play as { card?: string } | undefined)?.card === card);
+      const gemsOnBoard = () => full().players.a.field.some((c) => c?.card === ids.gems);
+      const enemyOnBoard = () => full().players.b.field.some((c) => c?.card === ids.enemy);
+
+      for (let guard = 0; guard < 160; guard++) {
+        const st = full();
+        if (typeof st.phase === "object") {
+          applyFirst((a) => "choose" in a);
+          continue;
+        }
+        if (st.active === "b") {
+          if (st.players.b.pp >= 2 && !enemyOnBoard()) {
+            play(ids.enemy);
+            continue;
+          }
+          endTurn();
+          continue;
+        }
+        if (gemsOnBoard() && enemyOnBoard()) {
+          const act = legal().find(
+            (a) => (a.engage as { player?: string } | undefined)?.player === "a",
+          );
+          if (!act) return false;
+          arena.apply(act);
+          return true;
+        }
+        if (st.players.a.pp >= 3 && !gemsOnBoard() && play(ids.gems)) continue;
+        endTurn();
+      }
+      return false;
+    },
+    { gems: GEMS, enemy: ENEMY_FOLLOWER },
+  );
+  expect(ready, "gems engage").toBeTruthy();
+
+  const labels = await modeButtonTexts(page);
+  expect(labels).toEqual(GEMS_ENGAGE_MODES);
+  await artShot(page.locator(".choice-modal"), `${ART}/gems_engage_mode_labels.png`);
+});
 
 test("mode labels: sweet abomination play-time earth rite", async ({ page }) => {
   await boot(page);

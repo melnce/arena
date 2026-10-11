@@ -57,9 +57,9 @@ const DEFAULT_OKILL_GATE_FPS: [u64; 8] = [
     0x649a_13b2_5e6f_3115,
     0xf257_1914_6cd5_5f83,
     0x362b_e20c_ddf6_d64c,
-    0x25a8_e316_2fe6_53ad,
+    0x8667_1e5e_f842_ccfb,
     0xfd90_619b_00c6_58f3,
-    0x28f8_0dd9_b44b_4e7b,
+    0xf4c1_05a7_9488_3210,
 ];
 
 /// `h0:okill=7` fingerprints on the same gate pairs. Computed on `main@7d7d2d1`
@@ -70,9 +70,9 @@ const OKILL7_GATE_FPS: [u64; 8] = [
     0x421d_14c6_1a80_f253,
     0x002a_10c1_1b84_7922,
     0xb971_00c3_06c1_81b7,
-    0x25a8_e316_2fe6_53ad,
+    0x356d_7e0a_857b_5dec,
     0x6e50_ac90_c116_9b49,
-    0x84f1_4a01_77e6_c228,
+    0x0389_b404_8b50_d258,
 ];
 
 /// Served spec fingerprints (seeds 11, 23, 37). Computed on `main@7d7d2d1` with

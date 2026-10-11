@@ -626,6 +626,8 @@ const SWEET_ABOMINATION_MODES: [&str; 2] = [
     "1. Deal 3 damage to all enemy followers.",
     "2. Draw 2 cards.",
 ];
+const GEMS: &str = "10463210";
+const GEMS_ENGAGE_MODES: [&str; 2] = ["1. Destroy a random enemy follower.", "2. Draw 2 cards."];
 
 fn assert_modes_open(st: &arena_engine::State) {
     assert!(
@@ -720,6 +722,21 @@ fn mode_choice_info_bittersweet_after_first_pick() {
     let info = mode_choice_info(&db, &st).expect("second pick still lists all modes");
     assert_eq!(info.source, BITTERSWEET);
     assert_eq!(info.options.as_slice(), BITTERSWEET_OPTIONS);
+}
+
+#[test]
+fn mode_choice_info_gems_engage_mode_labels() {
+    let db = load_db();
+    let mut st = started(&db, 10463210);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, opp, "89500001");
+    let slot = put_field(&db, &mut st, me, GEMS);
+    apply(&db, &mut st, Action::Engage { slot: Slot(slot) }).expect("engage");
+    assert_modes_open(&st);
+    let info = mode_choice_info(&db, &st).expect("gems engage modes");
+    assert_eq!(info.source, GEMS);
+    assert_eq!(info.options.as_slice(), GEMS_ENGAGE_MODES);
 }
 
 #[test]

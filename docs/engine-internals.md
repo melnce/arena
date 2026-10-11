@@ -171,6 +171,7 @@ Asked; arena follows the rulebook/text until he says otherwise.
 3. **Duplicate-id draw after `returnToDeck`.** A draw of an id that has both a modified copy and a just-returned printed copy takes the oldest (first in vec; return appends).
 4. **E38 — entrant's own `on:enter` vs older `ally_enter`.** Implemented as same-timing board enter triggers, oldest first (not a jump onto `pending_work` above Fanfare). Pending owner.
 5. **E40 — source must still be in its zone.** See Resolution §1. Trap in the Woods vs a 3-Knight summon: three `enemy_follower_enter` items queue (no mid-effect interrupt); the first destroys the first Knight and the trap; the other two skip.
+6. **E41 — sacrifice Engage still refers to its card.** Printed order destroys the amulet first, then resolves the rest of the Engage text. That text still means that card: `source_card_id` for a `SourceRef::Field` falls back to the instance in the owner's cemetery, then banished pile (newest first), so `replicate` and mode labels (`mode_choice_info`) work after the destroy. Earrings of Sunlight replicates its Fanfare; De La Fille's Gleaming Gems shows printed mode labels on Engage. E40 still drops *other* cards' queued triggers when their field source is gone; this is last-known information for the Engage's own `SourceRef::Field`, not an exception to E40.
 
 ## Defense debuff and `max_defense`
 
