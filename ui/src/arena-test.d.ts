@@ -81,6 +81,8 @@ declare global {
       spotlightEnqueue(events: unknown[]): void;
       turnPings(): number;
       playTurnPing(): void;
+      captures(): { waiting: number; uploaded: number; lastError: string | null };
+      flushCaptures(): Promise<void>;
     };
   }
 }

@@ -15,6 +15,17 @@ import {
 import { byId } from "./render/ids.ts";
 import { benchResult, initBenchUi } from "./bench.ts";
 import {
+  captureQueueStats,
+  flushCaptures,
+  initCaptures,
+  initCapturesSettingsUi,
+  onGameEnd,
+  onSessionStart,
+  recordBotStep,
+  setCaptureSessionRef,
+  type BotBackend,
+} from "./captures.ts";
+import {
   botStepWorker,
   botWorkerEnabled,
   botWorkerState,
@@ -287,6 +298,8 @@ function exposeArena(): void {
     },
     turnPings: () => turnPings(),
     playTurnPing: () => playTurnPing(),
+    captures: () => captureQueueStats(),
+    flushCaptures: () => flushCaptures(),
     mountNamedCounter: (vars) => {
       const host = document.getElementById("blueBoard") ?? document.body;
       const inst = {
@@ -429,6 +442,7 @@ function showCombat(events: EngineEvent[]): void {
   if (show) reflashDamage(events);
   if (session.cfg.mode === "vs-bot" && session.game.phase() === "terminal") {
     reportFinishedGame(session);
+    void onGameEnd(session);
   }
 }
 
@@ -580,10 +594,10 @@ async function startFromForm(): Promise<void> {
       cfg.policyB = vs;
     }
   }
-  startSession(cfg);
+  await startSession(cfg);
 }
 
-function startSession(cfg: SessionConfig): void {
+async function startSession(cfg: SessionConfig): Promise<void> {
   watchPlaying = false;
   spotlightEpoch += 1;
   botLoopSession = null;
@@ -593,8 +607,11 @@ function startSession(cfg: SessionConfig): void {
   localBotThinking = false;
   clearBotDecisionPending();
   resetSpotlightSession();
+  const previous = session;
+  await onSessionStart(cfg, previous);
   disposeSession(session);
   session = createSession(cfg);
+  setCaptureSessionRef(session);
   if (cfg.mode === "vs-bot") {
     const pol = cfg.policyA;
     if ((pol === "h0" || pol.startsWith("h0:")) && botWorkerEnabled()) {
@@ -657,7 +674,7 @@ async function rematch(keepSeed: boolean): Promise<void> {
     const seedInput = byId<HTMLInputElement>("seedInput");
     if (seedInput) seedInput.value = cfg.seed.toString();
   }
-  startSession(cfg);
+  await startSession(cfg);
 }
 
 function localBotQueryOff(): boolean {
@@ -878,6 +895,7 @@ async function maybeBots(): Promise<void> {
           if (staleRuns >= 3) {
             events = botStep(s);
             staleRuns = 0;
+            if (events.length) noteBotStepFromLoop(s, { useLocal, useWorker, usedMainFallback: true });
             showCombat(events);
             if (botEndedTurnInEvents(events, s.cfg.humanSide)) botEndedTurn = true;
             if (session === s && spotlightEpoch === epoch) {
@@ -900,6 +918,7 @@ async function maybeBots(): Promise<void> {
         refreshBotBackendBadge();
       }
       guard += 1;
+      if (events.length) noteBotStepFromLoop(s, { useLocal, useWorker, usedMainFallback: false });
       showCombat(events);
       if (botEndedTurnInEvents(events, s.cfg.humanSide)) botEndedTurn = true;
       if (session === s && spotlightEpoch === epoch) {
@@ -1480,7 +1499,35 @@ function restorePersistedToggles(): void {
   syncWatchSpeedReadout();
 }
 
+function noteBotStepFromLoop(
+  s: Session,
+  opts: { useLocal: boolean; useWorker: boolean; usedMainFallback: boolean },
+): void {
+  let backend: BotBackend = "main";
+  let ms: number | null = null;
+  let value: number | null = null;
+  if (opts.usedMainFallback || (!opts.useLocal && !opts.useWorker)) {
+    backend = "main";
+  } else if (opts.useLocal) {
+    const meta = lastLocalBotStepMeta();
+    if (meta.usedRemote) {
+      backend = "server";
+      ms = meta.ms ?? null;
+      value = meta.value ?? null;
+    } else {
+      backend = "main";
+    }
+  } else if (opts.useWorker) {
+    const meta = lastBotWorkerStepMeta();
+    if (meta.stale) return;
+    backend = "worker";
+    ms = meta.ms ?? null;
+  }
+  recordBotStep(s, backend, ms, value);
+}
+
 async function boot(): Promise<void> {
+  initCaptures();
   installAudioUnlock();
   restorePersistedToggles();
   await init();
@@ -1496,6 +1543,7 @@ async function boot(): Promise<void> {
   initImportDeck();
   initWatch();
   initBenchUi();
+  initCapturesSettingsUi();
   bindTooltips();
   bindPointer({
     play: (p, i) => hooks.onPlay(p, i),
