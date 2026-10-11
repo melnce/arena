@@ -27,7 +27,7 @@ const DEFAULT_OKILL_GATE_FPS: [u64; 8] = [
     0x362b_e20c_ddf6_d64c,
     0x8667_1e5e_f842_ccfb,
     0xfd90_619b_00c6_58f3,
-    0xf4c1_05a7_9488_3210,
+    0x0d24_2b16_5f40_84c8,
 ];
 
 const SERVED_GATE_SEEDS: [u64; 3] = [11, 23, 37];
