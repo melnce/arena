@@ -1,0 +1,7 @@
+From https://github.com/melnce/arena
+ * [new branch]      cursor/earrings-engage-replicate -> origin/cursor/earrings-engage-replicate
+ * [new branch]      cursor/kukishiro-crest-sofina -> origin/cursor/kukishiro-crest-sofina
+ * [new branch]      cursor/parallel-worlds -> origin/cursor/parallel-worlds
+ * [new branch]      cursor/serve-multicore -> origin/cursor/serve-multicore
+ * [new branch]      cursor/serve-okill8    -> origin/cursor/serve-okill8
+Already up to date.
