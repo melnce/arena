@@ -784,12 +784,7 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
         }
     }
     if let Some(path) = order_path {
-        let share_leaf = h.net_path.as_deref() == Some(path.as_str())
-            || (h.value == ValueVersion::Net
-                && h.net_path.is_none()
-                && (path.ends_with(crate::policy::h0::BUILTIN_NET_NAME)
-                    || path.ends_with("h0-linear-v4.json")));
-        if share_leaf {
+        if h.net_path.as_deref() == Some(path.as_str()) {
             h.order = h.net.clone();
         } else {
             h.order = Some(crate::policy::net::ValueNet::load(&path)?);

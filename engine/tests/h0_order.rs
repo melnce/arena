@@ -47,6 +47,14 @@ fn with_order(spec: &str, order_path: &str, oorder: bool) -> String {
     }
 }
 
+fn order_copy_of_v4_elsewhere() -> PathBuf {
+    let src = crate_dir().join("models/h0-linear-v4.json");
+    let mut path = std::env::temp_dir();
+    path.push("h0-order-v4-copy.json");
+    fs::copy(&src, &path).expect("copy v4");
+    path
+}
+
 fn zero_order_net_path() -> PathBuf {
     let v4 = fs::read_to_string(crate_dir().join("models/h0-linear-v4.json")).expect("v4");
     let mut j: Value = serde_json::from_str(&v4).expect("json");
@@ -259,13 +267,29 @@ fn order_spec_parser_round_trip_and_errors() {
     let e_net = AnyPolicy::parse_spec(missing).unwrap_err();
     let e_order = AnyPolicy::parse_spec("h0:net=/no/such/net.json").unwrap_err();
     assert_eq!(e_net, e_order);
+
+    let v4 = h0_linear_v4_path();
+    let both = format!("h0:net={v4},order={v4}");
+    let h = parse_h0(&both);
+    assert!(std::sync::Arc::ptr_eq(
+        h.order.as_ref().expect("order"),
+        h.net.as_ref().expect("net"),
+    ));
 }
 
 #[test]
 fn same_order_net_as_leaf_is_identity_on_review_and_self_play() {
     let db = load_recorded_db();
-    let v4 = h0_linear_v4_path();
-    let order_spec = with_order(SERVED_RELEASE, &v4, true);
+    let order_path = order_copy_of_v4_elsewhere().display().to_string();
+    let order_spec = with_order(SERVED_RELEASE, &order_path, true);
+    let h = parse_h0(&order_spec);
+    assert!(
+        !std::sync::Arc::ptr_eq(
+            h.order.as_ref().expect("order"),
+            h.net.as_ref().expect("net"),
+        ),
+        "copy path must load order from disk, not share built-in leaf"
+    );
 
     for m in REVIEW_MOMENTS {
         let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
@@ -414,11 +438,11 @@ fn order_net_speed_within_three_percent_on_review_moments() {
     let h_base = parse_h0(SERVED_RELEASE);
     let h_order = parse_h0(&with_order);
     assert!(
-        std::sync::Arc::ptr_eq(
+        !std::sync::Arc::ptr_eq(
             h_order.order.as_ref().expect("order"),
             h_base.net.as_ref().expect("net"),
         ),
-        "order= must share the built-in leaf Arc when paths match"
+        "order=v4 path loads a separate Arc from the built-in leaf"
     );
     let mut base_ns = 0u128;
     let mut order_ns = 0u128;

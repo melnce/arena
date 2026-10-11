@@ -2116,7 +2116,11 @@ fn fuse_overshoot_score(
             let order_v = eval.pick_value(&s, me, me);
             if order_v > best_order {
                 best_order = order_v;
-                best_leaf = eval.value(&s, me);
+                best_leaf = if eval.order_net.is_none() {
+                    order_v
+                } else {
+                    eval.value(&s, me)
+                };
                 best_state = s;
                 best_actions = actions;
             }
