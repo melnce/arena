@@ -367,8 +367,8 @@ test("menu lists PC strength from serve.py", async ({ page }) => {
   );
   const cheatIdx = opts.findIndex((o) => o.label.includes("cheater — sees your hand"));
   expect(cheatIdx).toBeGreaterThanOrEqual(0);
-  expect(opts[cheatIdx + 1]).toEqual({ value: strong, label: "h0 (PC strength)" });
-  expect(opts[cheatIdx + 2]).toEqual({ value: cheat, label: "h0 (cheater, PC strength)" });
+  expect(opts[cheatIdx + 1]).toEqual({ value: strong, label: "h0 (full strength, newest)" });
+  expect(opts[cheatIdx + 2]).toEqual({ value: cheat, label: "h0 (cheater, full strength, newest)" });
   for (const id of ["#policyASelect", "#policyBSelect"]) {
     const values = await page.locator(`${id} option`).evaluateAll((els) =>
       els.map((el) => (el as HTMLOptionElement).value),

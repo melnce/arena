@@ -86,6 +86,7 @@ test("desktop: option list defaults to h0 (strong)", async ({ page }) => {
     CHEAT,
     PC.strong,
     PC.cheat,
+    "__custom_spec__",
   ]);
   expect(opts[2]?.label).toBe("h0 (standard)");
   expect(opts[3]?.label).toBe("h0 (strong)");

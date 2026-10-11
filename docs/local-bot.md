@@ -46,7 +46,7 @@ browser still blocks the request, run the UI with `cd ui && npm run dev`.
 Settings → **Use local bot server when available** (on by default; the
 `?localbot=0` query flag also skips the probe and every `/bot` POST).
 In vs-bot the badge next to the policy select should read something like
-`bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8, 28 cpus)`. No server → `bot: browser` plus the running game’s policy label (e.g. `bot: browser · h0 (strong)`).
+`bot: local server (h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8, 28 cpus)`. No server → `bot: browser` when idle, or `bot: browser (<running spec>)` during a vs-bot game (e.g. `bot: browser (h0:nodes=6000)`). The menu’s **h0 (full strength, newest)** option is `py/serve.py`’s `DEFAULT_STRONG` at build time; your PC’s local server may run an older checkout and its badge shows that spec.
 The default samples eight worlds at twice the previous node cap. The served bot
 takes a deterministic kill before searching (`tkill`, up to 10 000 solver
 applies outside the node cap; runbook 32 audit at results `e2c8e1d`) and a

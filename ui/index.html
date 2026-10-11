@@ -197,6 +197,19 @@
                 </select>
                 <label id="vsBotPolicyLabel" for="vsBotPolicy">Bot policy</label>
                 <select id="vsBotPolicy"></select>
+                <div id="customBotSpecPanel" class="toolbar-cluster" hidden>
+                  <label for="customBotSpecInput">Custom h0 spec</label>
+                  <input
+                    id="customBotSpecInput"
+                    type="text"
+                    spellcheck="false"
+                    autocomplete="off"
+                    placeholder="h0 or h0:nodes=…"
+                  />
+                  <button type="button" id="customBotSpecSave">Save</button>
+                  <button type="button" id="customBotSpecCancel">Cancel</button>
+                  <p id="customBotSpecError" class="checkpoint-status"></p>
+                </div>
                 <p id="vsBotPolicyHint" class="checkpoint-status"></p>
                 <span id="botBackendBadge">bot: browser</span>
                 <label class="toolbar-check-label" for="hideBotHandToggle">

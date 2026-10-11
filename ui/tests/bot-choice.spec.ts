@@ -6,6 +6,8 @@ import { ART, artShot, openSettings } from "./helpers.ts";
 
 const STRONG = "h0:nodes=6000";
 const THINK_QUERY = "localbot=0&botworkerspin=8000";
+const CUSTOM_MENU = "__custom_spec__";
+const CUSTOM_SPEC = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000";
 
 function readPcPolicies(): { strong: string; cheat: string } {
   const servePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../py/serve.py");
@@ -129,6 +131,7 @@ test("vsBotPolicyHint shows label and title for every option; persists after rel
     (opts as HTMLOptionElement[]).map((o) => o.value),
   );
   for (const value of values) {
+    if (value === CUSTOM_MENU) continue;
     await page.locator("#vsBotPolicy").selectOption(value);
     const meta = await optionMeta(page, value);
     const hint = page.locator("#vsBotPolicyHint");
@@ -152,7 +155,7 @@ test("menu change mid-game: hint warns; badge names running bot until Start", as
   await startVsBot(page, { botPolicy: STRONG });
   await confirmMulligans(page);
   const strongMeta = await optionMeta(page, STRONG);
-  await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser · ${strongMeta.label}`);
+  await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser (${STRONG})`);
   await openSettings(page);
   const pcMeta = await optionMeta(page, PC.strong);
   await page.locator("#vsBotPolicy").selectOption(PC.strong);
@@ -160,26 +163,24 @@ test("menu change mid-game: hint warns; badge names running bot until Start", as
   await expect(hint).toContainText(pcMeta.label);
   await expect(hint).toContainText(pcMeta.title);
   await expect(hint).toContainText("Applies from the next game (Start or Rematch).");
-  await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser · ${strongMeta.label}`);
+  await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser (${STRONG})`);
   await page.locator("#startGameBtn").click();
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
     timeout: 15_000,
   });
-  await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser · ${pcMeta.label}`);
+  await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser (${PC.strong})`);
 });
 
 test("browser badge names running bot idle and while thinking", async ({ page }) => {
   test.setTimeout(120_000);
   await boot(page, THINK_QUERY);
   await startVsBot(page, { seed: "42", first: "b", botPolicy: "h0" });
-  const meta = await optionMeta(page, "h0");
-  await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser · ${meta.label}`);
+  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser (h0)");
   await confirmMulligans(page);
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b", { timeout: 60_000 });
-  await expect(page.locator("#botBackendBadge")).toHaveText(
-    `bot: browser · ${meta.label} — thinking…`,
-    { timeout: 90_000 },
-  );
+  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser (h0) — thinking…", {
+    timeout: 90_000,
+  });
 });
 
 test("watch rematch takes policyASelect and policyBSelect", async ({ page }) => {
@@ -218,20 +219,94 @@ test("watch rematch takes policyASelect and policyBSelect", async ({ page }) => 
   expect(policies).toEqual(["first-legal", STRONG]);
 });
 
-test("tablet screenshot: PC strength hint and badge", async ({ page }) => {
-  await page.setViewportSize({ width: 1180, height: 820 });
+async function openCustomSpecEditor(page: Page) {
+  await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#vsBotPolicy").selectOption(CUSTOM_MENU);
+  await expect(page.locator("#customBotSpecPanel")).toBeVisible();
+}
+
+async function saveCustomSpec(page: Page, spec: string) {
+  await page.locator("#customBotSpecInput").fill(spec);
+  await page.locator("#customBotSpecSave").click();
+}
+
+test("menu lists renamed full-strength options and custom spec entry", async ({ page }) => {
   await boot(page);
   await openSettings(page);
   await page.locator("#modeSelect").selectOption("vs-bot");
-  await page.locator("#vsBotPolicy").selectOption(PC.strong);
-  const meta = await optionMeta(page, PC.strong);
-  await expect(page.locator("#vsBotPolicyHint")).toContainText(meta.label);
-  await artShot(page.locator("#vsBotFields"), `${ART}/bot_choice_pc_hint.png`);
+  const labels = await page.locator("#vsBotPolicy option").evaluateAll((opts) =>
+    (opts as HTMLOptionElement[]).map((o) => o.textContent ?? ""),
+  );
+  expect(labels).toContain("h0 (full strength, newest)");
+  expect(labels).toContain("h0 (cheater, full strength, newest)");
+  expect(labels).toContain("Custom spec…");
+});
+
+test("custom spec: save, reload, start and rematch use spec; badge shows spec", async ({ page }) => {
+  test.setTimeout(120_000);
+  await boot(page);
+  await openCustomSpecEditor(page);
+  await saveCustomSpec(page, CUSTOM_SPEC);
+  await expect(page.locator("#vsBotPolicy")).toHaveValue(CUSTOM_SPEC);
+  await page.reload();
+  await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
+  await expect(page.locator("#vsBotPolicy")).toHaveValue(CUSTOM_SPEC);
+  const tiny = await importTinyDeck(page);
+  await openSettings(page);
+  await page.locator("#modeSelect").selectOption("vs-bot");
+  await page.locator("#seedInput").fill("1");
+  await page.locator("#blueDeckSelect").selectOption(tiny);
+  await page.locator("#redDeckSelect").selectOption(tiny);
+  await page.locator("#humanSideSelect").selectOption("a");
   await page.locator("#startGameBtn").click();
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
     timeout: 15_000,
   });
   await confirmMulligans(page);
-  await expect(page.locator("#botBackendBadge")).toContainText("h0 (PC strength)");
-  await artShot(page.locator("#appRoot"), `${ART}/bot_choice_pc_badge.png`);
+  await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser (${CUSTOM_SPEC})`);
+  expect(await page.evaluate(() => window.__arena!.policies())).toEqual([CUSTOM_SPEC, CUSTOM_SPEC]);
+  await playToGameOver(page);
+  await page.locator("#rematchNewSeedBtn").click();
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", "mulligan", {
+    timeout: 10_000,
+  });
+  expect(await page.evaluate(() => window.__arena!.policies())).toEqual([CUSTOM_SPEC, CUSTOM_SPEC]);
+  await confirmMulligans(page);
+  await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser (${CUSTOM_SPEC})`);
+});
+
+test("custom spec: invalid specs rejected and not stored", async ({ page }) => {
+  await boot(page);
+  for (const bad of ["h0:nodes=abc", "minimax"]) {
+    await openCustomSpecEditor(page);
+    await saveCustomSpec(page, bad);
+    await expect(page.locator("#customBotSpecError")).not.toHaveText("");
+    await expect(page.locator("#customBotSpecPanel")).toBeVisible();
+    const stored = await page.evaluate(() => localStorage.getItem("svwb.customBotSpec"));
+    expect(stored).toBeNull();
+  }
+});
+
+test("tablet screenshots: menu, custom error, badge with spec", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1180, height: 820 });
+  await boot(page);
+  await openCustomSpecEditor(page);
+  await saveCustomSpec(page, CUSTOM_SPEC);
+  await artShot(page.locator("#vsBotFields"), `${ART}/bot_choice_menu_custom.png`);
+  await page.locator("#vsBotPolicy").selectOption(CUSTOM_MENU);
+  await page.locator("#customBotSpecInput").fill("minimax");
+  await page.locator("#customBotSpecSave").click();
+  await expect(page.locator("#customBotSpecError")).not.toHaveText("");
+  await artShot(page.locator("#vsBotFields"), `${ART}/bot_choice_custom_error.png`);
+  await page.locator("#customBotSpecCancel").click();
+  await page.locator("#vsBotPolicy").selectOption(CUSTOM_SPEC);
+  await page.locator("#startGameBtn").click();
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
+    timeout: 15_000,
+  });
+  await confirmMulligans(page);
+  await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser (${CUSTOM_SPEC})`);
+  await artShot(page.locator("#appRoot"), `${ART}/bot_choice_spec_badge.png`);
 });

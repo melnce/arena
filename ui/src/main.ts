@@ -1,4 +1,4 @@
-import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
+import init, { Game, botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
 import { publicUrl } from "./base.ts";
 import { catalogIds, decks, loadCatalog, lookupText, parseDeckJson } from "./catalog.ts";
 import { clearFloaters, reflashDamage, spawnFloaters } from "./fct.ts";
@@ -531,6 +531,13 @@ const CHEAT_H0_TITLE =
 const STANDARD_H0_TITLE = "Default h0 search (~2 000 nodes per decision)";
 const RANDOM_POLICY_TITLE = "Uniform random among legal actions";
 const FIRST_LEGAL_POLICY_TITLE = "First legal action in engine order";
+const SERVED_STRONG_LABEL = "h0 (full strength, newest)";
+const SERVED_CHEAT_LABEL = "h0 (cheater, full strength, newest)";
+const CUSTOM_SPEC_MENU_VALUE = "__custom_spec__";
+const CUSTOM_SPEC_STORAGE_KEY = "svwb.customBotSpec";
+
+let vsBotPolicySelectWired = false;
+let vsBotPolicyBeforeCustom = "";
 
 function isCheaterPolicy(policy: string): boolean {
   if (!policy.startsWith("h0:")) return false;
@@ -544,17 +551,6 @@ function selectedVsBotPolicy(): string {
   return byId<HTMLSelectElement>("vsBotPolicy")?.value ?? "";
 }
 
-function policyOptionMeta(
-  value: string,
-  sel?: HTMLSelectElement,
-): { label: string; title: string } {
-  const pick = sel ?? byId<HTMLSelectElement>("vsBotPolicy");
-  if (!pick) return { label: value, title: "" };
-  const opt = [...pick.options].find((o) => o.value === value);
-  if (!opt) return { label: value, title: "" };
-  return { label: opt.textContent ?? value, title: opt.title };
-}
-
 function runningVsBotPolicy(s: Session): string {
   const human = s.cfg.humanSide;
   return botPolicyFor(s, human === "a" ? "b" : "a");
@@ -566,10 +562,113 @@ function effectiveVsBotPolicy(): string {
   return selectedVsBotPolicy();
 }
 
-function browserBotBadgeSuffix(): string {
-  if (!session || session.cfg.mode !== "vs-bot") return "";
-  const { label } = policyOptionMeta(runningVsBotPolicy(session));
-  return ` · ${label}`;
+function browserBotBadgeBase(): string {
+  if (!session || session.cfg.mode !== "vs-bot") return "bot: browser";
+  return `bot: browser (${runningVsBotPolicy(session)})`;
+}
+
+function readCustomBotSpec(): string | null {
+  try {
+    return localStorage.getItem(CUSTOM_SPEC_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function persistCustomBotSpec(spec: string): void {
+  try {
+    localStorage.setItem(CUSTOM_SPEC_STORAGE_KEY, spec);
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+function upsertVsBotCustomOption(sel: HTMLSelectElement, spec: string): void {
+  const label = `Custom: ${spec}`;
+  let opt = [...sel.options].find((o) => o.value === spec);
+  if (!opt) {
+    opt = document.createElement("option");
+    opt.value = spec;
+    opt.textContent = label;
+    const prompt = sel.querySelector(`option[value="${CUSTOM_SPEC_MENU_VALUE}"]`);
+    if (prompt) sel.insertBefore(opt, prompt);
+    else sel.appendChild(opt);
+  } else {
+    opt.textContent = label;
+  }
+}
+
+function validateH0BotSpec(spec: string): string | null {
+  const t = spec.trim();
+  if (t !== "h0" && !t.startsWith("h0:")) {
+    return "Policy must be h0 or h0:…";
+  }
+  const forest = deckCache.get("basic-forest");
+  const rune = deckCache.get("basic-rune");
+  if (!forest || !rune) return "Decks not loaded yet";
+  try {
+    const game = new Game("1", JSON.stringify(forest), JSON.stringify(rune), "a");
+    game.botAction(t, "1");
+    return null;
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+}
+
+function hideCustomBotSpecPanel(restoreSelect = true): void {
+  const panel = byId("customBotSpecPanel");
+  const err = byId("customBotSpecError");
+  if (panel) panel.hidden = true;
+  if (err) err.textContent = "";
+  if (restoreSelect) {
+    const vs = byId<HTMLSelectElement>("vsBotPolicy");
+    if (vs && vsBotPolicyBeforeCustom && vs.value === CUSTOM_SPEC_MENU_VALUE) {
+      vs.value = vsBotPolicyBeforeCustom;
+    }
+  }
+}
+
+function showCustomBotSpecPanel(): void {
+  const vs = byId<HTMLSelectElement>("vsBotPolicy");
+  const panel = byId("customBotSpecPanel");
+  const input = byId<HTMLInputElement>("customBotSpecInput");
+  const err = byId("customBotSpecError");
+  if (!vs || !panel || !input) return;
+  if (vs.value !== CUSTOM_SPEC_MENU_VALUE) {
+    vsBotPolicyBeforeCustom = vs.value;
+    vs.value = CUSTOM_SPEC_MENU_VALUE;
+  }
+  input.value = readCustomBotSpec() ?? input.value.trim();
+  if (err) err.textContent = "";
+  panel.hidden = false;
+  input.focus();
+}
+
+async function saveCustomBotSpecFromPanel(): Promise<void> {
+  const vs = byId<HTMLSelectElement>("vsBotPolicy");
+  const input = byId<HTMLInputElement>("customBotSpecInput");
+  const errEl = byId("customBotSpecError");
+  if (!vs || !input || !errEl) return;
+  await ensureDecks();
+  const spec = input.value.trim();
+  const validationErr = validateH0BotSpec(spec);
+  if (validationErr) {
+    errEl.textContent = validationErr;
+    return;
+  }
+  persistCustomBotSpec(spec);
+  upsertVsBotCustomOption(vs, spec);
+  vs.value = spec;
+  persistBotPolicy(spec);
+  applyVsBotPolicy();
+  hideCustomBotSpecPanel(false);
+  refreshVsBotPolicyHint();
+  refreshBotBackendBadge();
+}
+
+function initCustomBotSpecUi(): void {
+  byId("customBotSpecSave")?.addEventListener("click", () => void saveCustomBotSpecFromPanel());
+  byId("customBotSpecCancel")?.addEventListener("click", () => hideCustomBotSpecPanel(true));
 }
 
 function isDesktopClassDevice(): boolean {
@@ -793,7 +892,7 @@ function clearBotDecisionPending(): void {
 
 function botBackendBadgeText(): string {
   const cheater = isCheaterPolicy(effectiveVsBotPolicy());
-  const browser = `bot: browser${browserBotBadgeSuffix()}`;
+  const browser = browserBotBadgeBase();
   const workerErr = botWorkerState().error;
   if (localBotThinking && localBot && !localBotGameError && (!cheater || localBot.cheat)) {
     return "bot: local server — thinking…";
@@ -1081,11 +1180,20 @@ function appendPolicyOption(
   sel.appendChild(o);
 }
 
+function servedStrongTitle(): string {
+  return `From py/serve.py at build time (${__SERVED_STRONG__}). Your PC's local server may run an older spec; its badge shows what it actually plays.`;
+}
+
+function servedCheatTitle(): string {
+  return `${CHEAT_H0_TITLE} From py/serve.py at build time (${__SERVED_CHEAT__}). Your PC's local server may run an older spec; its badge shows what it actually plays.`;
+}
+
 function populatePolicies(): void {
   const names = JSON.parse(botPolicies()) as string[];
   for (const id of ["policyASelect", "policyBSelect", "vsBotPolicy"]) {
     const sel = byId<HTMLSelectElement>(id);
     if (!sel) continue;
+    const isVs = id === "vsBotPolicy";
     sel.innerHTML = "";
     for (const n of names) {
       if (n === "random") {
@@ -1100,33 +1208,33 @@ function populatePolicies(): void {
       if (n === "h0") {
         appendPolicyOption(sel, STRONG_H0, "h0 (strong)", STRONG_H0_TITLE);
         appendPolicyOption(sel, CHEAT_H0, "h0 (cheater — sees your hand)", CHEAT_H0_TITLE);
-        appendPolicyOption(
-          sel,
-          __SERVED_STRONG__,
-          "h0 (PC strength)",
-          `The bot your PC's local server plays (py/serve.py): ${__SERVED_STRONG__}. Same moves on any device; here it runs in the background — on a tablet, seconds to minutes per move.`,
-        );
-        appendPolicyOption(
-          sel,
-          __SERVED_CHEAT__,
-          "h0 (cheater, PC strength)",
-          `${CHEAT_H0_TITLE} Same search as the PC's cheater bot.`,
-        );
+        appendPolicyOption(sel, __SERVED_STRONG__, SERVED_STRONG_LABEL, servedStrongTitle());
+        appendPolicyOption(sel, __SERVED_CHEAT__, SERVED_CHEAT_LABEL, servedCheatTitle());
       }
     }
-  }
-  const vs = byId<HTMLSelectElement>("vsBotPolicy");
-  if (vs) {
-    const allowed = new Set([...vs.options].map((o) => o.value));
-    const stored = readStoredBotPolicy();
-    vs.value = stored && allowed.has(stored) ? stored : defaultVsBotPolicy();
-    vs.addEventListener("change", () => {
-      persistBotPolicy(vs.value);
-      applyVsBotPolicy();
+    if (isVs) {
+      const storedCustom = readCustomBotSpec();
+      if (storedCustom) upsertVsBotCustomOption(sel, storedCustom);
+      appendPolicyOption(sel, CUSTOM_SPEC_MENU_VALUE, "Custom spec…");
+      const allowed = new Set([...sel.options].map((o) => o.value));
+      const stored = readStoredBotPolicy();
+      sel.value = stored && allowed.has(stored) ? stored : defaultVsBotPolicy();
+      if (!vsBotPolicySelectWired) {
+        vsBotPolicySelectWired = true;
+        sel.addEventListener("change", () => {
+          if (sel.value === CUSTOM_SPEC_MENU_VALUE) {
+            showCustomBotSpecPanel();
+            return;
+          }
+          hideCustomBotSpecPanel(false);
+          persistBotPolicy(sel.value);
+          applyVsBotPolicy();
+          refreshVsBotPolicyHint();
+          refreshBotBackendBadge();
+        });
+      }
       refreshVsBotPolicyHint();
-      refreshBotBackendBadge();
-    });
-    refreshVsBotPolicyHint();
+    }
   }
 }
 
@@ -1613,8 +1721,10 @@ async function boot(): Promise<void> {
   await loadCatalog();
   populatePolicies();
   populateDecks();
+  void ensureDecks();
   syncModeChrome();
   initSettings();
+  initCustomBotSpecUi();
   initHistory();
   initHotkeys();
   initPositions();
