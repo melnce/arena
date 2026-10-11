@@ -20,7 +20,7 @@ use crate::action::{acting_player, to_neutral, Action};
 use crate::apply::{apply, legal_actions};
 use crate::card::{CardId, CardKind};
 use crate::db::CardDb;
-use crate::determinize::{determinize_block, HreadDeal, OpenStats};
+use crate::determinize::{determinize_block, HreadDeal};
 
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
@@ -39,11 +39,10 @@ use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
 
 use super::explain::{
-    CandidateRecord, ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord,
-    HoldbackRecord, HoldbackResampleCandidate, HoldbackResampleRecord, Line, LostRerankRecord,
-    PvEnd, PvTracker, WorldRecord,
+    ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord, HoldbackRecord,
+    HoldbackResampleCandidate, HoldbackResampleRecord, Line, PvEnd, PvTracker, WorldRecord,
 };
-use super::fuse_guard::{filter_cand_fuseguard, fuse_action_is_noop};
+use super::fuse_guard::fuse_action_is_noop;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum HorizonCutoff {
@@ -222,7 +221,7 @@ const DEFAULT_WV: f32 = 80.0;
 const DEFAULT_HRES: u32 = 200;
 
 /// Per-decision search counters, accumulated across [`H0::choose`] calls.
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct SearchStats {
     /// `choose` invocations.
     pub decisions: u64,
@@ -948,696 +947,16 @@ impl Policy for H0 {
         legal: &[Action],
         rng: &mut Xoshiro256ss,
     ) -> usize {
-        self.last_value = None;
-        self.stats.decisions += 1;
-        let recording = self.explain_armed;
-        if recording {
-            self.explain = None;
-        }
-        let mut shared_table = if self.info != Info::All {
-            self.tt.then(HashMap::new)
-        } else {
-            None
-        };
-        if legal.len() <= 1 {
-            if recording {
-                let mut rec = ExplainRecord::new(
-                    ChoosePath::SingleLegal,
-                    0,
-                    self.node_cap,
-                    self.alloc_label(),
-                );
-                rec.chosen_index = 0;
-                rec.tie_set = vec![0];
-                self.stamp_explain_deal(&mut rec, None);
-                self.explain = Some(rec);
-            }
-            return 0;
-        }
-        if matches!(state.phase, Phase::Mulligan { .. }) {
-            let idx = self.choose_mulligan(db, state, legal, rng);
-            if recording {
-                let mut rec =
-                    ExplainRecord::new(ChoosePath::Mulligan, 0, self.node_cap, self.alloc_label());
-                rec.chosen_index = idx;
-                rec.tie_set = vec![idx];
-                self.stamp_explain_deal(&mut rec, None);
-                self.explain = Some(rec);
-            }
-            return idx;
-        }
-
-        let me = acting_player(state);
-        let cand: Vec<usize> = legal
-            .iter()
-            .enumerate()
-            .filter(|(_, a)| useful_action(state, me, a, self.bpp1, self.bpp2))
-            .map(|(i, _)| i)
-            .collect();
-        let (cand, fuse_dropped) =
-            filter_cand_fuseguard(db, state, me, self.fuseguard, legal, cand);
-        self.stats.candidates += cand.len() as u64;
-        if cand.is_empty() {
-            if recording {
-                let mut rec = ExplainRecord::new(
-                    ChoosePath::SingleLegal,
-                    0,
-                    self.node_cap,
-                    self.alloc_label(),
-                );
-                rec.chosen_index = 0;
-                rec.tie_set = vec![0];
-                rec.fuse_dropped = fuse_dropped;
-                self.stamp_explain_deal(&mut rec, None);
-                self.explain = Some(rec);
-            }
-            return 0;
-        }
-        if cand.len() == 1 {
-            if recording {
-                let mut rec = ExplainRecord::new(
-                    ChoosePath::SingleLegal,
-                    0,
-                    self.node_cap,
-                    self.alloc_label(),
-                );
-                rec.chosen_index = cand[0];
-                rec.tie_set = vec![cand[0]];
-                rec.fuse_dropped = fuse_dropped;
-                self.stamp_explain_deal(&mut rec, None);
-                self.explain = Some(rec);
-            }
-            return cand[0];
-        }
-        let subset: Vec<Action> = cand.iter().map(|&i| legal[i].clone()).collect();
-        let mut nodes = 0u32;
-        let k = self.k();
-        let (world_seeds, wbase_used, wbase_reused) = self.root_world_seeds(state, me, k, rng);
-        let root_world_seeds = world_seeds.clone();
-        let block = self.deal == Deal::Block && self.hread.is_none();
-        let deal_seed = if block {
-            if self.turn_stable_worlds() {
-                let base = wbase_used.expect("turn-stable worlds require a base");
-                let mut seed_rng = Xoshiro256ss::from_seed(base);
-                for _ in 0..k {
-                    seed_rng.next_u64();
-                }
-                Some(seed_rng.next_u64())
-            } else {
-                Some(rng.next_u64())
-            }
-        } else {
-            None
-        };
-        let mut roots = Vec::with_capacity(k as usize);
-        for (world, seed) in world_seeds.into_iter().enumerate() {
-            if self.info == Info::Open {
-                let mut open = OpenStats::default();
-                roots.push(determinize_block(
-                    state,
-                    me,
-                    seed,
-                    deal_seed.unwrap_or(0),
-                    world as u32,
-                    self.info,
-                    Some(&mut open),
-                    block,
-                    self.hread_deal(),
-                ));
-                self.stats.open_hidden += u64::from(open.hidden);
-                self.stats.open_hosts += u64::from(open.hosts);
-            } else {
-                roots.push(determinize_block(
-                    state,
-                    me,
-                    seed,
-                    deal_seed.unwrap_or(0),
-                    world as u32,
-                    self.info,
-                    None,
-                    block,
-                    self.hread_deal(),
-                ));
-            }
-        }
-        self.stats.roots += u64::from(k);
-        let mut dec_stats = SearchStats::default();
-        let mut explain_rec = if recording {
-            let mut rec =
-                ExplainRecord::new(ChoosePath::Search, k, self.node_cap, self.alloc_label());
-            rec.wbase = wbase_used;
-            rec.wbase_reused = wbase_reused;
-            rec.fuse_dropped = fuse_dropped;
-            self.stamp_explain_deal(&mut rec, deal_seed);
-            Some(rec)
-        } else {
-            None
-        };
-        if self.tkill > 0
-            && matches!(
-                state.phase,
-                Phase::Main | Phase::Combat | Phase::Choice { .. }
-            )
-        {
-            let kill = {
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    if self.threads > 1 && self.tkroll > 0 {
-                        try_take_kill_parallel(
-                            db,
-                            &roots,
-                            legal,
-                            &cand,
-                            me,
-                            self.tkill,
-                            self.tkroll,
-                            &mut dec_stats,
-                        )
-                    } else {
-                        try_take_kill(
-                            db,
-                            &roots,
-                            legal,
-                            &cand,
-                            me,
-                            self.tkill,
-                            self.tkroll,
-                            &mut dec_stats,
-                        )
-                    }
-                }
-                #[cfg(target_arch = "wasm32")]
-                {
-                    try_take_kill(
-                        db,
-                        &roots,
-                        legal,
-                        &cand,
-                        me,
-                        self.tkill,
-                        self.tkroll,
-                        &mut dec_stats,
-                    )
-                }
-            };
-            if let Some((idx, path)) = kill {
-                self.last_value = Some(self.wv);
-                if let Some(rec) = &mut explain_rec {
-                    rec.path = path;
-                    rec.chosen_index = idx;
-                    rec.tie_set = vec![idx];
-                }
-                self.stats.accum(&dec_stats);
-                if let Some(rec) = explain_rec {
-                    self.explain = Some(rec);
-                }
-                return idx;
-            }
-        }
-        let root_vocab = self.root_vocab(state);
-        let eval = self.evaluator(db, &root_vocab);
-        let odepth = self.odepth;
-        let obeam = self.obeam;
-        let mut explain_cands: Vec<CandidateRecord> = if recording {
-            subset
-                .iter()
-                .enumerate()
-                .map(|(j, a)| CandidateRecord {
-                    legal_index: cand[j],
-                    action: crate::action::to_neutral(state, a),
-                    worlds: Vec::new(),
-                    root_agg: 0.0,
-                    worst: f32::INFINITY,
-                    n: 0,
-                })
-                .collect()
-        } else {
-            Vec::new()
-        };
-
-        // `fast()` is 1-ply on the determinized root: a depth-2 consensus
-        // lethal walk (every legal × every reply, plus `search_key` on each
-        // apply) was the 8× regression vs pre-R2 greedy. Immediate wins are
-        // still taken; constructed lethals use `H0::default()`.
-        let mut lethal_spent = None;
-        let pick = if self.depth <= 2 {
-            if let Some(rec) = &mut explain_rec {
-                rec.path = ChoosePath::OnePly;
-            }
-            let mut tie_set = Vec::new();
-            let (j, v) = one_ply(
-                &roots,
-                db,
-                &subset,
-                me,
-                &mut nodes,
-                self.node_cap,
-                eval,
-                self.pess,
-                if recording {
-                    Some((&cand, &mut tie_set))
-                } else {
-                    None
-                },
-            );
-            self.last_value = Some(v);
-            if let Some(rec) = &mut explain_rec {
-                rec.chosen_index = cand[j];
-                rec.tie_set = tie_set;
-            }
-            cand[j]
-        } else {
-            let nodes_before_lethal = nodes;
-            let lethal_cap = self.lethal_cap(nodes);
-            let lethal = consensus_lethal(db, &roots, &subset, me, 2, &mut nodes, lethal_cap);
-            lethal_spent = Some(nodes - nodes_before_lethal);
-            if let Some(j) = lethal {
-                if let Some(rec) = &mut explain_rec {
-                    rec.path = ChoosePath::ConsensusLethal;
-                    rec.nodes_lethal = nodes - nodes_before_lethal;
-                    rec.chosen_index = cand[j];
-                    rec.tie_set = vec![cand[j]];
-                }
-                self.last_value = Some(self.wv);
-                cand[j]
-            } else {
-                if let Some(rec) = &mut explain_rec {
-                    rec.path = ChoosePath::Search;
-                    rec.nodes_lethal = nodes - nodes_before_lethal;
-                }
-                let mut acc = vec![0.0f32; subset.len()];
-                let mut n = vec![0u32; subset.len()];
-                let mut worst = vec![f32::INFINITY; subset.len()];
-                let total_pairs = u64::from(k) * subset.len() as u64;
-                let mut attempted = 0u64;
-                let nodes_after_lethal = nodes;
-                let mut cap_exhausted = false;
-                if self.alloc == Alloc::World {
-                    let leftover = self.node_cap.saturating_sub(nodes_after_lethal);
-                    let base = leftover / k;
-                    let extra = leftover % k;
-                    let mut world_results: Vec<WorldSearchResult> = Vec::with_capacity(roots.len());
-                    let run_world = |r: usize| {
-                        let world_budget = base + if (r as u32) < extra { 1 } else { 0 };
-                        search_world(
-                            db,
-                            &roots[r],
-                            r,
-                            world_budget,
-                            &subset,
-                            me,
-                            self.depth,
-                            self.beam,
-                            self.tt,
-                            self.info,
-                            eval,
-                            odepth,
-                            obeam,
-                            self.fusemacro,
-                            self.horizon,
-                            self.hres,
-                            recording,
-                        )
-                    };
-                    #[cfg(not(target_arch = "wasm32"))]
-                    if self.threads > 1 {
-                        use std::sync::atomic::{AtomicUsize, Ordering};
-                        let slots: Vec<std::sync::Mutex<Option<WorldSearchResult>>> = (0..roots
-                            .len())
-                            .map(|_| std::sync::Mutex::new(None))
-                            .collect();
-                        let next = AtomicUsize::new(0);
-                        let workers = self.threads.min(k).max(1) as usize;
-                        std::thread::scope(|s| {
-                            for _ in 0..workers {
-                                s.spawn(|| loop {
-                                    let r = next.fetch_add(1, Ordering::Relaxed);
-                                    if r >= roots.len() {
-                                        break;
-                                    }
-                                    let wr = run_world(r);
-                                    *slots[r].lock().unwrap() = Some(wr);
-                                });
-                            }
-                        });
-                        for slot in slots {
-                            world_results.push(slot.lock().unwrap().take().expect("world"));
-                        }
-                    } else {
-                        for r in 0..roots.len() {
-                            world_results.push(run_world(r));
-                        }
-                    }
-                    #[cfg(target_arch = "wasm32")]
-                    for r in 0..roots.len() {
-                        world_results.push(run_world(r));
-                    }
-                    let mut world_nodes_sum = 0u32;
-                    for wr in world_results {
-                        attempted += wr.attempted;
-                        dec_stats.accum(&wr.stats);
-                        dec_stats.skipped_worlds += wr.skipped_worlds;
-                        world_nodes_sum += wr.nodes_spent;
-                        if recording {
-                            for (j, worlds) in wr.explain.into_iter().enumerate() {
-                                for w in worlds {
-                                    explain_cands[j].worlds.push(w);
-                                }
-                            }
-                        }
-                        for j in 0..subset.len() {
-                            acc[j] += wr.acc[j];
-                            if wr.n[j] > 0 && wr.worst[j] < worst[j] {
-                                worst[j] = wr.worst[j];
-                            }
-                            n[j] += wr.n[j];
-                        }
-                    }
-                    nodes = nodes_after_lethal + world_nodes_sum;
-                } else {
-                    for (r, root) in roots.iter().enumerate() {
-                        let mut root_table = if self.info == Info::All {
-                            self.tt.then(HashMap::new)
-                        } else {
-                            None
-                        };
-                        let root_key = search_key(root);
-                        for (j, a) in subset.iter().enumerate() {
-                            if nodes >= self.node_cap {
-                                let skipped = (subset.len() - j) as u64
-                                    + (roots.len() - r - 1) as u64 * subset.len() as u64;
-                                dec_stats.skipped_worlds += skipped;
-                                if recording {
-                                    for explain_cand in explain_cands.iter_mut().skip(j) {
-                                        explain_cand
-                                            .worlds
-                                            .push(PvTracker::skipped_world(r as u32, 0));
-                                    }
-                                    for rr in (r + 1)..roots.len() {
-                                        for explain_cand in explain_cands.iter_mut() {
-                                            explain_cand
-                                                .worlds
-                                                .push(PvTracker::skipped_world(rr as u32, 0));
-                                        }
-                                    }
-                                }
-                                cap_exhausted = true;
-                                break;
-                            }
-                            attempted += 1;
-                            let cap = if self.alloc == Alloc::Root {
-                                self.node_cap
-                            } else {
-                                const MIN_SHARE: u32 = 24;
-                                let pairs_left = (k as usize - r) * subset.len() - j;
-                                let remaining = self.node_cap - nodes;
-                                let even = remaining / pairs_left as u32;
-                                let share =
-                                    if remaining >= MIN_SHARE.saturating_mul(pairs_left as u32) {
-                                        even.max(MIN_SHARE)
-                                    } else {
-                                        even.max(1)
-                                    };
-                                nodes.saturating_add(share).min(self.node_cap)
-                            };
-                            let pair_nodes_start = nodes;
-                            let mut tracker = if recording {
-                                Some(PvTracker::new(cap))
-                            } else {
-                                None
-                            };
-                            let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key])
-                            else {
-                                if recording {
-                                    explain_cands[j]
-                                        .worlds
-                                        .push(PvTracker::skipped_world(r as u32, cap));
-                                }
-                                continue;
-                            };
-                            if let Some(t) = tracker.as_mut() {
-                                t.push(a.clone());
-                            }
-                            let v = if s.winner == Some(me) {
-                                if let Some(t) = tracker.as_mut() {
-                                    t.set_leaf(eval.wv, PvEnd::Terminal, &s);
-                                }
-                                eval.wv
-                            } else {
-                                let line = vec![root_key, search_key(&s)];
-                                let at_fuse_choice =
-                                    self.fusemacro && own_fuse_partners(&s, me).is_some();
-                                let search_depth = if at_fuse_choice {
-                                    self.depth
-                                } else {
-                                    self.depth.saturating_sub(1)
-                                };
-                                search_own(
-                                    db,
-                                    &s,
-                                    me,
-                                    search_depth,
-                                    self.beam,
-                                    &mut nodes,
-                                    cap,
-                                    &line,
-                                    eval,
-                                    odepth,
-                                    obeam,
-                                    &mut dec_stats,
-                                    if self.info == Info::All {
-                                        root_table.as_mut()
-                                    } else {
-                                        shared_table.as_mut()
-                                    },
-                                    tracker.as_mut(),
-                                    self.fusemacro,
-                                    self.horizon,
-                                    self.hres,
-                                )
-                            };
-                            if let Some(t) = tracker.as_mut() {
-                                t.note_nodes(nodes);
-                            }
-                            let fv = finite(v, eval.wv);
-                            if recording {
-                                let tracker = tracker.unwrap_or_else(|| PvTracker::new(cap));
-                                explain_cands[j].worlds.push(tracker.into_world(
-                                    r as u32,
-                                    v,
-                                    fv,
-                                    false,
-                                    nodes - pair_nodes_start,
-                                    db,
-                                    root,
-                                ));
-                            }
-                            acc[j] += fv;
-                            if fv < worst[j] {
-                                worst[j] = fv;
-                            }
-                            n[j] += 1;
-                        }
-                        if cap_exhausted {
-                            break;
-                        }
-                    }
-                }
-                let pairs_skipped_add = if nodes_after_lethal < self.node_cap {
-                    total_pairs - attempted
-                } else {
-                    0
-                };
-
-                let mut best_i = 0usize;
-                let mut best_v = f32::NEG_INFINITY;
-                let mut any_scored = false;
-                for (j, &c) in n.iter().enumerate() {
-                    if c == 0 {
-                        continue;
-                    }
-                    any_scored = true;
-                    let v = root_agg(acc[j], c, worst[j], self.pess);
-                    if recording {
-                        explain_cands[j].root_agg = v;
-                        explain_cands[j].worst = worst[j];
-                        explain_cands[j].n = c;
-                    }
-                    if v > best_v {
-                        best_v = v;
-                        best_i = j;
-                    }
-                }
-                if any_scored {
-                    const LETHAL_EPS: f32 = 1e-3;
-                    for (j, &c) in n.iter().enumerate() {
-                        if c == 0 {
-                            continue;
-                        }
-                        if worst[j] <= -self.wv + LETHAL_EPS {
-                            dec_stats.cands_with_lethal_root += 1;
-                            if j == best_i {
-                                dec_stats.chose_with_lethal_root += 1;
-                            }
-                        }
-                    }
-                }
-                let pick_last_value = finite(best_v, self.wv);
-                let unscored_inc = if !any_scored { 1 } else { 0 };
-                let mut lost_rerank_rec: Option<LostRerankRecord> = None;
-                let (pick_i, pick_last_value) = if self.lostrank > 0
-                    && any_scored
-                    && all_cands_lost(&n, &acc, &worst, self.pess, self.wv)
-                {
-                    if let Some((j, _, spent, aggregates)) = try_lost_rerank(
-                        self.lostrank,
-                        self.pess,
-                        self.horizon,
-                        self.hres,
-                        db,
-                        &roots,
-                        &subset,
-                        me,
-                        eval,
-                        odepth,
-                        obeam,
-                        self.fusemacro,
-                        self.depth,
-                        self.beam,
-                        &mut dec_stats,
-                    ) {
-                        lost_rerank_rec = Some(LostRerankRecord {
-                            aggregates,
-                            nodes: spent,
-                            chosen_index: cand[j],
-                        });
-                        (j, pick_last_value)
-                    } else {
-                        (best_i, pick_last_value)
-                    }
-                } else {
-                    (best_i, pick_last_value)
-                };
-                let (chosen, override_path, pick_last_value) = if lost_rerank_rec.is_some() {
-                    (cand[pick_i], None, pick_last_value)
-                } else if any_scored && matches!(subset[pick_i], Action::EndTurn) {
-                    let mut chosen_idx = cand[pick_i];
-                    let mut lv = pick_last_value;
-                    let mut path = None;
-                    if self.hbk > 0 {
-                        if let Some((idx, new_lv)) = try_holdback_resample(
-                            self.hbk,
-                            self.pess,
-                            self.node_cap,
-                            k,
-                            self.depth,
-                            self.beam,
-                            self.tt,
-                            self.info,
-                            self.deal,
-                            self.turn_stable_worlds(),
-                            wbase_used,
-                            &root_world_seeds,
-                            self.hread_deal(),
-                            db,
-                            &roots,
-                            state,
-                            me,
-                            &subset,
-                            &cand,
-                            &acc,
-                            &n,
-                            &worst,
-                            pick_i,
-                            eval,
-                            odepth,
-                            obeam,
-                            self.fusemacro,
-                            self.horizon,
-                            self.hres,
-                            &mut explain_rec,
-                            &mut dec_stats,
-                        ) {
-                            chosen_idx = idx;
-                            lv = new_lv;
-                            path = Some(ChoosePath::HoldbackResample);
-                        }
-                    }
-                    if path.is_none() && self.hbcheck > 0 {
-                        if let Some((idx, new_lv)) = try_holdback_trade(
-                            self.hbcheck,
-                            self.pess,
-                            self.horizon,
-                            self.hres,
-                            self.osteps,
-                            db,
-                            &roots,
-                            &subset,
-                            &cand,
-                            &n,
-                            pick_i,
-                            me,
-                            eval,
-                            odepth,
-                            obeam,
-                            &mut explain_rec,
-                            &mut dec_stats,
-                        ) {
-                            chosen_idx = idx;
-                            lv = new_lv;
-                            path = Some(ChoosePath::HoldbackTrade);
-                        }
-                    }
-                    (chosen_idx, path, lv)
-                } else {
-                    (cand[pick_i], None, pick_last_value)
-                };
-                self.stats.pairs_skipped += pairs_skipped_add;
-                self.stats.unscored += unscored_inc;
-                self.last_value = Some(pick_last_value);
-                if let Some(rec) = &mut explain_rec {
-                    rec.chosen_index = chosen;
-                    let did_lost_rerank = lost_rerank_rec.is_some();
-                    rec.lost_rerank = lost_rerank_rec;
-                    if any_scored {
-                        if override_path.is_some() || did_lost_rerank {
-                            rec.tie_set = vec![chosen];
-                        } else {
-                            rec.tie_set =
-                                tie_set_search(&n, &acc, &worst, self.pess, best_v, &cand);
-                        }
-                        if let Some(p) = override_path {
-                            rec.path = p;
-                        }
-                    } else {
-                        rec.path = ChoosePath::Unscored;
-                        rec.tie_set = cand.clone();
-                    }
-                    rec.candidates = explain_cands;
-                }
-                chosen
-            }
-        };
-        self.stats.nodes += u64::from(nodes);
-        if nodes >= self.node_cap {
-            self.stats.cap_hits += 1;
-        }
-        if let Some(spent) = lethal_spent {
-            self.stats.lethal_nodes += u64::from(spent);
-        }
-        self.stats.accum(&dec_stats);
-        if let Some(mut rec) = explain_rec {
-            rec.nodes = nodes;
-            rec.horizon_nodes = dec_stats.horizon_nodes as u32;
-            self.explain = Some(rec);
-        }
-        pick
+        self::job::choose_sync(self, db, state, legal, rng)
     }
 
     fn last_value(&self) -> Option<f32> {
         self.last_value
     }
 }
+
+#[path = "job.rs"]
+pub mod job;
 
 impl H0 {
     fn choose_mulligan(
@@ -1970,132 +1289,19 @@ fn search_world(
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 #[allow(clippy::too_many_arguments)]
-fn try_take_kill_parallel(
+pub(super) fn kill_det_on_roots(
     db: &CardDb,
     roots: &[State],
     legal: &[Action],
     cand: &[usize],
     me: PlayerId,
     budget: u32,
-    tkroll: u32,
     stats: &mut SearchStats,
-) -> Option<(usize, ChoosePath)> {
-    use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-
-    let cancel = AtomicBool::new(false);
-    let roll_lines_rejected = AtomicU32::new(0);
-    std::thread::scope(|s| {
-        let roll_handle = s.spawn(|| {
-            forced_lethal_accepting_cancel(
-                db,
-                &roots[0],
-                budget,
-                |line| {
-                    for root in roots {
-                        let pos_key = search_key(root);
-                        let seeds: Vec<u64> =
-                            (0..tkroll).map(|i| roll_confirm_seed(pos_key, i)).collect();
-                        if !confirm_lethal_line_rerolled(db, root, me, line, &seeds) {
-                            roll_lines_rejected.fetch_add(1, Ordering::Relaxed);
-                            return false;
-                        }
-                    }
-                    true
-                },
-                &cancel,
-            )
-        });
-
-        stats.own_solver_calls += 1;
-        let verdict = forced_lethal_det(db, &roots[0], budget);
-        let nodes = match &verdict {
-            LethalVerdict::Lethal { nodes, .. }
-            | LethalVerdict::None { nodes }
-            | LethalVerdict::Unknown { nodes } => *nodes,
-        };
-        stats.own_solver_nodes += u64::from(nodes);
-        stats.own_solver_nodes_max = stats.own_solver_nodes_max.max(u64::from(nodes));
-        match verdict {
-            LethalVerdict::Lethal { line, .. } => {
-                stats.own_solver_found += 1;
-                let mut all_roots_confirmed = true;
-                for root in roots.iter().skip(1) {
-                    if !confirm_det_lethal_line(db, root, me, &line) {
-                        all_roots_confirmed = false;
-                        break;
-                    }
-                }
-                if all_roots_confirmed {
-                    let first = &line[0];
-                    if let Some(idx) = legal.iter().position(|a| a == first) {
-                        if cand.contains(&idx) {
-                            stats.own_solver_taken += 1;
-                            cancel.store(true, Ordering::Relaxed);
-                            return Some((idx, ChoosePath::TakeKill));
-                        }
-                    }
-                    stats.own_solver_rejected += 1;
-                } else {
-                    stats.own_solver_rejected += 1;
-                }
-            }
-            LethalVerdict::Unknown { .. } => {
-                stats.own_solver_unknown += 1;
-            }
-            LethalVerdict::None { .. } => {}
-        }
-
-        let roll_verdict = roll_handle.join().expect("roll thread join");
-        stats.own_roll_calls += 1;
-        stats.own_roll_lines_rejected += u64::from(roll_lines_rejected.load(Ordering::Relaxed));
-        let roll_nodes = match &roll_verdict {
-            LethalVerdict::Lethal { nodes, .. }
-            | LethalVerdict::None { nodes }
-            | LethalVerdict::Unknown { nodes } => *nodes,
-        };
-        stats.own_roll_nodes += u64::from(roll_nodes);
-        stats.own_roll_nodes_max = stats.own_roll_nodes_max.max(u64::from(roll_nodes));
-        match roll_verdict {
-            LethalVerdict::Lethal { line, .. } => {
-                stats.own_roll_found += 1;
-                let first = &line[0];
-                let Some(idx) = legal.iter().position(|a| a == first) else {
-                    stats.own_roll_rejected += 1;
-                    return None;
-                };
-                if !cand.contains(&idx) {
-                    stats.own_roll_rejected += 1;
-                    return None;
-                }
-                stats.own_roll_taken += 1;
-                Some((idx, ChoosePath::TakeKillRoll))
-            }
-            LethalVerdict::Unknown { .. } => {
-                stats.own_roll_unknown += 1;
-                stats.own_roll_rejected += 1;
-                None
-            }
-            LethalVerdict::None { .. } => {
-                stats.own_roll_rejected += 1;
-                None
-            }
-        }
-    })
-}
-
-#[allow(clippy::too_many_arguments)]
-fn try_take_kill(
-    db: &CardDb,
-    roots: &[State],
-    legal: &[Action],
-    cand: &[usize],
-    me: PlayerId,
-    budget: u32,
-    tkroll: u32,
-    stats: &mut SearchStats,
-) -> Option<(usize, ChoosePath)> {
+) -> (Option<usize>, u32) {
+    if roots.is_empty() {
+        return (None, 0);
+    }
     stats.own_solver_calls += 1;
     let verdict = forced_lethal_det(db, &roots[0], budget);
     let nodes = match &verdict {
@@ -2120,7 +1326,7 @@ fn try_take_kill(
                 if let Some(idx) = legal.iter().position(|a| a == first) {
                     if cand.contains(&idx) {
                         stats.own_solver_taken += 1;
-                        return Some((idx, ChoosePath::TakeKill));
+                        return (Some(idx), nodes);
                     }
                 }
                 stats.own_solver_rejected += 1;
@@ -2133,13 +1339,29 @@ fn try_take_kill(
         }
         LethalVerdict::None { .. } => {}
     }
+    (None, nodes)
+}
 
+#[allow(clippy::too_many_arguments)]
+pub(super) fn kill_roll_on_roots(
+    db: &CardDb,
+    roots: &[State],
+    legal: &[Action],
+    cand: &[usize],
+    me: PlayerId,
+    budget: u32,
+    tkroll: u32,
+    stats: &mut SearchStats,
+    cancel: Option<&std::sync::atomic::AtomicBool>,
+) -> (Option<usize>, u32) {
     if tkroll == 0 {
-        return None;
+        return (None, 0);
     }
-
+    if roots.is_empty() {
+        return (None, 0);
+    }
     stats.own_roll_calls += 1;
-    let roll_verdict = forced_lethal_accepting(db, &roots[0], budget, |line| {
+    let confirm_line = |line: &[Action]| -> bool {
         for root in roots {
             let pos_key = search_key(root);
             let seeds: Vec<u64> = (0..tkroll).map(|i| roll_confirm_seed(pos_key, i)).collect();
@@ -2149,7 +1371,21 @@ fn try_take_kill(
             }
         }
         true
-    });
+    };
+    let roll_verdict = match cancel {
+        Some(cancel) => {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                forced_lethal_accepting_cancel(db, &roots[0], budget, confirm_line, cancel)
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                let _ = cancel;
+                forced_lethal_accepting(db, &roots[0], budget, confirm_line)
+            }
+        }
+        None => forced_lethal_accepting(db, &roots[0], budget, confirm_line),
+    };
     let roll_nodes = match &roll_verdict {
         LethalVerdict::Lethal { nodes, .. }
         | LethalVerdict::None { nodes }
@@ -2163,25 +1399,90 @@ fn try_take_kill(
             let first = &line[0];
             let Some(idx) = legal.iter().position(|a| a == first) else {
                 stats.own_roll_rejected += 1;
-                return None;
+                return (None, roll_nodes);
             };
             if !cand.contains(&idx) {
                 stats.own_roll_rejected += 1;
-                return None;
+                return (None, roll_nodes);
             }
             stats.own_roll_taken += 1;
-            Some((idx, ChoosePath::TakeKillRoll))
+            (Some(idx), roll_nodes)
         }
         LethalVerdict::Unknown { .. } => {
             stats.own_roll_unknown += 1;
             stats.own_roll_rejected += 1;
-            None
+            (None, roll_nodes)
         }
         LethalVerdict::None { .. } => {
             stats.own_roll_rejected += 1;
-            None
+            (None, roll_nodes)
         }
     }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(clippy::too_many_arguments)]
+fn try_take_kill_parallel(
+    db: &CardDb,
+    roots: &[State],
+    legal: &[Action],
+    cand: &[usize],
+    me: PlayerId,
+    budget: u32,
+    tkroll: u32,
+    stats: &mut SearchStats,
+) -> Option<(usize, ChoosePath)> {
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    let cancel = AtomicBool::new(false);
+    std::thread::scope(|s| {
+        let roll_handle = s.spawn(|| {
+            let mut roll_stats = SearchStats::default();
+            let (taken, _) = kill_roll_on_roots(
+                db,
+                roots,
+                legal,
+                cand,
+                me,
+                budget,
+                tkroll,
+                &mut roll_stats,
+                Some(&cancel),
+            );
+            (taken, roll_stats)
+        });
+
+        let (taken, nodes) = kill_det_on_roots(db, roots, legal, cand, me, budget, stats);
+        if let Some(idx) = taken {
+            cancel.store(true, Ordering::Relaxed);
+            return Some((idx, ChoosePath::TakeKill));
+        }
+        let _ = nodes;
+
+        let (roll_taken, roll_stats) = roll_handle.join().expect("roll thread join");
+        stats.accum(&roll_stats);
+        roll_taken.map(|idx| (idx, ChoosePath::TakeKillRoll))
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
+fn try_take_kill(
+    db: &CardDb,
+    roots: &[State],
+    legal: &[Action],
+    cand: &[usize],
+    me: PlayerId,
+    budget: u32,
+    tkroll: u32,
+    stats: &mut SearchStats,
+) -> Option<(usize, ChoosePath)> {
+    let (taken, _) = kill_det_on_roots(db, roots, legal, cand, me, budget, stats);
+    if let Some(idx) = taken {
+        return Some((idx, ChoosePath::TakeKill));
+    }
+    let (roll_taken, _) =
+        kill_roll_on_roots(db, roots, legal, cand, me, budget, tkroll, stats, None);
+    roll_taken.map(|idx| (idx, ChoosePath::TakeKillRoll))
 }
 
 fn consensus_lethal(

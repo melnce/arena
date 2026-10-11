@@ -20,6 +20,19 @@ declare module "../pkg/arena_wasm.js" {
     turn(): number;
     winner(): string | null;
     botAction(policy: string, seed: number | bigint | string): string;
+    botActionValue(policy: string, seed: number | bigint | string): string;
+    h0JobStart(policy: string, seed: number | bigint | string): string;
+    h0KillDet(policy: string, seed: number | bigint | string): string;
+    h0KillRoll(policy: string, seed: number | bigint | string): string;
+    h0JobKillDet(outcomeJson: string): string;
+    h0JobKillRoll(outcomeJson: string): string;
+    h0JobWorld(
+      policy: string,
+      seed: number | bigint | string,
+      r: number,
+      budget: number,
+    ): string;
+    h0JobFinish(outcomesJson: string): string;
     handInfo(player: string): string;
     boardInfo(player: string): string;
     playerInfo(player: string): string;
