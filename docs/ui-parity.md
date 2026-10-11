@@ -258,6 +258,7 @@ Dropped-by-design (owner 2026-09-11 + brief RZ / `ui/README.md:50`): blackbox, s
 | First-player control | (implicit / start options, not a drawer select) | `ui/index.html:128-133` coin/A/B | ported | New-only extra. |
 | Mode: hotseat / vs-bot / watch | — | `ui/index.html:93-98` | ported | New-only extra. |
 | Vs-bot: human side, bot policy, hide bot hand (code-read) | — | `ui/index.html:134-146` | ported | New-only extra. |
+| Vs-bot: `h0` in a Web Worker; PC-strength policies from `py/serve.py`; bot speed test in settings | — | `ui/src/bot-worker.ts`; `ui/src/bot-client.ts`; `ui/src/bench.ts` | ported | `?botworker=0` disables the worker. |
 | Watch: Bot A/B policies, auto-play, Step/Play/Pause, speed 1–20 (code-read) | — | `ui/index.html:148-156,197-205`; `ui/src/main.ts:325-361,627-647` | ported | New-only extra. |
 | Start Game | `index.html:259` | `ui/index.html:158` | ported | 
 | Undo / Redo buttons; disabled from stack; titles Ctrl+Z / Ctrl+Y | `index.html:266-275` | `ui/index.html:159-160`; `ui/src/render.ts:747-751` | ported | 

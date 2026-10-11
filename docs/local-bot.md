@@ -160,3 +160,17 @@ Measured on this box (4 cores; basic-forest vs basic-rune, seed 3):
   faster per core.
 
 "Up to a minute per turn is fine."
+
+## Browser worker (no local server)
+
+When `serve.py` is not reachable, `h0` policies still run in wasm. By default
+search runs in a **Web Worker** so the UI stays interactive; `?botworker=0`
+restores the synchronous main-thread path. Each decision replays the action log
+into a fresh `Game` in the worker (same model as `/bot`).
+
+Menu entries **h0 (PC strength)** and **h0 (cheater, PC strength)** are read
+from `DEFAULT_STRONG` / `DEFAULT_CHEAT` in this file at UI build time. On a
+tablet they use the worker; full PC specs can take seconds to minutes per move.
+
+The settings drawer **Bot speed test** benchmarks ten fixed positions in a
+separate worker and prints a fingerprint for cross-device comparison.
