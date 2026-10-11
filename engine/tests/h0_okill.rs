@@ -72,7 +72,7 @@ const OKILL7_GATE_FPS: [u64; 8] = [
     0xb971_00c3_06c1_81b7,
     0x356d_7e0a_857b_5dec,
     0x6e50_ac90_c116_9b49,
-    0x0389_b404_8b50_d258, // seed 97: A plays Kukishiro @ n=44 (crest draws run); okill=7 search still ends at fp 0x0389… — same neutral JSON trace as main@d1bbc53 through n=98 (first diff vs bare h0 is n=61, not crest-driven).
+    0xdf90_82c6_6514_9cb2, // seed 97: A plays Kukishiro @ n=44; crest Fanfare draws/summons shift okill=7 worlds (was 0x0389… pre-crest-fix).
 ];
 
 /// Served spec fingerprints (seeds 11, 23, 37). Computed on `main@7d7d2d1` with

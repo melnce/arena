@@ -75,7 +75,7 @@
 //! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x86671e5ef842ccfb` | 31 | same as default `h0`. |
 //! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0x28f80dd9b44b4e7b` → `0xf4c105a794883210` | 61 | same as default `h0`. |
 //! | `h0_okill` `OKILL7_GATE_FPS` | 67 | meta-haven-amulet | `0x25a8e3162fe653ad` → `0x356d7e0a857b5dec` | 31 | `h0:okill=7`; same as default `h0` seed 67. |
-//! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x84f14a0177e6c228` → `0x0389b4048b50d258` | 61 | `h0:okill=7`; same as default `h0` seed 97. |
+//! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x0389b4048b50d258` → `0xdf9082c665149cb2` | 44 | `h0:okill=7`; A `play` `10564120` @ n=44 (crest draws); pre-crest branch pin was 0x0389…. |
 //!
 //! ## Kukishiro crest / Sofina / burned-draw re-pins (`main@d1bbc53` → branch)
 //!
