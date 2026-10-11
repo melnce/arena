@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="./css/utility.css" />
     <link rel="stylesheet" href="./css/modern-theme.css" />
     <link rel="stylesheet" href="./css/settings-drawer.css" />
+    <link rel="stylesheet" href="./css/bot-thinking.css" />
     <link rel="stylesheet" href="./css/phase3-layout.css" />
     <link rel="stylesheet" href="./css/tooltip.css" />
     <link rel="stylesheet" href="./css/animation.css" />
@@ -265,6 +266,19 @@
               </label>
             </div>
           </div>
+          <div class="settings-drawer-section">
+            <h3>Bot speed test</h3>
+            <p class="checkpoint-status">
+              Fixed ten positions with the PC bot spec (or <code>?benchspec=</code>). Runs in a
+              background worker; does not affect an in-progress game.
+            </p>
+            <div class="toolbar-cluster">
+              <button id="benchRunBtn" type="button">Run</button>
+              <button id="benchStopBtn" type="button">Stop</button>
+              <button id="benchCopyBtn" type="button">Copy results</button>
+            </div>
+            <pre id="benchOutput" class="checkpoint-status"></pre>
+          </div>
           <p id="bundleMeta" class="checkpoint-status"></p>
           <p id="errBanner" class="checkpoint-status"></p>
         </div>
@@ -365,6 +379,7 @@
         </div>
         <div class="turn-controls-core">
           <div id="turnReadout">—</div>
+          <div id="botThinking" hidden aria-live="polite"></div>
           <div id="turnCounter" data-testid="turn-counter">0</div>
           <div class="red-pp-wrapper pp-block" id="redPpBlock">
             <div class="boost-host" id="redBoostHost"></div>

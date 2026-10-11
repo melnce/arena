@@ -1,4 +1,4 @@
-import init, { botPolicies, bundleInfo, version } from "../pkg/arena_wasm.js";
+import init, { botPolicies, bundleInfo, Game, version } from "../pkg/arena_wasm.js";
 import { publicUrl } from "./base.ts";
 import { catalogIds, decks, loadCatalog, lookupText, parseDeckJson } from "./catalog.ts";
 import { clearFloaters, reflashDamage, spawnFloaters } from "./fct.ts";
@@ -13,6 +13,16 @@ import {
   type RenderHooks,
 } from "./render.ts";
 import { byId } from "./render/ids.ts";
+import { benchResult, initBenchUi } from "./bench.ts";
+import {
+  botStepWorker,
+  botWorkerEnabled,
+  botWorkerState,
+  isBotWorkerThinking,
+  lastBotWorkerStepMeta,
+  prewarmBotWorker,
+  shouldUseBotWorker,
+} from "./bot-client.ts";
 import {
   applyAction,
   botPolicyFor,
@@ -72,6 +82,8 @@ let localBot: LocalBotHealth | null = null;
 let localBotGameError: string | null = null;
 let localBotRemoteCount = 0;
 let localBotThinking = false;
+let botDecisionPendingSince: number | null = null;
+let botThinkingTick: number | null = null;
 /** The vs-bot loop that currently owns `session`, or null. */
 let botLoopSession: Session | null = null;
 /** Bumped on history/session resets; stale `maybeBots` loops skip spotlight enqueue. */
@@ -255,6 +267,29 @@ function exposeArena(): void {
       backend: localBot && !localBotGameError ? "server" : "browser",
       error: localBotGameError,
     }),
+    botWorker: () => botWorkerState(),
+    setSessionBotPolicy: (spec: string) => {
+      if (!session || session.cfg.mode !== "vs-bot") return;
+      const human = session.cfg.humanSide;
+      if (human === "a") session.cfg.policyB = spec;
+      else session.cfg.policyA = spec;
+      const selId = human === "a" ? "policyBSelect" : "policyASelect";
+      const sel = byId<HTMLSelectElement>(selId);
+      if (sel) sel.value = spec;
+    },
+    benchResult: () => benchResult(),
+    measureBotPolicyMs: (spec: string) => {
+      const deckA = JSON.stringify({ "10051110": 40 });
+      const deckB = JSON.stringify({ "10052110": 40 });
+      const game = new Game("1", deckA, deckB, "a");
+      try {
+        const t0 = performance.now();
+        game.botAction(spec, "1");
+        return performance.now() - t0;
+      } finally {
+        game.free();
+      }
+    },
     catalogIds,
     cardText: (id) => lookupText(id),
     spotlightLog: () => spotlightLog(),
@@ -568,9 +603,16 @@ function startSession(cfg: SessionConfig): void {
   localBotGameError = null;
   localBotRemoteCount = 0;
   localBotThinking = false;
+  clearBotDecisionPending();
   resetSpotlightSession();
   disposeSession(session);
   session = createSession(cfg);
+  if (cfg.mode === "vs-bot") {
+    const pol = cfg.policyA;
+    if ((pol === "h0" || pol.startsWith("h0:")) && botWorkerEnabled()) {
+      prewarmBotWorker();
+    }
+  }
   resetZoneCache();
   closeSettings();
   writeShareParams({
@@ -648,10 +690,65 @@ function localBotToggleOn(): boolean {
   }
 }
 
-function botBackendBadgeText(): string {
+function botDecisionIsPending(): boolean {
   const cheater = isCheaterPolicy(selectedVsBotPolicy());
   if (localBotThinking && localBot && !localBotGameError && (!cheater || localBot.cheat)) {
+    return true;
+  }
+  return isBotWorkerThinking();
+}
+
+function ensureBotThinkingTick(): void {
+  if (botThinkingTick != null) return;
+  botThinkingTick = window.setInterval(() => {
+    const el = byId("botThinking");
+    if (!session || session.cfg.mode !== "vs-bot" || !botDecisionIsPending()) {
+      botDecisionPendingSince = null;
+      if (el) {
+        el.hidden = true;
+        el.textContent = "";
+      }
+      return;
+    }
+    if (botDecisionPendingSince == null) botDecisionPendingSince = performance.now();
+    const elapsed = performance.now() - botDecisionPendingSince;
+    if (elapsed < 600) {
+      if (el) el.hidden = true;
+      return;
+    }
+    const secs = Math.max(1, Math.floor(elapsed / 1000));
+    if (el) {
+      el.hidden = false;
+      el.textContent = `Bot thinking… ${secs} s`;
+    }
+  }, 250);
+}
+
+function markBotDecisionPending(): void {
+  if (botDecisionPendingSince == null) botDecisionPendingSince = performance.now();
+  ensureBotThinkingTick();
+}
+
+function clearBotDecisionPending(): void {
+  botDecisionPendingSince = null;
+  const el = byId("botThinking");
+  if (el) {
+    el.hidden = true;
+    el.textContent = "";
+  }
+}
+
+function botBackendBadgeText(): string {
+  const cheater = isCheaterPolicy(selectedVsBotPolicy());
+  const workerErr = botWorkerState().error;
+  if (localBotThinking && localBot && !localBotGameError && (!cheater || localBot.cheat)) {
     return "bot: local server — thinking…";
+  }
+  if (isBotWorkerThinking()) {
+    return "bot: browser — thinking…";
+  }
+  if (workerErr) {
+    return `bot: browser (worker error: ${workerErr})`;
   }
   if (localBotGameError) {
     return `bot: browser (server error: ${localBotGameError})`;
@@ -769,20 +866,25 @@ async function maybeBots(): Promise<void> {
     let botEndedTurn = false;
     while (session === s && !isHumanActing(s) && s.game.phase() !== "terminal" && guard < 80) {
       const useLocal = shouldUseLocalBot(s);
-      if (useLocal) {
-        localBotThinking = true;
+      const useWorker = !useLocal && shouldUseBotWorker(s);
+      if (useLocal || useWorker) {
+        if (useLocal) localBotThinking = true;
+        markBotDecisionPending();
         refreshBotBackendBadge();
       }
       const epoch = spotlightEpoch;
       let events = useLocal
         ? await botStepRemote(s, `${LOCAL_BOT_HOST}/bot`, { isCurrent: () => session === s })
-        : botStep(s);
+        : useWorker
+          ? await botStepWorker(s, { isCurrent: () => session === s })
+          : botStep(s);
       if (session !== s) break;
-      if (useLocal) {
-        const meta = lastLocalBotStepMeta();
+      if (useLocal || useWorker) {
+        const meta = useLocal ? lastLocalBotStepMeta() : lastBotWorkerStepMeta();
         if (meta.stale) {
           staleRuns += 1;
           localBotThinking = false;
+          clearBotDecisionPending();
           refreshBotBackendBadge();
           guard += 1;
           if (staleRuns >= 3) {
@@ -801,8 +903,12 @@ async function maybeBots(): Promise<void> {
         }
         staleRuns = 0;
         localBotThinking = false;
-        if (meta.usedRemote) localBotRemoteCount += 1;
-        if (meta.error) localBotGameError = meta.error;
+        clearBotDecisionPending();
+        if (useLocal) {
+          const localMeta = lastLocalBotStepMeta();
+          if (localMeta.usedRemote) localBotRemoteCount += 1;
+          if (localMeta.error) localBotGameError = localMeta.error;
+        }
         refreshBotBackendBadge();
       }
       guard += 1;
@@ -910,6 +1016,18 @@ function populatePolicies(): void {
       if (n === "h0") {
         appendPolicyOption(sel, STRONG_H0, "h0 (strong)", STRONG_H0_TITLE);
         appendPolicyOption(sel, CHEAT_H0, "h0 (cheater — sees your hand)", CHEAT_H0_TITLE);
+        appendPolicyOption(
+          sel,
+          __SERVED_STRONG__,
+          "h0 (PC strength)",
+          `The bot your PC's local server plays (py/serve.py): ${__SERVED_STRONG__}. Same moves on any device; here it runs in the background — on a tablet, seconds to minutes per move.`,
+        );
+        appendPolicyOption(
+          sel,
+          __SERVED_CHEAT__,
+          "h0 (cheater, PC strength)",
+          `${CHEAT_H0_TITLE} Same search as the PC's cheater bot.`,
+        );
       }
     }
   }
@@ -1389,6 +1507,7 @@ async function boot(): Promise<void> {
   initExportList();
   initImportDeck();
   initWatch();
+  initBenchUi();
   bindTooltips();
   bindPointer({
     play: (p, i) => hooks.onPlay(p, i),
@@ -1426,6 +1545,7 @@ async function boot(): Promise<void> {
   byId("undoBtn")?.addEventListener("click", () => applyHistory(undo));
   byId("redoBtn")?.addEventListener("click", () => applyHistory(redo));
   exposeArena();
+  window.addEventListener("arena-bot-backend", () => refreshBotBackendBadge());
   refreshBotBackendBadge();
   void probeLocalBot();
   byId("modeSelect")?.addEventListener("change", syncModeChrome);
