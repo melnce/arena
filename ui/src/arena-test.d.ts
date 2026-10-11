@@ -37,6 +37,13 @@ declare global {
         generation: number;
         error: string | null;
       };
+      botPool(): {
+        size: number;
+        alive: number;
+        busy: number;
+        generation: number;
+      };
+      armVsBot(opts: { humanSide: "a" | "b"; botPolicy: string }): void;
       setSessionBotPolicy(spec: string): void;
       benchResult(): unknown | null;
       reseed(seed: string | number | bigint): void;

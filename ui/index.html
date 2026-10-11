@@ -252,6 +252,15 @@
                 <input type="checkbox" id="localBotToggle" checked />
                 Use local bot server when available
               </label>
+              <label for="botCoresSelect">Bot cores</label>
+              <select id="botCoresSelect">
+                <option value="auto">Auto</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="4">4</option>
+                <option value="6">6</option>
+                <option value="8">8</option>
+              </select>
               <label class="toolbar-check-label" for="floatingCombatTextToggle">
                 <input type="checkbox" id="floatingCombatTextToggle" checked />
                 Floating combat text
@@ -269,8 +278,8 @@
           <div class="settings-drawer-section">
             <h3>Bot speed test</h3>
             <p class="checkpoint-status">
-              Fixed ten positions with the PC bot spec (or <code>?benchspec=</code>). Runs in a
-              background worker; does not affect an in-progress game.
+              Fixed ten positions with the PC bot spec (or <code>?benchspec=</code>). Runs twice
+              (1 core vs your Bot cores setting); does not affect an in-progress game.
             </p>
             <div class="toolbar-cluster">
               <button id="benchRunBtn" type="button">Run</button>

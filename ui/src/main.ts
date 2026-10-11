@@ -15,13 +15,17 @@ import {
 import { byId } from "./render/ids.ts";
 import { benchResult, initBenchUi } from "./bench.ts";
 import {
+  autoBotCores,
+  botPoolState,
   botStepWorker,
   botWorkerEnabled,
   botWorkerState,
   isBotWorkerThinking,
   lastBotWorkerStepMeta,
+  persistBotCoresChoice,
   prewarmBotWorker,
   shouldUseBotWorker,
+  terminateBotWorker,
 } from "./bot-client.ts";
 import {
   applyAction,
@@ -268,6 +272,17 @@ function exposeArena(): void {
       error: localBotGameError,
     }),
     botWorker: () => botWorkerState(),
+    botPool: () => botPoolState(),
+    armVsBot: (opts: { humanSide: PlayerId; botPolicy: string }) => {
+      if (!session) throw new Error("no session");
+      session.cfg.mode = "vs-bot";
+      session.cfg.humanSide = opts.humanSide;
+      if (opts.humanSide === "a") session.cfg.policyB = opts.botPolicy;
+      else session.cfg.policyA = opts.botPolicy;
+      botLoopSession = null;
+      paint();
+      void maybeBots();
+    },
     setSessionBotPolicy: (spec: string) => {
       if (!session || session.cfg.mode !== "vs-bot") return;
       const human = session.cfg.humanSide;
@@ -595,9 +610,10 @@ function startSession(cfg: SessionConfig): void {
   resetSpotlightSession();
   disposeSession(session);
   session = createSession(cfg);
-  if (cfg.mode === "vs-bot") {
-    const pol = cfg.policyA;
-    if ((pol === "h0" || pol.startsWith("h0:")) && botWorkerEnabled()) {
+  if (cfg.mode === "vs-bot" && botWorkerEnabled()) {
+    const human = cfg.humanSide;
+    const botPol = human === "a" ? cfg.policyB : cfg.policyA;
+    if (botPol === "h0" || botPol.startsWith("h0:")) {
       prewarmBotWorker();
     }
   }
@@ -1471,6 +1487,19 @@ function restorePersistedToggles(): void {
   if (spotlightBox) spotlightBox.checked = spotlight == null ? true : spotlight !== "0";
   if (turnPingBox) turnPingBox.checked = turnPing == null ? true : turnPing !== "0";
   if (localBotBox) localBotBox.checked = localBotStored == null ? true : localBotStored !== "0";
+  const botCoresSel = byId<HTMLSelectElement>("botCoresSelect");
+  if (botCoresSel) {
+    const stored = localStorage.getItem("svwb.botCores");
+    const autoLabel = `Auto (${autoBotCores()})`;
+    for (const opt of botCoresSel.options) {
+      if (opt.value === "auto") opt.textContent = autoLabel;
+    }
+    if (stored && [...botCoresSel.options].some((o) => o.value === stored)) {
+      botCoresSel.value = stored;
+    } else {
+      botCoresSel.value = "auto";
+    }
+  }
   const speedRaw = localStorage.getItem("svwb.watchSpeed");
   const sl = byId<HTMLInputElement>("watchSpeed");
   if (sl && speedRaw != null) {
@@ -1572,6 +1601,16 @@ async function boot(): Promise<void> {
       refreshBotBackendBadge();
     } else {
       void probeLocalBot();
+    }
+  });
+  byId("botCoresSelect")?.addEventListener("change", (e) => {
+    const value = (e.target as HTMLSelectElement).value;
+    persistBotCoresChoice(value);
+    terminateBotWorker();
+    if (session?.cfg.mode === "vs-bot" && botWorkerEnabled()) {
+      const human = session.cfg.humanSide;
+      const botPol = human === "a" ? session.cfg.policyB : session.cfg.policyA;
+      if (botPol === "h0" || botPol.startsWith("h0:")) prewarmBotWorker();
     }
   });
   byId("copySeedBtn")?.addEventListener("click", async () => {

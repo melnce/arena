@@ -1,6 +1,13 @@
-import type { BenchLine, BenchReply, BenchRequest } from "./bot-worker.ts";
+import { Game, version } from "../pkg/arena_wasm.js";
+import type { BenchLine } from "./bot-worker.ts";
+import {
+  autoBotCores,
+  benchDecideAtPosition,
+  configuredBotCores,
+} from "./bot-client.ts";
 import { decks, parseDeckJson } from "./catalog.ts";
 import { publicUrl } from "./base.ts";
+import type { LogStep } from "./types.ts";
 
 const BENCH_POSITIONS: Array<{
   deckA: string;
@@ -21,9 +28,8 @@ const BENCH_POSITIONS: Array<{
 
 const DRIVE_POLICY = "h0:nodes=300";
 
-let benchWorker: Worker | null = null;
 let lastBenchJson: unknown = null;
-let nextBenchRequestId = 1;
+let benchAbort: AbortController | null = null;
 
 export function benchResult(): unknown | null {
   return lastBenchJson;
@@ -63,6 +69,115 @@ async function fingerprint(lines: BenchLine[]): Promise<string> {
   return hex.slice(0, 12);
 }
 
+type BenchPrepared = {
+  i: number;
+  deckAId: string;
+  deckBId: string;
+  body: {
+    seed: string;
+    deckA: string;
+    deckB: string;
+    first: string;
+    actions: LogStep[];
+    hash: string;
+  };
+  botSeed: string;
+  turn: number | "ended";
+};
+
+function prepareBenchPosition(
+  i: number,
+  seed: number,
+  deckA: string,
+  deckB: string,
+  deckAId: string,
+  deckBId: string,
+  targetTurn: number,
+): BenchPrepared | null {
+  const game = new Game(String(seed), deckA, deckB, "a");
+  const actions: LogStep[] = [];
+  let n = 0;
+  try {
+    for (let step = 0; step < 400; step++) {
+      if (game.phase() === "terminal") return null;
+      const turn = game.turn();
+      if (turn >= targetTurn && game.phase() === "main") {
+        const legal = JSON.parse(game.legal()) as unknown[];
+        if (legal.length >= 3) {
+          return {
+            i,
+            deckAId,
+            deckBId,
+            body: {
+              seed: String(seed),
+              deckA,
+              deckB,
+              first: "a",
+              actions,
+              hash: game.hash(),
+            },
+            botSeed: String(seed + n),
+            turn: game.turn(),
+          };
+        }
+      }
+      const raw = game.botAction(DRIVE_POLICY, String(seed + n));
+      actions.push(JSON.parse(raw) as LogStep);
+      game.apply(raw);
+      n += 1;
+    }
+    return null;
+  } finally {
+    game.free();
+  }
+}
+
+async function runBenchLines(
+  prepared: Array<BenchPrepared | null>,
+  spec: string,
+  cores: number,
+  onProgress: (current: number, total: number) => void,
+  signal: AbortSignal,
+): Promise<BenchLine[]> {
+  const lines: BenchLine[] = [];
+  const total = prepared.length;
+  for (let idx = 0; idx < total; idx++) {
+    if (signal.aborted) throw new Error("aborted");
+    onProgress(idx + 1, total);
+    const pos = prepared[idx];
+    if (!pos) {
+      lines.push({
+        i: idx,
+        deckA: BENCH_POSITIONS[idx].deckA,
+        deckB: BENCH_POSITIONS[idx].deckB,
+        turn: "ended",
+        ms: null,
+        actionJson: "ended",
+      });
+      continue;
+    }
+    const decided = await benchDecideAtPosition(pos.body, spec, pos.botSeed, cores);
+    lines.push({
+      i: pos.i,
+      deckA: pos.deckAId,
+      deckB: pos.deckBId,
+      turn: pos.turn,
+      ms: decided.ms,
+      actionJson: decided.actionJson,
+    });
+  }
+  return lines;
+}
+
+function statsFromLines(lines: BenchLine[]): { med: number; max: number; total: number } {
+  const measured = lines.filter((l) => l.ms != null) as Array<BenchLine & { ms: number }>;
+  const msList = measured.map((l) => l.ms);
+  const med = msList.length ? median(msList) : 0;
+  const max = msList.length ? Math.max(...msList) : 0;
+  const total = msList.reduce((a, b) => a + b, 0) / 1000;
+  return { med, max, total };
+}
+
 export function initBenchUi(): void {
   const runBtn = document.getElementById("benchRunBtn");
   const stopBtn = document.getElementById("benchStopBtn");
@@ -77,10 +192,8 @@ export function initBenchUi(): void {
   };
 
   const stopBench = () => {
-    if (benchWorker) {
-      benchWorker.terminate();
-      benchWorker = null;
-    }
+    benchAbort?.abort();
+    benchAbort = null;
     running = false;
   };
 
@@ -104,71 +217,69 @@ export function initBenchUi(): void {
     void (async () => {
       running = true;
       stopBench();
-      benchWorker = new Worker(new URL("./bot-worker.ts", import.meta.url), { type: "module" });
-      const w = benchWorker;
+      benchAbort = new AbortController();
+      const signal = benchAbort.signal;
       const spec = benchSpec();
+      const poolCores = configuredBotCores();
       setOut("loading decks…");
-      const positions = [];
+      const prepared: Array<BenchPrepared | null> = [];
       for (let i = 0; i < BENCH_POSITIONS.length; i++) {
         const p = BENCH_POSITIONS[i];
         const deckA = await deckJsonFor(p.deckA);
         const deckB = await deckJsonFor(p.deckB);
-        positions.push({
-          i,
-          deckAId: p.deckA,
-          deckBId: p.deckB,
-          deckA,
-          deckB,
-          seed: 9100 + i,
-          targetTurn: p.targetTurn,
-        });
+        prepared.push(
+          prepareBenchPosition(i, 9100 + i, deckA, deckB, p.deckA, p.deckB, p.targetTurn),
+        );
       }
-      const id = nextBenchRequestId++;
-      const req: BenchRequest = {
-        type: "bench",
-        id,
-        spec,
-        drivePolicy: DRIVE_POLICY,
-        positions,
-      };
 
-      await new Promise<void>((resolve) => {
-        const onMsg = (ev: MessageEvent<BenchReply>) => {
-          const data = ev.data;
-          if (data.type === "bench-progress" && data.id === id) {
-            setOut(`position ${data.current} / ${data.total}…`);
-          } else if (data.type === "bench-error" && data.id === id) {
-            setOut(`error: ${data.message}`);
-            w.removeEventListener("message", onMsg);
-            stopBench();
-            resolve();
-          } else if (data.type === "bench-done" && data.id === id) {
-            void formatBenchResult(data.lines, spec, data.version).then((text) => {
-              setOut(text);
-              w.removeEventListener("message", onMsg);
-              stopBench();
-              resolve();
-            });
-          }
-        };
-        w.addEventListener("message", onMsg);
-        w.postMessage(req);
-      });
+      try {
+        setOut("1 core: position 0 / 10…");
+        const lines1 = await runBenchLines(
+          prepared,
+          spec,
+          1,
+          (c, t) => setOut(`1 core: position ${c} / ${t}…`),
+          signal,
+        );
+        setOut(`pool (${poolCores} cores): position 0 / 10…`);
+        const linesPool = await runBenchLines(
+          prepared,
+          spec,
+          poolCores,
+          (c, t) => setOut(`pool (${poolCores} cores): position ${c} / ${t}…`),
+          signal,
+        );
+        const text = await formatBenchResult(lines1, linesPool, spec, version(), poolCores);
+        setOut(text);
+      } catch (err) {
+        if (String(err).includes("aborted")) {
+          setOut((out.textContent ?? "") + "\n(stopped)");
+        } else {
+          setOut(`error: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
       running = false;
+      benchAbort = null;
     })();
   });
 }
 
-async function formatBenchResult(lines: BenchLine[], spec: string, wasmVersion: string): Promise<string> {
-  const measured = lines.filter((l) => l.ms != null) as Array<BenchLine & { ms: number }>;
-  const msList = measured.map((l) => l.ms);
-  const med = msList.length ? median(msList) : 0;
-  const max = msList.length ? Math.max(...msList) : 0;
-  const total = msList.reduce((a, b) => a + b, 0) / 1000;
-  const fp = await fingerprint(lines);
+async function formatBenchResult(
+  lines1: BenchLine[],
+  linesPool: BenchLine[],
+  spec: string,
+  wasmVersion: string,
+  poolCores: number,
+): Promise<string> {
+  const s1 = statsFromLines(lines1);
+  const sPool = statsFromLines(linesPool);
+  const fp1 = await fingerprint(lines1);
+  const fpPool = await fingerprint(linesPool);
+  const sameMoves = fp1 === fpPool;
+  const speedUp = s1.med > 0 ? sPool.med > 0 ? s1.med / sPool.med : 0 : 0;
   const cores = navigator.hardwareConcurrency ?? 0;
 
-  const rowLines = lines.map((l) => {
+  const rowLines = linesPool.map((l) => {
     if (l.turn === "ended") {
       return `${l.i}\t${l.deckA}\t${l.deckB}\tended\tended`;
     }
@@ -179,25 +290,31 @@ async function formatBenchResult(lines: BenchLine[], spec: string, wasmVersion: 
     spec,
     wasmVersion,
     cores,
-    medianMs: med,
-    maxMs: max,
-    totalSec: total,
-    fingerprint: fp,
-    lines: lines.map((l) => ({
+    poolCores,
+    oneCore: { medianMs: s1.med, maxMs: s1.max, totalSec: s1.total, fingerprint: fp1 },
+    pool: { medianMs: sPool.med, maxMs: sPool.max, totalSec: sPool.total, fingerprint: fpPool },
+    speedUp,
+    sameMoves,
+    fingerprint: fp1,
+    lines: linesPool.map((l) => ({
       ...l,
       action: l.actionJson === "ended" ? "ended" : JSON.parse(l.actionJson),
     })),
   };
 
+  const fpLabel = sameMoves
+    ? `fingerprint: ${fp1} (same moves)`
+    : `fingerprint: ${fp1} — pool ${fpPool} DIFFERENT`;
+
   return [
     ...rowLines,
     "",
-    `median: ${med.toFixed(1)} ms`,
-    `max: ${max.toFixed(1)} ms`,
-    `total: ${total.toFixed(2)} s`,
-    `cores: ${cores}`,
+    `1 core — median: ${s1.med.toFixed(1)} ms, max: ${s1.max.toFixed(1)} ms, total: ${s1.total.toFixed(2)} s`,
+    `pool (${poolCores}) — median: ${sPool.med.toFixed(1)} ms, max: ${sPool.max.toFixed(1)} ms, total: ${sPool.total.toFixed(2)} s`,
+    `speed-up: ${speedUp.toFixed(2)}×`,
+    `cores: ${cores} (auto ${autoBotCores()}, pool ${poolCores})`,
     `wasm: ${wasmVersion}`,
     `spec: ${spec}`,
-    `fingerprint: ${fp}`,
+    fpLabel,
   ].join("\n");
 }
