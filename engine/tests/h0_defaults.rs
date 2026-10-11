@@ -48,8 +48,8 @@
 //! test's own `h0` spec (not the `print_*` helpers). **`n`** is the 0-based index printed
 //! by `dump_gate_actions` (same convention as the play-time table above: first neutral-action
 //! JSON where branch and `main@99b7c05` differ). Proof (c): `git show origin/main:engine/src/apply.rs`
-//! + `origin/main` pins → `cargo test --release --test h0_defaults -- --include-ignored` →
-//! **26 passed** (2026-10-11).
+//! + `origin/main` pins → `cargo test --release --test h0_defaults -- --include-ignored`
+//!   → **26 passed** (2026-10-11).
 //!
 //! Where the first divergence is a **`meta-sword-rally` (seat B) move** before any Earrings
 //! play on that trace, B's search simulates A's turns in its worlds; A's sacrifice Engage now
