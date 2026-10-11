@@ -669,6 +669,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
 | `value` | `net` (built-in `h0-linear-v4`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
 | `net` | — | path to a `net.json` overriding the built-in model |
+| `order` | — | path to a second `net.json` used only where search compares one-step values to pick or rank moves (beam children, fuse completions, greedy turn finish, pending choices). Line scores, transposition leaves, and holdback/lethal paths still use the leaf (`net` / built-in). Native path like `net` |
+| `oorder` | 0 | with `order=`, `1` also orders the opponent model's greedy picks and `odepth≥1` beam children; ignored without `order` |
 | `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
 | `w_earth` | 0.35 | v1: saturated earth sigils (cap 6) |
 | `w_faith` | 0.15 | v1: saturated faith (cap 10) |
