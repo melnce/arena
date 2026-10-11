@@ -174,3 +174,10 @@ tablet they use the worker; full PC specs can take seconds to minutes per move.
 
 The settings drawer **Bot speed test** benchmarks ten fixed positions in a
 separate worker and prints a fingerprint for cross-device comparison.
+
+## Browser uploads
+
+Vs-bot games can also be captured in the browser and uploaded to the `captures`
+branch (see [captures.md](./captures.md)). That path is independent of
+`serve.py`’s `results/games/` files; using the local server does not disable
+browser uploads.
