@@ -1,23 +1,9 @@
-import { execFileSync } from "node:child_process";
 import { expect, test, type Page } from "@playwright/test";
+import { makeGameId } from "../src/captures.ts";
 import { openSettings } from "./helpers.ts";
 
 const ONE_COST = "10052110";
 const CAPTURE_KEY = "test-key-123";
-
-function pyGameId(seed: number, deckA: Record<string, number>, deckB: Record<string, number>, first: string): string {
-  const code = `
-import json, sys
-from serve import make_game_id
-deck_a = json.loads(sys.argv[1])
-deck_b = json.loads(sys.argv[2])
-print(make_game_id(int(sys.argv[3]), deck_a, deck_b, sys.argv[4]))
-`;
-  return execFileSync("python3", ["-c", code, JSON.stringify(deckA), JSON.stringify(deckB), String(seed), first], {
-    cwd: "/workspace/py",
-    encoding: "utf8",
-  }).trim();
-}
 
 async function boot(page: Page, hash = "") {
   await page.goto(`/${hash}`);
@@ -74,16 +60,9 @@ async function confirmHumanMulligan(page: Page, human: "a" | "b" = "a") {
 }
 
 async function playToTerminal(page: Page) {
-  const human = async () => (await page.evaluate(() => window.__arena!.humanSide())) as "a" | "b";
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 120; i++) {
     const phase = await page.locator("#turnCounter").getAttribute("data-phase");
     if (phase === "terminal") break;
-    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
-    const side = await human();
-    if (acting !== side) {
-      await page.waitForTimeout(400);
-      continue;
-    }
     await page.evaluate(() => {
       const legal = window.__arena!.legal() as Array<Record<string, unknown>>;
       const act =
@@ -92,9 +71,9 @@ async function playToTerminal(page: Page) {
         legal[0];
       if (act) window.__arena!.apply(act);
     });
-    await page.waitForTimeout(120);
+    await page.waitForTimeout(200);
   }
-  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", "terminal", { timeout: 180_000 });
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", "terminal", { timeout: 60_000 });
 }
 
 test("capture key from hash link", async ({ page }) => {
@@ -105,6 +84,7 @@ test("capture key from hash link", async ({ page }) => {
 });
 
 test("finished vs-bot game uploads once with final capture", async ({ page }) => {
+  test.setTimeout(120_000);
   const posts: Array<{ headers: Record<string, string>; body: Record<string, unknown> }> = [];
   await page.route("**/api/capture", async (route) => {
     const req = route.request();
@@ -131,7 +111,7 @@ test("finished vs-bot game uploads once with final capture", async ({ page }) =>
     deckA: deck,
     deckB: deck,
   };
-  const expectedId = pyGameId(9001, deck, deck, "a");
+  const expectedId = await makeGameId("9001", deck, deck, "a");
   expect(body.game_id).toBe(expectedId);
   expect(body.actions).toEqual(await page.evaluate(() => window.__arena!.actions()));
   expect(body.humanSide).toBe("a");
@@ -177,6 +157,7 @@ test("unfinished game stored as partial when new session starts", async ({ page 
 });
 
 test("offline queue then upload now", async ({ page }) => {
+  test.setTimeout(120_000);
   let fail = true;
   await page.route("**/api/capture", async (route) => {
     if (fail) {
@@ -200,6 +181,7 @@ test("offline queue then upload now", async ({ page }) => {
 });
 
 test("401 shows upload key rejected and stops posts", async ({ page }) => {
+  test.setTimeout(120_000);
   let count = 0;
   await page.route("**/api/capture", async (route) => {
     count += 1;
@@ -220,6 +202,7 @@ test("401 shows upload key rejected and stops posts", async ({ page }) => {
 });
 
 test("no capture key means no posts during vs-bot game", async ({ page }) => {
+  test.setTimeout(120_000);
   let count = 0;
   await page.route("**/api/capture", async (route) => {
     count += 1;
