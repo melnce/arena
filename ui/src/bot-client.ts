@@ -549,9 +549,11 @@ async function runPoolDecide(
 
   if (start.type !== "decided") throw new Error("pool decide failed");
   const ms = performance.now() - t0;
-  await Promise.all(
-    Array.from({ length: W }, (_, i) => releaseWorker(pool, i, allocId())),
-  );
+  if (!gamePool) {
+    await Promise.all(
+      Array.from({ length: W }, (_, i) => releaseWorker(pool, i, allocId())),
+    );
+  }
   return { action: start.action, ms };
   } finally {
     if (gamePool) poolBusy = 0;
