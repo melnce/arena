@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { ART, artShot, openSettings } from "./helpers.ts";
 
 const STRONG = "h0:nodes=6000";
-const THINK_QUERY = "localbot=0&botworkerspin=2000";
+const THINK_QUERY = "localbot=0&botworkerspin=8000";
 
 function readPcPolicies(): { strong: string; cheat: string } {
   const servePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../py/serve.py");
@@ -169,14 +169,17 @@ test("menu change mid-game: hint warns; badge names running bot until Start", as
 });
 
 test("browser badge names running bot idle and while thinking", async ({ page }) => {
-  test.setTimeout(90_000);
+  test.setTimeout(120_000);
   await boot(page, THINK_QUERY);
   await startVsBot(page, { seed: "42", first: "b", botPolicy: "h0" });
   await confirmMulligans(page);
   const meta = await optionMeta(page, "h0");
   await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser · ${meta.label}`);
-  await expect(page.locator("#botBackendBadge")).toContainText("thinking", { timeout: 30_000 });
-  await expect(page.locator("#botBackendBadge")).toContainText(meta.label);
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b", { timeout: 60_000 });
+  await expect(page.locator("#botBackendBadge")).toHaveText(
+    `bot: browser · ${meta.label} — thinking…`,
+    { timeout: 90_000 },
+  );
 });
 
 test("watch rematch takes policyASelect and policyBSelect", async ({ page }) => {
