@@ -8,8 +8,8 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    # ≈ 18–19 min measured before #133; two-thirds rule.
-    timeout-minutes: 30
+    # ≈ 18–19 min before #133; post–#142 soak/bench can exceed 30 m on cold cache.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
 
