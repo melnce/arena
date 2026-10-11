@@ -172,9 +172,9 @@ test("browser badge names running bot idle and while thinking", async ({ page })
   test.setTimeout(120_000);
   await boot(page, THINK_QUERY);
   await startVsBot(page, { seed: "42", first: "b", botPolicy: "h0" });
-  await confirmMulligans(page);
   const meta = await optionMeta(page, "h0");
   await expect(page.locator("#botBackendBadge")).toHaveText(`bot: browser · ${meta.label}`);
+  await confirmMulligans(page);
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "b", { timeout: 60_000 });
   await expect(page.locator("#botBackendBadge")).toHaveText(
     `bot: browser · ${meta.label} — thinking…`,
