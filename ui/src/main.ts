@@ -510,6 +510,9 @@ const STRONG_H0_TITLE =
 const CHEAT_H0 = "h0:nodes=6000,info=all";
 const CHEAT_H0_TITLE =
   "Full information: sees your hand and what is left in both decks — not what will be drawn (draws and random effects stay random). For sparring — not a fair opponent.";
+const STANDARD_H0_TITLE = "Default h0 search (~2 000 nodes per decision)";
+const RANDOM_POLICY_TITLE = "Uniform random among legal actions";
+const FIRST_LEGAL_POLICY_TITLE = "First legal action in engine order";
 
 function isCheaterPolicy(policy: string): boolean {
   if (!policy.startsWith("h0:")) return false;
@@ -521,6 +524,34 @@ function isCheaterPolicy(policy: string): boolean {
 
 function selectedVsBotPolicy(): string {
   return byId<HTMLSelectElement>("vsBotPolicy")?.value ?? "";
+}
+
+function policyOptionMeta(
+  value: string,
+  sel?: HTMLSelectElement,
+): { label: string; title: string } {
+  const pick = sel ?? byId<HTMLSelectElement>("vsBotPolicy");
+  if (!pick) return { label: value, title: "" };
+  const opt = [...pick.options].find((o) => o.value === value);
+  if (!opt) return { label: value, title: "" };
+  return { label: opt.textContent ?? value, title: opt.title };
+}
+
+function runningVsBotPolicy(s: Session): string {
+  const human = s.cfg.humanSide;
+  return botPolicyFor(s, human === "a" ? "b" : "a");
+}
+
+/** Menu when idle; running game's bot policy during vs-bot. */
+function effectiveVsBotPolicy(): string {
+  if (session?.cfg.mode === "vs-bot") return runningVsBotPolicy(session);
+  return selectedVsBotPolicy();
+}
+
+function browserBotBadgeSuffix(): string {
+  if (!session || session.cfg.mode !== "vs-bot") return "";
+  const { label } = policyOptionMeta(runningVsBotPolicy(session));
+  return ` · ${label}`;
 }
 
 function isDesktopClassDevice(): boolean {
@@ -620,6 +651,7 @@ function startSession(cfg: SessionConfig): void {
   refreshCheckpointStatus();
   paint();
   syncVsBotRoleLabels();
+  refreshBotBackendBadge();
   void maybeBots();
   if (cfg.mode === "watch") startWatchIfAuto();
 }
@@ -657,6 +689,18 @@ async function rematch(keepSeed: boolean): Promise<void> {
     const seedInput = byId<HTMLInputElement>("seedInput");
     if (seedInput) seedInput.value = cfg.seed.toString();
   }
+  if (cfg.mode === "vs-bot") {
+    const vs = byId<HTMLSelectElement>("vsBotPolicy")?.value;
+    if (vs) {
+      cfg.policyA = vs;
+      cfg.policyB = vs;
+    }
+  } else if (cfg.mode === "watch") {
+    const a = byId<HTMLSelectElement>("policyASelect")?.value;
+    const b = byId<HTMLSelectElement>("policyBSelect")?.value;
+    if (a) cfg.policyA = a;
+    if (b) cfg.policyB = b;
+  }
   startSession(cfg);
 }
 
@@ -679,7 +723,7 @@ function localBotToggleOn(): boolean {
 }
 
 function botDecisionIsPending(): boolean {
-  const cheater = isCheaterPolicy(selectedVsBotPolicy());
+  const cheater = isCheaterPolicy(effectiveVsBotPolicy());
   if (localBotThinking && localBot && !localBotGameError && (!cheater || localBot.cheat)) {
     return true;
   }
@@ -727,34 +771,55 @@ function clearBotDecisionPending(): void {
 }
 
 function botBackendBadgeText(): string {
-  const cheater = isCheaterPolicy(selectedVsBotPolicy());
+  const cheater = isCheaterPolicy(effectiveVsBotPolicy());
+  const browser = `bot: browser${browserBotBadgeSuffix()}`;
   const workerErr = botWorkerState().error;
   if (localBotThinking && localBot && !localBotGameError && (!cheater || localBot.cheat)) {
     return "bot: local server — thinking…";
   }
   if (isBotWorkerThinking()) {
-    return "bot: browser — thinking…";
+    return `${browser} — thinking…`;
   }
   if (workerErr) {
-    return `bot: browser (worker error: ${workerErr})`;
+    return `${browser} (worker error: ${workerErr})`;
   }
   if (localBotGameError) {
-    return `bot: browser (server error: ${localBotGameError})`;
+    return `${browser} (server error: ${localBotGameError})`;
   }
   if (localBot && localBotToggleOn() && !localBotQueryOff()) {
     if (cheater && !localBot.cheat) {
-      return "bot: browser (cheater needs an updated local server)";
+      return `${browser} (cheater needs an updated local server)`;
     }
     const cpus = localBot.cpus == null ? "?" : String(localBot.cpus);
     const spec = cheater && localBot.cheat ? localBot.cheat : localBot.strong;
     return `bot: local server (${spec}, ${cpus} cpus)`;
   }
-  return "bot: browser";
+  return browser;
+}
+
+function refreshVsBotPolicyHint(): void {
+  const el = byId("vsBotPolicyHint");
+  const vs = byId<HTMLSelectElement>("vsBotPolicy");
+  if (!el || !vs) return;
+  const opt = vs.selectedOptions[0];
+  if (!opt) {
+    el.textContent = "";
+    return;
+  }
+  const label = opt.textContent ?? "";
+  const title = opt.title;
+  const lines = [title ? `${label}: ${title}` : label];
+  if (session?.cfg.mode === "vs-bot" && vs.value !== runningVsBotPolicy(session)) {
+    lines.push("Applies from the next game (Start or Rematch).");
+  }
+  el.style.whiteSpace = "pre-line";
+  el.textContent = lines.join("\n");
 }
 
 function refreshBotBackendBadge(): void {
   const el = byId("botBackendBadge");
   if (el) el.textContent = botBackendBadgeText();
+  refreshVsBotPolicyHint();
 }
 
 async function applyHealthResponse(res: Response): Promise<void> {
@@ -1000,7 +1065,15 @@ function populatePolicies(): void {
     if (!sel) continue;
     sel.innerHTML = "";
     for (const n of names) {
-      appendPolicyOption(sel, n, n === "h0" ? "h0 (standard)" : n);
+      if (n === "random") {
+        appendPolicyOption(sel, n, n, RANDOM_POLICY_TITLE);
+      } else if (n === "first-legal") {
+        appendPolicyOption(sel, n, n, FIRST_LEGAL_POLICY_TITLE);
+      } else if (n === "h0") {
+        appendPolicyOption(sel, n, "h0 (standard)", STANDARD_H0_TITLE);
+      } else {
+        appendPolicyOption(sel, n, n);
+      }
       if (n === "h0") {
         appendPolicyOption(sel, STRONG_H0, "h0 (strong)", STRONG_H0_TITLE);
         appendPolicyOption(sel, CHEAT_H0, "h0 (cheater — sees your hand)", CHEAT_H0_TITLE);
@@ -1027,8 +1100,10 @@ function populatePolicies(): void {
     vs.addEventListener("change", () => {
       persistBotPolicy(vs.value);
       applyVsBotPolicy();
+      refreshVsBotPolicyHint();
       refreshBotBackendBadge();
     });
+    refreshVsBotPolicyHint();
   }
 }
 

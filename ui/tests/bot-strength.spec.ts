@@ -92,6 +92,7 @@ test("desktop: option list defaults to h0 (strong)", async ({ page }) => {
   expect(opts[3]?.title).toContain("6 000 search nodes");
   expect(opts[4]?.label).toBe("h0 (cheater — sees your hand)");
   await expect(page.locator("#vsBotPolicy")).toHaveValue(STRONG);
+  await expect(page.locator("#vsBotPolicyHint")).toContainText("h0 (strong)");
   await expect(page.locator("#vsBotPolicyHint")).toContainText("6 000 search nodes");
   await page.locator("#vsBotPolicy").evaluate((el) => {
     (el as HTMLSelectElement).size = 5;
