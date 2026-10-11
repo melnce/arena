@@ -1252,7 +1252,6 @@ For `h0`, the dict also carries:
 | `k` | int | Determinized roots (`determinizations`; honoured under all `info` modes). |
 | `node_cap` | int | Global node cap for the decision. |
 | `alloc` | str | `fair`, `root`, or `world`. |
-| `threads` | u32 | `1`–`64`; default `1`. Native only. |
 | `nodes` | int | Total `apply`s spent. |
 | `nodes_lethal` | int | Nodes spent on the consensus-lethal check before search (0 on other paths). |
 | `horizon_nodes` | int | Reserve applies spent on horizon finish-and-reply (not charged to `node_cap`). |
