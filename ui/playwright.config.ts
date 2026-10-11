@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: "./tests",
   timeout: 90_000,
   fullyParallel: false,
+  workers: process.env.CI ? 1 : undefined,
   retries: 0,
   projects: [
     {
