@@ -465,6 +465,17 @@ def card_source():
             ),
             closed({"from": {"$ref": "#/$defs/Selector"}}, required=["from"]),
             closed({"randomFrom": {"$ref": "#/$defs/Filter"}}, required=["randomFrom"]),
+            closed(
+                {
+                    "randomNamed": {
+                        "type": "array",
+                        "items": {"$ref": "#/$defs/CardId"},
+                        "minItems": 2,
+                        "uniqueItems": True,
+                    }
+                },
+                required=["randomNamed"],
+            ),
         ]
     }
 

@@ -1250,7 +1250,10 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 | `arena.load_cards(root: str = "cards") -> CardDb` | Filesystem load, serde-validated. |
 | `arena.deck_fingerprint(deck: dict[str, int]) -> str` | Canonical deck fingerprint: distinct ids sorted ascending as `<id>x<count>`, joined with `,`. Same as the engine's `deck_fingerprint_counts`. |
 | `Game(db, seed, deck_a, deck_b, first="coin", opening_hands=None)` | `deck_*` are `{id: count}`; `opening_hands` is the trace header shape. |
-| `Game.legal() -> list[dict]` | `NeutralAction` dicts, engine order. |
+| `Game.legal() -> list[dict]` | `NeutralAction` dicts, engine order. Identical `NeutralAction`s appear once (the two copies of one card in a `choose {card}` choice are one action), so positions in this list can differ from the engine's legal indices, the `legal_index` / `chosen_index` of explain records. |
+| `Game.vocab() -> list[int]` | Sorted card-id vocabulary (`CardId.0`) for histogram encoding at this state — the `root_vocab` H0 uses for every leaf of a decision taken here. |
+| `Game.encode(player, version=3, vocab=None) -> dict` | `{"features": list[float], "ids": list[int]}` from the deciding player's perspective. `player` is `"a"` or `"b"`; `version` is `1`, `2`, or `3`. `vocab=None` uses `encode_version`; a list uses `encode_with_vocab` (strictly ascending, as `vocab()` returns). Same row as `matchup(..., export=dir, encoding=version)` for that state and player. |
+| `Game.evaluate(policy, player) -> float` | H0 leaf value (`H0::evaluate`) for an `h0` spec (`value`, `net`, `clip`, `bppv`). Non-`h0` policies raise `ValueError`. |
 | `Game.apply(action, rng=None) -> list[dict]` | Event dicts. `rng` is the trace line's pick array (replay). Raises `arena.Illegal(str)`. |
 | `Game.snapshot() -> dict` | `CanonicalState` (`docs/trace-format.md`). |
 | `Game.full() -> dict` | Perfect-information dump of public `State` fields (instance ids, flags, ordered zones). |

@@ -195,6 +195,12 @@ fn commit_play_rally(state: &mut State) {
     }
 }
 
+struct DrawOutcome {
+    card: CardId,
+    entered_hand: bool,
+    hand_pos: Option<u8>,
+}
+
 fn note_draw(db: &CardDb, state: &mut State, who: PlayerId, card: CardId) {
     // Draw appends; "when you draw this card" is the newest copy, not the
     // first same-id already in hand (Swift Staffmaster).
@@ -213,7 +219,7 @@ fn draw_one(
     who: PlayerId,
     filter: Option<&Filter>,
     exclude_names: &[CardId],
-) -> Result<Option<CardId>, Illegal> {
+) -> Result<Option<DrawOutcome>, Illegal> {
     if state.winner.is_some() {
         return Ok(None);
     }
@@ -265,8 +271,24 @@ fn draw_one(
     let mut inst = state.player_mut(who).deck.remove(deck_i);
     inst.flags.summoning_sick = false;
     let id = inst.card;
+    let inst_id = inst.id;
     add_to_hand(state, who, inst, true);
-    Ok(Some(id))
+    let entered_hand = state.player(who).hand.iter().any(|c| c.id == inst_id);
+    let hand_pos = entered_hand
+        .then(|| {
+            state
+                .player(who)
+                .hand
+                .iter()
+                .position(|c| c.id == inst_id)
+                .map(|p| p as u8)
+        })
+        .flatten();
+    Ok(Some(DrawOutcome {
+        card: id,
+        entered_hand,
+        hand_pos,
+    }))
 }
 
 /// Hand limit 9; overflow destroys without Last Words.
@@ -3244,12 +3266,14 @@ fn run_aftermath(
         }
         Aftermath::ContinueTurnStart { step: 8 } => {
             let who = state.active;
-            if let Some(id) = draw_one(state, who, None, &[])? {
+            if let Some(out) = draw_one(state, who, None, &[])? {
                 events.push(Event::Draw {
                     player: who,
-                    card: id,
+                    card: out.card,
                 });
-                note_draw(db, state, who, id);
+                if out.entered_hand {
+                    note_draw(db, state, who, out.card);
+                }
             }
         }
         Aftermath::DrainQueue => drain_queue(db, state, events)?,
@@ -4862,20 +4886,19 @@ fn apply_effect(
             let mut exclude: Vec<CardId> = Vec::new();
             let mut drawn = Vec::new();
             for _ in 0..n {
-                if let Some(id) = draw_one(state, who, filter.as_ref(), &exclude)? {
+                if let Some(out) = draw_one(state, who, filter.as_ref(), &exclude)? {
                     if distinct_names == &Some(true) {
-                        exclude.push(id);
+                        exclude.push(out.card);
                     }
                     events.push(Event::Draw {
                         player: who,
-                        card: id,
+                        card: out.card,
                     });
-                    note_draw(db, state, who, id);
-                    if let Some(pos) = state.player(who).hand.iter().rposition(|c| c.card == id) {
-                        drawn.push(TargetOpt::Hand {
-                            player: who,
-                            pos: pos as u8,
-                        });
+                    if out.entered_hand {
+                        note_draw(db, state, who, out.card);
+                        if let Some(pos) = out.hand_pos {
+                            drawn.push(TargetOpt::Hand { player: who, pos });
+                        }
                     }
                 }
             }
@@ -4892,6 +4915,7 @@ fn apply_effect(
             ..
         } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            maybe_bind(state, e, &ts);
             apply_each_captured(state, &ts, |st, t| {
                 if let TargetOpt::Slot { player, slot } = t {
                     if *player == controller {
@@ -6534,6 +6558,24 @@ fn summon_source(
             taken.flags.summoning_sick = true;
             taken
         }
+        CardSource::RandomNamed { random_named } => {
+            if random_named.is_empty() {
+                return Ok(None);
+            }
+            let keys: Vec<String> = random_named.iter().map(|c| c.as_str()).collect();
+            let mut emit = Vec::new();
+            let i = state
+                .rng
+                .pick_index_among(PickWhat::RandomCard, None, &keys, &mut emit)
+                .map_err(Illegal::OraclePickNotLegal)?;
+            state.picks.extend(emit);
+            let chosen = random_named[i.min(random_named.len() - 1)];
+            let card = db.require_supported(chosen).map_err(|e| match e {
+                LoadError::Unsupported(u) => Illegal::Unsupported(u),
+                _ => Illegal::NotLegal,
+            })?;
+            CardInstance::from_card(card, state.alloc_id())
+        }
     };
     let _ = exact;
     let mut inst = inst;
@@ -6626,6 +6668,12 @@ fn add_source_to_deck(
             let _ = random_from;
             return Ok(None);
         }
+        CardSource::RandomNamed { .. } => {
+            return Err(Illegal::Unsupported(Unsupported {
+                card: who.as_str().into(),
+                construct: "CardSource.randomNamed".into(),
+            }));
+        }
         CardSource::From { .. } => {
             return Err(Illegal::Unsupported(Unsupported {
                 card: who.as_str().into(),
@@ -6674,6 +6722,10 @@ fn add_source_to_hand(
         CardSource::RandomFrom { .. } => Err(Illegal::Unsupported(Unsupported {
             card: who.as_str().into(),
             construct: "CardSource.randomFrom".into(),
+        })),
+        CardSource::RandomNamed { .. } => Err(Illegal::Unsupported(Unsupported {
+            card: who.as_str().into(),
+            construct: "CardSource.randomNamed".into(),
         })),
     }
 }
@@ -6814,6 +6866,10 @@ fn resolve_transform_into(
         CardSource::RandomFrom { .. } => Err(Illegal::Unsupported(Unsupported {
             card: controller.as_str().into(),
             construct: "transform randomFrom".into(),
+        })),
+        CardSource::RandomNamed { .. } => Err(Illegal::Unsupported(Unsupported {
+            card: controller.as_str().into(),
+            construct: "transform randomNamed".into(),
         })),
     }
 }

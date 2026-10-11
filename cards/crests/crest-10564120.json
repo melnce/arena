@@ -26,12 +26,10 @@
           "printed": "summon a Fox of Purity or Holy Falcon at random.",
           "op": "summon",
           "card": {
-            "randomFrom": {
-              "cards": [
-                "10061120",
-                "90061110"
-              ]
-            }
+            "randomNamed": [
+              "10061120",
+              "90061110"
+            ]
           },
           "count": 1
         }
@@ -56,12 +54,10 @@
           "printed": "summon an enemy Fox of Purity or Holy Falcon at random.",
           "op": "summon",
           "card": {
-            "randomFrom": {
-              "cards": [
-                "10061120",
-                "90061110"
-              ]
-            }
+            "randomNamed": [
+              "10061120",
+              "90061110"
+            ]
           },
           "count": 1,
           "controller": "opponent"
