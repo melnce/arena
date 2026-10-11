@@ -25,12 +25,12 @@ use crate::determinize::{determinize_block, HreadDeal, OpenStats};
 pub use crate::determinize::Info;
 use crate::encode::{encode_with_vocab, vocab, EncodingVersion};
 use crate::ids::{AttackTarget, PlayerId, Slot};
-use crate::lethal::{
-    confirm_det_lethal_line, confirm_lethal_line_rerolled, forced_lethal,
-    forced_lethal_accepting, forced_lethal_det, roll_confirm_seed, LethalVerdict,
-};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::lethal::forced_lethal_accepting_cancel;
+use crate::lethal::{
+    confirm_det_lethal_line, confirm_lethal_line_rerolled, forced_lethal, forced_lethal_accepting,
+    forced_lethal_det, roll_confirm_seed, LethalVerdict,
+};
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
 use crate::search_key::search_key;
@@ -1236,11 +1236,9 @@ impl Policy for H0 {
                     let leftover = self.node_cap.saturating_sub(nodes_after_lethal);
                     let base = leftover / k;
                     let extra = leftover % k;
-                    let mut world_results: Vec<WorldSearchResult> =
-                        Vec::with_capacity(roots.len());
+                    let mut world_results: Vec<WorldSearchResult> = Vec::with_capacity(roots.len());
                     let run_world = |r: usize| {
-                        let world_budget =
-                            base + if (r as u32) < extra { 1 } else { 0 };
+                        let world_budget = base + if (r as u32) < extra { 1 } else { 0 };
                         search_world(
                             db,
                             &roots[r],
@@ -1264,23 +1262,21 @@ impl Policy for H0 {
                     #[cfg(not(target_arch = "wasm32"))]
                     if self.threads > 1 {
                         use std::sync::atomic::{AtomicUsize, Ordering};
-                        let slots: Vec<std::sync::Mutex<Option<WorldSearchResult>>> =
-                            (0..roots.len())
-                                .map(|_| std::sync::Mutex::new(None))
-                                .collect();
+                        let slots: Vec<std::sync::Mutex<Option<WorldSearchResult>>> = (0..roots
+                            .len())
+                            .map(|_| std::sync::Mutex::new(None))
+                            .collect();
                         let next = AtomicUsize::new(0);
                         let workers = self.threads.min(k).max(1) as usize;
                         std::thread::scope(|s| {
                             for _ in 0..workers {
-                                s.spawn(|| {
-                                    loop {
-                                        let r = next.fetch_add(1, Ordering::Relaxed);
-                                        if r >= roots.len() {
-                                            break;
-                                        }
-                                        let wr = run_world(r);
-                                        *slots[r].lock().unwrap() = Some(wr);
+                                s.spawn(|| loop {
+                                    let r = next.fetch_add(1, Ordering::Relaxed);
+                                    if r >= roots.len() {
+                                        break;
                                     }
+                                    let wr = run_world(r);
+                                    *slots[r].lock().unwrap() = Some(wr);
                                 });
                             }
                         });
@@ -1319,132 +1315,133 @@ impl Policy for H0 {
                     }
                     nodes = nodes_after_lethal + world_nodes_sum;
                 } else {
-                for (r, root) in roots.iter().enumerate() {
-                    let mut root_table = if self.info == Info::All {
-                        self.tt.then(HashMap::new)
-                    } else {
-                        None
-                    };
-                    let root_key = search_key(root);
-                    for (j, a) in subset.iter().enumerate() {
-                        if nodes >= self.node_cap {
-                            let skipped = (subset.len() - j) as u64
-                                + (roots.len() - r - 1) as u64 * subset.len() as u64;
-                            dec_stats.skipped_worlds += skipped;
-                            if recording {
-                                for explain_cand in explain_cands.iter_mut().skip(j) {
-                                    explain_cand
-                                        .worlds
-                                        .push(PvTracker::skipped_world(r as u32, 0));
-                                }
-                                for rr in (r + 1)..roots.len() {
-                                    for explain_cand in explain_cands.iter_mut() {
-                                        explain_cand
-                                            .worlds
-                                            .push(PvTracker::skipped_world(rr as u32, 0));
-                                    }
-                                }
-                            }
-                            cap_exhausted = true;
-                            break;
-                        }
-                        attempted += 1;
-                        let cap = if self.alloc == Alloc::Root {
-                            self.node_cap
-                        } else {
-                            const MIN_SHARE: u32 = 24;
-                            let pairs_left = (k as usize - r) * subset.len() - j;
-                            let remaining = self.node_cap - nodes;
-                            let even = remaining / pairs_left as u32;
-                            let share =
-                                if remaining >= MIN_SHARE.saturating_mul(pairs_left as u32) {
-                                    even.max(MIN_SHARE)
-                                } else {
-                                    even.max(1)
-                                };
-                            nodes.saturating_add(share).min(self.node_cap)
-                        };
-                        let pair_nodes_start = nodes;
-                        let mut tracker = if recording {
-                            Some(PvTracker::new(cap))
+                    for (r, root) in roots.iter().enumerate() {
+                        let mut root_table = if self.info == Info::All {
+                            self.tt.then(HashMap::new)
                         } else {
                             None
                         };
-                        let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key]) else {
-                            if recording {
-                                explain_cands[j]
-                                    .worlds
-                                    .push(PvTracker::skipped_world(r as u32, cap));
+                        let root_key = search_key(root);
+                        for (j, a) in subset.iter().enumerate() {
+                            if nodes >= self.node_cap {
+                                let skipped = (subset.len() - j) as u64
+                                    + (roots.len() - r - 1) as u64 * subset.len() as u64;
+                                dec_stats.skipped_worlds += skipped;
+                                if recording {
+                                    for explain_cand in explain_cands.iter_mut().skip(j) {
+                                        explain_cand
+                                            .worlds
+                                            .push(PvTracker::skipped_world(r as u32, 0));
+                                    }
+                                    for rr in (r + 1)..roots.len() {
+                                        for explain_cand in explain_cands.iter_mut() {
+                                            explain_cand
+                                                .worlds
+                                                .push(PvTracker::skipped_world(rr as u32, 0));
+                                        }
+                                    }
+                                }
+                                cap_exhausted = true;
+                                break;
                             }
-                            continue;
-                        };
-                        if let Some(t) = tracker.as_mut() {
-                            t.push(a.clone());
-                        }
-                        let v = if s.winner == Some(me) {
-                            if let Some(t) = tracker.as_mut() {
-                                t.set_leaf(eval.wv, PvEnd::Terminal, &s);
-                            }
-                            eval.wv
-                        } else {
-                            let line = vec![root_key, search_key(&s)];
-                            let at_fuse_choice =
-                                self.fusemacro && own_fuse_partners(&s, me).is_some();
-                            let search_depth = if at_fuse_choice {
-                                self.depth
+                            attempted += 1;
+                            let cap = if self.alloc == Alloc::Root {
+                                self.node_cap
                             } else {
-                                self.depth.saturating_sub(1)
+                                const MIN_SHARE: u32 = 24;
+                                let pairs_left = (k as usize - r) * subset.len() - j;
+                                let remaining = self.node_cap - nodes;
+                                let even = remaining / pairs_left as u32;
+                                let share =
+                                    if remaining >= MIN_SHARE.saturating_mul(pairs_left as u32) {
+                                        even.max(MIN_SHARE)
+                                    } else {
+                                        even.max(1)
+                                    };
+                                nodes.saturating_add(share).min(self.node_cap)
                             };
-                            search_own(
-                                db,
-                                &s,
-                                me,
-                                search_depth,
-                                self.beam,
-                                &mut nodes,
-                                cap,
-                                &line,
-                                eval,
-                                odepth,
-                                obeam,
-                                &mut dec_stats,
-                                if self.info == Info::All {
-                                    root_table.as_mut()
+                            let pair_nodes_start = nodes;
+                            let mut tracker = if recording {
+                                Some(PvTracker::new(cap))
+                            } else {
+                                None
+                            };
+                            let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key])
+                            else {
+                                if recording {
+                                    explain_cands[j]
+                                        .worlds
+                                        .push(PvTracker::skipped_world(r as u32, cap));
+                                }
+                                continue;
+                            };
+                            if let Some(t) = tracker.as_mut() {
+                                t.push(a.clone());
+                            }
+                            let v = if s.winner == Some(me) {
+                                if let Some(t) = tracker.as_mut() {
+                                    t.set_leaf(eval.wv, PvEnd::Terminal, &s);
+                                }
+                                eval.wv
+                            } else {
+                                let line = vec![root_key, search_key(&s)];
+                                let at_fuse_choice =
+                                    self.fusemacro && own_fuse_partners(&s, me).is_some();
+                                let search_depth = if at_fuse_choice {
+                                    self.depth
                                 } else {
-                                    shared_table.as_mut()
-                                },
-                                tracker.as_mut(),
-                                self.fusemacro,
-                                self.horizon,
-                                self.hres,
-                            )
-                        };
-                        if let Some(t) = tracker.as_mut() {
-                            t.note_nodes(nodes);
+                                    self.depth.saturating_sub(1)
+                                };
+                                search_own(
+                                    db,
+                                    &s,
+                                    me,
+                                    search_depth,
+                                    self.beam,
+                                    &mut nodes,
+                                    cap,
+                                    &line,
+                                    eval,
+                                    odepth,
+                                    obeam,
+                                    &mut dec_stats,
+                                    if self.info == Info::All {
+                                        root_table.as_mut()
+                                    } else {
+                                        shared_table.as_mut()
+                                    },
+                                    tracker.as_mut(),
+                                    self.fusemacro,
+                                    self.horizon,
+                                    self.hres,
+                                )
+                            };
+                            if let Some(t) = tracker.as_mut() {
+                                t.note_nodes(nodes);
+                            }
+                            let fv = finite(v, eval.wv);
+                            if recording {
+                                let tracker = tracker.unwrap_or_else(|| PvTracker::new(cap));
+                                explain_cands[j].worlds.push(tracker.into_world(
+                                    r as u32,
+                                    v,
+                                    fv,
+                                    false,
+                                    nodes - pair_nodes_start,
+                                    db,
+                                    root,
+                                ));
+                            }
+                            acc[j] += fv;
+                            if fv < worst[j] {
+                                worst[j] = fv;
+                            }
+                            n[j] += 1;
                         }
-                        let fv = finite(v, eval.wv);
-                        if recording {
-                            let tracker = tracker.unwrap_or_else(|| PvTracker::new(cap));
-                            explain_cands[j].worlds.push(tracker.into_world(
-                                r as u32,
-                                v,
-                                fv,
-                                false,
-                                nodes - pair_nodes_start,
-                                db,
-                                root,
-                            ));
+                        if cap_exhausted {
+                            break;
                         }
-                        acc[j] += fv;
-                        if fv < worst[j] {
-                            worst[j] = fv;
-                        }
-                        n[j] += 1;
                     }
-                    if cap_exhausted {
-                        break;
-                    }
-                }
                 }
                 let pairs_skipped_add = if nodes_after_lethal < self.node_cap {
                     total_pairs - attempted
@@ -1991,18 +1988,24 @@ fn try_take_kill_parallel(
     let roll_lines_rejected = AtomicU32::new(0);
     std::thread::scope(|s| {
         let roll_handle = s.spawn(|| {
-            forced_lethal_accepting_cancel(db, &roots[0], budget, |line| {
-                for root in roots {
-                    let pos_key = search_key(root);
-                    let seeds: Vec<u64> =
-                        (0..tkroll).map(|i| roll_confirm_seed(pos_key, i)).collect();
-                    if !confirm_lethal_line_rerolled(db, root, me, line, &seeds) {
-                        roll_lines_rejected.fetch_add(1, Ordering::Relaxed);
-                        return false;
+            forced_lethal_accepting_cancel(
+                db,
+                &roots[0],
+                budget,
+                |line| {
+                    for root in roots {
+                        let pos_key = search_key(root);
+                        let seeds: Vec<u64> =
+                            (0..tkroll).map(|i| roll_confirm_seed(pos_key, i)).collect();
+                        if !confirm_lethal_line_rerolled(db, root, me, line, &seeds) {
+                            roll_lines_rejected.fetch_add(1, Ordering::Relaxed);
+                            return false;
+                        }
                     }
-                }
-                true
-            }, &cancel)
+                    true
+                },
+                &cancel,
+            )
         });
 
         stats.own_solver_calls += 1;

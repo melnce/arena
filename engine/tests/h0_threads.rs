@@ -20,7 +20,8 @@ const S2: &str = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000
 const S3: &str =
     "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,alloc=world";
 
-const S1_DEBUG: &str = "h0:nodes=2000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8";
+const S1_DEBUG: &str =
+    "h0:nodes=2000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8";
 const S2_DEBUG: &str =
     "h0:nodes=2000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,alloc=world";
 const S3_DEBUG: &str =
@@ -269,16 +270,10 @@ fn collect_cases(db: &CardDb) -> Vec<Case> {
     let mut cases = Vec::new();
     cases.extend(load_engine_fixtures(db, &root.join("tkill"), |_| true));
     cases.extend(load_engine_fixtures(db, &root.join("tkroll"), |_| true));
-    cases.extend(load_engine_fixtures(
-        db,
-        &root.join("lethal"),
-        |_| true,
-    ));
-    cases.extend(load_engine_fixtures(
-        db,
-        &root.join("hbcheck"),
-        |name| name.starts_with("pos-") || name.starts_with("neg-"),
-    ));
+    cases.extend(load_engine_fixtures(db, &root.join("lethal"), |_| true));
+    cases.extend(load_engine_fixtures(db, &root.join("hbcheck"), |name| {
+        name.starts_with("pos-") || name.starts_with("neg-")
+    }));
     cases.extend(load_review_cases(db));
     cases
 }
@@ -323,20 +318,17 @@ fn check_identity(cases: &[Case], specs: &[&str]) {
             for &t in &THREADS[1..] {
                 let got = decide(spec, t, &db, &case.cap, case.ply, case.seed);
                 assert_eq!(
-                    got.idx,
-                    baseline.idx,
+                    got.idx, baseline.idx,
                     "{spec} threads={t} {} idx",
                     case.label
                 );
                 assert_eq!(
-                    got.value_bits,
-                    baseline.value_bits,
+                    got.value_bits, baseline.value_bits,
                     "{spec} threads={t} {} value",
                     case.label
                 );
                 assert_eq!(
-                    got.explain,
-                    baseline.explain,
+                    got.explain, baseline.explain,
                     "{spec} threads={t} {} explain",
                     case.label
                 );
