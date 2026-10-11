@@ -12,7 +12,13 @@ import { isReseedStep } from "./types.ts";
 import { rerollSeed } from "./reroll.ts";
 
 /** Outcome of the last `botStepRemote` call (wasm fallback vs server). */
-export type LocalBotStepMeta = { usedRemote: boolean; error?: string; stale?: boolean };
+export type LocalBotStepMeta = {
+  usedRemote: boolean;
+  error?: string;
+  stale?: boolean;
+  ms?: number | null;
+  value?: number | null;
+};
 
 let lastLocalBotMeta: LocalBotStepMeta = { usedRemote: false };
 
@@ -520,13 +526,19 @@ export async function botStepRemote(
       const text = await res.text().catch(() => "");
       throw new Error(text || `${res.status} ${res.statusText}`);
     }
-    const data = (await res.json()) as { action?: NeutralAction };
+    const data = (await res.json()) as {
+      action?: NeutralAction;
+      ms?: number;
+      value?: number;
+    };
     if (!data.action || typeof data.action !== "object") {
       throw new Error("server returned no action");
     }
     if (dropStale()) return [];
     const events = applyAction(s, data.action, { human: false });
-    lastLocalBotMeta = { usedRemote: true };
+    const ms = typeof data.ms === "number" && Number.isFinite(data.ms) ? data.ms : null;
+    const value = typeof data.value === "number" && Number.isFinite(data.value) ? data.value : null;
+    lastLocalBotMeta = { usedRemote: true, ms, value };
     return events;
   } catch (err) {
     if (dropStale()) return [];
