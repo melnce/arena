@@ -13,7 +13,7 @@ Audit of every user-visible feature of the old practice tool’s **client** (`$H
 **Owner decisions 2026-09-11**
 
 1. **Click map — keep the old tool’s.** Left-click / tap a fuse-capable hand card opens Fuse and does not play. Right-click a playable hand card plays it. Drag to the own board plays. Releasing a hand-card drag inside the hand opens Fuse when the card can fuse. Engage by right-click on an `engage-ready` amulet (left-click may also engage). The OS context menu is suppressed on `.card`, `.zone`, `.leader`, `.evo-btn` and the play surface. The round-3 Fuse chip stays as the visible affordance; on a tablet the tap on the card is the primary path.
-2. **Terminal overlay.** Buttons: Rematch (same seed), Rematch (new seed), New Game (opens the drawer). Remove “Rematch (swap sides)”. The first player of a rematch follows the drawer’s first-player setting (A / B / coin). Reason line: `Deck-out` or `Lethal`, not “Match over”.
+2. **Terminal overlay.** Buttons: Rematch (same seed), Rematch (new seed), New Game (opens the drawer). Remove “Rematch (swap sides)”. The first player of a rematch follows the drawer’s first-player setting (A / B / coin); bot policy follows the settings drawer on rematch too. Reason line: `Deck-out` or `Lethal`, not “Match over”.
 3. **Dropped for good** (keep as `dropped (by design)`): blackbox, sparring-line scripts, puzzles, coverage banner, god-mode, Consistency Trainer, `?test=1` bridge, UNIMPL/unknown-op badges, burn-preview box, deck paste panel, smaller top-hand scale.
 
 **Status** ∈ `ported` | `missing` | `dropped (by design)` | `dropped (not representable)` | `dropped (owner decision 2026-09-11)`.
