@@ -10,6 +10,23 @@ export const WORLD_SPLIT_SPEC =
 
 const THINK_CANCEL_QUERY = `localbot=0&botcores=4&botworkerspin=4000`;
 
+async function ensurePolicyOption(page: Page, selector: string, value: string) {
+  await page.evaluate(
+    ({ sel, val }) => {
+      const el = document.querySelector(sel) as HTMLSelectElement | null;
+      if (!el) return;
+      if (![...el.options].some((o) => o.value === val)) {
+        const opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = val.length > 48 ? `${val.slice(0, 45)}…` : val;
+        el.appendChild(opt);
+      }
+      el.value = val;
+    },
+    { sel: selector, val: value },
+  );
+}
+
 async function boot(page: Page, query = "") {
   await page.goto(`/${query ? `?${query}` : ""}`);
   await expect(page.locator("#bundleMeta")).toContainText("cards", { timeout: 30_000 });
@@ -38,12 +55,10 @@ async function startVsBot(
   await page.locator("#blueDeckSelect").selectOption("basic-forest");
   await page.locator("#redDeckSelect").selectOption("basic-rune");
   const policy = opts.botPolicy ?? WORLD_SPLIT_SPEC;
-  await page.locator("#vsBotPolicy").selectOption(policy, { force: true }).catch(async () => {
-    await page.evaluate((pol) => window.__arena!.setSessionBotPolicy(pol), policy);
-  });
+  await ensurePolicyOption(page, "#vsBotPolicy", policy);
   const human = opts.human ?? "a";
   const other = human === "b" ? "#policyASelect" : "#policyBSelect";
-  await page.locator(other).selectOption(policy, { force: true });
+  await ensurePolicyOption(page, other, policy);
   await page.locator("#startGameBtn").click();
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-phase", /mulligan|main/, {
     timeout: 15_000,
