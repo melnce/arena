@@ -648,7 +648,12 @@ fn check_job_identity_orders(
 
 /// Full matrix on all fixture cases (slow.yml `h0_job` release target).
 fn check_job_identity_release(cases_all: &[Case], cases_subset: &[Case]) {
-    const FULL: &[&str] = &[SERVED_STRONG_RELEASE, SERVED_CHEAT_RELEASE, WORLD_4000, FAIR_6000];
+    const FULL: &[&str] = &[
+        SERVED_STRONG_RELEASE,
+        SERVED_CHEAT_RELEASE,
+        WORLD_4000,
+        FAIR_6000,
+    ];
     const SUBSET: &[&str] = &[STRONG_K16_RELEASE, "h0"];
     const FORWARD: &[WorldFeedOrder] = &[WorldFeedOrder::Forward];
     const ALL_FEEDS: &[WorldFeedOrder] = &[
