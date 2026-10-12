@@ -627,7 +627,7 @@ default `1` = today; `6` = never),
 evaluated player, subtract for the opponent; all value versions; default `0` =
 today),
 `mull=builtin|rule|random|<path>` (opening keep policy; default `builtin`
-is the embedded `mulligan-v2` table; `rule` sends back cost ≥ 4;
+is the embedded `mulligan-v3` table; `rule` sends back cost ≥ 4;
 `random` draws one `next_u64()` from the rng passed to `choose` and
 sends back slot `i` iff bit `i` is set, `i < hand length`, at most 4
 — deterministic for a seed; `<path>` loads a keep table at parse time
@@ -700,7 +700,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `lcap` | 0.5 | in `(0, 1]`: the consensus-lethal check before the search may spend at most `floor(lcap × node_cap)` nodes; running out counts as "no consensus lethal", and the search gets what is left. Sweep 10 pooled 0.503 [0.491, 0.516] / +2.1 Elo vs the pre-flip default on the 16-deck meta pool (4 096 + 2 048 games per candidate). Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `clip` | 5 | `≥ 0`: clamp each standardised input of the learned leaf to `[−clip, clip]`; `0` is off. Accepted and ignored with `value=v0` / `value=v1`. Sweep 10 pooled 0.531 [0.519, 0.543] / +21.6 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `fusemacro` | 1 | on the bot's own turn only: at a Main node each `Fuse` contributes one child — its best completion by immediate value (single partners; pairs too for hosts with fuse recipes) — and inside the bot's own `FusePartners` choice every completion is a child with no leaf ever scored inside that choice. Sweep 10 pooled 0.499 [0.486, 0.511] / −1.0 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |
-| `mull` | `builtin` (`mulligan-v2`) | opening mulligan: built-in keep table from sweep 46 pooled 0.5094 [0.4999, 0.5188] / +6.5 Elo vs `mulligan-v1` on the 16-deck meta pool (10 752 final games). `engine/models/mulligan-v1.json` remains available via `mull=<path>`. `rule` = cost ≥ 4 send back; `random` = uniform random mask; `<path>` = JSON keep table (see below) |
+| `mull` | `builtin` (`mulligan-v3`) | opening mulligan: built-in keep table from sweep 51 pooled 0.5060 [0.4944, 0.5176] / +4.2 Elo vs `mulligan-v2` on the 16-deck meta pool (7 168 final games). `engine/models/mulligan-v1.json` and `engine/models/mulligan-v2.json` remain available via `mull=<path>`. `rule` = cost ≥ 4 send back; `random` = uniform random mask; `<path>` = JSON keep table (see below) |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds); `world` = even split across worlds after consensus lethal, fair within each world (each world has its own node counter and transposition table) |
 | `threads` | `1` | native-only parallelism: with `alloc=world`, worlds run on up to `min(threads, k)` workers; with `tkill>0` and `tkroll>0`, the deterministic and roll kill solvers overlap. Does not change the chosen index, `last_value`, explain record, or `SearchStats` |
@@ -1466,12 +1466,13 @@ stored with their **signed** values.
 
 ## Learned mulligan (keep tables)
 
-The default `h0` uses the built-in `mulligan-v2` table
-(`engine/models/mulligan-v2.json`, embedded like `h0-linear-v4`). `mull=builtin`
+The default `h0` uses the built-in `mulligan-v3` table
+(`engine/models/mulligan-v3.json`, embedded like `h0-linear-v4`). `mull=builtin`
 requests it explicitly; `mull=rule` restores cost ≥ 4 send back.
 `mull=random` explores uniformly. `mull=<path>` loads a JSON keep table at
-parse time (same path rules as `net=`); `engine/models/mulligan-v1.json` replays
-the previous default exactly. At the bot's own mulligan the engine computes a
+parse time (same path rules as `net=`); `engine/models/mulligan-v1.json` and
+`engine/models/mulligan-v2.json` replay earlier defaults exactly. At the bot's
+own mulligan the engine computes a
 **deck fingerprint** — the multiset of card ids in hand plus deck, written as
 sorted `<id>x<count>` pairs joined with `,` — and looks up the deck. Seat is
 `first` when `state.first == me`, else `second`. Table entries are `true` =
@@ -1481,7 +1482,10 @@ A missing deck uses the rule for the whole hand. `SearchStats` adds
 decision. `py/mulligan.py data` collects matchup chunks with mulligan records;
 `py/mulligan.py fit` writes `table.json`, `fit.json`, `FIT.md`, and
 `observations.csv.gz` per run; `py/mulligan.py shrink` pools one or more runs
-into a shrinkage keep table (empirical Bayes by rule group). To ship a new
+into a shrinkage keep table (empirical Bayes by rule group). `shrink
+--fresh-only DECK …` counts only the newest tag's observations for those decks
+(older-tag rows for those decks are still included in the observation totals but
+left out of the fit). To ship a new
 built-in table: `data` and `fit` for each run → `shrink` over the runs → copy
 the result to `engine/models/mulligan-v<N>.json` → a sweep → wire it in
 `engine/src/policy/h0.rs` (same `include_str!` / `OnceLock` pattern as the

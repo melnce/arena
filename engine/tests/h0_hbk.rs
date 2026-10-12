@@ -20,20 +20,20 @@ const SERVED_SPEC: &str =
 const GATE_SEEDS: [u64; 8] = [11, 23, 37, 41, 53, 67, 79, 97];
 
 const DEFAULT_OKILL_GATE_FPS: [u64; 8] = [
-    0x4087_4d81_d117_4ee9,
-    0x8867_a7c5_74fc_8fa9,
+    0x2246_9fdb_d814_7321,
+    0xd8c3_dcd1_2502_4f7f,
     0x649a_13b2_5e6f_3115,
-    0xf257_1914_6cd5_5f83,
-    0x362b_e20c_ddf6_d64c,
-    0x8667_1e5e_f842_ccfb,
-    0xfd90_619b_00c6_58f3,
-    0x0d24_2b16_5f40_84c8,
+    0xd0a1_8275_06c2_801e,
+    0x4b8c_36bb_af3f_9a0e,
+    0x081e_1488_1d35_a647,
+    0x64a9_a3ca_860e_4884,
+    0x41ad_f866_2960_4f21,
 ];
 
 const SERVED_GATE_SEEDS: [u64; 3] = [11, 23, 37];
 const SERVED_GATE_FPS: [u64; 3] = [
-    0x2c56_7b73_e593_608a,
-    0xcf64_964d_6a48_10c2,
+    0xe245_2508_3e83_6195,
+    0xf56b_c488_8418_8f1e,
     0x240a_8a8f_d3c7_5241,
 ];
 

@@ -484,6 +484,7 @@ def test_shrink_two_runs(tmp_path: Path) -> None:
             root=str(tmp_path),
             min_n=5,
             out=str(out),
+            fresh_only=[],
             command="shrink",
             _argv=[],
         )
@@ -516,6 +517,154 @@ def test_shrink_deck_list_mismatch(tmp_path: Path) -> None:
                 root=str(tmp_path),
                 min_n=5,
                 out=str(out),
+                fresh_only=[],
+                command="shrink",
+                _argv=[],
+            )
+        )
+
+
+TARGET_CARD = "10001110"
+
+
+def _write_fresh_only_run(td: Path, run_idx: int, decks: dict[str, list[tuple[str, int]]]) -> None:
+    import csv
+    import gzip
+
+    cards_fit: list[dict] = []
+    table_decks: dict[str, dict] = {}
+    for deck, cards in decks.items():
+        fp = f"fp_{deck}"
+        first: dict[str, bool] = {}
+        for cid, cost in cards:
+            rk = cost < 4
+            cards_fit.append(
+                {"deck": deck, "card": cid, "copies": 3, "cost": cost, "rule_keep": rk}
+            )
+            first[cid] = rk
+        table_decks[fp] = {"name": deck, "first": first, "second": dict(first)}
+    td.mkdir(parents=True, exist_ok=True)
+    (td / "fit.json").write_text(json.dumps({"cards": cards_fit}), encoding="utf-8")
+    (td / "table.json").write_text(json.dumps({"version": 1, "decks": table_decks}), encoding="utf-8")
+    rows: list[dict[str, str | int]] = []
+    obs_id = 0
+    for deck, cards in decks.items():
+        deck_ids = [c for c, _ in cards]
+        opp = "deck-y" if deck == "deck-x" else "deck-x"
+        for seat in ("first", "second"):
+            for cid, _cost in cards:
+                fillers = [c for c in deck_ids if c != cid][:3]
+                for kept in (True, False):
+                    reps = (
+                        32
+                        if deck == "deck-x" and cid == TARGET_CARD and run_idx == 0
+                        else 8
+                    )
+                    for rep in range(reps):
+                        hand = [cid] + fillers
+                        swap = ["0", "1", "1", "1"]
+                        swap[0] = "0" if kept else "1"
+                        if deck == "deck-x" and cid == TARGET_CARD:
+                            won = 1 if (kept and run_idx == 0) or ((not kept) and run_idx == 1) else 0
+                        else:
+                            won = 1 if (rep + obs_id + run_idx) % 10 < 5 else 0
+                        rows.append(
+                            {
+                                "deck": deck,
+                                "seat": seat,
+                                "opponent_deck": opp,
+                                "opponent_class": "neutral",
+                                "hand": ";".join(hand),
+                                "swap": ";".join(swap),
+                                "won": won,
+                            }
+                        )
+                        obs_id += 1
+    with gzip.open(td / "observations.csv.gz", "wt", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        w.writerows(rows)
+
+
+def _target_keep(table: dict, decks_key: str = "deck-x") -> bool:
+    for fp, entry in table["decks"].items():
+        if entry["name"] == decks_key:
+            return entry["first"][TARGET_CARD]
+    raise AssertionError(decks_key)
+
+
+def test_shrink_fresh_only_deck(tmp_path: Path) -> None:
+    decks = {
+        "deck-x": _cards_for_shrink_deck("10"),
+        "deck-y": _cards_for_shrink_deck("20"),
+    }
+    for i, tag in enumerate(("run0", "run1")):
+        _write_fresh_only_run(tmp_path / tag, i, decks)
+    pooled_out = tmp_path / "pooled.json"
+    mulligan_mod.cmd_shrink(
+        argparse.Namespace(
+            tags=["run0", "run1"],
+            root=str(tmp_path),
+            min_n=5,
+            out=str(pooled_out),
+            fresh_only=[],
+            command="shrink",
+            _argv=[],
+        )
+    )
+    fresh_out = tmp_path / "fresh.json"
+    mulligan_mod.cmd_shrink(
+        argparse.Namespace(
+            tags=["run0", "run1"],
+            root=str(tmp_path),
+            min_n=5,
+            out=str(fresh_out),
+            fresh_only=["deck-x"],
+            command="shrink",
+            _argv=[],
+        )
+    )
+    run1_out = tmp_path / "run1only.json"
+    mulligan_mod.cmd_shrink(
+        argparse.Namespace(
+            tags=["run1"],
+            root=str(tmp_path),
+            min_n=5,
+            out=str(run1_out),
+            fresh_only=[],
+            command="shrink",
+            _argv=[],
+        )
+    )
+    pooled = json.loads(pooled_out.read_text(encoding="utf-8"))
+    fresh = json.loads(fresh_out.read_text(encoding="utf-8"))
+    run1 = json.loads(run1_out.read_text(encoding="utf-8"))
+    assert _target_keep(pooled) is True
+    assert _target_keep(run1) is False
+    assert _target_keep(fresh) == _target_keep(run1)
+    assert fresh["meta"]["fresh_only"] == ["deck-x"]
+    report = fresh_out.with_suffix(".txt").read_text(encoding="utf-8")
+    assert "fresh only (newest run alone): deck-x;" in report
+    left_out = int(report.split("older-run observations left out: ")[1].split("\n", 1)[0])
+    assert left_out == 736
+
+
+def test_shrink_fresh_only_unknown_deck(tmp_path: Path) -> None:
+    decks = {
+        "deck-a": _cards_for_shrink_deck("10"),
+        "deck-b": _cards_for_shrink_deck("20"),
+    }
+    for i, tag in enumerate(("run0", "run1")):
+        _write_shrink_run(tmp_path / tag, i, decks)
+    out = tmp_path / "out.json"
+    with pytest.raises(SystemExit, match="--fresh-only names decks the runs do not have"):
+        mulligan_mod.cmd_shrink(
+            argparse.Namespace(
+                tags=["run0", "run1"],
+                root=str(tmp_path),
+                min_n=5,
+                out=str(out),
+                fresh_only=["no-such-deck"],
                 command="shrink",
                 _argv=[],
             )
