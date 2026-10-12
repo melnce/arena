@@ -683,6 +683,10 @@ fn review_moment_choose_wall() {
     );
 }
 
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
 #[test]
 fn kill_roll_buffered_before_det() {
     let db = load_recorded_db();
@@ -715,6 +719,10 @@ fn kill_roll_buffered_before_det() {
     assert!(stats_eq(&got.stats, &baseline.stats));
 }
 
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
 #[test]
 fn threads_identity_debug_budgets() {
     let cases = debug_cases();
