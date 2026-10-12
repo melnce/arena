@@ -1,0 +1,14 @@
+From https://github.com/melnce/arena
+ * [new branch]      captures             -> origin/captures
+ * [new branch]      cursor/bot-choice    -> origin/cursor/bot-choice
+ * [new branch]      cursor/bot-pool      -> origin/cursor/bot-pool
+ * [new branch]      cursor/bot-worker    -> origin/cursor/bot-worker
+ * [new branch]      cursor/ci-release-h0-suites -> origin/cursor/ci-release-h0-suites
+ * [new branch]      cursor/game-captures -> origin/cursor/game-captures
+ * [new branch]      cursor/h0-job        -> origin/cursor/h0-job
+ * [new branch]      cursor/h0-order-net  -> origin/cursor/h0-order-net
+ + 723b691...c408e4f cursor/kukishiro-crest-sofina -> origin/cursor/kukishiro-crest-sofina  (forced update)
+ * [new branch]      cursor/py-encode     -> origin/cursor/py-encode
+ * [new branch]      cursor/serve-hbk16   -> origin/cursor/serve-hbk16
+   51c4c48..99e0775  main                 -> origin/main
+Already up to date.
