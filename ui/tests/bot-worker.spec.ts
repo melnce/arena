@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
 import { fullStrengthPolicyLabel } from "../src/policy-labels.ts";
-import { openSettings } from "./helpers.ts";
+import { openSettings, turnState } from "./helpers.ts";
 
 const CHEAT_STD = "h0:nodes=6000,info=all";
 /** Worker busy-spin so the thinking pill is deterministic on any machine. */
@@ -101,10 +101,8 @@ async function endHumanTurn(page: Page, human: "a" | "b" = "a") {
 
 async function playUntilTurnOrEnd(page: Page, minTurn = 6, human: "a" | "b" = "a") {
   for (let guard = 0; guard < 40; guard++) {
-    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
+    const { phase, turn, acting } = await turnState(page);
     if (phase === "terminal") break;
-    const turn = Number(await page.locator("#turnCounter").getAttribute("data-turn"));
-    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
     if (turn >= minTurn) break;
     if (acting === human) {
       await endHumanTurn(page, human);

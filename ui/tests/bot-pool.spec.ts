@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
-import { openSettings } from "./helpers.ts";
+import { openSettings, turnState } from "./helpers.ts";
 
 /** CI-sized world-split spec (same family as wasm job tests). */
 export const WORLD_SPLIT_SPEC =
@@ -82,10 +82,8 @@ async function endHumanTurn(page: Page, human: "a" | "b" = "a") {
 
 async function playUntilTurnOrEnd(page: Page, minTurn = 6, human: "a" | "b" = "a") {
   for (let guard = 0; guard < 300; guard++) {
-    const phase = await page.locator("#turnCounter").getAttribute("data-phase");
+    const { phase, turn, acting } = await turnState(page);
     if (phase === "terminal") break;
-    const turn = Number(await page.locator("#turnCounter").getAttribute("data-turn"));
-    const acting = await page.locator("#turnCounter").getAttribute("data-acting");
     if (turn >= minTurn && acting === human) break;
     if (acting === human) {
       await endHumanTurn(page, human);
@@ -245,7 +243,7 @@ test("kill step matches single worker", async ({ page }) => {
       .poll(async () => (await actionLog(page)).length, { timeout: 180_000 })
       .toBeGreaterThan(replayable.actions.length);
     const log = await actionLog(page);
-    return log[log.length - 1];
+    return log[replayable.actions.length];
   }
 
   const poolBotMove = await botMoveWith("localbot=0&botcores=4");

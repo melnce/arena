@@ -171,7 +171,8 @@ jobs:
 
   ui:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # ≈ 20–24 min measured on 2026-10-12; two-thirds rule
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
