@@ -5,6 +5,15 @@ import { copyFile, mkdir as mkdirP } from "node:fs/promises";
 
 export const ART = "/opt/cursor/artifacts";
 
+/** Single round-trip read of `#turnCounter` phase, round number, and acting seat. */
+export async function turnState(page: Page): Promise<{ phase: string; turn: number; acting: string }> {
+  return page.locator("#turnCounter").evaluate((el) => ({
+    phase: el.dataset.phase ?? "",
+    turn: Number(el.dataset.turn),
+    acting: el.dataset.acting ?? "",
+  }));
+}
+
 const TRANSIENT_ANIMS = [
   "card-enter",
   "barrier-flash-kf",
