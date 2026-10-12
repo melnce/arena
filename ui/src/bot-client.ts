@@ -1,4 +1,11 @@
-import type { DecideReply, DecideRequest } from "./bot-worker.ts";
+import type {
+  DecideReply,
+  DecideRequest,
+  PoolJobReply,
+  PrepareReply,
+  PrepareRequest,
+  WorkerOutbound,
+} from "./bot-worker.ts";
 import {
   applyAction,
   botPolicyFor,
@@ -11,13 +18,27 @@ import type { EngineEvent, PlayerId } from "./types.ts";
 
 export type BotWorkerStepMeta = { stale?: boolean; error?: string; ms?: number };
 
+export type BenchDecideBody = {
+  seed: string;
+  deckA: string;
+  deckB: string;
+  first: string;
+  actions: import("./types.ts").LogStep[];
+  hash: string;
+};
+
 let lastMeta: BotWorkerStepMeta = {};
-let worker: Worker | null = null;
+let workers: Worker[] = [];
+let benchWorkers: Worker[] = [];
+let benchNextRequestId = 1;
 let workerGeneration = 0;
 let pendingId: number | null = null;
 let nextRequestId = 1;
 let permanentError: string | null = null;
 let thinking = false;
+let poolBusy = 0;
+
+const BOT_CORES_STORAGE = "svwb.botCores";
 
 function notifyThinkingChange(): void {
   window.dispatchEvent(new Event("arena-bot-backend"));
@@ -39,6 +60,46 @@ function botWorkerQueryFlag(): string | null {
   }
 }
 
+function botCoresQueryOverride(): number | null {
+  try {
+    const raw = new URLSearchParams(location.search).get("botcores");
+    if (!raw) return null;
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 1) return null;
+    return Math.min(8, Math.floor(n));
+  } catch {
+    return null;
+  }
+}
+
+export function autoBotCores(): number {
+  const hw = navigator.hardwareConcurrency ?? 1;
+  return Math.max(1, Math.min(8, hw - 1));
+}
+
+export function configuredBotCores(): number {
+  const q = botCoresQueryOverride();
+  if (q != null) return q;
+  try {
+    const stored = localStorage.getItem(BOT_CORES_STORAGE);
+    if (stored && stored !== "auto") {
+      const n = Number(stored);
+      if (Number.isFinite(n) && n >= 1) return Math.min(8, Math.floor(n));
+    }
+  } catch {
+    /* ignore */
+  }
+  return autoBotCores();
+}
+
+export function persistBotCoresChoice(value: string): void {
+  try {
+    localStorage.setItem(BOT_CORES_STORAGE, value);
+  } catch {
+    /* ignore */
+  }
+}
+
 function botWorkerSpinMs(): number {
   try {
     const raw = new URLSearchParams(location.search).get("botworkerspin");
@@ -48,6 +109,22 @@ function botWorkerSpinMs(): number {
     return Math.floor(n);
   } catch {
     return 0;
+  }
+}
+
+function poolSabotageWorldSeed(): boolean {
+  try {
+    return new URLSearchParams(location.search).get("botpoolsabotage") === "worldseed";
+  } catch {
+    return false;
+  }
+}
+
+export function poolSkipStaleTerminate(): boolean {
+  try {
+    return new URLSearchParams(location.search).get("botpoolsabotage") === "nostale";
+  } catch {
+    return false;
   }
 }
 
@@ -66,32 +143,76 @@ export function botWorkerState(): {
 } {
   return {
     enabled: botWorkerEnabled(),
-    alive: worker != null,
+    alive: workers.some((w) => w != null),
     pending: pendingId != null,
     generation: workerGeneration,
     error: permanentError,
   };
 }
 
-function spawnWorker(): Worker {
-  workerGeneration += 1;
+export function botPoolState(): {
+  size: number;
+  alive: number;
+  busy: number;
+  generation: number;
+} {
+  const alive = workers.filter((w) => w != null).length;
+  return {
+    size: configuredBotCores(),
+    alive,
+    busy: poolBusy,
+    generation: workerGeneration,
+  };
+}
+
+function spawnWorkerAt(index: number): Worker {
   const w = new Worker(new URL("./bot-worker.ts", import.meta.url), { type: "module" });
-  worker = w;
+  workers[index] = w;
   return w;
+}
+
+function spawnBenchWorkerAt(index: number): Worker {
+  const w = new Worker(new URL("./bot-worker.ts", import.meta.url), { type: "module" });
+  benchWorkers[index] = w;
+  return w;
+}
+
+function ensureBenchWorkerPool(coreCount: number): void {
+  const want = coreCount;
+  while (benchWorkers.length < want) {
+    spawnBenchWorkerAt(benchWorkers.length);
+  }
+  for (let i = 0; i < want; i++) {
+    if (!benchWorkers[i]) spawnBenchWorkerAt(i);
+  }
+}
+
+function ensureWorkerPool(coreCount?: number): void {
+  const want = coreCount ?? configuredBotCores();
+  const hadWorkers = workers.some((w) => w != null);
+  while (workers.length < want) {
+    spawnWorkerAt(workers.length);
+  }
+  for (let i = 0; i < want; i++) {
+    if (!workers[i]) spawnWorkerAt(i);
+  }
+  if (!hadWorkers && want > 0) workerGeneration += 1;
 }
 
 export function prewarmBotWorker(): void {
   if (!botWorkerEnabled()) return;
-  if (!worker) spawnWorker();
+  ensureWorkerPool();
 }
 
 export function terminateBotWorker(): void {
-  if (worker) {
-    worker.terminate();
-    worker = null;
+  for (const w of workers) {
+    w?.terminate();
   }
+  workers = [];
+  workerGeneration += 1;
   pendingId = null;
   thinking = false;
+  poolBusy = 0;
   notifyThinkingChange();
 }
 
@@ -106,6 +227,371 @@ export function shouldUseBotWorker(s: Session): boolean {
   return policyUsesWorker(policy);
 }
 
+function postAndWait<T extends WorkerOutbound>(
+  worker: Worker,
+  msg: object,
+  expectId: number,
+  match: (data: WorkerOutbound) => T | null,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const onMessage = (ev: MessageEvent<WorkerOutbound>) => {
+      const data = ev.data;
+      if (data.id !== expectId) return;
+      const hit = match(data);
+      if (!hit) return;
+      worker.removeEventListener("message", onMessage);
+      worker.removeEventListener("error", onError);
+      if (hit.type === "error") {
+        reject(new Error(hit.message));
+      } else {
+        resolve(hit);
+      }
+    };
+    const onError = () => {
+      worker.removeEventListener("message", onMessage);
+      worker.removeEventListener("error", onError);
+      reject(new Error("worker crashed"));
+    };
+    worker.addEventListener("message", onMessage);
+    worker.addEventListener("error", onError);
+    worker.postMessage(msg);
+  });
+}
+
+function trackPoolBusy(pool: Worker[]): { done: () => void } {
+  if (pool !== workers) return { done: () => {} };
+  poolBusy += 1;
+  return { done: () => {
+    poolBusy -= 1;
+  } };
+}
+
+async function prepareWorker(
+  pool: Worker[],
+  workerIndex: number,
+  id: number,
+  body: BenchDecideBody,
+  policy: string,
+  botSeed: string,
+  worldSeedBump: number,
+): Promise<void> {
+  const w = pool[workerIndex]!;
+  const req: PrepareRequest = {
+    type: "prepare",
+    id,
+    seed: body.seed,
+    deckA: body.deckA,
+    deckB: body.deckB,
+    first: body.first,
+    actions: body.actions,
+    hash: body.hash,
+    policy,
+    botSeed,
+    worldSeedBump,
+  };
+  const busy = trackPoolBusy(pool);
+  try {
+    await postAndWait<PrepareReply>(w, req, id, (data) => {
+      if (data.type === "prepared" || data.type === "error") return data as PrepareReply;
+      return null;
+    });
+  } finally {
+    busy.done();
+  }
+}
+
+async function poolJob<T extends PoolJobReply>(
+  pool: Worker[],
+  workerIndex: number,
+  id: number,
+  msg: object,
+  match: (data: WorkerOutbound) => T | null,
+): Promise<T> {
+  const w = pool[workerIndex]!;
+  const busy = trackPoolBusy(pool);
+  try {
+    return await postAndWait<T>(w, msg, id, match);
+  } finally {
+    busy.done();
+  }
+}
+
+async function releaseWorker(pool: Worker[], workerIndex: number, id: number): Promise<void> {
+  const w = pool[workerIndex];
+  if (!w) return;
+  try {
+    await postAndWait(w, { type: "release", id }, id, (data) => {
+      if (data.type === "released" || data.type === "error") return data;
+      return null;
+    });
+  } catch {
+    /* ignore release errors */
+  }
+}
+
+function respawnWorkerInPool(pool: Worker[], index: number): void {
+  pool[index]?.terminate();
+  if (pool === workers) spawnWorkerAt(index);
+  else spawnBenchWorkerAt(index);
+}
+
+async function respawnAndPrepare(
+  pool: Worker[],
+  allocId: () => number,
+  index: number,
+  body: BenchDecideBody,
+  policy: string,
+  botSeed: string,
+  worldSeedBump: number,
+): Promise<void> {
+  respawnWorkerInPool(pool, index);
+  await prepareWorker(pool, index, allocId(), body, policy, botSeed, worldSeedBump);
+}
+
+async function runPoolDecide(
+  body: BenchDecideBody,
+  policy: string,
+  botSeed: string,
+  spinMs: number,
+  coreCount?: number,
+  opts?: { workerPool?: Worker[]; fail?: boolean },
+): Promise<NeutralActionHolder> {
+  if (opts?.fail) throw new Error("forced worker failure (test)");
+  const W = coreCount ?? configuredBotCores();
+  const pool = opts?.workerPool ?? workers;
+  const gamePool = pool === workers;
+  const allocId = () => (gamePool ? nextRequestId++ : benchNextRequestId++);
+  if (gamePool) ensureWorkerPool(W);
+  else ensureBenchWorkerPool(W);
+  const sabotage = poolSabotageWorldSeed();
+  if (gamePool) poolBusy = W;
+  try {
+  if (spinMs > 0) {
+    const end = performance.now() + spinMs;
+    while (performance.now() < end) {
+      await new Promise<void>((r) => window.setTimeout(r, 40));
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: W }, (_, i) =>
+      prepareWorker(
+        pool,
+        i,
+        allocId(),
+        body,
+        policy,
+        botSeed,
+        sabotage && i > 0 ? 1 : 0,
+      ),
+    ),
+  );
+
+  const t0 = performance.now();
+  const startMsgId = allocId();
+  let start = await poolJob(
+    pool,
+    0,
+    startMsgId,
+    { type: "h0JobStart", id: startMsgId },
+    (data) => {
+      if (data.type === "step" || data.type === "decided" || data.type === "error") return data;
+      return null;
+    },
+  );
+
+  while (start.type === "step") {
+    const step = JSON.parse(start.stepJson) as {
+      step: string;
+      roll?: boolean;
+      budgets?: number[];
+    };
+    if (step.step === "kill") {
+      const detMsgId = allocId();
+      const detP = poolJob(pool, 0, detMsgId, { type: "h0KillDet", id: detMsgId }, (data) => {
+        if (data.type === "outcome" || data.type === "error") return data;
+        return null;
+      });
+      let rollOutcome: string | null = null;
+      let rollP: Promise<PoolJobReply> | null = null;
+      if (step.roll && W > 1) {
+        const rollMsgId = allocId();
+        rollP = poolJob(pool, 1, rollMsgId, { type: "h0KillRoll", id: rollMsgId }, (data) => {
+          if (data.type === "outcome" || data.type === "error") return data;
+          return null;
+        });
+        rollP.then((roll) => {
+          if (roll.type === "outcome") rollOutcome = roll.outcomeJson;
+        });
+      }
+      const det = await detP;
+      if (det.type !== "outcome") throw new Error("kill det failed");
+      const feedDetId = allocId();
+      start = await poolJob(
+        pool,
+        0,
+        feedDetId,
+        { type: "h0JobKillDet", id: feedDetId, outcome: det.outcomeJson },
+        (data) => {
+          if (data.type === "step" || data.type === "decided" || data.type === "error") return data;
+          return null;
+        },
+      );
+      const needsRoll =
+        start.type === "step" && (JSON.parse(start.stepJson) as { step: string }).step === "await_roll";
+      if (!needsRoll) {
+        if (step.roll && W > 1) await respawnAndPrepare(pool, allocId, 1, body, policy, botSeed, 0);
+      } else if (step.roll) {
+        if (!rollOutcome) {
+          if (rollP) {
+            const roll = await rollP;
+            if (roll.type !== "outcome") throw new Error("kill roll failed");
+            rollOutcome = roll.outcomeJson;
+          } else {
+            const rollMsgId = allocId();
+            const roll = await poolJob(
+              pool,
+              0,
+              rollMsgId,
+              { type: "h0KillRoll", id: rollMsgId },
+              (data) => {
+                if (data.type === "outcome" || data.type === "error") return data;
+                return null;
+              },
+            );
+            if (roll.type !== "outcome") throw new Error("kill roll failed");
+            rollOutcome = roll.outcomeJson;
+          }
+        }
+        const feedRollId = allocId();
+        start = await poolJob(
+          pool,
+          0,
+          feedRollId,
+          { type: "h0JobKillRoll", id: feedRollId, outcome: rollOutcome },
+          (data) => {
+            if (data.type === "step" || data.type === "decided" || data.type === "error") return data;
+            return null;
+          },
+        );
+        if (W > 1) await respawnAndPrepare(pool, allocId, 1, body, policy, botSeed, 0);
+      }
+      continue;
+    }
+    if (step.step === "await_roll") {
+      const rollMsgId = allocId();
+      const roll = await poolJob(
+        pool,
+        0,
+        rollMsgId,
+        { type: "h0KillRoll", id: rollMsgId },
+        (data) => {
+          if (data.type === "outcome" || data.type === "error") return data;
+          return null;
+        },
+      );
+      if (roll.type !== "outcome") throw new Error("await_roll failed");
+      const feedRollId = allocId();
+      start = await poolJob(
+        pool,
+        0,
+        feedRollId,
+        { type: "h0JobKillRoll", id: feedRollId, outcome: roll.outcomeJson },
+        (data) => {
+          if (data.type === "step" || data.type === "decided" || data.type === "error") return data;
+          return null;
+        },
+      );
+      continue;
+    }
+    if (step.step === "worlds" && step.budgets) {
+      const budgets = step.budgets;
+      const k = budgets.length;
+      const outcomes: unknown[] = new Array(k);
+      let nextR = 0;
+      const worldWorkers = Array.from({ length: W }, (_, j) => j);
+      await Promise.all(
+        worldWorkers.map(async (wi) => {
+          while (true) {
+            const r = nextR++;
+            if (r >= k) break;
+            const msgId = allocId();
+            const out = await poolJob(
+              pool,
+              wi,
+              msgId,
+              { type: "h0JobWorld", id: msgId, r, budget: budgets[r]! },
+              (data) => {
+                if (data.type === "outcome" || data.type === "error") return data;
+                return null;
+              },
+            );
+            if (out.type !== "outcome") throw new Error("world failed");
+            outcomes[r] = JSON.parse(out.outcomeJson);
+          }
+        }),
+      );
+      const finishId = allocId();
+      start = await poolJob(
+        pool,
+        0,
+        finishId,
+        { type: "h0JobFinish", id: finishId, outcomes: JSON.stringify(outcomes) },
+        (data) => {
+          if (data.type === "decided" || data.type === "error") return data;
+          return null;
+        },
+      );
+      continue;
+    }
+    throw new Error(`unexpected job step ${start.stepJson}`);
+  }
+
+  if (start.type !== "decided") throw new Error("pool decide failed");
+  const ms = performance.now() - t0;
+  if (!gamePool) {
+    await Promise.all(
+      Array.from({ length: W }, (_, i) => releaseWorker(pool, i, allocId())),
+    );
+  }
+  return { action: start.action, ms };
+  } finally {
+    if (gamePool) poolBusy = 0;
+  }
+}
+
+type NeutralActionHolder = { action: import("./types.ts").NeutralAction; ms: number };
+
+async function runSingleWorkerDecide(
+  body: BenchDecideBody,
+  policy: string,
+  botSeed: string,
+  id: number,
+  fail: boolean,
+  spinMs: number,
+  workerPool?: Worker[],
+): Promise<NeutralActionHolder> {
+  const pool = workerPool ?? workers;
+  if (pool === workers) ensureWorkerPool();
+  else ensureBenchWorkerPool(1);
+  const w = pool[0]!;
+  const req: DecideRequest = {
+    type: "decide",
+    id,
+    ...body,
+    policy,
+    botSeed,
+    spinMs,
+    fail,
+  };
+  const reply = await postAndWait<DecideReply>(w, req, id, (data) => {
+    if (data.type === "decided" || data.type === "error") return data as DecideReply;
+    return null;
+  });
+  if (reply.type === "error") throw new Error(reply.message);
+  return { action: reply.action, ms: reply.ms };
+}
+
 export async function botStepWorker(
   s: Session,
   opts?: { isCurrent?: () => boolean },
@@ -115,8 +601,8 @@ export async function botStepWorker(
   const policy = botPolicyFor(s, acting);
   lastMeta = {};
 
-  if (!worker) spawnWorker();
-  const w = worker!;
+  const W = configuredBotCores();
+  ensureWorkerPool();
   const id = (pendingId = nextRequestId++);
   thinking = true;
   notifyThinkingChange();
@@ -146,14 +632,9 @@ export async function botStepWorker(
     return false;
   };
 
-  const body = localBotRequestBody(s, policy, seed.toString());
-  const req: DecideRequest = {
-    type: "decide",
-    id,
-    ...body,
-    spinMs: botWorkerSpinMs(),
-    fail: botWorkerQueryFlag() === "fail",
-  };
+  const body = toBenchBody(localBotRequestBody(s, policy, seed.toString()));
+  const spinMs = botWorkerSpinMs();
+  const fail = botWorkerQueryFlag() === "fail";
 
   return new Promise<EngineEvent[]>((resolve) => {
     let settled = false;
@@ -166,13 +647,11 @@ export async function botStepWorker(
       thinking = false;
       notifyThinkingChange();
       if (pollTimer != null) window.clearInterval(pollTimer);
-      w.removeEventListener("message", onMessage);
-      w.removeEventListener("error", onError);
       resolve(events);
     };
 
     const onStale = () => {
-      terminateBotWorker();
+      if (!poolSkipStaleTerminate()) terminateBotWorker();
       finish([]);
     };
 
@@ -180,42 +659,53 @@ export async function botStepWorker(
       if (dropStale()) onStale();
     }, 200);
 
-    const onError = () => {
-      permanentError = permanentError ?? "worker crashed";
-      terminateBotWorker();
-      if (dropStale()) {
-        finish([]);
-        return;
-      }
-      lastMeta = { error: permanentError };
-      finish(botStepWithSeed(s, seed));
-    };
-
-    const onMessage = (ev: MessageEvent<DecideReply>) => {
-      const data = ev.data;
-      if (data.id !== id) return;
-      if (data.type === "error") {
-        permanentError = data.message;
+    void (async () => {
+      try {
+        const decided =
+          W <= 1
+            ? await runSingleWorkerDecide(body, policy, seed.toString(), id, fail, spinMs)
+            : await runPoolDecide(body, policy, seed.toString(), spinMs, undefined, { fail });
+        if (dropStale()) {
+          onStale();
+          return;
+        }
+        lastMeta = {
+          ms: typeof decided.ms === "number" && Number.isFinite(decided.ms) ? decided.ms : undefined,
+        };
+        const events = applyAction(s, decided.action, { human: false });
+        finish(events);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        permanentError = permanentError ?? message;
         terminateBotWorker();
         if (dropStale()) {
           finish([]);
           return;
         }
-        lastMeta = { error: data.message };
+        lastMeta = { error: message };
         finish(botStepWithSeed(s, seed));
-        return;
       }
-      if (dropStale()) {
-        onStale();
-        return;
-      }
-      const events = applyAction(s, data.action, { human: false });
-      lastMeta = { ms: typeof data.ms === "number" && Number.isFinite(data.ms) ? data.ms : undefined };
-      finish(events);
-    };
-
-    w.addEventListener("message", onMessage);
-    w.addEventListener("error", onError);
-    w.postMessage(req);
+    })();
   });
+}
+
+/** Bench helper: run one bot decision at a replayed position (pool or single worker). */
+function toBenchBody(body: ReturnType<typeof localBotRequestBody>): BenchDecideBody {
+  const { policy: _p, botSeed: _b, ...rest } = body;
+  return rest;
+}
+
+export async function benchDecideAtPosition(
+  body: BenchDecideBody,
+  policy: string,
+  botSeed: string,
+  cores: number,
+): Promise<{ actionJson: string; ms: number }> {
+  if (cores <= 1) {
+    const id = benchNextRequestId++;
+    const decided = await runSingleWorkerDecide(body, policy, botSeed, id, false, 0, benchWorkers);
+    return { actionJson: JSON.stringify(decided.action), ms: decided.ms };
+  }
+  const decided = await runPoolDecide(body, policy, botSeed, 0, cores, { workerPool: benchWorkers });
+  return { actionJson: JSON.stringify(decided.action), ms: decided.ms };
 }

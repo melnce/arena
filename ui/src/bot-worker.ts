@@ -30,6 +30,47 @@ export type DecideReply =
   | { type: "decided"; id: number; action: NeutralAction; ms: number }
   | { type: "error"; id: number; message: string };
 
+export type PrepareRequest = {
+  type: "prepare";
+  id: number;
+  seed: string;
+  deckA: string;
+  deckB: string;
+  first: string;
+  actions: LogStep[];
+  hash: string;
+  policy: string;
+  botSeed: string;
+  /** Test sabotage: wrong seed on world workers. */
+  worldSeedBump?: number;
+};
+
+export type PoolJobRequest =
+  | { type: "h0JobStart"; id: number }
+  | { type: "h0KillDet"; id: number }
+  | { type: "h0KillRoll"; id: number }
+  | { type: "h0JobKillDet"; id: number; outcome: string }
+  | { type: "h0JobKillRoll"; id: number; outcome: string }
+  | {
+      type: "h0JobWorld";
+      id: number;
+      r: number;
+      budget: number;
+    }
+  | { type: "h0JobFinish"; id: number; outcomes: string }
+  | { type: "release"; id: number };
+
+export type PrepareReply =
+  | { type: "prepared"; id: number }
+  | { type: "error"; id: number; message: string };
+
+export type PoolJobReply =
+  | { type: "step"; id: number; stepJson: string }
+  | { type: "outcome"; id: number; outcomeJson: string }
+  | { type: "decided"; id: number; action: NeutralAction; ms: number }
+  | { type: "released"; id: number }
+  | { type: "error"; id: number; message: string };
+
 export type BenchPosition = {
   i: number;
   deckAId: string;
@@ -62,6 +103,18 @@ export type BenchReply =
   | { type: "bench-done"; id: number; lines: BenchLine[]; version: string }
   | { type: "bench-error"; id: number; message: string };
 
+export type WorkerInbound =
+  | DecideRequest
+  | PrepareRequest
+  | PoolJobRequest
+  | BenchRequest;
+
+export type WorkerOutbound =
+  | DecideReply
+  | PrepareReply
+  | PoolJobReply
+  | BenchReply;
+
 function cleanStep(step: LogStep): LogStep {
   if (isReseedStep(step)) return step;
   const raw = JSON.parse(JSON.stringify(step)) as Record<string, unknown>;
@@ -70,10 +123,7 @@ function cleanStep(step: LogStep): LogStep {
   return raw as LogStep;
 }
 
-function replayActions(
-  game: Game,
-  actions: LogStep[],
-): void {
+function replayActions(game: Game, actions: LogStep[]): void {
   for (const step of actions) {
     if (isReseedStep(step)) {
       game.reseed(step.reseed);
@@ -81,6 +131,26 @@ function replayActions(
       game.apply(JSON.stringify(cleanStep(step)));
     }
   }
+}
+
+let heldGame: Game | null = null;
+let heldPolicy = "";
+let heldBotSeed = "";
+let heldWorldSeedBump = 0;
+
+function releaseHeld(): void {
+  if (heldGame) {
+    heldGame.free();
+    heldGame = null;
+  }
+  heldPolicy = "";
+  heldBotSeed = "";
+  heldWorldSeedBump = 0;
+}
+
+function worldSeed(): string {
+  const base = BigInt(heldBotSeed);
+  return (base + BigInt(heldWorldSeedBump)).toString();
 }
 
 function reachPosition(
@@ -144,6 +214,89 @@ function handleDecide(req: DecideRequest): DecideReply {
   }
 }
 
+function handlePrepare(req: PrepareRequest): PrepareReply {
+  releaseHeld();
+  try {
+    const game = new Game(req.seed, req.deckA, req.deckB, req.first);
+    replayActions(game, req.actions);
+    const h = game.hash();
+    if (h !== req.hash) {
+      game.free();
+      return { type: "error", id: req.id, message: `hash mismatch (expected ${req.hash}, got ${h})` };
+    }
+    heldGame = game;
+    heldPolicy = req.policy;
+    heldBotSeed = req.botSeed;
+    heldWorldSeedBump = req.worldSeedBump ?? 0;
+    return { type: "prepared", id: req.id };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { type: "error", id: req.id, message };
+  }
+}
+
+function requireHeld(): Game {
+  if (!heldGame) throw new Error("no prepared game");
+  return heldGame;
+}
+
+function handlePoolJob(req: PoolJobRequest): PoolJobReply {
+  try {
+    if (req.type === "release") {
+      releaseHeld();
+      return { type: "released", id: req.id };
+    }
+    const game = requireHeld();
+    if (req.type === "h0JobStart") {
+      const t0 = performance.now();
+      const stepJson = game.h0JobStart(heldPolicy, heldBotSeed);
+      const step = JSON.parse(stepJson) as { step: string; action?: NeutralAction };
+      const ms = performance.now() - t0;
+      if (step.step === "done") {
+        if (!step.action) {
+          return { type: "error", id: req.id, message: `h0JobStart done without action: ${stepJson}` };
+        }
+        return { type: "decided", id: req.id, action: step.action, ms };
+      }
+      return { type: "step", id: req.id, stepJson };
+    }
+    if (req.type === "h0KillDet") {
+      const outcomeJson = game.h0KillDet(heldPolicy, heldBotSeed);
+      return { type: "outcome", id: req.id, outcomeJson };
+    }
+    if (req.type === "h0KillRoll") {
+      const outcomeJson = game.h0KillRoll(heldPolicy, heldBotSeed);
+      return { type: "outcome", id: req.id, outcomeJson };
+    }
+    if (req.type === "h0JobKillDet") {
+      const stepJson = game.h0JobKillDet(req.outcome);
+      return { type: "step", id: req.id, stepJson };
+    }
+    if (req.type === "h0JobKillRoll") {
+      const stepJson = game.h0JobKillRoll(req.outcome);
+      return { type: "step", id: req.id, stepJson };
+    }
+    if (req.type === "h0JobWorld") {
+      const outcomeJson = game.h0JobWorld(heldPolicy, worldSeed(), req.r, req.budget);
+      return { type: "outcome", id: req.id, outcomeJson };
+    }
+    if (req.type === "h0JobFinish") {
+      const t0 = performance.now();
+      const stepJson = game.h0JobFinish(req.outcomes);
+      const step = JSON.parse(stepJson) as { step: string; action?: NeutralAction };
+      const ms = performance.now() - t0;
+      if (step.step !== "done" || !step.action) {
+        return { type: "error", id: req.id, message: `h0JobFinish: ${stepJson}` };
+      }
+      return { type: "decided", id: req.id, action: step.action, ms };
+    }
+    return { type: "error", id: (req as { id: number }).id, message: "unknown pool job" };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { type: "error", id: req.id, message };
+  }
+}
+
 function handleBench(req: BenchRequest): BenchReply {
   const lines: BenchLine[] = [];
   const total = req.positions.length;
@@ -190,11 +343,26 @@ function handleBench(req: BenchRequest): BenchReply {
   return { type: "bench-done", id: req.id, lines, version: version() };
 }
 
-self.onmessage = (ev: MessageEvent<DecideRequest | BenchRequest>) => {
+self.onmessage = (ev: MessageEvent<WorkerInbound>) => {
   void ensureWasm().then(() => {
     const msg = ev.data;
     if (msg.type === "decide") {
       const reply = handleDecide(msg);
+      self.postMessage(reply);
+    } else if (msg.type === "prepare") {
+      const reply = handlePrepare(msg);
+      self.postMessage(reply);
+    } else if (
+      msg.type === "h0JobStart" ||
+      msg.type === "h0KillDet" ||
+      msg.type === "h0KillRoll" ||
+      msg.type === "h0JobKillDet" ||
+      msg.type === "h0JobKillRoll" ||
+      msg.type === "h0JobWorld" ||
+      msg.type === "h0JobFinish" ||
+      msg.type === "release"
+    ) {
+      const reply = handlePoolJob(msg);
       self.postMessage(reply);
     } else if (msg.type === "bench") {
       const reply = handleBench(msg);

@@ -4,7 +4,19 @@ export default defineConfig({
   testDir: "./tests",
   timeout: 90_000,
   fullyParallel: false,
+  workers: process.env.CI ? 1 : undefined,
   retries: 0,
+  projects: [
+    {
+      name: "chromium",
+      testIgnore: /bot-pool\.spec\.ts$/,
+    },
+    {
+      name: "chromium-bot-pool",
+      testMatch: /bot-pool\.spec\.ts$/,
+      timeout: 360_000,
+    },
+  ],
   use: {
     baseURL: "http://127.0.0.1:4173",
     browserName: "chromium",
