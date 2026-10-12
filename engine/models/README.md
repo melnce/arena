@@ -114,13 +114,29 @@ The `mulligan-v2` opening keep table (engine format version 1). Documented in `d
 
 Data: `mull1` + `mull2` pooled via the shrinkage learner (`py/mulligan.py shrink`, empirical Bayes by rule group).
 
-Yardstick: sweep 46 pooled 0.5094 [0.4999, 0.5188] / +6.5 Elo vs `mulligan-v1` on the 16-deck meta pool (10 752 final games). This is the built-in table since this PR.
+Yardstick: sweep 46 pooled 0.5094 [0.4999, 0.5188] / +6.5 Elo vs `mulligan-v1` on the 16-deck meta pool (10 752 final games). This was the built-in table until `mulligan-v3` shipped. Reach it with `h0:mull=engine/models/mulligan-v2.json`.
 
 sha256 `efbb96a0efac5cc9e9298e2e1bdbcb84fd0605cc47f13d29fa1f4f7374c6dde5`
 
 ## Rule
 
 Committed files are immutable measured artifacts — a new table is a new file (`mulligan-v3`, …) and becomes the default only after it beats the current default on the registered sweep rule; never regenerate a committed file in place.
+
+# `mulligan-v3`
+
+The `mulligan-v3` opening keep table (engine format version 1). Documented in `docs/engine-api.md` "Learned mulligan".
+
+## Provenance
+
+Data: `mull1` + `mull2` + `mull3` pooled via the shrinkage learner (`py/mulligan.py shrink --tags mull1 mull2 mull3 --fresh-only meta-haven-amulet meta-haven-evo meta-haven-kukishiro`, empirical Bayes by rule group).
+
+Yardstick: sweep 51 pooled 0.5060 [0.4944, 0.5176] / +4.2 Elo vs `mulligan-v2` on the 16-deck meta pool (7 168 final games). This is the built-in table since this PR.
+
+sha256 `6bb27768999e896443672ce6f82098ae2a76947b07be5fc94fb42fd7dbce01e7`
+
+## Rule
+
+Committed files are immutable measured artifacts — a new table is a new file (`mulligan-v4`, …) and becomes the default only after it beats the current default on the registered sweep rule; never regenerate a committed file in place.
 
 ## Optional race block
 

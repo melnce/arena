@@ -124,6 +124,13 @@ def _parse_shrink(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--root", default=None)
     p.add_argument("--min-n", type=int, default=30)
     p.add_argument("--out", required=True, help="table to write (engine format, version 1)")
+    p.add_argument(
+        "--fresh-only",
+        nargs="*",
+        default=[],
+        metavar="DECK",
+        help="for these decks, only the newest tag's observations count toward the table",
+    )
     args = p.parse_args(argv)
     args.command = "shrink"
     args._argv = ["shrink", *argv]
@@ -836,10 +843,23 @@ def _shrink_posterior(
     return h["mu"] + k11 * d1 + k12 * d2, h["mu"] + k21 * d1 + k22 * d2
 
 
+def _shrink_deck_names(runs: list[Path]) -> set[str]:
+    names: set[str] = set()
+    for r in runs:
+        rows = json.loads((r / "fit.json").read_text(encoding="utf-8"))["cards"]
+        names.update(row["deck"] for row in rows)
+    return names
+
+
 def cmd_shrink(args: argparse.Namespace) -> None:
     repo = repo_root()
     root = Path(args.root) if args.root else repo / "results"
     runs = [tag_dir(root, tag) for tag in args.tags]
+    fresh_only = sorted(set(args.fresh_only))
+    known_decks = _shrink_deck_names(runs)
+    unknown_fresh = sorted(d for d in fresh_only if d not in known_decks)
+    if unknown_fresh:
+        raise SystemExit(f"--fresh-only names decks the runs do not have: {unknown_fresh}")
 
     metas = [_shrink_card_meta(r / "fit.json") for r in runs]
     fps = [_shrink_fingerprints(r / "table.json") for r in runs]
@@ -859,13 +879,22 @@ def cmd_shrink(args: argparse.Namespace) -> None:
 
     per_seat: dict[tuple[str, str, str], CardStats] = defaultdict(CardStats)
     excluded_split = 0
+    fresh_left_out = 0
     n_obs: list[int] = []
     sha: list[str] = []
-    for r in runs:
+    for ri, r in enumerate(runs):
         p = r / "observations.csv.gz"
         obs = read_observations_csv(p)
         n_obs.append(len(obs))
         sha.append(hashlib.sha256(p.read_bytes()).hexdigest())
+        if fresh_only and ri < len(runs) - 1:
+            kept: list[Observation] = []
+            for o in obs:
+                if o.deck in fresh_only:
+                    fresh_left_out += 1
+                else:
+                    kept.append(o)
+            obs = kept
         stats, excluded = gather_stats(obs)
         for key, s in stats.items():
             dst = per_seat[key]
@@ -944,6 +973,7 @@ def cmd_shrink(args: argparse.Namespace) -> None:
                 }
                 for g, h in h_prior.items()
             },
+            "fresh_only": fresh_only,
             "created": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         },
     }
@@ -951,9 +981,11 @@ def cmd_shrink(args: argparse.Namespace) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(table, indent=2) + "\n", encoding="utf-8")
 
+    fresh_names = ", ".join(fresh_only) if fresh_only else "none"
     lines = [
         f"mull_bayes: {len(runs)} run(s) {', '.join(str(r) for r in runs)}",
         f"observations {sum(n_obs)} ({' + '.join(map(str, n_obs))}), games {sum(n_obs) // 2}, split copies left out {excluded_split}",
+        f"fresh only (newest run alone): {fresh_names}; older-run observations left out: {fresh_left_out}",
         *cost_notes,
     ]
     for g, h in h_prior.items():

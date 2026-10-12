@@ -13,7 +13,7 @@
 //! ```
 //!
 //! On this branch, `h0:mull=rule,info=fair,net=<v1 path>` must match those pins;
-//! bare `h0` must match `h0:mull=engine/models/mulligan-v2.json,info=open` and
+//! bare `h0` must match `h0:mull=engine/models/mulligan-v3.json,info=open` and
 //! `h0:net=<v4 path>` (the yardstick candidate); `h0:net=<v3 path>` reproduces
 //! the pre-v4 default pins; `h0:net=<v2 path>` reproduces the pre-v3 default pins.
 //!
@@ -233,16 +233,16 @@ fn action_trace(
 }
 
 /// Default `h0` action fingerprints on eight meta-deck / seed pairs.
-/// Computed on `main@7d7d2d1` with `mulligan-v2` as the built-in table.
+/// Computed on `main@99e0775` with `h0:mull=engine/models/mulligan-v3.json`.
 const DEFAULT_FINGERPRINTS: [u64; 8] = [
-    0x4087_4d81_d117_4ee9,
-    0x8867_a7c5_74fc_8fa9,
+    0x2246_9fdb_d814_7321,
+    0xd8c3_dcd1_2502_4f7f,
     0x649a_13b2_5e6f_3115,
-    0xf257_1914_6cd5_5f83,
-    0x362b_e20c_ddf6_d64c,
-    0x8667_1e5e_f842_ccfb,
-    0xfd90_619b_00c6_58f3,
-    0x0d24_2b16_5f40_84c8,
+    0xd0a1_8275_06c2_801e,
+    0x4b8c_36bb_af3f_9a0e,
+    0x081e_1488_1d35_a647,
+    0x64a9_a3ca_860e_4884,
+    0x41ad_f866_2960_4f21,
 ];
 
 /// Pre-v4 default `h0` fingerprints (`main@3742a1b`, built-in `h0-linear-v3`).
@@ -884,7 +884,7 @@ fn v2_net_matches_pre_v3_default_fingerprints() {
 fn default_matches_explicit_builtin_table_and_open() {
     let db = load_db();
     let table = repo_root()
-        .join("engine/models/mulligan-v2.json")
+        .join("engine/models/mulligan-v3.json")
         .display()
         .to_string();
     let v4 = h0_linear_v4_path();
