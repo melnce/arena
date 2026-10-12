@@ -1244,7 +1244,7 @@ function renderTerminal(full: FullState, hooks: RenderHooks): void {
     overlay.innerHTML = `<div class="gameover-card">
       <div class="gameover-title" id="gameOverTitle"></div>
       <div class="gameover-reason" id="gameOverReason"></div>
-      <p class="gameover-hint">First player of a rematch follows the drawer’s A / B / coin setting.</p>
+      <p class="gameover-hint">First player of a rematch follows the drawer’s A / B / coin setting; bot policy follows the settings drawer too.</p>
       <div class="gameover-actions">
         <button type="button" id="rematchSameSeedBtn">Rematch (same seed)</button>
         <button type="button" id="rematchNewSeedBtn">Rematch (new seed)</button>

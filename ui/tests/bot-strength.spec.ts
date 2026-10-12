@@ -86,12 +86,14 @@ test("desktop: option list defaults to h0 (strong)", async ({ page }) => {
     CHEAT,
     PC.strong,
     PC.cheat,
+    "__custom_spec__",
   ]);
-  expect(opts[2]?.label).toBe("h0 (standard)");
-  expect(opts[3]?.label).toBe("h0 (strong)");
+  expect(opts[2]?.label).toBe("Quick — 2 000 nodes");
+  expect(opts[3]?.label).toBe("Medium — 6 000 nodes");
   expect(opts[3]?.title).toContain("6 000 search nodes");
-  expect(opts[4]?.label).toBe("h0 (cheater — sees your hand)");
+  expect(opts[4]?.label).toBe("Medium, sees your hand — 6 000 nodes");
   await expect(page.locator("#vsBotPolicy")).toHaveValue(STRONG);
+  await expect(page.locator("#vsBotPolicyHint")).toContainText("Medium — 6 000 nodes");
   await expect(page.locator("#vsBotPolicyHint")).toContainText("6 000 search nodes");
   await page.locator("#vsBotPolicy").evaluate((el) => {
     (el as HTMLSelectElement).size = 5;

@@ -204,7 +204,7 @@ test("cheater without cheat field: browser only, no /bot", async ({ page }) => {
   });
   expect(mock.botRequests()).toBe(0);
   await expect(page.locator("#botBackendBadge")).toHaveText(
-    "bot: browser (cheater needs an updated local server)",
+    "bot: browser (h0:nodes=6000,info=all) (cheater needs an updated local server)",
   );
 });
 
@@ -229,7 +229,7 @@ test("no server: cheater vs-bot makes first bot move in browser", async ({ page 
     timeout: 15_000,
   });
   await expect(page.locator("#eventLog")).not.toHaveText("", { timeout: 15_000 });
-  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser");
+  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser (h0:nodes=6000,info=all)");
 });
 
 test("cheater with old server and toggle off: plain browser badge, no /bot", async ({ page }) => {
@@ -254,7 +254,7 @@ test("cheater with old server and toggle off: plain browser badge, no /bot", asy
     timeout: 15_000,
   });
   expect(mock.botRequests()).toBe(0);
-  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser");
+  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser (h0:nodes=6000,info=all)");
 });
 
 test("no server: badge is browser and vs-bot still plays", async ({ page }) => {
@@ -331,7 +331,9 @@ test("server 500 falls back to wasm and pins the error badge", async ({ page }) 
   await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a", {
     timeout: 15_000,
   });
-  await expect(page.locator("#botBackendBadge")).toContainText("bot: browser (server error:");
+  await expect(page.locator("#botBackendBadge")).toHaveText(
+    'bot: browser (h0) (server error: {"error":"synthetic server error"})',
+  );
   const state = await page.evaluate(() => window.__arena!.localBot());
   expect(state.backend).toBe("browser");
   expect(state.error).toBeTruthy();
@@ -358,7 +360,7 @@ test("settings toggle off: no /bot even with a mock", async ({ page }) => {
     timeout: 15_000,
   });
   expect(mock.botRequests()).toBe(0);
-  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser");
+  await expect(page.locator("#botBackendBadge")).toHaveText("bot: browser (h0)");
 });
 
 test("slow /health still becomes local server", async ({ page }) => {
