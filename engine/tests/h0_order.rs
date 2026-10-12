@@ -277,6 +277,10 @@ fn order_spec_parser_round_trip_and_errors() {
     ));
 }
 
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
 #[test]
 fn same_order_net_as_leaf_is_identity_on_review_and_self_play() {
     let db = load_recorded_db();
@@ -340,6 +344,10 @@ fn same_order_net_as_leaf_is_identity_on_review_and_self_play() {
     assert!(decisions >= 200, "self-play decisions={decisions}");
 }
 
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
 #[test]
 fn zero_order_net_preserves_beam_prefix_and_leaf_values() {
     let db = load_recorded_db();
@@ -374,6 +382,10 @@ fn zero_order_net_preserves_beam_prefix_and_leaf_values() {
     assert!(base.value_bits.is_some());
 }
 
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
 #[test]
 fn oorder_zero_matches_baseline_oorder_one_can_differ() {
     let db = load_recorded_db();
@@ -410,6 +422,10 @@ fn oorder_zero_matches_baseline_oorder_one_can_differ() {
     assert!(saw_diff, "expected oorder=1 to change some explain record");
 }
 
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
 #[test]
 fn order_threads_identity_alloc_world() {
     let db = load_recorded_db();
