@@ -46,7 +46,7 @@ browser still blocks the request, run the UI with `cd ui && npm run dev`.
 Settings → **Use local bot server when available** (on by default; the
 `?localbot=0` query flag also skips the probe and every `/bot` POST).
 In vs-bot the badge next to the policy select should read something like
-`bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8, 28 cpus)`. No server → `bot: browser` when idle, or `bot: browser (<running spec>)` during a vs-bot game (e.g. `bot: browser (h0:nodes=6000)`). Menu labels name each bot (Quick / Medium / Full strength / Custom spec…); **Full strength** is `py/serve.py`’s `DEFAULT_STRONG` at build time. When the local server is up, it plays **its** spec for every `h0` menu choice—the hint under the policy select says so.
+`bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000, 28 cpus)`. No server → `bot: browser` when idle, or `bot: browser (<running spec>)` during a vs-bot game (e.g. `bot: browser (h0:nodes=6000)`). Menu labels name each bot (Quick / Medium / Full strength / Custom spec…); **Full strength** is `py/serve.py`’s `DEFAULT_STRONG` at build time. When the local server is up, it plays **its** spec for every `h0` menu choice—the hint under the policy select says so.
 The default samples sixteen worlds at twice the previous node cap. The served bot
 takes a deterministic kill before searching (`tkill`, up to 10 000 solver
 applies outside the node cap; runbook 32 audit at results `e2c8e1d`) and a
@@ -80,7 +80,7 @@ default includes `okill=8` since sweep 48 (2026-10-10).
 `hbk=16` since 2026-10-11 (sweep 49): when the bot is about to end its turn with a kill attack available, it checks End Turn and each kill again on 16 fresh worlds.
 `alloc=world,threads=8` since 2026-10-11: the search runs its worlds on 8 cores; moves are the same for any thread
 count. `nodes=64000,k=16` since 2026-10-12 (sweep 50): sixteen sampled worlds instead of eight, about twice the thinking
-time per decision on the same cores. The client's
+time per decision on the same cores. `lostrank=4000` since 2026-10-12 (the owner's tablet games): in a turn where every move loses in every world, the bot re-ranks its moves without the opponent's reply instead of playing the first legal one; at sixteen worlds 4 000 nodes give each world the share 2 000 gave at eight. The client's
 "h0 (strong)" option is ignored for node count; change it here:
 
 ```
@@ -100,7 +100,7 @@ explicit `k=`, it builds the default four roots (same as the fair bot).
 
 Pick it in Settings → vs-bot policy (listed after **h0 (strong)**). The UI
 sends `h0:nodes=6000,info=all` to the server; the server rewrites that to
-its `--cheat` spec (default `h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8`). Override
+its `--cheat` spec (default `h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000`). Override
 with e.g. `python py/serve.py --cheat "h0:nodes=32000,info=all"`. The
 `GET /health` payload includes `"cheat": "<spec>"` alongside `"strong"`.
 
@@ -114,7 +114,7 @@ server)`).
 Each decision prints one stdout line:
 
 ```
-bot policy=h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
+bot policy=h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
 ```
 
 `hash=ok` means the client's `Game.hash()` matched the replayed
