@@ -36,36 +36,43 @@ CASES = [
     ("5644357252607789766-97db9ba4-nk0gbw1ual.json", 45, 5644357252607789789, -6.90),
 ]
 
-# onext=40 prototype reference (value, move key fields)
-ONEXT40 = {
-    "15347574370000780434-97db9ba4-z29pmzb008.json": (
-        -42.50,
-        {"end_turn": {"player": "b"}},
-    ),
-    "16711146681088137021-97db9ba4-gh1qev38sg.json": (
-        -40.00,
-        {"evolve": {"player": "b", "slot": 0}},
-    ),
-    "17120898228290884610-97db9ba4-jnbkdaf8om.json": (
-        -34.94,
-        {"end_turn": {"player": "b"}},
-    ),
-    "4483542872111018835-97db9ba4-w2kssgalv0.json": (
-        -9.37,
-        {"attack": {"attacker_slot": 0, "player": "b", "target": {"slot": 0}}},
-    ),
-    "5644357252607789766-97db9ba4-nk0gbw1ual.json": (
-        -24.15,
-        {"attack": {"attacker_slot": 1, "player": "b", "target": {"slot": 0}}},
-    ),
+ONEXT40_VALUE: dict[str, float] = {
+    "15347574370000780434-97db9ba4-z29pmzb008.json": -42.50,
+    "16711146681088137021-97db9ba4-gh1qev38sg.json": -40.00,
+    "17120898228290884610-97db9ba4-jnbkdaf8om.json": -34.94,
+    "4483542872111018835-97db9ba4-w2kssgalv0.json": -9.37,
+    "5644357252607789766-97db9ba4-nk0gbw1ual.json": -24.15,
 }
 
-ONEXT40_OOPEN1 = {
+ONEXT40_OOPEN1_VALUE: dict[str, float] = {
     "15347574370000780434-97db9ba4-z29pmzb008.json": -42.50,
     "16711146681088137021-97db9ba4-gh1qev38sg.json": -40.00,
     "17120898228290884610-97db9ba4-jnbkdaf8om.json": -34.97,
     "4483542872111018835-97db9ba4-w2kssgalv0.json": -17.01,
     "5644357252607789766-97db9ba4-nk0gbw1ual.json": -30.91,
+}
+
+# Exact bot moves with `,onext=40` (and without `onext` except 4483…).
+MOVE_ONEXT40: dict[str, dict[str, Any]] = {
+    "15347574370000780434-97db9ba4-z29pmzb008.json": {"end_turn": {"player": "b"}},
+    "16711146681088137021-97db9ba4-gh1qev38sg.json": {
+        "evolve": {"player": "b", "slot": 0, "super": False},
+    },
+    "17120898228290884610-97db9ba4-jnbkdaf8om.json": {"end_turn": {"player": "b"}},
+    "4483542872111018835-97db9ba4-w2kssgalv0.json": {
+        "attack": {"attacker_slot": 0, "player": "b", "target": "leader"},
+    },
+    "5644357252607789766-97db9ba4-nk0gbw1ual.json": {
+        "attack": {"attacker_slot": 1, "player": "b", "target": {"slot": 0}},
+    },
+}
+
+# Served spec without `onext`: same as MOVE_ONEXT40 except 4483… attacks follower slot 0.
+MOVE_SERVED: dict[str, dict[str, Any]] = {
+    **{k: v for k, v in MOVE_ONEXT40.items() if k != "4483542872111018835-97db9ba4-w2kssgalv0.json"},
+    "4483542872111018835-97db9ba4-w2kssgalv0.json": {
+        "attack": {"attacker_slot": 0, "player": "b", "target": {"slot": 0}},
+    },
 }
 
 
@@ -99,21 +106,6 @@ def _world_ends(exp: dict[str, Any]) -> dict[str, int]:
     return out
 
 
-def _normalize_bot_move(act: dict[str, Any]) -> dict[str, Any]:
-    if "attack" in act:
-        body = dict(act["attack"])
-        tgt = body.get("target")
-        if tgt == "leader" or tgt == {"leader": True}:
-            body["target"] = {"slot": 0}
-        elif isinstance(tgt, dict) and "player" not in tgt and "slot" in tgt:
-            body["target"] = {"slot": tgt["slot"]}
-        return {"attack": body}
-    if "evolve" in act:
-        body = {k: v for k, v in act["evolve"].items() if k != "super"}
-        return {"evolve": body}
-    return act
-
-
 @pytest.mark.parametrize("fixture,action_idx,bot_seed,served", CASES)
 def test_tablet_swing_onext(
     db,
@@ -128,23 +120,26 @@ def test_tablet_swing_onext(
     base = game.bot_action_value(SERVED_SPEC, bot_seed)
     assert abs(base["value"] - served) < 5e-3, f"served mismatch: {base['value']} vs {served}"
 
+    act_served = game.bot_action(SERVED_SPEC, bot_seed)
+    assert act_served == MOVE_SERVED[fixture]
+
     on40 = game.bot_action_value(f"{SERVED_SPEC},onext=40", bot_seed)
     o1n = game.bot_action_value(f"{SERVED_SPEC},oopen=1,onext=40", bot_seed)
     assert on40["value"] <= base["value"] + 1e-5
 
-    ref_val, ref_move = ONEXT40[fixture]
-    ref_o1 = ONEXT40_OOPEN1[fixture]
     act40 = game.bot_action(f"{SERVED_SPEC},onext=40", bot_seed)
     print(
         f"{fixture}@{action_idx}: served={base['value']:.4f} "
         f"onext=40={on40['value']:.4f} oopen+onext={o1n['value']:.4f}"
     )
     tol = 5e-3
+    ref_val = ONEXT40_VALUE[fixture]
+    ref_o1 = ONEXT40_OOPEN1_VALUE[fixture]
     if abs(on40["value"] - ref_val) >= tol:
         pytest.fail(f"onext=40 expected {ref_val}, got {on40['value']}")
     if abs(o1n["value"] - ref_o1) >= tol:
         pytest.fail(f"oopen=1,onext=40 expected {ref_o1}, got {o1n['value']}")
-    assert _normalize_bot_move(act40) == _normalize_bot_move(ref_move)
+    assert act40 == MOVE_ONEXT40[fixture]
 
     exp0 = game.bot_action_explain(SERVED_SPEC, bot_seed)
     exp40 = game.bot_action_explain(f"{SERVED_SPEC},onext=40", bot_seed)
