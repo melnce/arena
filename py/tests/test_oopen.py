@@ -35,6 +35,13 @@ CASES = [
     ("5644357252607789766-97db9ba4-nk0gbw1ual.json", 45, 5644357252607789789, -6.90, -10.17, -17.27),
 ]
 
+# Served spec uses k=16; 4483… attacks slot 0 (k=8 capture recorded leader).
+EXPECTED_BOT_MOVE: dict[str, dict[str, Any]] = {
+    "4483542872111018835-97db9ba4-w2kssgalv0.json": {
+        "attack": {"attacker_slot": 0, "player": "b", "target": {"slot": 0}}
+    },
+}
+
 
 def _load_capture(name: str) -> dict[str, Any]:
     return json.loads((FIXTURES / name).read_text())
@@ -66,6 +73,51 @@ def _world_ends(exp: dict[str, Any]) -> dict[str, int]:
     return out
 
 
+def _action_player(action: dict[str, Any]) -> str | None:
+    for body in action.values():
+        if isinstance(body, dict) and "player" in body:
+            return str(body["player"])
+    return None
+
+
+def _opp_open_pv_well_formed(pv: list[dict[str, Any]], bot_side: str) -> bool:
+    """After the bot's first end_turn, only opponent actions ending in his end_turn."""
+    opp = "b" if bot_side == "a" else "a"
+    first_bot_et: int | None = None
+    for i, action in enumerate(pv):
+        if "end_turn" in action and action["end_turn"].get("player") == bot_side:
+            first_bot_et = i
+            break
+    if first_bot_et is None:
+        return False
+    suffix = pv[first_bot_et + 1 :]
+    if not suffix:
+        return False
+    for action in suffix:
+        if _action_player(action) != opp:
+            return False
+    last = suffix[-1]
+    if "end_turn" not in last or last["end_turn"].get("player") != opp:
+        return False
+    return True
+
+
+def _iter_opp_open_worlds(exp: dict[str, Any]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for cand in exp.get("candidates") or []:
+        for w in cand.get("worlds") or []:
+            if w.get("end") == "opp_open":
+                out.append(w)
+    return out
+
+
+def _expected_bot_move(fixture: str, cap: dict[str, Any], action_idx: int) -> dict[str, Any]:
+    if fixture in EXPECTED_BOT_MOVE:
+        return EXPECTED_BOT_MOVE[fixture]
+    recorded = cap["actions"][action_idx]
+    return {k: v for k, v in recorded.items() if k not in ("value", "bot_value")}
+
+
 @pytest.mark.parametrize(
     "fixture,action_idx,bot_seed,served,v1,v2",
     CASES,
@@ -82,21 +134,13 @@ def test_tablet_swing_positions(
     import arena
 
     cap = _load_capture(fixture)
-    game, _bot_side = _replay(db, cap, action_idx)
-    recorded = cap["actions"][action_idx]
-    body = {k: v for k, v in recorded.items() if k not in ("value", "bot_value")}
-    recorded_action = json.dumps(body, sort_keys=True)
+    game, bot_side = _replay(db, cap, action_idx)
+    expected_move = _expected_bot_move(fixture, cap, action_idx)
 
     base = game.bot_action_value(SERVED_SPEC, bot_seed)
     act = game.bot_action(SERVED_SPEC, bot_seed)
     assert abs(base["value"] - served) < 5e-3, f"served mismatch: {base['value']} vs {served}"
-    # Leader vs slot target encoding can differ for the same attack line.
-    assert json.dumps(act, sort_keys=True) == recorded_action or (
-        "attack" in act
-        and "attack" in body
-        and act["attack"].get("attacker_slot") == body["attack"].get("attacker_slot")
-        and act["attack"].get("player") == body["attack"].get("player")
-    )
+    assert act == expected_move
 
     o1 = game.bot_action_value(f"{SERVED_SPEC},oopen=1", bot_seed)
     o2 = game.bot_action_value(f"{SERVED_SPEC},oopen=2", bot_seed)
@@ -116,3 +160,25 @@ def test_tablet_swing_positions(
     exp2 = game.bot_action_explain(f"{SERVED_SPEC},oopen=2", bot_seed)
     assert _world_ends(exp0).get("opp_open", 0) == 0
     assert _world_ends(exp2).get("opp_open", 0) >= 1
+
+
+@pytest.mark.parametrize(
+    "fixture,action_idx,bot_seed,served,v1,v2",
+    CASES,
+)
+def test_opp_open_pv_shape(
+    db,
+    fixture: str,
+    action_idx: int,
+    bot_seed: int,
+    served: float,
+    v1: float,
+    v2: float,
+) -> None:
+    cap = _load_capture(fixture)
+    game, bot_side = _replay(db, cap, action_idx)
+    exp = game.bot_action_explain(f"{SERVED_SPEC},oopen=2", bot_seed)
+    worlds = _iter_opp_open_worlds(exp)
+    assert worlds, f"no opp_open worlds for {fixture}"
+    bad = [w for w in worlds if not _opp_open_pv_well_formed(w.get("pv") or [], bot_side)]
+    assert not bad, f"{len(bad)} malformed opp_open PVs in {fixture} (of {len(worlds)})"

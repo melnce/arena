@@ -2924,14 +2924,17 @@ fn opponent_open_search(
             continue;
         };
         if s.winner == Some(opp) {
-            if let Some(t) = track.as_deref_mut() {
+            let win_line = if let Some(t) = track.as_deref_mut() {
                 let plen = t.path_len();
                 t.push(a.clone());
                 t.set_leaf(-eval.wv, PvEnd::Terminal, &s);
                 t.pop_to(plen);
-            }
+                t.take_last()
+            } else {
+                None
+            };
             stats.opp_open_nodes += u64::from(*nodes - nodes_start);
-            return Some((-eval.wv, None));
+            return Some((-eval.wv, win_line));
         }
         let k = search_key(&s);
         if matches!(a, Action::EndTurn) {
@@ -2955,7 +2958,7 @@ fn opponent_open_search(
         if *nodes >= cap {
             break;
         }
-        let skip_complete = i == 0 && end_turn_score.is_some() && score > end_turn_score.unwrap();
+        let skip_complete = i == 0 && end_turn_score.map_or(true, |e| score > e);
 
         if !skip_complete {
             let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
@@ -3126,6 +3129,7 @@ fn opponent_reply(
                 }
             }
         }
+        let plen0 = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
         let mut s = state.clone();
         if eval.omacro {
             greedy_until_end_omacro(
@@ -3164,6 +3168,9 @@ fn opponent_reply(
         let mut best = g;
         if eval.oopen > 0 && acting_player(state) == me.opponent() && *nodes < cap {
             stats.opp_open_replies += 1;
+            if let Some(t) = track.as_deref_mut() {
+                t.pop_to(plen0);
+            }
             if let Some((ov, oline)) = opponent_open_search(
                 db,
                 state,
