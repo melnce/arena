@@ -2958,7 +2958,7 @@ fn opponent_open_search(
         if *nodes >= cap {
             break;
         }
-        let skip_complete = i == 0 && end_turn_score.map_or(true, |e| score > e);
+        let skip_complete = i == 0 && end_turn_score.is_none_or(|e| score > e);
 
         if !skip_complete {
             let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
