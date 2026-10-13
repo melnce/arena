@@ -48,6 +48,13 @@ jobs:
   # h0_threads ~7m58s release --include-ignored (cloud-agent 2026-10-11, PR #133)
   # h0_job release identity ~9.3m wall (556s cargo, 2026-10-11 cloud-agent); GitHub runners
   # ~0.9–1.8× that (see h0_threads/tkroll/hbcheck notes); 556s×1.5+build ≈15m on slow runners → timeout 25m
+  # h0_block_deal ~0.2s release tests (cloud-agent 2026-10-13); timeout 15 like h0_tkill
+  # h0_hbk ~25m26s release tests (cloud-agent 2026-10-13, local; not yet measured on GitHub); ×1.7 + build ≈ 46m on a slow runner → timeout 60
+  # h0_okill ~7m30s release tests (cloud-agent 2026-10-13); timeout 25 like h0_pess
+  # h0_onext ~16m41s release tests (cloud-agent 2026-10-13, local; not yet measured on GitHub); ×1.7 + build ≈ 31m on a slow runner → timeout 45
+  # h0_oopen ~16m40s release tests (cloud-agent 2026-10-13, local; not yet measured on GitHub); ×1.7 + build ≈ 31m on a slow runner → timeout 45
+  # h0_turn_worlds ~1s release tests (cloud-agent 2026-10-13); timeout 15 like h0_tkill
+  # lethal ~3s release tests (cloud-agent 2026-10-13); timeout 15 like encode_v2
   suite:
     name: slow (${{ matrix.suite }})
     runs-on: ubuntu-latest
@@ -181,6 +188,41 @@ jobs:
             filter: ""
             ignored: true
             timeout: 25
+          - suite: h0_block_deal
+            test: h0_block_deal
+            filter: ""
+            ignored: false
+            timeout: 15
+          - suite: h0_hbk
+            test: h0_hbk
+            filter: ""
+            ignored: false
+            timeout: 60
+          - suite: h0_okill
+            test: h0_okill
+            filter: ""
+            ignored: false
+            timeout: 25
+          - suite: h0_onext
+            test: h0_onext
+            filter: ""
+            ignored: false
+            timeout: 45
+          - suite: h0_oopen
+            test: h0_oopen
+            filter: ""
+            ignored: false
+            timeout: 45
+          - suite: h0_turn_worlds
+            test: h0_turn_worlds
+            filter: ""
+            ignored: false
+            timeout: 15
+          - suite: lethal
+            test: lethal
+            filter: ""
+            ignored: false
+            timeout: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -262,7 +304,14 @@ jobs:
             "h0_tkroll": 15,
             "h0_hbcheck": 15,
             "h0_threads": 15,
-            "h0_job": 25
+            "h0_job": 25,
+            "h0_block_deal": 15,
+            "h0_hbk": 60,
+            "h0_okill": 25,
+            "h0_onext": 45,
+            "h0_oopen": 45,
+            "h0_turn_worlds": 15,
+            "lethal": 15
           }'
 
           failed_jobs=""
@@ -366,7 +415,14 @@ jobs:
             "h0_tkroll": 15,
             "h0_hbcheck": 15,
             "h0_threads": 15,
-            "h0_job": 25
+            "h0_job": 25,
+            "h0_block_deal": 15,
+            "h0_hbk": 60,
+            "h0_okill": 25,
+            "h0_onext": 45,
+            "h0_oopen": 45,
+            "h0_turn_worlds": 15,
+            "lethal": 15
           }'
 
           failed_jobs=""
