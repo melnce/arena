@@ -253,8 +253,7 @@ fn onext_counters() {
         assert!(on.stats.opp_next_nodes > 0);
     }
     assert_eq!(
-        off.stats.opp_lethal_checks,
-        on.stats.opp_lethal_checks,
+        off.stats.opp_lethal_checks, on.stats.opp_lethal_checks,
         "onext must not change opp_lethal_checks"
     );
 }
