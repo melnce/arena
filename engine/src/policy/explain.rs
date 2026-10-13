@@ -48,6 +48,8 @@ pub enum PvEnd {
     OppReply,
     /// Opponent reply scored through opening search (`oopen>0`, `odepth=0`).
     OppOpen,
+    /// Greedy reply leaf capped after bot turn + opponent next-turn lethal (`onext>0`).
+    OppNext,
     OppLethal,
     /// Opponent reply scored through bounded [`forced_lethal`] (`olsolve>0`).
     OppSolver,

@@ -556,7 +556,7 @@ hand-written leaf the bot used before this default), `net=<path>`
 `net=engine/models/h0-linear-v1.json` for the v1 leaf),
 (overrides the built-in; only meaningful with `value=net`;
 `h0:net=<path>` alone means `h0:value=net,net=<path>`; the path
-may not contain commas), `odepth=` / `obeam=` / `oopen=` (opponent model; defaults `0` / `3` / `0`),
+may not contain commas), `odepth=` / `obeam=` / `oopen=` / `onext=` (opponent model; defaults `0` / `3` / `0` / `0`),
 `olethal=0|1` (cheap opponent-lethal sweep on the greedy path; default `1`;
 `olethal=0` restores the pre-flip greedy path; ignored when `odepth≥1`),
 `oevo=0|1` (extend that sweep with one evolve; default `1` is the
@@ -681,6 +681,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `odepth` | 0 | opponent-model action depth; `0` = greedy line |
 | `obeam` | 3 | opponent beam (plus `EndTurn` always) |
 | `oopen` | 0 | on the greedy reply (`odepth=0`), after the lethal sweep and the greedy line, search up to this many opening actions for the opponent (each finished by the same greedy line); keeps the top `obeam` non-`EndTurn` first actions by one-step value, charged to the pair cap; ignored when `odepth≥1` |
+| `onext` | 0 | on the greedy reply (`odepth=0`), at the end of every leaf-scored reply line (the greedy line and each `oopen` completion): finish the bot's next turn greedily (`pick_value` up to `osteps`, then `EndTurn`), then run the opponent-lethal sweep on the following opponent turn; if it finds a kill, cap the line's value at `−onext` (charged to the pair cap); ignored when `odepth≥1` |
 | `olethal` | 1 | glance-level opponent-lethal sweep before the greedy line; `0` restores the pre-flip greedy path. Ignored when `odepth≥1` |
 | `oevo` | 1 | extend that sweep with at most one `Evolve` / `super_evolve` per leaf. Only meaningful with `olethal=1` and `odepth=0`. Sweep 8b pooled 0.527 [0.515, 0.540] / +19.0 Elo vs `h0:olethal=1,osteps=6` on the seven real decks (6 174 games). Owner flipped the default on 2026-09-19 |
 | `okill` | 0 | bitmask of extra kill shapes in the opponent-lethal sweep (`olethal=1`, `odepth=0`): bit 1 = Ward-break prefix before the face line; bit 2 = slot-freeing trades when the attacker's field is full; bit 4 = play-through (keep plays that only open evolve lines, and follower on-attacks after the face line); bit 8 = two relevant plays before the face line (each play must raise face potential or lower the defender's leader defence; `OPP_LETHAL_TWO_APPLY_CAP` applies on top of the existing sweep cap). Default off — play is byte-identical to today |
@@ -749,7 +750,15 @@ more" is a considered line rather than a hard 3-step cutoff. With
 the greedy line, then explores alternative opening actions (up to `oopen`
 steps, bounded by `osteps`) by finishing each with the same greedy
 completion and taking the minimum; `obeam` limits branching. Applies are
-charged to the pair cap like the greedy line. `odepth≥1` ignores `oopen`. If any
+charged to the pair cap like the greedy line. `odepth≥1` ignores `oopen`. With
+`onext>0` and `odepth=0`, at the end of every leaf-scored reply line (the
+greedy line and each `oopen` completion, but not lines already scored as
+`-wv` by the lethal sweep or `olsolve`), the model finishes the bot's next
+turn greedily (same `pick_value` / `osteps` / `EndTurn` rule as the bot's
+own horizon finish), then runs the opponent-lethal sweep on the following
+opponent turn; if that sweep finds a kill, the line's value is capped at
+`−onext` (applies are charged to the pair cap; the sweep's own
+`opp_lethal_*` counters are not incremented). `odepth≥1` ignores `onext`. If any
 explored opponent line reaches `winner == opponent`, the model returns
 `-wv` immediately (the opponent is assumed to find its lethal).
 A mid-turn choice handed to me is resolved with a 1-ply greedy pick from
@@ -1341,7 +1350,7 @@ Each world entry:
 | `skipped` | bool | Pair never searched (global cap already spent, or `try_apply` failed at the root). |
 | `pv` | list[NeutralAction] | Principal variation (first 12 actions of the line that produced the value). |
 | `pv_len` | int | Full PV length in actions (may exceed `len(pv)`). |
-| `end` | str \| null | `depth`, `cap`, `depth_reply`, `cap_reply`, `terminal`, `opp_reply`, `opp_open` (opening-search opponent reply on the greedy path), `opp_lethal`, `opp_solver` (bounded [`forced_lethal`] kill on the greedy opponent path), `opp_search` (opponent beam search leaf), or `tt` (transposition-table hit — no line behind it). |
+| `end` | str \| null | `depth`, `cap`, `depth_reply`, `cap_reply`, `terminal`, `opp_reply`, `opp_open` (opening-search opponent reply on the greedy path), `opp_next` (reply leaf capped after bot turn + opponent next-turn lethal glance, `onext>0`), `opp_lethal`, `opp_solver` (bounded [`forced_lethal`] kill on the greedy opponent path), `opp_search` (opponent beam search leaf), or `tt` (transposition-table hit — no line behind it). |
 | `horizon_nodes` | int | Reserve applies on this pair (see decision `horizon_nodes`). |
 | `leaf` | object \| null | `{value, phase, turn, active}` at the line end. **Invariant:** for scored worlds, `leaf.value == raw` (within float tolerance); it is the value the search returned, not a replay of `pv`. |
 
