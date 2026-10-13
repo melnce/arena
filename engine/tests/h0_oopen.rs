@@ -105,7 +105,10 @@ fn action_fingerprint(db: &CardDb, spec: &str, seed: u64, deck_a: &[arena_engine
     fnv1a64(&bytes)
 }
 
-fn collect_opp_reply_states(db: &CardDb, game_seeds: &[u64]) -> Vec<(arena_engine::State, PlayerId)> {
+fn collect_opp_reply_states(
+    db: &CardDb,
+    game_seeds: &[u64],
+) -> Vec<(arena_engine::State, PlayerId)> {
     let stems = meta_deck_stems();
     let deck_b = load_meta_deck("meta-sword-rally");
     let mut out = Vec::new();
@@ -125,10 +128,7 @@ fn collect_opp_reply_states(db: &CardDb, game_seeds: &[u64]) -> Vec<(arena_engin
         let mut a = parse_h0_v1("h0:nodes=200");
         let mut b = parse_h0_v1("h0:nodes=200");
         let mut rng = policy_rng(*seed);
-        while state.winner.is_none()
-            && !matches!(state.phase, Phase::Terminal)
-            && out.len() < 300
-        {
+        while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) && out.len() < 300 {
             let legal = legal_actions(db, &state);
             if legal.is_empty() {
                 break;
@@ -236,8 +236,14 @@ fn oopen_never_above_greedy_line() {
         lower_1 as f64 / 250.0,
         lower_2 as f64 / 250.0
     );
-    assert!(strict_1, "oopen=1 must be >0.01 lower in at least one state");
-    assert!(strict_2, "oopen=2 must be >0.01 lower in at least one state");
+    assert!(
+        strict_1,
+        "oopen=1 must be >0.01 lower in at least one state"
+    );
+    assert!(
+        strict_2,
+        "oopen=2 must be >0.01 lower in at least one state"
+    );
 }
 
 #[test]

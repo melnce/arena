@@ -2942,8 +2942,7 @@ fn opponent_open_search(
         }
     }
     scored.sort_by(|a, b| {
-        b.0
-            .partial_cmp(&a.0)
+        b.0.partial_cmp(&a.0)
             .unwrap_or(std::cmp::Ordering::Equal)
             .then_with(|| a.4.cmp(&b.4))
     });
@@ -2956,9 +2955,7 @@ fn opponent_open_search(
         if *nodes >= cap {
             break;
         }
-        let skip_complete = i == 0
-            && end_turn_score.is_some()
-            && score > end_turn_score.unwrap();
+        let skip_complete = i == 0 && end_turn_score.is_some() && score > end_turn_score.unwrap();
 
         if !skip_complete {
             let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
@@ -3165,10 +3162,7 @@ fn opponent_reply(
             best_pv = t.take_last();
         }
         let mut best = g;
-        if eval.oopen > 0
-            && acting_player(state) == me.opponent()
-            && *nodes < cap
-        {
+        if eval.oopen > 0 && acting_player(state) == me.opponent() && *nodes < cap {
             stats.opp_open_replies += 1;
             if let Some((ov, oline)) = opponent_open_search(
                 db,
