@@ -174,6 +174,7 @@ struct Evaluator<'a> {
     fuseguard: bool,
     order_net: Option<&'a ValueNet>,
     oorder: bool,
+    oopen: u32,
 }
 
 impl Evaluator<'_> {
@@ -396,6 +397,14 @@ pub struct SearchStats {
     pub hbk_flips: u64,
     /// `apply`s spent inside holdback resample searches (outside `node_cap`).
     pub hbk_nodes: u64,
+    /// Opponent replies where opening search ran (`oopen>0`, `odepth=0`).
+    pub opp_open_replies: u64,
+    /// Opening lines completed and scored.
+    pub opp_open_lines: u64,
+    /// Replies whose value came from an opening line (strictly below greedy).
+    pub opp_open_lower: u64,
+    /// `apply`s spent in opening search (actions and greedy completions).
+    pub opp_open_nodes: u64,
 }
 
 impl SearchStats {
@@ -466,6 +475,10 @@ impl SearchStats {
         self.hbk_checks += other.hbk_checks;
         self.hbk_flips += other.hbk_flips;
         self.hbk_nodes += other.hbk_nodes;
+        self.opp_open_replies += other.opp_open_replies;
+        self.opp_open_lines += other.opp_open_lines;
+        self.opp_open_lower += other.opp_open_lower;
+        self.opp_open_nodes += other.opp_open_nodes;
     }
 }
 
@@ -536,6 +549,8 @@ pub struct H0 {
     pub weights: Weights,
     pub odepth: u32,
     pub obeam: usize,
+    /// Opening actions explored on the greedy opponent reply (`odepth=0` only).
+    pub oopen: u32,
     /// Saturation bound on every accumulated value (`wv`). Default `80`
     /// is today's clamp — the same floor a detected opponent lethal
     /// returns (`-wv`).
@@ -667,6 +682,7 @@ impl Default for H0 {
             weights: Weights::default(),
             odepth: 0,
             obeam: 3,
+            oopen: 0,
             wv: DEFAULT_WV,
             pess: 0.0,
             tt: true,
@@ -782,6 +798,7 @@ impl H0 {
                 _ => None,
             },
             oorder: self.oorder,
+            oopen: self.oopen,
         }
     }
 
@@ -2215,7 +2232,10 @@ fn horizon_reply_end(cutoff: HorizonCutoff) -> PvEnd {
 fn fix_horizon_pv_end(track: Option<&mut PvTracker>, cutoff: HorizonCutoff) {
     if let Some(t) = track {
         if let Some(mut line) = t.take_last() {
-            if line.end != PvEnd::OppLethal && line.end != PvEnd::OppSolver {
+            if line.end != PvEnd::OppLethal
+                && line.end != PvEnd::OppSolver
+                && line.end != PvEnd::OppOpen
+            {
                 line.end = horizon_reply_end(cutoff);
             }
             t.restore_last(Some(line));
@@ -2324,6 +2344,7 @@ fn finish_bot_turn_horizon(
             eval,
             track.as_deref_mut(),
             eval.fuseguard,
+            0,
         );
     } else if !resolve_bot_choices(
         db,
@@ -2846,6 +2867,205 @@ fn search_own(
     best
 }
 
+fn opening_node(
+    state: &State,
+    me: PlayerId,
+    d: u32,
+    oopen: u32,
+    eval: Evaluator<'_>,
+    nodes: u32,
+    cap: u32,
+) -> bool {
+    d < oopen
+        && d < eval.osteps
+        && state.winner.is_none()
+        && !matches!(state.phase, Phase::Terminal)
+        && state.turn <= MAX_TURNS
+        && acting_player(state) == me.opponent()
+        && nodes < cap
+}
+
+#[allow(clippy::too_many_arguments, clippy::needless_option_as_deref)]
+fn opponent_open_search(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    obeam: usize,
+    oopen: u32,
+    d: u32,
+    stats: &mut SearchStats,
+    mut track: Option<&mut PvTracker>,
+) -> Option<(f32, Option<Line>)> {
+    if !opening_node(state, me, d, oopen, eval, *nodes, cap) {
+        return None;
+    }
+    let opp = me.opponent();
+    let nodes_start = *nodes;
+    let legal = legal_actions(db, state);
+    if legal.is_empty() {
+        return None;
+    }
+
+    let mut scored: Vec<(f32, State, u64, Action, usize)> = Vec::new();
+    let mut end_turn_score: Option<f32> = None;
+    let mut legal_idx = 0usize;
+    for a in &legal {
+        if *nodes >= cap {
+            break;
+        }
+        if !useful_action(state, opp, a, eval.bpp1, eval.bpp2) {
+            continue;
+        }
+        let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+            continue;
+        };
+        if s.winner == Some(opp) {
+            let win_line = if let Some(t) = track.as_deref_mut() {
+                let plen = t.path_len();
+                t.push(a.clone());
+                t.set_leaf(-eval.wv, PvEnd::Terminal, &s);
+                t.pop_to(plen);
+                t.take_last()
+            } else {
+                None
+            };
+            stats.opp_open_nodes += u64::from(*nodes - nodes_start);
+            return Some((-eval.wv, win_line));
+        }
+        let k = search_key(&s);
+        if matches!(a, Action::EndTurn) {
+            end_turn_score = Some(eval.pick_value(&s, opp, me));
+        } else {
+            scored.push((eval.pick_value(&s, opp, me), s, k, a.clone(), legal_idx));
+            legal_idx += 1;
+        }
+    }
+    scored.sort_by(|a, b| {
+        b.0.partial_cmp(&a.0)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| a.4.cmp(&b.4))
+    });
+    scored.truncate(obeam.max(1));
+
+    let mut best = f32::INFINITY;
+    let mut best_line: Option<Line> = None;
+
+    for (i, (score, s, k, a, _)) in scored.into_iter().enumerate() {
+        if *nodes >= cap {
+            break;
+        }
+        let skip_complete = i == 0 && end_turn_score.is_none_or(|e| score > e);
+
+        if !skip_complete {
+            let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
+            if let Some(t) = track.as_deref_mut() {
+                t.push(a.clone());
+            }
+            let mut next_line = line.to_vec();
+            next_line.push(k);
+            let mut s_work = s.clone();
+            if eval.omacro {
+                greedy_until_end_omacro(
+                    db,
+                    &mut s_work,
+                    opp,
+                    me,
+                    nodes,
+                    cap,
+                    &next_line,
+                    eval,
+                    track.as_deref_mut(),
+                    d + 1,
+                );
+            } else {
+                greedy_until_end(
+                    db,
+                    &mut s_work,
+                    opp,
+                    me,
+                    nodes,
+                    cap,
+                    &next_line,
+                    eval,
+                    track.as_deref_mut(),
+                    false,
+                    d + 1,
+                );
+            }
+            let v = if s_work.winner == Some(opp) {
+                -eval.wv
+            } else {
+                eval.value(&s_work, me)
+            };
+            stats.opp_open_lines += 1;
+            if v == -eval.wv {
+                if let Some(t) = track.as_deref_mut() {
+                    t.set_leaf(v, PvEnd::OppOpen, &s_work);
+                    best_line = t.take_last();
+                }
+                stats.opp_open_nodes += u64::from(*nodes - nodes_start);
+                return Some((v, best_line));
+            }
+            if v < best {
+                best = v;
+                if let Some(t) = track.as_deref_mut() {
+                    t.set_leaf(v, PvEnd::OppOpen, &s_work);
+                    best_line = t.take_last();
+                }
+            }
+            if let Some(t) = track.as_deref_mut() {
+                t.pop_to(plen);
+            }
+        }
+
+        if d + 1 < oopen && opening_node(&s, me, d + 1, oopen, eval, *nodes, cap) {
+            let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
+            if let Some(t) = track.as_deref_mut() {
+                t.push(a.clone());
+            }
+            let mut next_line = line.to_vec();
+            next_line.push(k);
+            if let Some((rv, rline)) = opponent_open_search(
+                db,
+                &s,
+                me,
+                nodes,
+                cap,
+                &next_line,
+                eval,
+                obeam,
+                oopen,
+                d + 1,
+                stats,
+                track.as_deref_mut(),
+            ) {
+                if rv == -eval.wv {
+                    stats.opp_open_nodes += u64::from(*nodes - nodes_start);
+                    return Some((rv, rline));
+                }
+                if rv < best {
+                    best = rv;
+                    best_line = rline;
+                }
+            }
+            if let Some(t) = track.as_deref_mut() {
+                t.pop_to(plen);
+            }
+        }
+    }
+
+    stats.opp_open_nodes += u64::from(*nodes - nodes_start);
+    if best.is_finite() {
+        Some((best, best_line))
+    } else {
+        None
+    }
+}
+
 #[allow(clippy::too_many_arguments, clippy::needless_option_as_deref)]
 fn opponent_reply(
     db: &CardDb,
@@ -2909,6 +3129,7 @@ fn opponent_reply(
                 }
             }
         }
+        let plen0 = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
         let mut s = state.clone();
         if eval.omacro {
             greedy_until_end_omacro(
@@ -2921,6 +3142,7 @@ fn opponent_reply(
                 line,
                 eval,
                 track.as_deref_mut(),
+                0,
             );
         } else {
             greedy_until_end(
@@ -2934,17 +3156,61 @@ fn opponent_reply(
                 eval,
                 track.as_deref_mut(),
                 false,
+                0,
             );
+        }
+        let g = eval.value(&s, me);
+        let mut best_pv = None;
+        if let Some(t) = track.as_deref_mut() {
+            t.set_leaf(g, PvEnd::OppReply, &s);
+            best_pv = t.take_last();
+        }
+        let mut best = g;
+        if eval.oopen > 0 && acting_player(state) == me.opponent() && *nodes < cap {
+            stats.opp_open_replies += 1;
+            if let Some(t) = track.as_deref_mut() {
+                t.pop_to(plen0);
+            }
+            if let Some((ov, oline)) = opponent_open_search(
+                db,
+                state,
+                me,
+                nodes,
+                cap,
+                line,
+                eval,
+                obeam,
+                eval.oopen,
+                0,
+                stats,
+                track.as_deref_mut(),
+            ) {
+                if ov < g - 1e-5 {
+                    stats.opp_open_lower += 1;
+                }
+                if ov < best {
+                    best = ov;
+                    if oline.is_some() {
+                        best_pv = oline;
+                    }
+                }
+            }
+        }
+        if best == -eval.wv {
+            if let Some(t) = track.as_deref_mut() {
+                t.restore_last(best_pv);
+            }
+            stats.opp_leaves += 1;
+            return -eval.wv;
         }
         if *nodes >= cap {
             stats.opp_cap_hits += 1;
         }
         stats.opp_leaves += 1;
-        let v = eval.value(&s, me);
         if let Some(t) = track.as_deref_mut() {
-            t.set_leaf(v, PvEnd::OppReply, &s);
+            t.restore_last(best_pv);
         }
-        return v;
+        return best;
     }
     let mut truncated = false;
     let v = search_opp(
@@ -3254,8 +3520,9 @@ fn greedy_until_end(
     eval: Evaluator<'_>,
     mut track: Option<&mut PvTracker>,
     skip_noop_fuse: bool,
+    start_steps: u32,
 ) {
-    let mut steps = 0u32;
+    let mut steps = start_steps;
     let mut line = line.to_vec();
     while state.winner.is_none()
         && !matches!(state.phase, Phase::Terminal)
@@ -3315,8 +3582,9 @@ fn greedy_until_end_omacro(
     line: &[u64],
     eval: Evaluator<'_>,
     mut track: Option<&mut PvTracker>,
+    start_steps: u32,
 ) {
-    let mut steps = 0u32;
+    let mut steps = start_steps;
     let mut line = line.to_vec();
     while state.winner.is_none()
         && !matches!(state.phase, Phase::Terminal)
@@ -5867,6 +6135,7 @@ mod fuse_guard_greedy_tests {
             h0_on.evaluator(&db, &[]),
             None,
             true,
+            0,
         );
         assert!(
             !greedy_took_noop_fuse(&state, &on, me),
@@ -5887,6 +6156,7 @@ mod fuse_guard_greedy_tests {
             h0_off.evaluator(&db, &[]),
             None,
             false,
+            0,
         );
         assert!(
             greedy_took_noop_fuse(&state, &off, me),

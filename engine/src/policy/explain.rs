@@ -46,6 +46,8 @@ pub enum PvEnd {
     CapReply,
     Terminal,
     OppReply,
+    /// Opponent reply scored through opening search (`oopen>0`, `odepth=0`).
+    OppOpen,
     OppLethal,
     /// Opponent reply scored through bounded [`forced_lethal`] (`olsolve>0`).
     OppSolver,
