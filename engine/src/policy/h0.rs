@@ -175,6 +175,7 @@ struct Evaluator<'a> {
     order_net: Option<&'a ValueNet>,
     oorder: bool,
     oopen: u32,
+    onext: u32,
 }
 
 impl Evaluator<'_> {
@@ -405,6 +406,12 @@ pub struct SearchStats {
     pub opp_open_lower: u64,
     /// `apply`s spent in opening search (actions and greedy completions).
     pub opp_open_nodes: u64,
+    /// Reply leaves that reached the post-bot-turn lethal glance (`onext>0`).
+    pub opp_next_checks: u64,
+    /// Leaves whose value was capped by `onext`.
+    pub opp_next_found: u64,
+    /// `apply`s spent in the bot-turn finish and next-turn lethal glance.
+    pub opp_next_nodes: u64,
 }
 
 impl SearchStats {
@@ -479,6 +486,9 @@ impl SearchStats {
         self.opp_open_lines += other.opp_open_lines;
         self.opp_open_lower += other.opp_open_lower;
         self.opp_open_nodes += other.opp_open_nodes;
+        self.opp_next_checks += other.opp_next_checks;
+        self.opp_next_found += other.opp_next_found;
+        self.opp_next_nodes += other.opp_next_nodes;
     }
 }
 
@@ -551,6 +561,9 @@ pub struct H0 {
     pub obeam: usize,
     /// Opening actions explored on the greedy opponent reply (`odepth=0` only).
     pub oopen: u32,
+    /// After a greedy-reply leaf, play the bot's turn greedily and glance for
+    /// opponent lethal on the following turn (`odepth=0` only).
+    pub onext: u32,
     /// Saturation bound on every accumulated value (`wv`). Default `80`
     /// is today's clamp — the same floor a detected opponent lethal
     /// returns (`-wv`).
@@ -683,6 +696,7 @@ impl Default for H0 {
             odepth: 0,
             obeam: 3,
             oopen: 0,
+            onext: 0,
             wv: DEFAULT_WV,
             pess: 0.0,
             tt: true,
@@ -799,6 +813,7 @@ impl H0 {
             },
             oorder: self.oorder,
             oopen: self.oopen,
+            onext: self.onext,
         }
     }
 
@@ -2235,6 +2250,7 @@ fn fix_horizon_pv_end(track: Option<&mut PvTracker>, cutoff: HorizonCutoff) {
             if line.end != PvEnd::OppLethal
                 && line.end != PvEnd::OppSolver
                 && line.end != PvEnd::OppOpen
+                && line.end != PvEnd::OppNext
             {
                 line.end = horizon_reply_end(cutoff);
             }
@@ -2867,6 +2883,65 @@ fn search_own(
     best
 }
 
+/// After a greedy-reply leaf (`odepth=0`), finish the bot's turn greedily and
+/// glance for opponent lethal on the following turn. Caps the line at
+/// `-onext` when the sweep finds a kill.
+#[allow(clippy::too_many_arguments)]
+fn opp_next_cap_value(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    v: f32,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+    eval: Evaluator<'_>,
+    onext: u32,
+    stats: &mut SearchStats,
+    default_end: PvEnd,
+) -> (f32, PvEnd) {
+    if onext == 0
+        || state.winner.is_some()
+        || matches!(state.phase, Phase::Terminal)
+        || acting_player(state) != me
+        || state.active != me
+        || *nodes >= cap
+    {
+        return (v, default_end);
+    }
+    let nodes_start = *nodes;
+    let mut p = state.clone();
+    let work_line = line.to_vec();
+    greedy_until_end(
+        db,
+        &mut p,
+        me,
+        me,
+        nodes,
+        cap,
+        &work_line,
+        eval,
+        None,
+        eval.fuseguard,
+        0,
+    );
+    if p.winner == Some(me) || acting_player(&p) != me.opponent() || *nodes >= cap {
+        stats.opp_next_nodes += u64::from(*nodes - nodes_start);
+        return (v, default_end);
+    }
+    stats.opp_next_checks += 1;
+    let mut sweep_line = work_line;
+    sweep_line.push(search_key(&p));
+    let mut scratch = SearchStats::default();
+    let found = opp_lethal_sweep(db, &p, me, nodes, cap, &sweep_line, eval, &mut scratch);
+    stats.opp_next_nodes += u64::from(*nodes - nodes_start);
+    if found {
+        stats.opp_next_found += 1;
+        return (v.min(-(onext as f32)), PvEnd::OppNext);
+    }
+    (v, default_end)
+}
+
 fn opening_node(
     state: &State,
     me: PlayerId,
@@ -2996,15 +3071,28 @@ fn opponent_open_search(
                     d + 1,
                 );
             }
-            let v = if s_work.winner == Some(opp) {
-                -eval.wv
+            let (v, leaf_end) = if s_work.winner == Some(opp) {
+                (-eval.wv, PvEnd::OppOpen)
             } else {
-                eval.value(&s_work, me)
+                let raw = eval.value(&s_work, me);
+                opp_next_cap_value(
+                    db,
+                    &s_work,
+                    me,
+                    raw,
+                    nodes,
+                    cap,
+                    &next_line,
+                    eval,
+                    eval.onext,
+                    stats,
+                    PvEnd::OppOpen,
+                )
             };
             stats.opp_open_lines += 1;
             if v == -eval.wv {
                 if let Some(t) = track.as_deref_mut() {
-                    t.set_leaf(v, PvEnd::OppOpen, &s_work);
+                    t.set_leaf(v, leaf_end, &s_work);
                     best_line = t.take_last();
                 }
                 stats.opp_open_nodes += u64::from(*nodes - nodes_start);
@@ -3013,7 +3101,7 @@ fn opponent_open_search(
             if v < best {
                 best = v;
                 if let Some(t) = track.as_deref_mut() {
-                    t.set_leaf(v, PvEnd::OppOpen, &s_work);
+                    t.set_leaf(v, leaf_end, &s_work);
                     best_line = t.take_last();
                 }
             }
@@ -3159,10 +3247,23 @@ fn opponent_reply(
                 0,
             );
         }
-        let g = eval.value(&s, me);
+        let raw_g = eval.value(&s, me);
+        let (g, g_end) = opp_next_cap_value(
+            db,
+            &s,
+            me,
+            raw_g,
+            nodes,
+            cap,
+            line,
+            eval,
+            eval.onext,
+            stats,
+            PvEnd::OppReply,
+        );
         let mut best_pv = None;
         if let Some(t) = track.as_deref_mut() {
-            t.set_leaf(g, PvEnd::OppReply, &s);
+            t.set_leaf(g, g_end, &s);
             best_pv = t.take_last();
         }
         let mut best = g;

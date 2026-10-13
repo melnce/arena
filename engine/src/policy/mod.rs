@@ -276,6 +276,9 @@ fn h0_spec(h: &H0) -> String {
     if h.oopen != def.oopen {
         parts.push(format!("oopen={}", h.oopen));
     }
+    if h.onext != def.onext {
+        parts.push(format!("onext={}", h.onext));
+    }
     if !h.olethal {
         parts.push("olethal=0".to_string());
     }
@@ -435,6 +438,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.odepth == b.odepth
         && a.obeam == b.obeam
         && a.oopen == b.oopen
+        && a.onext == b.onext
         && a.olethal == b.olethal
         && a.oevo == b.oevo
         && a.okill == b.okill
@@ -544,6 +548,7 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             "odepth" => h.odepth = parse_num(val)?,
             "obeam" => h.obeam = parse_num(val)?,
             "oopen" => h.oopen = parse_num(val)?,
+            "onext" => h.onext = parse_num(val)?,
             "osteps" => h.osteps = parse_num(val)?,
             "olethal" => {
                 h.olethal = match val {
