@@ -10,6 +10,7 @@ import {
   applyAction,
   botPolicyFor,
   botStepWithSeed,
+  isHumanActing,
   localBotRequestBody,
   nextBotSeed,
   type Session,
@@ -242,7 +243,7 @@ export function terminateBotWorker(): void {
   notifyThinkingChange();
 }
 
-function policyUsesWorker(policy: string): boolean {
+export function policyUsesWorker(policy: string): boolean {
   return policy === "h0" || policy.startsWith("h0:");
 }
 
@@ -638,11 +639,59 @@ async function paintBotBusyOverlay(): Promise<void> {
   await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
 }
 
-export async function botStepMainFallback(s: Session, seed: bigint): Promise<EngineEvent[]> {
+type MainFallbackOpts = { isCurrent?: () => boolean };
+
+type MainFallbackSnap = {
+  hash: string;
+  actions: number;
+  botSeq: number;
+};
+
+function snapshotMainFallback(s: Session): MainFallbackSnap {
+  return {
+    hash: s.game.hash(),
+    actions: s.actions.length,
+    botSeq: s.botSeq,
+  };
+}
+
+function mainFallbackStale(s: Session, snap: MainFallbackSnap, opts?: MainFallbackOpts): boolean {
+  if (opts?.isCurrent && !opts.isCurrent()) return true;
+  try {
+    if (
+      s.game.hash() !== snap.hash ||
+      s.actions.length !== snap.actions ||
+      s.botSeq !== snap.botSeq
+    ) {
+      return true;
+    }
+  } catch {
+    return true;
+  }
+  if (s.game.phase() === "terminal" || isHumanActing(s)) return true;
+  return false;
+}
+
+export async function botStepMainFallback(
+  s: Session,
+  seed: bigint,
+  opts?: MainFallbackOpts,
+): Promise<EngineEvent[]> {
+  lastMeta = {};
+  const snap = snapshotMainFallback(s);
+  if (mainFallbackStale(s, snap, opts)) {
+    lastMeta = { stale: true };
+    return [];
+  }
   showBotBusyOverlay();
   await paintBotBusyOverlay();
   const slow = botSlowMainMs();
   if (slow > 0) await new Promise<void>((r) => window.setTimeout(r, slow));
+  if (mainFallbackStale(s, snap, opts)) {
+    hideBotBusyOverlay();
+    lastMeta = { stale: true };
+    return [];
+  }
   try {
     return botStepWithSeed(s, seed);
   } finally {
@@ -837,7 +886,11 @@ export async function botStepWorker(
         }
         consecutiveWorkerDecisionFailures += 1;
         lastMeta = { error: message, backend: "main" };
-        const events = await botStepMainFallback(s, seed);
+        const events = await botStepMainFallback(s, seed, { isCurrent: opts?.isCurrent });
+        if (dropStale() || lastMeta.stale) {
+          onStale();
+          return;
+        }
         finish(events);
       }
     })();

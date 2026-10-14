@@ -206,6 +206,58 @@ test("main-thread fallback shows busy overlay and blocks end turn", async ({ pag
   await expect(page.locator("#botBusyOverlay")).toBeHidden({ timeout: 120_000 });
 });
 
+test("undo during a slow main-thread decision", async ({ page }) => {
+  test.setTimeout(120_000);
+  await boot(page, "localbot=0&botworker=0&botslowmain=1500");
+  await startVsBot(page, {
+    seed: "9060",
+    first: "a",
+    human: "a",
+    botPolicy: "h0",
+    skipBoot: true,
+  });
+  await confirmMulligans(page);
+  await expect.poll(async () => (await turnState(page)).acting).toBe("a");
+  const logBeforeEnd = await actionLog(page);
+  await page.locator("#endTurnBlue:visible").click();
+  await expect
+    .poll(
+      async () =>
+        page.locator("#botBusyOverlay").evaluate((el) => getComputedStyle(el).display !== "none"),
+      { timeout: 60_000 },
+    )
+    .toBe(true);
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press("Control+z");
+  await expect(page.locator("#turnCounter")).toHaveAttribute("data-acting", "a");
+  await expect
+    .poll(
+      async () =>
+        page.locator("#botBusyOverlay").evaluate((el) => getComputedStyle(el).display === "none"),
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+  expect(await actionLog(page)).toEqual(logBeforeEnd);
+  await expect(page.locator("#redoBtn")).toBeEnabled();
+  await page.keyboard.press("Control+y");
+  await expect
+    .poll(
+      async () =>
+        page.locator("#botBusyOverlay").evaluate((el) => getComputedStyle(el).display !== "none"),
+      { timeout: 60_000 },
+    )
+    .toBe(true);
+  await expect.poll(async () => (await turnState(page)).acting).toBe("a", { timeout: 120_000 });
+  const log = (await actionLog(page)) as Array<Record<string, unknown>>;
+  const endIdx = log.findIndex((step) => "end_turn" in step);
+  expect(endIdx).toBeGreaterThanOrEqual(0);
+  for (let i = endIdx + 1; i < log.length; i++) {
+    const step = log[i];
+    const inner = Object.values(step)[0] as { player?: string } | undefined;
+    if (inner?.player) expect(inner.player).toBe("b");
+  }
+});
+
 test("bot bonus PP is recorded in bot_meta", async ({ page }) => {
   test.setTimeout(240_000);
   await boot(page, "localbot=0&botworker=0");

@@ -32,6 +32,7 @@ import {
   botPoolState,
   botStepMainFallback,
   botStepWorker,
+  policyUsesWorker,
   botWorkerEnabled,
   botWorkerState,
   isBotWorkerThinking,
@@ -1093,6 +1094,7 @@ async function maybeBots(): Promise<void> {
       const epoch = spotlightEpoch;
       let events: EngineEvent[];
       let usedMainFallback = false;
+      let usedSlowMainFallback = false;
       if (useLocal) {
         events = await botStepRemote(s, `${LOCAL_BOT_HOST}/bot`, { isCurrent: () => session === s });
       } else if (useWorker) {
@@ -1101,22 +1103,33 @@ async function maybeBots(): Promise<void> {
         events = botStep(s);
         usedMainFallback = true;
       } else {
-        const seed = nextBotSeed(s);
-        events = await botStepMainFallback(s, seed);
-        usedMainFallback = true;
+        const acting = s.game.acting() as PlayerId;
+        const policy = botPolicyFor(s, acting);
+        if (policyUsesWorker(policy)) {
+          const seed = nextBotSeed(s);
+          events = await botStepMainFallback(s, seed, { isCurrent: () => session === s });
+          usedMainFallback = true;
+          usedSlowMainFallback = true;
+        } else {
+          events = botStep(s);
+        }
       }
       if (session !== s) break;
+      const handleStaleStep = (): boolean => {
+        staleRuns += 1;
+        localBotThinking = false;
+        clearBotDecisionPending();
+        refreshBotBackendBadge();
+        guard += 1;
+        if (staleRuns >= 3) {
+          staleRuns = 0;
+        }
+        return true;
+      };
       if (useLocal || useWorker) {
         const meta = useLocal ? lastLocalBotStepMeta() : lastBotWorkerStepMeta();
         if (meta.stale) {
-          staleRuns += 1;
-          localBotThinking = false;
-          clearBotDecisionPending();
-          refreshBotBackendBadge();
-          guard += 1;
-          if (staleRuns >= 3) {
-            staleRuns = 0;
-          }
+          handleStaleStep();
           await new Promise<void>((r) => window.setTimeout(r, 280));
           continue;
         }
@@ -1129,6 +1142,14 @@ async function maybeBots(): Promise<void> {
           if (localMeta.error) localBotGameError = localMeta.error;
         }
         refreshBotBackendBadge();
+      } else if (usedSlowMainFallback) {
+        const meta = lastBotWorkerStepMeta();
+        if (meta.stale) {
+          handleStaleStep();
+          await new Promise<void>((r) => window.setTimeout(r, 280));
+          continue;
+        }
+        staleRuns = 0;
       }
       guard += 1;
       if (s.actions.length > actionsBefore) {
