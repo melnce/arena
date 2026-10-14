@@ -4,6 +4,33 @@ export const POLICY_STRONG_H0 = "h0:nodes=6000";
 export const POLICY_CHEAT_H0 = "h0:nodes=6000,info=all";
 export const CUSTOM_SPEC_MENU_VALUE = "__custom_spec__";
 
+/** localStorage form for the served Full strength menu entry (survives spec changes). */
+export const STORED_SERVED_STRONG = "served:strong";
+/** localStorage form for the served cheater Full strength menu entry. */
+export const STORED_SERVED_CHEAT = "served:cheat";
+
+export function resolveStoredBotPolicy(
+  stored: string | null,
+  allowed: Set<string>,
+  servedStrong: string,
+  servedCheat: string,
+  fallback: string,
+): string {
+  if (stored === STORED_SERVED_STRONG) return servedStrong;
+  if (stored === STORED_SERVED_CHEAT) return servedCheat;
+  if (stored && allowed.has(stored)) return stored;
+  if (
+    stored &&
+    !allowed.has(stored) &&
+    stored.startsWith("h0:") &&
+    stored.includes("alloc=world") &&
+    stored.includes("threads=")
+  ) {
+    return stored.includes("info=all") ? servedCheat : servedStrong;
+  }
+  return fallback;
+}
+
 export function formatThousands(n: number): string {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 }
