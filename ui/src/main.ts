@@ -80,7 +80,10 @@ import {
   POLICY_CHEAT_H0,
   POLICY_STRONG_H0,
   policyOptionLabel,
+  resolveStoredBotPolicy,
   servedFullStrengthTitle,
+  STORED_SERVED_CHEAT,
+  STORED_SERVED_STRONG,
 } from "./policy-labels.ts";
 import { readShareParams, writeShareParams } from "./share.ts";
 import type {
@@ -729,8 +732,11 @@ function readStoredBotPolicy(): string | null {
 }
 
 function persistBotPolicy(value: string): void {
+  let stored = value;
+  if (value === __SERVED_STRONG__) stored = STORED_SERVED_STRONG;
+  else if (value === __SERVED_CHEAT__) stored = STORED_SERVED_CHEAT;
   try {
-    localStorage.setItem("svwb.botPolicy", value);
+    localStorage.setItem("svwb.botPolicy", stored);
   } catch {
     /* quota / private mode */
   }
@@ -1299,7 +1305,13 @@ function populatePolicies(): void {
       appendPolicyOption(sel, CUSTOM_SPEC_MENU_VALUE, "Custom spec…");
       const allowed = new Set([...sel.options].map((o) => o.value));
       const stored = readStoredBotPolicy();
-      sel.value = stored && allowed.has(stored) ? stored : defaultVsBotPolicy();
+      sel.value = resolveStoredBotPolicy(
+        stored,
+        allowed,
+        __SERVED_STRONG__,
+        __SERVED_CHEAT__,
+        defaultVsBotPolicy(),
+      );
       if (!vsBotPolicySelectWired) {
         vsBotPolicySelectWired = true;
         sel.addEventListener("change", () => {
