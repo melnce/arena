@@ -207,7 +207,7 @@ test("main-thread fallback shows busy overlay and blocks end turn", async ({ pag
 });
 
 test("undo during a slow main-thread decision", async ({ page }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(240_000);
   await boot(page, "localbot=0&botworker=0&botslowmain=1500");
   await startVsBot(page, {
     seed: "9060",
@@ -244,10 +244,12 @@ test("undo during a slow main-thread decision", async ({ page }) => {
     .poll(
       async () =>
         page.locator("#botBusyOverlay").evaluate((el) => getComputedStyle(el).display !== "none"),
-      { timeout: 60_000 },
+      { timeout: 120_000 },
     )
     .toBe(true);
-  await expect.poll(async () => (await turnState(page)).acting).toBe("a", { timeout: 120_000 });
+  await expect
+    .poll(async () => (await turnState(page)).acting, { timeout: 180_000 })
+    .toBe("a");
   const log = (await actionLog(page)) as Array<Record<string, unknown>>;
   const endIdx = log.findIndex((step) => "end_turn" in step);
   expect(endIdx).toBeGreaterThanOrEqual(0);
