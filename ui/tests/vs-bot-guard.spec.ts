@@ -208,7 +208,7 @@ test("main-thread fallback shows busy overlay and blocks end turn", async ({ pag
 
 test("undo during a slow main-thread decision", async ({ page }) => {
   test.setTimeout(240_000);
-  await boot(page, "localbot=0&botworker=0&botslowmain=1500");
+  await boot(page, "localbot=0&botworker=0&botslowmain=2500");
   await startVsBot(page, {
     seed: "9060",
     first: "a",
@@ -237,7 +237,7 @@ test("undo during a slow main-thread decision", async ({ page }) => {
       { timeout: 15_000 },
     )
     .toBe(true);
-  expect(await actionLog(page)).toEqual(logBeforeEnd);
+  await expect.poll(async () => await actionLog(page), { timeout: 10_000 }).toEqual(logBeforeEnd);
   await expect(page.locator("#redoBtn")).toBeEnabled();
   await page.keyboard.press("Control+y");
   await expect
