@@ -1,0 +1,819 @@
+{
+ "v": 1,
+ "game_id": "10948694022522588250-8795ded2",
+ "seed": "10948694022522588250",
+ "deckA": {
+  "10031210": 3,
+  "10403120": 2,
+  "10433310": 3,
+  "10733110": 3,
+  "10803310": 3,
+  "10833110": 3,
+  "10834110": 3,
+  "10931110": 3,
+  "10931310": 2,
+  "10932110": 3,
+  "10932310": 3,
+  "10933110": 3,
+  "10933310": 3,
+  "10934110": 3
+ },
+ "deckB": {
+  "10404110": 1,
+  "10473310": 2,
+  "10573310": 3,
+  "10574120": 3,
+  "10671110": 3,
+  "10672310": 3,
+  "10673110": 3,
+  "10673310": 2,
+  "10674110": 3,
+  "10674120": 3,
+  "10771310": 3,
+  "10773110": 2,
+  "10774110": 1,
+  "10874110": 3,
+  "10874120": 3,
+  "10974120": 2
+ },
+ "first": "coin",
+ "actions": [
+  {
+   "mulligan": {
+    "player": "b",
+    "swap": [
+     false,
+     true,
+     false,
+     false
+    ]
+   }
+  },
+  {
+   "mulligan": {
+    "player": "a",
+    "swap": [
+     false,
+     false,
+     true,
+     true
+    ]
+   }
+  },
+  {
+   "play": {
+    "card": "10771310",
+    "hand_pos": 1,
+    "player": "b"
+   }
+  },
+  {
+   "choose": {
+    "option": {
+     "mode": 1
+    },
+    "player": "b"
+   }
+  },
+  {
+   "end_turn": {
+    "player": "b"
+   }
+  },
+  {
+   "end_turn": {
+    "player": "a"
+   }
+  },
+  {
+   "play": {
+    "card": "10874120",
+    "hand_pos": 1,
+    "player": "b"
+   }
+  },
+  {
+   "end_turn": {
+    "player": "b"
+   }
+  },
+  {
+   "bonus_pp": {
+    "player": "a"
+   }
+  },
+  {
+   "play": {
+    "player": "a",
+    "hand_pos": 3,
+    "card": "10932310"
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 0,
+    "target": {
+     "slot": 0
+    }
+   }
+  },
+  {
+   "end_turn": {
+    "player": "a"
+   }
+  },
+  {
+   "play": {
+    "card": "10874120",
+    "hand_pos": 1,
+    "player": "b"
+   }
+  },
+  {
+   "play": {
+    "card": "90071130",
+    "hand_pos": 4,
+    "player": "b"
+   }
+  },
+  {
+   "end_turn": {
+    "player": "b"
+   }
+  },
+  {
+   "play": {
+    "player": "a",
+    "hand_pos": 0,
+    "card": "10932310"
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 0,
+    "target": {
+     "slot": 0
+    }
+   }
+  },
+  {
+   "end_turn": {
+    "player": "a"
+   }
+  },
+  {
+   "attack": {
+    "attacker_slot": 0,
+    "player": "b",
+    "target": "leader"
+   }
+  },
+  {
+   "play": {
+    "card": "10874120",
+    "hand_pos": 7,
+    "player": "b"
+   }
+  },
+  {
+   "play": {
+    "card": "90071130",
+    "hand_pos": 5,
+    "player": "b"
+   }
+  },
+  {
+   "play": {
+    "card": "90071130",
+    "hand_pos": 6,
+    "player": "b"
+   }
+  },
+  {
+   "end_turn": {
+    "player": "b"
+   }
+  },
+  {
+   "play": {
+    "player": "a",
+    "hand_pos": 3,
+    "card": "10932110"
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 2,
+    "target": {
+     "slot": 1
+    }
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 1,
+    "target": {
+     "slot": 0
+    }
+   }
+  },
+  {
+   "end_turn": {
+    "player": "a"
+   }
+  },
+  {
+   "attack": {
+    "attacker_slot": 0,
+    "player": "b",
+    "target": "leader"
+   }
+  },
+  {
+   "evolve": {
+    "player": "b",
+    "slot": 1,
+    "super": false
+   }
+  },
+  {
+   "attack": {
+    "attacker_slot": 1,
+    "player": "b",
+    "target": "leader"
+   }
+  },
+  {
+   "play": {
+    "card": "10673110",
+    "hand_pos": 6,
+    "player": "b"
+   }
+  },
+  {
+   "end_turn": {
+    "player": "b"
+   }
+  },
+  {
+   "play": {
+    "player": "a",
+    "hand_pos": 7,
+    "card": "10031210"
+   }
+  },
+  {
+   "play": {
+    "player": "a",
+    "hand_pos": 5,
+    "card": "10931110"
+   }
+  },
+  {
+   "play": {
+    "player": "a",
+    "hand_pos": 5,
+    "card": "10931110"
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 1,
+    "target": {
+     "slot": 1
+    }
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 1,
+    "target": {
+     "slot": 1
+    }
+   }
+  },
+  {
+   "end_turn": {
+    "player": "a"
+   }
+  },
+  {
+   "attack": {
+    "attacker_slot": 0,
+    "player": "b",
+    "target": "leader"
+   }
+  },
+  {
+   "play": {
+    "card": "10672310",
+    "hand_pos": 7,
+    "player": "b"
+   }
+  },
+  {
+   "end_turn": {
+    "player": "b"
+   }
+  },
+  {
+   "bonus_pp": {
+    "player": "a"
+   }
+  },
+  {
+   "play": {
+    "player": "a",
+    "hand_pos": 5,
+    "card": "10934110"
+   }
+  },
+  {
+   "evolve": {
+    "player": "a",
+    "slot": 1,
+    "super": true
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 2,
+    "target": {
+     "slot": 2
+    }
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 3,
+    "target": {
+     "slot": 2
+    }
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 1,
+    "target": {
+     "slot": 1
+    }
+   }
+  },
+  {
+   "end_turn": {
+    "player": "a"
+   }
+  },
+  {
+   "attack": {
+    "attacker_slot": 0,
+    "player": "b",
+    "target": "leader"
+   }
+  },
+  {
+   "play": {
+    "card": "10974120",
+    "hand_pos": 7,
+    "player": "b"
+   }
+  },
+  {
+   "evolve": {
+    "player": "b",
+    "slot": 1,
+    "super": true
+   }
+  },
+  {
+   "attack": {
+    "attacker_slot": 1,
+    "player": "b",
+    "target": {
+     "slot": 1
+    }
+   }
+  },
+  {
+   "end_turn": {
+    "player": "b"
+   }
+  },
+  {
+   "play": {
+    "player": "a",
+    "hand_pos": 2,
+    "card": "10733110"
+   }
+  },
+  {
+   "choose": {
+    "player": "a",
+    "option": {
+     "mode": 0
+    }
+   }
+  },
+  {
+   "fuse": {
+    "player": "a",
+    "host_pos": 3,
+    "partner_pos": []
+   }
+  },
+  {
+   "choose": {
+    "player": "a",
+    "option": {
+     "card": "10733110"
+    }
+   }
+  },
+  {
+   "confirm": {
+    "player": "a"
+   }
+  },
+  {
+   "evolve": {
+    "player": "a",
+    "slot": 0,
+    "super": false
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 0,
+    "target": {
+     "slot": 0
+    }
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 0,
+    "target": "leader"
+   }
+  },
+  {
+   "end_turn": {
+    "player": "a"
+   }
+  },
+  {
+   "play": {
+    "card": "10774110",
+    "hand_pos": 4,
+    "player": "b"
+   }
+  },
+  {
+   "evolve": {
+    "player": "b",
+    "slot": 0,
+    "super": true
+   }
+  },
+  {
+   "attack": {
+    "attacker_slot": 0,
+    "player": "b",
+    "target": "leader"
+   }
+  },
+  {
+   "end_turn": {
+    "player": "b"
+   }
+  },
+  {
+   "play": {
+    "player": "a",
+    "hand_pos": 0,
+    "card": "10932110"
+   }
+  },
+  {
+   "evolve": {
+    "player": "a",
+    "slot": 1,
+    "super": false
+   }
+  },
+  {
+   "choose": {
+    "player": "a",
+    "option": {
+     "slot": 3,
+     "player": "a"
+    }
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 3,
+    "target": {
+     "slot": 0
+    }
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 2,
+    "target": "leader"
+   }
+  },
+  {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 0,
+    "target": "leader"
+   }
+  },
+  {
+   "end_turn": {
+    "player": "a"
+   }
+  },
+  {
+   "play": {
+    "player": "b",
+    "hand_pos": 2,
+    "card": "90071140"
+   }
+  },
+  {
+   "attack": {
+    "player": "b",
+    "attacker_slot": 0,
+    "target": {
+     "slot": 2
+    }
+   }
+  },
+  {
+   "play": {
+    "player": "b",
+    "hand_pos": 2,
+    "card": "10674120"
+   }
+  },
+  {
+   "attack": {
+    "player": "b",
+    "attacker_slot": 0,
+    "target": {
+     "slot": 2
+    }
+   }
+  },
+  {
+   "play": {
+    "player": "b",
+    "hand_pos": 3,
+    "card": "10473310"
+   }
+  }
+ ],
+ "policy": "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000,order=builtin,oorder=1",
+ "strong": "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000,order=builtin,oorder=1",
+ "engine": "8a72a59dd827a4bd29aa73b69cf07b6270284f91",
+ "humanSide": "a",
+ "winner": "b",
+ "final": true,
+ "created": "2026-10-14T19:13:05.170Z",
+ "updated": "2026-10-14T19:18:20.008Z",
+ "finished": "2026-10-14T19:18:20.008Z",
+ "source": "browser",
+ "session_id": "xtk2vdyyau",
+ "bot_meta": [
+  {
+   "ply": 0,
+   "backend": "main",
+   "ms": null,
+   "value": null
+  },
+  {
+   "ply": 2,
+   "backend": "worker",
+   "ms": 190,
+   "value": null
+  },
+  {
+   "ply": 4,
+   "backend": "worker",
+   "ms": 0.6000000089406967,
+   "value": null
+  },
+  {
+   "ply": 6,
+   "backend": "worker",
+   "ms": 224.5,
+   "value": null
+  },
+  {
+   "ply": 7,
+   "backend": "worker",
+   "ms": 0.5,
+   "value": null
+  },
+  {
+   "ply": 12,
+   "backend": "worker",
+   "ms": 364.59999999403954,
+   "value": null
+  },
+  {
+   "ply": 13,
+   "backend": "worker",
+   "ms": 269.09999999403954,
+   "value": null
+  },
+  {
+   "ply": 14,
+   "backend": "worker",
+   "ms": 0.5,
+   "value": null
+  },
+  {
+   "ply": 18,
+   "backend": "worker",
+   "ms": 1122.2000000029802,
+   "value": null
+  },
+  {
+   "ply": 19,
+   "backend": "worker",
+   "ms": 766,
+   "value": null
+  },
+  {
+   "ply": 20,
+   "backend": "worker",
+   "ms": 386.8999999910593,
+   "value": null
+  },
+  {
+   "ply": 21,
+   "backend": "worker",
+   "ms": 262.6000000089407,
+   "value": null
+  },
+  {
+   "ply": 22,
+   "backend": "worker",
+   "ms": 0.6000000089406967,
+   "value": null
+  },
+  {
+   "ply": 27,
+   "backend": "worker",
+   "ms": 4863.0999999940395,
+   "value": null
+  },
+  {
+   "ply": 28,
+   "backend": "worker",
+   "ms": 3919.2000000029802,
+   "value": null
+  },
+  {
+   "ply": 29,
+   "backend": "worker",
+   "ms": 2062.800000011921,
+   "value": null
+  },
+  {
+   "ply": 30,
+   "backend": "worker",
+   "ms": 1173,
+   "value": null
+  },
+  {
+   "ply": 31,
+   "backend": "worker",
+   "ms": 355.5,
+   "value": null
+  },
+  {
+   "ply": 38,
+   "backend": "worker",
+   "ms": 2605.3999999910593,
+   "value": null
+  },
+  {
+   "ply": 39,
+   "backend": "worker",
+   "ms": 2004,
+   "value": null
+  },
+  {
+   "ply": 40,
+   "backend": "worker",
+   "ms": 360.40000000596046,
+   "value": null
+  },
+  {
+   "ply": 48,
+   "backend": "worker",
+   "ms": 11990.59999999404,
+   "value": null
+  },
+  {
+   "ply": 49,
+   "backend": "worker",
+   "ms": 10185.199999988079,
+   "value": null
+  },
+  {
+   "ply": 50,
+   "backend": "worker",
+   "ms": 1260.4000000059605,
+   "value": null
+  },
+  {
+   "ply": 51,
+   "backend": "worker",
+   "ms": 346.09999999403954,
+   "value": null
+  },
+  {
+   "ply": 52,
+   "backend": "worker",
+   "ms": 0.3999999910593033,
+   "value": null
+  },
+  {
+   "ply": 62,
+   "backend": "worker",
+   "ms": 4707.5999999940395,
+   "value": null
+  },
+  {
+   "ply": 63,
+   "backend": "worker",
+   "ms": 615.5999999940395,
+   "value": null
+  },
+  {
+   "ply": 64,
+   "backend": "worker",
+   "ms": 244.40000000596046,
+   "value": null
+  },
+  {
+   "ply": 65,
+   "backend": "worker",
+   "ms": 0.5999999940395355,
+   "value": null
+  },
+  {
+   "ply": 73,
+   "backend": "worker",
+   "ms": null,
+   "value": null
+  },
+  {
+   "ply": 74,
+   "backend": "main",
+   "ms": null,
+   "value": null
+  },
+  {
+   "ply": 75,
+   "backend": "main",
+   "ms": null,
+   "value": null
+  },
+  {
+   "ply": 76,
+   "backend": "main",
+   "ms": null,
+   "value": null
+  },
+  {
+   "ply": 77,
+   "backend": "main",
+   "ms": null,
+   "value": null
+  }
+ ],
+ "device": {
+  "cores": 8,
+  "standalone": true,
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36"
+ }
+}
