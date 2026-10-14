@@ -90,6 +90,28 @@ sha256 `76685509ff4aef49e34ae37793385d40b477d0756b52141299300f4cb85d8c95`
 
 Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
 
+# `h0-order-v53`
+
+The `h0-order-v53` move-ordering model — not a value leaf; same `net.json` format as `h0-linear-v4` (linear on 961 encoding-3 features, 245-id vocab, 13 zones). Used only where search ranks one-step values (`order=`); line scores still use the built-in value leaf.
+
+## Provenance
+
+Data: teach52 (the served search's per-candidate scores). Training: listwise softmax on each decision's candidates, τ 3, λ 0.001 (results `run53`, commit `1350405`). On teach52's held-out games vs v4 as order net: top-1 0.592 (v4 0.536), recall@4 0.872 (0.804), regret 2.52 (4.18) (`run53/FIT.md`).
+
+## Yardstick
+
+`order=<this file>,oorder=1` on the sweep-53 served spec (`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1`) vs that spec alone, all 16 meta decks (engine `99e0775`, results `8954a03`):
+
+- main 831 / 1 536 = 0.541, reverse 551 / 1 024 = 0.538;
+- **pooled 1 382 / 2 560 = 0.540 [0.520, 0.559], +27.7 Elo**;
+- throughput × 0.933 (ordering costs ≈ 7 % per game).
+
+As a value leaf (`net=`) on the same yardstick it screened 0.492 at × 0.74 speed — not shipped for play strength.
+
+sha256 `4b3988c9187ae0d5782ab0600b8e2308760fb530a0fb7012a84a7a1d1ca9328c`
+
+Reach it with `order=builtin` (embedded like `h0-linear-v4`). The browser's Full-strength bot and `py/serve.py` defaults use `order=builtin,oorder=1`.
+
 # `mulligan-v1`
 
 The `mulligan-v1` opening keep table (engine format version 1). Documented in `docs/engine-api.md` "Learned mulligan".
