@@ -669,7 +669,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
 | `value` | `net` (built-in `h0-linear-v4`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
 | `net` | — | path to a `net.json` overriding the built-in model |
-| `order` | — | path to a second `net.json` used only where search compares one-step values to pick or rank moves (beam children, fuse completions, greedy turn finish, pending choices). Line scores, transposition leaves, and holdback/lethal paths still use the leaf (`net` / built-in). Native path like `net` |
+| `order` | — | `builtin` (= embedded `h0-order-v53`, sweep 53 pooled 0.540 [0.520, 0.559] / +27.7 Elo vs the same spec without ordering on 16 meta decks) or path to a second `net.json` used only where search compares one-step values to pick or rank moves (beam children, fuse completions, greedy turn finish, pending choices). Line scores, transposition leaves, and holdback/lethal paths still use the leaf (`net` / built-in). Native path like `net` |
 | `oorder` | 0 | with `order=`, `1` also orders the opponent model's greedy picks and `odepth≥1` beam children; ignored without `order` |
 | `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
 | `w_earth` | 0.35 | v1: saturated earth sigils (cap 6) |
@@ -1136,7 +1136,7 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000`) is the spec used whenever the request's `policy` is an
+`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000,order=builtin,oorder=1`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
 exact token `info=all`. The default includes `okill=8` since sweep 48 (2026-10-10).
 `hbk=16` since 2026-10-11 (sweep 49): when the bot is about to end its turn with a kill attack available, it checks End Turn and each kill again on 16 fresh worlds.
@@ -1155,7 +1155,7 @@ review10 `729410e`). The served bot drops no-op fuses (a fuse whose every
 `fused` effect needs PP it cannot pay, with no `wasFused` ability, hand below 9;
 sweep 42, results `fdd50ab`, pooled 0.567, +46.6 Elo in the Test Subject mirror).
 `--cheat` (default
-`h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000`)
+`h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000,order=builtin,oorder=1`)
 is used for h0 variants whose keys include `info=all` (full-information
 sparring); same `tkill` / `tkroll` behaviour. `random` / `first-legal` and any non-h0 spec pass through
 unchanged — the server, not the client, decides H0 strength. `--origins` is
@@ -1225,7 +1225,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000, 28 cpus)` or
+select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8,lostrank=4000,order=builtin,oorder=1, 28 cpus)` or
 `bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
 selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.

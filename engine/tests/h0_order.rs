@@ -275,6 +275,26 @@ fn order_spec_parser_round_trip_and_errors() {
         h.order.as_ref().expect("order"),
         h.net.as_ref().expect("net"),
     ));
+
+    let builtin = AnyPolicy::parse_spec("h0:order=builtin").unwrap();
+    assert_eq!(builtin.spec(), "h0:order=builtin");
+    let builtin_o = AnyPolicy::parse_spec("h0:order=builtin,oorder=1").unwrap();
+    assert_eq!(builtin_o.spec(), "h0:order=builtin,oorder=1");
+    let h_b = parse_h0("h0:order=builtin");
+    assert!(
+        std::sync::Arc::ptr_eq(
+            h_b.order.as_ref().expect("order"),
+            &arena_engine::builtin_order(),
+        ),
+        "order=builtin must load embedded h0-order-v53"
+    );
+}
+
+fn h0_order_v53_path() -> String {
+    repo_root()
+        .join("engine/models/h0-order-v53.json")
+        .display()
+        .to_string()
 }
 
 #[cfg_attr(
@@ -337,6 +357,70 @@ fn same_order_net_as_leaf_is_identity_on_review_and_self_play() {
             assert_eq!(
                 b.last_value().map(f32::to_bits),
                 o.last_value().map(f32::to_bits)
+            );
+            decisions += 1;
+        }
+    }
+    assert!(decisions >= 200, "self-play decisions={decisions}");
+}
+
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
+#[test]
+fn builtin_order_matches_file_on_review_and_self_play() {
+    let db = load_recorded_db();
+    let file_path = h0_order_v53_path();
+    let file_spec = with_order(SERVED_RELEASE, &file_path, true);
+    let builtin_spec = format!("{SERVED_RELEASE},order=builtin,oorder=1");
+
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let from_file = decide(&file_spec, 1, &db, &cap, m.ply, seed);
+        let from_builtin = decide(&builtin_spec, 1, &db, &cap, m.ply, seed);
+        assert_eq!(
+            from_builtin.idx, from_file.idx,
+            "{}/{}@{}",
+            m.review, m.game, m.ply
+        );
+        assert_eq!(from_builtin.value_bits, from_file.value_bits, "value");
+        assert_eq!(from_builtin.explain, from_file.explain, "explain");
+    }
+
+    let decks = ["basic-forest", "royal-nattui"];
+    let mut decisions = 0usize;
+    for deck in decks {
+        let path = repo_root().join(format!("oracle/decks/{deck}.json"));
+        let deck_v: Value = serde_json::from_str(&fs::read_to_string(path).expect("deck")).unwrap();
+        let deck_a = deck_from_json(&deck_v);
+        for seed in 0u64..100 {
+            let st = new_game(
+                &db,
+                GameConfig {
+                    seed: 10_000 + seed,
+                    deck_a: deck_a.clone(),
+                    deck_b: deck_a.clone(),
+                    first: First::A,
+                    opening_hands: None,
+                },
+            )
+            .expect("game");
+            let legal = legal_actions(&db, &st);
+            if legal.len() <= 1 {
+                continue;
+            }
+            let mut rng = policy_rng(20_000 + seed);
+            let mut b = parse_h0(&builtin_spec);
+            let mut f = parse_h0(&file_spec);
+            let ib = b.choose(&db, &st, &legal, &mut rng);
+            let ifile = f.choose(&db, &st, &legal, &mut rng);
+            assert_eq!(ib, ifile);
+            assert_eq!(
+                b.last_value().map(f32::to_bits),
+                f.last_value().map(f32::to_bits)
             );
             decisions += 1;
         }
