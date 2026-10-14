@@ -4,6 +4,14 @@ export function keyOf(a: NeutralAction): string {
   return JSON.stringify(a);
 }
 
+export function actionPlayer(act: NeutralAction): PlayerId | null {
+  const entry = Object.entries(act)[0];
+  if (!entry) return null;
+  const val = entry[1];
+  if (!val || typeof val !== "object" || !("player" in val)) return null;
+  return val.player as PlayerId;
+}
+
 export function playsFor(legal: NeutralAction[], player: PlayerId): NeutralAction[] {
   return legal.filter(
     (a) => "play" in a && a.play.player === player,

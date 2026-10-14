@@ -9,13 +9,14 @@ const DB_VERSION = 2;
 const MAX_RECORDS = 300;
 const UPLOAD_INTERVAL_MS = 5 * 60 * 1000;
 
-export type BotBackend = "worker" | "main" | "server";
+export type BotBackend = "worker" | "worker-retry" | "main" | "server";
 
 export type BotMetaEntry = {
   ply: number;
   backend: BotBackend;
   ms: number | null;
   value: number | null;
+  error?: string;
 };
 
 export type GameCapture = {
@@ -543,11 +544,14 @@ export function recordBotStep(
   backend: BotBackend,
   ms: number | null,
   value: number | null,
+  error?: string | null,
 ): void {
   if (s.cfg.mode !== "vs-bot") return;
   const ply = s.actions.length - 1;
   if (ply < 0) return;
-  botMeta.push({ ply, backend, ms, value });
+  const entry: BotMetaEntry = { ply, backend, ms, value };
+  if (error) entry.error = error;
+  botMeta.push(entry);
 }
 
 export function beginCaptureSession(_cfg: SessionConfig): void {

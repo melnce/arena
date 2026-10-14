@@ -94,9 +94,10 @@ declare global {
       storeCaptureNow(): Promise<void>;
       captureBotMeta(): Array<{
         ply: number;
-        backend: "worker" | "main" | "server";
+        backend: "worker" | "worker-retry" | "main" | "server";
         ms: number | null;
         value: number | null;
+        error?: string;
       }>;
     };
   }

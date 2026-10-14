@@ -143,8 +143,8 @@ export function render(s: Session, hooks: RenderHooks): void {
   renderEvo(s, full, legal, hooks);
   renderCrests(full);
   renderMulligan(phase, acting, hooks);
-  renderEndTurn(full, legal, phase, hooks);
-  renderBonus(full, legal);
+  renderEndTurn(s, full, legal, phase, hooks);
+  renderBonus(s, full, legal);
   renderHistory(s, full);
   renderChoice(s, full, legal, hooks);
   renderTerminal(full, hooks);
@@ -576,6 +576,7 @@ function renderEvo(
     const btn = byId<HTMLButtonElement>(row.id);
     if (!btn) continue;
     const acts = L.evolveFor(legal, row.player, row.superEvo);
+    const botLocked = s.cfg.mode === "vs-bot" && row.player !== s.cfg.humanSide;
     const p = full.players[row.player];
     const info = infoByPlayer[row.player];
     const unlocked = row.superEvo ? info.super_evolve_unlocked : info.evolve_unlocked;
@@ -585,8 +586,8 @@ function renderEvo(
     label.className = "evo-btn-label";
     label.textContent = !unlocked && remain > 0 ? `${base} · ${remain}` : base;
     btn.replaceChildren(label);
-    btn.disabled = !unlocked;
-    btn.classList.toggle("evo-locked", !unlocked);
+    btn.disabled = !unlocked || botLocked;
+    btn.classList.toggle("evo-locked", !unlocked || botLocked);
     if (!unlocked && remain > 0) {
       btn.title = remain === 1 ? "unlocks in 1 turn" : `unlocks in ${remain} turns`;
     } else {
@@ -608,7 +609,7 @@ function renderEvo(
         }),
         kind: "evo",
       },
-      acts.length > 0,
+      acts.length > 0 && !botLocked,
     );
   }
 }
@@ -690,26 +691,38 @@ function renderMulligan(phase: string, acting: PlayerId, hooks: RenderHooks): vo
 }
 
 function renderEndTurn(
+  s: Session,
   full: FullState,
   legal: NeutralAction[],
   phase: string,
   hooks: RenderHooks,
 ): void {
+  const vsBot = s.cfg.mode === "vs-bot";
+  const human = s.cfg.humanSide;
   for (const p of ["a", "b"] as PlayerId[]) {
     const btn = byId<HTMLButtonElement>(`endTurn${p === "a" ? "Blue" : "Red"}`);
     if (!btn) continue;
     const act = L.endTurn(legal, p);
-    const show = phase !== "mulligan" && phase !== "terminal" && full.active === p;
+    let show = phase !== "mulligan" && phase !== "terminal" && full.active === p;
+    let disabled = !act;
+    if (vsBot) {
+      if (p !== human) {
+        show = false;
+      } else if (full.active !== human) {
+        show = true;
+        disabled = true;
+      }
+    }
     btn.style.display = show ? "inline-block" : "none";
-    btn.disabled = !act;
-    btn.classList.toggle("disabled", !act);
+    btn.disabled = disabled;
+    btn.classList.toggle("disabled", disabled);
     btn.onclick = () => {
-      if (act) hooks.onEndTurn(p);
+      if (act && !disabled) hooks.onEndTurn(p);
     };
   }
 }
 
-function renderBonus(full: FullState, legal: NeutralAction[]): void {
+function renderBonus(s: Session, full: FullState, legal: NeutralAction[]): void {
   const controls = byId("boostControls");
   const early = byId("boostPipEarly");
   const late = byId("boostPipLate");
@@ -729,9 +742,13 @@ function renderBonus(full: FullState, legal: NeutralAction[]): void {
   late?.classList.toggle("active-tier", !earlyTier && bp.late_charge);
   if (!btn) return;
   const act = L.bonusPp(legal, second);
-  btn.disabled = !act;
+  let disabled = !act;
+  if (s.cfg.mode === "vs-bot" && second !== s.cfg.humanSide) {
+    disabled = true;
+  }
+  btn.disabled = disabled;
   btn.classList.toggle("used", bp.active);
-  btn.classList.toggle("disabled", !act);
+  btn.classList.toggle("disabled", disabled);
   btn.dataset.player = second;
 }
 
@@ -848,13 +865,14 @@ function renderChoice(s: Session, full: FullState, legal: NeutralAction[], hooks
   const acting = phase.choice.player;
   currentChoiceNode = node;
   currentChoicePlayer = acting;
+  const humanChoice = s.cfg.mode !== "vs-bot" || acting === s.cfg.humanSide;
   const confirmAct = L.confirm(legal);
   const chooses = legal.filter((a) => "choose" in a);
   const inPlace = isInPlaceChoice(node);
   paintChoicePrompt(choicePrompt(node), hooks, confirmAct ? () => hooks.onConfirm() : null, node);
 
   if (inPlace) {
-    highlightChoiceTargets(legal, acting, node);
+    if (humanChoice) highlightChoiceTargets(legal, acting, node);
     return;
   }
 
@@ -880,6 +898,11 @@ function renderChoice(s: Session, full: FullState, legal: NeutralAction[], hooks
     actions.appendChild(btn);
   }
   modal.querySelectorAll<HTMLButtonElement>(".choice-option").forEach((btn) => {
+    if (!humanChoice) {
+      btn.disabled = true;
+      btn.classList.add("disabled");
+      return;
+    }
     btn.addEventListener("click", () => {
       btn.classList.add("processing");
       modal.remove();
