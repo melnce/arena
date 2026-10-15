@@ -260,6 +260,47 @@ test("undo during a slow main-thread decision", async ({ page }) => {
   }
 });
 
+function botActionPlies(log: Array<Record<string, unknown>>, bot: "a" | "b"): number[] {
+  const plies: number[] = [];
+  for (let ply = 0; ply < log.length; ply++) {
+    const step = log[ply];
+    const inner = Object.values(step)[0] as { player?: string } | undefined;
+    if (inner?.player === bot) plies.push(ply);
+  }
+  return plies;
+}
+
+test("a worker error decided on the main thread is recorded", async ({ page }) => {
+  test.setTimeout(240_000);
+  await boot(page, "localbot=0&botworker=fail");
+  await startVsBot(page, {
+    seed: "9070",
+    first: "a",
+    human: "a",
+    botPolicy: "h0",
+    skipBoot: true,
+  });
+  await confirmMulligans(page);
+  await expect.poll(async () => (await turnState(page)).acting).toBe("a");
+  for (let turn = 0; turn < 2; turn++) {
+    await page.locator("#endTurnBlue:visible").click();
+    await expect.poll(async () => (await turnState(page)).acting, { timeout: 180_000 }).toBe("a");
+  }
+  const log = (await actionLog(page)) as Array<Record<string, unknown>>;
+  const botPlies = botActionPlies(log, "b");
+  expect(botPlies.length).toBeGreaterThan(3);
+  const meta = await page.evaluate(() => window.__arena!.captureBotMeta());
+  const forced = /forced worker failure/;
+  for (const ply of botPlies) {
+    const entry = meta.find((m) => m.ply === ply);
+    expect(entry, `bot_meta missing for bot ply ${ply}`).toBeTruthy();
+    expect(entry!.backend).toBe("main");
+  }
+  const withError = meta.filter((m) => m.error && forced.test(m.error));
+  expect(withError).toHaveLength(3);
+  expect(meta.some((m) => m.backend === "main" && !m.error && botPlies.includes(m.ply))).toBe(true);
+});
+
 test("bot bonus PP is recorded in bot_meta", async ({ page }) => {
   test.setTimeout(240_000);
   await boot(page, "localbot=0&botworker=0");

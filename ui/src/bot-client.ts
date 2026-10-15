@@ -639,7 +639,11 @@ async function paintBotBusyOverlay(): Promise<void> {
   await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
 }
 
-type MainFallbackOpts = { isCurrent?: () => boolean };
+type MainFallbackOpts = {
+  isCurrent?: () => boolean;
+  /** Applied to `lastMeta` when a main-thread decision succeeds (clears prior decision meta). */
+  metaOnSuccess?: BotWorkerStepMeta;
+};
 
 type MainFallbackSnap = {
   hash: string;
@@ -677,7 +681,6 @@ export async function botStepMainFallback(
   seed: bigint,
   opts?: MainFallbackOpts,
 ): Promise<EngineEvent[]> {
-  lastMeta = {};
   const snap = snapshotMainFallback(s);
   if (mainFallbackStale(s, snap, opts)) {
     lastMeta = { stale: true };
@@ -693,7 +696,9 @@ export async function botStepMainFallback(
     return [];
   }
   try {
-    return botStepWithSeed(s, seed);
+    const events = botStepWithSeed(s, seed);
+    lastMeta = opts?.metaOnSuccess ?? { backend: "main" };
+    return events;
   } finally {
     hideBotBusyOverlay();
   }
@@ -885,9 +890,15 @@ export async function botStepWorker(
           return;
         }
         consecutiveWorkerDecisionFailures += 1;
-        lastMeta = { error: message, backend: "main" };
-        const events = await botStepMainFallback(s, seed, { isCurrent: opts?.isCurrent });
-        if (dropStale() || lastMeta.stale) {
+        if (pollTimer != null) {
+          window.clearInterval(pollTimer);
+          pollTimer = null;
+        }
+        const events = await botStepMainFallback(s, seed, {
+          isCurrent: opts?.isCurrent,
+          metaOnSuccess: { backend: "main", error: message },
+        });
+        if (lastMeta.stale) {
           onStale();
           return;
         }
