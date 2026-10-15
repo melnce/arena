@@ -42,36 +42,35 @@ def residual_value(
     *,
     clip: float,
 ) -> float:
-    mean = np.asarray(model["feat_mean"], dtype=np.float32)
-    std = np.asarray(model["feat_std"], dtype=np.float32)
-    f = np.asarray(features, dtype=np.float32)
+    """Dense float64 reference: standardize → linear + zone → MLP on [x‖e] → scale·tanh."""
+    mean = np.asarray(model["feat_mean"], dtype=np.float64)
+    std = np.asarray(model["feat_std"], dtype=np.float64)
+    f = np.asarray(features, dtype=np.float64)
     x = (f - mean) / std
     if clip > 0:
         x = np.clip(x, -clip, clip)
-    x = x.astype(np.float32)
 
     vocab = model["vocab"]
     zones = model["zones"]
     lin = model["linear"]
-    pre = np.float32(lin["b"])
-    w = np.asarray(lin["w"], dtype=np.float32)
-    for i in range(len(x)):
-        pre = np.float32(pre + np.float32(w[i] * x[i]))
+    pre = float(lin["b"])
+    w = np.asarray(lin["w"], dtype=np.float64)
+    pre += float(np.dot(w, x))
     for z, zone in enumerate(zones):
-        table = np.asarray(lin["zone_w"][z], dtype=np.float32)
+        table = np.asarray(lin["zone_w"][z], dtype=np.float64)
         off = zone["id_offset"]
         for slot in range(zone["count"]):
             count = _slot_count(f, zone, slot)
             if zone.get("hist_offset") is not None and count == 0.0:
                 continue
             idx = _id_index(vocab, int(ids[off + slot]))
-            pre = np.float32(pre + np.float32(count * table[idx]))
+            pre += count * table[idx]
 
     mlp = model["mlp"]
     emb_dim = len(mlp["emb"][0][0])
     emb_parts: list[np.ndarray] = []
     for z, zone in enumerate(zones):
-        ez = np.zeros(emb_dim, dtype=np.float32)
+        ez = np.zeros(emb_dim, dtype=np.float64)
         table = mlp["emb"][z]
         off = zone["id_offset"]
         for slot in range(zone["count"]):
@@ -79,44 +78,19 @@ def residual_value(
             if zone.get("hist_offset") is not None and count == 0.0:
                 continue
             idx = _id_index(vocab, int(ids[off + slot]))
-            ez += count * np.asarray(table[idx], dtype=np.float32)
+            ez += count * np.asarray(table[idx], dtype=np.float64)
         emb_parts.append(ez)
     e = np.concatenate(emb_parts)
-    w1 = np.asarray(mlp["w1"], dtype=np.float32)
-    b1 = np.asarray(mlp["b1"], dtype=np.float32)
-    w2 = np.asarray(mlp["w2"], dtype=np.float32)
-    hidden = w1.shape[0]
-    feat_len = len(x)
-    if clip in (0.0, 5.0):
-        x0 = (-mean / std).astype(np.float32)
-        if clip > 0:
-            x0 = np.clip(x0, -clip, clip).astype(np.float32)
-        # Match engine `residual_pre_sparse` (`a0` in f32, column deltas in f64).
-        w1f = w1.astype(np.float64)
-        h = np.empty(hidden, dtype=np.float64)
-        for k in range(hidden):
-            acc = float(b1[k])
-            for i in range(feat_len):
-                acc += float(w1[k, i]) * float(x0[i])
-            h[k] = np.float32(acc)
-        for i in range(feat_len):
-            if f[i] != 0:
-                d = float(x[i] - x0[i])
-                if d != 0.0:
-                    h += w1f[:, i] * d
-        for j in range(len(e)):
-            ej = float(e[j])
-            if ej != 0.0:
-                h += w1f[:, feat_len + j] * ej
-        h = np.maximum(0.0, h).astype(np.float32)
-    else:
-        inp = np.concatenate([x, e])
-        h = np.maximum(np.float32(0), w1 @ inp + b1)
-    mlp_out = np.float32(mlp["b2"])
-    for k in range(len(w2)):
-        mlp_out = np.float32(mlp_out + np.float32(w2[k] * h[k]))
-    pre = np.float32(pre + mlp_out)
-    return float(np.float32(model["scale"]) * np.tanh(pre))
+    w1 = np.asarray(mlp["w1"], dtype=np.float64)
+    b1 = np.asarray(mlp["b1"], dtype=np.float64)
+    w2 = np.asarray(mlp["w2"], dtype=np.float64)
+    inp = np.concatenate([x, e])
+    h = np.maximum(0.0, w1 @ inp + b1)
+    pre += float(mlp["b2"]) + float(np.dot(w2, h))
+    return float(model["scale"]) * float(np.tanh(pre))
+
+
+PARITY_TOL = 5e-4
 
 
 def _replay(db, cap: dict, n: int):
@@ -169,6 +143,7 @@ def test_residual_parity_on_review_positions(db, tiny_model: dict) -> None:
         (f"h0:net={net_path}", 5.0),
         (f"h0:net={net_path},clip=0", 0.0),
     ]
+    max_diff = 0.0
     for game, player in _collect_games(db, 200):
         enc = game.encode(player, 3)
         f_arr = np.asarray(enc["features"], dtype=np.float32)
@@ -176,4 +151,7 @@ def test_residual_parity_on_review_positions(db, tiny_model: dict) -> None:
         for spec, clip in specs:
             ref = residual_value(tiny_model, f_arr, id_arr, clip=clip)
             got = float(game.evaluate(spec, player))
-            assert abs(got - ref) <= 1e-4, (got, ref, spec)
+            diff = abs(got - ref)
+            max_diff = max(max_diff, diff)
+            assert diff <= PARITY_TOL, (got, ref, diff, spec)
+    print(f"residual_parity_max_abs_diff={max_diff:.6e}")

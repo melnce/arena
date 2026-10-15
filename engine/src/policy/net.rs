@@ -425,9 +425,9 @@ impl ValueNet {
     }
 
     #[inline]
-    fn add_scaled_col_f64(h: &mut [f64], scale: f64, col: &[f32]) {
+    fn add_scaled_col(h: &mut [f32], scale: f32, col: &[f32]) {
         for k in 0..h.len() {
-            h[k] += scale * col[k] as f64;
+            h[k] += scale * col[k];
         }
     }
 
@@ -444,10 +444,6 @@ impl ValueNet {
         let feat_len = self.feature_len;
         let emb_dim = mlp.emb_dim;
         let n_zone_emb = self.zones.len() * emb_dim;
-        assert!(
-            n_zone_emb <= RESIDUAL_ZONE_EMB_STACK,
-            "zone embedding width {n_zone_emb} exceeds stack cap"
-        );
 
         let mut pre = lin.b
             + lin
@@ -457,16 +453,14 @@ impl ValueNet {
                 .map(|(wi, xi)| *wi * *xi)
                 .sum::<f32>();
 
-        let mut h_stack = [0.0f64; RESIDUAL_HIDDEN_STACK];
-        let mut h_vec: Vec<f64>;
-        let h: &mut [f64] = if hidden <= RESIDUAL_HIDDEN_STACK {
+        let mut h_stack = [0.0f32; RESIDUAL_HIDDEN_STACK];
+        let mut h_vec: Vec<f32>;
+        let h: &mut [f32] = if hidden <= RESIDUAL_HIDDEN_STACK {
             let h = &mut h_stack[..hidden];
-            for k in 0..hidden {
-                h[k] = a0[k] as f64;
-            }
+            h.copy_from_slice(a0);
             h
         } else {
-            h_vec = a0.iter().map(|v| *v as f64).collect();
+            h_vec = a0.to_vec();
             &mut h_vec
         };
 
@@ -480,7 +474,7 @@ impl ValueNet {
                 continue;
             }
             let col = &mlp.w1_feat_col[i * hidden..(i + 1) * hidden];
-            Self::add_scaled_col_f64(h, d as f64, col);
+            Self::add_scaled_col(h, d, col);
         }
 
         let mut e_stack = [0.0f32; RESIDUAL_ZONE_EMB_STACK];
@@ -510,13 +504,13 @@ impl ValueNet {
                 continue;
             }
             let col = &mlp.w1_zone_col[j * hidden..(j + 1) * hidden];
-            Self::add_scaled_col_f64(h, *ej as f64, col);
+            Self::add_scaled_col(h, *ej, col);
         }
 
         let mlp_add = mlp.b2
             + h.iter()
                 .zip(mlp.w2.iter())
-                .map(|(hk, wk)| wk * (*hk).max(0.0) as f32)
+                .map(|(hk, wk)| wk * hk.max(0.0))
                 .sum::<f32>();
         pre + mlp_add
     }
@@ -638,7 +632,13 @@ fn parse_residual_mlp(
     if emb_dim == 0 {
         return Err(format!("{src}: bad field 'emb'"));
     }
-    let in_dim = feature_len + n_zones * emb_dim;
+    let zone_inputs = n_zones * emb_dim;
+    if zone_inputs > RESIDUAL_ZONE_EMB_STACK {
+        return Err(format!(
+            "{src}: bad field 'emb' (embedding width {zone_inputs}, max {RESIDUAL_ZONE_EMB_STACK})"
+        ));
+    }
+    let in_dim = feature_len + zone_inputs;
     let w1 = req_f32_mat(src, mlp, "w1", 0, in_dim)?;
     if w1.is_empty() {
         return Err(format!("{src}: bad field 'w1'"));

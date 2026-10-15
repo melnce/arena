@@ -2,6 +2,7 @@
 //! `cargo test --release --test bench_residual_order -- --ignored --nocapture`
 
 use std::fs;
+use std::path::PathBuf;
 use std::time::Instant;
 
 use arena_engine::{encode_with_vocab, vocab, AnyPolicy, EncodingVersion, PlayerId, Policy, H0};
@@ -21,45 +22,33 @@ fn bench_residual_order_vs_builtin() {
     let builtin = format!("{s},order=builtin,oorder=1");
     let residual = format!("{s},order={},oorder=1", tiny.display());
     let db = load_recorded_db();
-    let cap: serde_json::Value = serde_json::from_str(
-        &fs::read_to_string(
-            repo_root().join("py/tests/fixtures/review13/games/4984932781931433298-b4973563.json"),
-        )
-        .expect("review"),
-    )
-    .expect("json");
-    let st = replay_capture(&db, &cap, 27);
-    let legal = arena_engine::legal_actions(&db, &st);
-    let seed = cap["seed"].as_u64().expect("seed") + 27;
+    let moments = collect_bench_moments(&db, 20);
+    assert_eq!(moments.len(), 20, "want 20 bench decisions");
 
-    let mut b_times = Vec::new();
-    let mut r_times = Vec::new();
-    for _ in 0..20 {
+    let mut b_times = Vec::with_capacity(20);
+    let mut r_times = Vec::with_capacity(20);
+    for (st, seed) in &moments {
+        let legal = arena_engine::legal_actions(&db, st);
         let t0 = Instant::now();
         let mut h = parse_h0(&builtin);
-        let mut rng = arena_engine::policy_rng(seed);
-        h.choose(&db, &st, &legal, &mut rng);
+        let mut rng = arena_engine::policy_rng(*seed);
+        h.choose(&db, st, &legal, &mut rng);
         b_times.push(t0.elapsed().as_secs_f64());
 
         let t1 = Instant::now();
         let mut h = parse_h0(&residual);
-        let mut rng = arena_engine::policy_rng(seed);
-        h.choose(&db, &st, &legal, &mut rng);
+        let mut rng = arena_engine::policy_rng(*seed);
+        h.choose(&db, st, &legal, &mut rng);
         r_times.push(t1.elapsed().as_secs_f64());
     }
     let med_b = median(&b_times);
     let med_r = median(&r_times);
     let ratio = r_times.iter().sum::<f64>() / b_times.iter().sum::<f64>();
 
+    let st = &moments[0].0;
     let net = arena_engine::ValueNet::load(&tiny).expect("net");
-    let root_vocab = vocab(&st);
-    let obs = encode_with_vocab(
-        &st,
-        PlayerId::A,
-        &root_vocab,
-        EncodingVersion::V3,
-        Some(&db),
-    );
+    let root_vocab = vocab(st);
+    let obs = encode_with_vocab(st, PlayerId::A, &root_vocab, EncodingVersion::V3, Some(&db));
     let n = 12_000u32;
     let t0 = Instant::now();
     for _ in 0..n {
@@ -74,8 +63,61 @@ fn bench_residual_order_vs_builtin() {
     let micro_b = t1.elapsed().as_secs_f64() / n as f64;
 
     println!(
-        "median_builtin_s={med_b:.4} median_residual_s={med_r:.4} total_ratio={ratio:.4} value_clipped_builtin_s={micro_b:.7} value_clipped_residual_s={micro_r:.7}"
+        "median_builtin_s={med_b:.4} median_residual_s={med_r:.4} total_ratio={ratio:.4} value_clipped_builtin_s={micro_b:.7} value_clipped_residual_s={micro_r:.7} n_decisions={}",
+        moments.len()
     );
+}
+
+fn collect_bench_moments(
+    db: &arena_engine::CardDb,
+    want: usize,
+) -> Vec<(arena_engine::State, u64)> {
+    let mut out = Vec::new();
+    for dir in review_game_dirs() {
+        if out.len() >= want {
+            break;
+        }
+        for path in fs::read_dir(dir).expect("read review dir").flatten() {
+            if out.len() >= want {
+                break;
+            }
+            let path = path.path();
+            if path.extension().and_then(|e| e.to_str()) != Some("json") {
+                continue;
+            }
+            let cap: serde_json::Value =
+                serde_json::from_str(&fs::read_to_string(&path).expect("game")).expect("json");
+            let n_act = cap["actions"].as_array().map(|a| a.len()).unwrap_or(0);
+            for ply in 4..=n_act {
+                if out.len() >= want {
+                    break;
+                }
+                let st = replay_capture(db, &cap, ply);
+                if st.turn < 4 {
+                    continue;
+                }
+                if st.winner.is_some() {
+                    continue;
+                }
+                let legal = arena_engine::legal_actions(db, &st);
+                if legal.len() < 4 {
+                    continue;
+                }
+                let seed = cap["seed"].as_u64().expect("seed") + ply as u64;
+                out.push((st, seed));
+            }
+        }
+    }
+    out
+}
+
+fn review_game_dirs() -> Vec<PathBuf> {
+    let root = repo_root();
+    ["review13", "review14"]
+        .iter()
+        .map(|r| root.join("py/tests/fixtures").join(r).join("games"))
+        .filter(|p| p.is_dir())
+        .collect()
 }
 
 fn parse_h0(spec: &str) -> H0 {
