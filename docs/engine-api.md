@@ -415,8 +415,8 @@ slots.
 
 Export: `arena.matchup(..., encoding=3)`, `py/matchup.py --encoding 3`, or
 `py/iterate.py --encoding 3` (`mlp` is dropped from the default `--models` and
-refused when given explicitly). Encoding-3 models require `arch: linear` and
-exactly thirteen zones (the five standard zones plus `own_crests`,
+refused when given explicitly). Encoding-3 models require `arch: linear` or
+`arch: residual` and exactly thirteen zones (the five standard zones plus `own_crests`,
 `opp_crests`, `own_amulet_soon`, `opp_amulet_soon`, `own_entered`,
 `opp_entered`, `own_cemetery`, `opp_cemetery`). Rows `5..12` of `zone_w` must
 have index-0 weight exactly `0`.
@@ -669,7 +669,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
 | `value` | `net` (built-in `h0-linear-v4`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
 | `net` | — | path to a `net.json` overriding the built-in model |
-| `order` | — | `builtin` (= embedded `h0-order-v53`, sweep 53 pooled 0.540 [0.520, 0.559] / +27.7 Elo vs the same spec without ordering on 16 meta decks) or path to a second `net.json` used only where search compares one-step values to pick or rank moves (beam children, fuse completions, greedy turn finish, pending choices). Line scores, transposition leaves, and holdback/lethal paths still use the leaf (`net` / built-in). Native path like `net` |
+| `order` | — | `builtin` (= embedded `h0-order-v53`, sweep 53 pooled 0.540 [0.520, 0.559] / +27.7 Elo vs the same spec without ordering on 16 meta decks) or path to a second `net.json` used only where search compares one-step values to pick or rank moves (beam children, fuse completions, greedy turn finish, pending choices). Encoding-3 `residual` order files are supported. Line scores, transposition leaves, and holdback/lethal paths still use the leaf (`net` / built-in). Native path like `net` |
 | `oorder` | 0 | with `order=`, `1` also orders the opponent model's greedy picks and `odepth≥1` beam children; ignored without `order` |
 | `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
 | `w_earth` | 0.35 | v1: saturated earth sigils (cap 6) |
@@ -1535,7 +1535,7 @@ Model file (one JSON object, f32 values as JSON numbers):
 
 ```text
 {
-  "arch": "linear" | "mlp",
+  "arch": "linear" | "mlp" | "residual",
   "encoding": 1 | 2 | 3,      // optional; default 1
   "feature_len": 545 | 567 | 961,
   "feat_mean": [feature_len], "feat_std": [feature_len],
@@ -1566,6 +1566,18 @@ Zones (220 id slots, 5 groups):
 weight table per zone. `mlp`: per-zone weighted sums of a shared `emb`
 (vocab × `emb`) concatenated with the 545 standardized features
 (`545 + 5·emb`) → `hidden` ReLU → 1 → `tanh`.
+
+`residual` (encoding 3 only; no `race` block): same top-level fields as a
+linear encoding-3 model (`linear` with `w`, `zone_w`, `b`) plus an `mlp`
+block. Per zone `z`, `e_z = Σ_slot count(slot)·emb[z][id(slot)]` (histogram
+slots with count 0 contribute nothing; absent ids use vocab index 0). With
+`x` the standardized features (optionally clamped to `[−clip, clip]` when
+`clip > 0`, as for `value_clipped`):
+
+`lin = b + Σ_i w_i x_i + zone_linear`; `h = ReLU(b1 + W1·[x ‖ e_0 ‖ … ‖ e_{Z−1}])`;
+`pre = lin + b2 + w2·h`; value `scale × tanh(pre)`. The `mlp` object has
+`emb`: `[zones][vocab][emb_dim]`, `w1`: `[hidden][feature_len + zones·emb_dim]`,
+`b1`, `w2`, `b2`. Inference uses a sparse first layer when `clip` is 0 or 5.
 
 The `Evaluator` computes `vocab(root)` **once per `choose`** from the
 root state and reuses it for every leaf `encode_with_vocab`. A token

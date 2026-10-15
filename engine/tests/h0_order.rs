@@ -529,6 +529,48 @@ fn order_threads_identity_alloc_world() {
     assert_eq!(t1.idx, t2.idx);
 }
 
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
+#[test]
+fn zero_residual_mlp_order_matches_v53_file() {
+    let db = load_recorded_db();
+    let v53 = h0_order_v53_path();
+    let mut zero_path = std::env::temp_dir();
+    zero_path.push("h0-order-zero-residual-mlp.json");
+    let tiny =
+        fs::read_to_string(repo_root().join("py/tests/fixtures/order_residual/tiny-residual.json"))
+            .expect("tiny");
+    let mut j: Value = serde_json::from_str(&tiny).expect("json");
+    let hidden = j["mlp"]["w2"].as_array().expect("w2").len();
+    j["mlp"]["w2"] = Value::Array(vec![Value::from(0.0); hidden]);
+    j["mlp"]["b2"] = Value::from(0.0);
+    fs::write(&zero_path, serde_json::to_string(&j).unwrap()).expect("write zero");
+    let zero = zero_path.display().to_string();
+    let base_spec = format!("{SERVED_RELEASE},order={v53},oorder=1");
+    let zero_spec = format!("{SERVED_RELEASE},order={zero},oorder=1");
+
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let from_v53 = decide(&base_spec, 1, &db, &cap, m.ply, seed);
+        let from_zero = decide(&zero_spec, 1, &db, &cap, m.ply, seed);
+        assert_eq!(
+            from_zero.idx, from_v53.idx,
+            "{}/{}@{}",
+            m.review, m.game, m.ply
+        );
+        assert_eq!(from_zero.value_bits, from_v53.value_bits, "value");
+        let ex_v53: Value =
+            serde_json::from_str(from_v53.explain.as_ref().expect("explain")).unwrap();
+        let ex_zero: Value =
+            serde_json::from_str(from_zero.explain.as_ref().expect("explain")).unwrap();
+        assert_eq!(ex_zero["nodes"], ex_v53["nodes"], "nodes");
+    }
+}
+
 #[test]
 #[ignore = "paired micro-benchmark; run `cargo test --release --test h0_order order_net_speed -- --ignored` locally"]
 fn order_net_speed_within_three_percent_on_review_moments() {
