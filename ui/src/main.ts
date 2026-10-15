@@ -216,6 +216,10 @@ function exposeArena(): void {
       if (!session) throw new Error("no session");
       return session.game.botAction(policy, seed);
     },
+    botActionValue: (policy, seed) => {
+      if (!session) throw new Error("no session");
+      return session.game.botActionValue(policy, seed);
+    },
     apply: (actionJson) => {
       if (!session) throw new Error("no session");
       const action = (
