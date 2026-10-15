@@ -4,7 +4,7 @@
 use std::fs;
 use std::time::Instant;
 
-use arena_engine::{encode_with_vocab, vocab, AnyPolicy, EncodingVersion, H0, PlayerId, Policy};
+use arena_engine::{encode_with_vocab, vocab, AnyPolicy, EncodingVersion, PlayerId, Policy, H0};
 
 mod common;
 use common::*;
@@ -23,9 +23,7 @@ fn bench_residual_order_vs_builtin() {
     let db = load_recorded_db();
     let cap: serde_json::Value = serde_json::from_str(
         &fs::read_to_string(
-            repo_root().join(
-                "py/tests/fixtures/review13/games/4984932781931433298-b4973563.json",
-            ),
+            repo_root().join("py/tests/fixtures/review13/games/4984932781931433298-b4973563.json"),
         )
         .expect("review"),
     )
@@ -55,7 +53,13 @@ fn bench_residual_order_vs_builtin() {
 
     let net = arena_engine::ValueNet::load(&tiny).expect("net");
     let root_vocab = vocab(&st);
-    let obs = encode_with_vocab(&st, PlayerId::A, &root_vocab, EncodingVersion::V3, Some(&db));
+    let obs = encode_with_vocab(
+        &st,
+        PlayerId::A,
+        &root_vocab,
+        EncodingVersion::V3,
+        Some(&db),
+    );
     let n = 12_000u32;
     let t0 = Instant::now();
     for _ in 0..n {
@@ -81,9 +85,12 @@ fn parse_h0(spec: &str) -> H0 {
     }
 }
 
-fn replay_capture(db: &arena_engine::CardDb, cap: &serde_json::Value, n: usize) -> arena_engine::State {
+fn replay_capture(
+    db: &arena_engine::CardDb,
+    cap: &serde_json::Value,
+    n: usize,
+) -> arena_engine::State {
     use arena_engine::{apply_neutral, new_game, First, GameConfig};
-    use std::collections::BTreeMap;
     let seed = cap["seed"].as_u64().expect("seed");
     let deck_a = deck_from_json(&cap["deckA"]);
     let deck_b = deck_from_json(&cap["deckB"]);
