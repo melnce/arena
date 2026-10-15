@@ -1,0 +1,173 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\sweep.py",
+    "--tag",
+    "sweep55",
+    "--seed",
+    "1",
+    "--pool",
+    "meta",
+    "--baseline",
+    "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,order=results/run53/leaf53.json,oorder=1",
+    "--screen-games",
+    "2",
+    "--final-games",
+    "8",
+    "--final-reverse",
+    "4",
+    "--tp-games",
+    "1",
+    "--finalists",
+    "1",
+    "--candidates",
+    "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,order=results/run53/leaf53.json,oorder=1,onext=40",
+    "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,order=results/run53/leaf53.json,oorder=1,oopen=1,onext=40",
+    "--early-stop",
+    "--stop-thresholds",
+    "0.48",
+    "0.49",
+    "--publish"
+  ],
+  "git": "8093a9e93230d851bdb3f1bf776303d0ba80d789",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "screen": {
+      "start": "2026-10-14T18:05:33.827842+00:00",
+      "end": "2026-10-15T04:02:12.622324+00:00"
+    },
+    "final": {
+      "start": "2026-10-15T04:02:12.640152+00:00",
+      "end": "2026-10-15T12:19:24.192228+00:00"
+    },
+    "summary": {
+      "start": "2026-10-15T12:19:24.211281+00:00",
+      "end": "2026-10-15T12:19:24.228898+00:00"
+    },
+    "publish": {
+      "start": "2026-10-15T12:19:24.278643+00:00"
+    }
+  },
+  "final_game_offset": 2,
+  "sizing": {
+    "pool": "meta",
+    "decks": [
+      "meta-abyss-aggro",
+      "meta-abyss-midrange",
+      "meta-dragon-aggro",
+      "meta-dragon-ramp",
+      "meta-forest-combo",
+      "meta-haven-amulet",
+      "meta-haven-evo",
+      "meta-haven-kukishiro",
+      "meta-portal-af",
+      "meta-portal-cutthroat",
+      "meta-portal-evo",
+      "meta-rune-crystal",
+      "meta-rune-spell",
+      "meta-rune-test-subject",
+      "meta-sword-loot",
+      "meta-sword-rally"
+    ],
+    "n_decks": 16,
+    "pairs": 256,
+    "games_per_pair": {
+      "screen": 2,
+      "final": 8,
+      "reverse": 4,
+      "tp": 1
+    },
+    "totals": {
+      "screen": 512,
+      "final": 2048,
+      "reverse": 1024,
+      "tp": 256
+    },
+    "target_games": null,
+    "block": "pool: meta\ndecks: 16 (meta-abyss-aggro, meta-abyss-midrange, meta-dragon-aggro, meta-dragon-ramp, meta-forest-combo, meta-haven-amulet, meta-haven-evo, meta-haven-kukishiro, meta-portal-af, meta-portal-cutthroat, meta-portal-evo, meta-rune-crystal, meta-rune-spell, meta-rune-test-subject, meta-sword-loot, meta-sword-rally)\npairs: 256 (16 x 16, mirrors included)\nscreen    2 games/pair x 256 =   512\nfinal     8 games/pair x 256 =  2048\nreverse   4 games/pair x 256 =  1024\ntp        1 games/pair x 256 =   256"
+  },
+  "finalist_decisions": [
+    {
+      "index": 1,
+      "spec": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,order=results/run53/leaf53.json,oorder=1,onext=40",
+      "decision": "not in top 1"
+    },
+    {
+      "index": 2,
+      "spec": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,order=results/run53/leaf53.json,oorder=1,oopen=1,onext=40",
+      "decision": "finalist"
+    }
+  ],
+  "early_stop": {
+    "chunk": 2,
+    "thresholds": [
+      0.48,
+      0.49
+    ],
+    "gamma": 0.02,
+    "min_games": 1024,
+    "combine": null,
+    "finalists": {
+      "c02": {
+        "looks": [
+          {
+            "main_games": 512,
+            "main_planned": 2048,
+            "reverse_games": 0,
+            "reverse_planned": 1024,
+            "main_rate": 0.48046875,
+            "reverse_rate": 0.0,
+            "class_probs": {
+              "not better, pooled < 0.48, < 0.49": 0.47891050583658484,
+              "not better, pooled \u2265 0.48": 0.030243902439025267,
+              "not better, pooled \u2265 0.49": 0.48358123010349513,
+              "better, pooled \u2265 0.49": 0.007264361620894754
+            },
+            "best_class": "not better, pooled \u2265 0.49",
+            "best_prob": 0.48358123010349513,
+            "games_this_run": 512
+          },
+          {
+            "main_games": 512,
+            "main_planned": 2048,
+            "reverse_games": 512,
+            "reverse_planned": 1024,
+            "main_rate": 0.48046875,
+            "reverse_rate": 0.58203125,
+            "class_probs": {
+              "not better, pooled < 0.48, < 0.49": 0.006035685453646562,
+              "not better, pooled \u2265 0.48": 0.032410376526923544,
+              "not better, pooled \u2265 0.49": 0.946081598696662,
+              "better, pooled \u2265 0.49": 0.015472339322768005
+            },
+            "best_class": "not better, pooled \u2265 0.49",
+            "best_prob": 0.946081598696662,
+            "games_this_run": 1024
+          },
+          {
+            "main_games": 1024,
+            "main_planned": 2048,
+            "reverse_games": 512,
+            "reverse_planned": 1024,
+            "main_rate": 0.4853515625,
+            "reverse_rate": 0.58203125,
+            "class_probs": {
+              "not better, pooled < 0.48, < 0.49": 1.3977903726083409e-05,
+              "not better, pooled \u2265 0.48": 0.0010874806529742418,
+              "not better, pooled \u2265 0.49": 0.9984102933390151,
+              "better, pooled \u2265 0.49": 0.0004882481042846702
+            },
+            "best_class": "not better, pooled \u2265 0.49",
+            "best_prob": 0.9984102933390151,
+            "games_this_run": 1536
+          }
+        ],
+        "stopped": true,
+        "stopped_at_look": 3,
+        "settled_class": "not better, pooled \u2265 0.49",
+        "settled_prob": 0.9984102933390151
+      }
+    }
+  }
+}

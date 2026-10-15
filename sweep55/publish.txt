@@ -1,0 +1,9 @@
+From https://github.com/melnce/arena
+   aa4ec20..75b1cc2  captures              -> origin/captures
+ * [new branch]      cursor/bot-choice-persist -> origin/cursor/bot-choice-persist
+ * [new branch]      cursor/order-residual -> origin/cursor/order-residual
+ * [new branch]      cursor/vs-bot-guard   -> origin/cursor/vs-bot-guard
+   e90a1c0..7151818  main                  -> origin/main
+Auto packing the repository for optimum performance.
+See "git help gc" for manual housekeeping.
+Already up to date.
