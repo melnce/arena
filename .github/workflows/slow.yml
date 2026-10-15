@@ -46,13 +46,12 @@ jobs:
   # h0_tkroll ~2m38s release tests (cloud-agent 2026-10-02); timeout 15 like h0_tkill
   # h0_hbcheck ~3m30s release tests (cloud-agent 2026-10-02); timeout 15 like h0_tkroll
   # h0_threads ~7m58s release --include-ignored (cloud-agent 2026-10-11, PR #133)
-  # h0_job release identity ~9.3m wall (556s cargo, 2026-10-11 cloud-agent); GitHub runners
-  # ~0.9–1.8× that (see h0_threads/tkroll/hbcheck notes); 556s×1.5+build ≈15m on slow runners → timeout 25m
+  # h0_job release identity ~19.4m wall (1165s, 2026-10-15 cloud-agent, with the served oopen/onext specs); ×1.7 + build ≈ 38m on a slow runner → timeout 45
   # h0_block_deal ~0.2s release tests (cloud-agent 2026-10-13); timeout 15 like h0_tkill
-  # h0_hbk ~25m26s release tests (cloud-agent 2026-10-13, local; not yet measured on GitHub); ×1.7 + build ≈ 46m on a slow runner → timeout 60
-  # h0_okill ~7m30s release tests (cloud-agent 2026-10-13); timeout 25 like h0_pess
-  # h0_onext ~16m41s release tests (cloud-agent 2026-10-13, local; not yet measured on GitHub); ×1.7 + build ≈ 31m on a slow runner → timeout 45
-  # h0_oopen ~16m40s release tests (cloud-agent 2026-10-13, local; not yet measured on GitHub); ×1.7 + build ≈ 31m on a slow runner → timeout 45
+  # h0_hbk ~29–32m release tests (GitHub slow runs 38458242737, 38520393021); ×1.7 + build ≈ 46m on a slow runner → timeout 60
+  # h0_okill ~11m release tests (GitHub slow runs 38458242737, 38520393021); timeout 25 like h0_pess
+  # h0_onext ~18–24m release tests (GitHub slow runs 38458242737, 38520393021); ×1.7 + build ≈ 31m on a slow runner → timeout 45
+  # h0_oopen ~18–24m release tests (GitHub slow runs 38458242737, 38520393021); ×1.7 + build ≈ 31m on a slow runner → timeout 45
   # h0_turn_worlds ~1s release tests (cloud-agent 2026-10-13); timeout 15 like h0_tkill
   # lethal ~3s release tests (cloud-agent 2026-10-13); timeout 15 like encode_v2
   suite:
@@ -187,7 +186,7 @@ jobs:
             test: h0_job
             filter: ""
             ignored: true
-            timeout: 25
+            timeout: 45
           - suite: h0_block_deal
             test: h0_block_deal
             filter: ""
@@ -304,7 +303,7 @@ jobs:
             "h0_tkroll": 15,
             "h0_hbcheck": 15,
             "h0_threads": 15,
-            "h0_job": 25,
+            "h0_job": 45,
             "h0_block_deal": 15,
             "h0_hbk": 60,
             "h0_okill": 25,
@@ -415,7 +414,7 @@ jobs:
             "h0_tkroll": 15,
             "h0_hbcheck": 15,
             "h0_threads": 15,
-            "h0_job": 25,
+            "h0_job": 45,
             "h0_block_deal": 15,
             "h0_hbk": 60,
             "h0_okill": 25,

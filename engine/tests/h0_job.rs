@@ -51,6 +51,12 @@ const STRONG_K16: &str =
 /// `k=16` served shape at `nodes=8000` for release identity wall time (slow.yml).
 const STRONG_K16_RELEASE: &str =
     "h0:nodes=8000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1";
+/// `py/serve.py` `DEFAULT_STRONG` (`oopen`/`onext`) at `nodes=8000`, `threads=1` (slow.yml subset).
+const SERVED_STRONG_OOPEN_ONEXT_RELEASE: &str =
+    "h0:nodes=8000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40";
+/// `py/serve.py` `DEFAULT_CHEAT` (`oopen`/`onext`) at `nodes=8000`, `threads=1` (slow.yml subset).
+const SERVED_CHEAT_OOPEN_ONEXT_RELEASE: &str =
+    "h0:nodes=8000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40";
 #[allow(dead_code)]
 const STRONG_THREADS4: &str =
     "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=4";
@@ -654,7 +660,12 @@ fn check_job_identity_release(cases_all: &[Case], cases_subset: &[Case]) {
         WORLD_4000,
         FAIR_6000,
     ];
-    const SUBSET: &[&str] = &[STRONG_K16_RELEASE, "h0"];
+    const SUBSET: &[&str] = &[
+        STRONG_K16_RELEASE,
+        SERVED_STRONG_OOPEN_ONEXT_RELEASE,
+        SERVED_CHEAT_OOPEN_ONEXT_RELEASE,
+        "h0",
+    ];
     const FORWARD: &[WorldFeedOrder] = &[WorldFeedOrder::Forward];
     const ALL_FEEDS: &[WorldFeedOrder] = &[
         WorldFeedOrder::Forward,
