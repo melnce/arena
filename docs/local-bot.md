@@ -166,8 +166,15 @@ Measured on this box (4 cores; basic-forest vs basic-rune, seed 3):
 
 When `serve.py` is not reachable, `h0` policies still run in wasm. By default
 search runs in a **Web Worker** so the UI stays interactive; `?botworker=0`
-restores the synchronous main-thread path. Each decision replays the action log
-into a fresh `Game` in the worker (same model as `/bot`).
+restores the synchronous main-thread path (with a full-page “slow mode” overlay
+so taps do not hit the board). Each decision replays the action log into a fresh
+`Game` in the worker (same model as `/bot`). If a worker decision throws, the
+client respawns the pool and retries once, then tries a single fresh worker; only
+then does it fall back to the main thread for that move. A worker error is shown
+on the badge but does not disable workers for the rest of the page — only after
+three consecutive worker failures in one game does the rest of that game stay on
+the main-thread path. Test hooks: `?botworker=fail` (always fail),
+`?botworker=failonce` (first pool decide fails once, then retry succeeds).
 
 Menu entries **h0 (PC strength)** and **h0 (cheater, PC strength)** are read
 from `DEFAULT_STRONG` / `DEFAULT_CHEAT` in this file at UI build time. On a

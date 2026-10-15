@@ -20,3 +20,23 @@
 .turn-controls-core {
   position: relative;
 }
+
+#botBusyOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 9, 12, 0.72);
+  pointer-events: auto;
+}
+
+#botBusyOverlay .bot-busy-card {
+  padding: 16px 22px;
+  border-radius: 12px;
+  background: rgba(24, 26, 32, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--ink);
+  font-size: 1rem;
+}

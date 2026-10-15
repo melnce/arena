@@ -30,13 +30,16 @@ import {
 import {
   autoBotCores,
   botPoolState,
+  botStepMainFallback,
   botStepWorker,
+  policyUsesWorker,
   botWorkerEnabled,
   botWorkerState,
   isBotWorkerThinking,
   lastBotWorkerStepMeta,
   persistBotCoresChoice,
   prewarmBotWorker,
+  resetBotWorkerGameState,
   shouldUseBotWorker,
   terminateBotWorker,
 } from "./bot-client.ts";
@@ -52,6 +55,7 @@ import {
   isHumanActing,
   lastLocalBotStepMeta,
   legalActions,
+  nextBotSeed,
   redo,
   checkpointStatusText,
   replayPosition,
@@ -429,6 +433,13 @@ function paintSafe(): void {
 
 function commit(action: NeutralAction): void {
   if (!session) return;
+  if (session.cfg.mode === "vs-bot") {
+    const player = L.actionPlayer(action);
+    if (player != null && player !== session.cfg.humanSide) {
+      console.debug("vs-bot: ignored action for bot side", action);
+      return;
+    }
+  }
   try {
     const events = applyAction(session, action);
     showCombat(events);
@@ -769,6 +780,7 @@ function startSession(cfg: SessionConfig): void {
   spotlightEpoch += 1;
   botLoopSession = null;
   reportedGameFor = null;
+  resetBotWorkerGameState();
   localBotGameError = null;
   localBotRemoteCount = 0;
   localBotThinking = false;
@@ -1079,38 +1091,51 @@ async function maybeBots(): Promise<void> {
     while (session === s && !isHumanActing(s) && s.game.phase() !== "terminal" && guard < 80) {
       const useLocal = shouldUseLocalBot(s);
       const useWorker = !useLocal && shouldUseBotWorker(s);
+      const actionsBefore = s.actions.length;
       if (useLocal || useWorker) {
         if (useLocal) localBotThinking = true;
         markBotDecisionPending();
         refreshBotBackendBadge();
       }
       const epoch = spotlightEpoch;
-      let events = useLocal
-        ? await botStepRemote(s, `${LOCAL_BOT_HOST}/bot`, { isCurrent: () => session === s })
-        : useWorker
-          ? await botStepWorker(s, { isCurrent: () => session === s })
-          : botStep(s);
+      let events: EngineEvent[];
+      let usedMainFallback = false;
+      let usedSlowMainFallback = false;
+      if (useLocal) {
+        events = await botStepRemote(s, `${LOCAL_BOT_HOST}/bot`, { isCurrent: () => session === s });
+      } else if (useWorker) {
+        events = await botStepWorker(s, { isCurrent: () => session === s });
+      } else if (s.game.phase() === "mulligan") {
+        events = botStep(s);
+        usedMainFallback = true;
+      } else {
+        const acting = s.game.acting() as PlayerId;
+        const policy = botPolicyFor(s, acting);
+        if (policyUsesWorker(policy)) {
+          const seed = nextBotSeed(s);
+          events = await botStepMainFallback(s, seed, { isCurrent: () => session === s });
+          usedMainFallback = true;
+          usedSlowMainFallback = true;
+        } else {
+          events = botStep(s);
+        }
+      }
       if (session !== s) break;
+      const handleStaleStep = (): boolean => {
+        staleRuns += 1;
+        localBotThinking = false;
+        clearBotDecisionPending();
+        refreshBotBackendBadge();
+        guard += 1;
+        if (staleRuns >= 3) {
+          staleRuns = 0;
+        }
+        return true;
+      };
       if (useLocal || useWorker) {
         const meta = useLocal ? lastLocalBotStepMeta() : lastBotWorkerStepMeta();
         if (meta.stale) {
-          staleRuns += 1;
-          localBotThinking = false;
-          clearBotDecisionPending();
-          refreshBotBackendBadge();
-          guard += 1;
-          if (staleRuns >= 3) {
-            events = botStep(s);
-            staleRuns = 0;
-            if (events.length) noteBotStepFromLoop(s, { useLocal, useWorker, usedMainFallback: true });
-            showCombat(events);
-            if (botEndedTurnInEvents(events, s.cfg.humanSide)) botEndedTurn = true;
-            if (session === s && spotlightEpoch === epoch) {
-              enqueueBotSpotlights(events, s.cfg.humanSide);
-            }
-            await new Promise<void>((r) => window.setTimeout(r, 280));
-            continue;
-          }
+          handleStaleStep();
           await new Promise<void>((r) => window.setTimeout(r, 280));
           continue;
         }
@@ -1123,9 +1148,19 @@ async function maybeBots(): Promise<void> {
           if (localMeta.error) localBotGameError = localMeta.error;
         }
         refreshBotBackendBadge();
+      } else if (usedSlowMainFallback) {
+        const meta = lastBotWorkerStepMeta();
+        if (meta.stale) {
+          handleStaleStep();
+          await new Promise<void>((r) => window.setTimeout(r, 280));
+          continue;
+        }
+        staleRuns = 0;
       }
       guard += 1;
-      if (events.length) noteBotStepFromLoop(s, { useLocal, useWorker, usedMainFallback: false });
+      if (s.actions.length > actionsBefore) {
+        noteBotStepFromLoop(s, { useLocal, useWorker, usedMainFallback });
+      }
       showCombat(events);
       if (botEndedTurnInEvents(events, s.cfg.humanSide)) botEndedTurn = true;
       if (session === s && spotlightEpoch === epoch) {
@@ -1764,8 +1799,11 @@ function noteBotStepFromLoop(
   let backend: BotBackend = "main";
   let ms: number | null = null;
   let value: number | null = null;
+  let error: string | null = null;
   if (opts.usedMainFallback || (!opts.useLocal && !opts.useWorker)) {
     backend = "main";
+    const workerMeta = lastBotWorkerStepMeta();
+    if (workerMeta.backend === "main") error = workerMeta.error ?? null;
   } else if (opts.useLocal) {
     const meta = lastLocalBotStepMeta();
     if (meta.usedRemote) {
@@ -1778,10 +1816,11 @@ function noteBotStepFromLoop(
   } else if (opts.useWorker) {
     const meta = lastBotWorkerStepMeta();
     if (meta.stale) return;
-    backend = "worker";
+    backend = meta.backend ?? "worker";
     ms = meta.ms ?? null;
+    error = meta.error ?? null;
   }
-  recordBotStep(s, backend, ms, value);
+  recordBotStep(s, backend, ms, value, error);
 }
 
 async function boot(): Promise<void> {

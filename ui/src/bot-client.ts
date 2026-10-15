@@ -10,13 +10,19 @@ import {
   applyAction,
   botPolicyFor,
   botStepWithSeed,
+  isHumanActing,
   localBotRequestBody,
   nextBotSeed,
   type Session,
 } from "./session.ts";
 import type { EngineEvent, PlayerId } from "./types.ts";
 
-export type BotWorkerStepMeta = { stale?: boolean; error?: string; ms?: number };
+export type BotWorkerStepMeta = {
+  stale?: boolean;
+  error?: string;
+  ms?: number;
+  backend?: "worker" | "worker-retry" | "main";
+};
 
 export type BenchDecideBody = {
   seed: string;
@@ -35,6 +41,8 @@ let workerGeneration = 0;
 let pendingId: number | null = null;
 let nextRequestId = 1;
 let permanentError: string | null = null;
+let consecutiveWorkerDecisionFailures = 0;
+let failOnceArmed = false;
 let thinking = false;
 let poolBusy = 0;
 
@@ -100,6 +108,18 @@ export function persistBotCoresChoice(value: string): void {
   }
 }
 
+function botSlowMainMs(): number {
+  try {
+    const raw = new URLSearchParams(location.search).get("botslowmain");
+    if (!raw) return 0;
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return Math.min(10_000, Math.floor(n));
+  } catch {
+    return 0;
+  }
+}
+
 function botWorkerSpinMs(): number {
   try {
     const raw = new URLSearchParams(location.search).get("botworkerspin");
@@ -130,8 +150,15 @@ export function poolSkipStaleTerminate(): boolean {
 
 export function botWorkerEnabled(): boolean {
   if (botWorkerQueryFlag() === "0") return false;
-  if (permanentError) return false;
+  if (consecutiveWorkerDecisionFailures >= 3) return false;
   return true;
+}
+
+/** Reset worker error badge and per-game fallback counter (new vs-bot session). */
+export function resetBotWorkerGameState(): void {
+  permanentError = null;
+  consecutiveWorkerDecisionFailures = 0;
+  failOnceArmed = botWorkerQueryFlag() === "failonce";
 }
 
 export function botWorkerState(): {
@@ -216,7 +243,7 @@ export function terminateBotWorker(): void {
   notifyThinkingChange();
 }
 
-function policyUsesWorker(policy: string): boolean {
+export function policyUsesWorker(policy: string): boolean {
   return policy === "h0" || policy.startsWith("h0:");
 }
 
@@ -354,9 +381,8 @@ async function runPoolDecide(
   botSeed: string,
   spinMs: number,
   coreCount?: number,
-  opts?: { workerPool?: Worker[]; fail?: boolean },
+  opts?: { workerPool?: Worker[] },
 ): Promise<NeutralActionHolder> {
-  if (opts?.fail) throw new Error("forced worker failure (test)");
   const W = coreCount ?? configuredBotCores();
   const pool = opts?.workerPool ?? workers;
   const gamePool = pool === workers;
@@ -592,6 +618,191 @@ async function runSingleWorkerDecide(
   return { action: reply.action, ms: reply.ms };
 }
 
+function showBotBusyOverlay(): void {
+  let el = document.getElementById("botBusyOverlay");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "botBusyOverlay";
+    el.innerHTML = `<div class="bot-busy-card">Bot is thinking — slow mode</div>`;
+    document.body.appendChild(el);
+  }
+  el.style.display = "flex";
+}
+
+function hideBotBusyOverlay(): void {
+  const el = document.getElementById("botBusyOverlay");
+  if (el) el.style.display = "none";
+}
+
+async function paintBotBusyOverlay(): Promise<void> {
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+}
+
+type MainFallbackOpts = {
+  isCurrent?: () => boolean;
+  /** Applied to `lastMeta` when a main-thread decision succeeds (clears prior decision meta). */
+  metaOnSuccess?: BotWorkerStepMeta;
+};
+
+type MainFallbackSnap = {
+  hash: string;
+  actions: number;
+  botSeq: number;
+};
+
+function snapshotMainFallback(s: Session): MainFallbackSnap {
+  return {
+    hash: s.game.hash(),
+    actions: s.actions.length,
+    botSeq: s.botSeq,
+  };
+}
+
+function mainFallbackStale(s: Session, snap: MainFallbackSnap, opts?: MainFallbackOpts): boolean {
+  if (opts?.isCurrent && !opts.isCurrent()) return true;
+  try {
+    if (
+      s.game.hash() !== snap.hash ||
+      s.actions.length !== snap.actions ||
+      s.botSeq !== snap.botSeq
+    ) {
+      return true;
+    }
+  } catch {
+    return true;
+  }
+  if (s.game.phase() === "terminal" || isHumanActing(s)) return true;
+  return false;
+}
+
+export async function botStepMainFallback(
+  s: Session,
+  seed: bigint,
+  opts?: MainFallbackOpts,
+): Promise<EngineEvent[]> {
+  const snap = snapshotMainFallback(s);
+  if (mainFallbackStale(s, snap, opts)) {
+    lastMeta = { stale: true };
+    return [];
+  }
+  showBotBusyOverlay();
+  await paintBotBusyOverlay();
+  const slow = botSlowMainMs();
+  if (slow > 0) await new Promise<void>((r) => window.setTimeout(r, slow));
+  if (mainFallbackStale(s, snap, opts)) {
+    hideBotBusyOverlay();
+    lastMeta = { stale: true };
+    return [];
+  }
+  try {
+    const events = botStepWithSeed(s, seed);
+    lastMeta = opts?.metaOnSuccess ?? { backend: "main" };
+    return events;
+  } finally {
+    hideBotBusyOverlay();
+  }
+}
+
+type WorkerDecideResult = {
+  action: import("./types.ts").NeutralAction;
+  ms: number;
+  backend: "worker" | "worker-retry";
+  error?: string;
+};
+
+function forcedWorkerFailure(): Error {
+  return new Error("forced worker failure (test)");
+}
+
+async function workerDecideOnce(
+  body: BenchDecideBody,
+  policy: string,
+  botSeed: string,
+  spinMs: number,
+  W: number,
+  requestId: number,
+  alwaysFail: boolean,
+  poolFailOnce: boolean,
+): Promise<NeutralActionHolder> {
+  if (alwaysFail) throw forcedWorkerFailure();
+  if (poolFailOnce) {
+    failOnceArmed = false;
+    throw forcedWorkerFailure();
+  }
+  if (W <= 1) {
+    return runSingleWorkerDecide(body, policy, botSeed, requestId, false, spinMs);
+  }
+  return runPoolDecide(body, policy, botSeed, spinMs);
+}
+
+async function decideInWorker(
+  body: BenchDecideBody,
+  policy: string,
+  botSeed: string,
+  spinMs: number,
+): Promise<WorkerDecideResult> {
+  const W = configuredBotCores();
+  const alwaysFail = botWorkerQueryFlag() === "fail";
+  let decisionError: string | undefined;
+
+  const attempt = async (retry: boolean): Promise<WorkerDecideResult> => {
+    ensureWorkerPool(W);
+    const poolFailOnce = !retry && failOnceArmed && W > 1;
+    const id = nextRequestId++;
+    try {
+      const decided = await workerDecideOnce(
+        body,
+        policy,
+        botSeed,
+        spinMs,
+        W,
+        id,
+        alwaysFail,
+        poolFailOnce,
+      );
+      return {
+        action: decided.action,
+        ms: decided.ms,
+        backend: retry ? "worker-retry" : "worker",
+        error: retry ? decisionError : undefined,
+      };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      decisionError = message;
+      permanentError = message;
+      terminateBotWorker();
+      throw err;
+    }
+  };
+
+  try {
+    return await attempt(false);
+  } catch {
+    try {
+      return await attempt(true);
+    } catch {
+      terminateBotWorker();
+      ensureWorkerPool(1);
+      const id = nextRequestId++;
+      try {
+        const decided = await runSingleWorkerDecide(body, policy, botSeed, id, alwaysFail, spinMs);
+        return {
+          action: decided.action,
+          ms: decided.ms,
+          backend: "worker-retry",
+          error: decisionError,
+        };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        permanentError = message;
+        terminateBotWorker();
+        throw new Error(decisionError ?? message);
+      }
+    }
+  }
+}
+
 export async function botStepWorker(
   s: Session,
   opts?: { isCurrent?: () => boolean },
@@ -601,9 +812,8 @@ export async function botStepWorker(
   const policy = botPolicyFor(s, acting);
   lastMeta = {};
 
-  const W = configuredBotCores();
   ensureWorkerPool();
-  const id = (pendingId = nextRequestId++);
+  pendingId = nextRequestId++;
   thinking = true;
   notifyThinkingChange();
 
@@ -634,7 +844,6 @@ export async function botStepWorker(
 
   const body = toBenchBody(localBotRequestBody(s, policy, seed.toString()));
   const spinMs = botWorkerSpinMs();
-  const fail = botWorkerQueryFlag() === "fail";
 
   return new Promise<EngineEvent[]>((resolve) => {
     let settled = false;
@@ -661,29 +870,39 @@ export async function botStepWorker(
 
     void (async () => {
       try {
-        const decided =
-          W <= 1
-            ? await runSingleWorkerDecide(body, policy, seed.toString(), id, fail, spinMs)
-            : await runPoolDecide(body, policy, seed.toString(), spinMs, undefined, { fail });
+        const decided = await decideInWorker(body, policy, seed.toString(), spinMs);
         if (dropStale()) {
           onStale();
           return;
         }
+        consecutiveWorkerDecisionFailures = 0;
         lastMeta = {
           ms: typeof decided.ms === "number" && Number.isFinite(decided.ms) ? decided.ms : undefined,
+          backend: decided.backend,
+          error: decided.error,
         };
         const events = applyAction(s, decided.action, { human: false });
         finish(events);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        permanentError = permanentError ?? message;
-        terminateBotWorker();
         if (dropStale()) {
-          finish([]);
+          onStale();
           return;
         }
-        lastMeta = { error: message };
-        finish(botStepWithSeed(s, seed));
+        consecutiveWorkerDecisionFailures += 1;
+        if (pollTimer != null) {
+          window.clearInterval(pollTimer);
+          pollTimer = null;
+        }
+        const events = await botStepMainFallback(s, seed, {
+          isCurrent: opts?.isCurrent,
+          metaOnSuccess: { backend: "main", error: message },
+        });
+        if (lastMeta.stale) {
+          onStale();
+          return;
+        }
+        finish(events);
       }
     })();
   });
