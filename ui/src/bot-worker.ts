@@ -269,11 +269,29 @@ function handlePoolJob(req: PoolJobRequest): PoolJobReply {
       return { type: "outcome", id: req.id, outcomeJson };
     }
     if (req.type === "h0JobKillDet") {
+      const t0 = performance.now();
       const stepJson = game.h0JobKillDet(req.outcome);
+      const step = JSON.parse(stepJson) as { step: string; action?: NeutralAction };
+      const ms = performance.now() - t0;
+      if (step.step === "done") {
+        if (!step.action) {
+          return { type: "error", id: req.id, message: `h0JobKillDet done without action: ${stepJson}` };
+        }
+        return { type: "decided", id: req.id, action: step.action, ms };
+      }
       return { type: "step", id: req.id, stepJson };
     }
     if (req.type === "h0JobKillRoll") {
+      const t0 = performance.now();
       const stepJson = game.h0JobKillRoll(req.outcome);
+      const step = JSON.parse(stepJson) as { step: string; action?: NeutralAction };
+      const ms = performance.now() - t0;
+      if (step.step === "done") {
+        if (!step.action) {
+          return { type: "error", id: req.id, message: `h0JobKillRoll done without action: ${stepJson}` };
+        }
+        return { type: "decided", id: req.id, action: step.action, ms };
+      }
       return { type: "step", id: req.id, stepJson };
     }
     if (req.type === "h0JobWorld") {
