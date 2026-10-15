@@ -335,6 +335,9 @@ test("worker fallback on forced error matches sync", async ({ page }) => {
   await expect(page.locator("#botBackendBadge")).toContainText(/worker error:/, {
     timeout: 30_000,
   });
+  await expect
+    .poll(async () => (await actionLog(page)).length, { timeout: 60_000 })
+    .toBeGreaterThanOrEqual(3);
   const failLog = await actionLog(page);
 
   await startVsBot(page, {
@@ -348,7 +351,9 @@ test("worker fallback on forced error matches sync", async ({ page }) => {
   await expect(page.locator("#botBackendBadge")).not.toContainText(/worker error:/, {
     timeout: 30_000,
   });
-  await page.waitForTimeout(500);
+  await expect
+    .poll(async () => (await actionLog(page)).length, { timeout: 60_000 })
+    .toBeGreaterThanOrEqual(3);
   const syncLog = await actionLog(page);
   expect(failLog.slice(0, 3)).toEqual(syncLog.slice(0, 3));
 });
