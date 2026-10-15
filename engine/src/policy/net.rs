@@ -425,9 +425,9 @@ impl ValueNet {
     }
 
     #[inline]
-    fn add_scaled_col(h: &mut [f32], scale: f32, col: &[f32]) {
+    fn add_scaled_col_f64(h: &mut [f64], scale: f64, col: &[f32]) {
         for k in 0..h.len() {
-            h[k] += scale * col[k];
+            h[k] += scale * col[k] as f64;
         }
     }
 
@@ -457,14 +457,16 @@ impl ValueNet {
                 .map(|(wi, xi)| *wi * *xi)
                 .sum::<f32>();
 
-        let mut h_stack = [0.0f32; RESIDUAL_HIDDEN_STACK];
-        let mut h_vec: Vec<f32>;
-        let h: &mut [f32] = if hidden <= RESIDUAL_HIDDEN_STACK {
+        let mut h_stack = [0.0f64; RESIDUAL_HIDDEN_STACK];
+        let mut h_vec: Vec<f64>;
+        let h: &mut [f64] = if hidden <= RESIDUAL_HIDDEN_STACK {
             let h = &mut h_stack[..hidden];
-            h.copy_from_slice(a0);
+            for k in 0..hidden {
+                h[k] = a0[k] as f64;
+            }
             h
         } else {
-            h_vec = a0.to_vec();
+            h_vec = a0.iter().map(|v| *v as f64).collect();
             &mut h_vec
         };
 
@@ -478,7 +480,7 @@ impl ValueNet {
                 continue;
             }
             let col = &mlp.w1_feat_col[i * hidden..(i + 1) * hidden];
-            Self::add_scaled_col(h, d, col);
+            Self::add_scaled_col_f64(h, d as f64, col);
         }
 
         let mut e_stack = [0.0f32; RESIDUAL_ZONE_EMB_STACK];
@@ -508,13 +510,13 @@ impl ValueNet {
                 continue;
             }
             let col = &mlp.w1_zone_col[j * hidden..(j + 1) * hidden];
-            Self::add_scaled_col(h, *ej, col);
+            Self::add_scaled_col_f64(h, *ej as f64, col);
         }
 
         let mlp_add = mlp.b2
             + h.iter()
                 .zip(mlp.w2.iter())
-                .map(|(hk, wk)| wk * hk.max(0.0))
+                .map(|(hk, wk)| wk * (*hk).max(0.0) as f32)
                 .sum::<f32>();
         pre + mlp_add
     }
