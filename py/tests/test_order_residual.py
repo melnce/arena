@@ -91,17 +91,24 @@ def residual_value(
         x0 = (-mean / std).astype(np.float32)
         if clip > 0:
             x0 = np.clip(x0, -clip, clip).astype(np.float32)
-        h = np.zeros(hidden, dtype=np.float32)
+        # Match engine `residual_pre_sparse` (`a0` in f32, column deltas in f64).
+        w1f = w1.astype(np.float64)
+        h = np.empty(hidden, dtype=np.float64)
         for k in range(hidden):
-            acc = np.float32(b1[k])
+            acc = float(b1[k])
             for i in range(feat_len):
-                acc = np.float32(acc + np.float32(w1[k, i] * x0[i]))
-            for i in range(feat_len):
-                if f[i] != 0:
-                    acc = np.float32(acc + np.float32(w1[k, i] * (x[i] - x0[i])))
-            for j in range(len(e)):
-                acc = np.float32(acc + np.float32(w1[k, feat_len + j] * e[j]))
-            h[k] = max(np.float32(0), acc)
+                acc += float(w1[k, i]) * float(x0[i])
+            h[k] = np.float32(acc)
+        for i in range(feat_len):
+            if f[i] != 0:
+                d = float(x[i] - x0[i])
+                if d != 0.0:
+                    h += w1f[:, i] * d
+        for j in range(len(e)):
+            ej = float(e[j])
+            if ej != 0.0:
+                h += w1f[:, feat_len + j] * ej
+        h = np.maximum(0.0, h).astype(np.float32)
     else:
         inp = np.concatenate([x, e])
         h = np.maximum(np.float32(0), w1 @ inp + b1)
