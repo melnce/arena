@@ -94,6 +94,8 @@ Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before t
 
 The `h0-order-v53` move-ordering model — not a value leaf; same `net.json` format as `h0-linear-v4` (linear on 961 encoding-3 features, 245-id vocab, 13 zones). Used only where search ranks one-step values (`order=`); line scores still use the built-in value leaf.
 
+The engine also accepts `arch: residual` on encoding 3 (linear pre-activation plus a small ReLU MLP residual on zone-wise embeddings; see `docs/engine-api.md` "Learned value"). No committed residual order file ships in this repo yet — train offline and pass `order=<path>` like a linear order net.
+
 ## Provenance
 
 Data: teach52 (the served search's per-candidate scores). Training: listwise softmax on each decision's candidates, τ 3, λ 0.001 (results `run53`, commit `1350405`). On teach52's held-out games vs v4 as order net: top-1 0.592 (v4 0.536), recall@4 0.872 (0.804), regret 2.52 (4.18) (`run53/FIT.md`).
