@@ -10,12 +10,17 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testIgnore: /bot-pool\.spec\.ts$/,
+      testIgnore: /bot-pool(-kill-done)?\.spec\.ts$/,
     },
     {
       name: "chromium-bot-pool",
       testMatch: /bot-pool\.spec\.ts$/,
       timeout: 360_000,
+    },
+    {
+      name: "chromium-bot-pool-kill-done",
+      testMatch: /bot-pool-kill-done\.spec\.ts$/,
+      timeout: 720_000,
     },
   ],
   use: {
