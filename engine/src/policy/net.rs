@@ -63,7 +63,12 @@ struct ResidualMlp {
     a0_clip5: Vec<f32>,
     /// `w1[k][i]` stored column-major: index `i * hidden + k`.
     w1_feat_col: Vec<f32>,
+    /// Zone/embedding columns of `w1`, column-major: `j * hidden + k`.
+    w1_zone_col: Vec<f32>,
 }
+
+const RESIDUAL_HIDDEN_STACK: usize = 256;
+const RESIDUAL_ZONE_EMB_STACK: usize = 128;
 
 #[derive(Clone)]
 struct Race {
@@ -419,47 +424,99 @@ impl ValueNet {
                 .sum::<f32>()
     }
 
-    fn residual_mlp_sparse(
-        &self,
-        mlp: &ResidualMlp,
-        x: &[f32],
-        obs: &Observation,
-        clip: f32,
-    ) -> f32 {
+    #[inline]
+    fn add_scaled_col(h: &mut [f32], scale: f32, col: &[f32]) {
+        for k in 0..h.len() {
+            h[k] += scale * col[k];
+        }
+    }
+
+    /// Fused linear + MLP residual pre-activation for `clip` 0 and 5 (no per-call heap).
+    fn residual_pre_sparse(&self, x: &[f32], obs: &Observation, clip: f32) -> f32 {
+        let lin = self.linear.as_ref().expect("linear weights");
+        let mlp = self.residual_mlp.as_ref().expect("residual mlp");
         let (x0, a0) = if clip == 0.0 {
             (&mlp.x0_clip0, &mlp.a0_clip0)
         } else {
             (&mlp.x0_clip5, &mlp.a0_clip5)
         };
-        let z = self.zone_embs_per_zone(obs, &mlp.emb, mlp.emb_dim);
         let hidden = mlp.hidden;
         let feat_len = self.feature_len;
-        let feat_off = feat_len;
-        let mut h = vec![0.0f32; hidden];
-        for k in 0..hidden {
-            let mut acc = a0[k] as f64;
-            for i in 0..feat_len {
-                let f = obs.features.get(i).copied().unwrap_or(0.0);
-                if f != 0.0 {
-                    let wi = mlp.w1_feat_col[i * hidden + k];
-                    acc += (wi as f64) * ((x[i] - x0[i]) as f64);
+        let emb_dim = mlp.emb_dim;
+        let n_zone_emb = self.zones.len() * emb_dim;
+        assert!(
+            n_zone_emb <= RESIDUAL_ZONE_EMB_STACK,
+            "zone embedding width {n_zone_emb} exceeds stack cap"
+        );
+
+        let mut pre = lin.b
+            + lin
+                .w
+                .iter()
+                .zip(x.iter())
+                .map(|(wi, xi)| *wi * *xi)
+                .sum::<f32>();
+
+        let mut h_stack = [0.0f32; RESIDUAL_HIDDEN_STACK];
+        let mut h_vec: Vec<f32>;
+        let h: &mut [f32] = if hidden <= RESIDUAL_HIDDEN_STACK {
+            let h = &mut h_stack[..hidden];
+            h.copy_from_slice(a0);
+            h
+        } else {
+            h_vec = a0.to_vec();
+            &mut h_vec
+        };
+
+        for i in 0..feat_len {
+            let f = obs.features.get(i).copied().unwrap_or(0.0);
+            if f == 0.0 {
+                continue;
+            }
+            let d = x[i] - x0[i];
+            if d == 0.0 {
+                continue;
+            }
+            let col = &mlp.w1_feat_col[i * hidden..(i + 1) * hidden];
+            Self::add_scaled_col(h, d, col);
+        }
+
+        let mut e_stack = [0.0f32; RESIDUAL_ZONE_EMB_STACK];
+        let e = &mut e_stack[..n_zone_emb];
+        for (z, zone) in self.zones.iter().enumerate() {
+            let zone_w_row = &lin.zone_w[z];
+            let emb_table = &mlp.emb[z];
+            let dest = z * emb_dim;
+            for slot in 0..zone.count {
+                let count = self.slot_count(obs, zone, slot);
+                if zone.hist_offset.is_some() && count == 0.0 {
+                    continue;
+                }
+                let id = obs.ids.get(zone.id_offset + slot).copied().unwrap_or(0);
+                let idx = self.id_index(id);
+                pre += count * zone_w_row.get(idx).copied().unwrap_or(0.0);
+                if let Some(row) = emb_table.get(idx) {
+                    for e_i in 0..emb_dim {
+                        e[dest + e_i] += count * row.get(e_i).copied().unwrap_or(0.0);
+                    }
                 }
             }
-            let mut acc = acc as f32;
-            let row = &mlp.w1[k];
-            let extra = row.get(feat_off..).unwrap_or(&[]);
-            for (wi, zi) in extra.iter().zip(z.iter()) {
-                acc += wi * zi;
-            }
-            h[k] = acc.max(0.0);
         }
-        mlp.b2
-            + mlp
-                .w2
-                .iter()
-                .zip(h.iter())
-                .map(|(wi, hi)| wi * hi)
-                .sum::<f32>()
+
+        for (j, ej) in e.iter().enumerate() {
+            if *ej == 0.0 {
+                continue;
+            }
+            let col = &mlp.w1_zone_col[j * hidden..(j + 1) * hidden];
+            Self::add_scaled_col(h, *ej, col);
+        }
+
+        let mlp_add = mlp.b2
+            + h.iter()
+                .zip(mlp.w2.iter())
+                .map(|(hk, wk)| wk * hk.max(0.0))
+                .sum::<f32>();
+        pre + mlp_add
     }
 
     fn standardize(&self, obs: &Observation, clip: f32) -> Vec<f32> {
@@ -540,14 +597,12 @@ impl ValueNet {
                         .sum::<f32>()
             }
             NetArch::Residual => {
-                let mlp = self.residual_mlp.as_ref().expect("residual mlp");
-                let lin = self.linear_pre(x, obs);
-                let mlp_add = if clip == 0.0 || clip == 5.0 {
-                    self.residual_mlp_sparse(mlp, x, obs, clip)
+                if clip == 0.0 || clip == 5.0 {
+                    self.residual_pre_sparse(x, obs, clip)
                 } else {
-                    self.residual_mlp_dense(mlp, x, obs)
-                };
-                lin + mlp_add
+                    let mlp = self.residual_mlp.as_ref().expect("residual mlp");
+                    self.linear_pre(x, obs) + self.residual_mlp_dense(mlp, x, obs)
+                }
             }
         } + self.race_linear(obs, clip);
         self.scale * pre.tanh()
@@ -646,6 +701,14 @@ fn parse_residual_mlp(
         a0_clip5[k] = z5 as f32;
     }
 
+    let zone_in = n_zones * emb_dim;
+    let mut w1_zone_col = vec![0.0f32; zone_in * hidden];
+    for (k, row) in w1.iter().enumerate() {
+        for j in 0..zone_in {
+            w1_zone_col[j * hidden + k] = row[feature_len + j];
+        }
+    }
+
     Ok(ResidualMlp {
         emb,
         emb_dim,
@@ -659,6 +722,7 @@ fn parse_residual_mlp(
         a0_clip0,
         a0_clip5,
         w1_feat_col,
+        w1_zone_col,
     })
 }
 
