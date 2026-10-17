@@ -188,23 +188,29 @@ struct Evaluator<'a> {
     bpp2: u32,
     bppv: f32,
     fuseguard: bool,
+    /// Bot-side move-ordering net (`order=`).
     order_net: Option<&'a ValueNet>,
-    oorder: bool,
+    /// Opponent-model move-ordering net (`oorder=1` or `oorder=<model>`).
+    opp_order_net: Option<&'a ValueNet>,
     oopen: u32,
     onext: u32,
 }
 
 impl Evaluator<'_> {
-    /// One-step value for move ordering (`order=` net when set; else leaf).
+    /// One-step value for move ordering (`order=` / `oorder=` when set; else leaf).
     fn pick_value(self, state: &State, val_for: PlayerId, search_me: PlayerId) -> f32 {
-        let use_order = self.order_net.is_some() && (val_for == search_me || self.oorder);
-        if !use_order {
+        let order_for_pick = if val_for == search_me {
+            self.order_net
+        } else {
+            self.opp_order_net
+        };
+        if order_for_pick.is_none() {
             return self.value(state, val_for);
         }
-        if matches!((self.order_net, self.net), (Some(a), Some(b)) if std::ptr::eq(a, b)) {
+        if matches!((order_for_pick, self.net), (Some(a), Some(b)) if std::ptr::eq(a, b)) {
             return self.value(state, val_for);
         }
-        self.order_value(state, val_for)
+        self.order_value(state, val_for, order_for_pick.expect("checked"))
     }
 
     /// Raw leaf value (unclipped). Matches main's `Evaluator::value` before bppv.
@@ -245,24 +251,18 @@ impl Evaluator<'_> {
         v + self.bpp_prior(state, me)
     }
 
-    fn order_leaf(self, state: &State, me: PlayerId) -> f32 {
-        match self.order_net {
-            None => self.leaf(state, me),
-            Some(order_net) => {
-                let obs =
-                    encode_with_vocab(state, me, self.vocab, order_net.encoding, Some(self.db));
-                if self.clip > 0.0 {
-                    order_net.value_clipped(&obs, self.clip)
-                } else {
-                    order_net.value(&obs)
-                }
-            }
+    fn order_leaf(self, state: &State, me: PlayerId, order_net: &ValueNet) -> f32 {
+        let obs = encode_with_vocab(state, me, self.vocab, order_net.encoding, Some(self.db));
+        if self.clip > 0.0 {
+            order_net.value_clipped(&obs, self.clip)
+        } else {
+            order_net.value(&obs)
         }
     }
 
     /// Order net value plus `bppv` prior (unclipped). Without `order=`, matches [`value`].
-    fn order_value(self, state: &State, me: PlayerId) -> f32 {
-        let v = self.order_leaf(state, me);
+    fn order_value(self, state: &State, me: PlayerId, order_net: &ValueNet) -> f32 {
+        let v = self.order_leaf(state, me, order_net);
         if !v.is_finite() {
             return v;
         }
@@ -643,7 +643,11 @@ pub struct H0 {
     pub order: Option<Arc<ValueNet>>,
     /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
     pub order_path: Option<String>,
-    /// With `order=`, also order the opponent model's greedy picks (`oorder=1`).
+    /// Opponent-model move-ordering net (`oorder=<model>`). `None` when only `oorder=0|1`.
+    pub oorder_net: Option<Arc<ValueNet>>,
+    /// Spec path compared by `h0_fields_eq` and printed by `spec()`.
+    pub oorder_path: Option<String>,
+    /// With `order=`, `1` also orders the opponent model's greedy picks (`oorder=1`).
     pub oorder: bool,
     /// Opening mulligan mode. Default [`MullMode::Table`] with [`builtin_mulligan`].
     pub mull: MullMode,
@@ -733,6 +737,8 @@ impl Default for H0 {
             net_path: None,
             order: None,
             order_path: None,
+            oorder_net: None,
+            oorder_path: None,
             oorder: false,
             mull: MullMode::Table,
             mull_table: Some(builtin_mulligan()),
@@ -827,7 +833,18 @@ impl H0 {
                 (Some(a), _) => Some(a),
                 _ => None,
             },
-            oorder: self.oorder,
+            opp_order_net: {
+                let raw = self.oorder_net.as_deref().or(if self.oorder {
+                    self.order.as_deref()
+                } else {
+                    None
+                });
+                match (raw, self.net.as_deref()) {
+                    (Some(a), Some(b)) if std::ptr::eq(a, b) => None,
+                    (Some(a), _) => Some(a),
+                    _ => None,
+                }
+            },
             oopen: self.oopen,
             onext: self.onext,
         }
@@ -839,7 +856,7 @@ impl H0 {
     }
 
     fn root_vocab(&self, state: &State) -> Vec<CardId> {
-        if self.value == ValueVersion::Net || self.order.is_some() {
+        if self.value == ValueVersion::Net || self.order.is_some() || self.oorder_net.is_some() {
             vocab(state)
         } else {
             Vec::new()
@@ -6511,5 +6528,175 @@ mod okill_two_choice_second_tests {
             ),
             "second play (Bittersweet mode choice) must complete lethal after Storm"
         );
+    }
+}
+
+#[cfg(test)]
+mod oorder_pick_side_tests {
+    use std::fs;
+    use std::io::Write;
+    use std::path::Path;
+
+    use super::*;
+    use crate::apply::new_game;
+    use crate::db::CardDb;
+    use crate::encode::vocab;
+    use crate::ids::First;
+    use crate::state::GameConfig;
+    use serde_json::Value;
+
+    fn recorded_db() -> CardDb {
+        let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest.join("..");
+        let mut db = CardDb::load(&root).expect("cards");
+        db.load_extra_dir(manifest.join("tests/fixtures/cards"))
+            .expect("fixture cards");
+        db.load_replace_dir(root.join("oracle/cards-as-recorded"))
+            .expect("recorded overlay");
+        db.load_replace_dir(manifest.join("tests/fixtures/as-recorded/earrings-engage-noop"))
+            .expect("earrings");
+        db.load_replace_dir(manifest.join("tests/fixtures/as-recorded/kukishiro-crest-from-deck"))
+            .expect("kukishiro");
+        db
+    }
+
+    fn zero_order_net_path() -> std::path::PathBuf {
+        let v4 = fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("models/h0-linear-v4.json"),
+        )
+        .expect("v4");
+        let mut j: Value = serde_json::from_str(&v4).expect("json");
+        if let Some(w) = j
+            .get_mut("linear")
+            .and_then(|l| l.get_mut("w"))
+            .and_then(|v| v.as_array_mut())
+        {
+            for x in w.iter_mut() {
+                *x = Value::from(0.0);
+            }
+        }
+        if let Some(linear) = j.get_mut("linear").and_then(|v| v.as_object_mut()) {
+            if let Some(zw) = linear.get_mut("zone_w").and_then(|v| v.as_array_mut()) {
+                for row in zw.iter_mut() {
+                    if let Some(row) = row.as_array_mut() {
+                        for x in row.iter_mut() {
+                            *x = Value::from(0.0);
+                        }
+                    }
+                }
+            }
+            linear.insert("b".to_string(), Value::from(0.0));
+        }
+        let mut path = std::env::temp_dir();
+        path.push("h0-oorder-zero-net-unit.json");
+        let mut f = fs::File::create(&path).expect("create");
+        f.write_all(serde_json::to_string(&j).unwrap().as_bytes())
+            .expect("write");
+        path
+    }
+
+    fn review_state(db: &CardDb) -> State {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../py/tests/fixtures");
+        let path = root.join("review13/games/4984932781931433298-b4973563.json");
+        let cap: Value = serde_json::from_str(&fs::read_to_string(path).expect("review")).unwrap();
+        let seed = cap["seed"].as_u64().unwrap();
+        let mut deck = Vec::new();
+        for (id, n) in cap["deckA"].as_object().unwrap() {
+            let cid = CardId::parse(id).unwrap();
+            deck.extend(std::iter::repeat_n(cid, n.as_u64().unwrap() as usize));
+        }
+        let mut deck_b = Vec::new();
+        for (id, n) in cap["deckB"].as_object().unwrap() {
+            let cid = CardId::parse(id).unwrap();
+            deck_b.extend(std::iter::repeat_n(cid, n.as_u64().unwrap() as usize));
+        }
+        let first = match cap.get("first").and_then(|v| v.as_str()) {
+            Some("b") | Some("B") => First::B,
+            Some("a") | Some("A") => First::A,
+            _ => First::Coin,
+        };
+        let mut st = new_game(
+            db,
+            GameConfig {
+                seed,
+                deck_a: deck,
+                deck_b,
+                first,
+                opening_hands: None,
+            },
+        )
+        .expect("game");
+        let ply = 27usize;
+        for step in cap["actions"].as_array().unwrap().iter().take(ply) {
+            if step.get("reseed").is_some() {
+                st.reseed(step["reseed"].as_u64().unwrap());
+                continue;
+            }
+            let mut body = serde_json::Map::new();
+            for (k, v) in step.as_object().expect("action object") {
+                if k == "value" || k == "bot_value" {
+                    continue;
+                }
+                body.insert(k.clone(), v.clone());
+            }
+            let neu: crate::NeutralAction =
+                serde_json::from_value(serde_json::Value::Object(body)).unwrap();
+            crate::apply::apply_neutral(db, &mut st, &neu).unwrap();
+        }
+        st
+    }
+
+    #[test]
+    fn pick_value_uses_order_and_oorder_on_separate_sides() {
+        let db = recorded_db();
+        let state = review_state(&db);
+        let me = state.active;
+        let opp = me.opponent();
+        let v53_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("models/h0-order-v53.json")
+            .display()
+            .to_string();
+        let zero_path = zero_order_net_path().display().to_string();
+        let v53 = ValueNet::load(&v53_path).expect("v53");
+        let zero = ValueNet::load(&zero_path).expect("zero");
+        let h = H0 {
+            order: Some(v53.clone()),
+            order_path: Some(v53_path),
+            oorder_net: Some(zero.clone()),
+            oorder_path: Some(zero_path),
+            ..H0::default()
+        };
+        let root_vocab = vocab(&state);
+        let eval = h.evaluator(&db, &root_vocab);
+        let own = eval.pick_value(&state, me, me);
+        let opp_v = eval.pick_value(&state, opp, me);
+        let leaf_own = eval.value(&state, me);
+        let leaf_opp = eval.value(&state, opp);
+        assert_ne!(own, leaf_own, "bot side should use order=v53");
+        assert_ne!(opp_v, leaf_opp, "opponent side should use oorder=zero");
+        assert_ne!(own, opp_v, "models differ");
+    }
+
+    #[test]
+    fn pick_value_oorder_alone_orders_opponent_not_self() {
+        let db = recorded_db();
+        let state = review_state(&db);
+        let me = state.active;
+        let opp = me.opponent();
+        let zero_path = zero_order_net_path().display().to_string();
+        let zero = ValueNet::load(&zero_path).expect("zero");
+        let h = H0 {
+            oorder_net: Some(zero),
+            oorder_path: Some(zero_path),
+            ..H0::default()
+        };
+        let root_vocab = vocab(&state);
+        let eval = h.evaluator(&db, &root_vocab);
+        let own = eval.pick_value(&state, me, me);
+        let opp_v = eval.pick_value(&state, opp, me);
+        let leaf_own = eval.value(&state, me);
+        let leaf_opp = eval.value(&state, opp);
+        assert_eq!(own, leaf_own, "no order= → bot uses leaf");
+        assert_ne!(opp_v, leaf_opp, "oorder alone → opponent uses model");
     }
 }
