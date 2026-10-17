@@ -6672,9 +6672,12 @@ mod oorder_pick_side_tests {
         let opp_v = eval.pick_value(&state, opp, me);
         let leaf_own = eval.value(&state, me);
         let leaf_opp = eval.value(&state, opp);
+        assert_eq!(own, eval.order_value(&state, me, &v53));
+        assert_eq!(opp_v, eval.order_value(&state, opp, &zero));
+        assert_eq!(opp_v, 0.0, "zero order net → scale×tanh(0), bppv=0");
+        assert_eq!(h.bppv, 0.0);
         assert_ne!(own, leaf_own, "bot side should use order=v53");
         assert_ne!(opp_v, leaf_opp, "opponent side should use oorder=zero");
-        assert_ne!(own, opp_v, "models differ");
     }
 
     #[test]
@@ -6686,7 +6689,7 @@ mod oorder_pick_side_tests {
         let zero_path = zero_order_net_path().display().to_string();
         let zero = ValueNet::load(&zero_path).expect("zero");
         let h = H0 {
-            oorder_net: Some(zero),
+            oorder_net: Some(zero.clone()),
             oorder_path: Some(zero_path),
             ..H0::default()
         };
@@ -6697,6 +6700,8 @@ mod oorder_pick_side_tests {
         let leaf_own = eval.value(&state, me);
         let leaf_opp = eval.value(&state, opp);
         assert_eq!(own, leaf_own, "no order= → bot uses leaf");
+        assert_eq!(opp_v, eval.order_value(&state, opp, &zero));
+        assert_eq!(opp_v, 0.0, "zero order net → scale×tanh(0), bppv=0");
         assert_ne!(opp_v, leaf_opp, "oorder alone → opponent uses model");
     }
 }
