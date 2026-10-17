@@ -670,7 +670,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `value` | `net` (built-in `h0-linear-v4`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
 | `net` | — | path to a `net.json` overriding the built-in model |
 | `order` | — | `builtin` (= embedded `h0-order-v53`, sweep 53 pooled 0.540 [0.520, 0.559] / +27.7 Elo vs the same spec without ordering on 16 meta decks) or path to a second `net.json` used only where search compares one-step values to pick or rank moves (beam children, fuse completions, greedy turn finish, pending choices). Encoding-3 `residual` order files are supported. Line scores, transposition leaves, and holdback/lethal paths still use the leaf (`net` / built-in). Native path like `net` |
-| `oorder` | 0 | with `order=`, `1` also orders the opponent model's greedy picks and `odepth≥1` beam children; ignored without `order` |
+| `oorder` | 0 | `0` (default) or `1`: with `order=`, `1` also orders the opponent model's greedy picks (`val_for ≠ search_me` in move ordering) and `odepth≥1` beam children; ignored without `order`. `oorder=<model>` (`builtin` or a `net.json` path, same forms as `order=`) sets a **separate** ordering model for the opponent side only: bot picks still use `order=` when set, otherwise the leaf; opponent picks use `<model>` when set, otherwise the leaf. Examples: `order=A,oorder=1` — both sides use `A`; `order=A,oorder=B` — bot uses `A`, opponent uses `B`; `oorder=B` without `order=` — bot uses the leaf, opponent uses `B` |
 | `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
 | `w_earth` | 0.35 | v1: saturated earth sigils (cap 6) |
 | `w_faith` | 0.15 | v1: saturated faith (cap 10) |

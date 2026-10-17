@@ -280,6 +280,46 @@ fn order_spec_parser_round_trip_and_errors() {
     assert_eq!(builtin.spec(), "h0:order=builtin");
     let builtin_o = AnyPolicy::parse_spec("h0:order=builtin,oorder=1").unwrap();
     assert_eq!(builtin_o.spec(), "h0:order=builtin,oorder=1");
+
+    let v53 = h0_order_v53_path();
+    let rt_builtin = AnyPolicy::parse_spec("h0:order=builtin,oorder=builtin").unwrap();
+    assert_eq!(rt_builtin.spec(), "h0:order=builtin,oorder=builtin");
+    let rt_split = AnyPolicy::parse_spec(&format!("h0:order={v4},oorder={v53}")).unwrap();
+    assert_eq!(rt_split.spec(), format!("h0:order={v4},oorder={v53}"));
+    let rt_oonly = AnyPolicy::parse_spec(&format!("h0:oorder={v53}")).unwrap();
+    assert_eq!(rt_oonly.spec(), format!("h0:oorder={v53}"));
+
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:oorder=").unwrap_err(),
+        "missing key 'oorder'"
+    );
+    assert_eq!(
+        AnyPolicy::parse_spec("h0:oorder=2").unwrap_err(),
+        "unknown oorder '2'"
+    );
+    let e_oorder_net = AnyPolicy::parse_spec("h0:oorder=/no/such/net.json").unwrap_err();
+    assert_eq!(e_oorder_net, e_net);
+
+    let same = format!("h0:order={v4},oorder={v4}");
+    let h_same = parse_h0(&same);
+    assert!(std::sync::Arc::ptr_eq(
+        h_same.order.as_ref().expect("order"),
+        h_same.oorder_net.as_ref().expect("oorder"),
+    ));
+
+    let h_ob = parse_h0("h0:oorder=builtin");
+    assert!(std::sync::Arc::ptr_eq(
+        h_ob.oorder_net.as_ref().expect("oorder"),
+        &arena_engine::builtin_order(),
+    ));
+
+    let net_o = format!("h0:net={v4},oorder={v4}");
+    let h_net_o = parse_h0(&net_o);
+    assert!(std::sync::Arc::ptr_eq(
+        h_net_o.oorder_net.as_ref().expect("oorder"),
+        h_net_o.net.as_ref().expect("net"),
+    ));
+
     let h_b = parse_h0("h0:order=builtin");
     assert!(
         std::sync::Arc::ptr_eq(
@@ -511,6 +551,81 @@ fn oorder_zero_matches_baseline_oorder_one_can_differ() {
     ignore = "release only: the ci job runs it in its release step"
 )]
 #[test]
+fn oorder_model_matches_oorder_one_when_same() {
+    let db = load_recorded_db();
+    let v53 = h0_order_v53_path();
+    let specs = [
+        (
+            format!("{SERVED_RELEASE},order=builtin,oorder=builtin"),
+            format!("{SERVED_RELEASE},order=builtin,oorder=1"),
+        ),
+        (
+            format!("{SERVED_RELEASE},order={v53},oorder={v53}"),
+            format!("{SERVED_RELEASE},order={v53},oorder=1"),
+        ),
+    ];
+    for (model_spec, one_spec) in specs {
+        for m in REVIEW_MOMENTS {
+            let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+            let cap: Value = serde_json::from_str(&raw).expect("json");
+            let seed = policy_seed(&cap, m.ply);
+            let a = decide(&model_spec, 1, &db, &cap, m.ply, seed);
+            let b = decide(&one_spec, 1, &db, &cap, m.ply, seed);
+            assert_eq!(a.idx, b.idx, "{}/{}@{}", m.review, m.game, m.ply);
+            assert_eq!(a.value_bits, b.value_bits, "value");
+            assert_eq!(a.explain, b.explain, "explain");
+        }
+    }
+    let extra = format!("{SERVED_RELEASE},oopen=1,onext=40");
+    let model_extra = format!("{extra},order=builtin,oorder=builtin");
+    let one_extra = format!("{extra},order=builtin,oorder=1");
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let a = decide(&model_extra, 1, &db, &cap, m.ply, seed);
+        let b = decide(&one_extra, 1, &db, &cap, m.ply, seed);
+        assert_eq!(a.idx, b.idx, "oopen {}/{}@{}", m.review, m.game, m.ply);
+        assert_eq!(a.value_bits, b.value_bits, "value oopen");
+        assert_eq!(a.explain, b.explain, "explain oopen");
+    }
+}
+
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
+#[test]
+fn oorder_zero_net_differs_from_oorder_one() {
+    let db = load_recorded_db();
+    let v53 = h0_order_v53_path();
+    let zero = zero_order_net_path().display().to_string();
+    let same_opp = format!("{SERVED_RELEASE},order={v53},oorder=1");
+    let split = format!("{SERVED_RELEASE},order={v53},oorder={zero}");
+    let mut saw_diff = false;
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let a = decide(&same_opp, 1, &db, &cap, m.ply, seed);
+        let b = decide(&split, 1, &db, &cap, m.ply, seed);
+        if a.idx != b.idx || a.value_bits != b.value_bits || a.explain != b.explain {
+            saw_diff = true;
+            eprintln!("oorder split differs at {}/{}@{}", m.review, m.game, m.ply);
+            break;
+        }
+    }
+    assert!(
+        saw_diff,
+        "expected order=v53,oorder=zero to differ from oorder=1"
+    );
+}
+
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
+#[test]
 fn order_threads_identity_alloc_world() {
     let db = load_recorded_db();
     let v4 = h0_linear_v4_path();
@@ -527,6 +642,30 @@ fn order_threads_identity_alloc_world() {
     let t2 = decide(&spec, 2, &db, &cap, ply, seed);
     assert_eq!(t1.explain, t2.explain);
     assert_eq!(t1.idx, t2.idx);
+}
+
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
+#[test]
+fn oorder_threads_identity_alloc_world() {
+    let db = load_recorded_db();
+    let v53 = h0_order_v53_path();
+    let zero = zero_order_net_path().display().to_string();
+    let spec = format!("{SERVED_RELEASE},order={v53},oorder={zero},alloc=world");
+    let raw = fs::read_to_string(review_fixture(
+        "review13",
+        "4984932781931433298-b4973563.json",
+    ))
+    .expect("review");
+    let cap: Value = serde_json::from_str(&raw).expect("json");
+    let ply = 27usize;
+    let seed = policy_seed(&cap, ply);
+    let t1 = decide(&spec, 1, &db, &cap, ply, seed);
+    let t4 = decide(&spec, 4, &db, &cap, ply, seed);
+    assert_eq!(t1.explain, t4.explain);
+    assert_eq!(t1.idx, t4.idx);
 }
 
 #[cfg_attr(
