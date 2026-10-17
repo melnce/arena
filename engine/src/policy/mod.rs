@@ -265,7 +265,9 @@ fn h0_spec(h: &H0) -> String {
     if let Some(path) = &h.order_path {
         parts.push(format!("order={path}"));
     }
-    if h.oorder && h.order_path.is_some() {
+    if let Some(path) = &h.oorder_path {
+        parts.push(format!("oorder={path}"));
+    } else if h.oorder && h.order_path.is_some() {
         parts.push("oorder=1".to_string());
     }
     if h.odepth != def.odepth {
@@ -460,6 +462,7 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.fusemacro == b.fusemacro
         && a.net_path == b.net_path
         && a.order_path == b.order_path
+        && a.oorder_path == b.oorder_path
         && a.oorder == b.oorder
         && a.lcap == b.lcap
         && a.clip == b.clip
@@ -493,6 +496,7 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
     let mut h = H0::default();
     let mut net_path: Option<String> = None;
     let mut order_path: Option<String> = None;
+    let mut oorder_model_path: Option<String> = None;
     let mut mull_path: Option<String> = None;
     if body.is_empty() {
         return Ok(h);
@@ -533,11 +537,17 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                 order_path = Some(val.to_string());
             }
             "oorder" => {
-                h.oorder = match val {
-                    "0" => false,
-                    "1" => true,
-                    other => return Err(format!("unknown oorder '{other}'")),
-                };
+                if val.is_empty() {
+                    return Err("missing key 'oorder'".to_string());
+                }
+                match val {
+                    "0" => h.oorder = false,
+                    "1" => h.oorder = true,
+                    other if other.chars().all(|c| c.is_ascii_digit()) => {
+                        return Err(format!("unknown oorder '{other}'"));
+                    }
+                    other => oorder_model_path = Some(other.to_string()),
+                }
             }
             "w_shadows" => h.weights.shadows = parse_num(val)?,
             "w_earth" => h.weights.earth = parse_num(val)?,
@@ -804,6 +814,21 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
         } else {
             h.order = Some(crate::policy::net::ValueNet::load(&path)?);
             h.order_path = Some(path);
+        }
+    }
+    if let Some(path) = oorder_model_path {
+        if path == "builtin" {
+            h.oorder_net = Some(crate::policy::h0::builtin_order());
+            h.oorder_path = Some(path);
+        } else if h.order_path.as_deref() == Some(path.as_str()) {
+            h.oorder_net = h.order.clone();
+            h.oorder_path = Some(path);
+        } else if h.net_path.as_deref() == Some(path.as_str()) {
+            h.oorder_net = h.net.clone();
+            h.oorder_path = Some(path);
+        } else {
+            h.oorder_net = Some(crate::policy::net::ValueNet::load(&path)?);
+            h.oorder_path = Some(path);
         }
     }
     if h.order.is_none() {
