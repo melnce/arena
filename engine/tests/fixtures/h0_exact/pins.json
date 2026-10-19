@@ -1,0 +1,962 @@
+{
+  "moments": [
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "12108941341288814673",
+          "explain_len": 10367,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":5536,\"cap_hits\":0,\"candidates\":2,\"roots\":8,\"opp_leaves\":16,\"opp_cap_hits\":0,\"opp_lethal_checks\":16,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":337,\"opp_lethal_applies_max\":53,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":24,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":16,\"opp_open_lines\":32,\"opp_open_lower\":3,\"opp_open_nodes\":3359,\"opp_next_checks\":44,\"opp_next_found\":2,\"opp_next_nodes\":3116}",
+          "value_bits": 1082258437
+        },
+        "S2": {
+          "explain_fnv": "10086225425538789121",
+          "explain_len": 10364,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":6774,\"cap_hits\":0,\"candidates\":2,\"roots\":8,\"opp_leaves\":16,\"opp_cap_hits\":3,\"opp_lethal_checks\":16,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":632,\"opp_lethal_applies_max\":128,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":24,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":16,\"opp_open_lines\":32,\"opp_open_lower\":3,\"opp_open_nodes\":3794,\"opp_next_checks\":43,\"opp_next_found\":1,\"opp_next_nodes\":4059}",
+          "value_bits": 1082258437
+        },
+        "S3": {
+          "explain_fnv": "7951825898187328570",
+          "explain_len": 19128,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":7896,\"cap_hits\":0,\"candidates\":2,\"roots\":16,\"opp_leaves\":32,\"opp_cap_hits\":28,\"opp_lethal_checks\":32,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":623,\"opp_lethal_applies_max\":53,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":48,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":32,\"opp_open_lines\":50,\"opp_open_lower\":15,\"opp_open_nodes\":3504,\"opp_next_checks\":54,\"opp_next_found\":1,\"opp_next_nodes\":3819}",
+          "value_bits": 3230648961
+        },
+        "S4": {
+          "explain_fnv": "9170680584026903756",
+          "explain_len": 10505,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":5614,\"cap_hits\":0,\"candidates\":2,\"roots\":8,\"opp_leaves\":16,\"opp_cap_hits\":0,\"opp_lethal_checks\":16,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":199,\"opp_lethal_applies_max\":18,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":24,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":16,\"opp_open_lines\":32,\"opp_open_lower\":14,\"opp_open_nodes\":3402,\"opp_next_checks\":48,\"opp_next_found\":5,\"opp_next_nodes\":3188}",
+          "value_bits": 3244944273
+        }
+      },
+      "id": "review:review13:4984932781931433298-b4973563.json:27",
+      "search_key": "5910658872888312235"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "16739659380047417629",
+          "explain_len": 27923,
+          "idx": 2,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":512,\"opp_cap_hits\":512,\"opp_lethal_checks\":512,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":7344,\"opp_lethal_applies_max\":24,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":8768,\"own_solver_nodes_max\":8768,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":160,\"pairs_skipped\":0,\"lethal_nodes\":1348,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":512,\"horizon_nodes\":97924,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":272,\"opp_open_lines\":252,\"opp_open_lower\":139,\"opp_open_nodes\":9844,\"opp_next_checks\":312,\"opp_next_found\":64,\"opp_next_nodes\":56860}",
+          "value_bits": 1106349547
+        },
+        "S2": {
+          "explain_fnv": "5720945637411176654",
+          "explain_len": 28005,
+          "idx": 2,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":512,\"opp_cap_hits\":512,\"opp_lethal_checks\":512,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":16076,\"opp_lethal_applies_max\":51,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":8768,\"own_solver_nodes_max\":8768,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":160,\"pairs_skipped\":0,\"lethal_nodes\":1348,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":512,\"horizon_nodes\":97924,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":76,\"opp_open_lines\":72,\"opp_open_lower\":16,\"opp_open_nodes\":2168,\"opp_next_checks\":296,\"opp_next_found\":60,\"opp_next_nodes\":53408}",
+          "value_bits": 1108682658
+        },
+        "S3": {
+          "explain_fnv": "4718923832277546650",
+          "explain_len": 55336,
+          "idx": 2,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":16,\"opp_leaves\":1024,\"opp_cap_hits\":1024,\"opp_lethal_checks\":1024,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":17000,\"opp_lethal_applies_max\":37,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":8768,\"own_solver_nodes_max\":8768,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":320,\"pairs_skipped\":0,\"lethal_nodes\":1348,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1024,\"horizon_nodes\":202500,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":444,\"opp_open_lines\":398,\"opp_open_lower\":221,\"opp_open_nodes\":14794,\"opp_next_checks\":656,\"opp_next_found\":128,\"opp_next_nodes\":108570}",
+          "value_bits": 1106519205
+        },
+        "S4": {
+          "explain_fnv": "17949661356638658419",
+          "explain_len": 27645,
+          "idx": 2,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":512,\"opp_cap_hits\":512,\"opp_lethal_checks\":512,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":5440,\"opp_lethal_applies_max\":14,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":8768,\"own_solver_nodes_max\":8768,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":160,\"pairs_skipped\":0,\"lethal_nodes\":1348,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":512,\"horizon_nodes\":97924,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":432,\"opp_open_lines\":412,\"opp_open_lower\":116,\"opp_open_nodes\":14520,\"opp_next_checks\":512,\"opp_next_found\":68,\"opp_next_nodes\":67156}",
+          "value_bits": 1098213464
+        }
+      },
+      "id": "review:review13:4984932781931433298-b4973563.json:45",
+      "search_key": "2280883064444226564"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "9333482030402072948",
+          "explain_len": 13234,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":5545,\"cap_hits\":0,\"candidates\":2,\"roots\":8,\"opp_leaves\":16,\"opp_cap_hits\":0,\"opp_lethal_checks\":16,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":522,\"opp_lethal_applies_max\":69,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":24,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":32,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":8,\"open_hosts\":8,\"hb_checks\":1,\"hb_worlds_removable\":6,\"hb_overrides\":0,\"hb_nodes\":19410,\"hb_nodes_max\":1693,\"hb_unknown\":0,\"hbk_checks\":1,\"hbk_flips\":0,\"hbk_nodes\":11172,\"opp_open_replies\":16,\"opp_open_lines\":32,\"opp_open_lower\":5,\"opp_open_nodes\":3323,\"opp_next_checks\":19,\"opp_next_found\":6,\"opp_next_nodes\":2028}",
+          "value_bits": 3246443381
+        },
+        "S2": {
+          "explain_fnv": "4099587486024220114",
+          "explain_len": 13191,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":7021,\"cap_hits\":0,\"candidates\":2,\"roots\":8,\"opp_leaves\":16,\"opp_cap_hits\":6,\"opp_lethal_checks\":16,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":967,\"opp_lethal_applies_max\":117,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":24,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":32,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":8,\"open_hosts\":8,\"hb_checks\":1,\"hb_worlds_removable\":6,\"hb_overrides\":0,\"hb_nodes\":19410,\"hb_nodes_max\":1693,\"hb_unknown\":0,\"hbk_checks\":1,\"hbk_flips\":0,\"hbk_nodes\":13700,\"opp_open_replies\":16,\"opp_open_lines\":30,\"opp_open_lower\":5,\"opp_open_nodes\":3837,\"opp_next_checks\":16,\"opp_next_found\":6,\"opp_next_nodes\":3197}",
+          "value_bits": 3246443381
+        },
+        "S3": {
+          "explain_fnv": "895772177341127203",
+          "explain_len": 23140,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":2,\"roots\":16,\"opp_leaves\":32,\"opp_cap_hits\":32,\"opp_lethal_checks\":32,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":888,\"opp_lethal_applies_max\":69,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":48,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":64,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":16,\"open_hosts\":16,\"hb_checks\":1,\"hb_worlds_removable\":11,\"hb_overrides\":0,\"hb_nodes\":43752,\"hb_nodes_max\":2000,\"hb_unknown\":0,\"hbk_checks\":1,\"hbk_flips\":0,\"hbk_nodes\":8000,\"opp_open_replies\":32,\"opp_open_lines\":52,\"opp_open_lower\":14,\"opp_open_nodes\":3625,\"opp_next_checks\":25,\"opp_next_found\":6,\"opp_next_nodes\":2257}",
+          "value_bits": 3249961699
+        },
+        "S4": {
+          "explain_fnv": "15960486960659966309",
+          "explain_len": 14799,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":3631,\"cap_hits\":0,\"candidates\":2,\"roots\":8,\"opp_leaves\":16,\"opp_cap_hits\":0,\"opp_lethal_checks\":16,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":392,\"opp_lethal_applies_max\":30,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":24,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":32,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":1,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":16518,\"hb_nodes_max\":1423,\"hb_unknown\":0,\"hbk_checks\":1,\"hbk_flips\":0,\"hbk_nodes\":7299,\"opp_open_replies\":16,\"opp_open_lines\":32,\"opp_open_lower\":5,\"opp_open_nodes\":2083,\"opp_next_checks\":7,\"opp_next_found\":0,\"opp_next_nodes\":338}",
+          "value_bits": 3255743450
+        }
+      },
+      "id": "review:review14:14600367900189587136-d90f8eb2.json:69",
+      "search_key": "8629251272070882388"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "5341704889330504960",
+          "explain_len": 16182,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":3,\"roots\":8,\"opp_leaves\":64,\"opp_cap_hits\":64,\"opp_lethal_checks\":64,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":1798,\"opp_lethal_applies_max\":67,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":5,\"own_solver_nodes_max\":5,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":7,\"own_roll_nodes_max\":7,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":56,\"pairs_skipped\":0,\"lethal_nodes\":7,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":40,\"horizon_nodes\":8000,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":51,\"opp_open_lines\":46,\"opp_open_lower\":15,\"opp_open_nodes\":3925,\"opp_next_checks\":60,\"opp_next_found\":11,\"opp_next_nodes\":7293}",
+          "value_bits": 1075403183
+        },
+        "S2": {
+          "explain_fnv": "4601531084140283263",
+          "explain_len": 15577,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":3,\"roots\":8,\"opp_leaves\":64,\"opp_cap_hits\":64,\"opp_lethal_checks\":64,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":10011,\"opp_lethal_applies_max\":298,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":5,\"own_solver_nodes_max\":5,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":7,\"own_roll_nodes_max\":7,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":56,\"pairs_skipped\":0,\"lethal_nodes\":7,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":40,\"horizon_nodes\":8000,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":10,\"opp_open_lines\":9,\"opp_open_lower\":4,\"opp_open_nodes\":711,\"opp_next_checks\":18,\"opp_next_found\":0,\"opp_next_nodes\":2440}",
+          "value_bits": 3230083879
+        },
+        "S3": {
+          "explain_fnv": "2488996181112016124",
+          "explain_len": 31852,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":3,\"roots\":16,\"opp_leaves\":128,\"opp_cap_hits\":128,\"opp_lethal_checks\":128,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":4203,\"opp_lethal_applies_max\":90,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":5,\"own_solver_nodes_max\":5,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":7,\"own_roll_nodes_max\":7,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":64,\"pairs_skipped\":0,\"lethal_nodes\":7,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":128,\"horizon_nodes\":17799,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":62,\"opp_open_lines\":47,\"opp_open_lower\":23,\"opp_open_nodes\":2543,\"opp_next_checks\":99,\"opp_next_found\":17,\"opp_next_nodes\":10650}",
+          "value_bits": 1090986147
+        },
+        "S4": {
+          "explain_fnv": "15275819911483252302",
+          "explain_len": 15999,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":3,\"roots\":8,\"opp_leaves\":64,\"opp_cap_hits\":63,\"opp_lethal_checks\":64,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":1708,\"opp_lethal_applies_max\":57,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":5,\"own_solver_nodes_max\":5,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":7,\"own_roll_nodes_max\":7,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":57,\"pairs_skipped\":0,\"lethal_nodes\":7,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":40,\"horizon_nodes\":7905,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":27,\"opp_open_lines\":27,\"opp_open_lower\":12,\"opp_open_nodes\":1859,\"opp_next_checks\":62,\"opp_next_found\":0,\"opp_next_nodes\":8390}",
+          "value_bits": 1105264744
+        }
+      },
+      "id": "review:review14:14600367900189587136-d90f8eb2.json:40",
+      "search_key": "6455221694207907481"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "2281909319246153714",
+          "explain_len": 10346,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":3113,\"cap_hits\":0,\"candidates\":2,\"roots\":8,\"opp_leaves\":16,\"opp_cap_hits\":0,\"opp_lethal_checks\":16,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":139,\"opp_lethal_applies_max\":19,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":24,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":8,\"open_hosts\":8,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":16,\"opp_open_lines\":32,\"opp_open_lower\":7,\"opp_open_nodes\":1928,\"opp_next_checks\":48,\"opp_next_found\":0,\"opp_next_nodes\":1381}",
+          "value_bits": 1109025575
+        },
+        "S2": {
+          "explain_fnv": "193025145218636104",
+          "explain_len": 10346,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":3760,\"cap_hits\":0,\"candidates\":2,\"roots\":8,\"opp_leaves\":16,\"opp_cap_hits\":0,\"opp_lethal_checks\":16,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":367,\"opp_lethal_applies_max\":50,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":24,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":8,\"open_hosts\":8,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":16,\"opp_open_lines\":32,\"opp_open_lower\":7,\"opp_open_nodes\":2203,\"opp_next_checks\":48,\"opp_next_found\":0,\"opp_next_nodes\":1800}",
+          "value_bits": 1109025575
+        },
+        "S3": {
+          "explain_fnv": "18309741089358225030",
+          "explain_len": 20007,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":6180,\"cap_hits\":0,\"candidates\":2,\"roots\":16,\"opp_leaves\":32,\"opp_cap_hits\":0,\"opp_lethal_checks\":32,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":308,\"opp_lethal_applies_max\":25,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":48,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":14,\"open_hosts\":16,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":32,\"opp_open_lines\":64,\"opp_open_lower\":19,\"opp_open_nodes\":3783,\"opp_next_checks\":96,\"opp_next_found\":0,\"opp_next_nodes\":2757}",
+          "value_bits": 1109151816
+        },
+        "S4": {
+          "explain_fnv": "16510255809951508709",
+          "explain_len": 10224,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":2690,\"cap_hits\":0,\"candidates\":2,\"roots\":8,\"opp_leaves\":16,\"opp_cap_hits\":0,\"opp_lethal_checks\":16,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":71,\"opp_lethal_applies_max\":10,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1,\"own_solver_nodes_max\":1,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1,\"own_roll_nodes_max\":1,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":24,\"pairs_skipped\":0,\"lethal_nodes\":1,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":16,\"opp_open_lines\":32,\"opp_open_lower\":8,\"opp_open_nodes\":1582,\"opp_next_checks\":48,\"opp_next_found\":0,\"opp_next_nodes\":1186}",
+          "value_bits": 1108368671
+        }
+      },
+      "id": "review:review14:6598261483642061665-d90f8eb2.json:27",
+      "search_key": "11020201453559175541"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "11757940066292669602",
+          "explain_len": 15696,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":7838,\"cap_hits\":0,\"candidates\":3,\"roots\":8,\"opp_leaves\":24,\"opp_cap_hits\":19,\"opp_lethal_checks\":24,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":542,\"opp_lethal_applies_max\":42,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":2,\"own_solver_nodes_max\":2,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":2,\"own_roll_nodes_max\":2,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":40,\"pairs_skipped\":0,\"lethal_nodes\":2,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":13,\"open_hosts\":8,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":24,\"opp_open_lines\":46,\"opp_open_lower\":14,\"opp_open_nodes\":4205,\"opp_next_checks\":37,\"opp_next_found\":10,\"opp_next_nodes\":2590}",
+          "value_bits": 3234060901
+        },
+        "S2": {
+          "explain_fnv": "5317635841714209111",
+          "explain_len": 14461,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":7954,\"cap_hits\":0,\"candidates\":3,\"roots\":8,\"opp_leaves\":24,\"opp_cap_hits\":22,\"opp_lethal_checks\":24,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":1401,\"opp_lethal_applies_max\":94,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":2,\"own_solver_nodes_max\":2,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":2,\"own_roll_nodes_max\":2,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":40,\"pairs_skipped\":0,\"lethal_nodes\":2,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":13,\"open_hosts\":8,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":24,\"opp_open_lines\":37,\"opp_open_lower\":14,\"opp_open_nodes\":3009,\"opp_next_checks\":28,\"opp_next_found\":8,\"opp_next_nodes\":2498}",
+          "value_bits": 3233976539
+        },
+        "S3": {
+          "explain_fnv": "16639915045012480569",
+          "explain_len": 31253,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":3,\"roots\":16,\"opp_leaves\":48,\"opp_cap_hits\":48,\"opp_lethal_checks\":48,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":1136,\"opp_lethal_applies_max\":44,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":2,\"own_solver_nodes_max\":2,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":2,\"own_roll_nodes_max\":2,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":32,\"pairs_skipped\":0,\"lethal_nodes\":2,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":144,\"horizon_nodes\":1682,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":29,\"open_hosts\":16,\"hb_checks\":1,\"hb_worlds_removable\":7,\"hb_overrides\":1,\"hb_nodes\":76307,\"hb_nodes_max\":2000,\"hb_unknown\":0,\"hbk_checks\":1,\"hbk_flips\":0,\"hbk_nodes\":7968,\"opp_open_replies\":47,\"opp_open_lines\":47,\"opp_open_lower\":29,\"opp_open_nodes\":2383,\"opp_next_checks\":30,\"opp_next_found\":8,\"opp_next_nodes\":2387}",
+          "value_bits": 3254230269
+        },
+        "S4": {
+          "explain_fnv": "13083169490283881966",
+          "explain_len": 19532,
+          "idx": 2,
+          "stats": "{\"decisions\":1,\"nodes\":7753,\"cap_hits\":0,\"candidates\":3,\"roots\":8,\"opp_leaves\":24,\"opp_cap_hits\":9,\"opp_lethal_checks\":24,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":685,\"opp_lethal_applies_max\":48,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":2,\"own_solver_nodes_max\":2,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":2,\"own_roll_nodes_max\":2,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":40,\"pairs_skipped\":0,\"lethal_nodes\":2,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":48,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":1,\"hb_worlds_removable\":3,\"hb_overrides\":0,\"hb_nodes\":43221,\"hb_nodes_max\":2000,\"hb_unknown\":0,\"hbk_checks\":1,\"hbk_flips\":0,\"hbk_nodes\":15049,\"opp_open_replies\":24,\"opp_open_lines\":47,\"opp_open_lower\":20,\"opp_open_nodes\":4462,\"opp_next_checks\":17,\"opp_next_found\":3,\"opp_next_nodes\":1777}",
+          "value_bits": 3192389888
+        }
+      },
+      "id": "review:review14:6598261483642061665-d90f8eb2.json:52",
+      "search_key": "7921619444472731527"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "13802490171922300243",
+          "explain_len": 75354,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":7416,\"cap_hits\":0,\"candidates\":12,\"roots\":8,\"opp_leaves\":1262,\"opp_cap_hits\":681,\"opp_lethal_checks\":1262,\"opp_lethal_found\":581,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":34237,\"opp_lethal_applies_max\":61,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":99,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":2221,\"own_solver_nodes_max\":2221,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":1,\"cands_with_lethal_root\":12,\"tt_hits\":36,\"tt_stores\":512,\"pairs_skipped\":0,\"lethal_nodes\":860,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1262,\"horizon_nodes\":143203,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":22,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":515,\"opp_open_lines\":405,\"opp_open_lower\":333,\"opp_open_nodes\":14120,\"opp_next_checks\":29,\"opp_next_found\":29,\"opp_next_nodes\":43109}",
+          "value_bits": 1107904007
+        },
+        "S2": {
+          "explain_fnv": "18151802369268383896",
+          "explain_len": 75354,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":7416,\"cap_hits\":0,\"candidates\":12,\"roots\":8,\"opp_leaves\":1262,\"opp_cap_hits\":681,\"opp_lethal_checks\":1262,\"opp_lethal_found\":581,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":35281,\"opp_lethal_applies_max\":64,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":99,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":2221,\"own_solver_nodes_max\":2221,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":1,\"cands_with_lethal_root\":12,\"tt_hits\":36,\"tt_stores\":509,\"pairs_skipped\":0,\"lethal_nodes\":860,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1262,\"horizon_nodes\":143406,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":22,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":502,\"opp_open_lines\":398,\"opp_open_lower\":326,\"opp_open_nodes\":13575,\"opp_next_checks\":29,\"opp_next_found\":29,\"opp_next_nodes\":42808}",
+          "value_bits": 1107904007
+        },
+        "S3": {
+          "explain_fnv": "7916205129278331193",
+          "explain_len": 147534,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":7424,\"cap_hits\":0,\"candidates\":12,\"roots\":16,\"opp_leaves\":2400,\"opp_cap_hits\":1294,\"opp_lethal_checks\":2400,\"opp_lethal_found\":1106,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":64219,\"opp_lethal_applies_max\":61,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":258,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":2221,\"own_solver_nodes_max\":2221,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":1,\"cands_with_lethal_root\":12,\"tt_hits\":48,\"tt_stores\":880,\"pairs_skipped\":0,\"lethal_nodes\":860,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":2400,\"horizon_nodes\":280301,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":45,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":978,\"opp_open_lines\":785,\"opp_open_lower\":586,\"opp_open_nodes\":27639,\"opp_next_checks\":41,\"opp_next_found\":34,\"opp_next_nodes\":84370}",
+          "value_bits": 1107796039
+        },
+        "S4": {
+          "explain_fnv": "6889759540104010488",
+          "explain_len": 76898,
+          "idx": 8,
+          "stats": "{\"decisions\":1,\"nodes\":7416,\"cap_hits\":0,\"candidates\":12,\"roots\":8,\"opp_leaves\":1366,\"opp_cap_hits\":661,\"opp_lethal_checks\":1366,\"opp_lethal_found\":705,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":38003,\"opp_lethal_applies_max\":70,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":181,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":2221,\"own_solver_nodes_max\":2221,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":4,\"tt_hits\":56,\"tt_stores\":598,\"pairs_skipped\":0,\"lethal_nodes\":860,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1366,\"horizon_nodes\":141108,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":439,\"opp_open_lines\":473,\"opp_open_lower\":269,\"opp_open_nodes\":19164,\"opp_next_checks\":0,\"opp_next_found\":0,\"opp_next_nodes\":36797}",
+          "value_bits": 1111053730
+        }
+      },
+      "id": "review:review14:6598261483642061665-d90f8eb2.json:91",
+      "search_key": "15657696786881564658"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "16310399559088139692",
+          "explain_len": 20653,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":7337,\"cap_hits\":0,\"candidates\":4,\"roots\":8,\"opp_leaves\":32,\"opp_cap_hits\":11,\"opp_lethal_checks\":32,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":625,\"opp_lethal_applies_max\":36,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":3,\"own_solver_nodes_max\":3,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":3,\"own_roll_nodes_max\":3,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":56,\"pairs_skipped\":0,\"lethal_nodes\":3,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":32,\"opp_open_lines\":64,\"opp_open_lower\":19,\"opp_open_nodes\":4286,\"opp_next_checks\":85,\"opp_next_found\":0,\"opp_next_nodes\":3307}",
+          "value_bits": 1099960088
+        },
+        "S2": {
+          "explain_fnv": "5161373196936842204",
+          "explain_len": 20559,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":32,\"opp_cap_hits\":30,\"opp_lethal_checks\":32,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":1611,\"opp_lethal_applies_max\":85,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":3,\"own_solver_nodes_max\":3,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":3,\"own_roll_nodes_max\":3,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":56,\"pairs_skipped\":0,\"lethal_nodes\":3,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":1,\"hbk_flips\":1,\"hbk_nodes\":15753,\"opp_open_replies\":32,\"opp_open_lines\":50,\"opp_open_lower\":13,\"opp_open_nodes\":3445,\"opp_next_checks\":64,\"opp_next_found\":0,\"opp_next_nodes\":3485}",
+          "value_bits": 1099648373
+        },
+        "S3": {
+          "explain_fnv": "8386344870923375317",
+          "explain_len": 38783,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":16,\"opp_leaves\":64,\"opp_cap_hits\":50,\"opp_lethal_checks\":64,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":1322,\"opp_lethal_applies_max\":50,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":3,\"own_solver_nodes_max\":3,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":3,\"own_roll_nodes_max\":3,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":48,\"pairs_skipped\":0,\"lethal_nodes\":3,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":64,\"horizon_nodes\":4697,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":64,\"opp_open_lines\":121,\"opp_open_lower\":42,\"opp_open_nodes\":6634,\"opp_next_checks\":132,\"opp_next_found\":0,\"opp_next_nodes\":4730}",
+          "value_bits": 1100708842
+        },
+        "S4": {
+          "explain_fnv": "3917561146700075242",
+          "explain_len": 21897,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":7744,\"cap_hits\":0,\"candidates\":4,\"roots\":8,\"opp_leaves\":32,\"opp_cap_hits\":17,\"opp_lethal_checks\":32,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":571,\"opp_lethal_applies_max\":25,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":3,\"own_solver_nodes_max\":3,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":3,\"own_roll_nodes_max\":3,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":56,\"pairs_skipped\":0,\"lethal_nodes\":3,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":1,\"hbk_flips\":1,\"hbk_nodes\":15321,\"opp_open_replies\":32,\"opp_open_lines\":64,\"opp_open_lower\":25,\"opp_open_nodes\":4506,\"opp_next_checks\":77,\"opp_next_found\":0,\"opp_next_nodes\":3225}",
+          "value_bits": 1105519267
+        }
+      },
+      "id": "review:review14:12644260486301391828-d90f8eb2.json:15",
+      "search_key": "10338272629292575689"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "12277484753744026879",
+          "explain_len": 43743,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":8,\"opp_leaves\":384,\"opp_cap_hits\":384,\"opp_lethal_checks\":384,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":9016,\"opp_lethal_applies_max\":94,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":253,\"own_solver_nodes_max\":253,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":641,\"own_roll_nodes_max\":641,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":200,\"pairs_skipped\":0,\"lethal_nodes\":99,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":384,\"horizon_nodes\":69563,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":14,\"open_hosts\":8,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":325,\"opp_open_lines\":399,\"opp_open_lower\":139,\"opp_open_nodes\":21495,\"opp_next_checks\":286,\"opp_next_found\":67,\"opp_next_nodes\":19054}",
+          "value_bits": 3241380382
+        },
+        "S2": {
+          "explain_fnv": "17886766939853059181",
+          "explain_len": 42461,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":8,\"opp_leaves\":384,\"opp_cap_hits\":384,\"opp_lethal_checks\":384,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":25150,\"opp_lethal_applies_max\":184,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":253,\"own_solver_nodes_max\":253,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":641,\"own_roll_nodes_max\":641,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":200,\"pairs_skipped\":0,\"lethal_nodes\":99,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":384,\"horizon_nodes\":69563,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":14,\"open_hosts\":8,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":177,\"opp_open_lines\":220,\"opp_open_lower\":87,\"opp_open_nodes\":11044,\"opp_next_checks\":194,\"opp_next_found\":19,\"opp_next_nodes\":13404}",
+          "value_bits": 1067964660
+        },
+        "S3": {
+          "explain_fnv": "17586962907618006630",
+          "explain_len": 85469,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":16,\"opp_leaves\":768,\"opp_cap_hits\":763,\"opp_lethal_checks\":768,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":19012,\"opp_lethal_applies_max\":94,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":253,\"own_solver_nodes_max\":253,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":641,\"own_roll_nodes_max\":641,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":400,\"pairs_skipped\":0,\"lethal_nodes\":99,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":768,\"horizon_nodes\":146971,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":28,\"open_hosts\":16,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":623,\"opp_open_lines\":761,\"opp_open_lower\":227,\"opp_open_nodes\":41675,\"opp_next_checks\":671,\"opp_next_found\":222,\"opp_next_nodes\":44061}",
+          "value_bits": 3243368904
+        },
+        "S4": {
+          "explain_fnv": "4787606658136551241",
+          "explain_len": 43429,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":8,\"opp_leaves\":384,\"opp_cap_hits\":384,\"opp_lethal_checks\":384,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":9219,\"opp_lethal_applies_max\":53,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":253,\"own_solver_nodes_max\":253,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":641,\"own_roll_nodes_max\":641,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":200,\"pairs_skipped\":0,\"lethal_nodes\":99,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":384,\"horizon_nodes\":69563,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":296,\"opp_open_lines\":331,\"opp_open_lower\":155,\"opp_open_nodes\":16002,\"opp_next_checks\":317,\"opp_next_found\":92,\"opp_next_nodes\":22754}",
+          "value_bits": 1083134029
+        }
+      },
+      "id": "review:review14:12644260486301391828-d90f8eb2.json:35",
+      "search_key": "510867383754126098"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "14501953774466924138",
+          "explain_len": 16530,
+          "idx": 2,
+          "stats": "{\"decisions\":1,\"nodes\":7901,\"cap_hits\":0,\"candidates\":3,\"roots\":8,\"opp_leaves\":40,\"opp_cap_hits\":28,\"opp_lethal_checks\":40,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":728,\"opp_lethal_applies_max\":32,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":189,\"own_solver_nodes_max\":189,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":598,\"own_roll_nodes_max\":598,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":72,\"pairs_skipped\":0,\"lethal_nodes\":34,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":16,\"horizon_nodes\":2920,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":40,\"opp_open_lines\":70,\"opp_open_lower\":5,\"opp_open_nodes\":6160,\"opp_next_checks\":59,\"opp_next_found\":20,\"opp_next_nodes\":7045}",
+          "value_bits": 3252189758
+        },
+        "S2": {
+          "explain_fnv": "6856611836246402726",
+          "explain_len": 16567,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":7962,\"cap_hits\":0,\"candidates\":3,\"roots\":8,\"opp_leaves\":36,\"opp_cap_hits\":29,\"opp_lethal_checks\":36,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":1036,\"opp_lethal_applies_max\":49,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":189,\"own_solver_nodes_max\":189,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":598,\"own_roll_nodes_max\":598,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":68,\"pairs_skipped\":0,\"lethal_nodes\":34,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":12,\"horizon_nodes\":2347,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":35,\"opp_open_lines\":60,\"opp_open_lower\":7,\"opp_open_nodes\":5455,\"opp_next_checks\":47,\"opp_next_found\":18,\"opp_next_nodes\":6591}",
+          "value_bits": 3250993509
+        },
+        "S3": {
+          "explain_fnv": "16453277237743266559",
+          "explain_len": 31676,
+          "idx": 2,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":3,\"roots\":16,\"opp_leaves\":64,\"opp_cap_hits\":64,\"opp_lethal_checks\":64,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":1276,\"opp_lethal_applies_max\":32,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":189,\"own_solver_nodes_max\":189,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":598,\"own_roll_nodes_max\":598,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":80,\"pairs_skipped\":0,\"lethal_nodes\":34,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":64,\"horizon_nodes\":5106,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":64,\"opp_open_lines\":75,\"opp_open_lower\":15,\"opp_open_nodes\":5344,\"opp_next_checks\":57,\"opp_next_found\":22,\"opp_next_nodes\":7687}",
+          "value_bits": 3247059852
+        },
+        "S4": {
+          "explain_fnv": "13329873958624557175",
+          "explain_len": 16360,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":7997,\"cap_hits\":0,\"candidates\":3,\"roots\":8,\"opp_leaves\":38,\"opp_cap_hits\":31,\"opp_lethal_checks\":38,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":548,\"opp_lethal_applies_max\":18,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":189,\"own_solver_nodes_max\":189,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":598,\"own_roll_nodes_max\":598,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":70,\"pairs_skipped\":0,\"lethal_nodes\":34,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":14,\"horizon_nodes\":2660,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":38,\"opp_open_lines\":65,\"opp_open_lower\":10,\"opp_open_nodes\":5805,\"opp_next_checks\":43,\"opp_next_found\":0,\"opp_next_nodes\":6664}",
+          "value_bits": 1097218725
+        }
+      },
+      "id": "review:review14:6598261483642061665-d90f8eb2.json:60",
+      "search_key": "6259296275000261121"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "11301695126666263717",
+          "explain_len": 309,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":0,\"cap_hits\":0,\"candidates\":0,\"roots\":0,\"opp_leaves\":0,\"opp_cap_hits\":0,\"opp_lethal_checks\":0,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":0,\"opp_lethal_applies_max\":0,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":0,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":0,\"own_solver_nodes_max\":0,\"own_roll_calls\":0,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":0,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":0,\"own_roll_nodes_max\":0,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":0,\"pairs_skipped\":0,\"lethal_nodes\":0,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":0,\"opp_open_lines\":0,\"opp_open_lower\":0,\"opp_open_nodes\":0,\"opp_next_checks\":0,\"opp_next_found\":0,\"opp_next_nodes\":0}",
+          "value_bits": null
+        },
+        "S2": {
+          "explain_fnv": "11301695126666263717",
+          "explain_len": 309,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":0,\"cap_hits\":0,\"candidates\":0,\"roots\":0,\"opp_leaves\":0,\"opp_cap_hits\":0,\"opp_lethal_checks\":0,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":0,\"opp_lethal_applies_max\":0,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":0,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":0,\"own_solver_nodes_max\":0,\"own_roll_calls\":0,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":0,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":0,\"own_roll_nodes_max\":0,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":0,\"pairs_skipped\":0,\"lethal_nodes\":0,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":0,\"opp_open_lines\":0,\"opp_open_lower\":0,\"opp_open_nodes\":0,\"opp_next_checks\":0,\"opp_next_found\":0,\"opp_next_nodes\":0}",
+          "value_bits": null
+        },
+        "S3": {
+          "explain_fnv": "11301695126666263717",
+          "explain_len": 309,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":0,\"cap_hits\":0,\"candidates\":0,\"roots\":0,\"opp_leaves\":0,\"opp_cap_hits\":0,\"opp_lethal_checks\":0,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":0,\"opp_lethal_applies_max\":0,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":0,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":0,\"own_solver_nodes_max\":0,\"own_roll_calls\":0,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":0,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":0,\"own_roll_nodes_max\":0,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":0,\"pairs_skipped\":0,\"lethal_nodes\":0,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":0,\"opp_open_lines\":0,\"opp_open_lower\":0,\"opp_open_nodes\":0,\"opp_next_checks\":0,\"opp_next_found\":0,\"opp_next_nodes\":0}",
+          "value_bits": null
+        },
+        "S4": {
+          "explain_fnv": "11301695126666263717",
+          "explain_len": 309,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":0,\"cap_hits\":0,\"candidates\":0,\"roots\":0,\"opp_leaves\":0,\"opp_cap_hits\":0,\"opp_lethal_checks\":0,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":0,\"opp_lethal_applies_max\":0,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":0,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":0,\"own_solver_nodes_max\":0,\"own_roll_calls\":0,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":0,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":0,\"own_roll_nodes_max\":0,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":0,\"pairs_skipped\":0,\"lethal_nodes\":0,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":0,\"opp_open_lines\":0,\"opp_open_lower\":0,\"opp_open_nodes\":0,\"opp_next_checks\":0,\"opp_next_found\":0,\"opp_next_nodes\":0}",
+          "value_bits": null
+        }
+      },
+      "id": "review:review14:14600367900189587136-d90f8eb2.json:55",
+      "search_key": "17637617073001499582"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "4423898985942235851",
+          "explain_len": 306,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":0,\"cap_hits\":0,\"candidates\":17,\"roots\":8,\"opp_leaves\":0,\"opp_cap_hits\":0,\"opp_lethal_checks\":0,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":0,\"opp_lethal_applies_max\":0,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":1,\"own_solver_taken\":1,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":3,\"own_solver_nodes_max\":3,\"own_roll_calls\":0,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":0,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":0,\"own_roll_nodes_max\":0,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":0,\"pairs_skipped\":0,\"lethal_nodes\":0,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":0,\"opp_open_lines\":0,\"opp_open_lower\":0,\"opp_open_nodes\":0,\"opp_next_checks\":0,\"opp_next_found\":0,\"opp_next_nodes\":0}",
+          "value_bits": 1117782016
+        },
+        "S2": {
+          "explain_fnv": "4423898985942235851",
+          "explain_len": 306,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":0,\"cap_hits\":0,\"candidates\":17,\"roots\":8,\"opp_leaves\":0,\"opp_cap_hits\":0,\"opp_lethal_checks\":0,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":0,\"opp_lethal_applies_max\":0,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":1,\"own_solver_taken\":1,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":3,\"own_solver_nodes_max\":3,\"own_roll_calls\":0,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":0,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":0,\"own_roll_nodes_max\":0,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":0,\"pairs_skipped\":0,\"lethal_nodes\":0,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":0,\"opp_open_lines\":0,\"opp_open_lower\":0,\"opp_open_nodes\":0,\"opp_next_checks\":0,\"opp_next_found\":0,\"opp_next_nodes\":0}",
+          "value_bits": 1117782016
+        },
+        "S3": {
+          "explain_fnv": "1377164227415595278",
+          "explain_len": 307,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":0,\"cap_hits\":0,\"candidates\":17,\"roots\":16,\"opp_leaves\":0,\"opp_cap_hits\":0,\"opp_lethal_checks\":0,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":0,\"opp_lethal_applies_max\":0,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":1,\"own_solver_taken\":1,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":3,\"own_solver_nodes_max\":3,\"own_roll_calls\":0,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":0,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":0,\"own_roll_nodes_max\":0,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":0,\"pairs_skipped\":0,\"lethal_nodes\":0,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":0,\"opp_open_lines\":0,\"opp_open_lower\":0,\"opp_open_nodes\":0,\"opp_next_checks\":0,\"opp_next_found\":0,\"opp_next_nodes\":0}",
+          "value_bits": 1117782016
+        },
+        "S4": {
+          "explain_fnv": "4423898985942235851",
+          "explain_len": 306,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":0,\"cap_hits\":0,\"candidates\":17,\"roots\":8,\"opp_leaves\":0,\"opp_cap_hits\":0,\"opp_lethal_checks\":0,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":0,\"opp_lethal_applies_max\":0,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":1,\"own_solver_taken\":1,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":3,\"own_solver_nodes_max\":3,\"own_roll_calls\":0,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":0,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":0,\"own_roll_nodes_max\":0,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":0,\"pairs_skipped\":0,\"lethal_nodes\":0,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":0,\"horizon_nodes\":0,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":0,\"opp_open_lines\":0,\"opp_open_lower\":0,\"opp_open_nodes\":0,\"opp_next_checks\":0,\"opp_next_found\":0,\"opp_next_nodes\":0}",
+          "value_bits": 1117782016
+        }
+      },
+      "id": "review:review13:4984932781931433298-b4973563.json:60",
+      "search_key": "16877054228285732530"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "17997828875182140954",
+          "explain_len": 46168,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":8,\"opp_leaves\":565,\"opp_cap_hits\":559,\"opp_lethal_checks\":565,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":12688,\"opp_lethal_applies_max\":86,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1100,\"own_solver_nodes_max\":1100,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":248,\"pairs_skipped\":0,\"lethal_nodes\":130,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":565,\"horizon_nodes\":106453,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":523,\"opp_open_lines\":637,\"opp_open_lower\":185,\"opp_open_nodes\":32029,\"opp_next_checks\":737,\"opp_next_found\":166,\"opp_next_nodes\":45207}",
+          "value_bits": 1105387566
+        },
+        "S2": {
+          "explain_fnv": "426064643786603564",
+          "explain_len": 46064,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":8,\"opp_leaves\":565,\"opp_cap_hits\":565,\"opp_lethal_checks\":565,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":30820,\"opp_lethal_applies_max\":200,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1100,\"own_solver_nodes_max\":1100,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":248,\"pairs_skipped\":0,\"lethal_nodes\":130,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":565,\"horizon_nodes\":106463,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":319,\"opp_open_lines\":358,\"opp_open_lower\":68,\"opp_open_nodes\":16205,\"opp_next_checks\":549,\"opp_next_found\":136,\"opp_next_nodes\":39538}",
+          "value_bits": 1104888421
+        },
+        "S3": {
+          "explain_fnv": "14504197927314850006",
+          "explain_len": 91409,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":16,\"opp_leaves\":1123,\"opp_cap_hits\":1117,\"opp_lethal_checks\":1123,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":25227,\"opp_lethal_applies_max\":86,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1100,\"own_solver_nodes_max\":1100,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":496,\"pairs_skipped\":0,\"lethal_nodes\":130,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1123,\"horizon_nodes\":219395,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":1003,\"opp_open_lines\":1122,\"opp_open_lower\":322,\"opp_open_nodes\":57540,\"opp_next_checks\":1335,\"opp_next_found\":307,\"opp_next_nodes\":86927}",
+          "value_bits": 1104274528
+        },
+        "S4": {
+          "explain_fnv": "6044415992450153420",
+          "explain_len": 46370,
+          "idx": 2,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":8,\"opp_leaves\":556,\"opp_cap_hits\":555,\"opp_lethal_checks\":556,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":7415,\"opp_lethal_applies_max\":29,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":1100,\"own_solver_nodes_max\":1100,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":248,\"pairs_skipped\":0,\"lethal_nodes\":130,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":556,\"horizon_nodes\":104637,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":542,\"opp_open_lines\":703,\"opp_open_lower\":128,\"opp_open_nodes\":37736,\"opp_next_checks\":783,\"opp_next_found\":141,\"opp_next_nodes\":49154}",
+          "value_bits": 1107433241
+        }
+      },
+      "id": "meta:71001:28",
+      "search_key": "10383088444757311040"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "7661340777327107157",
+          "explain_len": 41216,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":8,\"opp_leaves\":535,\"opp_cap_hits\":535,\"opp_lethal_checks\":535,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":12297,\"opp_lethal_applies_max\":52,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":6,\"own_solver_nodes_max\":6,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":240,\"pairs_skipped\":0,\"lethal_nodes\":141,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":535,\"horizon_nodes\":100819,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":505,\"opp_open_lines\":590,\"opp_open_lower\":175,\"opp_open_nodes\":28435,\"opp_next_checks\":708,\"opp_next_found\":110,\"opp_next_nodes\":44741}",
+          "value_bits": 1107000242
+        },
+        "S2": {
+          "explain_fnv": "9302011649794072617",
+          "explain_len": 41532,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":8,\"opp_leaves\":535,\"opp_cap_hits\":535,\"opp_lethal_checks\":535,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":25545,\"opp_lethal_applies_max\":160,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":6,\"own_solver_nodes_max\":6,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":240,\"pairs_skipped\":0,\"lethal_nodes\":141,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":535,\"horizon_nodes\":100819,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":312,\"opp_open_lines\":304,\"opp_open_lower\":100,\"opp_open_nodes\":13383,\"opp_next_checks\":528,\"opp_next_found\":52,\"opp_next_nodes\":41173}",
+          "value_bits": 1108487404
+        },
+        "S3": {
+          "explain_fnv": "6746652338678551970",
+          "explain_len": 81493,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":16,\"opp_leaves\":1071,\"opp_cap_hits\":1071,\"opp_lethal_checks\":1071,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":26022,\"opp_lethal_applies_max\":71,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":6,\"own_solver_nodes_max\":6,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":480,\"pairs_skipped\":0,\"lethal_nodes\":141,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1071,\"horizon_nodes\":209707,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":930,\"opp_open_lines\":1036,\"opp_open_lower\":321,\"opp_open_nodes\":48271,\"opp_next_checks\":1325,\"opp_next_found\":232,\"opp_next_nodes\":88957}",
+          "value_bits": 1107548571
+        },
+        "S4": {
+          "explain_fnv": "14034836017453048491",
+          "explain_len": 41714,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":8,\"opp_leaves\":538,\"opp_cap_hits\":530,\"opp_lethal_checks\":538,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":6415,\"opp_lethal_applies_max\":40,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":6,\"own_solver_nodes_max\":6,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":240,\"pairs_skipped\":0,\"lethal_nodes\":123,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":538,\"horizon_nodes\":101127,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":529,\"opp_open_lines\":669,\"opp_open_lower\":130,\"opp_open_nodes\":34713,\"opp_next_checks\":790,\"opp_next_found\":87,\"opp_next_nodes\":50958}",
+          "value_bits": 1109039612
+        }
+      },
+      "id": "meta:71001:29",
+      "search_key": "2862575251047709418"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "4549354838489309498",
+          "explain_len": 42835,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":8,\"opp_leaves\":465,\"opp_cap_hits\":427,\"opp_lethal_checks\":465,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":6094,\"opp_lethal_applies_max\":29,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":859,\"own_solver_nodes_max\":859,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":6566,\"own_roll_nodes_max\":6566,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":224,\"pairs_skipped\":0,\"lethal_nodes\":94,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":465,\"horizon_nodes\":85291,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":8,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":463,\"opp_open_lines\":659,\"opp_open_lower\":140,\"opp_open_nodes\":35025,\"opp_next_checks\":780,\"opp_next_found\":9,\"opp_next_nodes\":52925}",
+          "value_bits": 1107389106
+        },
+        "S2": {
+          "explain_fnv": "6366523217585897731",
+          "explain_len": 43543,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":8,\"opp_leaves\":465,\"opp_cap_hits\":465,\"opp_lethal_checks\":465,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":9755,\"opp_lethal_applies_max\":52,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":859,\"own_solver_nodes_max\":859,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":6566,\"own_roll_nodes_max\":6566,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":224,\"pairs_skipped\":0,\"lethal_nodes\":94,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":465,\"horizon_nodes\":85958,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":8,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":322,\"opp_open_lines\":347,\"opp_open_lower\":108,\"opp_open_nodes\":15367,\"opp_next_checks\":551,\"opp_next_found\":7,\"opp_next_nodes\":57282}",
+          "value_bits": 1107837753
+        },
+        "S3": {
+          "explain_fnv": "2761501430347040417",
+          "explain_len": 85436,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":16,\"opp_leaves\":932,\"opp_cap_hits\":893,\"opp_lethal_checks\":932,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":15552,\"opp_lethal_applies_max\":36,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":859,\"own_solver_nodes_max\":859,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":6566,\"own_roll_nodes_max\":6566,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":448,\"pairs_skipped\":0,\"lethal_nodes\":94,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":932,\"horizon_nodes\":179556,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":16,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":925,\"opp_open_lines\":1272,\"opp_open_lower\":388,\"opp_open_nodes\":68060,\"opp_next_checks\":1483,\"opp_next_found\":18,\"opp_next_nodes\":102384}",
+          "value_bits": 1108007960
+        },
+        "S4": {
+          "explain_fnv": "2775340132208177594",
+          "explain_len": 40463,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":7,\"roots\":8,\"opp_leaves\":462,\"opp_cap_hits\":262,\"opp_lethal_checks\":462,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":3823,\"opp_lethal_applies_max\":15,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":859,\"own_solver_nodes_max\":859,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":6769,\"own_roll_nodes_max\":6769,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":224,\"pairs_skipped\":0,\"lethal_nodes\":96,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":462,\"horizon_nodes\":76786,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":462,\"opp_open_lines\":739,\"opp_open_lower\":272,\"opp_open_nodes\":41264,\"opp_next_checks\":1006,\"opp_next_found\":3,\"opp_next_nodes\":57114}",
+          "value_bits": 1108951852
+        }
+      },
+      "id": "meta:71002:23",
+      "search_key": "11453081443691892765"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "1956277425493377004",
+          "explain_len": 26346,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":392,\"opp_cap_hits\":384,\"opp_lethal_checks\":392,\"opp_lethal_found\":4,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":11141,\"opp_lethal_applies_max\":54,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":431,\"own_solver_nodes_max\":431,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1277,\"own_roll_nodes_max\":1277,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":176,\"pairs_skipped\":0,\"lethal_nodes\":132,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":376,\"horizon_nodes\":71092,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":8,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":369,\"opp_open_lines\":444,\"opp_open_lower\":106,\"opp_open_nodes\":24643,\"opp_next_checks\":513,\"opp_next_found\":177,\"opp_next_nodes\":31548}",
+          "value_bits": 1095616033
+        },
+        "S2": {
+          "explain_fnv": "18211998136076008368",
+          "explain_len": 26480,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":392,\"opp_cap_hits\":388,\"opp_lethal_checks\":392,\"opp_lethal_found\":4,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":19589,\"opp_lethal_applies_max\":123,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":431,\"own_solver_nodes_max\":431,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1277,\"own_roll_nodes_max\":1277,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":176,\"pairs_skipped\":0,\"lethal_nodes\":132,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":376,\"horizon_nodes\":71256,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":8,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":248,\"opp_open_lines\":242,\"opp_open_lower\":78,\"opp_open_nodes\":11083,\"opp_next_checks\":429,\"opp_next_found\":153,\"opp_next_nodes\":31340}",
+          "value_bits": 1095040013
+        },
+        "S3": {
+          "explain_fnv": "3540062985879331806",
+          "explain_len": 51784,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":16,\"opp_leaves\":784,\"opp_cap_hits\":759,\"opp_lethal_checks\":784,\"opp_lethal_found\":12,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":20125,\"opp_lethal_applies_max\":54,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":431,\"own_solver_nodes_max\":431,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1277,\"own_roll_nodes_max\":1277,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":320,\"pairs_skipped\":0,\"lethal_nodes\":132,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":784,\"horizon_nodes\":147368,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":15,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":741,\"opp_open_lines\":924,\"opp_open_lower\":232,\"opp_open_nodes\":50561,\"opp_next_checks\":1075,\"opp_next_found\":352,\"opp_next_nodes\":62203}",
+          "value_bits": 1093004862
+        },
+        "S4": {
+          "explain_fnv": "628880509450667169",
+          "explain_len": 25317,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":392,\"opp_cap_hits\":375,\"opp_lethal_checks\":392,\"opp_lethal_found\":4,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":5221,\"opp_lethal_applies_max\":27,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":431,\"own_solver_nodes_max\":431,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1277,\"own_roll_nodes_max\":1277,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":176,\"pairs_skipped\":0,\"lethal_nodes\":132,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":376,\"horizon_nodes\":71117,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":388,\"opp_open_lines\":713,\"opp_open_lower\":79,\"opp_open_nodes\":37326,\"opp_next_checks\":777,\"opp_next_found\":348,\"opp_next_nodes\":38586}",
+          "value_bits": 1061358600
+        }
+      },
+      "id": "meta:71002:37",
+      "search_key": "1823696458804829851"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "6165589354244969873",
+          "explain_len": 29074,
+          "idx": 4,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":8,\"opp_leaves\":112,\"opp_cap_hits\":104,\"opp_lethal_checks\":112,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":4097,\"opp_lethal_applies_max\":200,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":13,\"own_solver_nodes_max\":13,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":15,\"own_roll_nodes_max\":15,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":80,\"pairs_skipped\":0,\"lethal_nodes\":15,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":112,\"horizon_nodes\":14464,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":101,\"opp_open_lines\":147,\"opp_open_lower\":52,\"opp_open_nodes\":7810,\"opp_next_checks\":186,\"opp_next_found\":0,\"opp_next_nodes\":8647}",
+          "value_bits": 3218092016
+        },
+        "S2": {
+          "explain_fnv": "3542405857621227272",
+          "explain_len": 32791,
+          "idx": 4,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":8,\"opp_leaves\":112,\"opp_cap_hits\":112,\"opp_lethal_checks\":112,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":7353,\"opp_lethal_applies_max\":200,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":13,\"own_solver_nodes_max\":13,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":15,\"own_roll_nodes_max\":15,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":80,\"pairs_skipped\":0,\"lethal_nodes\":15,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":112,\"horizon_nodes\":14607,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":63,\"opp_open_lines\":67,\"opp_open_lower\":34,\"opp_open_nodes\":3159,\"opp_next_checks\":117,\"opp_next_found\":0,\"opp_next_nodes\":7930}",
+          "value_bits": 3206857782
+        },
+        "S3": {
+          "explain_fnv": "2127742758987933719",
+          "explain_len": 59478,
+          "idx": 4,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":16,\"opp_leaves\":224,\"opp_cap_hits\":211,\"opp_lethal_checks\":224,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":7127,\"opp_lethal_applies_max\":200,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":13,\"own_solver_nodes_max\":13,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":15,\"own_roll_nodes_max\":15,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":160,\"pairs_skipped\":0,\"lethal_nodes\":15,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":224,\"horizon_nodes\":37005,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":203,\"opp_open_lines\":301,\"opp_open_lower\":108,\"opp_open_nodes\":16423,\"opp_next_checks\":378,\"opp_next_found\":0,\"opp_next_nodes\":18155}",
+          "value_bits": 1068242743
+        },
+        "S4": {
+          "explain_fnv": "18368406426568746020",
+          "explain_len": 32695,
+          "idx": 4,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":8,\"opp_leaves\":112,\"opp_cap_hits\":109,\"opp_lethal_checks\":112,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":2586,\"opp_lethal_applies_max\":42,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":13,\"own_solver_nodes_max\":13,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":15,\"own_roll_nodes_max\":15,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":80,\"pairs_skipped\":0,\"lethal_nodes\":15,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":112,\"horizon_nodes\":14579,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":112,\"opp_open_lines\":155,\"opp_open_lower\":60,\"opp_open_nodes\":9181,\"opp_next_checks\":179,\"opp_next_found\":0,\"opp_next_nodes\":9388}",
+          "value_bits": 1080957531
+        }
+      },
+      "id": "meta:71003:24",
+      "search_key": "11032733571931081935"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "13325210195001629968",
+          "explain_len": 57947,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":9,\"roots\":8,\"opp_leaves\":848,\"opp_cap_hits\":835,\"opp_lethal_checks\":848,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":21384,\"opp_lethal_applies_max\":76,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":960,\"own_solver_nodes_max\":960,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":4078,\"own_roll_nodes_max\":4078,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":312,\"pairs_skipped\":0,\"lethal_nodes\":251,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":848,\"horizon_nodes\":163261,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":8,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":766,\"opp_open_lines\":1117,\"opp_open_lower\":378,\"opp_open_nodes\":63553,\"opp_next_checks\":1507,\"opp_next_found\":0,\"opp_next_nodes\":88847}",
+          "value_bits": 3243113983
+        },
+        "S2": {
+          "explain_fnv": "17797642277344135960",
+          "explain_len": 56450,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":9,\"roots\":8,\"opp_leaves\":848,\"opp_cap_hits\":848,\"opp_lethal_checks\":848,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":43635,\"opp_lethal_applies_max\":200,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":960,\"own_solver_nodes_max\":960,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":4078,\"own_roll_nodes_max\":4078,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":312,\"pairs_skipped\":0,\"lethal_nodes\":251,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":848,\"horizon_nodes\":163331,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":8,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":580,\"opp_open_lines\":792,\"opp_open_lower\":281,\"opp_open_nodes\":41363,\"opp_next_checks\":1210,\"opp_next_found\":0,\"opp_next_nodes\":77875}",
+          "value_bits": 3239778266
+        },
+        "S3": {
+          "explain_fnv": "18252173701820459429",
+          "explain_len": 115263,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":9,\"roots\":16,\"opp_leaves\":1696,\"opp_cap_hits\":1683,\"opp_lethal_checks\":1696,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":43580,\"opp_lethal_applies_max\":76,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":960,\"own_solver_nodes_max\":960,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":4078,\"own_roll_nodes_max\":4078,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":624,\"pairs_skipped\":0,\"lethal_nodes\":251,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1696,\"horizon_nodes\":334341,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":16,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":1612,\"opp_open_lines\":2283,\"opp_open_lower\":753,\"opp_open_nodes\":125256,\"opp_next_checks\":2936,\"opp_next_found\":0,\"opp_next_nodes\":174174}",
+          "value_bits": 3242154900
+        },
+        "S4": {
+          "explain_fnv": "10586774949493465981",
+          "explain_len": 59586,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":9,\"roots\":8,\"opp_leaves\":848,\"opp_cap_hits\":800,\"opp_lethal_checks\":848,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":15056,\"opp_lethal_applies_max\":31,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":960,\"own_solver_nodes_max\":960,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":4078,\"own_roll_nodes_max\":4078,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":312,\"pairs_skipped\":0,\"lethal_nodes\":251,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":848,\"horizon_nodes\":162745,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":848,\"opp_open_lines\":1438,\"opp_open_lower\":777,\"opp_open_nodes\":81729,\"opp_next_checks\":1737,\"opp_next_found\":0,\"opp_next_nodes\":94291}",
+          "value_bits": 3240497846
+        }
+      },
+      "id": "meta:71003:27",
+      "search_key": "2389218078912138627"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "17271402703606093957",
+          "explain_len": 37644,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":7917,\"cap_hits\":0,\"candidates\":7,\"roots\":8,\"opp_leaves\":184,\"opp_cap_hits\":161,\"opp_lethal_checks\":184,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":3246,\"opp_lethal_applies_max\":38,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":15,\"own_solver_nodes_max\":15,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":28,\"own_roll_nodes_max\":28,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":96,\"pairs_skipped\":0,\"lethal_nodes\":28,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":184,\"horizon_nodes\":28678,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":184,\"opp_open_lines\":284,\"opp_open_lower\":86,\"opp_open_nodes\":16767,\"opp_next_checks\":356,\"opp_next_found\":0,\"opp_next_nodes\":22181}",
+          "value_bits": 3240906980
+        },
+        "S2": {
+          "explain_fnv": "7699922082808020452",
+          "explain_len": 37944,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":7929,\"cap_hits\":0,\"candidates\":7,\"roots\":8,\"opp_leaves\":184,\"opp_cap_hits\":174,\"opp_lethal_checks\":184,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":4773,\"opp_lethal_applies_max\":60,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":15,\"own_solver_nodes_max\":15,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":28,\"own_roll_nodes_max\":28,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":96,\"pairs_skipped\":0,\"lethal_nodes\":28,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":184,\"horizon_nodes\":28892,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":184,\"opp_open_lines\":242,\"opp_open_lower\":88,\"opp_open_nodes\":13307,\"opp_next_checks\":284,\"opp_next_found\":0,\"opp_next_nodes\":21730}",
+          "value_bits": 3242236642
+        },
+        "S3": {
+          "explain_fnv": "4015923598573832034",
+          "explain_len": 72734,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":7995,\"cap_hits\":0,\"candidates\":7,\"roots\":16,\"opp_leaves\":372,\"opp_cap_hits\":286,\"opp_lethal_checks\":372,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":5614,\"opp_lethal_applies_max\":38,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":15,\"own_solver_nodes_max\":15,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":28,\"own_roll_nodes_max\":28,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":194,\"pairs_skipped\":0,\"lethal_nodes\":28,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":372,\"horizon_nodes\":64435,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":372,\"opp_open_lines\":573,\"opp_open_lower\":172,\"opp_open_nodes\":34096,\"opp_next_checks\":741,\"opp_next_found\":0,\"opp_next_nodes\":45127}",
+          "value_bits": 3241288898
+        },
+        "S4": {
+          "explain_fnv": "13275554479101973343",
+          "explain_len": 34565,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":7955,\"cap_hits\":0,\"candidates\":7,\"roots\":8,\"opp_leaves\":184,\"opp_cap_hits\":121,\"opp_lethal_checks\":184,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":1408,\"opp_lethal_applies_max\":16,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":15,\"own_solver_nodes_max\":15,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":29,\"own_roll_nodes_max\":29,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":96,\"pairs_skipped\":0,\"lethal_nodes\":29,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":184,\"horizon_nodes\":26382,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":184,\"opp_open_lines\":301,\"opp_open_lower\":83,\"opp_open_nodes\":17769,\"opp_next_checks\":409,\"opp_next_found\":0,\"opp_next_nodes\":24429}",
+          "value_bits": 3245611826
+        }
+      },
+      "id": "meta:71004:19",
+      "search_key": "4314571379881462417"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "16475230251065597929",
+          "explain_len": 27506,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":445,\"opp_cap_hits\":427,\"opp_lethal_checks\":445,\"opp_lethal_found\":17,\"opp_lethal_evo_found\":17,\"opp_lethal_nodes\":11903,\"opp_lethal_applies_max\":51,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":4,\"own_solver_nodes_max\":4,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":3328,\"own_roll_nodes_max\":3328,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":160,\"pairs_skipped\":0,\"lethal_nodes\":65,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":445,\"horizon_nodes\":79459,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":422,\"opp_open_lines\":401,\"opp_open_lower\":164,\"opp_open_nodes\":19452,\"opp_next_checks\":455,\"opp_next_found\":378,\"opp_next_nodes\":27450}",
+          "value_bits": 3258218153
+        },
+        "S2": {
+          "explain_fnv": "1385285723643643814",
+          "explain_len": 28219,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":445,\"opp_cap_hits\":428,\"opp_lethal_checks\":445,\"opp_lethal_found\":17,\"opp_lethal_evo_found\":17,\"opp_lethal_nodes\":34183,\"opp_lethal_applies_max\":194,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":4,\"own_solver_nodes_max\":4,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":3328,\"own_roll_nodes_max\":3328,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":160,\"pairs_skipped\":0,\"lethal_nodes\":65,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":445,\"horizon_nodes\":80112,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":174,\"opp_open_lines\":120,\"opp_open_lower\":46,\"opp_open_nodes\":5051,\"opp_next_checks\":233,\"opp_next_found\":186,\"opp_next_nodes\":17996}",
+          "value_bits": 3258304530
+        },
+        "S3": {
+          "explain_fnv": "7927709896586920291",
+          "explain_len": 54450,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":16,\"opp_leaves\":891,\"opp_cap_hits\":844,\"opp_lethal_checks\":891,\"opp_lethal_found\":47,\"opp_lethal_evo_found\":47,\"opp_lethal_nodes\":23892,\"opp_lethal_applies_max\":51,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":4,\"own_solver_nodes_max\":4,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":3328,\"own_roll_nodes_max\":3328,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":320,\"pairs_skipped\":0,\"lethal_nodes\":65,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":891,\"horizon_nodes\":162914,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":789,\"opp_open_lines\":774,\"opp_open_lower\":300,\"opp_open_nodes\":37530,\"opp_next_checks\":907,\"opp_next_found\":741,\"opp_next_nodes\":54310}",
+          "value_bits": 3258666372
+        },
+        "S4": {
+          "explain_fnv": "10731252965124543021",
+          "explain_len": 27951,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":447,\"opp_cap_hits\":447,\"opp_lethal_checks\":447,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":16066,\"opp_lethal_applies_max\":51,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":4,\"own_solver_nodes_max\":4,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":2565,\"own_roll_nodes_max\":2565,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":160,\"pairs_skipped\":0,\"lethal_nodes\":54,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":447,\"horizon_nodes\":83000,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":383,\"opp_open_lines\":333,\"opp_open_lower\":255,\"opp_open_nodes\":14237,\"opp_next_checks\":449,\"opp_next_found\":327,\"opp_next_nodes\":25916}",
+          "value_bits": 3259497074
+        }
+      },
+      "id": "meta:71004:49",
+      "search_key": "13870526048697001787"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "7527649556926225079",
+          "explain_len": 42304,
+          "idx": 6,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":8,\"roots\":8,\"opp_leaves\":268,\"opp_cap_hits\":129,\"opp_lethal_checks\":268,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":3130,\"opp_lethal_applies_max\":22,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":42,\"own_solver_nodes_max\":42,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":69,\"own_roll_nodes_max\":69,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":157,\"pairs_skipped\":0,\"lethal_nodes\":69,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":268,\"horizon_nodes\":38349,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":268,\"opp_open_lines\":444,\"opp_open_lower\":50,\"opp_open_nodes\":24034,\"opp_next_checks\":610,\"opp_next_found\":0,\"opp_next_nodes\":25421}",
+          "value_bits": 3232767004
+        },
+        "S2": {
+          "explain_fnv": "5411664922425156839",
+          "explain_len": 42179,
+          "idx": 6,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":8,\"roots\":8,\"opp_leaves\":268,\"opp_cap_hits\":150,\"opp_lethal_checks\":268,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":4347,\"opp_lethal_applies_max\":33,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":42,\"own_solver_nodes_max\":42,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":69,\"own_roll_nodes_max\":69,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":156,\"pairs_skipped\":0,\"lethal_nodes\":69,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":268,\"horizon_nodes\":39928,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":268,\"opp_open_lines\":427,\"opp_open_lower\":42,\"opp_open_nodes\":23081,\"opp_next_checks\":585,\"opp_next_found\":0,\"opp_next_nodes\":26563}",
+          "value_bits": 3232760409
+        },
+        "S3": {
+          "explain_fnv": "14706214503972589612",
+          "explain_len": 81592,
+          "idx": 6,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":8,\"roots\":16,\"opp_leaves\":533,\"opp_cap_hits\":229,\"opp_lethal_checks\":533,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":5432,\"opp_lethal_applies_max\":22,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":42,\"own_solver_nodes_max\":42,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":69,\"own_roll_nodes_max\":69,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":309,\"pairs_skipped\":0,\"lethal_nodes\":69,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":533,\"horizon_nodes\":80773,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":533,\"opp_open_lines\":826,\"opp_open_lower\":71,\"opp_open_nodes\":45251,\"opp_next_checks\":1176,\"opp_next_found\":0,\"opp_next_nodes\":49820}",
+          "value_bits": 3231142848
+        },
+        "S4": {
+          "explain_fnv": "1244791244686757865",
+          "explain_len": 42242,
+          "idx": 6,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":8,\"roots\":8,\"opp_leaves\":272,\"opp_cap_hits\":157,\"opp_lethal_checks\":272,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":1626,\"opp_lethal_applies_max\":12,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":42,\"own_solver_nodes_max\":42,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":69,\"own_roll_nodes_max\":69,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":159,\"pairs_skipped\":0,\"lethal_nodes\":69,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":272,\"horizon_nodes\":39036,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":272,\"opp_open_lines\":386,\"opp_open_lower\":58,\"opp_open_nodes\":22266,\"opp_next_checks\":556,\"opp_next_found\":0,\"opp_next_nodes\":31230}",
+          "value_bits": 1091801401
+        }
+      },
+      "id": "meta:71005:21",
+      "search_key": "4875722480761763773"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "8736214565037036010",
+          "explain_len": 25020,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":320,\"opp_cap_hits\":253,\"opp_lethal_checks\":320,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":10976,\"opp_lethal_applies_max\":159,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":130,\"own_solver_nodes_max\":130,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":268,\"own_roll_nodes_max\":268,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":210,\"pairs_skipped\":0,\"lethal_nodes\":84,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":288,\"horizon_nodes\":56293,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":291,\"opp_open_lines\":486,\"opp_open_lower\":54,\"opp_open_nodes\":26269,\"opp_next_checks\":696,\"opp_next_found\":0,\"opp_next_nodes\":28929}",
+          "value_bits": 1107923608
+        },
+        "S2": {
+          "explain_fnv": "13106526891483215655",
+          "explain_len": 25781,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":320,\"opp_cap_hits\":309,\"opp_lethal_checks\":320,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":21321,\"opp_lethal_applies_max\":200,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":130,\"own_solver_nodes_max\":130,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":268,\"own_roll_nodes_max\":268,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":195,\"pairs_skipped\":0,\"lethal_nodes\":84,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":288,\"horizon_nodes\":57477,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":239,\"opp_open_lines\":377,\"opp_open_lower\":45,\"opp_open_nodes\":18779,\"opp_next_checks\":499,\"opp_next_found\":0,\"opp_next_nodes\":24826}",
+          "value_bits": 1108500100
+        },
+        "S3": {
+          "explain_fnv": "6504767465732220637",
+          "explain_len": 48278,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":16,\"opp_leaves\":640,\"opp_cap_hits\":484,\"opp_lethal_checks\":640,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":19052,\"opp_lethal_applies_max\":159,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":130,\"own_solver_nodes_max\":130,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":268,\"own_roll_nodes_max\":268,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":304,\"pairs_skipped\":0,\"lethal_nodes\":84,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":640,\"horizon_nodes\":116948,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":597,\"opp_open_lines\":999,\"opp_open_lower\":164,\"opp_open_nodes\":52485,\"opp_next_checks\":1393,\"opp_next_found\":6,\"opp_next_nodes\":56692}",
+          "value_bits": 1107314748
+        },
+        "S4": {
+          "explain_fnv": "7011822005953724547",
+          "explain_len": 23024,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":320,\"opp_cap_hits\":97,\"opp_lethal_checks\":320,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":7072,\"opp_lethal_applies_max\":49,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":130,\"own_solver_nodes_max\":130,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":268,\"own_roll_nodes_max\":268,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":216,\"pairs_skipped\":0,\"lethal_nodes\":84,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":288,\"horizon_nodes\":46529,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":320,\"opp_open_lines\":581,\"opp_open_lower\":234,\"opp_open_nodes\":25314,\"opp_next_checks\":819,\"opp_next_found\":0,\"opp_next_nodes\":24239}",
+          "value_bits": 1083148619
+        }
+      },
+      "id": "meta:71005:26",
+      "search_key": "18001628786913793643"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "3720462851218052112",
+          "explain_len": 49752,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":7954,\"cap_hits\":0,\"candidates\":9,\"roots\":8,\"opp_leaves\":608,\"opp_cap_hits\":538,\"opp_lethal_checks\":608,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":6536,\"opp_lethal_applies_max\":18,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":464,\"own_solver_nodes_max\":464,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":2380,\"own_roll_nodes_max\":2380,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":104,\"tt_stores\":296,\"pairs_skipped\":0,\"lethal_nodes\":340,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":600,\"horizon_nodes\":114212,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":608,\"opp_open_lines\":956,\"opp_open_lower\":228,\"opp_open_nodes\":54205,\"opp_next_checks\":1176,\"opp_next_found\":0,\"opp_next_nodes\":78776}",
+          "value_bits": 1109046027
+        },
+        "S2": {
+          "explain_fnv": "11901663546303748343",
+          "explain_len": 49379,
+          "idx": 7,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":9,\"roots\":8,\"opp_leaves\":608,\"opp_cap_hits\":601,\"opp_lethal_checks\":608,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":14460,\"opp_lethal_applies_max\":48,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":464,\"own_solver_nodes_max\":464,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":2380,\"own_roll_nodes_max\":2380,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":104,\"tt_stores\":296,\"pairs_skipped\":0,\"lethal_nodes\":340,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":600,\"horizon_nodes\":115404,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":608,\"opp_open_lines\":775,\"opp_open_lower\":220,\"opp_open_nodes\":42921,\"opp_next_checks\":1005,\"opp_next_found\":0,\"opp_next_nodes\":74080}",
+          "value_bits": 1109046027
+        },
+        "S3": {
+          "explain_fnv": "613206173056751200",
+          "explain_len": 95205,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":9,\"roots\":16,\"opp_leaves\":1216,\"opp_cap_hits\":1146,\"opp_lethal_checks\":1216,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":14804,\"opp_lethal_applies_max\":21,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":464,\"own_solver_nodes_max\":464,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":2380,\"own_roll_nodes_max\":2380,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":208,\"tt_stores\":576,\"pairs_skipped\":0,\"lethal_nodes\":340,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1216,\"horizon_nodes\":237322,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":1216,\"opp_open_lines\":1712,\"opp_open_lower\":437,\"opp_open_nodes\":92436,\"opp_next_checks\":2025,\"opp_next_found\":0,\"opp_next_nodes\":161811}",
+          "value_bits": 1108449185
+        },
+        "S4": {
+          "explain_fnv": "7577666258823964486",
+          "explain_len": 52351,
+          "idx": 5,
+          "stats": "{\"decisions\":1,\"nodes\":7874,\"cap_hits\":0,\"candidates\":9,\"roots\":8,\"opp_leaves\":608,\"opp_cap_hits\":424,\"opp_lethal_checks\":608,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":4104,\"opp_lethal_applies_max\":16,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":464,\"own_solver_nodes_max\":464,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":2380,\"own_roll_nodes_max\":2380,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":104,\"tt_stores\":296,\"pairs_skipped\":0,\"lethal_nodes\":340,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":600,\"horizon_nodes\":107660,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":608,\"opp_open_lines\":1043,\"opp_open_lower\":89,\"opp_open_nodes\":56027,\"opp_next_checks\":1274,\"opp_next_found\":0,\"opp_next_nodes\":72354}",
+          "value_bits": 1107892704
+        }
+      },
+      "id": "meta:71006:19",
+      "search_key": "8466243958772303677"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "8348997110055029143",
+          "explain_len": 26624,
+          "idx": 2,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":454,\"opp_cap_hits\":454,\"opp_lethal_checks\":454,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":48577,\"opp_lethal_applies_max\":209,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":4,\"own_solver_nodes_max\":4,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":160,\"pairs_skipped\":0,\"lethal_nodes\":239,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":454,\"horizon_nodes\":84400,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":46,\"opp_open_lines\":45,\"opp_open_lower\":28,\"opp_open_nodes\":1944,\"opp_next_checks\":158,\"opp_next_found\":0,\"opp_next_nodes\":15252}",
+          "value_bits": 1107620286
+        },
+        "S2": {
+          "explain_fnv": "11318622863078582981",
+          "explain_len": 23262,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":454,\"opp_cap_hits\":454,\"opp_lethal_checks\":454,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":74102,\"opp_lethal_applies_max\":210,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":4,\"own_solver_nodes_max\":4,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":160,\"pairs_skipped\":0,\"lethal_nodes\":239,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":454,\"horizon_nodes\":84400,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":0,\"opp_open_lines\":0,\"opp_open_lower\":0,\"opp_open_nodes\":0,\"opp_next_checks\":12,\"opp_next_found\":0,\"opp_next_nodes\":718}",
+          "value_bits": 1103482517
+        },
+        "S3": {
+          "explain_fnv": "9625501461651057137",
+          "explain_len": 51035,
+          "idx": 2,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":16,\"opp_leaves\":887,\"opp_cap_hits\":887,\"opp_lethal_checks\":887,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":99884,\"opp_lethal_applies_max\":200,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":4,\"own_solver_nodes_max\":4,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":320,\"pairs_skipped\":0,\"lethal_nodes\":239,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":887,\"horizon_nodes\":172029,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":68,\"opp_open_lines\":50,\"opp_open_lower\":33,\"opp_open_nodes\":2127,\"opp_next_checks\":279,\"opp_next_found\":0,\"opp_next_nodes\":27275}",
+          "value_bits": 1105176079
+        },
+        "S4": {
+          "explain_fnv": "14308599962354747441",
+          "explain_len": 28205,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":443,\"opp_cap_hits\":443,\"opp_lethal_checks\":443,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":8765,\"opp_lethal_applies_max\":35,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":4,\"own_solver_nodes_max\":4,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":1,\"own_roll_nodes\":10000,\"own_roll_nodes_max\":10000,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":160,\"pairs_skipped\":0,\"lethal_nodes\":247,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":443,\"horizon_nodes\":82200,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":211,\"opp_open_lines\":214,\"opp_open_lower\":104,\"opp_open_nodes\":8942,\"opp_next_checks\":367,\"opp_next_found\":3,\"opp_next_nodes\":40573}",
+          "value_bits": 1110567359
+        }
+      },
+      "id": "meta:71006:54",
+      "search_key": "4378657241326399893"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "6272982245602779160",
+          "explain_len": 36023,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":8,\"opp_leaves\":330,\"opp_cap_hits\":330,\"opp_lethal_checks\":330,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":21085,\"opp_lethal_applies_max\":199,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":126,\"own_solver_nodes_max\":126,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":520,\"own_roll_nodes_max\":520,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":184,\"pairs_skipped\":0,\"lethal_nodes\":57,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":330,\"horizon_nodes\":58784,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":220,\"opp_open_lines\":257,\"opp_open_lower\":96,\"opp_open_nodes\":12760,\"opp_next_checks\":339,\"opp_next_found\":67,\"opp_next_nodes\":21005}",
+          "value_bits": 1074563934
+        },
+        "S2": {
+          "explain_fnv": "17795754344092266928",
+          "explain_len": 33896,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":8,\"opp_leaves\":330,\"opp_cap_hits\":330,\"opp_lethal_checks\":330,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":30144,\"opp_lethal_applies_max\":200,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":126,\"own_solver_nodes_max\":126,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":520,\"own_roll_nodes_max\":520,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":184,\"pairs_skipped\":0,\"lethal_nodes\":57,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":330,\"horizon_nodes\":58784,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":149,\"opp_open_lines\":147,\"opp_open_lower\":54,\"opp_open_nodes\":5774,\"opp_next_checks\":243,\"opp_next_found\":52,\"opp_next_nodes\":17930}",
+          "value_bits": 1088396556
+        },
+        "S3": {
+          "explain_fnv": "8914214095542329470",
+          "explain_len": 71942,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":16,\"opp_leaves\":663,\"opp_cap_hits\":663,\"opp_lethal_checks\":663,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":47313,\"opp_lethal_applies_max\":199,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":126,\"own_solver_nodes_max\":126,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":520,\"own_roll_nodes_max\":520,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":369,\"pairs_skipped\":0,\"lethal_nodes\":57,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":663,\"horizon_nodes\":126095,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":405,\"opp_open_lines\":418,\"opp_open_lower\":182,\"opp_open_nodes\":19503,\"opp_next_checks\":602,\"opp_next_found\":94,\"opp_next_nodes\":39743}",
+          "value_bits": 1087563804
+        },
+        "S4": {
+          "explain_fnv": "1398729430039533928",
+          "explain_len": 37563,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":6,\"roots\":8,\"opp_leaves\":338,\"opp_cap_hits\":338,\"opp_lethal_checks\":338,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":28467,\"opp_lethal_applies_max\":169,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":126,\"own_solver_nodes_max\":126,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":520,\"own_roll_nodes_max\":520,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":188,\"pairs_skipped\":0,\"lethal_nodes\":57,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":338,\"horizon_nodes\":60388,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":196,\"opp_open_lines\":163,\"opp_open_lower\":71,\"opp_open_nodes\":6241,\"opp_next_checks\":273,\"opp_next_found\":82,\"opp_next_nodes\":17457}",
+          "value_bits": 1081742976
+        }
+      },
+      "id": "meta:72022:22",
+      "search_key": "5273605716210345712"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "11202893940302481951",
+          "explain_len": 25576,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":5,\"roots\":8,\"opp_leaves\":72,\"opp_cap_hits\":72,\"opp_lethal_checks\":72,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":4825,\"opp_lethal_applies_max\":184,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":6,\"own_solver_nodes_max\":6,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":8,\"own_roll_nodes_max\":8,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":64,\"pairs_skipped\":0,\"lethal_nodes\":8,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":72,\"horizon_nodes\":6544,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":54,\"opp_open_lines\":57,\"opp_open_lower\":28,\"opp_open_nodes\":2949,\"opp_next_checks\":80,\"opp_next_found\":8,\"opp_next_nodes\":5715}",
+          "value_bits": 1096292413
+        },
+        "S2": {
+          "explain_fnv": "4309570845960773608",
+          "explain_len": 24204,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":5,\"roots\":8,\"opp_leaves\":72,\"opp_cap_hits\":72,\"opp_lethal_checks\":72,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":6303,\"opp_lethal_applies_max\":200,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":6,\"own_solver_nodes_max\":6,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":8,\"own_roll_nodes_max\":8,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":64,\"pairs_skipped\":0,\"lethal_nodes\":8,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":72,\"horizon_nodes\":6544,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":46,\"opp_open_lines\":44,\"opp_open_lower\":24,\"opp_open_nodes\":1628,\"opp_next_checks\":56,\"opp_next_found\":6,\"opp_next_nodes\":4941}",
+          "value_bits": 1095430987
+        },
+        "S3": {
+          "explain_fnv": "3928793641400171503",
+          "explain_len": 49554,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":5,\"roots\":16,\"opp_leaves\":144,\"opp_cap_hits\":144,\"opp_lethal_checks\":144,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":8714,\"opp_lethal_applies_max\":184,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":6,\"own_solver_nodes_max\":6,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":8,\"own_roll_nodes_max\":8,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":128,\"pairs_skipped\":0,\"lethal_nodes\":8,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":144,\"horizon_nodes\":21080,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":117,\"opp_open_lines\":130,\"opp_open_lower\":50,\"opp_open_nodes\":6072,\"opp_next_checks\":165,\"opp_next_found\":27,\"opp_next_nodes\":11899}",
+          "value_bits": 1093299289
+        },
+        "S4": {
+          "explain_fnv": "7002262506058221598",
+          "explain_len": 25944,
+          "idx": 0,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":5,\"roots\":8,\"opp_leaves\":72,\"opp_cap_hits\":72,\"opp_lethal_checks\":72,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":4041,\"opp_lethal_applies_max\":152,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":6,\"own_solver_nodes_max\":6,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":8,\"own_roll_nodes_max\":8,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":64,\"pairs_skipped\":0,\"lethal_nodes\":8,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":72,\"horizon_nodes\":6544,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":66,\"opp_open_lines\":80,\"opp_open_lower\":30,\"opp_open_nodes\":3688,\"opp_next_checks\":96,\"opp_next_found\":15,\"opp_next_nodes\":5310}",
+          "value_bits": 1091741075
+        }
+      },
+      "id": "meta:72022:24",
+      "search_key": "8087215100487791474"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "14485730126792830781",
+          "explain_len": 24797,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":245,\"opp_cap_hits\":230,\"opp_lethal_checks\":245,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":7355,\"opp_lethal_applies_max\":61,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":101,\"own_solver_nodes_max\":101,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":613,\"own_roll_nodes_max\":613,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":144,\"pairs_skipped\":0,\"lethal_nodes\":69,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":221,\"horizon_nodes\":42279,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":243,\"opp_open_lines\":369,\"opp_open_lower\":117,\"opp_open_nodes\":19508,\"opp_next_checks\":425,\"opp_next_found\":213,\"opp_next_nodes\":17477}",
+          "value_bits": 3260489598
+        },
+        "S2": {
+          "explain_fnv": "5251016788695798167",
+          "explain_len": 24405,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":245,\"opp_cap_hits\":243,\"opp_lethal_checks\":245,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":25226,\"opp_lethal_applies_max\":183,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":101,\"own_solver_nodes_max\":101,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":613,\"own_roll_nodes_max\":613,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":137,\"pairs_skipped\":0,\"lethal_nodes\":69,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":221,\"horizon_nodes\":42534,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":73,\"opp_open_lines\":84,\"opp_open_lower\":40,\"opp_open_nodes\":3850,\"opp_next_checks\":194,\"opp_next_found\":55,\"opp_next_nodes\":10110}",
+          "value_bits": 3260251073
+        },
+        "S3": {
+          "explain_fnv": "8314897576903801578",
+          "explain_len": 49187,
+          "idx": 1,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":16,\"opp_leaves\":490,\"opp_cap_hits\":482,\"opp_lethal_checks\":490,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":15472,\"opp_lethal_applies_max\":61,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":101,\"own_solver_nodes_max\":101,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":613,\"own_roll_nodes_max\":613,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":224,\"pairs_skipped\":0,\"lethal_nodes\":69,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":490,\"horizon_nodes\":90698,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":484,\"opp_open_lines\":696,\"opp_open_lower\":242,\"opp_open_nodes\":35820,\"opp_next_checks\":785,\"opp_next_found\":388,\"opp_next_nodes\":33869}",
+          "value_bits": 3260477711
+        },
+        "S4": {
+          "explain_fnv": "6028225014951904867",
+          "explain_len": 24250,
+          "idx": 3,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":4,\"roots\":8,\"opp_leaves\":246,\"opp_cap_hits\":223,\"opp_lethal_checks\":246,\"opp_lethal_found\":0,\"opp_lethal_evo_found\":0,\"opp_lethal_nodes\":5977,\"opp_lethal_applies_max\":50,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":101,\"own_solver_nodes_max\":101,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":2481,\"own_roll_nodes_max\":2481,\"chose_with_lethal_root\":0,\"cands_with_lethal_root\":0,\"tt_hits\":0,\"tt_stores\":145,\"pairs_skipped\":0,\"lethal_nodes\":69,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":222,\"horizon_nodes\":42264,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":246,\"opp_open_lines\":431,\"opp_open_lower\":95,\"opp_open_nodes\":23141,\"opp_next_checks\":504,\"opp_next_found\":160,\"opp_next_nodes\":20130}",
+          "value_bits": 3260462726
+        }
+      },
+      "id": "meta:71008:30",
+      "search_key": "8012290432286266091"
+    },
+    {
+      "by_spec": {
+        "S1": {
+          "explain_fnv": "4176809285402718017",
+          "explain_len": 26862,
+          "idx": 4,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":5,\"roots\":8,\"opp_leaves\":1150,\"opp_cap_hits\":74,\"opp_lethal_checks\":1150,\"opp_lethal_found\":1076,\"opp_lethal_evo_found\":35,\"opp_lethal_nodes\":7426,\"opp_lethal_applies_max\":81,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":8,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":5,\"own_solver_nodes_max\":5,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1158,\"own_roll_nodes_max\":1158,\"chose_with_lethal_root\":1,\"cands_with_lethal_root\":5,\"tt_hits\":9,\"tt_stores\":733,\"pairs_skipped\":0,\"lethal_nodes\":94,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1146,\"horizon_nodes\":17393,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":54,\"opp_open_lines\":46,\"opp_open_lower\":23,\"opp_open_nodes\":2073,\"opp_next_checks\":72,\"opp_next_found\":1,\"opp_next_nodes\":4241}",
+          "value_bits": 3263603202
+        },
+        "S2": {
+          "explain_fnv": "10031152187525946827",
+          "explain_len": 26413,
+          "idx": 4,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":5,\"roots\":8,\"opp_leaves\":1167,\"opp_cap_hits\":74,\"opp_lethal_checks\":1167,\"opp_lethal_found\":1093,\"opp_lethal_evo_found\":36,\"opp_lethal_nodes\":11885,\"opp_lethal_applies_max\":167,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":24,\"opp_lethal_two_found\":8,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":5,\"own_solver_nodes_max\":5,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1158,\"own_roll_nodes_max\":1158,\"chose_with_lethal_root\":1,\"cands_with_lethal_root\":5,\"tt_hits\":9,\"tt_stores\":744,\"pairs_skipped\":0,\"lethal_nodes\":94,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1163,\"horizon_nodes\":17709,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":0,\"opp_open_lines\":0,\"opp_open_lower\":0,\"opp_open_nodes\":0,\"opp_next_checks\":37,\"opp_next_found\":0,\"opp_next_nodes\":2410}",
+          "value_bits": 3263600436
+        },
+        "S3": {
+          "explain_fnv": "18108360714586737886",
+          "explain_len": 51455,
+          "idx": 4,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":5,\"roots\":16,\"opp_leaves\":1582,\"opp_cap_hits\":118,\"opp_lethal_checks\":1582,\"opp_lethal_found\":1464,\"opp_lethal_evo_found\":29,\"opp_lethal_nodes\":9582,\"opp_lethal_applies_max\":81,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":8,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":5,\"own_solver_nodes_max\":5,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1158,\"own_roll_nodes_max\":1158,\"chose_with_lethal_root\":1,\"cands_with_lethal_root\":5,\"tt_hits\":0,\"tt_stores\":773,\"pairs_skipped\":0,\"lethal_nodes\":94,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1582,\"horizon_nodes\":33052,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":98,\"opp_open_lines\":98,\"opp_open_lower\":33,\"opp_open_nodes\":4608,\"opp_next_checks\":124,\"opp_next_found\":1,\"opp_next_nodes\":6703}",
+          "value_bits": 3263999976
+        },
+        "S4": {
+          "explain_fnv": "13808348347566851762",
+          "explain_len": 26180,
+          "idx": 4,
+          "stats": "{\"decisions\":1,\"nodes\":8000,\"cap_hits\":1,\"candidates\":5,\"roots\":8,\"opp_leaves\":1164,\"opp_cap_hits\":40,\"opp_lethal_checks\":1164,\"opp_lethal_found\":1124,\"opp_lethal_evo_found\":25,\"opp_lethal_nodes\":4386,\"opp_lethal_applies_max\":20,\"opp_lethal_ward_found\":0,\"opp_lethal_slot_found\":0,\"opp_lethal_through_found\":0,\"opp_lethal_two_found\":0,\"opp_solver_calls\":0,\"opp_solver_found\":0,\"opp_solver_unknown\":0,\"opp_solver_nodes\":0,\"own_solver_calls\":1,\"own_solver_found\":0,\"own_solver_taken\":0,\"own_solver_rejected\":0,\"own_solver_unknown\":0,\"own_solver_nodes\":5,\"own_solver_nodes_max\":5,\"own_roll_calls\":1,\"own_roll_found\":0,\"own_roll_taken\":0,\"own_roll_rejected\":1,\"own_roll_lines_rejected\":0,\"own_roll_unknown\":0,\"own_roll_nodes\":1286,\"own_roll_nodes_max\":1286,\"chose_with_lethal_root\":1,\"cands_with_lethal_root\":5,\"tt_hits\":0,\"tt_stores\":603,\"pairs_skipped\":0,\"lethal_nodes\":89,\"unscored\":0,\"fuse_overshoot\":0,\"horizon_leaves\":1162,\"horizon_nodes\":11591,\"horizon_fallback\":0,\"skipped_worlds\":0,\"mull_table\":0,\"mull_fallback\":0,\"open_hidden\":0,\"open_hosts\":0,\"hb_checks\":0,\"hb_worlds_removable\":0,\"hb_overrides\":0,\"hb_nodes\":0,\"hb_nodes_max\":0,\"hb_unknown\":0,\"hbk_checks\":0,\"hbk_flips\":0,\"hbk_nodes\":0,\"opp_open_replies\":24,\"opp_open_lines\":16,\"opp_open_lower\":16,\"opp_open_nodes\":989,\"opp_next_checks\":39,\"opp_next_found\":0,\"opp_next_nodes\":3425}",
+          "value_bits": 3264301914
+        }
+      },
+      "id": "meta:71008:42",
+      "search_key": "16041890126630334146"
+    }
+  ],
+  "specs": {
+    "S1": "h0:nodes=8000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40",
+    "S2": "h0:nodes=8000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40",
+    "S3": "h0:nodes=8000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=4,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40",
+    "S4": "h0:nodes=8000,horizon=3,k=8,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40"
+  }
+}
