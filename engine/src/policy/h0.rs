@@ -1809,7 +1809,7 @@ fn greedy_index(
     line: &[u64],
     eval: Evaluator<'_>,
     skip_noop_fuse: bool,
-) -> usize {
+) -> (usize, Option<State>) {
     let indices = greedy_action_indices(
         db,
         state,
@@ -1821,6 +1821,7 @@ fn greedy_index(
     );
     let mut best_i = indices.first().copied().unwrap_or(0);
     let mut best_v = f32::NEG_INFINITY;
+    let mut best_s: Option<State> = None;
     for i in indices {
         if *nodes >= cap {
             break;
@@ -1833,9 +1834,34 @@ fn greedy_index(
         if v > best_v {
             best_v = v;
             best_i = i;
+            best_s = Some(s);
         }
     }
-    best_i
+    (best_i, best_s)
+}
+
+/// The re-apply of greedy_index's pick without redoing it: the same cap check and node charge as `try_apply`;
+/// the kept afterstate is what that apply would produce (and it already passed the same line check).
+#[allow(clippy::too_many_arguments)]
+fn take_or_apply(
+    db: &CardDb,
+    state: &State,
+    a: &Action,
+    kept: Option<State>,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+) -> Option<State> {
+    match kept {
+        Some(s) => {
+            if *nodes >= cap {
+                return None;
+            }
+            *nodes += 1;
+            Some(s)
+        }
+        None => try_apply(db, state, a, nodes, cap, line),
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1974,10 +2000,10 @@ fn greedy_resolve_choices(
         if legal.is_empty() {
             return false;
         }
-        let i = greedy_index(
+        let (i, kept) = greedy_index(
             db, state, &legal, choose_for, search_me, nodes, cap, line, eval, false,
         );
-        let Some(next) = try_apply(db, state, &legal[i], nodes, cap, line) else {
+        let Some(next) = take_or_apply(db, state, &legal[i], kept, nodes, cap, line) else {
             return false;
         };
         line.push(line_key(&next));
@@ -2327,10 +2353,10 @@ fn resolve_bot_choices(
         if legal.is_empty() {
             return false;
         }
-        let i = greedy_index(
+        let (i, kept) = greedy_index(
             db, state, &legal, me, me, nodes, work_cap, line, eval, false,
         );
-        let Some(next) = try_apply(db, state, &legal[i], nodes, work_cap, line) else {
+        let Some(next) = take_or_apply(db, state, &legal[i], kept, nodes, work_cap, line) else {
             return false;
         };
         if let Some(t) = track.as_deref_mut() {
@@ -3489,12 +3515,12 @@ fn search_opp_expand(
             }
             return v;
         }
-        let i = greedy_index(db, state, &legal, me, me, nodes, cap, line, eval, false);
+        let (i, kept) = greedy_index(db, state, &legal, me, me, nodes, cap, line, eval, false);
         let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
         if let Some(t) = track.as_deref_mut() {
             t.push(legal[i].clone());
         }
-        let Some(s) = try_apply(db, state, &legal[i], nodes, cap, line) else {
+        let Some(s) = take_or_apply(db, state, &legal[i], kept, nodes, cap, line) else {
             if let Some(t) = track.as_deref_mut() {
                 t.pop_to(plen);
             }
@@ -3696,7 +3722,7 @@ fn greedy_until_end(
                 break;
             }
         }
-        let i = greedy_index(
+        let (i, kept) = greedy_index(
             db,
             state,
             &legal,
@@ -3708,7 +3734,7 @@ fn greedy_until_end(
             eval,
             skip_noop_fuse,
         );
-        let Some(next) = try_apply(db, state, &legal[i], nodes, cap, &line) else {
+        let Some(next) = take_or_apply(db, state, &legal[i], kept, nodes, cap, &line) else {
             break;
         };
         if let Some(t) = track.as_deref_mut() {
@@ -5517,7 +5543,7 @@ fn holdback_bot_finish(
         if legal.is_empty() {
             break;
         }
-        let i = greedy_index(
+        let (i, kept) = greedy_index(
             db,
             state,
             &legal,
@@ -5531,8 +5557,13 @@ fn holdback_bot_finish(
         );
         let a = legal[i].clone();
         let ended = matches!(a, Action::EndTurn);
-        if apply(db, state, a).is_err() {
-            return false;
+        match kept {
+            Some(s) => *state = s,
+            None => {
+                if apply(db, state, a).is_err() {
+                    return false;
+                }
+            }
         }
         line.push(line_key(state));
         if ended {
@@ -6718,5 +6749,169 @@ mod oorder_pick_side_tests {
         assert_eq!(opp_v, eval.order_value(&state, opp, &zero));
         assert_eq!(opp_v, 0.0, "zero order net → scale×tanh(0), bppv=0");
         assert_ne!(opp_v, leaf_opp, "oorder alone → opponent uses model");
+    }
+}
+
+#[cfg(test)]
+mod speed_reuse_tests {
+    use std::fs;
+    use std::path::Path;
+
+    use super::*;
+    use crate::apply::{apply_neutral, legal_actions, new_game};
+    use crate::db::CardDb;
+    use crate::ids::First;
+    use crate::state::GameConfig;
+    use serde_json::Value;
+
+    fn recorded_db() -> CardDb {
+        let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest.join("..");
+        let mut db = CardDb::load(&root).expect("cards");
+        db.load_extra_dir(manifest.join("tests/fixtures/cards"))
+            .expect("fixture cards");
+        db.load_replace_dir(root.join("oracle/cards-as-recorded"))
+            .expect("recorded overlay");
+        db.load_replace_dir(manifest.join("tests/fixtures/as-recorded/earrings-engage-noop"))
+            .expect("earrings");
+        db.load_replace_dir(manifest.join("tests/fixtures/as-recorded/kukishiro-crest-from-deck"))
+            .expect("kukishiro");
+        db
+    }
+
+    fn review_at(db: &CardDb, review: &str, game: &str, ply: usize) -> State {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../py/tests/fixtures")
+            .join(review)
+            .join("games")
+            .join(game);
+        let cap: Value = serde_json::from_str(&fs::read_to_string(path).expect("review")).unwrap();
+        let seed = cap["seed"].as_u64().unwrap();
+        let mut deck_a = Vec::new();
+        for (id, n) in cap["deckA"].as_object().unwrap() {
+            let cid = CardId::parse(id).unwrap();
+            deck_a.extend(std::iter::repeat_n(cid, n.as_u64().unwrap() as usize));
+        }
+        let mut deck_b = Vec::new();
+        for (id, n) in cap["deckB"].as_object().unwrap() {
+            let cid = CardId::parse(id).unwrap();
+            deck_b.extend(std::iter::repeat_n(cid, n.as_u64().unwrap() as usize));
+        }
+        let first = match cap.get("first").and_then(|v| v.as_str()) {
+            Some("b") | Some("B") => First::B,
+            Some("a") | Some("A") => First::A,
+            _ => First::Coin,
+        };
+        let mut st = new_game(
+            db,
+            GameConfig {
+                seed,
+                deck_a,
+                deck_b,
+                first,
+                opening_hands: None,
+            },
+        )
+        .expect("game");
+        for step in cap["actions"].as_array().unwrap().iter().take(ply) {
+            if step.get("reseed").is_some() {
+                st.reseed(step["reseed"].as_u64().unwrap());
+                continue;
+            }
+            let mut body = serde_json::Map::new();
+            for (k, v) in step.as_object().expect("action object") {
+                if k == "value" || k == "bot_value" {
+                    continue;
+                }
+                body.insert(k.clone(), v.clone());
+            }
+            let neu: crate::NeutralAction =
+                serde_json::from_value(serde_json::Value::Object(body)).unwrap();
+            apply_neutral(db, &mut st, &neu).unwrap();
+        }
+        st
+    }
+
+    fn v0() -> H0 {
+        H0 {
+            value: ValueVersion::V0,
+            net: None,
+            olethal: false,
+            oevo: false,
+            ..H0::default()
+        }
+    }
+
+    #[test]
+    fn take_or_apply_charges_one_node_and_refuses_at_cap() {
+        let db = recorded_db();
+        let st = review_at(&db, "review13", "4984932781931433298-b4973563.json", 27);
+        let mut nodes = 3u32;
+        let kept = st.clone();
+        let got = take_or_apply(
+            &db,
+            &st,
+            &Action::EndTurn,
+            Some(kept.clone()),
+            &mut nodes,
+            10,
+            &[],
+        )
+        .expect("kept");
+        assert_eq!(nodes, 4, "kept afterstate charges one node");
+        assert_eq!(search_key(&got), search_key(&kept));
+        let mut nodes = 10u32;
+        let got = take_or_apply(
+            &db,
+            &st,
+            &Action::EndTurn,
+            Some(st.clone()),
+            &mut nodes,
+            10,
+            &[],
+        );
+        assert!(got.is_none(), "at the cap the kept state is not taken");
+        assert_eq!(nodes, 10, "a cap refusal does not charge");
+    }
+
+    #[test]
+    fn greedy_index_kept_afterstate_matches_reapply() {
+        let db = recorded_db();
+        let moments = [
+            ("review13", "4984932781931433298-b4973563.json", 27usize),
+            ("review14", "12644260486301391828-d90f8eb2.json", 35),
+            ("review14", "6598261483642061665-d90f8eb2.json", 91),
+        ];
+        let h = v0();
+        for (review, game, ply) in moments {
+            let state = review_at(&db, review, game, ply);
+            let legal = legal_actions(&db, &state);
+            assert!(legal.len() >= 2, "{review} {ply}");
+            let me = acting_player(&state);
+            let eval = h.evaluator(&db, &[]);
+            let line = vec![line_key(&state)];
+            let mut nodes = 0u32;
+            let (i, kept) = greedy_index(
+                &db,
+                &state,
+                &legal,
+                me,
+                me,
+                &mut nodes,
+                u32::MAX,
+                &line,
+                eval,
+                false,
+            );
+            let kept = kept.expect("a candidate applied");
+            let mut again_nodes = 0u32;
+            let again = try_apply(&db, &state, &legal[i], &mut again_nodes, u32::MAX, &line)
+                .expect("re-apply");
+            assert_eq!(
+                search_key(&kept),
+                search_key(&again),
+                "{review} ply {ply} kept afterstate"
+            );
+        }
     }
 }
