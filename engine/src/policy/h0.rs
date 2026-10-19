@@ -33,7 +33,7 @@ use crate::lethal::{
 };
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
-use crate::search_key::search_key;
+use crate::search_key::{search_key, search_key_id};
 use crate::state::FIELD_SIZE;
 use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
@@ -1038,7 +1038,7 @@ fn tt_get(
     me_to_move: bool,
     stats: &mut SearchStats,
 ) -> Option<f32> {
-    let v = *tt?.get(&(search_key(state), depth as u8, me_to_move))?;
+    let v = *tt?.get(&(search_key_id(state), depth as u8, me_to_move))?;
     stats.tt_hits += 1;
     Some(v)
 }
@@ -1052,7 +1052,7 @@ fn tt_put(
     stats: &mut SearchStats,
 ) {
     if let Some(tt) = tt {
-        tt.insert((search_key(state), depth as u8, me_to_move), v);
+        tt.insert((search_key_id(state), depth as u8, me_to_move), v);
         stats.tt_stores += 1;
     }
 }
@@ -1230,7 +1230,7 @@ pub(super) fn can_repeat(s: &State) -> bool {
 #[inline]
 pub(super) fn line_key(s: &State) -> u64 {
     if can_repeat(s) {
-        search_key(s) // Part C; search_key until Part C lands
+        search_key_id(s)
     } else {
         0x6c69_6e65_0000_0000 ^ s.step_counter
     }
@@ -5213,7 +5213,7 @@ fn search_holdback_removal(
         return;
     }
     let remaining = max_depth - line.len() as u32;
-    let key = search_key(state);
+    let key = search_key_id(state);
     if tt.get(&key).is_some_and(|&d| d >= remaining) {
         return;
     }
@@ -6758,7 +6758,7 @@ mod speed_reuse_tests {
     use std::path::Path;
 
     use super::*;
-    use crate::apply::{apply_neutral, legal_actions, new_game};
+    use crate::apply::{apply, apply_neutral, legal_actions, new_game};
     use crate::db::CardDb;
     use crate::ids::First;
     use crate::state::GameConfig;
@@ -6913,5 +6913,29 @@ mod speed_reuse_tests {
                 "{review} ply {ply} kept afterstate"
             );
         }
+    }
+
+    #[test]
+    fn line_key_is_id_on_choice_and_changes_across_main() {
+        let db = recorded_db();
+        let choice = review_at(&db, "review13", "4984932781931433298-b4973563.json", 45);
+        assert!(matches!(choice.phase, Phase::Choice { .. }));
+        assert_eq!(line_key(&choice), search_key_id(&choice));
+        let main = review_at(&db, "review14", "12644260486301391828-d90f8eb2.json", 35);
+        assert!(matches!(main.phase, Phase::Main));
+        let legal = legal_actions(&db, &main);
+        let next = legal.iter().find_map(|a| {
+            let mut s = main.clone();
+            if apply(&db, &mut s, a.clone()).is_ok()
+                && s.winner.is_none()
+                && matches!(s.phase, Phase::Main)
+            {
+                Some(s)
+            } else {
+                None
+            }
+        });
+        let next = next.expect("Main successor");
+        assert_ne!(line_key(&main), line_key(&next));
     }
 }

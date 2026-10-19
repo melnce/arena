@@ -16,6 +16,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -479,6 +480,12 @@ checksum = "81941cd78d0c92026c33e5e01312845a4cb1e9af3407f9134b100dd03144103e"
 dependencies = [
  "unicode-ident",
 ]
+
+[[package]]
+name = "xxhash-rust"
+version = "0.8.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "550a2b930b62486a393c52d5c3b84bff264b28aa437ed64694d31e93b1757af7"
 
 [[package]]
 name = "zlib-rs"

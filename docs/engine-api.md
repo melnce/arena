@@ -429,6 +429,11 @@ canonical walk of every `State` field **except the RNG**. It differs when
 actor differ; clones match; RNG-only reseeds match. Not interchangeable with
 `hash` (the snapshot hash is pinned by the oracle corpus).
 
+`search_key_id(state) -> u64` is xxh3 64 over that same walk. It is an
+identity key only: line-repetition checks and transposition tables. It is
+not a seed. `search_key` stays the FNV-1a value used for reroll seeds and
+the public export.
+
 `lethal_key(state) -> u64` keys [`forced_lethal`] cycle detection and
 transposition on in-flight positions. At a **quiescent** state (Main phase,
 empty `pending_work` / `queue`, no play-pick or deferred-play state) it
@@ -969,7 +974,7 @@ allocator had a budget.
 
 When `tt=1`, each `choose` builds an empty
 `HashMap<(u64, u8, bool), f32>` keyed by
-`(search_key(state), remaining depth, side-to-move-is-me)` and consults
+`(search_key_id(state), remaining depth, side-to-move-is-me)` and consults
 it in `search_own` / `search_opp` before expanding a node. After a
 state's value is computed it is stored. The table is dropped at the end
 of the decision and is never shared across roots or decisions (the K
@@ -1048,9 +1053,10 @@ Non-H0 seats print
 `decisions=0`.
 
 `BonusPp` is considered only in the **activate** direction
-(`!bonus_pp.active`); cancel is never chosen. Cycles are skipped: any
-action whose resulting `search_key` is already on the current line is
-dropped. Mulligan: swap every card whose cost is ≥ 4 (both seats).
+(`!bonus_pp.active`); cancel is never chosen. Cycles are skipped: only Choice and Mulligan states are checked, because
+every other `apply` bumps `step_counter` and the key includes it. A repeat
+of one of those states on the current line is dropped. Mulligan: swap
+every card whose cost is ≥ 4 (both seats).
 
 Value: leader-defense difference, board (atk+def with Ward/Storm/evolved
 weights), hand size, next-turn PP / EP / SEP, crest / countdown presence;
