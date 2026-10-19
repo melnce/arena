@@ -10,6 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     # ≈ 18–19 min before #133; post–#142 soak/bench can exceed 30 m on cold cache.
     timeout-minutes: 35
+    # Thin LTO + codegen-units = 1 (root Cargo.toml) are for the Python extension, the wasm bot and the slow
+    # suites. This job builds ~90 release test binaries (the soak step's name filter); with that profile it
+    # compiled 15 min longer and hit timeout-minutes (PR #160, run 39334304322). Decisions do not depend on the
+    # profile (the h0_exact pins pass with and without it), so this job keeps Cargo's default release codegen.
+    env:
+      CARGO_PROFILE_RELEASE_LTO: "false"
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
     steps:
       - uses: actions/checkout@v4
 
