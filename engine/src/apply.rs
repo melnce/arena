@@ -770,7 +770,8 @@ pub fn play_form_effects_reference(
     } else {
         (false, false)
     };
-    let enhance: Vec<&Mode> = if suppress_enhance || !inst.statics.printed_tags.contains("enhance") {
+    let enhance: Vec<&Mode> = if suppress_enhance || !inst.statics.printed_tags.contains("enhance")
+    {
         Vec::new()
     } else {
         card.modes()

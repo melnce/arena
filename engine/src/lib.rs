@@ -29,9 +29,9 @@ pub mod trace;
 
 pub use action::{acting_player, from_neutral, to_neutral, Action};
 pub use action_id::{legal_ids, legal_mask, ActionId};
-pub use apply::{apply, apply_neutral, legal_actions, new_game, zone_count};
 #[doc(hidden)]
 pub use apply::apply_known_legal;
+pub use apply::{apply, apply_neutral, legal_actions, new_game, zone_count};
 pub use card::{Card, CardId, CardKind, CardOrCrest};
 pub use db::CardDb;
 pub use determinize::{

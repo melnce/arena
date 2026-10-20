@@ -321,7 +321,8 @@ jobs:
             "h0_oopen": 45,
             "h0_turn_worlds": 15,
             "lethal": 15,
-            "h0_exact_games": 45
+            "h0_exact_games": 45,
+            "h0_zb_equiv": 25
           }'
 
           failed_jobs=""
@@ -433,7 +434,8 @@ jobs:
             "h0_oopen": 45,
             "h0_turn_worlds": 15,
             "lethal": 15,
-            "h0_exact_games": 45
+            "h0_exact_games": 45,
+            "h0_zb_equiv": 25
           }'
 
           failed_jobs=""

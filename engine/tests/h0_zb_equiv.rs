@@ -122,8 +122,7 @@ fn check_play_form_hand(
         };
         for pp in pp_samples(card, inst, usable) {
             let got = play_form_for_equiv(db, state, me, card, inst, pp, static_in_play);
-            let expect =
-                play_form_effects_reference(db, state, me, card, inst, pp, static_in_play);
+            let expect = play_form_effects_reference(db, state, me, card, inst, pp, static_in_play);
             assert_eq!(
                 got, expect,
                 "play_form {:?} pp={} static={}",
@@ -148,18 +147,18 @@ fn check_value_nets(nets: &[Arc<ValueNet>], observations: &[Observation]) {
             for clip in [0.0f32, 5.0, 2.5] {
                 let fast = net.value_clipped(obs, clip);
                 let reference = net.value_standardize_forward(obs, clip);
-                assert_eq!(
-                    fast.to_bits(),
-                    reference.to_bits(),
-                    "net {ni} clip={clip}"
-                );
+                assert_eq!(fast.to_bits(), reference.to_bits(), "net {ni} clip={clip}");
                 hit[ni] = true;
             }
             let neg = obs_with_neg_zero(obs);
             for clip in [0.0f32, 5.0] {
                 let fast = net.value_clipped(&neg, clip);
                 let reference = net.value_standardize_forward(&neg, clip);
-                assert_eq!(fast.to_bits(), reference.to_bits(), "neg0 net {ni} clip={clip}");
+                assert_eq!(
+                    fast.to_bits(),
+                    reference.to_bits(),
+                    "neg0 net {ni} clip={clip}"
+                );
             }
         }
     }
@@ -168,11 +167,7 @@ fn check_value_nets(nets: &[Arc<ValueNet>], observations: &[Observation]) {
     }
 }
 
-fn collect_observations(
-    db: &CardDb,
-    state: &arena_engine::State,
-    buf: &mut Vec<Observation>,
-) {
+fn collect_observations(db: &CardDb, state: &arena_engine::State, buf: &mut Vec<Observation>) {
     for me in [PlayerId::A, PlayerId::B] {
         buf.push(arena_engine::encode_version(
             state,
@@ -305,11 +300,7 @@ fn assert_same_pick_err(
     }
 }
 
-fn live_pick_equiv(
-    seed: u64,
-    among: Option<&str>,
-    candidates: &[CardId],
-) {
+fn live_pick_equiv(seed: u64, among: Option<&str>, candidates: &[CardId]) {
     let mut a = GameRng::live(seed);
     let mut b = GameRng::live(seed);
     let mut emit_a = Vec::new();
