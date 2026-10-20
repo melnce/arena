@@ -181,6 +181,11 @@ test("pool splits work across cores", async ({ page }) => {
   expect(text).toMatch(/same moves/i);
   if (hw >= 2) {
     const speedUp = Number(text.match(/speed-up:\s*([\d.]+)/)?.[1] ?? "0");
+    console.log(`pool speed-up bench: ${speedUp} (${hw} cores, WORLD_SPLIT_SPEC)`);
+    test.info().annotations.push({
+      type: "pool-speedup",
+      description: `${speedUp} on ${hw} cores`,
+    });
     expect(speedUp, `speed-up ${speedUp} on ${hw} cores`).toBeGreaterThan(1.3);
   }
 });
