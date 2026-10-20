@@ -225,14 +225,14 @@ fn run_game(db: &CardDb, plan: &PlannedGame, meta: &Value) -> GameCapture {
     }
 }
 
-fn decision_json(d: &BotDecision) -> Value {
+fn decision_pin_json(d: &BotDecision) -> Value {
     json!({
         "decision_index": d.decision_index,
         "search_key": d.search_key.to_string(),
         "idx": d.idx,
         "value_bits": d.value_bits,
-        "stats": d.stats,
-        "explain": d.explain,
+        "stats_fnv": fnv1a64(d.stats.as_bytes()).to_string(),
+        "explain_fnv": fnv1a64(d.explain.as_bytes()).to_string(),
     })
 }
 
@@ -250,7 +250,7 @@ fn capture_to_json(g: &GameCapture) -> Value {
         "final_search_key": g.final_search_key.to_string(),
         "final_snapshot_hash": g.final_snapshot_hash.to_string(),
         "winner": g.winner,
-        "decisions": g.decisions.iter().map(decision_json).collect::<Vec<_>>(),
+        "decision_pins": g.decisions.iter().map(decision_pin_json).collect::<Vec<_>>(),
     })
 }
 
@@ -296,18 +296,37 @@ fn compare_game(pin: &Value, live: &GameCapture) {
     assert_eq!(pin["winner"], json!(live.winner));
 }
 
+fn pin_decisions<'a>(pin: &'a Value) -> &'a [Value] {
+    if let Some(a) = pin["decision_pins"].as_array() {
+        return a;
+    }
+    pin["decisions"].as_array().map(|v| v.as_slice()).unwrap_or(&[])
+}
+
 fn diff_first_decision(id: &str, pin: &Value, live: &GameCapture) {
-    let pin_dec = pin["decisions"].as_array().expect("pin decisions");
+    let pin_dec = pin_decisions(pin);
     for (p, l) in pin_dec.iter().zip(live.decisions.iter()) {
+        let stats_fnv = fnv1a64(l.stats.as_bytes());
+        let explain_fnv = fnv1a64(l.explain.as_bytes());
+        let pin_stats_fnv = if p.get("stats_fnv").is_some() {
+            u64_field(p, "stats_fnv")
+        } else {
+            fnv1a64(p["stats"].as_str().unwrap_or("").as_bytes())
+        };
+        let pin_explain_fnv = if p.get("explain_fnv").is_some() {
+            u64_field(p, "explain_fnv")
+        } else {
+            fnv1a64(p["explain"].as_str().unwrap_or("").as_bytes())
+        };
         if p["decision_index"] != json!(l.decision_index)
             || p["idx"] != json!(l.idx)
             || p["value_bits"] != json!(l.value_bits)
             || u64_field(p, "search_key") != l.search_key
-            || p["stats"] != json!(l.stats)
-            || p["explain"] != json!(l.explain)
+            || pin_stats_fnv != stats_fnv
+            || pin_explain_fnv != explain_fnv
         {
             panic!(
-                "{id} first differing decision index {}\n  pin idx={} live idx={}\n  pin value_bits={:?} live {:?}\n  pin search_key={} live {}\n  stats equal={}\n  explain equal={}",
+                "{id} first differing decision index {}\n  pin idx={} live idx={}\n  pin value_bits={:?} live {:?}\n  pin search_key={} live {}\n  pin stats_fnv={} live {stats_fnv}\n  pin explain_fnv={} live {explain_fnv}",
                 l.decision_index,
                 p["idx"],
                 l.idx,
@@ -315,15 +334,17 @@ fn diff_first_decision(id: &str, pin: &Value, live: &GameCapture) {
                 l.value_bits,
                 p["search_key"],
                 l.search_key,
-                p["stats"] == json!(l.stats),
-                p["explain"] == json!(l.explain),
+                pin_stats_fnv,
+                pin_explain_fnv,
             );
         }
     }
     panic!(
-        "{id} aggregate fnv mismatch but per-decision rows matched (pin {} decisions, live {})",
-        pin_dec.len(),
-        live.decisions.len()
+        "{id} aggregate fnv mismatch (decisions_fnv pin {} live {}; root_search_keys_fnv pin {} live {})",
+        pin["decisions_fnv"],
+        live.decisions_fnv,
+        pin["root_search_keys_fnv"],
+        live.root_search_keys_fnv
     );
 }
 
