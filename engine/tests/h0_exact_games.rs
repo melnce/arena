@@ -25,8 +25,7 @@ const S3: &str = "h0:nodes=16000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hb
 
 const S4: &str = "h0";
 
-const S5: &str =
-    "h0:nodes=8000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,hbk=16";
+const S5: &str = "h0:nodes=8000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,hbk=16";
 
 struct PlannedGame {
     spec_key: &'static str,
@@ -89,7 +88,7 @@ fn meta_games() -> Vec<Value> {
     serde_json::from_str(&text).expect("meta games")
 }
 
-fn meta_row<'a>(games: &'a [Value], seed: u64) -> &'a Value {
+fn meta_row(games: &[Value], seed: u64) -> &Value {
     games
         .iter()
         .find(|g| g["seed"].as_u64() == Some(seed))
@@ -296,11 +295,14 @@ fn compare_game(pin: &Value, live: &GameCapture) {
     assert_eq!(pin["winner"], json!(live.winner));
 }
 
-fn pin_decisions<'a>(pin: &'a Value) -> &'a [Value] {
+fn pin_decisions(pin: &Value) -> &[Value] {
     if let Some(a) = pin["decision_pins"].as_array() {
         return a;
     }
-    pin["decisions"].as_array().map(|v| v.as_slice()).unwrap_or(&[])
+    pin["decisions"]
+        .as_array()
+        .map(|v| v.as_slice())
+        .unwrap_or(&[])
 }
 
 fn diff_first_decision(id: &str, pin: &Value, live: &GameCapture) {
@@ -348,11 +350,8 @@ fn diff_first_decision(id: &str, pin: &Value, live: &GameCapture) {
     );
 }
 
-#[cfg_attr(
-    debug_assertions,
-    ignore = "release only: the ci job runs it in its release step"
-)]
 #[test]
+#[ignore = "slow.yml suite h0_exact_games"]
 fn h0_exact_games() {
     let db = load_db();
     let text = fs::read_to_string(games_fixture_path())
@@ -366,9 +365,14 @@ fn h0_exact_games() {
     }
 }
 
+/// Run once on `main` (`336d625` or earlier engine) with `H0_EXACT_GAMES_REGEN=1`.
 #[test]
 #[ignore]
 fn regen_h0_exact_games() {
+    if std::env::var("H0_EXACT_GAMES_REGEN").as_deref() != Ok("1") {
+        eprintln!("set H0_EXACT_GAMES_REGEN=1 to rewrite fixtures/h0_exact/games.json");
+        return;
+    }
     let db = load_db();
     let live = collect_all(&db);
     let games: Vec<Value> = live.iter().map(capture_to_json).collect();
@@ -385,6 +389,10 @@ fn regen_h0_exact_games() {
 #[test]
 #[ignore]
 fn bench_h0_exact_games() {
+    if std::env::var("H0_EXACT_GAMES_BENCH").as_deref() != Ok("1") {
+        eprintln!("set H0_EXACT_GAMES_BENCH=1 to time S1's four games");
+        return;
+    }
     let db = load_db();
     let meta = meta_games();
     let t0 = Instant::now();
