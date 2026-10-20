@@ -398,7 +398,7 @@ fn full_instance(c: &arena_engine::CardInstance) -> Value {
     json!({
         "id": c.id,
         "card": c.card.as_str(),
-        "name": c.name,
+        "name": c.statics.name,
         "kind": kind_str(c.kind),
         "class": class_str(c.class),
         "cost": c.cost,

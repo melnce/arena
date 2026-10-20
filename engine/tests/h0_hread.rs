@@ -122,7 +122,8 @@ fn hread_weight_fixture(db: &CardDb) -> (State, PlayerId) {
             pp_max: 5,
             board_full: false,
         },
-    ];
+    ]
+    .into();
 
     let pool_pricey = CardInstance::from_card(pricey, st.alloc_id());
     st.player_mut(opp).deck.push(pool_pricey);
@@ -166,7 +167,8 @@ fn hread_hand_since_fixture(db: &CardDb) -> (State, PlayerId) {
             pp_max: 5,
             board_full: false,
         },
-    ];
+    ]
+    .into();
 
     let pricey_id = st.alloc_id();
     st.player_mut(opp)

@@ -190,6 +190,7 @@ where
     match search(
         db,
         state,
+        public,
         perspective,
         budget,
         &mut nodes,
@@ -223,13 +224,13 @@ where
     }
 
     let mut tt2: HashMap<(u64, u64), u64> = HashMap::new();
-    let public = hash(state);
     path_keys = vec![position_key(state, public, true)];
     path_lethal.clear();
     line.clear();
     match search(
         db,
         state,
+        public,
         perspective,
         budget,
         &mut nodes,
@@ -391,6 +392,7 @@ where
 fn search<F>(
     db: &CardDb,
     state: &State,
+    public: u64,
     perspective: PlayerId,
     budget: u32,
     nodes: &mut u32,
@@ -427,7 +429,7 @@ where
     if ply >= MAX_PLY {
         return Outcome::Unknown;
     }
-    let public = hash(state);
+    debug_assert_eq!(public, hash(state));
     let lethal = lethal_key_with(state, public);
     let key = position_key(state, public, use_lethal_key);
     if use_tt {
@@ -466,7 +468,7 @@ where
         let mut s = Box::new(state.clone());
         let rng_before = s.rng.clone();
         *nodes += 1;
-        if apply(db, &mut s, a.clone()).is_err() {
+        if crate::apply::apply_known_legal(db, &mut s, a.clone()).is_err() {
             continue;
         }
         let consumed = rng_consumed(&rng_before, &s.rng);
@@ -504,6 +506,7 @@ where
         let out = search(
             db,
             &s,
+            child_public,
             perspective,
             budget,
             nodes,

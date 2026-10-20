@@ -86,6 +86,12 @@ pub struct ValueNet {
     feat_mean: Vec<f32>,
     feat_std: Vec<f32>,
     vocab: Vec<u32>,
+    /// `vocab.binary_search(&id)` for every id in `vocab`, precomputed (see [`ValueNet::id_index`]).
+    vocab_index: crate::fxhash::FxMap<u32, usize>,
+    /// The standardized value of a feature that is exactly `+0.0`, per feature, at clip 0 and clip 5 (the two clips
+    /// H0 uses): what [`ValueNet::std_feature`] returns for it, computed once.
+    zero_x_clip0: Vec<f32>,
+    zero_x_clip5: Vec<f32>,
     zones: Vec<ZoneSpec>,
     scale: f32,
     linear: Option<Linear>,
@@ -279,6 +285,19 @@ impl ValueNet {
             }
         };
 
+        let mut vocab_index = std::collections::HashMap::default();
+        for &id in &vocab {
+            vocab_index
+                .entry(id)
+                .or_insert_with(|| vocab.binary_search(&id).expect("id is in vocab"));
+        }
+        let zero_x = |clip: f32| -> Vec<f32> {
+            (0..feature_len)
+                .map(|i| std_value(0.0, &feat_mean, &feat_std, i, clip))
+                .collect()
+        };
+        let zero_x_clip0 = zero_x(0.0);
+        let zero_x_clip5 = zero_x(5.0);
         Ok(Arc::new(ValueNet {
             arch,
             feature_len,
@@ -286,6 +305,9 @@ impl ValueNet {
             feat_mean,
             feat_std,
             vocab,
+            vocab_index,
+            zero_x_clip0,
+            zero_x_clip5,
             zones,
             scale,
             linear,
@@ -310,8 +332,10 @@ impl ValueNet {
         s
     }
 
+    /// `self.vocab.binary_search(&id).unwrap_or(0)`, by table: the same index for every id.
+    #[inline]
     fn id_index(&self, id: u32) -> usize {
-        self.vocab.binary_search(&id).unwrap_or(0)
+        self.vocab_index.get(&id).copied().unwrap_or(0)
     }
 
     fn slot_count(&self, obs: &Observation, zone: &ZoneSpec, slot: usize) -> f32 {
@@ -547,8 +571,60 @@ impl ValueNet {
     /// Like [`value`], but clamps each standardised input to `[-clip, clip]`
     /// before the forward pass when `clip > 0`.
     pub fn value_clipped(&self, obs: &Observation, clip: f32) -> f32 {
+        if self.arch == NetArch::Linear {
+            // The same arithmetic as `standardize` + `forward` (Linear), in the same order, without the
+            // standardized vector.
+            let pre = self.linear_pre_fused(obs, clip) + self.race_linear(obs, clip);
+            return self.scale * pre.tanh();
+        }
         let x = self.standardize(obs, clip);
         self.forward(&x, obs, clip)
+    }
+
+    /// [`linear_pre`] on the standardized observation, computed term by term in the same order. A feature that is
+    /// exactly `+0.0` takes its precomputed standardized value (the same bits `standardize` computes for it).
+    fn linear_pre_fused(&self, obs: &Observation, clip: f32) -> f32 {
+        let lin = self.linear.as_ref().expect("linear weights");
+        let n = lin.w.len().min(self.feature_len);
+        let zero_x: Option<&[f32]> = if clip == 0.0 {
+            Some(&self.zero_x_clip0)
+        } else if clip == 5.0 {
+            Some(&self.zero_x_clip5)
+        } else {
+            None
+        };
+        lin.b
+            + lin.w[..n]
+                .iter()
+                .enumerate()
+                .map(|(i, wi)| {
+                    let f = obs.features.get(i).copied().unwrap_or(0.0);
+                    let x = match zero_x {
+                        Some(z) if f.to_bits() == 0 => z[i],
+                        _ => std_value(f, &self.feat_mean, &self.feat_std, i, clip),
+                    };
+                    wi * x
+                })
+                .sum::<f32>()
+            + self.zone_linear(obs, &lin.zone_w)
+    }
+
+    /// `forward(standardize(obs, clip), …)` — reference path for [`value_clipped`].
+    #[doc(hidden)]
+    pub fn value_standardize_forward(&self, obs: &Observation, clip: f32) -> f32 {
+        let x = self.standardize(obs, clip);
+        self.forward(&x, obs, clip)
+    }
+
+    /// `vocab_index` vs `vocab.binary_search` (missing ids → 0).
+    #[doc(hidden)]
+    pub fn vocab_id_index(&self, id: u32) -> usize {
+        self.id_index(id)
+    }
+
+    #[doc(hidden)]
+    pub fn vocab_ids(&self) -> &[u32] {
+        &self.vocab
     }
 
     /// Dense residual forward for tests (sparse path must match for `clip` 0 and 5).
@@ -602,6 +678,19 @@ impl ValueNet {
             }
         } + self.race_linear(obs, clip);
         self.scale * pre.tanh()
+    }
+}
+
+/// Feature `i` with value `f`, standardized exactly as [`ValueNet::standardize`] does it.
+#[inline]
+fn std_value(f: f32, feat_mean: &[f32], feat_std: &[f32], i: usize, clip: f32) -> f32 {
+    let mean = feat_mean.get(i).copied().unwrap_or(0.0);
+    let std = feat_std.get(i).copied().unwrap_or(1.0);
+    let x = (f - mean) / std;
+    if clip > 0.0 {
+        x.clamp(-clip, clip)
+    } else {
+        x
     }
 }
 

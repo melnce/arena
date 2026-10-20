@@ -598,7 +598,7 @@ fn ripper_last_words_copy_without_last_words() {
         .find(|c| c.card.as_str() == "10941110")
         .expect("lw copy");
     assert!(
-        !copy.printed_tags.contains("lastWords"),
+        !copy.statics.printed_tags.contains("lastWords"),
         "Last Words removed from the hand copy"
     );
 }

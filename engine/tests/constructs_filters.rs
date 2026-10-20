@@ -120,7 +120,7 @@ fn construct_filter_all() {
     let mut st = started(&db, 201);
     put_field(&db, &mut st, PlayerId::B, WARD);
     if let Some(f) = st.field_inst_mut(PlayerId::B, 0) {
-        f.tribes = vec![arena_engine::card::Tribe::Officer];
+        f.statics.tribes = vec![arena_engine::card::Tribe::Officer];
     }
     put_field(&db, &mut st, PlayerId::B, OFFICER);
     play_costed(&db, &mut st, "89600001", 1);

@@ -109,7 +109,7 @@ fn granted_tags(c: &crate::state::CardInstance) -> Option<Vec<String>> {
         .iter()
         .map(|a| a.snapshot_tag().to_string())
         .collect();
-    for printed in &c.printed_tags {
+    for printed in &c.statics.printed_tags {
         tags.remove(printed);
     }
     if tags.is_empty() {
@@ -249,9 +249,175 @@ pub fn snapshot_json(state: &State) -> serde_json::Value {
 }
 
 pub fn hash(state: &State) -> u64 {
+    let snap = snapshot(state);
+    let mut w = Fnv1aWriter(0xcbf2_9ce4_8422_2325);
+    serde_json::to_writer(&mut w, &SortedState::of(&snap)).expect("canonical json");
+    w.0
+}
+
+/// The old route, kept to check [`hash`] against: `serde_json::Value`, sorted, serialized, then FNV-1a.
+pub fn hash_via_value(state: &State) -> u64 {
     let json = snapshot_json(state);
     let bytes = serde_json::to_vec(&json).expect("canonical json");
     fnv1a64(&bytes)
+}
+
+/// FNV-1a 64 as an `io::Write` sink: the same value as `fnv1a64` of everything written.
+struct Fnv1aWriter(u64);
+
+impl std::io::Write for Fnv1aWriter {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let mut h = self.0;
+        for &b in buf {
+            h ^= b as u64;
+            h = h.wrapping_mul(0x0100_0000_01b3);
+        }
+        self.0 = h;
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+// `snapshot_json` turns every struct into a map, and serde_json's maps are sorted by key, so the bytes `hash` covers
+// have every object's keys in byte order. These views serialize a `CanonicalState` with their fields declared in that
+// order, which gives the same bytes without building the `Value` tree. `CanonicalState`, `CanonicalPlayers`,
+// `CanonicalPlayer` and `CanonicalCrest` already declare their fields sorted; `CanonicalHand` and `CanonicalField`
+// do not, so they get their own view.
+#[derive(Serialize)]
+struct SortedState<'a> {
+    active: &'a str,
+    phase: &'a str,
+    players: SortedPlayers<'a>,
+    turn: u32,
+    winner: &'a Option<String>,
+}
+
+#[derive(Serialize)]
+struct SortedPlayers<'a> {
+    a: SortedPlayer<'a>,
+    b: SortedPlayer<'a>,
+}
+
+#[derive(Serialize)]
+struct SortedPlayer<'a> {
+    banished: &'a BTreeMap<String, u32>,
+    cemetery: &'a BTreeMap<String, u32>,
+    combo: i32,
+    crests: &'a [CanonicalCrest],
+    deck: &'a BTreeMap<String, u32>,
+    earth: i32,
+    ep: i32,
+    evolves_used: i32,
+    faith: i32,
+    field: [Option<SortedField<'a>>; 5],
+    hand: Vec<SortedHand<'a>>,
+    leader_defense: i32,
+    leader_max: i32,
+    pp: i32,
+    pp_bonus: i32,
+    pp_max: i32,
+    rally: i32,
+    sep: i32,
+    shadows: i32,
+}
+
+#[derive(Serialize)]
+struct SortedHand<'a> {
+    card: &'a str,
+    cost: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    skybound: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    vars: Option<&'a BTreeMap<String, i32>>,
+}
+
+#[derive(Serialize)]
+struct SortedField<'a> {
+    attack: i32,
+    attacks_left: i32,
+    can_attack: bool,
+    card: &'a str,
+    countdown: Option<i32>,
+    defense: i32,
+    evolved: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    granted: Option<&'a Vec<String>>,
+    max_defense: i32,
+    #[serde(rename = "super")]
+    super_evolved: bool,
+    traits: &'a [String],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    vars: Option<&'a BTreeMap<String, i32>>,
+}
+
+impl<'a> SortedState<'a> {
+    fn of(s: &'a CanonicalState) -> Self {
+        SortedState {
+            active: &s.active,
+            phase: &s.phase,
+            players: SortedPlayers {
+                a: SortedPlayer::of(&s.players.a),
+                b: SortedPlayer::of(&s.players.b),
+            },
+            turn: s.turn,
+            winner: &s.winner,
+        }
+    }
+}
+
+impl<'a> SortedPlayer<'a> {
+    fn of(p: &'a CanonicalPlayer) -> Self {
+        let mut field: [Option<SortedField<'a>>; 5] = Default::default();
+        for (i, slot) in p.field.iter().enumerate() {
+            field[i] = slot.as_ref().map(|f| SortedField {
+                attack: f.attack,
+                attacks_left: f.attacks_left,
+                can_attack: f.can_attack,
+                card: &f.card,
+                countdown: f.countdown,
+                defense: f.defense,
+                evolved: f.evolved,
+                granted: f.granted.as_ref(),
+                max_defense: f.max_defense,
+                super_evolved: f.super_evolved,
+                traits: &f.traits,
+                vars: f.vars.as_ref(),
+            });
+        }
+        SortedPlayer {
+            banished: &p.banished,
+            cemetery: &p.cemetery,
+            combo: p.combo,
+            crests: &p.crests,
+            deck: &p.deck,
+            earth: p.earth,
+            ep: p.ep,
+            evolves_used: p.evolves_used,
+            faith: p.faith,
+            field,
+            hand: p
+                .hand
+                .iter()
+                .map(|h| SortedHand {
+                    card: &h.card,
+                    cost: h.cost,
+                    skybound: h.skybound,
+                    vars: h.vars.as_ref(),
+                })
+                .collect(),
+            leader_defense: p.leader_defense,
+            leader_max: p.leader_max,
+            pp: p.pp,
+            pp_bonus: p.pp_bonus,
+            pp_max: p.pp_max,
+            rally: p.rally,
+            sep: p.sep,
+            shadows: p.shadows,
+        }
+    }
 }
 
 pub fn card_id_key(id: CardId) -> String {

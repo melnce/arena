@@ -322,7 +322,7 @@ fn determinize_open_opponent(
         }
         fixed.push(dealt);
     }
-    out.player_mut(opp).hand = fixed;
+    out.player_mut(opp).hand = fixed.into();
 
     if block_deal_ran {
         let mut rng = Xoshiro256ss::from_seed(root_seed);
@@ -336,7 +336,7 @@ fn determinize_open_opponent(
         }
         new_deck.push(inst);
     }
-    out.player_mut(opp).deck = new_deck;
+    out.player_mut(opp).deck = new_deck.into();
 
     let mut slots: Vec<(HiddenZone, usize)> = hidden_meta
         .iter()
@@ -428,8 +428,8 @@ fn determinize_draws_impl(
         let mut rng = Xoshiro256ss::from_seed(root_seed);
         shuffle(&mut rest, &mut rng);
     }
-    out.player_mut(opp).hand = stay;
-    out.player_mut(opp).deck = rest;
+    out.player_mut(opp).hand = stay.into();
+    out.player_mut(opp).deck = rest.into();
     out
 }
 

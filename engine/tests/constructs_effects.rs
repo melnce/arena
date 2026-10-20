@@ -289,7 +289,7 @@ fn construct_op_removeAbilities() {
 
 fn tags_has(st: &arena_engine::State, who: PlayerId, slot: u8, tag: &str) -> bool {
     st.field_inst(who, slot)
-        .is_some_and(|c| c.printed_tags.contains(tag))
+        .is_some_and(|c| c.statics.printed_tags.contains(tag))
 }
 
 fn destroy_via_spell(db: &arena_engine::CardDb, st: &mut arena_engine::State) {

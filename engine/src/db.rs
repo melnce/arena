@@ -1,7 +1,10 @@
 //! `CardDb::load(root)` — every `cards/**/*.json` except the catalog, plus
 //! the catalog for facts. `from_json` is the same path on in-memory text.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
+use std::sync::Arc;
+
+use crate::fxhash::{FxMap, FxSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -14,22 +17,26 @@ use crate::support;
 
 #[derive(Debug, Clone)]
 pub struct CardDb {
-    pub cards: BTreeMap<CardId, Card>,
+    pub cards: BTreeMap<CardId, Arc<Card>>,
+    /// The same cards by id, for lookups (rebuilt with the other indexes after every load).
+    card_index: FxMap<CardId, Arc<Card>>,
+    /// Cards for which `support::card_unsupported` is `Some` (rebuilt with `card_index`).
+    unsupported_cards: FxSet<CardId>,
     pub crests: BTreeMap<String, Crest>,
     pub catalog: BTreeMap<String, CatalogRecord>,
     pub paths: BTreeMap<String, PathBuf>,
     /// Printed `When` abilities, keyed by `(event, zone)` → card ids.
-    when_cards: HashMap<(EventName, AbilityZone), HashSet<CardId>>,
+    when_cards: FxMap<(EventName, AbilityZone), FxSet<CardId>>,
     /// Printed `When` abilities on crests, keyed by `(event, zone)` → crest ids.
-    when_crests: HashMap<(EventName, AbilityZone), HashSet<String>>,
+    when_crests: FxMap<(EventName, AbilityZone), FxSet<String>>,
     /// Cards that print a start/end-of-turn ability in a given zone.
     /// `true` = startOfTurn, `false` = endOfTurn.
-    boundary_cards: HashMap<(AbilityZone, bool), HashSet<CardId>>,
+    boundary_cards: FxMap<(AbilityZone, bool), FxSet<CardId>>,
     /// Printed `on: static` with a non-empty `suppress`. Granted abilities
     /// cannot be static (`grantAbility.ability` has no static variant), so
     /// this set is complete for the board walk.
-    static_cards: HashSet<CardId>,
-    static_crests: HashSet<String>,
+    static_cards: FxSet<CardId>,
+    static_crests: FxSet<String>,
     /// State-free resource needs (Pay / Rally / Spellboost / Last Words).
     needs: NeedsTable,
 }
@@ -38,14 +45,16 @@ impl CardDb {
     fn empty() -> Self {
         CardDb {
             cards: BTreeMap::new(),
+            card_index: HashMap::default(),
+            unsupported_cards: FxSet::default(),
             crests: BTreeMap::new(),
             catalog: BTreeMap::new(),
             paths: BTreeMap::new(),
-            when_cards: HashMap::new(),
-            when_crests: HashMap::new(),
-            boundary_cards: HashMap::new(),
-            static_cards: HashSet::new(),
-            static_crests: HashSet::new(),
+            when_cards: FxMap::default(),
+            when_crests: FxMap::default(),
+            boundary_cards: FxMap::default(),
+            static_cards: FxSet::default(),
+            static_crests: FxSet::default(),
             needs: NeedsTable::default(),
         }
     }
@@ -85,6 +94,7 @@ impl CardDb {
                 db.load_text(label, text, false)?;
             }
         }
+        db.rebuild_card_index();
         db.rebuild_when_index();
         db.rebuild_boundary_index();
         db.rebuild_static_index();
@@ -101,6 +111,7 @@ impl CardDb {
             return Ok(());
         }
         walk_json(dir, &mut |path| self.load_file(path, true))?;
+        self.rebuild_card_index();
         self.rebuild_when_index();
         self.rebuild_boundary_index();
         self.rebuild_static_index();
@@ -116,6 +127,7 @@ impl CardDb {
             return Ok(());
         }
         walk_json(dir, &mut |path| self.load_file_replace(path))?;
+        self.rebuild_card_index();
         self.rebuild_when_index();
         self.rebuild_boundary_index();
         self.rebuild_static_index();
@@ -179,7 +191,7 @@ impl CardDb {
                     });
                 }
                 self.paths.insert(key, PathBuf::from(label));
-                self.cards.insert(id, card);
+                self.cards.insert(id, Arc::new(card));
             }
             CardOrCrest::Crest(crest) => {
                 let key = crest.id.clone();
@@ -223,7 +235,7 @@ impl CardDb {
                     });
                 }
                 self.paths.insert(key, PathBuf::from(label));
-                self.cards.insert(id, card);
+                self.cards.insert(id, Arc::new(card));
             }
             CardOrCrest::Crest(crest) => {
                 let key = crest.id.clone();
@@ -241,7 +253,14 @@ impl CardDb {
     }
 
     pub fn card(&self, id: CardId) -> Result<&Card, LoadError> {
-        self.cards.get(&id).ok_or(LoadError::MissingCard(id))
+        match self.card_index.get(&id) {
+            Some(card) => Ok(card),
+            None => self
+                .cards
+                .get(&id)
+                .map(|c| &**c)
+                .ok_or(LoadError::MissingCard(id)),
+        }
     }
 
     pub fn crest(&self, id: &str) -> Result<&Crest, LoadError> {
@@ -316,9 +335,29 @@ impl CardDb {
         &self.needs
     }
 
+    fn rebuild_card_index(&mut self) {
+        self.card_index = self
+            .cards
+            .iter()
+            .map(|(id, card)| (*id, Arc::clone(card)))
+            .collect();
+        self.unsupported_cards = self
+            .cards
+            .iter()
+            .filter(|(_, card)| support::card_unsupported(card).is_some())
+            .map(|(id, _)| *id)
+            .collect();
+    }
+
+    /// `support::card_unsupported(db.card(id)?).is_some()`, by table.
+    #[inline]
+    pub fn card_is_unsupported(&self, id: CardId) -> bool {
+        self.unsupported_cards.contains(&id)
+    }
+
     fn rebuild_when_index(&mut self) {
-        let mut when_cards: HashMap<(EventName, AbilityZone), HashSet<CardId>> = HashMap::new();
-        let mut when_crests: HashMap<(EventName, AbilityZone), HashSet<String>> = HashMap::new();
+        let mut when_cards: FxMap<(EventName, AbilityZone), FxSet<CardId>> = FxMap::default();
+        let mut when_crests: FxMap<(EventName, AbilityZone), FxSet<String>> = FxMap::default();
         for (id, card) in &self.cards {
             index_when_abilities(card.abilities(), |event, zone| {
                 when_cards.entry((event, zone)).or_default().insert(*id);
@@ -337,7 +376,7 @@ impl CardDb {
     }
 
     fn rebuild_boundary_index(&mut self) {
-        let mut boundary_cards: HashMap<(AbilityZone, bool), HashSet<CardId>> = HashMap::new();
+        let mut boundary_cards: FxMap<(AbilityZone, bool), FxSet<CardId>> = FxMap::default();
         for (id, card) in &self.cards {
             for a in card.abilities() {
                 let start = match a {
@@ -357,8 +396,8 @@ impl CardDb {
     }
 
     fn rebuild_static_index(&mut self) {
-        let mut static_cards = HashSet::new();
-        let mut static_crests = HashSet::new();
+        let mut static_cards = FxSet::default();
+        let mut static_crests = FxSet::default();
         for (id, card) in &self.cards {
             if card.abilities().iter().any(ability_has_static_suppress) {
                 static_cards.insert(*id);

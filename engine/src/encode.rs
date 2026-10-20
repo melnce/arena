@@ -660,7 +660,7 @@ fn deck_hist(p: &PlayerState, vocab: &[CardId]) -> [f32; HIST_WIDTH] {
 
 fn pool_hist(p: &PlayerState, vocab: &[CardId]) -> [f32; HIST_WIDTH] {
     let mut h = [0.0f32; HIST_WIDTH];
-    for (id, n) in p.known_remaining_pool() {
+    for (id, n) in p.known_remaining_pool_sorted() {
         if let Ok(i) = vocab.binary_search(&id) {
             h[i] = n as f32;
         }
@@ -732,7 +732,7 @@ fn write_crest_ids(ids: &mut [u32], off: usize, p: &PlayerState) {
 
 fn strict_pool_hist(p: &PlayerState, vocab: &[CardId]) -> [f32; HIST_WIDTH] {
     let mut h = [0.0f32; HIST_WIDTH];
-    for (id, n) in p.strict_remaining_pool() {
+    for (id, n) in p.strict_remaining_pool_sorted() {
         if let Ok(i) = vocab.binary_search(&id) {
             h[i] = n as f32;
         }

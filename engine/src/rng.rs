@@ -245,6 +245,36 @@ impl GameRng {
         }
     }
 
+    /// [`GameRng::pick_index_among`] with the candidates given as card ids, each standing for its key
+    /// `id.as_str()`: the same draw, the same recorded pick and the same oracle matching, without formatting every
+    /// candidate's key when only the chosen one is recorded.
+    pub fn pick_index_among_ids(
+        &mut self,
+        what: PickWhat,
+        among: Option<&str>,
+        candidates: &[crate::card::CardId],
+        emit: &mut Vec<Pick>,
+    ) -> Result<usize, OraclePickNotLegal> {
+        if candidates.is_empty() {
+            return Ok(0);
+        }
+        match self {
+            GameRng::Live(g) => {
+                let i = g.gen_range(candidates.len() as u32) as usize;
+                emit.push(Pick {
+                    what,
+                    among: among.map(str::to_string),
+                    chose: PickChose::Id(candidates[i].as_str()),
+                });
+                Ok(i)
+            }
+            GameRng::Scripted { .. } => {
+                let keys: Vec<String> = candidates.iter().map(|c| c.as_str()).collect();
+                self.pick_index_among(what, among, &keys, emit)
+            }
+        }
+    }
+
     pub fn pick_player_coin(
         &mut self,
         emit: &mut Vec<Pick>,

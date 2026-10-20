@@ -54,7 +54,7 @@ fn printed_def(id: &str) -> i32 {
 
 fn last_words(st: &arena_engine::State, who: PlayerId, slot: u8) -> bool {
     st.field_inst(who, slot)
-        .is_some_and(|c| c.printed_tags.contains("lastWords"))
+        .is_some_and(|c| c.statics.printed_tags.contains("lastWords"))
 }
 
 fn hand_cost(st: &arena_engine::State, who: PlayerId, id: &str) -> i32 {

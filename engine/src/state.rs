@@ -7,6 +7,7 @@ use crate::card::{
 };
 use crate::ids::{First, PlayerId};
 use crate::rng::GameRng;
+use crate::shared::{Memo, Shared};
 
 pub const HAND_LIMIT: usize = 9;
 pub const FIELD_SIZE: usize = 5;
@@ -72,8 +73,8 @@ pub struct CardInstance {
     /// Count of `Ability::When` entries in `granted`. Grants are dynamic and
     /// rare; a non-zero count forces the instance into the `when` scan.
     pub granted_whens: u8,
-    /// Printed trigger tags at construction; `granted` snapshot is instance − this.
-    pub printed_tags: BTreeSet<String>,
+    /// Name, printed trigger tags and tribes: set from the card, rarely changed, shared between copies.
+    pub statics: Shared<InstStatic>,
     pub flags: InstanceFlags,
     pub vars: BTreeMap<VarKey, i32>,
     pub skybound: i32,
@@ -82,8 +83,6 @@ pub struct CardInstance {
     /// Printed type; Accelerate play rewrites the corpse to Spell.
     pub kind: CardKind,
     pub class: Class,
-    pub tribes: Vec<Tribe>,
-    pub name: String,
     pub once_used: Vec<TriggerTag>,
     /// Next `op:sequence` step (wraps after the last). Per-instance; survives
     /// the trigger queue so Omerio / City of Babelon keep their cursor.
@@ -97,6 +96,15 @@ pub struct CardInstance {
     /// outside the hand. Snapshot-neutral — not in `CanonicalState`, `hash`,
     /// or `search_key`.
     pub hand_since: u32,
+}
+
+/// The parts of a [`CardInstance`] that come from its card and almost never change.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InstStatic {
+    pub name: String,
+    /// Printed trigger tags at construction; `granted` snapshot is instance − this.
+    pub printed_tags: BTreeSet<String>,
+    pub tribes: Vec<Tribe>,
 }
 
 /// A `grantTraits` that expires at a turn boundary.
@@ -129,7 +137,11 @@ impl CardInstance {
             traits,
             granted: Vec::new(),
             granted_whens: 0,
-            printed_tags: card.printed_trigger_tags(),
+            statics: Shared::new(InstStatic {
+                name: card.name().to_string(),
+                printed_tags: card.printed_trigger_tags(),
+                tribes: card.tribes().to_vec(),
+            }),
             flags: InstanceFlags {
                 ambush_active: ambush,
                 attacks_left: attacks,
@@ -142,8 +154,6 @@ impl CardInstance {
             spellboost_count: 0,
             kind: card.kind(),
             class: card.class(),
-            tribes: card.tribes().to_vec(),
-            name: card.name().to_string(),
             once_used: Vec::new(),
             sequence_index: 0,
             temp_traits: Vec::new(),
@@ -190,7 +200,7 @@ impl CardInstance {
         self.traits.cant_be_played == Some(true)
     }
     pub fn is_earth_sigil(&self) -> bool {
-        self.tribes.contains(&Tribe::EarthSigil)
+        self.statics.tribes.contains(&Tribe::EarthSigil)
     }
     pub fn damaged(&self) -> bool {
         self.defense < self.max_defense
@@ -208,12 +218,12 @@ impl CardInstance {
             Some(tags) => {
                 self.granted.retain(|a| !tags.contains(&a.tag()));
                 for t in tags {
-                    self.printed_tags.remove(t.snapshot());
+                    self.statics.printed_tags.remove(t.snapshot());
                 }
             }
             None => {
                 self.granted.clear();
-                self.printed_tags.clear();
+                self.statics.printed_tags.clear();
             }
         }
         self.granted_whens = self
@@ -294,45 +304,45 @@ pub struct PlayerState {
     pub earth_slot: Option<u8>,
     pub faith: i32,
     pub rally: i32,
-    pub leader_mods: Vec<LeaderMod>,
-    pub crests: Vec<CrestInstance>,
-    pub hand: Vec<CardInstance>,
+    pub leader_mods: Memo<Vec<LeaderMod>>,
+    pub crests: Memo<Vec<CrestInstance>>,
+    pub hand: Memo<Vec<CardInstance>>,
     pub field: [Option<CardInstance>; FIELD_SIZE],
-    pub deck: Vec<CardInstance>,
-    pub cemetery: Vec<CardInstance>,
-    pub banished: Vec<CardInstance>,
-    pub destroyed_history: Vec<DestroyedRecord>,
-    pub played_this_turn: Vec<CardId>,
-    pub played_base_costs_this_match: Vec<i32>,
+    pub deck: Memo<Vec<CardInstance>>,
+    pub cemetery: Memo<Vec<CardInstance>>,
+    pub banished: Memo<Vec<CardInstance>>,
+    pub destroyed_history: Memo<Vec<DestroyedRecord>>,
+    pub played_this_turn: Memo<Vec<CardId>>,
+    pub played_base_costs_this_match: Memo<Vec<i32>>,
     pub attacked_leader_this_turn: bool,
     pub attacked_leader_last_turn: bool,
     pub turns_taken: u32,
     pub is_second: bool,
-    pub enter_counts: BTreeMap<CardId, i32>,
+    pub enter_counts: Memo<BTreeMap<CardId, i32>>,
     /// Opening decklist (card ids, with copies). Snapshot-neutral.
-    pub starting_deck: Vec<CardId>,
+    pub starting_deck: Memo<Vec<CardId>>,
     /// Cards currently in a public zone that left the hidden pool.
     /// Snapshot-neutral — not in `CanonicalState`.
-    pub public_removals: Vec<CardId>,
+    pub public_removals: Memo<Vec<CardId>>,
     /// Instance ids of cards that left hand or deck without the opponent
     /// learning which card it was. Snapshot-neutral — not in
     /// `CanonicalState`, `hash`, or `search_key`.
-    pub hidden_removals: Vec<u32>,
+    pub hidden_removals: Memo<Vec<u32>>,
     /// Card id for each `hidden_removals` entry (parallel vec, same index).
     /// Lets `strict_remaining_pool` add back without looking up cemetery /
     /// banished — required after `Info::Open` determinization moves instances.
-    pub hidden_removal_cards: Vec<CardId>,
+    pub hidden_removal_cards: Memo<Vec<CardId>>,
     /// Instance ids restored to cemetery slots during `Info::Open`
     /// determinization. Snapshot-neutral — not in `CanonicalState`, `hash`, or
     /// `search_key`. Cleared on each determinization. Encoding v3 uses this to
     /// exclude non-public opponent cemetery cards in search worlds.
-    pub hidden_cemetery_restores: Vec<u32>,
+    pub hidden_cemetery_restores: Memo<Vec<u32>>,
     /// Tokens / returned cards currently in hand or deck that are not
     /// accounted for by `starting_deck − public_removals`. Snapshot-neutral.
-    pub public_hand_additions: Vec<CardId>,
+    pub public_hand_additions: Memo<Vec<CardId>>,
     /// Turn-end snapshots for hand-reading (`hread`). Snapshot-neutral —
     /// not in `CanonicalState`, `hash`, or `search_key`.
-    pub turn_ends: Vec<TurnEnd>,
+    pub turn_ends: Memo<Vec<TurnEnd>>,
 }
 
 impl PlayerState {
@@ -353,36 +363,36 @@ impl PlayerState {
             earth_slot: None,
             faith: 0,
             rally: 0,
-            leader_mods: Vec::new(),
-            crests: Vec::new(),
-            hand: Vec::new(),
+            leader_mods: Memo::default(),
+            crests: Memo::default(),
+            hand: Memo::default(),
             field: Default::default(),
-            deck: Vec::new(),
-            cemetery: Vec::new(),
-            banished: Vec::new(),
-            destroyed_history: Vec::new(),
-            played_this_turn: Vec::new(),
-            played_base_costs_this_match: Vec::new(),
+            deck: Memo::default(),
+            cemetery: Memo::default(),
+            banished: Memo::default(),
+            destroyed_history: Memo::default(),
+            played_this_turn: Memo::default(),
+            played_base_costs_this_match: Memo::default(),
             attacked_leader_this_turn: false,
             attacked_leader_last_turn: false,
             turns_taken: 0,
             is_second: false,
-            enter_counts: BTreeMap::new(),
-            starting_deck: Vec::new(),
-            public_removals: Vec::new(),
-            hidden_removals: Vec::new(),
-            hidden_removal_cards: Vec::new(),
-            hidden_cemetery_restores: Vec::new(),
-            public_hand_additions: Vec::new(),
-            turn_ends: Vec::new(),
+            enter_counts: Memo::default(),
+            starting_deck: Memo::default(),
+            public_removals: Memo::default(),
+            hidden_removals: Memo::default(),
+            hidden_removal_cards: Memo::default(),
+            hidden_cemetery_restores: Memo::default(),
+            public_hand_additions: Memo::default(),
+            turn_ends: Memo::default(),
         }
     }
 
     /// Snapshot of the incremental logs (additions then removals).
     pub fn derive_public_knowledge(&self) -> (Vec<CardId>, Vec<CardId>) {
         (
-            self.public_removals.clone(),
-            self.public_hand_additions.clone(),
+            self.public_removals.to_vec(),
+            self.public_hand_additions.to_vec(),
         )
     }
 
@@ -404,6 +414,51 @@ impl PlayerState {
             }
         }
         pool.retain(|_, n| *n > 0);
+        pool
+    }
+
+    /// [`PlayerState::known_remaining_pool`] as a list sorted by card id (the map's order), built without a map.
+    pub fn known_remaining_pool_sorted(&self) -> Vec<(CardId, u32)> {
+        let mut ids: Vec<CardId> =
+            Vec::with_capacity(self.starting_deck.len() + self.public_hand_additions.len());
+        ids.extend(self.starting_deck.iter().copied());
+        ids.extend(self.public_hand_additions.iter().copied());
+        ids.sort_unstable();
+        let mut pool: Vec<(CardId, u32)> = Vec::with_capacity(ids.len());
+        for id in ids {
+            match pool.last_mut() {
+                Some((last, n)) if *last == id => *n += 1,
+                _ => pool.push((id, 1)),
+            }
+        }
+        for id in self.public_removals.iter() {
+            if let Ok(i) = pool.binary_search_by_key(id, |e| e.0) {
+                if pool[i].1 > 0 {
+                    pool[i].1 -= 1;
+                }
+            }
+        }
+        pool.retain(|e| e.1 > 0);
+        pool
+    }
+
+    /// [`PlayerState::strict_remaining_pool`] as a list sorted by card id (the map's order), built without a map.
+    pub fn strict_remaining_pool_sorted(&self) -> Vec<(CardId, u32)> {
+        let mut pool = self.known_remaining_pool_sorted();
+        let mut seen: Vec<u32> = Vec::with_capacity(self.hidden_removals.len());
+        for (idx, &inst_id) in self.hidden_removals.iter().enumerate() {
+            if seen.contains(&inst_id) {
+                continue;
+            }
+            seen.push(inst_id);
+            if let Some(&card_id) = self.hidden_removal_cards.get(idx) {
+                match pool.binary_search_by_key(&card_id, |e| e.0) {
+                    Ok(i) => pool[i].1 += 1,
+                    Err(i) => pool.insert(i, (card_id, 1)),
+                }
+            }
+        }
+        pool.retain(|e| e.1 > 0);
         pool
     }
 

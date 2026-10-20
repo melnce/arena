@@ -55,7 +55,7 @@ fn fediel_double_reanimate_evolve_departed() {
     let mut st = started(&db, 101);
     let me = PlayerId::A;
     st.player_mut(me).destroyed_history =
-        vec![destroyed("10551110", 2, me), destroyed("88001110", 1, me)];
+        vec![destroyed("10551110", 2, me), destroyed("88001110", 1, me)].into();
     st.player_mut(me).shadows = 6;
     give_pp(&mut st, me, 7, 7);
     st.player_mut(me).hand.clear();
@@ -68,7 +68,7 @@ fn fediel_double_reanimate_evolve_departed() {
         .find(|c| c.card.as_str() == "10551110")
         .expect("reanimate 2");
     assert!(wolf.evolved);
-    assert!(wolf.tribes.contains(&Tribe::Departed));
+    assert!(wolf.statics.tribes.contains(&Tribe::Departed));
     let van = st
         .player(me)
         .field
@@ -77,7 +77,7 @@ fn fediel_double_reanimate_evolve_departed() {
         .find(|c| c.card.as_str() == "88001110")
         .expect("reanimate 1");
     assert!(van.evolved);
-    assert!(van.tribes.contains(&Tribe::Departed));
+    assert!(van.statics.tribes.contains(&Tribe::Departed));
 }
 
 /// Tyrannical Fists at 19/20 and at 20/20.
@@ -203,7 +203,7 @@ fn lifestealer_transform_keywords_and_restore_either_side() {
         .find(|c| c.card.as_str() == "90051110")
         .expect("ally skeleton");
     assert!(!sk.is_storm(), "plain printed Skeleton, no leftover Storm");
-    assert!(sk.tribes.contains(&Tribe::Departed));
+    assert!(sk.statics.tribes.contains(&Tribe::Departed));
     assert_eq!((sk.attack, sk.defense), (1, 1));
     assert!(field_has(&st, opp, "90051110"));
 
@@ -702,7 +702,7 @@ fn kratos_copy_without_last_words() {
         .find(|c| c.card.as_str() == "10871110")
         .expect("summoned Kratos");
     assert!(
-        !copy.printed_tags.contains("lastWords"),
+        !copy.statics.printed_tags.contains("lastWords"),
         "Last Words removed from the copy"
     );
 }

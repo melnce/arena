@@ -159,7 +159,7 @@ fn instance_json(c: &CardInstance) -> Value {
     json!({
         "id": c.id,
         "card": c.card.as_str(),
-        "name": c.name,
+        "name": c.statics.name,
         "kind": format!("{:?}", c.kind).to_ascii_lowercase(),
         "class": format!("{:?}", c.class).to_ascii_lowercase(),
         "cost": c.cost,
@@ -172,7 +172,7 @@ fn instance_json(c: &CardInstance) -> Value {
         "traits": c.traits.snapshot_tags(),
         "granted": c.granted,
         "granted_whens": c.granted_whens,
-        "printed_tags": c.printed_tags.iter().collect::<Vec<_>>(),
+        "printed_tags": c.statics.printed_tags.iter().collect::<Vec<_>>(),
         "flags": {
             "was_fused": c.flags.was_fused,
             "fused_kinds": ids(&c.flags.fused_kinds),
@@ -191,7 +191,7 @@ fn instance_json(c: &CardInstance) -> Value {
         "skybound": c.skybound,
         "countdown": c.countdown,
         "spellboost_count": c.spellboost_count,
-        "tribes": c.tribes,
+        "tribes": c.statics.tribes,
         "once_used": c.once_used,
     })
 }

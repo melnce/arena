@@ -250,7 +250,7 @@ fn v2_strict_pool_counts_fuse_partners_as_remaining() {
     confirm(&db, &mut st);
     assert!(st.player(me).hidden_removals.contains(&partner_id));
     assert_eq!(
-        st.player(me).hidden_removal_cards,
+        *st.player(me).hidden_removal_cards,
         vec![partner_card],
         "parallel card-id log"
     );

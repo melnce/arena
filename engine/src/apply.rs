@@ -82,8 +82,8 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
     };
     fill_deck(db, &mut state, PlayerId::A, &cfg.deck_a)?;
     fill_deck(db, &mut state, PlayerId::B, &cfg.deck_b)?;
-    state.players[0].starting_deck = cfg.deck_a.clone();
-    state.players[1].starting_deck = cfg.deck_b.clone();
+    state.players[0].starting_deck = cfg.deck_a.clone().into();
+    state.players[1].starting_deck = cfg.deck_b.clone().into();
     let mut picks = Vec::new();
     let first = match cfg.first {
         First::A => PlayerId::A,
@@ -248,15 +248,15 @@ fn draw_one(
         }
         return Ok(None);
     }
-    let keys: Vec<String> = idxs
+    let keys: Vec<CardId> = idxs
         .iter()
-        .map(|&i| state.player(who).deck[i].card.as_str())
+        .map(|&i| state.player(who).deck[i].card)
         .collect();
     let mut emit = Vec::new();
     let among = if filter.is_some() { Some("deck") } else { None };
     let pick = state
         .rng
-        .pick_index_among(PickWhat::Draw, among, &keys, &mut emit)
+        .pick_index_among_ids(PickWhat::Draw, among, &keys, &mut emit)
         .map_err(Illegal::OraclePickNotLegal)?;
     state.picks.extend(emit);
     // Duplicate ids can carry different mods (Thestae deck +1/+1 vs a copy
@@ -639,7 +639,7 @@ fn playable(
     let Ok(card) = db.card(inst.card) else {
         return false;
     };
-    if support::card_unsupported(card).is_some() {
+    if db.card_is_unsupported(inst.card) {
         return false;
     }
     let pp = state.player(me).usable_pp();
@@ -661,7 +661,98 @@ fn playable(
     spell_playable(db, state, me, hand_i, card, &effects)
 }
 
-fn play_form(
+fn play_form<'c>(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    card: &'c Card,
+    inst: &CardInstance,
+    pp: i32,
+    static_in_play: bool,
+) -> Option<(i32, CardKind, std::borrow::Cow<'c, [Effect]>)> {
+    use std::borrow::Cow;
+    let effective = inst.cost;
+    let (suppress_enhance, suppress_fanfare) = if static_in_play {
+        (
+            static_suppresses_tag(db, state, inst, me, TriggerTag::Enhance),
+            static_suppresses_tag(db, state, inst, me, TriggerTag::Fanfare),
+        )
+    } else {
+        (false, false)
+    };
+    // `printed_tags` loses "enhance" after `removeAbilities`; static suppress
+    // also strips the mode at play (Milteo & Luzen).
+    let enhance: Vec<&Mode> = if suppress_enhance || !inst.statics.printed_tags.contains("enhance")
+    {
+        Vec::new()
+    } else {
+        card.modes()
+            .iter()
+            .filter(|m| matches!(m, Mode::Enhance { cost, .. } if pp >= *cost))
+            .collect()
+    };
+    let accel = card.modes().iter().find_map(|m| match m {
+        Mode::Accelerate { cost, effects, .. } if pp < effective && pp >= *cost => {
+            Some((*cost, Cow::Borrowed(&effects[..])))
+        }
+        _ => None,
+    });
+    if !enhance.is_empty() && pp >= effective {
+        let paid = enhance
+            .iter()
+            .map(|m| m.cost())
+            .max()
+            .unwrap_or(effective)
+            .max(effective);
+        if pp < paid {
+            return None;
+        }
+        let mut fx: Cow<'c, [Effect]> = if suppress_fanfare {
+            Cow::Borrowed(&[])
+        } else {
+            fanfare_effects_cow(card)
+        };
+        for m in enhance {
+            if let Mode::Enhance {
+                effects,
+                replaces_base,
+                ..
+            } = m
+            {
+                if *replaces_base == Some(true) {
+                    fx = Cow::Borrowed(&effects[..]);
+                } else {
+                    fx.to_mut().extend(effects.iter().cloned());
+                }
+            }
+        }
+        return Some((paid, card.kind(), fx));
+    }
+    if let Some((cost, fx)) = accel {
+        return Some((cost, CardKind::Spell, fx));
+    }
+    let crystal = card.modes().iter().find_map(|m| match m {
+        Mode::Crystallize { cost, .. } if pp < effective && pp >= *cost => Some(*cost),
+        _ => None,
+    });
+    if let Some(cost) = crystal {
+        return Some((cost, CardKind::Amulet, Cow::Borrowed(&[])));
+    }
+    if pp >= effective {
+        let fx = if suppress_fanfare {
+            Cow::Borrowed(&[][..])
+        } else {
+            fanfare_effects_cow(card)
+        };
+        Some((effective, card.kind(), fx))
+    } else {
+        None
+    }
+}
+
+/// Reference `play_form` from `e8e602e` (always builds a `Vec` of effects). Equivalence tests only.
+#[doc(hidden)]
+pub fn play_form_effects_reference(
     db: &CardDb,
     state: &State,
     me: PlayerId,
@@ -679,9 +770,7 @@ fn play_form(
     } else {
         (false, false)
     };
-    // `printed_tags` loses "enhance" after `removeAbilities`; static suppress
-    // also strips the mode at play (Milteo & Luzen).
-    let enhance: Vec<&Mode> = if suppress_enhance || !inst.printed_tags.contains("enhance") {
+    let enhance: Vec<&Mode> = if suppress_enhance || !inst.statics.printed_tags.contains("enhance") {
         Vec::new()
     } else {
         card.modes()
@@ -748,6 +837,34 @@ fn play_form(
     }
 }
 
+/// [`play_form`] with effects materialized. Equivalence tests only.
+#[doc(hidden)]
+pub fn play_form_for_equiv(
+    db: &CardDb,
+    state: &State,
+    me: PlayerId,
+    card: &Card,
+    inst: &CardInstance,
+    pp: i32,
+    static_in_play: bool,
+) -> Option<(i32, CardKind, Vec<Effect>)> {
+    let (paid, kind, fx) = play_form(db, state, me, card, inst, pp, static_in_play)?;
+    Some((paid, kind, fx.into_owned()))
+}
+
+/// [`fanfare_effects`] without copying when the card has at most one Fanfare ability (the same effects, in order).
+fn fanfare_effects_cow(card: &Card) -> std::borrow::Cow<'_, [Effect]> {
+    let mut fanfares = card
+        .abilities()
+        .iter()
+        .filter(|a| matches!(a, Ability::Fanfare { .. }));
+    match (fanfares.next(), fanfares.next()) {
+        (None, _) => std::borrow::Cow::Borrowed(&[]),
+        (Some(a), None) => std::borrow::Cow::Borrowed(a.effects()),
+        _ => std::borrow::Cow::Owned(fanfare_effects(card)),
+    }
+}
+
 fn apply_crystallize_form(card: &Card, inst: &mut CardInstance, paid: i32) {
     inst.kind = CardKind::Amulet;
     inst.base_cost = paid;
@@ -766,7 +883,7 @@ fn apply_crystallize_form(card: &Card, inst: &mut CardInstance, paid: i32) {
         .find(|m| matches!(m, Mode::Crystallize { .. }))
     {
         inst.countdown = *countdown;
-        inst.printed_tags = abilities
+        inst.statics.printed_tags = abilities
             .as_ref()
             .map(|abs| abs.iter().map(|a| a.snapshot_tag().to_string()).collect())
             .unwrap_or_default();
@@ -904,6 +1021,31 @@ pub fn apply(db: &CardDb, state: &mut State, action: Action) -> Result<Vec<Event
             return Err(Illegal::NotLegal);
         }
     }
+    apply_after_check(db, state, action)
+}
+
+/// [`apply`] for an action the caller took from `legal_actions(db, state)` of this very state: the same result,
+/// without generating the legal list a second time.
+pub fn apply_known_legal(
+    db: &CardDb,
+    state: &mut State,
+    action: Action,
+) -> Result<Vec<Event>, Illegal> {
+    if state.winner.is_some() {
+        return Err(Illegal::Terminal);
+    }
+    debug_assert!(
+        legal_actions(db, state).contains(&action),
+        "apply_known_legal: {action:?} is not legal here"
+    );
+    apply_after_check(db, state, action)
+}
+
+fn apply_after_check(
+    db: &CardDb,
+    state: &mut State,
+    action: Action,
+) -> Result<Vec<Event>, Illegal> {
     state.picks.clear();
     state.bindings.clear();
     let mut events = Vec::new();
@@ -997,7 +1139,7 @@ fn apply_mulligan(
             keep.push(inst);
         }
     }
-    state.player_mut(player).hand = keep;
+    state.player_mut(player).hand = keep.into();
     for _ in 0..returning.len() {
         let _ = draw_one(state, player, None, &[])?;
     }
@@ -1071,6 +1213,7 @@ fn apply_play(
         board_has_static_suppressor(db, state),
     )
     .ok_or(Illegal::NotLegal)?;
+    let effects: Vec<Effect> = effects.into_owned();
     state.player_mut(me).spend_pp(paid);
     let mut inst = state.player_mut(me).hand.remove(hand as usize);
     state.note_public_removal(me, inst.card);
@@ -2521,7 +2664,7 @@ fn enqueue_card_triggers(
             if static_suppresses_tag(db, state, &inst, who, tag) {
                 continue;
             }
-            if ord < n_printed && !inst.printed_tags.contains(a.snapshot_tag()) {
+            if ord < n_printed && !inst.statics.printed_tags.contains(a.snapshot_tag()) {
                 continue;
             }
             if let Some(cond) = a.when_cond() {
@@ -2784,7 +2927,7 @@ fn enqueue_when_on(
             (
                 granted,
                 inst.once_used.contains(&TriggerTag::When),
-                inst.printed_tags.clone(),
+                inst.statics.clone(),
             )
         };
         collect_when_from_abilities(
@@ -2803,7 +2946,7 @@ fn enqueue_when_on(
             cand.card,
             &granted,
             once_when,
-            Some(&tags),
+            Some(&tags.printed_tags),
             &mut pending,
         );
     }
@@ -2913,7 +3056,7 @@ fn enqueue_when_on(
                     (
                         granted,
                         h.once_used.contains(&TriggerTag::When),
-                        h.printed_tags.clone(),
+                        h.statics.clone(),
                     )
                 };
                 collect_when_from_abilities(
@@ -2932,7 +3075,7 @@ fn enqueue_when_on(
                     cand.card,
                     &granted,
                     once_when,
-                    Some(&tags),
+                    Some(&tags.printed_tags),
                     &mut pending,
                 );
             }
@@ -2971,7 +3114,7 @@ fn enqueue_when_on(
                     (
                         granted,
                         d.once_used.contains(&TriggerTag::When),
-                        d.printed_tags.clone(),
+                        d.statics.clone(),
                     )
                 };
                 collect_when_from_abilities(
@@ -2990,7 +3133,7 @@ fn enqueue_when_on(
                     cand.card,
                     &granted,
                     once_when,
-                    Some(&tags),
+                    Some(&tags.printed_tags),
                     &mut pending,
                 );
             }
@@ -5859,7 +6002,7 @@ fn queue_last_words(db: &CardDb, state: &mut State, who: PlayerId, inst: &CardIn
             }
         }
     }
-    if inst.printed_tags.contains("lastWords") {
+    if inst.statics.printed_tags.contains("lastWords") {
         if let Ok(card) = db.card(inst.card) {
             for a in card.abilities() {
                 if matches!(a, Ability::LastWords { .. }) {
@@ -7045,7 +7188,7 @@ fn remove_matching_crests(
             kept.push(c);
         }
     }
-    state.player_mut(who).crests = kept;
+    state.player_mut(who).crests = kept.into();
     for c in gone {
         events.push(Event::CrestRemove {
             player: who,
@@ -7382,8 +7525,8 @@ fn reanimate(
     inst.flags.summoning_sick = true;
     // Official glossary, 2026-09-10: Reanimate "gives it the Departed trait."
     // On the instance only — a later printed copy does not inherit it.
-    if !inst.tribes.contains(&crate::card::Tribe::Departed) {
-        inst.tribes.push(crate::card::Tribe::Departed);
+    if !inst.statics.tribes.contains(&crate::card::Tribe::Departed) {
+        inst.statics.tribes.push(crate::card::Tribe::Departed);
     }
     let Some(slot) = state.player(who).first_empty_slot() else {
         return Ok(None);
@@ -8270,8 +8413,8 @@ fn inst_matches_filter(_state: &State, _who: PlayerId, c: &CardInstance, f: &Fil
     }
     if let Some(t) = &f.tribe {
         let ok = match t {
-            crate::card::TribeOrList::One(tr) => c.tribes.contains(tr),
-            crate::card::TribeOrList::Many(ts) => ts.iter().any(|tr| c.tribes.contains(tr)),
+            crate::card::TribeOrList::One(tr) => c.statics.tribes.contains(tr),
+            crate::card::TribeOrList::Many(ts) => ts.iter().any(|tr| c.statics.tribes.contains(tr)),
         };
         if !ok {
             return false;
@@ -8409,7 +8552,7 @@ fn inst_matches_filter(_state: &State, _who: PlayerId, c: &CardInstance, f: &Fil
         }
     }
     if let Some(b) = f.has_last_words {
-        let has = c.printed_tags.contains("lastWords")
+        let has = c.statics.printed_tags.contains("lastWords")
             || c.granted
                 .iter()
                 .any(|a| matches!(a, Ability::LastWords { .. }));
@@ -8418,7 +8561,7 @@ fn inst_matches_filter(_state: &State, _who: PlayerId, c: &CardInstance, f: &Fil
         }
     }
     if let Some(b) = f.has_spellboost {
-        let has = c.printed_tags.contains("spellboost");
+        let has = c.statics.printed_tags.contains("spellboost");
         if has != b {
             return false;
         }
