@@ -60,7 +60,7 @@ pub use policy::{
     BUILTIN_ORDER_NAME, H0,
 };
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
-pub use search_key::{lethal_key, search_key};
+pub use search_key::{lethal_key, search_key, search_key_id};
 pub use snapshot::{hash, snapshot, snapshot_json};
 pub use state::{
     CardInstance, ChoiceNode, GameConfig, OpeningHands, PendingKind, Phase, PlayForm, PlayerState,

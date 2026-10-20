@@ -11,7 +11,6 @@ use crate::determinize::{determinize_block, OpenStats};
 use crate::ids::PlayerId;
 use crate::policy::AnyPolicy;
 use crate::rng::{policy_rng, Xoshiro256ss};
-use crate::search_key::search_key;
 use crate::state::{Phase, State};
 
 use crate::policy::explain::{
@@ -22,8 +21,8 @@ use crate::policy::fuse_guard::filter_cand_fuseguard;
 #[cfg(not(target_arch = "wasm32"))]
 use super::try_take_kill_parallel;
 use super::{
-    all_cands_lost, consensus_lethal, finite, kill_det_on_roots, kill_roll_on_roots, one_ply,
-    own_fuse_partners, root_agg, search_own, search_world, tie_set_search, try_apply,
+    all_cands_lost, consensus_lethal, finite, kill_det_on_roots, kill_roll_on_roots, line_key,
+    one_ply, own_fuse_partners, root_agg, search_own, search_world, tie_set_search, try_apply,
     try_holdback_resample, try_holdback_trade, try_lost_rerank, try_take_kill, useful_action,
     Alloc, Deal, Info, SearchStats, WorldSearchResult, H0,
 };
@@ -631,7 +630,7 @@ fn run_h0_decision_mode(
                     } else {
                         None
                     };
-                    let root_key = search_key(root);
+                    let root_key = line_key(root);
                     for (j, a) in subset.iter().enumerate() {
                         if nodes >= h.node_cap {
                             let skipped = (subset.len() - j) as u64
@@ -693,7 +692,7 @@ fn run_h0_decision_mode(
                             }
                             eval.wv
                         } else {
-                            let line = vec![root_key, search_key(&s)];
+                            let line = vec![root_key, line_key(&s)];
                             let at_fuse_choice = h.fusemacro && own_fuse_partners(&s, me).is_some();
                             let search_depth = if at_fuse_choice {
                                 h.depth

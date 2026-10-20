@@ -2,6 +2,9 @@
 
 use pyo3::prelude::*;
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 mod convert;
 mod game;
 mod lethal;

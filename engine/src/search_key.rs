@@ -1,5 +1,6 @@
-//! Search key: FNV-1a 64 over a hand-rolled canonical walk of `State`
-//! except the RNG. Stable across runs of the same binary.
+//! Search key: FNV-1a 64 (`search_key`) or xxh3 (`search_key_id`) over a
+//! hand-rolled canonical walk of `State` except the RNG. Stable across
+//! runs of the same binary. `search_key_id` is an identity key only.
 
 use crate::card::{Ability, CardId, Traits, TriggerTag, Until, VarKey};
 use crate::state::{
@@ -10,8 +11,8 @@ use crate::state::{
 };
 use crate::trace::fnv1a64;
 
-/// FNV-1a 64 of every field that can change the future, excluding `State.rng`.
-pub fn search_key(state: &State) -> u64 {
+/// Canonical bytes of every field that can change the future, excluding `State.rng`.
+fn canonical_bytes(state: &State) -> Vec<u8> {
     let mut w = Writer::new();
     w.u8(state.active as u8);
     w.u8(state.first as u8);
@@ -113,7 +114,18 @@ pub fn search_key(state: &State) -> u64 {
             hash_bound(&mut w, r);
         }
     }
-    fnv1a64(&w.buf)
+    w.buf
+}
+
+/// FNV-1a 64 of every field that can change the future, excluding `State.rng`.
+pub fn search_key(state: &State) -> u64 {
+    fnv1a64(&canonical_bytes(state))
+}
+
+/// xxh3 64 of the same canonical walk as [`search_key`]. Identity only
+/// (line repetition and transposition); not a seed.
+pub fn search_key_id(state: &State) -> u64 {
+    xxhash_rust::xxh3::xxh3_64(&canonical_bytes(state))
 }
 
 /// Key for forced_lethal's cycle check and transposition set: the public snapshot hash at a quiescent state,

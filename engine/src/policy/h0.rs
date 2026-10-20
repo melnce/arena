@@ -33,7 +33,7 @@ use crate::lethal::{
 };
 use crate::limits::MAX_TURNS;
 use crate::rng::Xoshiro256ss;
-use crate::search_key::search_key;
+use crate::search_key::{search_key, search_key_id};
 use crate::state::FIELD_SIZE;
 use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
@@ -1005,7 +1005,7 @@ impl H0 {
         let mut nodes = 0u32;
         let root_vocab = self.root_vocab(state);
         let eval = self.evaluator(db, &root_vocab);
-        let line = [search_key(state)];
+        let line = [line_key(state)];
         let mut stats = SearchStats::default();
         let v = opponent_reply(
             db,
@@ -1038,7 +1038,7 @@ fn tt_get(
     me_to_move: bool,
     stats: &mut SearchStats,
 ) -> Option<f32> {
-    let v = *tt?.get(&(search_key(state), depth as u8, me_to_move))?;
+    let v = *tt?.get(&(search_key_id(state), depth as u8, me_to_move))?;
     stats.tt_hits += 1;
     Some(v)
 }
@@ -1052,7 +1052,7 @@ fn tt_put(
     stats: &mut SearchStats,
 ) {
     if let Some(tt) = tt {
-        tt.insert((search_key(state), depth as u8, me_to_move), v);
+        tt.insert((search_key_id(state), depth as u8, me_to_move), v);
         stats.tt_stores += 1;
     }
 }
@@ -1218,6 +1218,24 @@ fn tie_set_search(
     out
 }
 
+/// Only a Choice or Mulligan state can repeat an earlier state of its line: every other `apply` bumps
+/// `step_counter` (see `drain_until_quiet`), and the key includes it.
+#[inline]
+pub(super) fn can_repeat(s: &State) -> bool {
+    matches!(s.phase, Phase::Choice { .. } | Phase::Mulligan { .. })
+}
+
+/// Line entry for the repetition check: the state's key where a repeat is possible, else a per-step tag that no
+/// state of the same line can produce.
+#[inline]
+pub(super) fn line_key(s: &State) -> u64 {
+    if can_repeat(s) {
+        search_key_id(s)
+    } else {
+        0x6c69_6e65_0000_0000 ^ s.step_counter
+    }
+}
+
 fn try_apply(
     db: &CardDb,
     state: &State,
@@ -1234,8 +1252,7 @@ fn try_apply(
     if apply(db, &mut s, a.clone()).is_err() {
         return None;
     }
-    let k = search_key(&s);
-    if line.contains(&k) {
+    if can_repeat(&s) && line.contains(&line_key(&s)) {
         return None;
     }
     Some(s)
@@ -1306,7 +1323,7 @@ fn search_world(
     } else {
         None
     };
-    let root_key = search_key(root);
+    let root_key = line_key(root);
     for (j, a) in subset.iter().enumerate() {
         if world_nodes >= world_budget {
             skipped_worlds += (subset.len() - j) as u64;
@@ -1342,7 +1359,7 @@ fn search_world(
             }
             eval.wv
         } else {
-            let line = vec![root_key, search_key(&s)];
+            let line = vec![root_key, line_key(&s)];
             let at_fuse_choice = fusemacro && own_fuse_partners(&s, me).is_some();
             let search_depth = if at_fuse_choice {
                 depth
@@ -1615,7 +1632,7 @@ fn consensus_lethal(
     let mut ok = vec![true; legal.len()];
     let mut any = false;
     for root in roots {
-        let line = [search_key(root)];
+        let line = [line_key(root)];
         for (j, a) in legal.iter().enumerate() {
             if !ok[j] {
                 continue;
@@ -1658,7 +1675,7 @@ fn is_lethal(
     }
     let next = legal_actions(db, &s);
     let mut next_line = line.to_vec();
-    next_line.push(search_key(&s));
+    next_line.push(line_key(&s));
     next.iter().any(|b| {
         useful_action(&s, me, b, 1, 6)
             && is_lethal(
@@ -1792,7 +1809,7 @@ fn greedy_index(
     line: &[u64],
     eval: Evaluator<'_>,
     skip_noop_fuse: bool,
-) -> usize {
+) -> (usize, Option<State>) {
     let indices = greedy_action_indices(
         db,
         state,
@@ -1804,6 +1821,7 @@ fn greedy_index(
     );
     let mut best_i = indices.first().copied().unwrap_or(0);
     let mut best_v = f32::NEG_INFINITY;
+    let mut best_s: Option<State> = None;
     for i in indices {
         if *nodes >= cap {
             break;
@@ -1816,9 +1834,34 @@ fn greedy_index(
         if v > best_v {
             best_v = v;
             best_i = i;
+            best_s = Some(s);
         }
     }
-    best_i
+    (best_i, best_s)
+}
+
+/// The re-apply of greedy_index's pick without redoing it: the same cap check and node charge as `try_apply`;
+/// the kept afterstate is what that apply would produce (and it already passed the same line check).
+#[allow(clippy::too_many_arguments)]
+fn take_or_apply(
+    db: &CardDb,
+    state: &State,
+    a: &Action,
+    kept: Option<State>,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+) -> Option<State> {
+    match kept {
+        Some(s) => {
+            if *nodes >= cap {
+                return None;
+            }
+            *nodes += 1;
+            Some(s)
+        }
+        None => try_apply(db, state, a, nodes, cap, line),
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1881,7 +1924,7 @@ fn score_play_with_macro(
         return (f32::NEG_INFINITY, None);
     };
     let mut line2 = line.to_vec();
-    line2.push(search_key(&s));
+    line2.push(line_key(&s));
     if !greedy_resolve_choices(
         db, &mut s, choose_for, search_me, nodes, cap, &mut line2, eval,
     ) {
@@ -1957,13 +2000,13 @@ fn greedy_resolve_choices(
         if legal.is_empty() {
             return false;
         }
-        let i = greedy_index(
+        let (i, kept) = greedy_index(
             db, state, &legal, choose_for, search_me, nodes, cap, line, eval, false,
         );
-        let Some(next) = try_apply(db, state, &legal[i], nodes, cap, line) else {
+        let Some(next) = take_or_apply(db, state, &legal[i], kept, nodes, cap, line) else {
             return false;
         };
-        line.push(search_key(&next));
+        line.push(line_key(&next));
         *state = next;
     }
     true
@@ -2117,8 +2160,7 @@ fn try_apply_uncharged(
     if apply(db, &mut s, action.clone()).is_err() {
         return None;
     }
-    let k = search_key(&s);
-    if line.contains(&k) {
+    if can_repeat(&s) && line.contains(&line_key(&s)) {
         return None;
     }
     Some(s)
@@ -2146,7 +2188,7 @@ fn apply_fuse_completion(
         } else {
             try_apply_uncharged(db, &s, &action, &cur_line, stats)?
         };
-        cur_line.push(search_key(&s));
+        cur_line.push(line_key(&s));
     }
     let confirm = Action::Confirm;
     actions.push(confirm.clone());
@@ -2236,7 +2278,7 @@ fn best_fuse_main_child(
         if best.as_ref().is_none_or(|(bv, _, _, _)| order_v > *bv) {
             let mut prefix = vec![fuse_action.clone()];
             prefix.extend(tail);
-            let key = search_key(&s);
+            let key = line_key(&s);
             best = Some((order_v, s, key, prefix));
         }
     }
@@ -2311,16 +2353,16 @@ fn resolve_bot_choices(
         if legal.is_empty() {
             return false;
         }
-        let i = greedy_index(
+        let (i, kept) = greedy_index(
             db, state, &legal, me, me, nodes, work_cap, line, eval, false,
         );
-        let Some(next) = try_apply(db, state, &legal[i], nodes, work_cap, line) else {
+        let Some(next) = take_or_apply(db, state, &legal[i], kept, nodes, work_cap, line) else {
             return false;
         };
         if let Some(t) = track.as_deref_mut() {
             t.push(legal[i].clone());
         }
-        line.push(search_key(&next));
+        line.push(line_key(&next));
         *state = next;
     }
     true
@@ -2355,7 +2397,7 @@ fn try_bot_end_turn(
     if let Some(t) = track.as_mut() {
         t.push(et.clone());
     }
-    line.push(search_key(&next));
+    line.push(line_key(&next));
     *state = next;
     true
 }
@@ -2586,7 +2628,7 @@ fn search_own_fuse_choice(
             }
         }
         let mut next_line = line.to_vec();
-        next_line.push(search_key(&s));
+        next_line.push(line_key(&s));
         let v = search_own(
             db,
             &s,
@@ -2863,7 +2905,7 @@ fn search_own(
             tt_put(tt, state, depth, true, INF, stats);
             return INF;
         }
-        let k = search_key(&s);
+        let k = line_key(&s);
         scored.push((eval.pick_value(&s, me, me), s, k, vec![a.clone()]));
     }
     scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
@@ -2964,7 +3006,7 @@ fn opp_next_cap_value(
     }
     stats.opp_next_checks += 1;
     let mut sweep_line = work_line;
-    sweep_line.push(search_key(&p));
+    sweep_line.push(line_key(&p));
     let mut scratch = SearchStats::default();
     let found = opp_lethal_sweep(db, &p, me, nodes, cap, &sweep_line, eval, &mut scratch);
     stats.opp_next_nodes += u64::from(*nodes - nodes_start);
@@ -3044,7 +3086,7 @@ fn opponent_open_search(
             stats.opp_open_nodes += u64::from(*nodes - nodes_start);
             return Some((-eval.wv, win_line));
         }
-        let k = search_key(&s);
+        let k = line_key(&s);
         if matches!(a, Action::EndTurn) {
             end_turn_score = Some(eval.pick_value(&s, opp, me));
         } else {
@@ -3473,12 +3515,12 @@ fn search_opp_expand(
             }
             return v;
         }
-        let i = greedy_index(db, state, &legal, me, me, nodes, cap, line, eval, false);
+        let (i, kept) = greedy_index(db, state, &legal, me, me, nodes, cap, line, eval, false);
         let plen = track.as_ref().map(|t| t.path_len()).unwrap_or(0);
         if let Some(t) = track.as_deref_mut() {
             t.push(legal[i].clone());
         }
-        let Some(s) = try_apply(db, state, &legal[i], nodes, cap, line) else {
+        let Some(s) = take_or_apply(db, state, &legal[i], kept, nodes, cap, line) else {
             if let Some(t) = track.as_deref_mut() {
                 t.pop_to(plen);
             }
@@ -3493,7 +3535,7 @@ fn search_opp_expand(
             return v;
         };
         let mut next_line = line.to_vec();
-        next_line.push(search_key(&s));
+        next_line.push(line_key(&s));
         let v = search_opp(
             db,
             &s,
@@ -3567,7 +3609,7 @@ fn search_opp_expand(
             }
             return -eval.wv;
         }
-        let k = search_key(&s);
+        let k = line_key(&s);
         if matches!(a, Action::EndTurn) {
             end_turn = Some((s, k, a.clone()));
         } else {
@@ -3680,7 +3722,7 @@ fn greedy_until_end(
                 break;
             }
         }
-        let i = greedy_index(
+        let (i, kept) = greedy_index(
             db,
             state,
             &legal,
@@ -3692,13 +3734,13 @@ fn greedy_until_end(
             eval,
             skip_noop_fuse,
         );
-        let Some(next) = try_apply(db, state, &legal[i], nodes, cap, &line) else {
+        let Some(next) = take_or_apply(db, state, &legal[i], kept, nodes, cap, &line) else {
             break;
         };
         if let Some(t) = track.as_deref_mut() {
             t.push(legal[i].clone());
         }
-        line.push(search_key(&next));
+        line.push(line_key(&next));
         *state = next;
         steps += 1;
     }
@@ -3755,7 +3797,7 @@ fn greedy_until_end_omacro(
         if let Some(t) = track.as_deref_mut() {
             t.push(legal[i].clone());
         }
-        line.push(search_key(&next));
+        line.push(line_key(&next));
         *state = next;
         if matches!(legal[i], Action::Play { .. }) {
             greedy_resolve_choices(db, state, who, search_me, nodes, cap, &mut line, eval);
@@ -3765,7 +3807,7 @@ fn greedy_until_end_omacro(
                 if let Some(t) = track.as_deref_mut() {
                     t.push(evo);
                 }
-                line.push(search_key(&next2));
+                line.push(line_key(&next2));
                 *state = next2;
             }
         }
@@ -3932,7 +3974,7 @@ fn chip_face_line_state(
         let Some(next) = try_apply(db, &s, a, nodes, cap, &line) else {
             return s;
         };
-        line.push(search_key(&next));
+        line.push(line_key(&next));
         s = next;
     }
 }
@@ -3961,13 +4003,13 @@ fn resolve_pending_choices(
             .collect();
         if !chooses.is_empty() {
             let next = try_apply(db, &s, &chooses[0], nodes, cap, &line)?;
-            line.push(search_key(&next));
+            line.push(line_key(&next));
             s = next;
             continue;
         }
         if let Some(a) = legal.iter().find(|a| matches!(a, Action::Confirm)) {
             let next = try_apply(db, &s, a, nodes, cap, &line)?;
-            line.push(search_key(&next));
+            line.push(line_key(&next));
             s = next;
             continue;
         }
@@ -4047,7 +4089,7 @@ fn face_line_kills(
         let Some(next) = try_apply(db, &s, a, nodes, cap, &line) else {
             return false;
         };
-        line.push(search_key(&next));
+        line.push(line_key(&next));
         s = next;
     }
     if !play_through {
@@ -4080,7 +4122,7 @@ fn face_line_kills(
         let Some(next) = try_apply(db, &s, a, nodes, cap, &line) else {
             continue;
         };
-        line.push(search_key(&next));
+        line.push(line_key(&next));
         s = next;
         if face_line_kills(db, &s, me, nodes, cap, &line, false, through_used) {
             *through_used = true;
@@ -4136,7 +4178,7 @@ fn resolve_play_line(
                 continue;
             };
             let mut next_line = line.to_vec();
-            next_line.push(search_key(&s));
+            next_line.push(line_key(&s));
             if resolve_play_line(
                 db,
                 &s,
@@ -4160,7 +4202,7 @@ fn resolve_play_line(
                     return false;
                 };
                 let mut next_line = line.to_vec();
-                next_line.push(search_key(&s));
+                next_line.push(line_key(&s));
                 return resolve_play_line(
                     db,
                     &s,
@@ -4286,7 +4328,7 @@ fn evolve_then_face(
             continue;
         };
         let mut next_line = line.to_vec();
-        next_line.push(search_key(&s));
+        next_line.push(line_key(&s));
         if face_line_kills(
             db,
             &s,
@@ -4324,7 +4366,7 @@ fn standalone_evolve_kills(
             continue;
         };
         let mut next_line = line.to_vec();
-        next_line.push(search_key(&s));
+        next_line.push(line_key(&s));
         let mut dummy_through = false;
         if face_line_kills(
             db,
@@ -4372,7 +4414,7 @@ fn opp_lethal_two_after_first(
                 continue;
             };
             let mut next_line = line.to_vec();
-            next_line.push(search_key(&s));
+            next_line.push(line_key(&s));
             if opp_lethal_two_after_first(
                 db,
                 before_first,
@@ -4395,7 +4437,7 @@ fn opp_lethal_two_after_first(
                     return false;
                 };
                 let mut next_line = line.to_vec();
-                next_line.push(search_key(&s));
+                next_line.push(line_key(&s));
                 return opp_lethal_two_after_first(
                     db,
                     before_first,
@@ -4431,7 +4473,7 @@ fn opp_lethal_two_after_first(
             continue;
         }
         let mut line2 = line.to_vec();
-        line2.push(search_key(&after_second));
+        line2.push(line_key(&after_second));
         let origin_def = state.player(me).leader_defense;
         let origin_faces = leader_attackers(db, state);
         if resolve_play_line(
@@ -4479,7 +4521,7 @@ fn opp_lethal_two_pass(
             continue;
         };
         let mut line1 = line.to_vec();
-        line1.push(search_key(&after_first));
+        line1.push(line_key(&after_first));
         if opp_lethal_two_after_first(
             db,
             state,
@@ -4538,7 +4580,7 @@ fn opp_lethal_sweep_core(
             continue;
         };
         let mut next_line = line.to_vec();
-        next_line.push(search_key(&s));
+        next_line.push(line_key(&s));
         if resolve_play_line(
             db,
             &s,
@@ -4602,7 +4644,7 @@ fn try_ward_prefix(
                     continue;
                 };
                 let mut nl = line.clone();
-                nl.push(search_key(&next));
+                nl.push(line_key(&next));
                 attacks = legal_ward_attacks(db, &next, ward_slot);
                 if !attacks.is_empty() {
                     s = next;
@@ -4623,11 +4665,11 @@ fn try_ward_prefix(
                         continue;
                     };
                     let mut nl = line.clone();
-                    nl.push(search_key(&next));
+                    nl.push(line_key(&next));
                     let Some(played) = resolve_pending_choices(db, &next, nodes, cap, &nl) else {
                         continue;
                     };
-                    nl.push(search_key(&played));
+                    nl.push(line_key(&played));
                     if !legal_ward_attacks(db, &played, ward_slot).is_empty() {
                         s = played;
                         line = nl;
@@ -4650,7 +4692,7 @@ fn try_ward_prefix(
                             continue;
                         };
                         let mut nl2 = nl.clone();
-                        nl2.push(search_key(&after));
+                        nl2.push(line_key(&after));
                         attacks = legal_ward_attacks(db, &after, ward_slot);
                         if !attacks.is_empty() {
                             s = after;
@@ -4677,7 +4719,7 @@ fn try_ward_prefix(
             let Some(next) = try_apply(db, &trial, a, nodes, cap, &trial_line) else {
                 continue;
             };
-            trial_line.push(search_key(&next));
+            trial_line.push(line_key(&next));
             trial = next;
             let ward_gone = defender_ward_slots(&trial, defender)
                 .iter()
@@ -4747,7 +4789,7 @@ fn slot_free_prefix_states(
                 continue;
             };
             let mut l1 = line.to_vec();
-            l1.push(search_key(&s1));
+            l1.push(line_key(&s1));
             if s1.player(attacker).field_count() < FIELD_SIZE {
                 out.push((s1, l1));
                 continue;
@@ -4760,7 +4802,7 @@ fn slot_free_prefix_states(
                     continue;
                 };
                 let mut l2 = l1.clone();
-                l2.push(search_key(&s2));
+                l2.push(line_key(&s2));
                 if s2.player(attacker).field_count() < FIELD_SIZE {
                     out.push((s2, l2));
                 }
@@ -4859,7 +4901,7 @@ fn opp_lethal_sweep(
     {
         if let Some(cleared) = try_ward_prefix(db, state, me, nodes, core_end, line) {
             let mut next_line = line.to_vec();
-            next_line.push(search_key(&cleared));
+            next_line.push(line_key(&cleared));
             if opp_lethal_sweep_core(
                 db,
                 &cleared,
@@ -5076,8 +5118,7 @@ fn try_apply_hb(
     if apply(db, &mut s, a.clone()).is_err() {
         return None;
     }
-    let k = search_key(&s);
-    if line.contains(&k) {
+    if can_repeat(&s) && line.contains(&line_key(&s)) {
         return None;
     }
     Some(s)
@@ -5105,7 +5146,7 @@ fn holdback_removal_search(
         if nodes >= budget {
             break;
         }
-        let mut path_keys: Vec<u64> = vec![search_key(turn_start)];
+        let mut path_keys: Vec<u64> = vec![line_key(turn_start)];
         let mut line: Vec<Action> = Vec::new();
         search_holdback_removal(
             db,
@@ -5172,7 +5213,7 @@ fn search_holdback_removal(
         return;
     }
     let remaining = max_depth - line.len() as u32;
-    let key = search_key(state);
+    let key = search_key_id(state);
     if tt.get(&key).is_some_and(|&d| d >= remaining) {
         return;
     }
@@ -5196,7 +5237,7 @@ fn search_holdback_removal(
             continue;
         };
         line.push(a.clone());
-        path_keys.push(search_key(&next));
+        path_keys.push(line_key(&next));
         search_holdback_removal(
             db, turn_start, &next, me, x_ids, budget, max_depth, nodes, tt, path_keys, line, eval,
             best,
@@ -5228,10 +5269,10 @@ fn holdback_leaf_value(
     if turn_start.winner == Some(me) {
         return eval.wv;
     }
-    let root_key = search_key(root);
+    let root_key = line_key(root);
     let mut nodes = 0u32;
     let cap = u32::MAX;
-    let line = vec![root_key, search_key(turn_start)];
+    let line = vec![root_key, line_key(turn_start)];
     let mut hb_stats = SearchStats::default();
     let v = if horizon >= 1 {
         horizon_score_leaf(
@@ -5316,7 +5357,7 @@ fn try_lost_rerank(
     let mut n_acc = vec![0u32; subset.len()];
     let mut worst = vec![f32::INFINITY; subset.len()];
     for (r, root) in roots.iter().enumerate() {
-        let root_key = search_key(root);
+        let root_key = line_key(root);
         for (j, a) in subset.iter().enumerate() {
             if lost_nodes >= lostrank {
                 break;
@@ -5341,7 +5382,7 @@ fn try_lost_rerank(
             } else {
                 depth.saturating_sub(1)
             };
-            let line = vec![root_key, search_key(&s)];
+            let line = vec![root_key, line_key(&s)];
             let v = if s.winner == Some(me) {
                 eval_lost.wv
             } else {
@@ -5473,7 +5514,7 @@ fn holdback_apply_action(
     }
     let mut nodes = 0u32;
     let cap = u32::MAX;
-    let mut line = vec![search_key(state), search_key(&s)];
+    let mut line = vec![line_key(state), line_key(&s)];
     if !greedy_resolve_choices(db, &mut s, me, me, &mut nodes, cap, &mut line, eval) {
         return None;
     }
@@ -5489,7 +5530,7 @@ fn holdback_bot_finish(
 ) -> bool {
     let mut nodes = 0u32;
     let cap = u32::MAX;
-    let mut line = vec![search_key(state)];
+    let mut line = vec![line_key(state)];
     let mut steps = 0u32;
     while bot_turn_still_active(state, me) && steps < osteps {
         if !greedy_resolve_choices(db, state, me, me, &mut nodes, cap, &mut line, eval) {
@@ -5502,7 +5543,7 @@ fn holdback_bot_finish(
         if legal.is_empty() {
             break;
         }
-        let i = greedy_index(
+        let (i, kept) = greedy_index(
             db,
             state,
             &legal,
@@ -5516,10 +5557,15 @@ fn holdback_bot_finish(
         );
         let a = legal[i].clone();
         let ended = matches!(a, Action::EndTurn);
-        if apply(db, state, a).is_err() {
-            return false;
+        match kept {
+            Some(s) => *state = s,
+            None => {
+                if apply(db, state, a).is_err() {
+                    return false;
+                }
+            }
         }
-        line.push(search_key(state));
+        line.push(line_key(state));
         if ended {
             return true;
         }
@@ -5654,7 +5700,7 @@ fn score_search_candidate_pair(
     root_table: &mut Option<HashMap<(u64, u8, bool), f32>>,
 ) -> Option<f32> {
     let mut nodes = 0u32;
-    let root_key = search_key(root);
+    let root_key = line_key(root);
     let cap = pair_cap;
     let pair_nodes_start = nodes;
     let s = try_apply(db, root, a, &mut nodes, cap, &[root_key])?;
@@ -5667,7 +5713,7 @@ fn score_search_candidate_pair(
     let v = if s.winner == Some(me) {
         eval.wv
     } else {
-        let line = vec![root_key, search_key(&s)];
+        let line = vec![root_key, line_key(&s)];
         let mut pair_stats = SearchStats::default();
         search_own(
             db,
@@ -6254,7 +6300,7 @@ mod fuse_guard_greedy_tests {
             "fuse must be legal"
         );
         let mut nodes = 0u32;
-        let line = vec![search_key(&state)];
+        let line = vec![line_key(&state)];
 
         let h0_on = greedy_h0(true);
         let mut on = state.clone();
@@ -6303,7 +6349,7 @@ mod fuse_guard_greedy_tests {
         let db = test_db();
         let (state, me) = sephie_noop_greedy_state(&db);
         let mut nodes = 0u32;
-        let mut line = vec![search_key(&state)];
+        let mut line = vec![line_key(&state)];
 
         let h0_on = greedy_h0(true);
         let mut on = state.clone();
@@ -6329,7 +6375,7 @@ mod fuse_guard_greedy_tests {
         let h0_off = greedy_h0(false);
         let mut off = state.clone();
         nodes = 0;
-        line = vec![search_key(&state)];
+        line = vec![line_key(&state)];
         assert!(
             finish_bot_turn_horizon(
                 &db,
@@ -6509,7 +6555,7 @@ mod okill_two_choice_second_tests {
             "storm must add face potential for the follow-up line"
         );
         let mut nodes = 0u32;
-        let line = vec![search_key(&root), search_key(&after_storm)];
+        let line = vec![line_key(&root), line_key(&after_storm)];
         let mut evo_found = false;
         let mut through_used = false;
         assert!(
@@ -6703,5 +6749,193 @@ mod oorder_pick_side_tests {
         assert_eq!(opp_v, eval.order_value(&state, opp, &zero));
         assert_eq!(opp_v, 0.0, "zero order net → scale×tanh(0), bppv=0");
         assert_ne!(opp_v, leaf_opp, "oorder alone → opponent uses model");
+    }
+}
+
+#[cfg(test)]
+mod speed_reuse_tests {
+    use std::fs;
+    use std::path::Path;
+
+    use super::*;
+    use crate::apply::{apply, apply_neutral, legal_actions, new_game};
+    use crate::db::CardDb;
+    use crate::ids::First;
+    use crate::state::GameConfig;
+    use serde_json::Value;
+
+    fn recorded_db() -> CardDb {
+        let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest.join("..");
+        let mut db = CardDb::load(&root).expect("cards");
+        db.load_extra_dir(manifest.join("tests/fixtures/cards"))
+            .expect("fixture cards");
+        db.load_replace_dir(root.join("oracle/cards-as-recorded"))
+            .expect("recorded overlay");
+        db.load_replace_dir(manifest.join("tests/fixtures/as-recorded/earrings-engage-noop"))
+            .expect("earrings");
+        db.load_replace_dir(manifest.join("tests/fixtures/as-recorded/kukishiro-crest-from-deck"))
+            .expect("kukishiro");
+        db
+    }
+
+    fn review_at(db: &CardDb, review: &str, game: &str, ply: usize) -> State {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../py/tests/fixtures")
+            .join(review)
+            .join("games")
+            .join(game);
+        let cap: Value = serde_json::from_str(&fs::read_to_string(path).expect("review")).unwrap();
+        let seed = cap["seed"].as_u64().unwrap();
+        let mut deck_a = Vec::new();
+        for (id, n) in cap["deckA"].as_object().unwrap() {
+            let cid = CardId::parse(id).unwrap();
+            deck_a.extend(std::iter::repeat_n(cid, n.as_u64().unwrap() as usize));
+        }
+        let mut deck_b = Vec::new();
+        for (id, n) in cap["deckB"].as_object().unwrap() {
+            let cid = CardId::parse(id).unwrap();
+            deck_b.extend(std::iter::repeat_n(cid, n.as_u64().unwrap() as usize));
+        }
+        let first = match cap.get("first").and_then(|v| v.as_str()) {
+            Some("b") | Some("B") => First::B,
+            Some("a") | Some("A") => First::A,
+            _ => First::Coin,
+        };
+        let mut st = new_game(
+            db,
+            GameConfig {
+                seed,
+                deck_a,
+                deck_b,
+                first,
+                opening_hands: None,
+            },
+        )
+        .expect("game");
+        for step in cap["actions"].as_array().unwrap().iter().take(ply) {
+            if step.get("reseed").is_some() {
+                st.reseed(step["reseed"].as_u64().unwrap());
+                continue;
+            }
+            let mut body = serde_json::Map::new();
+            for (k, v) in step.as_object().expect("action object") {
+                if k == "value" || k == "bot_value" {
+                    continue;
+                }
+                body.insert(k.clone(), v.clone());
+            }
+            let neu: crate::NeutralAction =
+                serde_json::from_value(serde_json::Value::Object(body)).unwrap();
+            apply_neutral(db, &mut st, &neu).unwrap();
+        }
+        st
+    }
+
+    fn v0() -> H0 {
+        H0 {
+            value: ValueVersion::V0,
+            net: None,
+            olethal: false,
+            oevo: false,
+            ..H0::default()
+        }
+    }
+
+    #[test]
+    fn take_or_apply_charges_one_node_and_refuses_at_cap() {
+        let db = recorded_db();
+        let st = review_at(&db, "review13", "4984932781931433298-b4973563.json", 27);
+        let mut nodes = 3u32;
+        let kept = st.clone();
+        let got = take_or_apply(
+            &db,
+            &st,
+            &Action::EndTurn,
+            Some(kept.clone()),
+            &mut nodes,
+            10,
+            &[],
+        )
+        .expect("kept");
+        assert_eq!(nodes, 4, "kept afterstate charges one node");
+        assert_eq!(search_key(&got), search_key(&kept));
+        let mut nodes = 10u32;
+        let got = take_or_apply(
+            &db,
+            &st,
+            &Action::EndTurn,
+            Some(st.clone()),
+            &mut nodes,
+            10,
+            &[],
+        );
+        assert!(got.is_none(), "at the cap the kept state is not taken");
+        assert_eq!(nodes, 10, "a cap refusal does not charge");
+    }
+
+    #[test]
+    fn greedy_index_kept_afterstate_matches_reapply() {
+        let db = recorded_db();
+        let moments = [
+            ("review13", "4984932781931433298-b4973563.json", 27usize),
+            ("review14", "12644260486301391828-d90f8eb2.json", 35),
+            ("review14", "6598261483642061665-d90f8eb2.json", 91),
+        ];
+        let h = v0();
+        for (review, game, ply) in moments {
+            let state = review_at(&db, review, game, ply);
+            let legal = legal_actions(&db, &state);
+            assert!(legal.len() >= 2, "{review} {ply}");
+            let me = acting_player(&state);
+            let eval = h.evaluator(&db, &[]);
+            let line = vec![line_key(&state)];
+            let mut nodes = 0u32;
+            let (i, kept) = greedy_index(
+                &db,
+                &state,
+                &legal,
+                me,
+                me,
+                &mut nodes,
+                u32::MAX,
+                &line,
+                eval,
+                false,
+            );
+            let kept = kept.expect("a candidate applied");
+            let mut again_nodes = 0u32;
+            let again = try_apply(&db, &state, &legal[i], &mut again_nodes, u32::MAX, &line)
+                .expect("re-apply");
+            assert_eq!(
+                search_key(&kept),
+                search_key(&again),
+                "{review} ply {ply} kept afterstate"
+            );
+        }
+    }
+
+    #[test]
+    fn line_key_is_id_on_choice_and_changes_across_main() {
+        let db = recorded_db();
+        let choice = review_at(&db, "review13", "4984932781931433298-b4973563.json", 45);
+        assert!(matches!(choice.phase, Phase::Choice { .. }));
+        assert_eq!(line_key(&choice), search_key_id(&choice));
+        let main = review_at(&db, "review14", "12644260486301391828-d90f8eb2.json", 35);
+        assert!(matches!(main.phase, Phase::Main));
+        let legal = legal_actions(&db, &main);
+        let next = legal.iter().find_map(|a| {
+            let mut s = main.clone();
+            if apply(&db, &mut s, a.clone()).is_ok()
+                && s.winner.is_none()
+                && matches!(s.phase, Phase::Main)
+            {
+                Some(s)
+            } else {
+                None
+            }
+        });
+        let next = next.expect("Main successor");
+        assert_ne!(line_key(&main), line_key(&next));
     }
 }
