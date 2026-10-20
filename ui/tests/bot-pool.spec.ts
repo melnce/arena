@@ -8,6 +8,10 @@ import { openSettings, turnState } from "./helpers.ts";
 export const WORLD_SPLIT_SPEC =
   "h0:nodes=4000,k=8,horizon=3,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8";
 
+/** Heavier search for the pool speed-up bench (same keys as {@link WORLD_SPLIT_SPEC}). */
+export const SPEEDUP_SPEC =
+  "h0:nodes=32000,k=8,horizon=3,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=8";
+
 const THINK_CANCEL_QUERY = `localbot=0&botcores=4&botworkerspin=30000`;
 
 async function ensurePolicyOption(page: Page, selector: string, value: string) {
@@ -172,7 +176,7 @@ test("pool splits work across cores", async ({ page }) => {
 
   await boot(
     page,
-    `localbot=0&benchspec=${encodeURIComponent(WORLD_SPLIT_SPEC)}&botcores=${Math.min(8, hw)}`,
+    `localbot=0&benchspec=${encodeURIComponent(SPEEDUP_SPEC)}&botcores=${Math.min(8, hw)}`,
   );
   await openSettings(page);
   await page.locator("#benchRunBtn").click();
@@ -181,6 +185,11 @@ test("pool splits work across cores", async ({ page }) => {
   expect(text).toMatch(/same moves/i);
   if (hw >= 2) {
     const speedUp = Number(text.match(/speed-up:\s*([\d.]+)/)?.[1] ?? "0");
+    console.log(`pool speed-up bench: ${speedUp} (${hw} cores, nodes=32000)`);
+    test.info().annotations.push({
+      type: "pool-speedup",
+      description: `${speedUp} on ${hw} cores`,
+    });
     expect(speedUp, `speed-up ${speedUp} on ${hw} cores`).toBeGreaterThan(1.3);
   }
 });
