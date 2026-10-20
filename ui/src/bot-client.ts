@@ -46,6 +46,40 @@ let failOnceArmed = false;
 let thinking = false;
 let poolBusy = 0;
 
+/** Per-pool worker readiness (in-flight roll, prepare, etc.) before the next message. */
+const poolSlotReady = new WeakMap<Worker[], Promise<void>[]>();
+
+function slotReadies(pool: Worker[]): Promise<void>[] {
+  let ready = poolSlotReady.get(pool);
+  if (!ready) {
+    ready = [];
+    poolSlotReady.set(pool, ready);
+  }
+  return ready;
+}
+
+function ensureSlotCount(pool: Worker[], count: number): void {
+  const ready = slotReadies(pool);
+  while (ready.length < count) ready.push(Promise.resolve());
+}
+
+function resetPoolSlotReadies(pool: Worker[]): void {
+  poolSlotReady.delete(pool);
+}
+
+function chainWorkerReady(pool: Worker[], workerIndex: number, tail: Promise<unknown>): void {
+  ensureSlotCount(pool, workerIndex + 1);
+  const ready = slotReadies(pool);
+  ready[workerIndex] = ready[workerIndex].then(async () => {
+    await tail;
+  });
+}
+
+async function awaitWorkerReady(pool: Worker[], workerIndex: number): Promise<void> {
+  ensureSlotCount(pool, workerIndex + 1);
+  await slotReadies(pool)[workerIndex];
+}
+
 const BOT_CORES_STORAGE = "svwb.botCores";
 
 function notifyThinkingChange(): void {
@@ -232,9 +266,16 @@ export function prewarmBotWorker(): void {
 }
 
 export function terminateBotWorker(): void {
-  for (const w of workers) {
+  const gamePool = workers;
+  for (const w of gamePool) {
     w?.terminate();
   }
+  resetPoolSlotReadies(gamePool);
+  for (const w of benchWorkers) {
+    w?.terminate();
+  }
+  resetPoolSlotReadies(benchWorkers);
+  benchWorkers = [];
   workers = [];
   workerGeneration += 1;
   pendingId = null;
@@ -302,6 +343,7 @@ async function prepareWorker(
   botSeed: string,
   worldSeedBump: number,
 ): Promise<void> {
+  await awaitWorkerReady(pool, workerIndex);
   const w = pool[workerIndex]!;
   const req: PrepareRequest = {
     type: "prepare",
@@ -334,6 +376,7 @@ async function poolJob<T extends PoolJobReply>(
   msg: object,
   match: (data: WorkerOutbound) => T | null,
 ): Promise<T> {
+  await awaitWorkerReady(pool, workerIndex);
   const w = pool[workerIndex]!;
   const busy = trackPoolBusy(pool);
   try {
@@ -354,25 +397,6 @@ async function releaseWorker(pool: Worker[], workerIndex: number, id: number): P
   } catch {
     /* ignore release errors */
   }
-}
-
-function respawnWorkerInPool(pool: Worker[], index: number): void {
-  pool[index]?.terminate();
-  if (pool === workers) spawnWorkerAt(index);
-  else spawnBenchWorkerAt(index);
-}
-
-async function respawnAndPrepare(
-  pool: Worker[],
-  allocId: () => number,
-  index: number,
-  body: BenchDecideBody,
-  policy: string,
-  botSeed: string,
-  worldSeedBump: number,
-): Promise<void> {
-  respawnWorkerInPool(pool, index);
-  await prepareWorker(pool, index, allocId(), body, policy, botSeed, worldSeedBump);
 }
 
 async function runPoolDecide(
@@ -446,6 +470,7 @@ async function runPoolDecide(
           if (data.type === "outcome" || data.type === "error") return data;
           return null;
         });
+        chainWorkerReady(pool, 1, rollP);
         rollP.then((roll) => {
           if (roll.type === "outcome") rollOutcome = roll.outcomeJson;
         });
@@ -465,9 +490,7 @@ async function runPoolDecide(
       );
       const needsRoll =
         start.type === "step" && (JSON.parse(start.stepJson) as { step: string }).step === "await_roll";
-      if (!needsRoll) {
-        if (step.roll && W > 1) await respawnAndPrepare(pool, allocId, 1, body, policy, botSeed, 0);
-      } else if (step.roll) {
+      if (needsRoll && step.roll) {
         if (!rollOutcome) {
           if (rollP) {
             const roll = await rollP;
@@ -500,7 +523,6 @@ async function runPoolDecide(
             return null;
           },
         );
-        if (W > 1) await respawnAndPrepare(pool, allocId, 1, body, policy, botSeed, 0);
       }
       continue;
     }
