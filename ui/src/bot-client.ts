@@ -70,7 +70,9 @@ function resetPoolSlotReadies(pool: Worker[]): void {
 function chainWorkerReady(pool: Worker[], workerIndex: number, tail: Promise<unknown>): void {
   ensureSlotCount(pool, workerIndex + 1);
   const ready = slotReadies(pool);
-  ready[workerIndex] = ready[workerIndex].then(() => tail);
+  ready[workerIndex] = ready[workerIndex].then(async () => {
+    await tail;
+  });
 }
 
 async function awaitWorkerReady(pool: Worker[], workerIndex: number): Promise<void> {
