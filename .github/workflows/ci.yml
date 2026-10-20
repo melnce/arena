@@ -51,7 +51,7 @@ jobs:
         run: cargo test
 
       - name: h0 search suites (release)
-        run: cargo test --release --test h0_order --test h0_job --test h0_exact
+        run: cargo test --release --test h0_order --test h0_job --test h0_exact --test h0_zb_equiv
 
       - name: soak 100 games
         # Fixture-deck soak (`soak.rs`) and the class-matrix random-deck gate

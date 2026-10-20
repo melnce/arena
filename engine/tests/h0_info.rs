@@ -303,7 +303,7 @@ fn hidden_removals_logs_fuse_partners() {
     apply(&db, &mut st, Action::Fuse { host: 0 }).unwrap();
     choose(&db, &mut st, 0);
     confirm(&db, &mut st);
-    assert_eq!(st.player(me).hidden_removals, vec![partner_id]);
+    assert_eq!(*st.player(me).hidden_removals, vec![partner_id]);
 }
 
 #[test]
@@ -353,7 +353,7 @@ fn hidden_removals_discard_without_on_discard() {
     let spell_pos = put_hand(&db, &mut st, me, "89200140");
     give_pp(&mut st, me, 10, 10);
     play(&db, &mut st, spell_pos);
-    assert_eq!(st.player(me).hidden_removals, vec![silent_id]);
+    assert_eq!(*st.player(me).hidden_removals, vec![silent_id]);
 
     let mut open_st = started(&db, 11);
     clear_hand(&mut open_st, opp);

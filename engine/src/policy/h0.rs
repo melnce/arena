@@ -1236,6 +1236,29 @@ pub(super) fn line_key(s: &State) -> u64 {
     }
 }
 
+/// [`try_apply`] for `a` taken from `legal_actions(db, state)` of this very state (see [`apply_known_legal`]).
+fn try_apply_legal(
+    db: &CardDb,
+    state: &State,
+    a: &Action,
+    nodes: &mut u32,
+    cap: u32,
+    line: &[u64],
+) -> Option<State> {
+    if *nodes >= cap {
+        return None;
+    }
+    let mut s = state.clone();
+    *nodes += 1;
+    if crate::apply::apply_known_legal(db, &mut s, a.clone()).is_err() {
+        return None;
+    }
+    if can_repeat(&s) && line.contains(&line_key(&s)) {
+        return None;
+    }
+    Some(s)
+}
+
 fn try_apply(
     db: &CardDb,
     state: &State,
@@ -1827,7 +1850,7 @@ fn greedy_index(
             break;
         }
         let a = &legal[i];
-        let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+        let Some(s) = try_apply_legal(db, state, a, nodes, cap, line) else {
             continue;
         };
         let v = eval.pick_value(&s, choose_for, search_me);
@@ -3070,7 +3093,7 @@ fn opponent_open_search(
         if !useful_action(state, opp, a, eval.bpp1, eval.bpp2) {
             continue;
         }
-        let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+        let Some(s) = try_apply_legal(db, state, a, nodes, cap, line) else {
             continue;
         };
         if s.winner == Some(opp) {
@@ -4174,7 +4197,7 @@ fn resolve_play_line(
             if *nodes >= cap {
                 return false;
             }
-            let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+            let Some(s) = try_apply_legal(db, state, a, nodes, cap, line) else {
                 continue;
             };
             let mut next_line = line.to_vec();
@@ -4198,7 +4221,7 @@ fn resolve_play_line(
         }
         if chooses.is_empty() {
             if let Some(a) = legal.iter().find(|a| matches!(a, Action::Confirm)) {
-                let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+                let Some(s) = try_apply_legal(db, state, a, nodes, cap, line) else {
                     return false;
                 };
                 let mut next_line = line.to_vec();
@@ -4410,7 +4433,7 @@ fn opp_lethal_two_after_first(
             if *nodes >= two_end {
                 return false;
             }
-            let Some(s) = try_apply(db, state, a, nodes, two_end, line) else {
+            let Some(s) = try_apply_legal(db, state, a, nodes, two_end, line) else {
                 continue;
             };
             let mut next_line = line.to_vec();
@@ -4433,7 +4456,7 @@ fn opp_lethal_two_after_first(
         }
         if chooses.is_empty() {
             if let Some(a) = legal.iter().find(|a| matches!(a, Action::Confirm)) {
-                let Some(s) = try_apply(db, state, a, nodes, two_end, line) else {
+                let Some(s) = try_apply_legal(db, state, a, nodes, two_end, line) else {
                     return false;
                 };
                 let mut next_line = line.to_vec();
@@ -4462,7 +4485,7 @@ fn opp_lethal_two_after_first(
         if *nodes >= two_end {
             return false;
         }
-        let Some(after_second) = try_apply(db, state, &second, nodes, two_end, line) else {
+        let Some(after_second) = try_apply_legal(db, state, &second, nodes, two_end, line) else {
             continue;
         };
         // Second plays that open a choice are not "relevant" until the choice resolves
@@ -4517,7 +4540,7 @@ fn opp_lethal_two_pass(
         if *nodes >= two_end {
             break;
         }
-        let Some(after_first) = try_apply(db, state, &first, nodes, two_end, line) else {
+        let Some(after_first) = try_apply_legal(db, state, &first, nodes, two_end, line) else {
             continue;
         };
         let mut line1 = line.to_vec();
@@ -4576,7 +4599,7 @@ fn opp_lethal_sweep_core(
         if !matches!(a, Action::Play { .. }) {
             continue;
         }
-        let Some(s) = try_apply(db, state, a, nodes, sweep_cap, line) else {
+        let Some(s) = try_apply_legal(db, state, a, nodes, sweep_cap, line) else {
             continue;
         };
         let mut next_line = line.to_vec();

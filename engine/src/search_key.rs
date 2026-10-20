@@ -3,6 +3,7 @@
 //! runs of the same binary. `search_key_id` is an identity key only.
 
 use crate::card::{Ability, CardId, Traits, TriggerTag, Until, VarKey};
+use crate::shared::CanonicalBytes;
 use crate::state::{
     BoundRef, CardInstance, ChoiceNode, CrestInstance, DestroyedRecord, InstanceFlags, LeaderMod,
     PendingChoice, PendingKind, PendingPlayChoices, Phase, PlayCapture, PlayCapturedTarget,
@@ -96,7 +97,7 @@ fn canonical_bytes(state: &State) -> Vec<u8> {
     }
     w.u32(state.picks.len() as u32);
     for pick in &state.picks {
-        w.bytes(format!("{:?}", pick).as_bytes());
+        w.debug(pick);
     }
     w.u32(state.pending_work.len() as u32);
     for frame in &state.pending_work {
@@ -312,12 +313,35 @@ impl Writer {
         self.u32(s.len() as u32);
         self.buf.extend_from_slice(s.as_bytes());
     }
-    fn bytes(&mut self, b: &[u8]) {
-        self.u32(b.len() as u32);
-        self.buf.extend_from_slice(b);
-    }
     fn card(&mut self, id: CardId) {
         self.u32(id.0);
+    }
+    /// The same bytes as `self.bytes(&serde_json::to_vec(v).unwrap_or_default())`, without the temporary `Vec`.
+    fn json<T: serde::Serialize + ?Sized>(&mut self, v: &T) {
+        let at = self.buf.len();
+        self.buf.extend_from_slice(&[0; 4]);
+        if serde_json::to_writer(&mut self.buf, v).is_err() {
+            self.buf.truncate(at + 4);
+        }
+        let n = (self.buf.len() - at - 4) as u32;
+        self.buf[at..at + 4].copy_from_slice(&n.to_le_bytes());
+    }
+    fn raw(&mut self, b: &[u8]) {
+        self.buf.extend_from_slice(b);
+    }
+    fn with_capacity(n: usize) -> Self {
+        Self {
+            buf: Vec::with_capacity(n),
+        }
+    }
+    /// The same bytes as `self.bytes(format!("{v:?}").as_bytes())`, without the temporary `String`.
+    fn debug<T: std::fmt::Debug + ?Sized>(&mut self, v: &T) {
+        use std::io::Write as _;
+        let at = self.buf.len();
+        self.buf.extend_from_slice(&[0; 4]);
+        write!(self.buf, "{v:?}").expect("write to Vec");
+        let n = (self.buf.len() - at - 4) as u32;
+        self.buf[at..at + 4].copy_from_slice(&n.to_le_bytes());
     }
 }
 
@@ -486,18 +510,9 @@ fn hash_player(w: &mut Writer, p: &PlayerState) {
     }
     w.i32(p.faith);
     w.i32(p.rally);
-    w.u32(p.leader_mods.len() as u32);
-    for m in &p.leader_mods {
-        hash_leader_mod(w, m);
-    }
-    w.u32(p.crests.len() as u32);
-    for c in &p.crests {
-        hash_crest(w, c);
-    }
-    w.u32(p.hand.len() as u32);
-    for c in &p.hand {
-        hash_inst(w, c);
-    }
+    w.raw(p.leader_mods.canonical());
+    w.raw(p.crests.canonical());
+    w.raw(p.hand.canonical());
     for slot in &p.field {
         match slot {
             Some(c) => {
@@ -507,50 +522,99 @@ fn hash_player(w: &mut Writer, p: &PlayerState) {
             None => w.u8(0),
         }
     }
-    w.u32(p.deck.len() as u32);
-    for c in &p.deck {
-        hash_inst(w, c);
-    }
-    w.u32(p.cemetery.len() as u32);
-    for c in &p.cemetery {
-        hash_inst(w, c);
-    }
-    w.u32(p.banished.len() as u32);
-    for c in &p.banished {
-        hash_inst(w, c);
-    }
-    w.u32(p.destroyed_history.len() as u32);
-    for d in &p.destroyed_history {
-        hash_destroyed(w, d);
-    }
-    w.u32(p.played_this_turn.len() as u32);
-    for id in &p.played_this_turn {
-        w.card(*id);
-    }
-    w.u32(p.played_base_costs_this_match.len() as u32);
-    for n in &p.played_base_costs_this_match {
-        w.i32(*n);
-    }
+    w.raw(p.deck.canonical());
+    w.raw(p.cemetery.canonical());
+    w.raw(p.banished.canonical());
+    w.raw(p.destroyed_history.canonical());
+    w.raw(p.played_this_turn.canonical());
+    w.raw(p.played_base_costs_this_match.canonical());
     w.bool(p.attacked_leader_this_turn);
     w.bool(p.attacked_leader_last_turn);
     w.u32(p.turns_taken);
     w.bool(p.is_second);
-    w.u32(p.enter_counts.len() as u32);
-    for (id, n) in &p.enter_counts {
-        w.card(*id);
-        w.i32(*n);
+    w.raw(p.enter_counts.canonical());
+    w.raw(p.starting_deck.canonical());
+    w.raw(p.public_removals.canonical());
+    w.raw(p.public_hand_additions.canonical());
+}
+
+// Each zone's part of the walk: its length, then each element, exactly as `hash_player` wrote them inline. A
+// `Memo` zone keeps these bytes until the zone changes.
+impl CanonicalBytes for Vec<CardInstance> {
+    fn canonical_bytes(&self) -> Vec<u8> {
+        let mut w = Writer::with_capacity(16 + 160 * self.len());
+        w.u32(self.len() as u32);
+        for c in self {
+            hash_inst(&mut w, c);
+        }
+        w.buf
     }
-    w.u32(p.starting_deck.len() as u32);
-    for id in &p.starting_deck {
-        w.card(*id);
+}
+
+impl CanonicalBytes for Vec<CardId> {
+    fn canonical_bytes(&self) -> Vec<u8> {
+        let mut w = Writer::with_capacity(4 + 4 * self.len());
+        w.u32(self.len() as u32);
+        for id in self {
+            w.card(*id);
+        }
+        w.buf
     }
-    w.u32(p.public_removals.len() as u32);
-    for id in &p.public_removals {
-        w.card(*id);
+}
+
+impl CanonicalBytes for Vec<i32> {
+    fn canonical_bytes(&self) -> Vec<u8> {
+        let mut w = Writer::with_capacity(4 + 4 * self.len());
+        w.u32(self.len() as u32);
+        for n in self {
+            w.i32(*n);
+        }
+        w.buf
     }
-    w.u32(p.public_hand_additions.len() as u32);
-    for id in &p.public_hand_additions {
-        w.card(*id);
+}
+
+impl CanonicalBytes for Vec<LeaderMod> {
+    fn canonical_bytes(&self) -> Vec<u8> {
+        let mut w = Writer::with_capacity(64);
+        w.u32(self.len() as u32);
+        for m in self {
+            hash_leader_mod(&mut w, m);
+        }
+        w.buf
+    }
+}
+
+impl CanonicalBytes for Vec<CrestInstance> {
+    fn canonical_bytes(&self) -> Vec<u8> {
+        let mut w = Writer::with_capacity(64);
+        w.u32(self.len() as u32);
+        for c in self {
+            hash_crest(&mut w, c);
+        }
+        w.buf
+    }
+}
+
+impl CanonicalBytes for Vec<DestroyedRecord> {
+    fn canonical_bytes(&self) -> Vec<u8> {
+        let mut w = Writer::with_capacity(4 + 16 * self.len());
+        w.u32(self.len() as u32);
+        for d in self {
+            hash_destroyed(&mut w, d);
+        }
+        w.buf
+    }
+}
+
+impl CanonicalBytes for std::collections::BTreeMap<CardId, i32> {
+    fn canonical_bytes(&self) -> Vec<u8> {
+        let mut w = Writer::with_capacity(4 + 8 * self.len());
+        w.u32(self.len() as u32);
+        for (id, n) in self {
+            w.card(*id);
+            w.i32(*n);
+        }
+        w.buf
     }
 }
 
@@ -626,8 +690,8 @@ fn hash_inst(w: &mut Writer, c: &CardInstance) {
         hash_ability(w, a);
     }
     w.u8(c.granted_whens);
-    w.u32(c.printed_tags.len() as u32);
-    for t in &c.printed_tags {
+    w.u32(c.statics.printed_tags.len() as u32);
+    for t in &c.statics.printed_tags {
         w.str(t);
     }
     hash_flags(w, &c.flags);
@@ -651,11 +715,11 @@ fn hash_inst(w: &mut Writer, c: &CardInstance) {
     w.i32(c.spellboost_count);
     w.u8(c.kind as u8);
     w.u8(c.class as u8);
-    w.u32(c.tribes.len() as u32);
-    for t in &c.tribes {
-        w.bytes(format!("{t:?}").as_bytes());
+    w.u32(c.statics.tribes.len() as u32);
+    for t in &c.statics.tribes {
+        w.debug(t);
     }
-    w.str(&c.name);
+    w.str(&c.statics.name);
     w.u32(c.once_used.len() as u32);
     for t in &c.once_used {
         hash_tag(w, *t);
@@ -714,11 +778,11 @@ fn hash_flags(w: &mut Writer, f: &InstanceFlags) {
 }
 
 fn hash_traits(w: &mut Writer, t: &Traits) {
-    w.bytes(&serde_json::to_vec(t).unwrap_or_default());
+    w.json(t);
 }
 
 fn hash_ability(w: &mut Writer, a: &Ability) {
-    w.bytes(&serde_json::to_vec(a).unwrap_or_default());
+    w.json(a);
 }
 
 fn hash_tag(w: &mut Writer, t: TriggerTag) {
@@ -726,7 +790,7 @@ fn hash_tag(w: &mut Writer, t: TriggerTag) {
 }
 
 fn hash_work(w: &mut Writer, frame: &WorkFrame) {
-    w.bytes(&serde_json::to_vec(&work_tag(frame)).unwrap_or_default());
+    w.json(&work_tag(frame));
     match frame {
         WorkFrame::Effects {
             controller,
@@ -741,7 +805,7 @@ fn hash_work(w: &mut Writer, frame: &WorkFrame) {
             hash_source(w, source);
             w.u32(effects.len() as u32);
             for e in effects {
-                w.bytes(&serde_json::to_vec(e).unwrap_or_default());
+                w.json(e);
             }
             w.u32(*index as u32);
             hash_opt_target(w, subject.as_ref());
@@ -755,7 +819,7 @@ fn hash_work(w: &mut Writer, frame: &WorkFrame) {
             w.bool(*e40);
         }
         WorkFrame::Aftermath(a) => {
-            w.bytes(format!("{a:?}").as_bytes());
+            w.debug(a);
         }
     }
 }
@@ -776,7 +840,7 @@ fn hash_queued(w: &mut Writer, q: &QueuedTrigger) {
     hash_tag(w, q.tag);
     w.u32(q.effects.len() as u32);
     for e in &q.effects {
-        w.bytes(&serde_json::to_vec(e).unwrap_or_default());
+        w.json(e);
     }
     hash_opt_target(w, q.subject.as_ref());
     match q.subject_id {
@@ -892,7 +956,7 @@ fn hash_pending_play_choices(w: &mut Writer, p: &PendingPlayChoices) {
     for step in &p.steps {
         match step {
             PlayPickStep::Target(e) | PlayPickStep::Mode(e) => {
-                w.bytes(format!("{e:?}").as_bytes());
+                w.debug(e);
             }
         }
     }

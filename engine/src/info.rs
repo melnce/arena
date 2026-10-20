@@ -368,7 +368,7 @@ fn resolve_play_form(db: &CardDb, inst: &CardInstance, pp: i32) -> Option<(i32, 
         return None;
     };
     let effective = inst.cost;
-    let enhance: Vec<&Mode> = if !inst.printed_tags.contains("enhance") {
+    let enhance: Vec<&Mode> = if !inst.statics.printed_tags.contains("enhance") {
         Vec::new()
     } else {
         card.modes()
@@ -475,7 +475,7 @@ fn collect_hand_gates(
             }
         }
     }
-    if inst.printed_tags.contains("spellboost")
+    if inst.statics.printed_tags.contains("spellboost")
         || card
             .abilities()
             .iter()
@@ -1161,8 +1161,8 @@ fn inst_matches_simple(c: &CardInstance, f: &Filter) -> bool {
     }
     if let Some(t) = &f.tribe {
         let ok = match t {
-            TribeOrList::One(tr) => c.tribes.contains(tr),
-            TribeOrList::Many(ts) => ts.iter().any(|tr| c.tribes.contains(tr)),
+            TribeOrList::One(tr) => c.statics.tribes.contains(tr),
+            TribeOrList::Many(ts) => ts.iter().any(|tr| c.statics.tribes.contains(tr)),
         };
         if !ok {
             return false;

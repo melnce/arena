@@ -424,7 +424,7 @@ fn edeth_summoned_copy_without_last_words() {
         .find(|c| c.card == cid(EDETH))
         .expect("summoned Edeth");
     assert!(
-        !copy.printed_tags.contains("lastWords"),
+        !copy.statics.printed_tags.contains("lastWords"),
         "Last Words stripped from the summoned copy"
     );
 }
@@ -536,7 +536,7 @@ fn azvaldt_cost_history_and_last_words() {
     let db = load_db();
     let mut st = started_decks(&db, 23, &[AZVALDT, ZERAEL], &[VANILLA]);
     let me = PlayerId::A;
-    st.player_mut(me).played_base_costs_this_match = vec![1, 2, 3, 4, 5, 6, 7, 8];
+    st.player_mut(me).played_base_costs_this_match = vec![1, 2, 3, 4, 5, 6, 7, 8].into();
     st.player_mut(me).field = Default::default();
     put_field(&db, &mut st, me, AZVALDT);
     remember_destroyed(&mut st, me, VANILLA, 1, CardKind::Follower);

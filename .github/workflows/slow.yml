@@ -222,6 +222,16 @@ jobs:
             filter: ""
             ignored: false
             timeout: 15
+          - suite: h0_exact_games
+            test: h0_exact_games
+            filter: ""
+            ignored: true
+            timeout: 45
+          - suite: h0_zb_equiv
+            test: h0_zb_equiv
+            filter: ""
+            ignored: true
+            timeout: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -310,7 +320,9 @@ jobs:
             "h0_onext": 45,
             "h0_oopen": 45,
             "h0_turn_worlds": 15,
-            "lethal": 15
+            "lethal": 15,
+            "h0_exact_games": 45,
+            "h0_zb_equiv": 25
           }'
 
           failed_jobs=""
@@ -421,7 +433,9 @@ jobs:
             "h0_onext": 45,
             "h0_oopen": 45,
             "h0_turn_worlds": 15,
-            "lethal": 15
+            "lethal": 15,
+            "h0_exact_games": 45,
+            "h0_zb_equiv": 25
           }'
 
           failed_jobs=""

@@ -459,7 +459,9 @@ fn reanimate_highest_cost_summoning_sick() {
         .expect("reanimated the 4-cost");
     assert!(f.flags.summoning_sick);
     assert!(
-        f.tribes.contains(&arena_engine::card::Tribe::Departed),
+        f.statics
+            .tribes
+            .contains(&arena_engine::card::Tribe::Departed),
         "Reanimate gives the instance the Departed trait (official glossary, 2026-09-10)"
     );
 }

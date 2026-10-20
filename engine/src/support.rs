@@ -11,11 +11,10 @@ use crate::error::Unsupported;
 
 /// Constructs the M1 engine will not resolve. Loading them into a game fails.
 pub fn card_unsupported(card: &Card) -> Option<Unsupported> {
-    let id = card.id().as_str();
     for a in card.abilities() {
         if let Some(c) = ability_unsupported(a) {
             return Some(Unsupported {
-                card: id,
+                card: card.id().as_str(),
                 construct: c,
             });
         }
@@ -23,7 +22,7 @@ pub fn card_unsupported(card: &Card) -> Option<Unsupported> {
     for m in card.modes() {
         if let Some(c) = mode_unsupported(m) {
             return Some(Unsupported {
-                card: id,
+                card: card.id().as_str(),
                 construct: c,
             });
         }

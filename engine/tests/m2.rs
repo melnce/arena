@@ -290,7 +290,7 @@ fn netherworld_lieutenant_removes_last_words_from_the_copy() {
     assert_eq!(copy.attack, 2);
     assert!(copy.traits.rush == Some(true));
     assert!(
-        !copy.printed_tags.contains("lastWords"),
+        !copy.statics.printed_tags.contains("lastWords"),
         "Last Words removed from the copy"
     );
 }
@@ -738,7 +738,9 @@ fn reanimate_grants_departed_and_macmillan_fires() {
     assert!(f.is_rush());
     assert!(f.is_ward());
     assert!(
-        f.tribes.contains(&arena_engine::card::Tribe::Departed),
+        f.statics
+            .tribes
+            .contains(&arena_engine::card::Tribe::Departed),
         "reanimated instance carries Departed"
     );
     assert_eq!(st.player(opp).leader_defense, 19);
@@ -746,6 +748,7 @@ fn reanimate_grants_departed_and_macmillan_fires() {
         arena_engine::CardInstance::from_card(db.card(cid("10951120")).expect("Lieutenant"), 0);
     assert!(
         !printed
+            .statics
             .tribes
             .contains(&arena_engine::card::Tribe::Departed),
         "printed Lieutenant is not Departed; the tribe is instance-only"
@@ -764,7 +767,8 @@ fn reanimate_pick_weighted_by_destroyed_instances() {
         destroyed("88001110", 1, me),
         destroyed("88001110", 1, me),
         destroyed("88001150", 1, me),
-    ];
+    ]
+    .into();
     give_pp(&mut proto, me, 2, 2);
     proto.player_mut(me).hand.clear();
     put_hand(&db, &mut proto, me, "88001280");
