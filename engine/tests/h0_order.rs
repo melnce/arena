@@ -9,10 +9,12 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::time::Instant;
 
+use arena_engine::trace::fnv1a64;
 use arena_engine::{
-    apply_neutral, legal_actions, new_game, policy_rng, AnyPolicy, CardDb, First, GameConfig,
-    Policy, H0,
+    apply, apply_neutral, legal_actions, new_game, policy_rng, AnyPolicy, CardDb, First,
+    GameConfig, Phase, PlayerId, Policy, State, H0,
 };
+use arena_engine::{MAX_ACTIONS, MAX_TURNS};
 use serde_json::Value;
 
 mod common;
@@ -337,6 +339,133 @@ fn h0_order_v53_path() -> String {
         .to_string()
 }
 
+fn h0_order_v59_path() -> String {
+    repo_root()
+        .join("engine/models/h0-order-v59.json")
+        .display()
+        .to_string()
+}
+
+struct SelfPlayCase {
+    label: String,
+    state: State,
+    seed: u64,
+}
+
+fn meta_deck_stems() -> Vec<String> {
+    let text = fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS.json");
+    let pools: Value = serde_json::from_str(&text).expect("pools json");
+    pools["meta"]
+        .as_array()
+        .expect("meta pool")
+        .iter()
+        .map(|v| v.as_str().expect("deck stem").to_string())
+        .filter(|s| s != "meta-rune-test-subject")
+        .collect()
+}
+
+fn load_deck_file(path: PathBuf) -> Vec<arena_engine::CardId> {
+    let map: BTreeMap<String, u32> =
+        serde_json::from_str(&fs::read_to_string(path).expect("deck")).expect("deck json");
+    let mut ids = Vec::new();
+    for (k, n) in map {
+        let id = arena_engine::CardId::parse(&k).expect("card id");
+        for _ in 0..n {
+            ids.push(id);
+        }
+    }
+    ids
+}
+
+/// Main-phase bot decisions at turn ≥ 4 from seeded self-play (`seed = 20261011 + g*97 + stem*131`).
+fn meta_selfplay_cases(db: &CardDb) -> Vec<SelfPlayCase> {
+    let spec = "h0";
+    let mut out = Vec::new();
+    for stem in meta_deck_stems() {
+        let deck = load_deck_file(repo_root().join(format!("oracle/decks/{stem}.json")));
+        for g in 0u64..2 {
+            let seed = 20261011u64
+                .wrapping_add(g * 97)
+                .wrapping_add(stem.len() as u64 * 131);
+            let mut state = new_game(
+                db,
+                GameConfig {
+                    seed,
+                    deck_a: deck.clone(),
+                    deck_b: deck.clone(),
+                    first: First::A,
+                    opening_hands: None,
+                },
+            )
+            .expect("new_game");
+            let mut pol = parse_h0(spec);
+            let mut rng = policy_rng(seed);
+            let mut nact = 0u32;
+            while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
+                if state.turn > MAX_TURNS || nact >= MAX_ACTIONS {
+                    break;
+                }
+                let legal = legal_actions(db, &state);
+                if legal.is_empty() {
+                    break;
+                }
+                if state.active == PlayerId::A
+                    && state.turn >= 4
+                    && matches!(state.phase, Phase::Main)
+                {
+                    let choose_seed = seed
+                        .wrapping_add(u64::from(state.turn) * 97)
+                        .wrapping_add(u64::from(nact) * 131);
+                    out.push(SelfPlayCase {
+                        label: format!("selfplay/{stem}/g{g}/t{}/n{}", state.turn, nact),
+                        state: state.clone(),
+                        seed: choose_seed,
+                    });
+                    if out.len() >= 40 {
+                        return out;
+                    }
+                }
+                let idx = pol.choose(db, &state, &legal, &mut rng);
+                if apply(db, &mut state, legal[idx].clone()).is_err() {
+                    break;
+                }
+                nact += 1;
+            }
+        }
+    }
+    out
+}
+
+fn decide_state(spec: &str, threads: u32, db: &CardDb, st: &State, seed: u64) -> Outcome {
+    let legal = legal_actions(db, st);
+    let mut h0 = parse_h0(spec);
+    h0.threads = threads;
+    h0.arm_explain();
+    let mut rng = policy_rng(seed);
+    let idx = h0.choose(db, st, &legal, &mut rng);
+    Outcome {
+        idx,
+        value_bits: h0.last_value().map(f32::to_bits),
+        explain: h0
+            .take_explain()
+            .map(|r| serde_json::to_string(&r).expect("explain json")),
+    }
+}
+
+fn explain_used_search(explain: &str, legal_len: usize) -> bool {
+    if legal_len <= 1 {
+        return false;
+    }
+    let ex: Value = serde_json::from_str(explain).expect("explain json");
+    if ex.get("mulligan").is_some() {
+        return false;
+    }
+    if ex.get("kill").is_some() || ex.get("tkill").is_some() {
+        return false;
+    }
+    ex["nodes"].as_u64().unwrap_or(0) > 0
+}
+
 #[cfg_attr(
     debug_assertions,
     ignore = "release only: the ci job runs it in its release step"
@@ -430,42 +559,23 @@ fn builtin_order_matches_file_on_review_and_self_play() {
         assert_eq!(from_builtin.explain, from_file.explain, "explain");
     }
 
-    let decks = ["basic-forest", "royal-nattui"];
-    let mut decisions = 0usize;
-    for deck in decks {
-        let path = repo_root().join(format!("oracle/decks/{deck}.json"));
-        let deck_v: Value = serde_json::from_str(&fs::read_to_string(path).expect("deck")).unwrap();
-        let deck_a = deck_from_json(&deck_v);
-        for seed in 0u64..100 {
-            let st = new_game(
-                &db,
-                GameConfig {
-                    seed: 10_000 + seed,
-                    deck_a: deck_a.clone(),
-                    deck_b: deck_a.clone(),
-                    first: First::A,
-                    opening_hands: None,
-                },
-            )
-            .expect("game");
-            let legal = legal_actions(&db, &st);
-            if legal.len() <= 1 {
-                continue;
-            }
-            let mut rng = policy_rng(20_000 + seed);
-            let mut b = parse_h0(&builtin_spec);
-            let mut f = parse_h0(&file_spec);
-            let ib = b.choose(&db, &st, &legal, &mut rng);
-            let ifile = f.choose(&db, &st, &legal, &mut rng);
-            assert_eq!(ib, ifile);
-            assert_eq!(
-                b.last_value().map(f32::to_bits),
-                f.last_value().map(f32::to_bits)
-            );
-            decisions += 1;
-        }
+    let cases = meta_selfplay_cases(&db);
+    assert!(cases.len() >= 40, "self-play cases={}", cases.len());
+    for case in &cases {
+        let from_builtin = decide_state(&builtin_spec, 1, &db, &case.state, case.seed);
+        let from_file = decide_state(&file_spec, 1, &db, &case.state, case.seed);
+        assert_eq!(from_builtin.idx, from_file.idx, "{}", case.label);
+        assert_eq!(
+            from_builtin.value_bits, from_file.value_bits,
+            "value {}",
+            case.label
+        );
+        assert_eq!(
+            from_builtin.explain, from_file.explain,
+            "explain {}",
+            case.label
+        );
     }
-    assert!(decisions >= 200, "self-play decisions={decisions}");
 }
 
 #[cfg_attr(
@@ -708,6 +818,135 @@ fn zero_residual_mlp_order_matches_v53_file() {
             serde_json::from_str(from_zero.explain.as_ref().expect("explain")).unwrap();
         assert_eq!(ex_zero["nodes"], ex_v53["nodes"], "nodes");
     }
+}
+
+#[test]
+fn order_v59_builtin_names_and_round_trip() {
+    let h_v59 = parse_h0("h0:order=h0-order-v59");
+    assert!(std::sync::Arc::ptr_eq(
+        h_v59.order.as_ref().expect("order"),
+        &arena_engine::builtin_order_v59(),
+    ));
+    let h_v53 = parse_h0("h0:order=h0-order-v53");
+    assert!(std::sync::Arc::ptr_eq(
+        h_v53.order.as_ref().expect("order"),
+        &arena_engine::builtin_order(),
+    ));
+    let h_oo = parse_h0("h0:oorder=h0-order-v53");
+    assert!(std::sync::Arc::ptr_eq(
+        h_oo.oorder_net.as_ref().expect("oorder"),
+        &arena_engine::builtin_order(),
+    ));
+    let h_same = parse_h0("h0:order=h0-order-v59,oorder=h0-order-v59");
+    assert!(std::sync::Arc::ptr_eq(
+        h_same.order.as_ref().expect("order"),
+        h_same.oorder_net.as_ref().expect("oorder"),
+    ));
+    let rt = AnyPolicy::parse_spec("h0:order=h0-order-v59,oorder=h0-order-v53").unwrap();
+    assert_eq!(rt.spec(), "h0:order=h0-order-v59,oorder=h0-order-v53");
+}
+
+#[test]
+fn h0_order_v59_file_is_sweep_59() {
+    let raw = fs::read_to_string(crate_dir().join("models/h0-order-v59.json")).expect("v59 file");
+    let trimmed = raw.trim_end_matches(&['\r', '\n'][..]);
+    assert_eq!(trimmed.len(), 2_141_245);
+    assert_eq!(fnv1a64(trimmed.as_bytes()), 0x0452_0aa2_fc66_a8e1);
+}
+
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
+#[test]
+fn order_v59_matches_file_on_review_and_self_play() {
+    let db = load_recorded_db();
+    let v59 = h0_order_v59_path();
+    let v53 = h0_order_v53_path();
+    let name_spec = format!("{SERVED_RELEASE},order=h0-order-v59,oorder=h0-order-v53");
+    let file_spec = format!("{SERVED_RELEASE},order={v59},oorder={v53}");
+    let legacy_spec = format!("{SERVED_RELEASE},order=builtin,oorder=1");
+
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let from_file = decide(&file_spec, 1, &db, &cap, m.ply, seed);
+        let from_name = decide(&name_spec, 1, &db, &cap, m.ply, seed);
+        assert_eq!(
+            from_name.idx, from_file.idx,
+            "{}/{}@{}",
+            m.review, m.game, m.ply
+        );
+        assert_eq!(from_name.value_bits, from_file.value_bits, "value");
+        assert_eq!(from_name.explain, from_file.explain, "explain");
+    }
+
+    let oopen_name = format!("{name_spec},oopen=1,onext=40");
+    let oopen_file = format!("{file_spec},oopen=1,onext=40");
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let from_file = decide(&oopen_file, 1, &db, &cap, m.ply, seed);
+        let from_name = decide(&oopen_name, 1, &db, &cap, m.ply, seed);
+        assert_eq!(
+            from_name.idx, from_file.idx,
+            "oopen {}/{}@{}",
+            m.review, m.game, m.ply
+        );
+        assert_eq!(from_name.value_bits, from_file.value_bits, "value oopen");
+        assert_eq!(from_name.explain, from_file.explain, "explain oopen");
+    }
+
+    let mut v59_differs_from_v53 = false;
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let v59_out = decide(&name_spec, 1, &db, &cap, m.ply, seed);
+        let v53_out = decide(&legacy_spec, 1, &db, &cap, m.ply, seed);
+        if v59_out.explain != v53_out.explain {
+            v59_differs_from_v53 = true;
+            break;
+        }
+    }
+    assert!(
+        v59_differs_from_v53,
+        "h0-order-v59 explain should differ from order=builtin,oorder=1 on some review moment"
+    );
+
+    let cases = meta_selfplay_cases(&db);
+    assert!(cases.len() >= 40, "self-play cases={}", cases.len());
+    let mut searched = 0usize;
+    for case in &cases {
+        let legal_len = legal_actions(&db, &case.state).len();
+        let from_name = decide_state(&name_spec, 1, &db, &case.state, case.seed);
+        let from_file = decide_state(&file_spec, 1, &db, &case.state, case.seed);
+        assert_eq!(from_name.idx, from_file.idx, "{}", case.label);
+        assert_eq!(
+            from_name.value_bits, from_file.value_bits,
+            "value {}",
+            case.label
+        );
+        assert_eq!(
+            from_name.explain, from_file.explain,
+            "explain {}",
+            case.label
+        );
+        if from_name
+            .explain
+            .as_ref()
+            .is_some_and(|e| explain_used_search(e, legal_len))
+        {
+            searched += 1;
+        }
+    }
+    assert!(
+        searched * 2 >= cases.len(),
+        "expected most self-play decisions through search, searched={searched} of {}",
+        cases.len()
+    );
 }
 
 #[test]
