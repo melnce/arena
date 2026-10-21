@@ -26,9 +26,9 @@ pub use h0::job::{
     kill_det, kill_roll, world, H0Job, JobStep, KillDetOutcome, KillRollOutcome, WorldOutcome,
 };
 pub use h0::{
-    builtin_mulligan, builtin_net, builtin_order, fuse_completion_partner_sets, Alloc, Deal, Info,
-    MullMode, SearchStats, ValueVersion, Weights, Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME,
-    BUILTIN_ORDER_NAME, H0,
+    builtin_mulligan, builtin_net, builtin_order, builtin_order_by_name, builtin_order_v59,
+    fuse_completion_partner_sets, Alloc, Deal, Info, MullMode, SearchStats, ValueVersion, Weights,
+    Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, BUILTIN_ORDER_NAME, BUILTIN_ORDER_V59_NAME, H0,
 };
 pub use mulligan::{
     deck_fingerprint_counts, deck_fingerprint_player, mulligan_seat, DeckMulligan, MulliganTable,
@@ -805,8 +805,8 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
         }
     }
     if let Some(path) = order_path {
-        if path == "builtin" {
-            h.order = Some(crate::policy::h0::builtin_order());
+        if let Some(net) = crate::policy::h0::builtin_order_by_name(&path) {
+            h.order = Some(net);
             h.order_path = Some(path);
         } else if h.net_path.as_deref() == Some(path.as_str()) {
             h.order = h.net.clone();
@@ -817,8 +817,8 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
         }
     }
     if let Some(path) = oorder_model_path {
-        if path == "builtin" {
-            h.oorder_net = Some(crate::policy::h0::builtin_order());
+        if let Some(net) = crate::policy::h0::builtin_order_by_name(&path) {
+            h.oorder_net = Some(net);
             h.oorder_path = Some(path);
         } else if h.order_path.as_deref() == Some(path.as_str()) {
             h.oorder_net = h.order.clone();

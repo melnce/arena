@@ -674,8 +674,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
 | `value` | `net` (built-in `h0-linear-v4`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
 | `net` | — | path to a `net.json` overriding the built-in model |
-| `order` | — | `builtin` (= embedded `h0-order-v53`, sweep 53 pooled 0.540 [0.520, 0.559] / +27.7 Elo vs the same spec without ordering on 16 meta decks) or path to a second `net.json` used only where search compares one-step values to pick or rank moves (beam children, fuse completions, greedy turn finish, pending choices). Encoding-3 `residual` order files are supported. Line scores, transposition leaves, and holdback/lethal paths still use the leaf (`net` / built-in). Native path like `net` |
-| `oorder` | 0 | `0` (default) or `1`: with `order=`, `1` also orders the opponent model's greedy picks (`val_for ≠ search_me` in move ordering) and `odepth≥1` beam children; ignored without `order`. `oorder=<model>` (`builtin` or a `net.json` path, same forms as `order=`) sets a **separate** ordering model for the opponent side only: bot picks still use `order=` when set, otherwise the leaf; opponent picks use `<model>` when set, otherwise the leaf. Examples: `order=A,oorder=1` — both sides use `A`; `order=A,oorder=B` — bot uses `A`, opponent uses `B`; `oorder=B` without `order=` — bot uses the leaf, opponent uses `B` |
+| `order` | — | `builtin` (= `h0-order-v53`), `h0-order-v53`, `h0-order-v59` (served bot's own turn since brief YA), or path to a second `net.json` — a **name is matched before a path**. Used only where search compares one-step values to pick or rank moves (beam children, fuse completions, greedy turn finish, pending choices). Encoding-3 `residual` order files are supported. Line scores, transposition leaves, and holdback/lethal paths still use the leaf (`net` / built-in). Native path like `net` |
+| `oorder` | 0 | `0` (default) or `1`: with `order=`, `1` also orders the opponent model's greedy picks (`val_for ≠ search_me` in move ordering) and `odepth≥1` beam children; ignored without `order`. `oorder=<model>` (`builtin`, `h0-order-v53`, `h0-order-v59`, or a `net.json` path — name before path, same forms as `order=`) sets a **separate** ordering model for the opponent side only: bot picks still use `order=` when set, otherwise the leaf; opponent picks use `<model>` when set, otherwise the leaf. Examples: `order=A,oorder=1` — both sides use `A`; `order=A,oorder=B` — bot uses `A`, opponent uses `B`; `oorder=B` without `order=` — bot uses the leaf, opponent uses `B` |
 | `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
 | `w_earth` | 0.35 | v1: saturated earth sigils (cap 6) |
 | `w_faith` | 0.15 | v1: saturated faith (cap 10) |
@@ -1142,7 +1142,7 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40`) is the spec used whenever the request's `policy` is an
+`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
 exact token `info=all`. The default includes `okill=8` since sweep 48 (2026-10-10).
 `okill=15` since 2026-10-19 (sweep 58, +6 Elo at eight worlds): after each of its lines the bot looks for the opponent's kill also through a Ward-break prefix, slot-freeing trades and play-through lines (plays that only open evolve lines, one follower attack per target); it thinks ≈ 5–7 % longer per decision.
@@ -1163,8 +1163,11 @@ review10 `729410e`). The served bot drops no-op fuses (a fuse whose every
 sweep 42, results `fdd50ab`, pooled 0.567, +46.6 Elo in the Test Subject mirror).
 `oopen=1,onext=40` since 2026-10-15 (sweep 55, +12 Elo at eight worlds): the bot searches the opponent's first action
 of his reply and looks one turn further at the end of each reply line; it thinks ≈ 1.5–2 × as long per decision.
+`order=h0-order-v59,oorder=h0-order-v53` since brief YA (2026-10-21; sweep 59, +9.7 Elo at eight worlds): the bot
+ranks its own moves with a small neural network trained on the search's own scores and keeps the linear
+`h0-order-v53` for its model of the opponent's replies; it thinks ≈ 30 % longer per decision.
 `--cheat` (default
-`h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40`)
+`h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40`)
 is used for h0 variants whose keys include `info=all` (full-information
 sparring); same `tkill` / `tkroll` behaviour. `random` / `first-legal` and any non-h0 spec pass through
 unchanged — the server, not the client, decides H0 strength. `--origins` is
@@ -1234,7 +1237,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40, 28 cpus)` or
+select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40, 28 cpus)` or
 `bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
 selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.

@@ -17,10 +17,10 @@ use common::*;
 
 const S1: &str = "h0:nodes=8000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40";
 
-/// `py/serve.py` `DEFAULT_STRONG` with `nodes=16000,threads=4`.
+/// Pre–brief-YA `py/serve.py` `DEFAULT_STRONG` (`order=builtin,oorder=1`) with `nodes=16000,threads=4`.
 const S2: &str = "h0:nodes=16000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=4,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40";
 
-/// `py/serve.py` `DEFAULT_CHEAT` with `nodes=16000,threads=4`.
+/// Pre–brief-YA `py/serve.py` `DEFAULT_CHEAT` (`order=builtin,oorder=1`) with `nodes=16000,threads=4`.
 const S3: &str = "h0:nodes=16000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=4,lostrank=4000,order=builtin,oorder=1,oopen=1,onext=40";
 
 const S4: &str = "h0";
