@@ -94,7 +94,7 @@ Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before t
 
 The `h0-order-v53` move-ordering model — not a value leaf; same `net.json` format as `h0-linear-v4` (linear on 961 encoding-3 features, 245-id vocab, 13 zones). Used only where search ranks one-step values (`order=`); line scores still use the built-in value leaf.
 
-The engine also accepts `arch: residual` on encoding 3 (linear pre-activation plus a small ReLU MLP residual on zone-wise embeddings; see `docs/engine-api.md` "Learned value"). No committed residual order file ships in this repo yet — train offline and pass `order=<path>` like a linear order net.
+The engine also accepts `arch: residual` on encoding 3 (linear pre-activation plus a small ReLU MLP residual on zone-wise embeddings; see `docs/engine-api.md` "Learned value"). The committed residual order file is [`h0-order-v59`](#h0-order-v59); train others offline and pass `order=<path>` like a linear order net.
 
 ## Provenance
 
@@ -112,7 +112,43 @@ As a value leaf (`net=`) on the same yardstick it screened 0.492 at × 0.74 spee
 
 sha256 `4b3988c9187ae0d5782ab0600b8e2308760fb530a0fb7012a84a7a1d1ca9328c`
 
-Reach it with `order=builtin` (embedded like `h0-linear-v4`). The browser's Full-strength bot and `py/serve.py` defaults use `order=builtin,oorder=1`.
+Reach it with `order=builtin` or `order=h0-order-v53` (embedded like `h0-linear-v4`). `py/serve.py` defaults and the browser's Full-strength bot use `oorder=h0-order-v53` for the opponent's replies since brief YA; the bot's own turn uses [`h0-order-v59`](#h0-order-v59).
+
+# `h0-order-v59`
+
+The `h0-order-v59` move-ordering model — `arch: residual` on encoding 3 (`docs/engine-api.md` "Learned value"):
+`h0-order-v53`'s linear part unchanged (same features, standardization, vocab and zones) plus a ReLU MLP residual
+with 64 hidden units on the 961 standardized features and an 8-dimensional embedding per card and zone (245-id
+vocab, 13 zones), `scale` 60. Used only where search ranks one-step values; line scores still use the built-in
+value leaf.
+
+## Provenance
+
+Data: the search's per-candidate scores in teach52 (4 096 games), teach54 (2 048) and teach56 (2 048): 2 693 793
+rows, split by game (crc32: training 2 152 770, validation 273 470, test 267 553 rows). Training: listwise softmax on
+each decision's candidates, τ 3, from `h0-order-v53`, 20 epochs, seed 2, best epoch 10 by validation regret (bots
+thread probe `cap57`, trainer `mlp57b.py` — the file's `trained_on.probe` reads `cap57b` — model `M525456-s2`).
+On the test games: regret × 0.797 of `h0-order-v53`'s (teach52 0.809, teach54 0.760, teach56 0.805), top-1 0.624
+(v53 0.589), recall@4 0.894 (0.869).
+
+## Yardstick
+
+Sweep 59 (engine `2e529fb`, results `sweep59/` at `cf0b817`), all 16 meta decks: `order=<this file>,oorder=<h0-order-v53>`
+vs `order=<h0-order-v53>,oorder=1`, both on
+`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1,lostrank=4000,oopen=1,onext=40`:
+
+- main 1 039 / 2 048 = 0.507, reverse 540 / 1 024 = 0.527;
+- **pooled 1 579 / 3 072 = 0.514 [0.496, 0.532], +9.7 Elo** (adopted by the registered rule, ≥ 0.51 on the full
+  final);
+- self-play throughput × 0.937.
+
+On both sides (`oorder=1`) a sibling network (sweep 57, trained without teach56) measured −7.9 Elo: it orders the
+bot's own turn only.
+
+sha256 `fdba85d155738881310d714c24ef987cc253fe21fc6d31ca08066d21600ba346`
+
+Reach it with `order=h0-order-v59` (embedded like `h0-order-v53`). `py/serve.py`'s defaults and the browser's
+Full-strength bot use `order=h0-order-v59,oorder=h0-order-v53` since brief YA.
 
 # `mulligan-v1`
 
