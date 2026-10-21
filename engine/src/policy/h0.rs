@@ -147,6 +147,31 @@ pub fn builtin_order() -> Arc<ValueNet> {
         .clone()
 }
 
+const BUILTIN_ORDER_V59_JSON: &str = include_str!("../../models/h0-order-v59.json");
+/// Committed name of the served bot's own-turn ordering model (`engine/models/h0-order-v59.json`).
+pub const BUILTIN_ORDER_V59_NAME: &str = "h0-order-v59";
+static BUILTIN_ORDER_V59: OnceLock<Arc<ValueNet>> = OnceLock::new();
+
+/// The built-in `h0-order-v59` move-ordering model, parsed once. A parse failure is a
+/// build defect.
+pub fn builtin_order_v59() -> Arc<ValueNet> {
+    BUILTIN_ORDER_V59
+        .get_or_init(|| {
+            ValueNet::from_json_named(BUILTIN_ORDER_V59_NAME, BUILTIN_ORDER_V59_JSON)
+                .expect("built-in order v59 model parses")
+        })
+        .clone()
+}
+
+/// Resolve a built-in move-ordering model by committed name (`builtin` is `h0-order-v53`).
+pub fn builtin_order_by_name(name: &str) -> Option<Arc<ValueNet>> {
+    match name {
+        "builtin" | BUILTIN_ORDER_NAME => Some(builtin_order()),
+        BUILTIN_ORDER_V59_NAME => Some(builtin_order_v59()),
+        _ => None,
+    }
+}
+
 /// The built-in `mulligan-v3` keep table, parsed once. A parse failure is a
 /// build defect.
 pub fn builtin_mulligan() -> Arc<MulliganTable> {
