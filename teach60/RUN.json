@@ -341,9 +341,21 @@
       "wall_seconds": 13988.6,
       "cpu_seconds": 390486.5,
       "end": "2026-10-22 10:16:20 UTC"
+    },
+    {
+      "start": "2026-10-22 11:53:46 UTC",
+      "workers": 28,
+      "todo": 8192,
+      "engine": "75f087f95e767f72ff7d8fb8ae630431be990efe",
+      "games_per_pair": 48,
+      "games": 8192,
+      "error_games": 0,
+      "wall_seconds": 28143.4,
+      "cpu_seconds": 786054.7,
+      "end": "2026-10-22 19:42:49 UTC"
     }
   ],
-  "games_per_pair": 16,
-  "total_games": 4096,
-  "finished": "2026-10-22 10:16:20 UTC"
+  "games_per_pair": 48,
+  "total_games": 12288,
+  "finished": "2026-10-22 19:42:50 UTC"
 }
