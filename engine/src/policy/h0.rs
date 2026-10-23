@@ -219,6 +219,8 @@ struct Evaluator<'a> {
     opp_order_net: Option<&'a ValueNet>,
     oopen: u32,
     onext: u32,
+    onextwin: u32,
+    onextleaf: bool,
 }
 
 impl Evaluator<'_> {
@@ -453,6 +455,10 @@ pub struct SearchStats {
     pub opp_next_found: u64,
     /// `apply`s spent in the bot-turn finish and next-turn lethal glance.
     pub opp_next_nodes: u64,
+    /// Greedy next bot turns that won (`onextwin` / `onextleaf`, with `onext>0`).
+    pub opp_next_own_wins: u64,
+    /// Reply lines scored after the greedy next bot turn (`onextleaf`, with `onext>0`).
+    pub opp_next_leaf: u64,
 }
 
 impl SearchStats {
@@ -530,6 +536,8 @@ impl SearchStats {
         self.opp_next_checks += other.opp_next_checks;
         self.opp_next_found += other.opp_next_found;
         self.opp_next_nodes += other.opp_next_nodes;
+        self.opp_next_own_wins += other.opp_next_own_wins;
+        self.opp_next_leaf += other.opp_next_leaf;
     }
 }
 
@@ -605,6 +613,13 @@ pub struct H0 {
     /// After a greedy-reply leaf, play the bot's turn greedily and glance for
     /// opponent lethal on the following turn (`odepth=0` only).
     pub onext: u32,
+    /// With `onext>0`: a reply line whose greedy next bot turn wins scores at
+    /// least this value (`0` = off).
+    pub onextwin: u32,
+    /// With `onext>0`: score the line after the bot's greedy next turn (minus
+    /// the leaf from the opponent's side at his turn start) instead of at the
+    /// bot's turn start.
+    pub onextleaf: bool,
     /// Saturation bound on every accumulated value (`wv`). Default `80`
     /// is today's clamp — the same floor a detected opponent lethal
     /// returns (`-wv`).
@@ -742,6 +757,8 @@ impl Default for H0 {
             obeam: 3,
             oopen: 0,
             onext: 0,
+            onextwin: 0,
+            onextleaf: false,
             wv: DEFAULT_WV,
             pess: 0.0,
             tt: true,
@@ -872,6 +889,8 @@ impl H0 {
             },
             oopen: self.oopen,
             onext: self.onext,
+            onextwin: self.onextwin,
+            onextleaf: self.onextleaf,
         }
     }
 
@@ -2374,6 +2393,8 @@ fn fix_horizon_pv_end(track: Option<&mut PvTracker>, cutoff: HorizonCutoff) {
                 && line.end != PvEnd::OppSolver
                 && line.end != PvEnd::OppOpen
                 && line.end != PvEnd::OppNext
+                && line.end != PvEnd::OwnNext
+                && line.end != PvEnd::NextLeaf
             {
                 line.end = horizon_reply_end(cutoff);
             }
@@ -3048,7 +3069,23 @@ fn opp_next_cap_value(
         eval.fuseguard,
         0,
     );
-    if p.winner == Some(me) || acting_player(&p) != me.opponent() || *nodes >= cap {
+    if p.winner == Some(me) {
+        stats.opp_next_nodes += u64::from(*nodes - nodes_start);
+        if eval.onextleaf || eval.onextwin > 0 {
+            stats.opp_next_own_wins += 1;
+        }
+        if eval.onextleaf {
+            return (eval.wv, PvEnd::OwnNext);
+        }
+        if eval.onextwin > 0 {
+            let raised = v.max(eval.onextwin as f32);
+            if raised > v {
+                return (raised, PvEnd::OwnNext);
+            }
+        }
+        return (v, default_end);
+    }
+    if acting_player(&p) != me.opponent() || *nodes >= cap {
         stats.opp_next_nodes += u64::from(*nodes - nodes_start);
         return (v, default_end);
     }
@@ -3058,9 +3095,18 @@ fn opp_next_cap_value(
     let mut scratch = SearchStats::default();
     let found = opp_lethal_sweep(db, &p, me, nodes, cap, &sweep_line, eval, &mut scratch);
     stats.opp_next_nodes += u64::from(*nodes - nodes_start);
+    let base = if eval.onextleaf {
+        -eval.value(&p, me.opponent())
+    } else {
+        v
+    };
     if found {
         stats.opp_next_found += 1;
-        return (v.min(-(onext as f32)), PvEnd::OppNext);
+        return (base.min(-(onext as f32)), PvEnd::OppNext);
+    }
+    if eval.onextleaf {
+        stats.opp_next_leaf += 1;
+        return (base, PvEnd::NextLeaf);
     }
     (v, default_end)
 }

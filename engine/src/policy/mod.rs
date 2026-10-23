@@ -282,6 +282,12 @@ fn h0_spec(h: &H0) -> String {
     if h.onext != def.onext {
         parts.push(format!("onext={}", h.onext));
     }
+    if h.onextwin != def.onextwin {
+        parts.push(format!("onextwin={}", h.onextwin));
+    }
+    if h.onextleaf != def.onextleaf {
+        parts.push(format!("onextleaf={}", u32::from(h.onextleaf)));
+    }
     if !h.olethal {
         parts.push("olethal=0".to_string());
     }
@@ -442,6 +448,8 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.obeam == b.obeam
         && a.oopen == b.oopen
         && a.onext == b.onext
+        && a.onextwin == b.onextwin
+        && a.onextleaf == b.onextleaf
         && a.olethal == b.olethal
         && a.oevo == b.oevo
         && a.okill == b.okill
@@ -560,6 +568,14 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
             "obeam" => h.obeam = parse_num(val)?,
             "oopen" => h.oopen = parse_num(val)?,
             "onext" => h.onext = parse_num(val)?,
+            "onextwin" => h.onextwin = parse_num(val)?,
+            "onextleaf" => {
+                h.onextleaf = match val {
+                    "0" => false,
+                    "1" => true,
+                    other => return Err(format!("unknown onextleaf '{other}'")),
+                }
+            }
             "osteps" => h.osteps = parse_num(val)?,
             "olethal" => {
                 h.olethal = match val {

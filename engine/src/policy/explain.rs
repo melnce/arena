@@ -50,6 +50,10 @@ pub enum PvEnd {
     OppOpen,
     /// Greedy reply leaf capped after bot turn + opponent next-turn lethal (`onext>0`).
     OppNext,
+    /// The bot's greedy next turn won (`onextwin` / `onextleaf`, with `onext>0`).
+    OwnNext,
+    /// Scored after the bot's greedy next turn (`onextleaf`, with `onext>0`).
+    NextLeaf,
     OppLethal,
     /// Opponent reply scored through bounded [`forced_lethal`] (`olsolve>0`).
     OppSolver,
