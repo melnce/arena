@@ -581,9 +581,9 @@ fn drive_job(spec: &str, db: &arena_engine::CardDb, st: &State, seed: u64) -> De
             JobStep::Worlds { budgets } => {
                 let k = budgets.len();
                 let mut outs = Vec::with_capacity(k);
-                for r in 0..k {
+                for (r, budget) in budgets.iter().enumerate() {
                     outs.push(serde_round(
-                        &world(db, st, spec, seed, r, budgets[r]).expect("world"),
+                        &world(db, st, spec, seed, r, *budget).expect("world"),
                     ));
                 }
                 step = job.finish(db, &outs).expect("finish");
