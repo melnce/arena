@@ -458,6 +458,29 @@ fn candidate_aggregates(explain: &str) -> Vec<f32> {
         .collect()
 }
 
+/// `onextleaf=1` shifted at least one `root_agg` vs keys-off, with no greedy next-turn win
+/// (`opp_next_own_wins == 0`) on this decision.
+fn onextleaf_value_shift_without_own_win(
+    db: &arena_engine::CardDb,
+    base: &str,
+    with_leaf: &str,
+    st: &State,
+    seed: u64,
+) -> bool {
+    let mut h0 = parse_h0(with_leaf);
+    h0.threads = 1;
+    let legal = legal_actions(db, st);
+    let mut rng = policy_rng(seed);
+    h0.choose(db, st, &legal, &mut rng);
+    if h0.stats.opp_next_own_wins != 0 {
+        return false;
+    }
+    let off = decide_state(base, db, st, seed);
+    let on = decide_state(with_leaf, db, st, seed);
+    candidate_aggregates(off.explain.as_ref().expect("explain off"))
+        != candidate_aggregates(on.explain.as_ref().expect("explain on"))
+}
+
 fn explain_has_end(explain: &str, end: &str) -> bool {
     let v: Value = serde_json::from_str(explain).expect("explain json");
     v["candidates"]
@@ -740,6 +763,7 @@ fn onextleaf_acts_on_review_moments() {
     let mut leaf_hits = 0u64;
     let mut agg_diff = false;
     let mut saw_next_leaf = false;
+    let mut value_shift_on_review = false;
     for m in REVIEW_MOMENTS {
         let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
         let cap: Value = serde_json::from_str(&raw).expect("json");
@@ -751,6 +775,9 @@ fn onextleaf_acts_on_review_moments() {
         let mut rng = policy_rng(seed);
         h0.choose(&db, &st, &legal, &mut rng);
         leaf_hits += h0.stats.opp_next_leaf;
+        if onextleaf_value_shift_without_own_win(&db, base, &with_leaf, &st, seed) {
+            value_shift_on_review = true;
+        }
         let off = decide_state(base, &db, &st, seed);
         let on = decide_state(&with_leaf, &db, &st, seed);
         let a0 = candidate_aggregates(off.explain.as_ref().expect("explain off"));
@@ -773,6 +800,42 @@ fn onextleaf_acts_on_review_moments() {
             }
         }
     }
+    let mut value_shift_without_own_win = value_shift_on_review;
+    if !value_shift_on_review {
+        for case in meta_selfplay_cases(&db) {
+            if onextleaf_value_shift_without_own_win(&db, base, &with_leaf, &case.state, case.seed)
+            {
+                value_shift_without_own_win = true;
+                assert!(
+                    onextleaf_value_shift_without_own_win(
+                        &db,
+                        base,
+                        &with_leaf,
+                        &case.state,
+                        case.seed,
+                    ),
+                    "pinned self-play case {} seed={} must qualify",
+                    case.label,
+                    case.seed,
+                );
+                break;
+            }
+        }
+    }
+    // Pinned review moment (YB-1): first in `REVIEW_MOMENTS` that shifts `root_agg` with
+    // `opp_next_own_wins == 0` on the served stack with `onextleaf=1`.
+    let pin = &REVIEW_MOMENTS[0];
+    let pin_raw = fs::read_to_string(review_fixture(pin.review, pin.game)).expect("review");
+    let pin_cap: Value = serde_json::from_str(&pin_raw).expect("json");
+    let pin_seed = policy_seed(&pin_cap, pin.ply);
+    let pin_st = replay_capture(&db, &pin_cap, pin.ply);
+    assert!(
+        onextleaf_value_shift_without_own_win(&db, base, &with_leaf, &pin_st, pin_seed),
+        "pinned review {}/{}@{} must shift root_agg without opp_next_own_wins",
+        pin.review,
+        pin.game,
+        pin.ply
+    );
     assert!(leaf_hits > 0, "opp_next_leaf must be > 0 on review moments");
     assert!(
         agg_diff,
@@ -781,6 +844,10 @@ fn onextleaf_acts_on_review_moments() {
     assert!(
         saw_next_leaf,
         "at least one explain line must end next_leaf or own_next"
+    );
+    assert!(
+        value_shift_without_own_win,
+        "need onextleaf root_agg shift with opp_next_own_wins==0 (review or self-play scan)"
     );
 }
 
