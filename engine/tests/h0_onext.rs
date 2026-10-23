@@ -572,9 +572,8 @@ fn drive_job(spec: &str, db: &arena_engine::CardDb, st: &State, seed: u64) -> De
                     );
                     step = job.provide_kill_roll(db, out).expect("roll");
                 } else {
-                    let out = serde_round(
-                        &arena_engine::kill_det(db, st, spec, seed).expect("kill_det"),
-                    );
+                    let out =
+                        serde_round(&arena_engine::kill_det(db, st, spec, seed).expect("kill_det"));
                     step = job.provide_kill_det(db, out).expect("det");
                 }
             }
@@ -605,7 +604,9 @@ fn onext_spec() {
     let leaf = AnyPolicy::parse_spec("h0:onext=40,onextleaf=1").unwrap();
     assert_eq!(leaf.spec(), "h0:onext=40,onextleaf=1");
     assert_eq!(
-        AnyPolicy::parse_spec("h0:onext=40,onextleaf=0").unwrap().spec(),
+        AnyPolicy::parse_spec("h0:onext=40,onextleaf=0")
+            .unwrap()
+            .spec(),
         "h0:onext=40"
     );
     assert!(AnyPolicy::parse_spec("h0:onextleaf=2").is_err());
@@ -681,11 +682,7 @@ fn onextwin_acts_on_self_play_scan() {
         let cap: Value = serde_json::from_str(&raw).expect("json");
         let seed = policy_seed(&cap, m.ply);
         let st = replay_capture(&db, &cap, m.ply);
-        scan_cases.push((
-            st,
-            seed,
-            format!("{}/{}@{}", m.review, m.game, m.ply),
-        ));
+        scan_cases.push((st, seed, format!("{}/{}@{}", m.review, m.game, m.ply)));
     }
     for case in meta_selfplay_cases(&db) {
         scan_cases.push((case.state.clone(), case.seed, case.label.clone()));
@@ -711,14 +708,13 @@ fn onextwin_acts_on_self_play_scan() {
         }
     }
     let (state, seed, label) = hit.expect("need opp_next_own_wins with own_next in explain");
-    let case = SelfPlayCase {
-        label,
-        state,
-        seed,
-    };
+    let case = SelfPlayCase { label, state, seed };
     let off = decide_state(base, &db, &case.state, case.seed);
     let on = decide_state(&with_win, &db, &case.state, case.seed);
-    assert!(explain_has_end(on.explain.as_ref().expect("explain"), "own_next"));
+    assert!(explain_has_end(
+        on.explain.as_ref().expect("explain"),
+        "own_next"
+    ));
     let agg_off = candidate_aggregates(off.explain.as_ref().expect("explain off"));
     let agg_on = candidate_aggregates(on.explain.as_ref().expect("explain on"));
     assert_eq!(agg_off.len(), agg_on.len());
@@ -729,7 +725,10 @@ fn onextwin_acts_on_self_play_scan() {
             raised = true;
         }
     }
-    assert!(raised, "onextwin must raise at least one candidate aggregate");
+    assert!(
+        raised,
+        "onextwin must raise at least one candidate aggregate"
+    );
 }
 
 #[test]
@@ -775,7 +774,10 @@ fn onextleaf_acts_on_review_moments() {
         }
     }
     assert!(leaf_hits > 0, "opp_next_leaf must be > 0 on review moments");
-    assert!(agg_diff, "onextleaf must change a root aggregate on review moments");
+    assert!(
+        agg_diff,
+        "onextleaf must change a root aggregate on review moments"
+    );
     assert!(
         saw_next_leaf,
         "at least one explain line must end next_leaf or own_next"
@@ -795,7 +797,11 @@ fn onext_own_keys_job_matches_choose() {
             let st = replay_capture(&db, &cap, m.ply);
             let choose = decide_state(&spec, &db, &st, seed);
             let job = drive_job(&spec, &db, &st, seed);
-            assert_eq!(job.idx, choose.idx, "{spec} {}/{}@{}", m.review, m.game, m.ply);
+            assert_eq!(
+                job.idx, choose.idx,
+                "{spec} {}/{}@{}",
+                m.review, m.game, m.ply
+            );
             assert_eq!(job.value_bits, choose.value_bits, "value");
         }
     }
