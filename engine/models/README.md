@@ -88,7 +88,42 @@ Training: `py/train_value.py --data results/net10/data-e0 results/net10/data-e10
 
 sha256 `76685509ff4aef49e34ae37793385d40b477d0756b52141299300f4cb85d8c95`
 
-Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
+Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v64`](#h0-value-v64) since brief YC. Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
+
+# `h0-value-v64`
+
+The `h0-value-v64` value model (the leaf) — `arch: residual` on encoding 3 (`docs/engine-api.md` "Learned value"):
+`h0-linear-v4`'s linear part unchanged (same features, standardization, vocab and zones) plus a ReLU MLP residual
+with 32 hidden units on the 961 standardized features and an 8-dimensional embedding per card and zone (13 zones),
+`scale` 60. Its residual is the trained network's halved — the pre-activation is `h0-linear-v4`'s plus ½ × the network's
+residual (`w2`, `b2` scaled by 0.5: `trained_on.shrink` 0.5); sweep 64 screened the full network too (0.549
+against this file's 0.578) and sent this one to the final.
+
+## Provenance
+
+Data: every search decision with two or more scored candidates of the box's teach52 / 54 / 56 / 57 / 59 / 60 / 61 /
+62 games (32 768 games of the served search, 2.2 M states from both seats), each encoded from the decider's side
+with the decider's result (won / lost) as the target, split by game (crc32: training 1 774 682, validation 227 736,
+test 222 743 states). Training: the squared error of `60·tanh(pre)` against `60 × result` (`h0-linear-v4`'s own
+target), AdamW lr 1e-4, weight decay 1e-3, a moving average of the weights (one epoch), best epoch 3 of 4 by
+validation (bots thread probe `rb64`, trainer `train64.py` — the file's `trained_on.probe` reads `train64` — model
+`O8-h32`). On the test games (3 279): at turn starts (where the search uses the leaf) this file's Brier
+score is 0.1982, the full network's 0.1934, `h0-linear-v4`'s 0.2170.
+
+## Yardstick
+
+Sweep 64 (engine `d49783c`, results `sweep64/` at `19da5cf`), all 16 meta decks: `net=<this file>` vs
+the built-in `h0-linear-v4`, both on
+`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40`:
+
+- screen 296 / 512 = 0.578 (the full network 281 / 512 = 0.549);
+- final main 1 410 / 2 560 = 0.551, reverse 826 / 1 536 = 0.538, **pooled 2 236 / 4 096 = 0.546 [0.531, 0.561], +32.0 Elo** (adopted by the registered rule, ≥ 0.51);
+- self-play throughput × 0.816 (longer games: 94.3 actions against 89.2).
+
+sha256 `df4dd3ccdfa582e7cddaa6ee1fd831751661d7b2e61d6f31a1a44a8cc83846bb`
+
+Reach it with `net=h0-value-v64` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
+Full-strength bot score their lines with it since brief YC.
 
 # `h0-order-v53`
 

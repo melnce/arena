@@ -555,12 +555,12 @@ Any subset of the H0 keys; omitted keys take [`H0::default`].
 `k` = `determinizations`, `nodes` = `node_cap`. `"h0"` is
 `H0::default()`; `"h0-fast"` is `H0::fast()`. Extra keys: `value=v0|v1|net`
 (default `net` = the built-in `h0-linear-v4`; `value=v0` is the
-hand-written leaf the bot used before this default), `net=<path>`
+hand-written leaf the bot used before this default), `net=<name|path>`
 (override with `net=engine/models/h0-linear-v3.json` for the previous leaf;
 `net=engine/models/h0-linear-v2.json` for the v2 leaf;
 `net=engine/models/h0-linear-v1.json` for the v1 leaf),
 (overrides the built-in; only meaningful with `value=net`;
-`h0:net=<path>` alone means `h0:value=net,net=<path>`; the path
+`h0:net=<name|path>` alone means `h0:value=net,net=<name|path>`; the path
 may not contain commas), `odepth=` / `obeam=` / `oopen=` / `onext=` (opponent model; defaults `0` / `3` / `0` / `0`),
 `olethal=0|1` (cheap opponent-lethal sweep on the greedy path; default `1`;
 `olethal=0` restores the pre-flip greedy path; ignored when `odepth≥1`),
@@ -638,7 +638,7 @@ sends back slot `i` iff bit `i` is set, `i < hand length`, at most 4
 — deterministic for a seed; `<path>` loads a keep table at parse time
 like `net=`). `Err` names the offending token. `AnyPolicy::spec` is the
 canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
-`value=v1` or `value=net,net=<path>` — the built-in net is not printed,
+`value=v1` or `value=net,net=<name|path>` — the built-in net is not printed,
 non-default `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
 `oevo=0` when the evolve branch is off, non-default `wv`, non-default `pess`, `tt=0` when the table is off, `alloc=root` when the
 allocator is the pre-#46 root-major spend, `info=fair` / `info=draws`
@@ -673,7 +673,7 @@ streams and output as before). `H0` is a determinized search bot:
 | `determinizations` | 4 | opponent-reply samples |
 | `node_cap` | 2000 | `apply` calls per decision (budget ≈ 2 ms) |
 | `value` | `net` (built-in `h0-linear-v4`) | leaf evaluator; `v0` is the hand-written leaf; `v1` adds economy terms |
-| `net` | — | path to a `net.json` overriding the built-in model |
+| `net` | — | `builtin` (= `h0-linear-v4`), `h0-linear-v4`, `h0-value-v64` (the served bot's leaf since brief YC), or path to a `net.json` — a **name is matched before a path** |
 | `order` | — | `builtin` (= `h0-order-v53`), `h0-order-v53`, `h0-order-v59` (served bot's own turn since brief YA), or path to a second `net.json` — a **name is matched before a path**. Used only where search compares one-step values to pick or rank moves (beam children, fuse completions, greedy turn finish, pending choices). Encoding-3 `residual` order files are supported. Line scores, transposition leaves, and holdback/lethal paths still use the leaf (`net` / built-in). Native path like `net` |
 | `oorder` | 0 | `0` (default) or `1`: with `order=`, `1` also orders the opponent model's greedy picks (`val_for ≠ search_me` in move ordering) and `odepth≥1` beam children; ignored without `order`. `oorder=<model>` (`builtin`, `h0-order-v53`, `h0-order-v59`, or a `net.json` path — name before path, same forms as `order=`) sets a **separate** ordering model for the opponent side only: bot picks still use `order=` when set, otherwise the leaf; opponent picks use `<model>` when set, otherwise the leaf. Examples: `order=A,oorder=1` — both sides use `A`; `order=A,oorder=B` — bot uses `A`, opponent uses `B`; `oorder=B` without `order=` — bot uses the leaf, opponent uses `B` |
 | `w_shadows` | 0.12 | v1: saturated shadows (cap 10) |
@@ -1144,7 +1144,7 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40`) is the spec used whenever the request's `policy` is an
+`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v64`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
 exact token `info=all`. The default includes `okill=8` since sweep 48 (2026-10-10).
 `okill=15` since 2026-10-19 (sweep 58, +6 Elo at eight worlds): after each of its lines the bot looks for the opponent's kill also through a Ward-break prefix, slot-freeing trades and play-through lines (plays that only open evolve lines, one follower attack per target); it thinks ≈ 5–7 % longer per decision.
@@ -1168,8 +1168,11 @@ of his reply and looks one turn further at the end of each reply line; it thinks
 `order=h0-order-v59,oorder=h0-order-v53` since brief YA (2026-10-21; sweep 59, +9.7 Elo at eight worlds): the bot
 ranks its own moves with a small neural network trained on the search's own scores and keeps the linear
 `h0-order-v53` for its model of the opponent's replies; it thinks ≈ 30 % longer per decision.
+`net=h0-value-v64` since brief YC (2026-10-24; sweep 64, +32 Elo at eight worlds): the bot scores the end of each
+line it reads with a small neural network trained on the results of its own games instead of the linear
+`h0-linear-v4`; it thinks about as long as before.
 `--cheat` (default
-`h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40`)
+`h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v64`)
 is used for h0 variants whose keys include `info=all` (full-information
 sparring); same `tkill` / `tkroll` behaviour. `random` / `first-legal` and any non-h0 spec pass through
 unchanged — the server, not the client, decides H0 strength. `--origins` is
@@ -1239,7 +1242,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40, 28 cpus)` or
+select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v64, 28 cpus)` or
 `bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
 selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.
@@ -1435,19 +1438,20 @@ throughput 1.03×. The search, the determinization, and the opponent model
 stay exactly as they are.
 `value=v0` is the hand-written leaf the bot used before learned defaults
 and is byte-identical to that arithmetic. `h0:value=net` (no path) keeps
-the built-in — it is the same as `"h0"`. `net=<path>` overrides the
-built-in (`h0:net=<path>` alone means `h0:value=net,net=<path>`); use
+the built-in — it is the same as `"h0"`. `net=<name|path>` overrides the
+built-in (`h0:net=<name|path>` alone means `h0:value=net,net=<name|path>`); use
 `net=engine/models/h0-linear-v3.json` for the previous default leaf;
 `net=engine/models/h0-linear-v2.json` for the v2 leaf;
 `net=engine/models/h0-linear-v1.json` for the v1 leaf.
 `net=` with `value=v0` or `value=v1` is a parse error naming both keys
 (`net= requires value=net`). A missing file is a parse error naming the
 path. The path may not contain commas. `spec()` prints nothing for the
-built-in net and `value=net,net=<path>` when a path is set;
+built-in net and `value=net,net=<name|path>` when a path or name is set;
 `h0_fields_eq` compares the path. `names()` is unchanged. The linear
 leaf costs ~6 µs against v0's 0.15 µs (−14 % throughput on v1). The model
-adds ~59 KB to the engine and to the wasm binary; `ValueNet::load` is
-still the only `std::fs` user and is never called from wasm.
+adds ~59 KB to the engine and to the wasm binary; `net=h0-value-v64` is the
+embedded residual leaf the served specs use since brief YC (+1.41 MB);
+`ValueNet::load` is still the only `std::fs` user and is never called from wasm.
 
 ### Optional race block (linear only)
 

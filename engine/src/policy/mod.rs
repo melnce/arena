@@ -26,9 +26,10 @@ pub use h0::job::{
     kill_det, kill_roll, world, H0Job, JobStep, KillDetOutcome, KillRollOutcome, WorldOutcome,
 };
 pub use h0::{
-    builtin_mulligan, builtin_net, builtin_order, builtin_order_by_name, builtin_order_v59,
-    fuse_completion_partner_sets, Alloc, Deal, Info, MullMode, SearchStats, ValueVersion, Weights,
-    Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME, BUILTIN_ORDER_NAME, BUILTIN_ORDER_V59_NAME, H0,
+    builtin_mulligan, builtin_net, builtin_net_by_name, builtin_order, builtin_order_by_name,
+    builtin_order_v59, builtin_value_v64, fuse_completion_partner_sets, Alloc, Deal, Info,
+    MullMode, SearchStats, ValueVersion, Weights, Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME,
+    BUILTIN_ORDER_NAME, BUILTIN_ORDER_V59_NAME, BUILTIN_VALUE_V64_NAME, H0,
 };
 pub use mulligan::{
     deck_fingerprint_counts, deck_fingerprint_player, mulligan_seat, DeckMulligan, MulliganTable,
@@ -130,9 +131,9 @@ impl AnyPolicy {
     /// ([`H0::fast`]) | `"h0:depth=6,beam=4,k=4,nodes=2000"` — any subset of
     /// keys, the rest default; `k` = `determinizations`, `nodes` = `node_cap`.
     /// H0 also accepts `value=v0|v1|net` (default `net` = the built-in
-    /// `h0-linear-v4`), `net=<path>` (overrides the built-in; only
-    /// meaningful with `value=net`; `h0:net=<path>` alone means
-    /// `h0:value=net,net=<path>`; the path may not contain commas; a
+    /// `h0-linear-v4`), `net=<name|path>` (overrides the built-in; only
+    /// meaningful with `value=net`; `h0:net=<name|path>` alone means
+    /// `h0:value=net,net=<name|path>`; the path may not contain commas; a
     /// missing file is a parse error naming the path),
     /// `odepth=` / `obeam=`
     /// (opponent model; `odepth=0` is the greedy line), `olethal=0|1` (cheap
@@ -808,9 +809,14 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
     }
     match (h.value, net_path) {
         (ValueVersion::Net, Some(path)) => {
-            let net = crate::policy::net::ValueNet::load(&path)?;
-            h.net = Some(net);
-            h.net_path = Some(path);
+            if let Some(net) = crate::policy::h0::builtin_net_by_name(&path) {
+                h.net = Some(net);
+                h.net_path = Some(path);
+            } else {
+                let net = crate::policy::net::ValueNet::load(&path)?;
+                h.net = Some(net);
+                h.net_path = Some(path);
+            }
         }
         (ValueVersion::Net, None) => {}
         (ValueVersion::V0 | ValueVersion::V1, None) => {
