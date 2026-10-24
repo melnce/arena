@@ -890,11 +890,9 @@ fn value_v64_builtin_names_and_round_trip() {
         h_triple.net.as_ref().expect("net"),
         h_triple.oorder_net.as_ref().expect("oorder"),
     ));
-    assert!(
-        AnyPolicy::parse_spec("h0:value=v0,net=h0-value-v64")
-            .unwrap_err()
-            .contains("value=net")
-    );
+    assert!(AnyPolicy::parse_spec("h0:value=v0,net=h0-value-v64")
+        .unwrap_err()
+        .contains("value=net"));
     let spec = format!("{SERVED_LEAF_RELEASE},net=h0-value-v64");
     let p = AnyPolicy::parse_spec(&spec).unwrap();
     let p2 = AnyPolicy::parse_spec(&p.spec()).unwrap();
