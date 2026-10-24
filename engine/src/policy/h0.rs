@@ -105,7 +105,7 @@ pub enum ValueVersion {
     V1,
     /// Learned leaf. Search, determinization, and the opponent model
     /// are unchanged; only [`Evaluator::value`] dispatches. Without
-    /// `net=<path>` this is [`builtin_net`].
+    /// `net=<name|path>` this is [`builtin_net`].
     #[default]
     Net,
 }
@@ -129,6 +129,31 @@ pub fn builtin_net() -> Arc<ValueNet> {
                 .expect("built-in value model parses")
         })
         .clone()
+}
+
+const BUILTIN_VALUE_V64_JSON: &str = include_str!("../../models/h0-value-v64.json");
+/// Committed name of the served-bot residual value leaf (`engine/models/h0-value-v64.json`).
+pub const BUILTIN_VALUE_V64_NAME: &str = "h0-value-v64";
+static BUILTIN_VALUE_V64: OnceLock<Arc<ValueNet>> = OnceLock::new();
+
+/// The built-in `h0-value-v64` residual leaf, parsed once. A parse failure is a
+/// build defect.
+pub fn builtin_value_v64() -> Arc<ValueNet> {
+    BUILTIN_VALUE_V64
+        .get_or_init(|| {
+            ValueNet::from_json_named(BUILTIN_VALUE_V64_NAME, BUILTIN_VALUE_V64_JSON)
+                .expect("built-in h0-value-v64 parses")
+        })
+        .clone()
+}
+
+/// Resolve a built-in value leaf by committed name (`builtin`, `h0-linear-v4`, `h0-value-v64`).
+pub fn builtin_net_by_name(name: &str) -> Option<Arc<ValueNet>> {
+    match name {
+        "builtin" | BUILTIN_NET_NAME => Some(builtin_net()),
+        BUILTIN_VALUE_V64_NAME => Some(builtin_value_v64()),
+        _ => None,
+    }
 }
 
 const BUILTIN_ORDER_JSON: &str = include_str!("../../models/h0-order-v53.json");
