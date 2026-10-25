@@ -356,6 +356,13 @@ fn h0_value_v64_path() -> String {
         .to_string()
 }
 
+fn h0_value_v65_path() -> String {
+    repo_root()
+        .join("engine/models/h0-value-v65.json")
+        .display()
+        .to_string()
+}
+
 struct SelfPlayCase {
     label: String,
     state: State,
@@ -949,6 +956,125 @@ fn value_v64_matches_file_on_review_and_self_play() {
     assert!(
         v64_differs_from_linear,
         "h0-value-v64 explain should differ from default leaf on some review moment"
+    );
+
+    let cases = meta_selfplay_cases(&db);
+    assert!(cases.len() >= 40, "self-play cases={}", cases.len());
+    let mut searched = 0usize;
+    for case in &cases {
+        let legal_len = legal_actions(&db, &case.state).len();
+        let from_name = decide_state(&name_spec, 1, &db, &case.state, case.seed);
+        let from_file = decide_state(&file_spec, 1, &db, &case.state, case.seed);
+        assert_eq!(from_name.idx, from_file.idx, "{}", case.label);
+        assert_eq!(
+            from_name.value_bits, from_file.value_bits,
+            "value {}",
+            case.label
+        );
+        assert_eq!(
+            from_name.explain, from_file.explain,
+            "explain {}",
+            case.label
+        );
+        if from_name
+            .explain
+            .as_ref()
+            .is_some_and(|e| explain_used_search(e, legal_len))
+        {
+            searched += 1;
+        }
+    }
+    assert!(
+        searched * 2 >= cases.len(),
+        "expected most self-play decisions through search, searched={searched} of {}",
+        cases.len()
+    );
+}
+
+#[test]
+fn value_v65_builtin_names_and_round_trip() {
+    let h_v65 = parse_h0("h0:net=h0-value-v65");
+    assert!(std::sync::Arc::ptr_eq(
+        h_v65.net.as_ref().expect("net"),
+        &arena_engine::builtin_value_v65(),
+    ));
+    let h_v64 = parse_h0("h0:net=h0-value-v64");
+    assert!(std::sync::Arc::ptr_eq(
+        h_v64.net.as_ref().expect("net"),
+        &arena_engine::builtin_value_v64(),
+    ));
+    assert!(!std::sync::Arc::ptr_eq(
+        h_v64.net.as_ref().expect("net"),
+        &arena_engine::builtin_value_v65(),
+    ));
+    let h_triple = parse_h0("h0:net=h0-value-v65,order=h0-value-v65,oorder=h0-value-v65");
+    assert!(std::sync::Arc::ptr_eq(
+        h_triple.net.as_ref().expect("net"),
+        h_triple.order.as_ref().expect("order"),
+    ));
+    assert!(std::sync::Arc::ptr_eq(
+        h_triple.net.as_ref().expect("net"),
+        h_triple.oorder_net.as_ref().expect("oorder"),
+    ));
+    assert!(AnyPolicy::parse_spec("h0:value=v0,net=h0-value-v65")
+        .unwrap_err()
+        .contains("value=net"));
+    let spec = format!("{SERVED_LEAF_RELEASE},net=h0-value-v65");
+    let p = AnyPolicy::parse_spec(&spec).unwrap();
+    let p2 = AnyPolicy::parse_spec(&p.spec()).unwrap();
+    assert_eq!(p, p2);
+}
+
+#[test]
+fn h0_value_v65_file_is_sweep_65() {
+    let raw = fs::read_to_string(crate_dir().join("models/h0-value-v65.json")).expect("v65 file");
+    let trimmed = raw.trim_end_matches(&['\r', '\n'][..]);
+    assert_eq!(trimmed.len(), 1_406_731);
+    assert_eq!(fnv1a64(trimmed.as_bytes()), 0xd247_d7e9_c232_89cb);
+}
+
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
+#[test]
+fn value_v65_matches_file_on_review_and_self_play() {
+    let db = load_recorded_db();
+    let v65 = h0_value_v65_path();
+    let name_spec = format!("{SERVED_LEAF_RELEASE},net=h0-value-v65");
+    let file_spec = format!("{SERVED_LEAF_RELEASE},net={v65}");
+    let v64_spec = format!("{SERVED_LEAF_RELEASE},net=h0-value-v64");
+
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let from_file = decide(&file_spec, 1, &db, &cap, m.ply, seed);
+        let from_name = decide(&name_spec, 1, &db, &cap, m.ply, seed);
+        assert_eq!(
+            from_name.idx, from_file.idx,
+            "{}/{}@{}",
+            m.review, m.game, m.ply
+        );
+        assert_eq!(from_name.value_bits, from_file.value_bits, "value");
+        assert_eq!(from_name.explain, from_file.explain, "explain");
+    }
+
+    let mut v65_differs_from_v64 = false;
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let v65_out = decide(&name_spec, 1, &db, &cap, m.ply, seed);
+        let v64_out = decide(&v64_spec, 1, &db, &cap, m.ply, seed);
+        if v65_out.explain != v64_out.explain {
+            v65_differs_from_v64 = true;
+            break;
+        }
+    }
+    assert!(
+        v65_differs_from_v64,
+        "h0-value-v65 explain should differ from h0-value-v64 on some review moment"
     );
 
     let cases = meta_selfplay_cases(&db);
