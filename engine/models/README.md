@@ -88,7 +88,7 @@ Training: `py/train_value.py --data results/net10/data-e0 results/net10/data-e10
 
 sha256 `76685509ff4aef49e34ae37793385d40b477d0756b52141299300f4cb85d8c95`
 
-Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v64`](#h0-value-v64) since brief YC. Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
+Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v65`](#h0-value-v65) since brief YE (`h0-value-v64` from brief YC). Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
 
 # `h0-value-v64`
 
@@ -123,7 +123,42 @@ the built-in `h0-linear-v4`, both on
 sha256 `df4dd3ccdfa582e7cddaa6ee1fd831751661d7b2e61d6f31a1a44a8cc83846bb`
 
 Reach it with `net=h0-value-v64` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
-Full-strength bot score their lines with it since brief YC.
+Full-strength bot scored their lines with it from brief YC to brief YE ([`h0-value-v65`](#h0-value-v65) since).
+
+# `h0-value-v65`
+
+The `h0-value-v65` value model (the leaf) — `arch: residual` on encoding 3, the same architecture as
+[`h0-value-v64`](#h0-value-v64): `h0-linear-v4`'s linear part unchanged plus a ReLU MLP residual with 32 hidden
+units on the 961 standardized features and an 8-dimensional embedding per card and zone (13 zones), `scale` 60.
+Its residual is three quarters of the trained network's (`w2`, `b2` scaled by 0.75: `trained_on.shrink` 0.75);
+sweep 65 screened the halved form too (269 / 512 against this file's 270 / 512) and sent this one to the final.
+
+## Provenance
+
+Data: every search decision with two or more scored candidates of the box's teach52 / 54 / 56 / 57 / 59 / 60 / 61 /
+62 / 63 games (36 864 games of the served search, 2.0 M training states from both seats), each encoded from the
+decider's side, split by game (crc32) as for `h0-value-v64`. Targets: TD(λ 0.95) returns instead of the bare
+result — four networks of `h0-value-v64`'s recipe, each trained on three quarters of the training games
+(cross-fitted folds), score the states of the quarter they never saw, and each state's target mixes those values
+of the game's later states with the result at the end. Training: `h0-value-v64`'s recipe (the squared error of
+`60·tanh(pre)`, AdamW lr 1e-4, weight decay 1e-3, a moving average of the weights over one epoch) for 10 epochs on
+those targets (bots thread probe `rb65`, trainer `train65.py`). On the 3 695 held-out games of those sets, at turn
+starts (where the search uses the leaf), Brier score: this file 0.1890, the full network 0.1875, `h0-value-v64`
+0.1973, `h0-linear-v4` 0.2162.
+
+## Yardstick
+
+Sweep 65 (engine `d49783c`, results `sweep65/` at `3fa4c97`), all 16 meta decks: `net=<this file>` vs `h0-value-v64`, both on
+`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40`:
+
+- screen 270 / 512 = 0.527 (the halved network 269 / 512 = 0.525);
+- final main 2 106 / 4 096 = 0.514, reverse 1 047 / 2 048 = 0.511, **pooled 3 153 / 6 144 = 0.513 [0.502, 0.524], +9.2 Elo** (adopted by the registered rule, ≥ 0.51);
+- self-play throughput × 0.997.
+
+sha256 `954ca78066262b462aab433ccd09a702958557e92106cd632e416549d27cbaf0`
+
+Reach it with `net=h0-value-v65` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
+Full-strength bot score their lines with it since brief YE.
 
 # `h0-order-v53`
 
