@@ -26,6 +26,12 @@ const SERVED_RELEASE: &str =
 const SERVED_LEAF_RELEASE: &str =
     "h0:nodes=8000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40";
 
+fn unique_temp(stem: &str, ext: &str) -> PathBuf {
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    std::env::temp_dir().join(format!("{stem}-{}-{n}.{ext}", std::process::id()))
+}
+
 fn review_fixture(review: &str, name: &str) -> PathBuf {
     repo_root()
         .join("py/tests/fixtures")
@@ -54,8 +60,7 @@ fn with_order(spec: &str, order_path: &str, oorder: bool) -> String {
 
 fn order_copy_of_v4_elsewhere() -> PathBuf {
     let src = crate_dir().join("models/h0-linear-v4.json");
-    let mut path = std::env::temp_dir();
-    path.push("h0-order-v4-copy.json");
+    let path = unique_temp("h0-order-v4-copy", "json");
     fs::copy(&src, &path).expect("copy v4");
     path
 }
@@ -84,8 +89,7 @@ fn zero_order_net_path() -> PathBuf {
         }
         linear.insert("b".to_string(), Value::from(0.0));
     }
-    let mut path = std::env::temp_dir();
-    path.push("h0-order-zero-net.json");
+    let path = unique_temp("h0-order-zero-net", "json");
     let mut f = fs::File::create(&path).expect("create temp order net");
     f.write_all(serde_json::to_string(&j).unwrap().as_bytes())
         .expect("write");
@@ -810,8 +814,7 @@ fn oorder_threads_identity_alloc_world() {
 fn zero_residual_mlp_order_matches_v53_file() {
     let db = load_recorded_db();
     let v53 = h0_order_v53_path();
-    let mut zero_path = std::env::temp_dir();
-    zero_path.push("h0-order-zero-residual-mlp.json");
+    let zero_path = unique_temp("h0-order-zero-residual-mlp", "json");
     let tiny =
         fs::read_to_string(repo_root().join("py/tests/fixtures/order_residual/tiny-residual.json"))
             .expect("tiny");
@@ -842,6 +845,7 @@ fn zero_residual_mlp_order_matches_v53_file() {
             serde_json::from_str(from_zero.explain.as_ref().expect("explain")).unwrap();
         assert_eq!(ex_zero["nodes"], ex_v53["nodes"], "nodes");
     }
+    let _ = fs::remove_file(&zero_path);
 }
 
 #[test]

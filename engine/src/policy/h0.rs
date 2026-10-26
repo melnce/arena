@@ -6744,6 +6744,12 @@ mod oorder_pick_side_tests {
     use crate::state::GameConfig;
     use serde_json::Value;
 
+    fn unique_temp(stem: &str, ext: &str) -> std::path::PathBuf {
+        static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        std::env::temp_dir().join(format!("{stem}-{}-{n}.{ext}", std::process::id()))
+    }
+
     fn recorded_db() -> CardDb {
         let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
         let root = manifest.join("..");
@@ -6786,8 +6792,7 @@ mod oorder_pick_side_tests {
             }
             linear.insert("b".to_string(), Value::from(0.0));
         }
-        let mut path = std::env::temp_dir();
-        path.push("h0-oorder-zero-net-unit.json");
+        let path = unique_temp("h0-oorder-zero-net-unit", "json");
         let mut f = fs::File::create(&path).expect("create");
         f.write_all(serde_json::to_string(&j).unwrap().as_bytes())
             .expect("write");

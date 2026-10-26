@@ -9,6 +9,12 @@ use arena_engine::{
 mod common;
 use common::*;
 
+fn unique_temp_dir(stem: &str) -> std::path::PathBuf {
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    std::env::temp_dir().join(format!("{stem}-{}-{n}", std::process::id()))
+}
+
 /// Rulebook: a super-evolve fires both Evolve and Super-Evolve lines unless
 /// the super line says "instead". Bindings share that resolution.
 #[test]
@@ -103,7 +109,7 @@ fn card_db_rejects_ref_with_no_as_on_same_card() {
     let card: Card = serde_json::from_str(&text).unwrap();
     assert_eq!(card.unbound_refs(), vec!["missing".to_string()]);
 
-    let tmp = std::env::temp_dir().join("arena-unbound-ref-load");
+    let tmp = unique_temp_dir("arena-unbound-ref-load");
     let _ = std::fs::remove_dir_all(&tmp);
     std::fs::create_dir_all(&tmp).unwrap();
     std::fs::write(tmp.join("88009990.json"), &text).unwrap();
