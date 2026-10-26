@@ -53,10 +53,10 @@ const STRONG_K16_RELEASE: &str =
     "h0:nodes=8000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=1";
 /// `py/serve.py` `DEFAULT_STRONG` (`oopen`/`onext`) at `nodes=8000`, `threads=1` (slow.yml subset).
 const SERVED_STRONG_OOPEN_ONEXT_RELEASE: &str =
-    "h0:nodes=8000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v65";
+    "h0:nodes=8000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v66";
 /// `py/serve.py` `DEFAULT_CHEAT` (`oopen`/`onext`) at `nodes=8000`, `threads=1` (slow.yml subset).
 const SERVED_CHEAT_OOPEN_ONEXT_RELEASE: &str =
-    "h0:nodes=8000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v65";
+    "h0:nodes=8000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v66";
 #[allow(dead_code)]
 const STRONG_THREADS4: &str =
     "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=8,hbk=16,alloc=world,threads=4";
