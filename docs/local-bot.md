@@ -46,7 +46,7 @@ browser still blocks the request, run the UI with `cd ui && npm run dev`.
 Settings → **Use local bot server when available** (on by default; the
 `?localbot=0` query flag also skips the probe and every `/bot` POST).
 In vs-bot the badge next to the policy select should read something like
-`bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v66, 28 cpus)`. No server → `bot: browser` when idle, or `bot: browser (<running spec>)` during a vs-bot game (e.g. `bot: browser (h0:nodes=6000)`). Menu labels name each bot (Quick / Medium / Full strength / Custom spec…); **Full strength** is `py/serve.py`’s `DEFAULT_STRONG` at build time. When the local server is up, it plays **its** spec for every `h0` menu choice—the hint under the policy select says so.
+`bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v66, 28 cpus)`. No server → `bot: browser` when idle, or `bot: browser (<running spec>)` during a vs-bot game (e.g. `bot: browser (h0:nodes=6000)`). Menu labels name each bot (Quick / Medium / Full strength / Custom spec…); **Full strength** is `py/serve.py`’s `DEFAULT_STRONG` at build time. When the local server is up, it plays **its** spec for every `h0` menu choice—the hint under the policy select says so.
 The default samples sixteen worlds at twice the previous node cap. The served bot
 takes a deterministic kill before searching (`tkill`, up to 10 000 solver
 applies outside the node cap; runbook 32 audit at results `e2c8e1d`) and a
@@ -84,6 +84,10 @@ count. `nodes=64000,k=16` since 2026-10-12 (sweep 50): sixteen sampled worlds in
 time per decision on the same cores. `lostrank=4000` since 2026-10-12 (the owner's tablet games): in a turn where every move loses in every world, the bot re-ranks its moves without the opponent's reply instead of playing the first legal one; at sixteen worlds 4 000 nodes give each world the share 2 000 gave at eight.
 `oopen=1,onext=40` since 2026-10-15 (sweep 55, +12 Elo at eight worlds): the bot searches the opponent's first action
 of his reply and looks one turn further at the end of each reply line; it thinks ≈ 1.5–2 × as long per decision.
+`onext=0` since brief YG (2026-10-26; sweep 67: pooled 2 461 / 4 608 = 0.534, +23.7 Elo [+15.3, +32.2], against the same stack with `onext=40`, at eight
+worlds): with the network leaf the bot no longer finishes its next turn greedily at the end of each reply line to
+look for the opponent's kill after it; the leaf already prices that danger, and the look took about a third of each
+decision. The bot thinks about a quarter less per decision (sweep 67's self-play at eight worlds: × 0.76 per action).
 `order=h0-order-v59,oorder=h0-order-v53` since brief YA (2026-10-21; sweep 59, +9.7 Elo at eight worlds): the bot
 ranks its own moves with a small neural network trained on the search's own scores and keeps the linear
 `h0-order-v53` for its model of the opponent's replies; it thinks ≈ 30 % longer per decision.
@@ -110,7 +114,7 @@ explicit `k=`, it builds the default four roots (same as the fair bot).
 
 Pick it in Settings → vs-bot policy (listed after **h0 (strong)**). The UI
 sends `h0:nodes=6000,info=all` to the server; the server rewrites that to
-its `--cheat` spec (default `h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v66`). Override
+its `--cheat` spec (default `h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v66`). Override
 with e.g. `python py/serve.py --cheat "h0:nodes=32000,info=all"`. The
 `GET /health` payload includes `"cheat": "<spec>"` alongside `"strong"`.
 
@@ -124,7 +128,7 @@ server)`).
 Each decision prints one stdout line:
 
 ```
-bot policy=h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v66 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
+bot policy=h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v66 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
 ```
 
 `hash=ok` means the client's `Game.hash()` matched the replayed
