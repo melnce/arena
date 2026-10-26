@@ -14,6 +14,12 @@ const V3_EXTRA_OFF: usize = arena_engine::encode::LEN_V2;
 const V3_EXTRA_LEN: usize = arena_engine::encode::LEN_V3 - arena_engine::encode::LEN_V2;
 const OPEN_WORLDS: u64 = 8;
 
+fn unique_temp(stem: &str, ext: &str) -> std::path::PathBuf {
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    std::env::temp_dir().join(format!("{stem}-{}-{n}.{ext}", std::process::id()))
+}
+
 fn offset_v3(name: &str) -> usize {
     Observation::LAYOUT_V3_EXTRA
         .iter()
@@ -303,7 +309,7 @@ fn v3_zero_stack_matches_h0_linear_v3() {
     let db = load_db();
     let base = ValueNet::from_json(include_str!("../models/h0-linear-v3.json")).expect("v2");
     let path = h0_linear_v3_path();
-    let tmp = std::env::temp_dir().join("arena-v3-zero-stack.json");
+    let tmp = unique_temp("arena-v3-zero-stack", "json");
     let stacked = write_h0_v3_zero_stack_file(&tmp);
     let stacked_spec = format!("h0:net={}", tmp.display());
     let file_h = parse_h0_v2(&format!("h0:net={path}"));
@@ -551,7 +557,7 @@ fn v3_evaluate_cost_us() {
         seed += 1;
     }
     let v2 = ValueNet::from_json(include_str!("../models/h0-linear-v3.json")).expect("v2");
-    let tmp = std::env::temp_dir().join("arena-v3-zero-stack.json");
+    let tmp = unique_temp("arena-v3-zero-stack", "json");
     let v3 = write_h0_v3_zero_stack_file(&tmp);
     let benches: [(&str, EncodingVersion, &ValueNet); 2] = [
         ("h0-linear-v3 (v2)", EncodingVersion::V2, &v2),
@@ -637,7 +643,7 @@ fn v3_h0_decision_ms() {
         }
         seed += 1;
     }
-    let tmp = std::env::temp_dir().join("arena-v3-zero-stack.json");
+    let tmp = unique_temp("arena-v3-zero-stack", "json");
     write_h0_v3_zero_stack_file(&tmp);
     let stack_spec = format!("h0:net={}", tmp.display());
     let specs = [
