@@ -88,7 +88,7 @@ Training: `py/train_value.py --data results/net10/data-e0 results/net10/data-e10
 
 sha256 `76685509ff4aef49e34ae37793385d40b477d0756b52141299300f4cb85d8c95`
 
-Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v65`](#h0-value-v65) since brief YE (`h0-value-v64` from brief YC). Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
+Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v66`](#h0-value-v66) since brief YF (`h0-value-v64` from brief YC, `h0-value-v65` from brief YE). Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
 
 # `h0-value-v64`
 
@@ -158,7 +158,42 @@ Sweep 65 (engine `d49783c`, results `sweep65/` at `3fa4c97`), all 16 meta decks:
 sha256 `954ca78066262b462aab433ccd09a702958557e92106cd632e416549d27cbaf0`
 
 Reach it with `net=h0-value-v65` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
-Full-strength bot score their lines with it since brief YE.
+Full-strength bot scored their lines with it from brief YE to brief YF ([`h0-value-v66`](#h0-value-v66) since).
+
+# `h0-value-v66`
+
+The `h0-value-v66` value model (the leaf) — `arch: residual` on encoding 3, the same architecture as
+[`h0-value-v65`](#h0-value-v65): `h0-linear-v4`'s linear part unchanged plus a ReLU MLP residual with 32 hidden
+units on the 961 standardized features and an 8-dimensional embedding per card and zone (13 zones), `scale` 60.
+Its residual is three quarters of the trained network's (`w2`, `b2` scaled by 0.75: `trained_on.shrink` 0.75);
+sweep 66 screened the full form too (266 / 512 against this file's 268 / 512) and sent this one to the final.
+
+## Provenance
+
+Trained on the owner's box inside runbook 66 (`fit66.py`), with `h0-value-v65`'s recipe exactly: every search
+decision with two or more scored candidates of the box's teach52 / 54 / 56 / 57 / 59 / 60 / 61 / 62 / 63 / 64 / 65
+games (45 056 games of the served search — teach64 / 65 are the first a network leaf played —, 2.48 M states from
+both seats), each encoded from the decider's side, split by game (crc32). Targets: TD(λ 0.95) returns from four
+cross-fitted networks of `h0-value-v64`'s recipe; then 10 epochs of the squared error of `60·tanh(pre)` (AdamW lr
+1e-4, weight decay 1e-3, a moving average of the weights over one epoch; best epoch 8). On the 4 527 held-out games
+of those sets, at turn starts (where the search uses the leaf), Brier score: this file 0.1890, the full network
+0.1868, `h0-value-v65` 0.1897, `h0-value-v64` 0.1982, `h0-linear-v4` 0.2179.
+
+## Yardstick
+
+Sweeps 66 and 66b (engine `d49783c`, results `sweep66/` at `cc9df7e`, `sweep66b/` at `950a567`), all 16 meta decks:
+`net=<this file>` vs `h0-value-v65`, both on
+`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40`:
+
+- screens 268 / 512 = 0.523 (sweep 66; the full network 266 / 512) and 282 / 512 = 0.551 (66b);
+- finals main 4 121 / 8 192 = 0.503, reverse 2 094 / 4 096 = 0.511, **pooled 6 215 / 12 288 = 0.506 [0.498, 0.514],
+  +4.0 Elo** (sweep 66 alone 0.505 → the confirm run; adopted by the registered rule, both runs combined ≥ 0.505);
+- self-play throughput × 0.958 / × 1.031.
+
+sha256 `facd1ed275de891b5ef6f683aa4c217d945bd3503a70d16b5ccf84763b0f7975`
+
+Reach it with `net=h0-value-v66` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
+Full-strength bot score their lines with it since brief YF.
 
 # `h0-order-v53`
 
