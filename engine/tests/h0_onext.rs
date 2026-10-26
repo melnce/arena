@@ -265,7 +265,7 @@ fn onext_counters() {
 }
 
 const DEFAULT_STRONG: &str =
-    "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v66";
+    "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v66";
 
 const SERVED_STACK_8W: &str =
     "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40";
@@ -642,12 +642,20 @@ fn onext_spec() {
         both.spec()
     );
 
+    assert!(DEFAULT_STRONG.contains(",onext=0,"));
     let parsed = AnyPolicy::parse_spec(DEFAULT_STRONG).unwrap();
     let spec = parsed.spec();
     assert!(!spec.contains("onextwin"));
     assert!(!spec.contains("onextleaf"));
+    assert_eq!(
+        AnyPolicy::parse_spec(DEFAULT_STRONG).unwrap().spec(),
+        AnyPolicy::parse_spec(&DEFAULT_STRONG.replace(",onext=0", ""))
+            .unwrap()
+            .spec()
+    );
     match parsed {
         AnyPolicy::H0(h) => {
+            assert_eq!(h.onext, 0);
             assert_eq!(h.onextwin, 0);
             assert!(!h.onextleaf);
         }

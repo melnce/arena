@@ -1144,7 +1144,7 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v66`) is the spec used whenever the request's `policy` is an
+`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v66`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
 exact token `info=all`. The default includes `okill=8` since sweep 48 (2026-10-10).
 `okill=15` since 2026-10-19 (sweep 58, +6 Elo at eight worlds): after each of its lines the bot looks for the opponent's kill also through a Ward-break prefix, slot-freeing trades and play-through lines (plays that only open evolve lines, one follower attack per target); it thinks ≈ 5–7 % longer per decision.
@@ -1165,6 +1165,10 @@ review10 `729410e`). The served bot drops no-op fuses (a fuse whose every
 sweep 42, results `fdd50ab`, pooled 0.567, +46.6 Elo in the Test Subject mirror).
 `oopen=1,onext=40` since 2026-10-15 (sweep 55, +12 Elo at eight worlds): the bot searches the opponent's first action
 of his reply and looks one turn further at the end of each reply line; it thinks ≈ 1.5–2 × as long per decision.
+`onext=0` since brief YG (2026-10-26; sweep 67: pooled 2 461 / 4 608 = 0.534, +23.7 Elo [+15.3, +32.2], against the same stack with `onext=40`, at eight
+worlds): with the network leaf the bot no longer finishes its next turn greedily at the end of each reply line to
+look for the opponent's kill after it; the leaf already prices that danger, and the look took about a third of each
+decision. The bot thinks about a quarter less per decision (sweep 67's self-play at eight worlds: × 0.76 per action).
 `order=h0-order-v59,oorder=h0-order-v53` since brief YA (2026-10-21; sweep 59, +9.7 Elo at eight worlds): the bot
 ranks its own moves with a small neural network trained on the search's own scores and keeps the linear
 `h0-order-v53` for its model of the opponent's replies; it thinks ≈ 30 % longer per decision.
@@ -1173,7 +1177,7 @@ was +9 Elo against brief YC's `h0-value-v64`, itself +32 Elo against `h0-linear-
 scores the end of each line it reads with a small neural network trained on the results of its own games instead
 of the linear `h0-linear-v4`; it thinks about as long as before.
 `--cheat` (default
-`h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v66`)
+`h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v66`)
 is used for h0 variants whose keys include `info=all` (full-information
 sparring); same `tkill` / `tkroll` behaviour. `random` / `first-legal` and any non-h0 spec pass through
 unchanged — the server, not the client, decides H0 strength. `--origins` is
@@ -1243,7 +1247,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40,net=h0-value-v66, 28 cpus)` or
+select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v66, 28 cpus)` or
 `bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
 selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.
