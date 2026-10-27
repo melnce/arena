@@ -948,6 +948,8 @@ fn hash_pending_play_choices(w: &mut Writer, p: &PendingPlayChoices) {
     w.u32(p.step_idx as u32);
     w.u8(p.controller as u8);
     hash_source(w, &p.source);
+    w.u8(p.played_kind as u8);
+    w.u32(p.played_id);
     w.u32(p.deferred_rx.len() as u32);
     for q in &p.deferred_rx {
         hash_queued(w, q);

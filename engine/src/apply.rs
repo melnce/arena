@@ -1298,9 +1298,11 @@ fn apply_play(
     }
     let play_steps = collect_play_time_steps(db, state, me, body_src, &body_effects);
     if play_steps.is_empty() {
-        flush_play_reactions_ahead(state, play_rx);
+        finish_play_reactions(db, state, me, kind, played_id, play_rx);
     } else {
-        begin_play_time_choices(db, state, me, body_src, play_rx, play_steps, events)?;
+        begin_play_time_choices(
+            db, state, me, body_src, kind, played_id, play_rx, play_steps, events,
+        )?;
     }
     Ok(())
 }
@@ -3728,17 +3730,20 @@ fn play_body_effects(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn begin_play_time_choices(
     db: &CardDb,
     state: &mut State,
     controller: PlayerId,
     source: SourceRef,
+    kind: CardKind,
+    played_id: u32,
     play_rx: Vec<QueuedTrigger>,
     steps: Vec<PlayPickStep>,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
     if steps.is_empty() {
-        flush_play_reactions_ahead(state, play_rx);
+        finish_play_reactions(db, state, controller, kind, played_id, play_rx);
         return Ok(());
     }
     state.pending_play_choices = Some(PendingPlayChoices {
@@ -3747,6 +3752,8 @@ fn begin_play_time_choices(
         step_idx: 0,
         controller,
         source,
+        played_kind: kind,
+        played_id,
     });
     state.play_picks = Some(PlayPickState {
         captures: Vec::new(),
@@ -4065,8 +4072,11 @@ fn complete_play_pick(
     pending.step_idx += 1;
     if pending.step_idx >= pending.steps.len() {
         let play_rx = pending.deferred_rx;
+        let controller = pending.controller;
+        let kind = pending.played_kind;
+        let played_id = pending.played_id;
         state.phase = Phase::Main;
-        flush_play_reactions_ahead(state, play_rx);
+        finish_play_reactions(db, state, controller, kind, played_id, play_rx);
     } else {
         state.pending_play_choices = Some(pending);
         offer_next_play_pick(db, state, events)?;
@@ -4161,6 +4171,48 @@ fn clear_play_pick_state(state: &mut State) {
 /// Fanfare / spell body (crest-then-board). Last Words those reactions
 /// cause (World of Games dying on play) then run via `FlushPlayLastWords`
 /// still before Fanfare; enter reactions stay queued (E34).
+/// E39 / E45: board play reactions flush before Fanfare; crest play reactions on
+/// follower / amulet plays wait on the queue until after the body (unless
+/// `CardDb::as_recorded.crest_play_reactions_first`).
+fn finish_play_reactions(
+    db: &CardDb,
+    state: &mut State,
+    me: PlayerId,
+    kind: CardKind,
+    played_id: u32,
+    play_rx: Vec<QueuedTrigger>,
+) {
+    let defer_crest = kind != CardKind::Spell && !db.as_recorded.crest_play_reactions_first;
+    if !defer_crest {
+        flush_play_reactions_ahead(state, play_rx);
+        return;
+    }
+    let (crest_rx, other_rx): (Vec<_>, Vec<_>) = play_rx
+        .into_iter()
+        .partition(|t| matches!(t.source, SourceRef::Crest { .. }));
+    flush_play_reactions_ahead(state, other_rx);
+    if crest_rx.is_empty() {
+        return;
+    }
+    let subject = state
+        .find_field(me, played_id)
+        .map(|slot| TargetOpt::Slot { player: me, slot });
+    let subject_id = Some(played_id);
+    for t in crest_rx {
+        state.queue.push(QueuedTrigger {
+            category: t.category,
+            entry: t.entry,
+            printed_order: t.printed_order,
+            controller: t.controller,
+            source: t.source,
+            tag: t.tag,
+            effects: t.effects,
+            subject: subject.clone(),
+            subject_id,
+        });
+    }
+}
+
 fn flush_play_reactions_ahead(state: &mut State, mut play_rx: Vec<QueuedTrigger>) {
     if play_rx.is_empty() {
         return;

@@ -682,6 +682,8 @@ pub struct PendingPlayChoices {
     pub step_idx: usize,
     pub controller: PlayerId,
     pub source: SourceRef,
+    pub played_kind: CardKind,
+    pub played_id: u32,
 }
 
 #[derive(Debug, Clone)]

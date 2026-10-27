@@ -15,6 +15,13 @@ use crate::error::LoadError;
 use crate::policy::NeedsTable;
 use crate::support;
 
+/// Recording-time rule overrides (test-only toggles; not part of game snapshots).
+#[derive(Debug, Clone, Default)]
+pub struct AsRecorded {
+    /// Pre–crest-after-Fanfare recordings: crest play reactions flush before the body.
+    pub crest_play_reactions_first: bool,
+}
+
 #[derive(Debug, Clone)]
 pub struct CardDb {
     pub cards: BTreeMap<CardId, Arc<Card>>,
@@ -39,6 +46,8 @@ pub struct CardDb {
     static_crests: FxSet<String>,
     /// State-free resource needs (Pay / Rally / Spellboost / Last Words).
     needs: NeedsTable,
+    #[doc(hidden)]
+    pub as_recorded: AsRecorded,
 }
 
 impl CardDb {
@@ -56,6 +65,7 @@ impl CardDb {
             static_cards: FxSet::default(),
             static_crests: FxSet::default(),
             needs: NeedsTable::default(),
+            as_recorded: AsRecorded::default(),
         }
     }
 
