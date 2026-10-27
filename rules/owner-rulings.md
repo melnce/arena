@@ -780,7 +780,7 @@ A stat modification defines the follower's maximum defense: max = the stat line 
 
 > "WoG says 'whenever you play' so it should die on play and make space."
 
-World of Games (`10503210`) and other "whenever you play …" abilities (crests included) resolve when the card is played, **before** that card's Fanfare or spell text. **Exception (2026-10-27):** crest reactions to a follower or amulet play wait until after Fanfare — see **A crest's reaction to a follower or amulet play waits for its Fanfare — 2026-10-27** below. Official Cygames Q&A on World of Games: _"The only card on my field is a World of Games with a count of 5, and the only enemy card on the field is a Quake Goliath. If I play Divine Thunder, what will World of Games's count be?"_ → _"Its count will be 4."_ Divine Thunder destroys the Goliath; the count still advances. Enter reactions ("whenever … enters the field") still wait until the play sequence finishes.
+World of Games (`10503210`) and other "whenever you play …" abilities (crests included) resolve when the card is played, **before** that card's Fanfare or spell text on **spell** plays (including Accelerate). On **follower / amulet** plays the 2026-10-27 owner observation overrides the "die on play and make space" reading — see **Play reactions to a follower or amulet play wait for its whole Fanfare — 2026-10-27** below. Official Cygames Q&A on World of Games: _"The only card on my field is a World of Games with a count of 5, and the only enemy card on the field is a Quake Goliath. If I play Divine Thunder, what will World of Games's count be?"_ → _"Its count will be 4."_ Divine Thunder destroys the Goliath; the count still advances. Enter reactions ("whenever … enters the field") still wait until the play sequence finishes.
 
 ## World of Games counts either side — 2026-09-10
 
@@ -852,27 +852,27 @@ Supporting source (original Shadowverse effect-processing wiki; no official Cyga
 
 **Measured cases:** Moelle, Gloomy Maiden (`10811130`) + World of Games (`10503210`) at count 1 — the Last Words draws are not candidates for Moelle's Fanfare return. Evolved Imari, Dewdrop (`10574120`) + Sincerity of the Dewdrop (`10573310`) — Little Buddies summoned by Imari's play reaction are not candidates. Flowering Artisan (`10571120`) + a spell that selects an enemy follower — the pick is offered while the target is still alive; if Artisan's damage kills it, that part fizzles. Crest: Majestic Conquest (`crest:10622310`) + an Enhanced card whose text picks an allied follower — the Fearless Soldier it summons is not a candidate. Crest: Yuel & Societte (`crest:10414120`) + a follower with Fanfare and Evolve picks — Fanfare pick first, then Evolve pick. Itsurugi & Taketsumi (`10854110`) mode before play reactions. Spilling Red (`10642310`) — both picks at play, in text order.
 
-**Exception (crest play reactions on follower/amulet plays):** see **A crest's reaction to a follower or amulet play waits for its Fanfare — 2026-10-27** below. Board-sourced play reactions and every reaction to a **spell** play (including Accelerate) still follow pick → play reactions → body.
+**Exception (follower / amulet plays):** see **Play reactions to a follower or amulet play wait for its whole Fanfare — 2026-10-27** below. Every reaction to a **spell** play (including Accelerate) still follows pick → play reactions → body.
 
-## A crest's reaction to a follower or amulet play waits for its Fanfare — 2026-10-27
+## Play reactions to a follower or amulet play wait for its whole Fanfare — 2026-10-27
 
 <!-- rulebook: absorbed #fanfare-and-enter-play-trigger-order -->
 
-> "Bug: Asher & Lydia only destroyed 1 ward instead of 2"
->
-> "maybe the crest behaves differently from his own evolve at 9pp (enhanced)? If he evolves himself at 9pp he destroys 2."
->
 > "Thestae did -3"
+>
+> "Thestae fanfare triggers before WoG counts down"
+>
+> "moelle selects a card first in hand and only then does WoG trigger"
+>
+> "Moelles draw is first"
 
-**Scope.** When the played card is a **follower or amulet** (normal play, Enhance, Crystallize), every `ally_card_played` reaction whose source is a **crest** (`SourceRef::Crest`) still **triggers at the play** — filter, `when`, and `oncePerTurn` are judged and the once-per-turn is consumed at enqueue — but it is **not** flushed ahead of the body. It stays on the trigger queue and resolves **after** the played card's Fanfare / Enhance body and everything that body raises, together with the play's enter reactions, in the queue's normal order (crests before board; same-timing crests in grant order). Its `pick: entering` subject is the **played card**, captured by instance id at the play.
+**Scope.** On a **follower or amulet play** (Normal, Enhance, Crystallize — not Accelerate), every `ally_card_played` reaction from **any** source (crests, faith, field cards such as World of Games, hand cards) still **triggers at the play** — filter, `when`, and `oncePerTurn` are judged at the play — but **resolves only after the played card's whole Fanfare / Enhance body** (every op of that list, and everything those ops resolve along the way). Play-time picks (owner 2026-09-27) still come first; Moelle's return pick happens before World of Games. Then the body runs to completion; then play reactions release with whatever is still queued and resolve in queue order. `pick: entering` is the played card by instance id.
 
-**Unchanged:** reactions whose source is a field or hand card on any play; every reaction to a **spell** play (Accelerate included — official Q&A World of Games / Divine Thunder; Crest: Tico on Mysteria spells; Crest: Majestic Conquest on an Enhanced spell); play-time picks (owner 2026-09-27); E37; E40.
+**Consequence for 2026-09-10.** On follower / amulet plays, World of Games at count 1 no longer breaks **before** the body's summons — its slot is still occupied while multi-op Fanfares run (Enamored Researcher Enhance ×3 lands one copy, then WoG breaks; Last Words draws come after those summons). **Spell** plays keep the 2026-09-10 ruling and the Divine Thunder Q&A.
 
-**Real client (owner, 2026-10-27).** Crest: Yuel & Societte, Dancing Duo (`crest:10414120`) active; play Thestae, Anathema of Distortion (`10714110`, Fanfare: −0/−X where X is this follower's attack). The target lost **3 defense** (owner did not quote exact before/after stats); the crest's evolve came **after** the Fanfare.
+**Real client (owner, 2026-10-27).** Yuel & Societte crest + Thestae: Fanfare −0/−X applied before the crest evolve. World of Games on board: counts down after Thestae's Fanfare, not before. Moelle + World of Games at count 1: hand pick first, then Moelle's Fanfare draw, then World of Games breaks and draws 2.
 
-**Crests affected today:** `crest:10414120` Yuel & Societte, `crest:10974110` Cutthroat, `crest:10554110` Milteo & Luzen (static suppresses allied Fanfares/Enhances; only ordering vs enter reactions can show), `crest:10622310` Majestic Conquest on an Enhanced follower or amulet.
-
-**Pinned:** `engine/tests/crest_play_reaction_order.rs` (`thestae_yuel_crest_x_is_unevolved_attack`, `thestae_cutthroat_crest_x_is_unevolved_attack`, `asher_cutthroat_crest_destroys_the_fanfare_ward`, `owner_capture_asher_game`, `aizeden_cutthroat_crest_evolves_the_played_card`, `majestic_conquest_soldier_after_enhance_body`, `majestic_crest_soldier_before_enhanced_spell_buff_body`, `as_recorded_crest_order_replays_like_main`); capture `captures/2026-10/6750670994633786279-d96c4c62-lr4npoqps2.json` at engine `b110fd1` destroyed only Warden on Fanfare (one enemy Ward); Cutthroat −0/−3 on Thestae and two-destroy Asher line are engine tests on fixture stats (2/10 → 2/7); regressions named in that file and `m2_portal::asher_enhance_granted_ward_is_a_destroy_candidate`.
+**Pinned:** `engine/tests/play_reaction_after_body.rs`; `engine/tests/crest_play_reaction_order.rs`; `m2_wave2::world_of_games_breaks_after_enamored_enhance_summons`; `owner_capture_asher_game` (split replay). Cutthroat / Asher two-destroy lines remain engine fixtures, not owner quotes.
 
 ## Goddess of Starlight (`10502110`) selects as many as it can — 2026-09-18
 
