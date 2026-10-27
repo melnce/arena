@@ -733,6 +733,15 @@
    }
   },
   {
+   "attack": {
+    "player": "a",
+    "attacker_slot": 3,
+    "target": {
+     "slot": 0
+    }
+   }
+  },
+  {
    "end_turn": {
     "player": "a"
    }
@@ -822,8 +831,8 @@
  "winner": "b",
  "final": true,
  "created": "2026-10-27T19:57:12.700Z",
- "updated": "2026-10-27T20:01:10.841Z",
- "finished": "2026-10-27T20:01:10.841Z",
+ "updated": "2026-10-27T20:01:28.244Z",
+ "finished": "2026-10-27T20:01:28.244Z",
  "source": "browser",
  "session_id": "glpgv189s1",
  "bot_meta": [
@@ -1149,6 +1158,72 @@
    "ply": 109,
    "backend": "worker",
    "ms": 10.599999964237213,
+   "value": null
+  },
+  {
+   "ply": 100,
+   "backend": "worker",
+   "ms": 36.69999998807907,
+   "value": null
+  },
+  {
+   "ply": 101,
+   "backend": "worker",
+   "ms": 10.399999976158142,
+   "value": null
+  },
+  {
+   "ply": 102,
+   "backend": "worker",
+   "ms": 7.700000047683716,
+   "value": null
+  },
+  {
+   "ply": 103,
+   "backend": "worker",
+   "ms": 16.30000001192093,
+   "value": null
+  },
+  {
+   "ply": 104,
+   "backend": "worker",
+   "ms": 8.5,
+   "value": null
+  },
+  {
+   "ply": 105,
+   "backend": "worker",
+   "ms": 0.2999999523162842,
+   "value": null
+  },
+  {
+   "ply": 106,
+   "backend": "worker",
+   "ms": 0.5,
+   "value": null
+  },
+  {
+   "ply": 107,
+   "backend": "worker",
+   "ms": 4.800000011920929,
+   "value": null
+  },
+  {
+   "ply": 108,
+   "backend": "worker",
+   "ms": 1.600000023841858,
+   "value": null
+  },
+  {
+   "ply": 109,
+   "backend": "worker",
+   "ms": 2.199999988079071,
+   "value": null
+  },
+  {
+   "ply": 110,
+   "backend": "worker",
+   "ms": 3.5,
    "value": null
   }
  ],
