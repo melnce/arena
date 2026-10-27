@@ -684,6 +684,8 @@ pub struct PendingPlayChoices {
     pub source: SourceRef,
     pub played_kind: CardKind,
     pub played_id: u32,
+    /// `pending_work.len()` before the played card's body was pushed (`apply_play`).
+    pub body_insert_idx: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -827,6 +829,13 @@ pub enum Aftermath {
     /// Games dying on play) run before the played card's Fanfare / spell body.
     /// Enter reactions stay on the queue (E34).
     FlushPlayLastWords,
+    /// E45: play reactions deferred until after the played follower/amulet body.
+    /// `items` are hashed via `w.debug` in `search_key` (not part of snapshots).
+    ReleasePlayReactions {
+        player: PlayerId,
+        played_id: u32,
+        items: Vec<QueuedTrigger>,
+    },
     ContinueTurnStart {
         step: u8,
     },

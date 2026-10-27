@@ -18,8 +18,8 @@ use crate::support;
 /// Recording-time rule overrides (test-only toggles; not part of game snapshots).
 #[derive(Debug, Clone, Default)]
 pub struct AsRecorded {
-    /// Pre–crest-after-Fanfare recordings: crest play reactions flush before the body.
-    pub crest_play_reactions_first: bool,
+    /// Pre–PR-#172 recordings: every play reaction flushed before the played body (E39).
+    pub play_reactions_before_body: bool,
 }
 
 #[derive(Debug, Clone)]

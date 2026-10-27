@@ -950,6 +950,7 @@ fn hash_pending_play_choices(w: &mut Writer, p: &PendingPlayChoices) {
     hash_source(w, &p.source);
     w.u8(p.played_kind as u8);
     w.u32(p.played_id);
+    w.u32(p.body_insert_idx as u32);
     w.u32(p.deferred_rx.len() as u32);
     for q in &p.deferred_rx {
         hash_queued(w, q);
