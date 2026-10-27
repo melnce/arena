@@ -852,6 +852,28 @@ Supporting source (original Shadowverse effect-processing wiki; no official Cyga
 
 **Measured cases:** Moelle, Gloomy Maiden (`10811130`) + World of Games (`10503210`) at count 1 — the Last Words draws are not candidates for Moelle's Fanfare return. Evolved Imari, Dewdrop (`10574120`) + Sincerity of the Dewdrop (`10573310`) — Little Buddies summoned by Imari's play reaction are not candidates. Flowering Artisan (`10571120`) + a spell that selects an enemy follower — the pick is offered while the target is still alive; if Artisan's damage kills it, that part fizzles. Crest: Majestic Conquest (`crest:10622310`) + an Enhanced card whose text picks an allied follower — the Fearless Soldier it summons is not a candidate. Crest: Yuel & Societte (`crest:10414120`) + a follower with Fanfare and Evolve picks — Fanfare pick first, then Evolve pick. Itsurugi & Taketsumi (`10854110`) mode before play reactions. Spilling Red (`10642310`) — both picks at play, in text order.
 
+**Exception (crest play reactions on follower/amulet plays):** see **A crest's reaction to a follower or amulet play waits for its Fanfare — 2026-10-27** below. Board-sourced play reactions and every reaction to a **spell** play (including Accelerate) still follow pick → play reactions → body.
+
+## A crest's reaction to a follower or amulet play waits for its Fanfare — 2026-10-27
+
+<!-- rulebook: absorbed #fanfare-and-enter-play-trigger-order -->
+
+> "Bug: Asher & Lydia only destroyed 1 ward instead of 2"
+>
+> "maybe the crest behaves differently from his own evolve at 9pp (enhanced)? If he evolves himself at 9pp he destroys 2."
+>
+> "Thestae did -3"
+
+**Scope.** When the played card is a **follower or amulet** (normal play, Enhance, Crystallize), every `ally_card_played` reaction whose source is a **crest** (`SourceRef::Crest`) still **triggers at the play** — filter, `when`, and `oncePerTurn` are judged and the once-per-turn is consumed at enqueue — but it is **not** flushed ahead of the body. It stays on the trigger queue and resolves **after** the played card's Fanfare / Enhance body and everything that body raises, together with the play's enter reactions, in the queue's normal order (crests before board; same-timing crests in grant order). Its `pick: entering` subject is the **played card**, captured by instance id at the play.
+
+**Unchanged:** reactions whose source is a field or hand card on any play; every reaction to a **spell** play (Accelerate included — official Q&A World of Games / Divine Thunder; Crest: Tico on Mysteria spells; Crest: Majestic Conquest on an Enhanced spell); play-time picks (owner 2026-09-27); E37; E40.
+
+**Real client (owner, 2026-10-27).** Crest: Yuel & Societte, Dancing Duo (`crest:10414120`) active; play Thestae, Anathema of Distortion (`10714110`, Fanfare: −0/−X where X is this follower's attack). Target ended at **2/7** (−0/−3 from Thestae's unevolved 3 attack); the crest's evolve came **after** the Fanfare. Cutthroat, Fluxblade Convict (`crest:10974110`) + the same line: same −0/−3. Capture `captures/2026-10/6750670994633786279-d96c4c62-lr4npoqps2.json` (engine `b110fd1`, seat a, turn 7): Asher & Lydia + Cutthroat crest — after the Fanfare Ward pick, both enemy Ward followers are destroyed; Asher's own Enhance (9) evolve is still part of his play text and correctly runs after Fanfare.
+
+**Crests affected today:** `crest:10414120` Yuel & Societte, `crest:10974110` Cutthroat, `crest:10554110` Milteo & Luzen (static suppresses allied Fanfares/Enhances; only ordering vs enter reactions can show), `crest:10622310` Majestic Conquest on an Enhanced follower or amulet.
+
+**Pinned:** `engine/tests/crest_play_reaction_order.rs` (`thestae_yuel_crest_x_is_unevolved_attack`, `thestae_cutthroat_crest_x_is_unevolved_attack`, `asher_cutthroat_crest_destroys_the_fanfare_ward`, `owner_capture_asher_game`, `aizeden_cutthroat_crest_evolves_the_played_card`, `majestic_conquest_soldier_after_enhance_body`, `as_recorded_crest_order_replays_like_main`); regressions named in that file and `m2_portal::asher_enhance_granted_ward_is_a_destroy_candidate`.
+
 ## Goddess of Starlight (`10502110`) selects as many as it can — 2026-09-18
 
 <!-- rulebook: pending — "Select N, take as many as you can" not written through to rulebook -->
