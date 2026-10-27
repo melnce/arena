@@ -534,16 +534,58 @@
      "slot": 0
     }
    }
+  },
+  {
+   "end_turn": {
+    "player": "a"
+   }
+  },
+  {
+   "attack": {
+    "attacker_slot": 0,
+    "player": "b",
+    "target": "leader"
+   }
+  },
+  {
+   "play": {
+    "card": "10954120",
+    "hand_pos": 0,
+    "player": "b"
+   }
+  },
+  {
+   "choose": {
+    "option": {
+     "mode": 0
+    },
+    "player": "b"
+   }
+  },
+  {
+   "evolve": {
+    "player": "b",
+    "slot": 1,
+    "super": true
+   }
+  },
+  {
+   "attack": {
+    "attacker_slot": 1,
+    "player": "b",
+    "target": "leader"
+   }
   }
  ],
  "policy": "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v66",
  "strong": "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v66",
  "engine": "b110fd1892b436603bb3079f82b209dbe960f9c5",
  "humanSide": "a",
- "winner": null,
- "final": false,
+ "winner": "b",
+ "final": true,
  "created": "2026-10-27T19:42:39.624Z",
- "updated": "2026-10-27T19:46:58.222Z",
+ "updated": "2026-10-27T19:47:02.774Z",
+ "finished": "2026-10-27T19:47:02.774Z",
  "source": "browser",
  "session_id": "q1j44rwiwj",
  "bot_meta": [
@@ -713,6 +755,36 @@
    "ply": 58,
    "backend": "worker",
    "ms": 66.09999996423721,
+   "value": null
+  },
+  {
+   "ply": 69,
+   "backend": "worker",
+   "ms": 4.199999988079071,
+   "value": null
+  },
+  {
+   "ply": 70,
+   "backend": "worker",
+   "ms": 5.900000035762787,
+   "value": null
+  },
+  {
+   "ply": 71,
+   "backend": "worker",
+   "ms": 2,
+   "value": null
+  },
+  {
+   "ply": 72,
+   "backend": "worker",
+   "ms": 1.9000000357627869,
+   "value": null
+  },
+  {
+   "ply": 73,
+   "backend": "worker",
+   "ms": 3,
    "value": null
   }
  ],
