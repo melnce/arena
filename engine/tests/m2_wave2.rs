@@ -1092,10 +1092,10 @@ fn obsidian_raven_with_no_enemy_follower_still_summons() {
 }
 
 #[test]
-fn world_of_games_dies_on_play_before_enamored_enhance_summons() {
-    // E39 / rune-2 i=68: WoG at 1 on a 3-card board (a 4-cost so the Enhance
-    // matches, plus a filler). Play Enamored Enhance (summon ×3): WoG dies
-    // on play, two Subjects land, Last Words draw before the summons.
+fn world_of_games_breaks_after_enamored_enhance_summons() {
+    // Owner 2026-10-27: WoG ticks after the played follower's whole body. WoG at
+    // 1 on a full board; Enamored Enhance (summon ×3) fills the slot while WoG
+    // still occupies it — one Subject lands, then WoG breaks; Last Words draw 2.
     let db = load_db();
     let mut st = started(&db, 139);
     let me = PlayerId::A;
@@ -1118,7 +1118,7 @@ fn world_of_games_dies_on_play_before_enamored_enhance_summons() {
     drain_choice(&db, &mut st);
     assert!(
         !field_has(&st, me, WORLD),
-        "WoG dies at play time before the Enhance summons"
+        "WoG breaks after the Enhance body"
     );
     let subjects: Vec<_> = st
         .player(me)
@@ -1127,21 +1127,20 @@ fn world_of_games_dies_on_play_before_enamored_enhance_summons() {
         .flatten()
         .filter(|c| c.card.as_str() == SUBJECT)
         .collect();
-    assert_eq!(
-        subjects.len(),
-        2,
-        "two of three Enhance summons land after WoG frees the slot"
-    );
+    assert_eq!(subjects.len(), 1, "one of three summons fits before WoG leaves");
     assert!(
-        subjects.iter().all(|c| c.traits.ward == Some(true)),
-        "Enhance grants Ward to the summons that land"
+        subjects[0].traits.ward == Some(true),
+        "Enhance grants Ward"
     );
     assert_eq!(
         st.player(me).hand.len(),
         hand_before + 2,
-        "Last Words Draw 2 resolve before the summons"
+        "Last Words draws after the summons"
     );
-    assert_eq!(field_count(&st, me), 5);
+    assert_eq!(field_count(&st, me), 4);
+    assert!(field_has(&st, me, "10011130"));
+    assert!(field_has(&st, me, "88001110"));
+    assert!(field_has(&st, me, "10932110"));
 }
 
 #[test]

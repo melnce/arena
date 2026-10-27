@@ -21,7 +21,7 @@ const FEARLESS: &str = "10621110";
 const ENHANCE_BUFF_ALLIES_SPELL: &str = "89209992";
 fn load_recorded_db_live_crest_order() -> CardDb {
     let mut db = load_recorded_db();
-    db.as_recorded.crest_play_reactions_first = false;
+    db.as_recorded.play_reactions_before_body = false;
     db
 }
 
@@ -74,12 +74,43 @@ fn put_crest_countdown(st: &mut State, who: PlayerId, id: &str, cd: i32) {
     });
 }
 
+fn replay_capture_actions(
+    db: &CardDb,
+    cap: &serde_json::Value,
+    st: &mut State,
+    from: usize,
+    to: usize,
+) -> Result<(), (usize, Illegal)> {
+    use arena_engine::{apply_neutral, NeutralAction};
+    use serde_json::Value;
+
+    let actions = cap["actions"].as_array().expect("actions");
+    for (i, step) in actions.iter().enumerate().skip(from).take(to - from) {
+        if step.get("reseed").is_some() {
+            st.reseed(step["reseed"].as_u64().expect("reseed"));
+            continue;
+        }
+        let mut body = serde_json::Map::new();
+        for (k, v) in step.as_object().expect("action object") {
+            if k == "value" || k == "bot_value" {
+                continue;
+            }
+            body.insert(k.clone(), v.clone());
+        }
+        let neu: NeutralAction = serde_json::from_value(Value::Object(body)).expect("action");
+        if let Err(e) = apply_neutral(db, st, &neu) {
+            return Err((i, e));
+        }
+    }
+    Ok(())
+}
+
 fn replay_capture_to_ply(
     db: &CardDb,
     cap: &serde_json::Value,
     n: usize,
 ) -> Result<arena_engine::State, (usize, Illegal)> {
-    use arena_engine::{apply_neutral, new_game, First, GameConfig, NeutralAction};
+    use arena_engine::{new_game, First, GameConfig};
     use serde_json::Value;
     use std::collections::BTreeMap;
 
@@ -119,24 +150,7 @@ fn replay_capture_to_ply(
         },
     )
     .expect("new_game");
-    let actions = cap["actions"].as_array().expect("actions");
-    for (i, step) in actions.iter().take(n).enumerate() {
-        if step.get("reseed").is_some() {
-            st.reseed(step["reseed"].as_u64().expect("reseed"));
-            continue;
-        }
-        let mut body = serde_json::Map::new();
-        for (k, v) in step.as_object().expect("action object") {
-            if k == "value" || k == "bot_value" {
-                continue;
-            }
-            body.insert(k.clone(), v.clone());
-        }
-        let neu: NeutralAction = serde_json::from_value(Value::Object(body)).expect("action");
-        if let Err(e) = apply_neutral(db, &mut st, &neu) {
-            return Err((i, e));
-        }
-    }
+    replay_capture_actions(db, cap, &mut st, 0, n)?;
     Ok(st)
 }
 
@@ -231,14 +245,34 @@ fn asher_cutthroat_crest_destroys_the_fanfare_ward() {
 
 #[test]
 fn owner_capture_asher_game() {
-    // Origin: captures/2026-10/6750670994633786279-d96c4c62-lr4npoqps2.json @ engine b110fd1
-    let db = load_db();
+    // Origin: captures/2026-10/6750670994633786279-d96c4c62-lr4npoqps2.json @ engine b110fd1.
+    // Both seats run World of Games; replay 0–58 under recording play order, then
+    // the Asher play + Fanfare pick on current rules.
     let path = fixtures_dir().join("captures/6750670994633786279-d96c4c62-lr4npoqps2.json");
     let cap: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(&path).expect("capture")).expect("json");
-    let st = replay_capture_to_ply(&db, &cap, 61).expect("replay through Fanfare pick");
+    let db_rec = with_play_reactions_as_recorded(load_db());
+    let mut st = replay_capture_to_ply(&db_rec, &cap, 59).expect("replay through action 58");
+    replay_capture_actions(&load_db(), &cap, &mut st, 59, 61).expect("asher play + pick");
     assert_eq!(field_count(&st, PlayerId::B), 0);
     assert_eq!(st.player(PlayerId::B).leader_defense, 20);
+    let asher = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == ASHER)
+        .expect("asher");
+    assert!(asher.evolved);
+    assert_eq!(asher.attack, 7);
+    assert_eq!(asher.defense, 7);
+    assert_eq!(st.player(PlayerId::A).pp, 2);
+
+    let st61 = replay_capture_to_ply(&db_rec, &cap, 61).expect("full replay under recording order");
+    assert!(
+        field_has(&st61, PlayerId::B, AIZEDEN_ENEMY),
+        "recording order keeps Aizeden on the enemy field through action 60"
+    );
 }
 
 #[test]
@@ -383,7 +417,7 @@ fn as_recorded_crest_order_replays_like_main() {
     const META_AFTER_56: u64 = 0xb467669a5313ed41;
     const META_AFTER_57: u64 = 0x47f212bec0b96d5f;
     let actions = game0["actions"].as_array().expect("actions");
-    let db_switch = with_crest_play_reactions_as_recorded(load_db());
+    let db_switch = with_play_reactions_as_recorded(load_db());
     let st = replay_meta_game(&db_switch, game0, actions.len()).expect("meta game 0 with switch");
     assert_eq!(hash(&st), META_FINAL, "meta_games.json game 0 final");
     let st = replay_meta_game(&load_db(), game0, 56).expect("meta game 0 ply 56");
