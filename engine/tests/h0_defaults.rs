@@ -113,6 +113,9 @@
 //! | `LEGACY_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x97344d31d7152b48` → `0xb9716918b6f7e319` | 62 | branch A `play` `10564120` hand 0; main A `play` `10461110` hand 2. |
 //! | `V1_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x97344d31d7152b48` → `0xb9716918b6f7e319` | 62 | same as legacy 97. |
 //! | `V3_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x435b799878a022c3` → `0x493b2a4bea8f4ef8` | 54 | branch A `play` `10564120` hand 3; main A `play` `10703110` hand 5. |
+//! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0xf4c105a794883210` → `0x0d242b165f4084c8` | 41 | same as `DEFAULT_FINGERPRINTS` 97 (`h0` spec). |
+//! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x0389b4048b50d258` → `0xdf9082c665149cb2` | 44 | `h0:okill=7`; branch A `play` `10564120` hand 0; main A `play` `10962310` hand 4. |
+//! | `h0_hbk` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0xf4c105a794883210` → `0x0d242b165f4084c8` | 41 | same as `DEFAULT_FINGERPRINTS` 97 (`load_db()` gate). |
 //!
 //! ### legacy `h0:mull=rule,info=fair`
 //!
