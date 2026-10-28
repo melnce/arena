@@ -945,12 +945,12 @@ fn hash_play_picks(w: &mut Writer, picks: &PlayPickState) {
 }
 
 fn hash_pending_play_choices(w: &mut Writer, p: &PendingPlayChoices) {
+    // `played_kind`, `played_id`, and `body_insert_idx` are not hashed: `source`
+    // already distinguishes Spell vs Field and the played instance id; plays only
+    // happen at quiescence with empty `pending_work`, so `body_insert_idx` is 0.
     w.u32(p.step_idx as u32);
     w.u8(p.controller as u8);
     hash_source(w, &p.source);
-    w.u8(p.played_kind as u8);
-    w.u32(p.played_id);
-    w.u32(p.body_insert_idx as u32);
     w.u32(p.deferred_rx.len() as u32);
     for q in &p.deferred_rx {
         hash_queued(w, q);

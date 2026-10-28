@@ -1195,6 +1195,10 @@ fn apply_play(
     hand: u8,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
+    debug_assert!(
+        state.pending_work.is_empty(),
+        "plays only at quiescence with empty pending_work"
+    );
     let me = state.active;
     let inst = state
         .player(me)
