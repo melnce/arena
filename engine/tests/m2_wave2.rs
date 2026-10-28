@@ -1127,11 +1127,12 @@ fn world_of_games_breaks_after_enamored_enhance_summons() {
         .flatten()
         .filter(|c| c.card.as_str() == SUBJECT)
         .collect();
-    assert_eq!(subjects.len(), 1, "one of three summons fits before WoG leaves");
-    assert!(
-        subjects[0].traits.ward == Some(true),
-        "Enhance grants Ward"
+    assert_eq!(
+        subjects.len(),
+        1,
+        "one of three summons fits before WoG leaves"
     );
+    assert!(subjects[0].traits.ward == Some(true), "Enhance grants Ward");
     assert_eq!(
         st.player(me).hand.len(),
         hand_before + 2,

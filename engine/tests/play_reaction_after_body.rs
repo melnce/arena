@@ -34,19 +34,23 @@ fn clear_hand_deck(st: &mut arena_engine::State, who: PlayerId) {
     st.player_mut(who).deck.clear();
 }
 
-fn fill_deck(db: &arena_engine::CardDb, st: &mut arena_engine::State, who: PlayerId, id: &str, n: usize) {
+fn fill_deck(
+    db: &arena_engine::CardDb,
+    st: &mut arena_engine::State,
+    who: PlayerId,
+    id: &str,
+    n: usize,
+) {
     let card = db.card(cid(id)).expect("card");
     for _ in 0..n {
         let id = st.alloc_id();
-        st.player_mut(who).deck.push(CardInstance::from_card(card, id));
+        st.player_mut(who)
+            .deck
+            .push(CardInstance::from_card(card, id));
     }
 }
 
-fn play_events(
-    db: &arena_engine::CardDb,
-    st: &mut arena_engine::State,
-    hand: u8,
-) -> Vec<Event> {
+fn play_events(db: &arena_engine::CardDb, st: &mut arena_engine::State, hand: u8) -> Vec<Event> {
     let mut ev = apply(db, st, Action::Play { hand }).expect("play");
     while matches!(st.phase, arena_engine::Phase::Choice { .. }) {
         ev.extend(apply(db, st, Action::Choose(0)).expect("choose"));
@@ -114,10 +118,7 @@ fn moelle_wog_after_body_play_time_pick_first() {
     let moelle_hand = put_hand(&db, &mut st, me, MOELLE);
     let events = play_events(&db, &mut st, moelle_hand);
     assert_eq!(st.player(me).hand.len(), 3);
-    assert_eq!(
-        play_kind_tags(&events),
-        ["draw", "destroy", "draw", "draw"]
-    );
+    assert_eq!(play_kind_tags(&events), ["draw", "destroy", "draw", "draw"]);
 }
 
 #[test]
@@ -131,10 +132,7 @@ fn witch_brew_amulet_wog_after_fanfare_draw() {
     give_pp(&mut st, me, 10, 10);
     put_hand(&db, &mut st, me, WITCH_BREW);
     let events = play_events(&db, &mut st, 0);
-    assert_eq!(
-        play_kind_tags(&events),
-        ["draw", "destroy", "draw", "draw"]
-    );
+    assert_eq!(play_kind_tags(&events), ["draw", "destroy", "draw", "draw"]);
 }
 
 #[test]
@@ -148,10 +146,7 @@ fn foresight_spell_wog_before_draw_unchanged() {
     give_pp(&mut st, me, 10, 10);
     put_hand(&db, &mut st, me, FORESIGHT);
     let events = play_events(&db, &mut st, 0);
-    assert_eq!(
-        play_kind_tags(&events),
-        ["destroy", "draw", "draw", "draw"]
-    );
+    assert_eq!(play_kind_tags(&events), ["destroy", "draw", "draw", "draw"]);
 }
 
 #[test]

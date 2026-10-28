@@ -1299,9 +1299,7 @@ fn apply_play(
     }
     let play_steps = collect_play_time_steps(db, state, me, body_src, &body_effects);
     if play_steps.is_empty() {
-        finish_play_reactions(
-            db, state, me, kind, played_id, play_rx, body_insert_idx,
-        );
+        finish_play_reactions(db, state, me, kind, played_id, play_rx, body_insert_idx);
     } else {
         begin_play_time_choices(
             db,
@@ -3782,7 +3780,13 @@ fn begin_play_time_choices(
 ) -> Result<(), Illegal> {
     if steps.is_empty() {
         finish_play_reactions(
-            db, state, controller, kind, played_id, play_rx, body_insert_idx,
+            db,
+            state,
+            controller,
+            kind,
+            played_id,
+            play_rx,
+            body_insert_idx,
         );
         return Ok(());
     }
@@ -4119,7 +4123,13 @@ fn complete_play_pick(
         let body_insert_idx = pending.body_insert_idx;
         state.phase = Phase::Main;
         finish_play_reactions(
-            db, state, controller, kind, played_id, play_rx, body_insert_idx,
+            db,
+            state,
+            controller,
+            kind,
+            played_id,
+            play_rx,
+            body_insert_idx,
         );
     } else {
         state.pending_play_choices = Some(pending);
