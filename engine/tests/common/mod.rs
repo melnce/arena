@@ -157,12 +157,24 @@ pub fn load_db() -> CardDb {
 /// Also loads the Earrings Engage as-recorded overlay (see
 /// `fixtures/as-recorded/earrings-engage-noop/`).
 pub fn load_recorded_db() -> CardDb {
-    with_kukishiro_crest_as_recorded(with_earrings_engage_as_recorded({
-        let mut db = load_db();
-        db.load_replace_dir(repo_root().join("oracle/cards-as-recorded"))
-            .expect("recorded overlay");
-        db
-    }))
+    with_play_reactions_as_recorded(with_kukishiro_crest_as_recorded(
+        with_earrings_engage_as_recorded({
+            let mut db = load_db();
+            db.load_replace_dir(repo_root().join("oracle/cards-as-recorded"))
+                .expect("recorded overlay");
+            db
+        }),
+    ))
+}
+
+/// Recording-time play order before PR #172: every play reaction flushed before
+/// the played body (E39). Used for `tkroll/fa-play-150-ply0086`,
+/// `tkroll/fb-play-122-ply0064`, `h0_exact/meta_games.json` game 0, and
+/// `load_recorded_db()` overlays — never new games.
+pub fn with_play_reactions_as_recorded(db: CardDb) -> CardDb {
+    let mut db = db;
+    db.as_recorded.play_reactions_before_body = true;
+    db
 }
 
 /// Recording-time Kukishiro crest used `randomFrom` (deck pull). Chained by

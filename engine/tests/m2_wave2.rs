@@ -2,8 +2,8 @@
 //! Earth Sigil banish-merge, split leftover-as-one-hit, attacksPerTurn.
 
 use arena_engine::{
-    apply, legal_actions, snapshot, Action, AttackTarget, GameRng, Phase, Pick, PickChose,
-    PickWhat, PlayerId, Slot,
+    apply, event::Event, legal_actions, snapshot, Action, AttackTarget, GameRng, Phase, Pick,
+    PickChose, PickWhat, PlayerId, Slot,
 };
 
 mod common;
@@ -1092,10 +1092,11 @@ fn obsidian_raven_with_no_enemy_follower_still_summons() {
 }
 
 #[test]
-fn world_of_games_dies_on_play_before_enamored_enhance_summons() {
-    // E39 / rune-2 i=68: WoG at 1 on a 3-card board (a 4-cost so the Enhance
-    // matches, plus a filler). Play Enamored Enhance (summon ×3): WoG dies
-    // on play, two Subjects land, Last Words draw before the summons.
+fn world_of_games_breaks_after_enamored_enhance_summons() {
+    // Owner 2026-10-27: WoG ticks after the played follower's whole body. WoG at
+    // 1 with three followers on board (four with Enamored, one free slot);
+    // Enhance (summon ×3) lands one Subject while WoG still occupies its slot,
+    // then WoG breaks and Last Words draw 2.
     let db = load_db();
     let mut st = started(&db, 139);
     let me = PlayerId::A;
@@ -1114,11 +1115,34 @@ fn world_of_games_dies_on_play_before_enamored_enhance_summons() {
     }
     st.player_mut(me).hand.clear();
     let hand_before = st.player(me).hand.len();
-    play_id(&db, &mut st, me, "10932110");
-    drain_choice(&db, &mut st);
+    let hand = put_hand(&db, &mut st, me, "10932110");
+    let mut events = apply(&db, &mut st, Action::Play { hand }).expect("play");
+    while matches!(st.phase, Phase::Choice { .. }) {
+        events.extend(apply(&db, &mut st, Action::Choose(0)).expect("choose"));
+    }
+    let wog = cid(WORLD);
+    let subject = cid(SUBJECT);
+    let summon_i = events
+        .iter()
+        .position(|e| matches!(e, Event::Summon { card, .. } if *card == subject))
+        .expect("Subject summoned from Enhance body");
+    let destroy_i = events
+        .iter()
+        .position(|e| matches!(e, Event::Destroy { card, .. } if *card == wog))
+        .expect("WoG destroyed after body");
+    assert!(
+        summon_i < destroy_i,
+        "Enhance summon before WoG breaks (summon @ {summon_i}, destroy @ {destroy_i})"
+    );
+    let draws_after = events
+        .iter()
+        .skip(destroy_i + 1)
+        .filter(|e| matches!(e, Event::Draw { .. }))
+        .count();
+    assert_eq!(draws_after, 2, "Last Words draw 2 after WoG leaves");
     assert!(
         !field_has(&st, me, WORLD),
-        "WoG dies at play time before the Enhance summons"
+        "WoG breaks after the Enhance body"
     );
     let subjects: Vec<_> = st
         .player(me)
@@ -1129,19 +1153,19 @@ fn world_of_games_dies_on_play_before_enamored_enhance_summons() {
         .collect();
     assert_eq!(
         subjects.len(),
-        2,
-        "two of three Enhance summons land after WoG frees the slot"
+        1,
+        "one of three summons fits before WoG leaves"
     );
-    assert!(
-        subjects.iter().all(|c| c.traits.ward == Some(true)),
-        "Enhance grants Ward to the summons that land"
-    );
+    assert!(subjects[0].traits.ward == Some(true), "Enhance grants Ward");
     assert_eq!(
         st.player(me).hand.len(),
         hand_before + 2,
-        "Last Words Draw 2 resolve before the summons"
+        "Last Words draw 2"
     );
-    assert_eq!(field_count(&st, me), 5);
+    assert_eq!(field_count(&st, me), 4);
+    assert!(field_has(&st, me, "10011130"));
+    assert!(field_has(&st, me, "88001110"));
+    assert!(field_has(&st, me, "10932110"));
 }
 
 #[test]

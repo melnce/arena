@@ -1,0 +1,33 @@
+{
+  "id": "89209992",
+  "name": "Enhance Buff Allies Fixture",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Enhance (4): Give all allied followers on the field +1/+1.",
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Give all allied followers on the field +1/+1.",
+      "effects": [
+        {
+          "printed": "Give all allied followers on the field +1/+1.",
+          "op": "buff",
+          "select": {
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

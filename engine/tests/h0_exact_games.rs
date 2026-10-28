@@ -353,7 +353,7 @@ fn diff_first_decision(id: &str, pin: &Value, live: &GameCapture) {
 #[test]
 #[ignore = "slow.yml suite h0_exact_games"]
 fn h0_exact_games() {
-    let db = load_db();
+    let db = with_play_reactions_as_recorded(load_db());
     let text = fs::read_to_string(games_fixture_path())
         .expect("games.json — run regen_h0_exact_games once on main");
     let pin: Value = serde_json::from_str(&text).expect("games json");
@@ -373,7 +373,7 @@ fn regen_h0_exact_games() {
         eprintln!("set H0_EXACT_GAMES_REGEN=1 to rewrite fixtures/h0_exact/games.json");
         return;
     }
-    let db = load_db();
+    let db = with_play_reactions_as_recorded(load_db());
     let live = collect_all(&db);
     let games: Vec<Value> = live.iter().map(capture_to_json).collect();
     let path = games_fixture_path();

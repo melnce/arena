@@ -69,6 +69,13 @@
 //! | `V2_DEFAULT_FINGERPRINTS` | 67 | meta-haven-amulet | `0x8f6bb18b4445e0bd` → `0x9b0b1dba8bb63158` | 48 | branch B `play` `90024330`; main B `attack` slot 2 slot 3 (seat-B first diff). |
 //! | `V2_DEFAULT_FINGERPRINTS` | 79 | meta-haven-evo | `0x5cca9048c37e96c9` → `0x6c3461eed232775e` | 58 | branch B `attack` slot 0 slot 0; main B `attack` slot 1 slot 0 (seat-B first diff). |
 //! | `V2_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x46e6103324ea959f` → `0xccfa14793ef8e148` | 4 | branch B `play` `10021110`; main B `bonus_pp` (seat-B first diff). |
+//!
+//! ## Play reactions after whole Fanfare (`main` → PR #172)
+//!
+//! | table | seed | deck | main → branch | n | note |
+//! |-------|------|------|---------------|---|------|
+//! | `V2_DEFAULT_FINGERPRINTS` | 53 | meta-forest-combo | `0x3633207340903124` → `0xe532eaeb163c42fa` | 86 | same divergence as default `h0` seed 53 (`h0:mull=v1,net=v2`). |
+//! | `V2_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0xccfa14793ef8e148` → `0x4836411694e56361` | 4 | seat-B first diff; play-reaction timing on follower plays. |
 //! | `V3_DEFAULT_FINGERPRINTS` | 67 | meta-haven-amulet | `0x783df18c0ca289f1` → `0x9e4a4092a024a9e7` | 99 | branch A `engage` slot 1; main A `play` hand 6 `90064320`. Earrings on field at n. |
 //! | `V3_DEFAULT_FINGERPRINTS` | 79 | meta-haven-evo | `0x3f38eeac5db259c1` → `0xfd6aac8f03e94988` | 48 | branch A `engage` slot 0; main A `play` `10863210`. Earrings on field at n. |
 //! | `V3_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x857a2b3ba078359e` → `0x435b799878a022c3` | 4 | branch B `play` `10021110`; main B `bonus_pp` (seat-B first diff). |
@@ -263,10 +270,10 @@ const V2_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0x19e7_2e1b_1adf_b216,
     0x122c_fa71_850c_7637,
     0x9475_f3fc_7d65_58c7,
-    0x3633_2073_4090_3124,
+    0xe532_eaeb_163c_42fa,
     0x9b0b_1dba_8bb6_3158,
     0x6c34_61ee_d232_775e,
-    0xccfa_1479_3ef8_e148,
+    0x4836_4116_94e5_6361,
 ];
 
 /// Pre-v2 default `h0` fingerprints (`main@063bdd4`, built-in `h0-linear-v1`).

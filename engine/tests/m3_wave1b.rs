@@ -746,7 +746,7 @@ fn last_words_still_resolves_after_source_destroyed() {
 }
 
 #[test]
-fn yuel_crest_evolves_played_follower_before_fanfare_once_per_turn() {
+fn yuel_crest_evolves_played_follower_after_fanfare_once_per_turn() {
     let db = load_db();
     let mut st = started(&db, 515);
     let me = PlayerId::A;
@@ -772,10 +772,13 @@ fn yuel_crest_evolves_played_follower_before_fanfare_once_per_turn() {
         .flatten()
         .find(|c| c.card.as_str() == TAMER)
         .expect("Tamer");
-    assert!(tamer.evolved, "crest evolves the played follower (E39)");
+    assert!(
+        tamer.evolved,
+        "crest evolves the played follower after its Fanfare (E45)"
+    );
     assert!(
         hand_has(&st, me, FAIRY),
-        "Fanfare still ran after the crest evolve"
+        "Fanfare ran before the crest evolve"
     );
     give_pp(&mut st, me, 2, 2);
     play_id(&db, &mut st, me, VANILLA);

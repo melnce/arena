@@ -1195,6 +1195,10 @@ fn apply_play(
     hand: u8,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
+    debug_assert!(
+        state.pending_work.is_empty(),
+        "plays only at quiescence with empty pending_work"
+    );
     let me = state.active;
     let inst = state
         .player(me)
@@ -1268,6 +1272,7 @@ fn apply_play(
     }
     let play_rx = std::mem::take(&mut state.queue);
     let played_id = inst.id;
+    let body_insert_idx = state.pending_work.len();
     let (body_src, body_effects) =
         play_body_effects(db, state, me, kind, inst.card, card, &inst, &effects);
     if kind == CardKind::Spell {
@@ -1298,9 +1303,20 @@ fn apply_play(
     }
     let play_steps = collect_play_time_steps(db, state, me, body_src, &body_effects);
     if play_steps.is_empty() {
-        flush_play_reactions_ahead(state, play_rx);
+        finish_play_reactions(db, state, me, kind, played_id, play_rx, body_insert_idx);
     } else {
-        begin_play_time_choices(db, state, me, body_src, play_rx, play_steps, events)?;
+        begin_play_time_choices(
+            db,
+            state,
+            me,
+            body_src,
+            kind,
+            played_id,
+            play_rx,
+            body_insert_idx,
+            play_steps,
+            events,
+        )?;
     }
     Ok(())
 }
@@ -3422,6 +3438,30 @@ fn run_aftermath(
         }
         Aftermath::DrainQueue => drain_queue(db, state, events)?,
         Aftermath::FlushPlayLastWords => flush_play_last_words(db, state, events)?,
+        Aftermath::ReleasePlayReactions {
+            player,
+            played_id,
+            items,
+        } => {
+            let subject = state
+                .find_field(player, played_id)
+                .map(|slot| TargetOpt::Slot { player, slot });
+            let subject_id = Some(played_id);
+            for t in items {
+                state.queue.push(QueuedTrigger {
+                    category: t.category,
+                    entry: t.entry,
+                    printed_order: t.printed_order,
+                    controller: t.controller,
+                    source: t.source,
+                    tag: t.tag,
+                    effects: t.effects,
+                    subject: subject.clone(),
+                    subject_id,
+                });
+            }
+            drain_queue(db, state, events)?;
+        }
         Aftermath::RestoreBindings(map) => {
             state.bindings = map;
         }
@@ -3523,6 +3563,7 @@ fn next_frame_allows_queue_drain(state: &State) -> bool {
         Some(WorkFrame::Effects { index, .. }) => *index > 0,
         Some(WorkFrame::Aftermath(Aftermath::RestoreBindings(_))) => false,
         Some(WorkFrame::Aftermath(Aftermath::FlushPlayLastWords)) => false,
+        Some(WorkFrame::Aftermath(Aftermath::ReleasePlayReactions { .. })) => false,
         Some(WorkFrame::Aftermath(Aftermath::AfterCombat { .. })) => true,
         Some(WorkFrame::Aftermath(_)) => true,
     }
@@ -3728,17 +3769,29 @@ fn play_body_effects(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn begin_play_time_choices(
     db: &CardDb,
     state: &mut State,
     controller: PlayerId,
     source: SourceRef,
+    kind: CardKind,
+    played_id: u32,
     play_rx: Vec<QueuedTrigger>,
+    body_insert_idx: usize,
     steps: Vec<PlayPickStep>,
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
     if steps.is_empty() {
-        flush_play_reactions_ahead(state, play_rx);
+        finish_play_reactions(
+            db,
+            state,
+            controller,
+            kind,
+            played_id,
+            play_rx,
+            body_insert_idx,
+        );
         return Ok(());
     }
     state.pending_play_choices = Some(PendingPlayChoices {
@@ -3747,6 +3800,9 @@ fn begin_play_time_choices(
         step_idx: 0,
         controller,
         source,
+        played_kind: kind,
+        played_id,
+        body_insert_idx,
     });
     state.play_picks = Some(PlayPickState {
         captures: Vec::new(),
@@ -4065,8 +4121,20 @@ fn complete_play_pick(
     pending.step_idx += 1;
     if pending.step_idx >= pending.steps.len() {
         let play_rx = pending.deferred_rx;
+        let controller = pending.controller;
+        let kind = pending.played_kind;
+        let played_id = pending.played_id;
+        let body_insert_idx = pending.body_insert_idx;
         state.phase = Phase::Main;
-        flush_play_reactions_ahead(state, play_rx);
+        finish_play_reactions(
+            db,
+            state,
+            controller,
+            kind,
+            played_id,
+            play_rx,
+            body_insert_idx,
+        );
     } else {
         state.pending_play_choices = Some(pending);
         offer_next_play_pick(db, state, events)?;
@@ -4161,6 +4229,35 @@ fn clear_play_pick_state(state: &mut State) {
 /// Fanfare / spell body (crest-then-board). Last Words those reactions
 /// cause (World of Games dying on play) then run via `FlushPlayLastWords`
 /// still before Fanfare; enter reactions stay queued (E34).
+/// E39: spell plays (and recording-time switch) flush play reactions before the
+/// body. E45: follower / amulet plays release them after the whole body via
+/// `Aftermath::ReleasePlayReactions` inserted below the body's `pending_work`.
+fn finish_play_reactions(
+    db: &CardDb,
+    state: &mut State,
+    me: PlayerId,
+    kind: CardKind,
+    played_id: u32,
+    play_rx: Vec<QueuedTrigger>,
+    body_insert_idx: usize,
+) {
+    let flush_ahead = kind == CardKind::Spell || db.as_recorded.play_reactions_before_body;
+    if flush_ahead {
+        flush_play_reactions_ahead(state, play_rx);
+        return;
+    }
+    if play_rx.is_empty() {
+        return;
+    }
+    let frame = WorkFrame::Aftermath(Aftermath::ReleasePlayReactions {
+        player: me,
+        played_id,
+        items: play_rx,
+    });
+    let at = body_insert_idx.min(state.pending_work.len());
+    state.pending_work.insert(at, frame);
+}
+
 fn flush_play_reactions_ahead(state: &mut State, mut play_rx: Vec<QueuedTrigger>) {
     if play_rx.is_empty() {
         return;

@@ -555,7 +555,9 @@ fn compare_pins(pin: &Value, live: &Value) {
 #[test]
 fn h0_exact_pins() {
     let recorded = load_recorded_db();
-    let live = load_db();
+    // Meta roots replay recordings but search the future under live rules; pins
+    // were generated before PR #172, so match recording-time play-reaction order.
+    let live = with_play_reactions_as_recorded(load_db());
     let roots = all_roots(&recorded, &live);
     check_shape(&roots, &recorded, &live);
     let text = fs::read_to_string(pins_path()).expect("pins.json — run regen_h0_exact_pins once");
@@ -568,7 +570,7 @@ fn h0_exact_pins() {
 #[ignore]
 fn regen_h0_exact_pins() {
     let recorded = load_recorded_db();
-    let live = load_db();
+    let live = with_play_reactions_as_recorded(load_db());
     let roots = all_roots(&recorded, &live);
     check_shape(&roots, &recorded, &live);
     let live_pins = collect(&roots, &recorded, &live);
@@ -582,7 +584,7 @@ fn regen_h0_exact_pins() {
 #[ignore]
 fn bench_h0_exact() {
     let recorded = load_recorded_db();
-    let live = load_db();
+    let live = with_play_reactions_as_recorded(load_db());
     let roots = all_roots(&recorded, &live);
     let t0 = Instant::now();
     for (mi, r) in roots.iter().enumerate() {

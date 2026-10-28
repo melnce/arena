@@ -1,4 +1,13 @@
 //! `lcap` (consensus-lethal budget) and `clip` (learned-leaf input clamp).
+//!
+//! ## Play-reaction re-pins (PR #172)
+//!
+//! Proof (c): `git checkout origin/main -- engine/src/apply.rs engine/src/state.rs` restores
+//! `pre_flip_default_bench_identity_seed5` nodes to **232_747**.
+//!
+//! | test | seed | decks | field | main → branch | n | note |
+//! |------|------|-------|-------|---------------|---|------|
+//! | `pre_flip_default_bench_identity_seed5` | 7 (`5+2` in bench) | meta-rune-test-subject vs **meta-sword-rally** | `nodes` (and coupled search tallies) | 232_747 → **232_087**; `candidates` 811→809; `opp_leaves` 10_102→10_043; `tt_hits` 3_432→3_289; … | seat-A **a_dec=58** (action 112) | Public trace matches `main` through action 111. At **n=15** B plays Yidmetra, Eld Sword `10624120`; at **n=18** B plays Depths `90024320` (Enhanced); `faith_b≥1` from **n=20**. First seat-A search expansion delta at **a_dec=58** while `faith:10624120` is active in fair worlds (only seed 7 of the four-game bench moves nodes). |
 
 use arena_engine::policy::{ChoosePath, ValueNet};
 use arena_engine::{
@@ -318,6 +327,114 @@ fn fast_pins_pre_flip_lcap_clip_fusemacro() {
 }
 
 #[test]
+#[ignore]
+fn dump_pre_flip_bench_actions() {
+    let db = load_db();
+    let decks = (
+        load_deck_file("oracle/decks/meta-rune-test-subject.json"),
+        load_deck_file("oracle/decks/meta-sword-rally.json"),
+    );
+    let seed: u64 = std::env::var("H0_DUMP_SEEDS")
+        .unwrap_or_else(|_| "5".into())
+        .parse()
+        .expect("seed");
+    let mut state = new_game(
+        &db,
+        arena_engine::GameConfig {
+            seed,
+            deck_a: decks.0,
+            deck_b: decks.1,
+            first: arena_engine::First::A,
+            opening_hands: None,
+        },
+    )
+    .unwrap();
+    let mut rng = policy_rng(seed);
+    let mut pol_a = parse_h0(&with_v1_net(
+        "h0:mull=rule,info=fair,lcap=1,clip=0,fusemacro=0",
+    ));
+    let mut pol_b = parse_h0("h0:value=v0,mull=rule,info=fair,lcap=1,clip=0,fusemacro=0");
+    let mut n = 0u32;
+    while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
+        let legal = legal_actions(&db, &state);
+        if legal.is_empty() {
+            break;
+        }
+        let me = arena_engine::acting_player(&state);
+        let idx = match me {
+            arena_engine::PlayerId::A => pol_a.choose(&db, &state, &legal, &mut rng),
+            arena_engine::PlayerId::B => pol_b.choose(&db, &state, &legal, &mut rng),
+        };
+        let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
+        let faith_b = state.player(arena_engine::PlayerId::B).faith;
+        println!(
+            "n={n} seat={me:?} faith_b={faith_b} {}",
+            serde_json::to_string(&arena_engine::to_neutral(&state, &action)).unwrap()
+        );
+        apply(&db, &mut state, action).expect("apply");
+        n += 1;
+    }
+    println!("DONE actions={n}");
+}
+
+#[test]
+#[ignore]
+fn dump_pre_flip_bench_a_nodes() {
+    let db = load_db();
+    let decks = (
+        load_deck_file("oracle/decks/meta-rune-test-subject.json"),
+        load_deck_file("oracle/decks/meta-sword-rally.json"),
+    );
+    let seed: u64 = std::env::var("H0_DUMP_SEEDS")
+        .unwrap_or_else(|_| "5".into())
+        .parse()
+        .expect("seed");
+    let mut state = new_game(
+        &db,
+        arena_engine::GameConfig {
+            seed,
+            deck_a: decks.0,
+            deck_b: decks.1,
+            first: arena_engine::First::A,
+            opening_hands: None,
+        },
+    )
+    .unwrap();
+    let mut rng = policy_rng(seed);
+    let mut pol_a = parse_h0(&with_v1_net(
+        "h0:mull=rule,info=fair,lcap=1,clip=0,fusemacro=0",
+    ));
+    let mut pol_b = parse_h0("h0:value=v0,mull=rule,info=fair,lcap=1,clip=0,fusemacro=0");
+    let mut n = 0u32;
+    let mut a_dec = 0u32;
+    while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
+        let legal = legal_actions(&db, &state);
+        if legal.is_empty() {
+            break;
+        }
+        let me = arena_engine::acting_player(&state);
+        let idx = match me {
+            arena_engine::PlayerId::A => {
+                let before = pol_a.stats.nodes;
+                let idx = pol_a.choose(&db, &state, &legal, &mut rng);
+                println!(
+                    "a_dec={a_dec} action_n={n} nodes={} faith_b={}",
+                    pol_a.stats.nodes - before,
+                    state.player(arena_engine::PlayerId::B).faith
+                );
+                a_dec += 1;
+                idx
+            }
+            arena_engine::PlayerId::B => pol_b.choose(&db, &state, &legal, &mut rng),
+        };
+        let action = legal[idx.min(legal.len().saturating_sub(1))].clone();
+        apply(&db, &mut state, action).expect("apply");
+        n += 1;
+    }
+    println!("DONE a_decisions={a_dec} total_nodes={}", pol_a.stats.nodes);
+}
+
+#[test]
 #[cfg_attr(debug_assertions, ignore)]
 fn pre_flip_default_bench_identity_seed5() {
     let db = load_db();
@@ -364,33 +481,33 @@ fn pre_flip_default_bench_identity_seed5() {
     assert_eq!(a_wins, 0, "a_wins baseline");
     assert_eq!(b_wins, 4, "b_wins baseline");
     assert_eq!(stats.decisions, 207, "decisions baseline");
-    assert_eq!(stats.nodes, 232_747, "nodes baseline");
+    assert_eq!(stats.nodes, 232_087, "nodes baseline");
     assert_eq!(stats.cap_hits, 29, "cap_hits baseline");
     assert_eq!(stats.pairs_skipped, 0, "pairs_skipped baseline");
-    assert_eq!(stats.candidates, 811, "candidates baseline");
+    assert_eq!(stats.candidates, 809, "candidates baseline");
     assert_eq!(stats.roots, 660, "roots baseline");
-    assert_eq!(stats.opp_leaves, 10_102, "opp_leaves baseline");
-    assert_eq!(stats.opp_cap_hits, 1_236, "opp_cap_hits baseline");
-    assert_eq!(stats.tt_hits, 3_432, "tt_hits baseline");
-    assert_eq!(stats.tt_stores, 32_144, "tt_stores baseline");
+    assert_eq!(stats.opp_leaves, 10_043, "opp_leaves baseline");
+    assert_eq!(stats.opp_cap_hits, 1_235, "opp_cap_hits baseline");
+    assert_eq!(stats.tt_hits, 3_289, "tt_hits baseline");
+    assert_eq!(stats.tt_stores, 32_008, "tt_stores baseline");
     assert_eq!(
-        stats.opp_lethal_checks, 10_102,
+        stats.opp_lethal_checks, 10_043,
         "opp_lethal_checks baseline"
     );
-    assert_eq!(stats.opp_lethal_found, 5_068, "opp_lethal_found baseline");
+    assert_eq!(stats.opp_lethal_found, 5_010, "opp_lethal_found baseline");
     assert_eq!(
         stats.opp_lethal_evo_found, 295,
         "opp_lethal_evo_found baseline"
     );
-    assert_eq!(stats.opp_lethal_nodes, 50_894, "opp_lethal_nodes baseline");
+    assert_eq!(stats.opp_lethal_nodes, 50_662, "opp_lethal_nodes baseline");
     assert_eq!(
         stats.chose_with_lethal_root, 21,
         "chose_with_lethal_root baseline"
     );
     assert_eq!(
-        stats.cands_with_lethal_root, 155,
+        stats.cands_with_lethal_root, 154,
         "cands_with_lethal_root baseline"
     );
-    assert_eq!(stats.lethal_nodes, 12_743, "lethal_nodes tally");
+    assert_eq!(stats.lethal_nodes, 12_662, "lethal_nodes tally");
     assert_eq!(stats.unscored, 1, "unscored tally");
 }
