@@ -1262,10 +1262,9 @@ fn apply_play(
         card: inst.card,
         form,
     });
-    // E39: play reactions (`ally_card_played` / `ally_spell_played` /
-    // "whenever you play …") enqueue now and resolve before Fanfare / spell
-    // text. Enter reactions stay on the queue until the play sequence ends
-    // (E34). Official Q&A World of Games / Divine Thunder; owner 2026-09-10.
+    // Play reactions (`ally_card_played` / `ally_spell_played` / "whenever you
+    // play …") enqueue at the play (E45; recording switch E39). Enter
+    // reactions stay on the queue until the play sequence ends (E34).
     raise_when(db, state, me, EventName::AllyCardPlayed, Some(&inst), me);
     if kind == CardKind::Spell {
         raise_when(db, state, me, EventName::AllySpellPlayed, Some(&inst), me);
@@ -1303,14 +1302,13 @@ fn apply_play(
     }
     let play_steps = collect_play_time_steps(db, state, me, body_src, &body_effects);
     if play_steps.is_empty() {
-        finish_play_reactions(db, state, me, kind, played_id, play_rx, body_insert_idx);
+        finish_play_reactions(db, state, me, played_id, play_rx, body_insert_idx);
     } else {
         begin_play_time_choices(
             db,
             state,
             me,
             body_src,
-            kind,
             played_id,
             play_rx,
             body_insert_idx,
@@ -1376,8 +1374,8 @@ fn enter_from_play(
             raise_follower_enter(db, state, me, &entered);
         }
     }
-    // E39: play reactions (`whenever you play`) are flushed onto pending_work
-    // above Fanfare in `apply_play`. E34: other cards' enter reactions stay on
+    // E45: play reactions release after the whole body in `apply_play`. E34:
+    // other cards' enter reactions stay on
     // the queue until the play completes. E38: the entrant's own `on:enter` is
     // one of those reactions (board age, oldest first), not a jump ahead of them.
     let gated = gated_fanfare(db, state, me, src, card_id, fanfare);
@@ -3336,8 +3334,8 @@ fn drain_until_quiet(
         // leave the queue behind those so a later-raised Last Words cannot
         // jump a trigger already in the wave (E32 / Grimnir) and so other
         // cards' enter reactions wait for Fanfare, including a Fanfare
-        // choice (E34 / A2). Play reactions are flushed onto pending_work
-        // before Fanfare (E39) and do not wait here.
+        // choice (E34 / A2). Play reactions release after the whole body (E45);
+        // recording switch E39 flushes ahead.
         if !state.queue.is_empty()
             && !next_frame_is_choice_continuation(db, state)
             && next_frame_allows_queue_drain(state)
@@ -3775,7 +3773,6 @@ fn begin_play_time_choices(
     state: &mut State,
     controller: PlayerId,
     source: SourceRef,
-    kind: CardKind,
     played_id: u32,
     play_rx: Vec<QueuedTrigger>,
     body_insert_idx: usize,
@@ -3783,15 +3780,7 @@ fn begin_play_time_choices(
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
     if steps.is_empty() {
-        finish_play_reactions(
-            db,
-            state,
-            controller,
-            kind,
-            played_id,
-            play_rx,
-            body_insert_idx,
-        );
+        finish_play_reactions(db, state, controller, played_id, play_rx, body_insert_idx);
         return Ok(());
     }
     state.pending_play_choices = Some(PendingPlayChoices {
@@ -3800,7 +3789,6 @@ fn begin_play_time_choices(
         step_idx: 0,
         controller,
         source,
-        played_kind: kind,
         played_id,
         body_insert_idx,
     });
@@ -4122,19 +4110,10 @@ fn complete_play_pick(
     if pending.step_idx >= pending.steps.len() {
         let play_rx = pending.deferred_rx;
         let controller = pending.controller;
-        let kind = pending.played_kind;
         let played_id = pending.played_id;
         let body_insert_idx = pending.body_insert_idx;
         state.phase = Phase::Main;
-        finish_play_reactions(
-            db,
-            state,
-            controller,
-            kind,
-            played_id,
-            play_rx,
-            body_insert_idx,
-        );
+        finish_play_reactions(db, state, controller, played_id, play_rx, body_insert_idx);
     } else {
         state.pending_play_choices = Some(pending);
         offer_next_play_pick(db, state, events)?;
@@ -4225,23 +4204,21 @@ fn clear_play_pick_state(state: &mut State) {
     state.deferred_play_rx = None;
 }
 
-/// E39: flush `whenever you play` reactions onto `pending_work` above the
-/// Fanfare / spell body (crest-then-board). Last Words those reactions
-/// cause (World of Games dying on play) then run via `FlushPlayLastWords`
-/// still before Fanfare; enter reactions stay queued (E34).
-/// E39: spell plays (and recording-time switch) flush play reactions before the
-/// body. E45: follower / amulet plays release them after the whole body via
+/// E39 (recording switch): flush `whenever you play` reactions onto
+/// `pending_work` above the Fanfare / spell body (crest-then-board). Last
+/// Words those reactions cause then run via `FlushPlayLastWords` still before
+/// the body; enter reactions stay queued (E34).
+/// E45: every play releases play reactions after the whole body via
 /// `Aftermath::ReleasePlayReactions` inserted below the body's `pending_work`.
 fn finish_play_reactions(
     db: &CardDb,
     state: &mut State,
     me: PlayerId,
-    kind: CardKind,
     played_id: u32,
     play_rx: Vec<QueuedTrigger>,
     body_insert_idx: usize,
 ) {
-    let flush_ahead = kind == CardKind::Spell || db.as_recorded.play_reactions_before_body;
+    let flush_ahead = db.as_recorded.play_reactions_before_body;
     if flush_ahead {
         flush_play_reactions_ahead(state, play_rx);
         return;
