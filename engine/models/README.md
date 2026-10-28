@@ -88,7 +88,7 @@ Training: `py/train_value.py --data results/net10/data-e0 results/net10/data-e10
 
 sha256 `76685509ff4aef49e34ae37793385d40b477d0756b52141299300f4cb85d8c95`
 
-Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v66`](#h0-value-v66) since brief YF (`h0-value-v64` from brief YC, `h0-value-v65` from brief YE). Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
+Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v69`](#h0-value-v69) since brief YJ (`h0-value-v64` from brief YC, `h0-value-v65` from brief YE, `h0-value-v66` from brief YF). Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
 
 # `h0-value-v64`
 
@@ -193,7 +193,40 @@ Sweeps 66 and 66b (engine `d49783c`, results `sweep66/` at `cc9df7e`, `sweep66b/
 sha256 `facd1ed275de891b5ef6f683aa4c217d945bd3503a70d16b5ccf84763b0f7975`
 
 Reach it with `net=h0-value-v66` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
-Full-strength bot score their lines with it since brief YF.
+Full-strength bot scored their lines with it from brief YF to brief YJ ([`h0-value-v69`](#h0-value-v69) since).
+
+# `h0-value-v69`
+
+The `h0-value-v69` value model (the leaf) — `arch: residual` on encoding 3, the same architecture as
+[`h0-value-v66`](#h0-value-v66): `h0-linear-v4`'s linear part unchanged plus a ReLU MLP residual with 32 hidden
+units on the 961 standardized features and an 8-dimensional embedding per card and zone (13 zones), `scale` 60.
+Its residual is three quarters of the trained network's (`w2`, `b2` scaled by 0.75: `trained_on.shrink` 0.75);
+sweep 69 screened the full form too (236 / 512 against this file's 244 / 512) and sent this one to the final.
+
+## Provenance
+
+Trained on the owner's box inside runbook 69 (`fit69.py`, `fit66.py`'s code), with `h0-value-v66`'s recipe
+exactly: every search decision with two or more scored candidates of the box's teach52 / 54 / 56 / 57 / 59 / 60 /
+61 / 62 / 63 / 64 / 65 / 66 / 67 / 68 games (61 440 games of the served search — teach67 / 68 are the `onext=0`
+bot's —, 4.27 M states from both seats, 3.41 M of them for training), each encoded from the decider's side, split
+by game (crc32). Targets: TD(λ 0.95) returns from four cross-fitted networks of `h0-value-v64`'s recipe; then 10
+epochs of the squared error of `60·tanh(pre)` (AdamW lr 1e-4, weight decay 1e-3, a moving average of the weights
+over one epoch; best epoch 8). On the 6 185 held-out games of those sets, at turn starts (where the search uses
+the leaf), Brier score: this file 0.1865, the full network 0.1847, `h0-value-v66` 0.1880, `h0-linear-v4` 0.2175.
+
+## Yardstick
+
+Sweeps 69 and 69b (engine `d49783c`, results `sweep69/` at `823f36b`, `sweep69b/` at `50bd78e`), all 16 meta decks:
+`net=<this file>` vs `h0-value-v66`, both on `h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0`:
+
+- screens 244 / 512 = 0.477 (sweep 69; the full network 236 / 512) and 266 / 512 = 0.520 (69b);
+- finals main 3 893 / 7 680 = 0.507, reverse 1 855 / 3 584 = 0.518, **pooled 5 748 / 11 264 = 0.510 [0.502, 0.519], +7.2 Elo** (sweep 69 alone 0.510 → the confirm run; adopted by the registered rule, both runs combined ≥ 0.505);
+- self-play throughput × 1.028 / × 1.007.
+
+sha256 `8c30ae8632d9161444fda5b65c637d60977a02d40105a7b7ccf670d8e1f230a3`
+
+Reach it with `net=h0-value-v69` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
+Full-strength bot score their lines with it since brief YJ.
 
 # `h0-order-v53`
 
