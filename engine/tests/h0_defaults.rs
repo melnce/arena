@@ -72,10 +72,6 @@
 //!
 //! ## Play reactions after whole Fanfare (`main` → PR #172)
 //!
-//! Proof (c): `git checkout origin/main -- engine/src/apply.rs engine/src/state.rs` with branch
-//! `search_key.rs` + tests → `pre_flip_default_bench_identity_seed5` nodes restore to **232_747**
-//! (`meta-rune-test-subject` vs `meta-sword-rally` — outside the gate deck set below; do not re-pin).
-//!
 //! | table | seed | deck | main → branch | n | note |
 //! |-------|------|------|---------------|---|------|
 //! | `V2_DEFAULT_FINGERPRINTS` | 53 | meta-forest-combo | `0x3633207340903124` → `0xe532eaeb163c42fa` | 86 | same divergence as default `h0` seed 53 (`h0:mull=v1,net=v2`). |
