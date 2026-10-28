@@ -114,6 +114,14 @@
 //! | `V1_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x97344d31d7152b48` → `0xb9716918b6f7e319` | 62 | same as legacy 97. |
 //! | `V3_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x435b799878a022c3` → `0x493b2a4bea8f4ef8` | 54 | branch A `play` `10564120` hand 3; main A `play` `10703110` hand 5. |
 //!
+//! ### legacy `h0:mull=rule,info=fair`
+//!
+//! | seed | deck | main@b5b822c → branch | n | hash@n | hashΔ | reconv | proof |
+//! |------|------|------------------------|---|--------|-------|--------|-------|
+//! | 37 | meta-dragon-aggro | `0xe0ff3ba0823747ae` → `0x0c5e00eb14bdce85` | 88 | match | 79 | 80 | same as default 37 |
+//! | 41 | meta-dragon-ramp | `0xc4e8ab63aec96246` → `0x3207d65c42f589a8` | 51 | match | 52 | 53 | **hashΔ 52:** Lumiore & Argente, Shining Wings `10844120` discard (`PlaySelect` both); main hash shifts on first discard pick; branch stays at `hash@51`. **reconv 53.** **n 51:** `hash@50` match; main discards Dragonsign `10042310` then Burnite, Anathema of Ash `10744110`; branch reverses order. |
+//! | 53 | meta-forest-combo | `0x7404fbcb4cae7f60` → `0x73930e18abe26408` | 86 | match | 37 | 38 | same as default 53 |
+//!
 //! ## Spell play reactions after whole spell text (`main` → this branch)
 //!
 //! Proof (c): `git checkout origin/main -- engine/src/apply.rs engine/src/state.rs` + old pin below →
@@ -122,17 +130,6 @@
 //! | table | seed | deck | main → branch | n | note |
 //! |-------|------|------|---------------|---|------|
 //! | `V2_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x4836411694e56361` → `0xfa56af64fca7aacd` | 17 | `h0:mull=v1,net=v2`. Branch B `play` `10624120` (Faith: Yidmetra); main B `end_turn`. Seat-B search worlds see spell play-reaction order on A's turns. |
-//! | `h0_okill` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0xf4c105a794883210` → `0x0d242b165f4084c8` | 41 | same as `DEFAULT_FINGERPRINTS` 97 (`h0` spec). |
-//! | `h0_okill` `OKILL7_GATE_FPS` | 97 | meta-haven-kukishiro | `0x0389b4048b50d258` → `0xdf9082c665149cb2` | 44 | `h0:okill=7`; branch A `play` `10564120` hand 0; main A `play` `10962310` hand 4. |
-//! | `h0_hbk` `DEFAULT_OKILL_GATE_FPS` | 97 | meta-haven-kukishiro | `0xf4c105a794883210` → `0x0d242b165f4084c8` | 41 | same as `DEFAULT_FINGERPRINTS` 97 (`load_db()` gate). |
-//!
-//! ### legacy `h0:mull=rule,info=fair`
-//!
-//! | seed | deck | main@b5b822c → branch | n | hash@n | hashΔ | reconv | proof |
-//! |------|------|------------------------|---|--------|-------|--------|-------|
-//! | 37 | meta-dragon-aggro | `0xe0ff3ba0823747ae` → `0x0c5e00eb14bdce85` | 88 | match | 79 | 80 | same as default 37 |
-//! | 41 | meta-dragon-ramp | `0xc4e8ab63aec96246` → `0x3207d65c42f589a8` | 51 | match | 52 | 53 | **hashΔ 52:** Lumiore & Argente, Shining Wings `10844120` discard (`PlaySelect` both); main hash shifts on first discard pick; branch stays at `hash@51`. **reconv 53.** **n 51:** `hash@50` match; main discards Dragonsign `10042310` then Burnite, Anathema of Ash `10744110`; branch reverses order. |
-//! | 53 | meta-forest-combo | `0x7404fbcb4cae7f60` → `0x73930e18abe26408` | 86 | match | 37 | 38 | same as default 53 |
 
 use arena_engine::{
     apply, hash, legal_actions, new_game, play_game, policy_rng, to_neutral, trace::fnv1a64,

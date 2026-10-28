@@ -73,6 +73,22 @@ fn play_kind_tags(events: &[Event]) -> Vec<&'static str> {
         .collect()
 }
 
+fn play_damage_amounts(events: &[Event]) -> Vec<i32> {
+    events
+        .iter()
+        .filter_map(|e| match e {
+            Event::Damage { amount, .. } => Some(*amount),
+            _ => None,
+        })
+        .collect()
+}
+
+fn play_damage_then_destroy(events: &[Event]) -> (Vec<i32>, bool) {
+    let amounts = play_damage_amounts(events);
+    let destroy = events.iter().any(|e| matches!(e, Event::Destroy { .. }));
+    (amounts, destroy)
+}
+
 fn stormy_blast_wog_after_spell_text_one_print(stormy: &str) {
     let db = load_db();
     let mut st = started(&db, 806);
@@ -180,7 +196,7 @@ fn foresight_spell_wog_after_spell_text() {
 }
 
 #[test]
-fn flowering_artisan_wog_after_stormy_blast_spell_text() {
+fn flowering_artisan_damage_after_stormy_blast_text() {
     let db = load_db();
     let mut st = started(&db, 807);
     let me = PlayerId::A;
@@ -197,10 +213,9 @@ fn flowering_artisan_wog_after_stormy_blast_spell_text() {
     put_hand(&db, &mut st, me, STORMY_A);
     let events = play_events(&db, &mut st, 0);
     assert_eq!(field_def(&st, opp, TANK), Some(7));
-    assert_eq!(
-        play_kind_tags(&events),
-        ["damage", "damage", "damage", "destroy"]
-    );
+    let (amounts, destroy) = play_damage_then_destroy(&events);
+    assert_eq!(amounts, [2, 3, 3]);
+    assert!(destroy);
 }
 
 #[test]

@@ -180,15 +180,19 @@ fn stormy_blast_spell_damage_before_artisan_damage_after_pick() {
         st.field_inst(opp, weak).is_none(),
         "Artisan finished the follower after Stormy Blast's spell damage"
     );
-    let tags: Vec<&str> = events
-        .iter()
-        .filter_map(|e| match e {
-            Event::Damage { .. } => Some("damage"),
-            Event::Destroy { .. } => Some("destroy"),
-            _ => None,
-        })
-        .collect();
-    assert_eq!(tags, ["damage", "damage", "destroy"]);
+    let (amounts, destroy) = {
+        let amounts: Vec<i32> = events
+            .iter()
+            .filter_map(|e| match e {
+                Event::Damage { amount, .. } => Some(*amount),
+                _ => None,
+            })
+            .collect();
+        let destroy = events.iter().any(|e| matches!(e, Event::Destroy { .. }));
+        (amounts, destroy)
+    };
+    assert_eq!(amounts, [2, 3]);
+    assert!(destroy);
 }
 
 /// Majestic Conquest crest + Enhanced ally-follower pick: Fearless Soldier not a candidate.

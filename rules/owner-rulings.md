@@ -780,7 +780,7 @@ A stat modification defines the follower's maximum defense: max = the stat line 
 
 > "WoG says 'whenever you play' so it should die on play and make space."
 
-World of Games (`10503210`) and other "whenever you play …" abilities (crests included) still **trigger at the play** — filter, `when`, and `oncePerTurn` are judged then (official Cygames Q&A on World of Games + Divine Thunder: the count advances even though the spell destroys the same-cost enemy before the reaction resolves). **Resolution order** for every play is now in **Play reactions wait for the played card's whole text — 2026-10-27 / 2026-10-28** below; the 2026-09-10 _"die on play and make space"_ quote was about timing relative to Fanfare, not the final order on spell plays. Enter reactions ("whenever … enters the field") still wait until the play sequence finishes.
+World of Games (`10503210`) and other "whenever you play …" abilities (crests included) still **trigger at the play** — filter, `when`, and `oncePerTurn` are judged then (official Cygames Q&A on World of Games + Divine Thunder: the count advances even though the spell destroys the same-cost enemy before the reaction resolves). Its resolution order (reactions before the card's text) is **superseded for every play** by the 2026-10-27 / 2026-10-28 observations in **Play reactions wait for the played card's whole text — 2026-10-27 / 2026-10-28** below; what stands is the Q&A's reading — the same-cost condition is judged at the play. Enter reactions ("whenever … enters the field") still wait until the play sequence finishes.
 
 ## World of Games counts either side — 2026-09-10
 
@@ -846,7 +846,7 @@ Current behaviour confirmed correct by measurement in PR #50; no code or data ch
 
 When a **played** card's own text asks for a player selection — hand or field targets, mode picks — that choice is made **as part of the play**, before any "whenever you play" reaction (`ally_card_played`, `ally_spell_played`, crests included) resolves and before the card's own enter abilities. The Fanfare / spell body then resolves on those locked-in picks. A target that is gone or no longer valid by resolution time is skipped for that part; the rest still resolves (`rules/rulebook.md` targeting).
 
-Supporting source (original Shadowverse effect-processing wiki; no official Cygames Q&A on this timing): https://w.atwiki.jp/svkoukasyori/pages/16.html — 「対象はプレイ時に選択する」 ("targets are selected when the card is played"). Order: pick → the card's whole text → play reactions for every play (owner 2026-10-27 / 2026-10-28).
+Supporting source (original Shadowverse effect-processing wiki; no official Cygames Q&A on this timing): https://w.atwiki.jp/svkoukasyori/pages/16.html — 「対象はプレイ時に選択する」 ("targets are selected when the card is played") and 「「(スペルを/カードを)プレイした時」効果はスペルの効果解決前に誘発する」 ("'when you play' effects trigger before the spell's effect resolves") — the latter matches **trigger-at-play** (filter / `when` / `oncePerTurn` at the play); resolution order is pick → the card's whole text → play reactions for every play (owner 2026-10-27 / 2026-10-28).
 
 **Unchanged:** Evolve, Super-Evolve, Last Words, Engage, Strike, Clash, and every other triggered ability still select when they resolve (owner 2026-09-10: evolve first, reactions, then the Evolve selection).
 
@@ -863,6 +863,10 @@ Supporting source (original Shadowverse effect-processing wiki; no official Cyga
 > "moelle selects a card first in hand and only then does WoG trigger"
 >
 > "Moelles draw is first"
+>
+> "i tested it with runecrafts stormy blast. stormy blast dealt damage first. then wog proct and drew 2 cards"
+>
+> "funny enough i just watched RAGE championship season 3 and they played asher and killed 2 wards with the cutthroat crest"
 
 **Scope.** On **every** play — follower, amulet, or **spell** (Normal, Enhance, Crystallize, Accelerate) — every `ally_card_played` / `ally_spell_played` reaction from **any** source (crests, faith, field cards such as World of Games, hand cards) still **triggers at the play** — filter, `when`, and `oncePerTurn` are judged at the play (World of Games same-base-cost on either side included) — but **resolves only after the played card's whole Fanfare / Enhance / spell body** (every op of that list, and everything those ops resolve along the way). Play-time picks (owner 2026-09-27) still come first. Then the body runs to completion; then play reactions release with whatever is still queued and resolve in queue order. `pick: entering` is the played follower/amulet by instance id.
 
@@ -874,7 +878,7 @@ Supporting source (original Shadowverse effect-processing wiki; no official Cyga
 
 **Real client (RAGE Championship Season 3, 2026-10-28).** Asher play with Cutthroat crest destroying two Wards — third-party confirmation that crest play reactions wait for the whole Fanfare body (same rule as owner 2026-10-27 follower plays).
 
-**Pinned:** `engine/tests/play_reaction_after_body.rs`; `engine/tests/crest_play_reaction_order.rs`; `m2_wave2::world_of_games_breaks_after_enamored_enhance_summons`; `owner_capture_asher_game` (split replay). Cutthroat / Asher two-destroy lines remain engine fixtures, not owner quotes.
+**Pinned:** `engine/tests/play_reaction_after_body.rs` (including `stormy_blast_wog_after_spell_text_both_prints`, `flowering_artisan_damage_after_stormy_blast_text`); `play_time_selection::stormy_blast_spell_damage_before_artisan_damage_after_pick`; `engine/tests/crest_play_reaction_order.rs`; `m2_wave2::world_of_games_breaks_after_enamored_enhance_summons`; `owner_capture_asher_game` (split replay). Asher + Cutthroat two-destroy coverage is an engine test (`crest_play_reaction_order`) and matches the RAGE sighting above.
 
 ## Goddess of Starlight (`10502110`) selects as many as it can — 2026-09-18
 
