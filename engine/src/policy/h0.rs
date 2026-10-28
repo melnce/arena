@@ -40,7 +40,8 @@ use crate::trace::{ChooseOptionJson, NeutralAction};
 
 use super::explain::{
     ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord, HoldbackRecord,
-    HoldbackResampleCandidate, HoldbackResampleRecord, Line, PvEnd, PvTracker, WorldRecord,
+    HoldbackResampleCandidate, HoldbackResampleRecord, Line, MullExplainRecord, PvEnd, PvTracker,
+    WorldRecord,
 };
 use super::fuse_guard::fuse_action_is_noop;
 
@@ -65,6 +66,8 @@ pub enum MullMode {
     Random,
     #[default]
     Table,
+    /// Keep table fallback plus leaf value over determinized post-mulligan positions.
+    Leaf,
 }
 
 /// Per-decision transposition table: (`search_key`, remaining depth, side-to-move-is-me).
@@ -770,6 +773,11 @@ pub struct H0 {
     pub mull_table: Option<Arc<MulliganTable>>,
     /// Table path compared by `h0_fields_eq` and printed by `spec()`.
     pub mull_path: Option<String>,
+    /// Leaf mulligan sample count (`mulls=`; default 32).
+    pub mulls: u32,
+    /// Prefer the keep table when the best leaf mean beats the table by less than
+    /// this margin in leaf points (`mullm=`; default `0`).
+    pub mullm: f32,
     pub stats: SearchStats,
     /// Root value of the most recent [`Policy::choose`]. Reset every
     /// `choose`; ignored by `h0_fields_eq` and `spec()`.
@@ -780,6 +788,8 @@ pub struct H0 {
     /// Per-decision explain record. Populated when [`explain_armed`] was
     /// set; take with [`take_explain`].
     pub explain: Option<ExplainRecord>,
+    /// Mulligan explain payload for the most recent `choose_mulligan` when armed.
+    pub(crate) pending_mull_explain: Option<MullExplainRecord>,
     /// Do not activate the early Bonus PP charge before this turn (1–6;
     /// default `1` = today; `6` = never).
     pub bpp1: u32,
@@ -861,10 +871,13 @@ impl Default for H0 {
             mull: MullMode::Table,
             mull_table: Some(builtin_mulligan()),
             mull_path: None,
+            mulls: 32,
+            mullm: 0.0,
             stats: SearchStats::default(),
             last_value: None,
             explain_armed: false,
             explain: None,
+            pending_mull_explain: None,
             bpp1: 1,
             bpp2: 6,
             bppv: 0.0,
@@ -993,6 +1006,10 @@ impl H0 {
     pub fn take_explain(&mut self) -> Option<ExplainRecord> {
         self.explain_armed = false;
         self.explain.take()
+    }
+
+    pub(crate) fn take_pending_mull_explain(&mut self) -> Option<MullExplainRecord> {
+        self.pending_mull_explain.take()
     }
 
     fn alloc_label(&self) -> &'static str {
@@ -1204,11 +1221,27 @@ impl H0 {
         legal: &[Action],
         rng: &mut Xoshiro256ss,
     ) -> usize {
+        self.pending_mull_explain = None;
         match self.mull {
             MullMode::Rule => mulligan_index(state, legal),
             MullMode::Random => mulligan_random(state, legal, rng),
             MullMode::Table => mulligan_table(self, db, state, legal),
+            MullMode::Leaf => mulligan_leaf(self, db, state, legal, rng),
         }
+    }
+
+    /// For tests: state at which `mull=leaf` scores mask `mask_index` on one sample.
+    #[doc(hidden)]
+    pub fn mull_leaf_scored_position(
+        &self,
+        db: &CardDb,
+        state: &State,
+        legal: &[Action],
+        mask_index: usize,
+        sample_seed: u64,
+    ) -> Option<State> {
+        let me = acting_player(state);
+        mull_leaf_position_after_mask(db, self, state, me, legal, mask_index, sample_seed)
     }
 }
 
@@ -1277,6 +1310,132 @@ fn mulligan_table(h0: &mut H0, _db: &CardDb, state: &State, legal: &[Action]) ->
         .iter()
         .position(|a| matches!(a, Action::MulliganConfirm { swap } if *swap == want))
         .unwrap_or_else(|| mulligan_index(state, legal))
+}
+
+const MULL_KEEP_ALL: [bool; 4] = [false; 4];
+
+fn mull_leaf_position_after_mask(
+    db: &CardDb,
+    h0: &H0,
+    state: &State,
+    me: PlayerId,
+    legal: &[Action],
+    mask_index: usize,
+    sample_seed: u64,
+) -> Option<State> {
+    let action = legal.get(mask_index)?;
+    let Action::MulliganConfirm { .. } = action else {
+        return None;
+    };
+    let mut s = determinize_block(state, me, sample_seed, 0, 0, h0.info, None, false, None);
+    apply(db, &mut s, action.clone()).ok()?;
+    let opp = me.opponent();
+    if me == state.first {
+        if !matches!(s.phase, Phase::Mulligan { player: p } if p == opp) {
+            return None;
+        }
+        let opp_legal = legal_actions(db, &s);
+        let keep_all = opp_legal
+            .iter()
+            .find(|a| matches!(a, Action::MulliganConfirm { swap } if *swap == MULL_KEEP_ALL))
+            .or_else(|| opp_legal.first())?;
+        apply(db, &mut s, keep_all.clone()).ok()?;
+    }
+    if s.winner.is_some() || matches!(s.phase, Phase::Terminal) {
+        return None;
+    }
+    let mut steps = 0;
+    while s.active != me {
+        if s.winner.is_some() || matches!(s.phase, Phase::Terminal | Phase::End) || steps >= 8 {
+            return None;
+        }
+        let step_legal = legal_actions(db, &s);
+        if step_legal.is_empty() {
+            return None;
+        }
+        let act = step_legal
+            .iter()
+            .find(|a| matches!(a, Action::EndTurn))
+            .unwrap_or(&step_legal[0]);
+        apply(db, &mut s, act.clone()).ok()?;
+        steps += 1;
+    }
+    if !matches!(s.phase, Phase::Main | Phase::Combat) {
+        return None;
+    }
+    Some(s)
+}
+
+fn mulligan_leaf(
+    h0: &mut H0,
+    db: &CardDb,
+    state: &State,
+    legal: &[Action],
+    rng: &mut Xoshiro256ss,
+) -> usize {
+    let me = acting_player(state);
+    let table_idx = mulligan_table(h0, db, state, legal);
+    let n = legal.len();
+    let root_vocab = h0.root_vocab(state);
+    let eval = h0.evaluator(db, &root_vocab);
+    let mut acc = vec![0.0f32; n];
+    let mut cnt = vec![0u32; n];
+    let mut kept_samples = 0u32;
+    for _ in 0..h0.mulls {
+        let sample_seed = rng.next_u64();
+        let mut sample_any = false;
+        for (i, _) in legal.iter().enumerate() {
+            if let Some(pos) =
+                mull_leaf_position_after_mask(db, h0, state, me, legal, i, sample_seed)
+            {
+                acc[i] += eval.value(&pos, me);
+                cnt[i] += 1;
+                sample_any = true;
+            }
+        }
+        if sample_any {
+            kept_samples += 1;
+        }
+    }
+    let means: Vec<f32> = (0..n)
+        .map(|i| {
+            if cnt[i] > 0 {
+                acc[i] / cnt[i] as f32
+            } else {
+                f32::NAN
+            }
+        })
+        .collect();
+    let table_mean = means.get(table_idx).copied().unwrap_or(f32::NAN);
+    let mut best_idx = table_idx;
+    let mut best_mean = f32::NEG_INFINITY;
+    for (i, &m) in means.iter().enumerate() {
+        if m.is_nan() {
+            continue;
+        }
+        if m > best_mean || (m == best_mean && i < best_idx) {
+            best_mean = m;
+            best_idx = i;
+        }
+    }
+    let chosen = if !best_mean.is_finite()
+        || (h0.mullm > 0.0 && table_mean.is_finite() && best_mean - table_mean < h0.mullm)
+    {
+        table_idx
+    } else {
+        best_idx
+    };
+    if h0.explain_armed {
+        h0.pending_mull_explain = Some(MullExplainRecord {
+            mode: "leaf".into(),
+            samples: h0.mulls,
+            kept: kept_samples,
+            margin: h0.mullm,
+            values: means,
+            table_index: table_idx,
+        });
+    }
+    chosen
 }
 
 fn useful_action(state: &State, me: PlayerId, a: &Action, bpp1: u32, bpp2: u32) -> bool {

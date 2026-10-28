@@ -325,6 +325,7 @@ fn run_h0_decision_mode(
             let mut rec = ExplainRecord::new(ChoosePath::Mulligan, 0, h.node_cap, h.alloc_label());
             rec.chosen_index = idx;
             rec.tie_set = vec![idx];
+            rec.mull = h.take_pending_mull_explain();
             h.stamp_explain_deal(&mut rec, None);
             h.explain = Some(rec);
         }
@@ -1369,6 +1370,15 @@ impl H0Job {
         }
         if matches!(state.phase, Phase::Mulligan { .. }) {
             let idx = h.choose_mulligan(db, state, &legal, &mut rng);
+            if h.explain_armed {
+                let mut rec =
+                    ExplainRecord::new(ChoosePath::Mulligan, 0, h.node_cap, h.alloc_label());
+                rec.chosen_index = idx;
+                rec.tie_set = vec![idx];
+                rec.mull = h.take_pending_mull_explain();
+                h.stamp_explain_deal(&mut rec, None);
+                h.explain = Some(rec);
+            }
             return Ok((
                 H0Job::terminal(h, state, legal, seed, idx, None),
                 JobStep::done(idx, None),

@@ -163,6 +163,17 @@ pub struct LostRerankRecord {
     pub chosen_index: usize,
 }
 
+/// Mulligan explain fields when `mull=leaf` (`mull` spec key).
+#[derive(Debug, Clone, Serialize)]
+pub struct MullExplainRecord {
+    pub mode: String,
+    pub samples: u32,
+    pub kept: u32,
+    pub margin: f32,
+    pub values: Vec<f32>,
+    pub table_index: usize,
+}
+
 /// Full explain record for one `choose` call.
 #[derive(Debug, Clone, Serialize)]
 pub struct ExplainRecord {
@@ -193,6 +204,9 @@ pub struct ExplainRecord {
     pub deal_seed: Option<u64>,
     /// Hand-reading deal weights when `hread` is on; absent otherwise.
     pub hread: Option<HreadExplain>,
+    /// Leaf mulligan scoring when `mull=leaf`; absent for other modes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mull: Option<MullExplainRecord>,
 }
 
 /// Hand-reading explain fields (`hread` spec key).
@@ -226,6 +240,7 @@ impl ExplainRecord {
             deal: "indep".to_string(),
             deal_seed: None,
             hread: None,
+            mull: None,
         }
     }
 }
