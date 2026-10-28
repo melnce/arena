@@ -124,6 +124,15 @@
 //! | 37 | meta-dragon-aggro | `0xe0ff3ba0823747ae` → `0x0c5e00eb14bdce85` | 88 | match | 79 | 80 | same as default 37 |
 //! | 41 | meta-dragon-ramp | `0xc4e8ab63aec96246` → `0x3207d65c42f589a8` | 51 | match | 52 | 53 | **hashΔ 52:** Lumiore & Argente, Shining Wings `10844120` discard (`PlaySelect` both); main hash shifts on first discard pick; branch stays at `hash@51`. **reconv 53.** **n 51:** `hash@50` match; main discards Dragonsign `10042310` then Burnite, Anathema of Ash `10744110`; branch reverses order. |
 //! | 53 | meta-forest-combo | `0x7404fbcb4cae7f60` → `0x73930e18abe26408` | 86 | match | 37 | 38 | same as default 53 |
+//!
+//! ## Spell play reactions after whole spell text (`main` → this branch)
+//!
+//! Proof (c): `git checkout origin/main -- engine/src/apply.rs engine/src/state.rs` + old pin below →
+//! `cargo test --release --test h0_defaults v2_net_matches_pre_v3_default_fingerprints` → **1 passed**.
+//!
+//! | table | seed | deck | main → branch | n | note |
+//! |-------|------|------|---------------|---|------|
+//! | `V2_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x4836411694e56361` → `0xfa56af64fca7aacd` | 17 | `h0:mull=v1,net=v2`. Branch B `play` `10624120` (Faith: Yidmetra); main B `end_turn`. Seat-B search worlds see spell play-reaction order on A's turns. |
 
 use arena_engine::{
     apply, hash, legal_actions, new_game, play_game, policy_rng, to_neutral, trace::fnv1a64,
@@ -273,7 +282,7 @@ const V2_DEFAULT_FINGERPRINTS: [u64; 8] = [
     0xe532_eaeb_163c_42fa,
     0x9b0b_1dba_8bb6_3158,
     0x6c34_61ee_d232_775e,
-    0x4836_4116_94e5_6361,
+    0xfa56_af64_fca7_aacd,
 ];
 
 /// Pre-v2 default `h0` fingerprints (`main@063bdd4`, built-in `h0-linear-v1`).

@@ -1,4 +1,4 @@
-//! Play reactions on follower / amulet plays resolve after the whole body (E45).
+//! Play reactions on every play resolve after the played card's whole body (E45).
 
 use arena_engine::event::Event;
 use arena_engine::{apply, Action, CardInstance, PlayerId};
@@ -15,6 +15,9 @@ const MOELLE: &str = "10811130";
 const FORESIGHT: &str = "10031310";
 const WITCH_BREW: &str = "10031210";
 const THESTAE: &str = "10714110";
+const STORMY_A: &str = "10831310";
+const STORMY_B: &str = "10131320";
+const ARTISAN: &str = "10571120";
 
 fn wog_at_count(db: &arena_engine::CardDb, st: &mut arena_engine::State, who: PlayerId, n: i32) {
     put_field(db, st, who, WORLD);
@@ -68,6 +71,49 @@ fn play_kind_tags(events: &[Event]) -> Vec<&'static str> {
             _ => None,
         })
         .collect()
+}
+
+fn play_damage_amounts(events: &[Event]) -> Vec<i32> {
+    events
+        .iter()
+        .filter_map(|e| match e {
+            Event::Damage { amount, .. } => Some(*amount),
+            _ => None,
+        })
+        .collect()
+}
+
+fn play_damage_then_destroy(events: &[Event]) -> (Vec<i32>, bool) {
+    let amounts = play_damage_amounts(events);
+    let destroy = events.iter().any(|e| matches!(e, Event::Destroy { .. }));
+    (amounts, destroy)
+}
+
+fn stormy_blast_wog_after_spell_text_one_print(stormy: &str) {
+    let db = load_db();
+    let mut st = started(&db, 806);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    clear_hand_deck(&mut st, me);
+    fill_deck(&db, &mut st, me, VANILLA, 5);
+    wog_at_count(&db, &mut st, me, 1);
+    put_field(&db, &mut st, opp, TANK);
+    give_pp(&mut st, me, 10, 10);
+    put_hand(&db, &mut st, me, stormy);
+    let events = play_events(&db, &mut st, 0);
+    assert_eq!(field_def(&st, opp, TANK), Some(8));
+    assert_eq!(st.player(me).hand.len(), 2);
+    assert!(!field_has(&st, me, WORLD));
+    assert_eq!(
+        play_kind_tags(&events),
+        ["damage", "destroy", "draw", "draw"]
+    );
+}
+
+#[test]
+fn stormy_blast_wog_after_spell_text_both_prints() {
+    stormy_blast_wog_after_spell_text_one_print(STORMY_A);
+    stormy_blast_wog_after_spell_text_one_print(STORMY_B);
 }
 
 #[test]
@@ -136,7 +182,7 @@ fn witch_brew_amulet_wog_after_fanfare_draw() {
 }
 
 #[test]
-fn foresight_spell_wog_before_draw_unchanged() {
+fn foresight_spell_wog_after_spell_text() {
     let db = load_db();
     let mut st = started(&db, 804);
     let me = PlayerId::A;
@@ -146,7 +192,30 @@ fn foresight_spell_wog_before_draw_unchanged() {
     give_pp(&mut st, me, 10, 10);
     put_hand(&db, &mut st, me, FORESIGHT);
     let events = play_events(&db, &mut st, 0);
-    assert_eq!(play_kind_tags(&events), ["destroy", "draw", "draw", "draw"]);
+    assert_eq!(play_kind_tags(&events), ["draw", "destroy", "draw", "draw"]);
+}
+
+#[test]
+fn flowering_artisan_damage_after_stormy_blast_text() {
+    let db = load_db();
+    let mut st = started(&db, 807);
+    let me = PlayerId::A;
+    let opp = PlayerId::B;
+    put_field(&db, &mut st, me, ARTISAN);
+    let weak = put_field(&db, &mut st, opp, VANILLA);
+    if let Some(f) = st.field_inst_mut(opp, weak) {
+        f.defense = 4;
+        f.max_defense = 4;
+    }
+    put_field(&db, &mut st, opp, TANK);
+    give_pp(&mut st, me, 10, 10);
+    st.player_mut(me).hand.clear();
+    put_hand(&db, &mut st, me, STORMY_A);
+    let events = play_events(&db, &mut st, 0);
+    assert_eq!(field_def(&st, opp, TANK), Some(7));
+    let (amounts, destroy) = play_damage_then_destroy(&events);
+    assert_eq!(amounts, [2, 3, 3]);
+    assert!(destroy);
 }
 
 #[test]

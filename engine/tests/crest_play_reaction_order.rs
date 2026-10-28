@@ -335,7 +335,7 @@ fn majestic_conquest_soldier_after_enhance_body() {
 }
 
 #[test]
-fn majestic_crest_soldier_before_enhanced_spell_buff_body() {
+fn majestic_crest_soldier_after_enhanced_spell_buff_body() {
     let db = load_db();
     let mut st = started(&db, 706);
     let me = PlayerId::A;
@@ -352,10 +352,10 @@ fn majestic_crest_soldier_before_enhanced_spell_buff_body() {
         .find(|c| c.card.as_str() == FEARLESS)
         .expect("soldier");
     assert_eq!(
-        soldier.attack, 3,
-        "spell play: crest summons before Enhance body; +1/+1 hits the token"
+        soldier.attack, 2,
+        "spell play: Enhance body before crest; Soldier not buffed"
     );
-    assert_eq!(soldier.defense, 3);
+    assert_eq!(soldier.defense, 2);
 }
 
 struct RecordedReplayRow {
@@ -427,6 +427,6 @@ fn as_recorded_crest_order_replays_like_main() {
 }
 
 // Unchanged regressions (see PR body): `m2_wave2::world_of_games_divine_thunder_qa_count_is_four`,
-// `m2_wave2::world_of_games_advances_on_same_base_cost`, `play_time_selection::artisan_damage_kills_spell_target_after_play_time_pick`,
+// `m2_wave2::world_of_games_advances_on_same_base_cost`, `play_time_selection::stormy_blast_spell_damage_before_artisan_damage_after_pick`,
 // `play_time_selection::majestic_crest_summon_not_in_enhanced_play_pick` (spell plays),
 // `m2_portal::asher_enhance_granted_ward_is_a_destroy_candidate`, `play_time_selection::yuel_crest_fanfare_pick_before_evolve_pick`.

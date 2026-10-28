@@ -682,7 +682,6 @@ pub struct PendingPlayChoices {
     pub step_idx: usize,
     pub controller: PlayerId,
     pub source: SourceRef,
-    pub played_kind: CardKind,
     pub played_id: u32,
     /// `pending_work.len()` before the played card's body was pushed (`apply_play`).
     pub body_insert_idx: usize,
