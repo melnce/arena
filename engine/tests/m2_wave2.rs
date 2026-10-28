@@ -1172,8 +1172,8 @@ fn world_of_games_breaks_after_enamored_enhance_summons() {
 fn world_of_games_divine_thunder_qa_count_is_four() {
     // Official Q&A 10503210: only card on my field is WoG at 5; only enemy
     // card is Quake Goliath. Play Divine Thunder → count 4. The enemy
-    // 4-cost counts, and the play reaction resolves before the spell
-    // destroys Goliath.
+    // 4-cost counts; the condition is judged at the play although Goliath is
+    // destroyed before the play reaction resolves.
     let db = load_db();
     let mut st = started(&db, 140);
     let me = PlayerId::A;

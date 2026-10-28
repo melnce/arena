@@ -8,7 +8,7 @@ use common::*;
 
 const MOELLE: &str = "10811130";
 const WORLD: &str = "10503210";
-const ELMOTT: &str = "10433110";
+const STORMY: &str = "10831310";
 const SPILLING_RED: &str = "10642310";
 const ITSURUGI: &str = "10854110";
 const IMARI: &str = "10574120";
@@ -153,29 +153,42 @@ fn sincerity_pick_excludes_imari_buddies_summoned_on_play() {
     }
 }
 
-/// Flowering Artisan + Elmott: target picked while alive; damage kill fizzles destroy.
+/// Flowering Artisan + Stormy Blast: spell damage on the pick, then Artisan hits.
 #[test]
-fn artisan_damage_kills_spell_target_after_play_time_pick() {
+fn stormy_blast_spell_damage_before_artisan_damage_after_pick() {
+    use arena_engine::event::Event;
+
     let db = load_db();
     let mut st = started(&db, 903);
     let me = PlayerId::A;
     let opp = PlayerId::B;
     put_field(&db, &mut st, me, ARTISAN);
     let weak = put_field(&db, &mut st, opp, VANILLA);
+    // 3 defense: Stormy Blast leaves 1 so Artisan's `pick: all` still hits the pick.
     if let Some(f) = st.field_inst_mut(opp, weak) {
-        f.defense = 2;
-        f.max_defense = 2;
+        f.defense = 3;
+        f.max_defense = 3;
     }
     give_pp(&mut st, me, 3, 3);
     st.player_mut(me).hand.clear();
-    play_id(&db, &mut st, me, ELMOTT);
-    assert!(matches!(st.phase, Phase::Choice { .. }));
-    choose(&db, &mut st, 0);
-    drain_choice(&db, &mut st);
+    put_hand(&db, &mut st, me, STORMY);
+    let mut events = apply(&db, &mut st, Action::Play { hand: 0 }).expect("play");
+    while matches!(st.phase, Phase::Choice { .. }) {
+        events.extend(apply(&db, &mut st, Action::Choose(0)).expect("choose"));
+    }
     assert!(
         st.field_inst(opp, weak).is_none(),
-        "Artisan killed the target; spell part fizzled harmlessly"
+        "Artisan finished the follower after Stormy Blast's spell damage"
     );
+    let tags: Vec<&str> = events
+        .iter()
+        .filter_map(|e| match e {
+            Event::Damage { .. } => Some("damage"),
+            Event::Destroy { .. } => Some("destroy"),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(tags, ["damage", "damage", "destroy"]);
 }
 
 /// Majestic Conquest crest + Enhanced ally-follower pick: Fearless Soldier not a candidate.
