@@ -373,7 +373,7 @@ fn regen_h0_exact_games() {
         eprintln!("set H0_EXACT_GAMES_REGEN=1 to rewrite fixtures/h0_exact/games.json");
         return;
     }
-    let db = load_db();
+    let db = with_play_reactions_as_recorded(load_db());
     let live = collect_all(&db);
     let games: Vec<Value> = live.iter().map(capture_to_json).collect();
     let path = games_fixture_path();
