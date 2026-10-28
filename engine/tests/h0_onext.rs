@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
+use arena_engine::policy::Deal;
 use arena_engine::{
     acting_player, apply, apply_neutral, legal_actions, new_game, policy_rng, to_neutral,
     trace::fnv1a64, world, Action, AnyPolicy, First, GameConfig, H0Job, JobStep, Phase, PlayerId,
@@ -265,7 +266,9 @@ fn onext_counters() {
 }
 
 const DEFAULT_STRONG: &str =
-    "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v69";
+    "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69";
+const DEFAULT_CHEAT: &str =
+    "h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v69";
 
 const SERVED_STACK_8W: &str =
     "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=40";
@@ -643,6 +646,8 @@ fn onext_spec() {
     );
 
     assert!(DEFAULT_STRONG.contains(",onext=0,"));
+    assert!(DEFAULT_STRONG.contains(",deal=block,"));
+    assert!(!DEFAULT_CHEAT.contains("deal="));
     let parsed = AnyPolicy::parse_spec(DEFAULT_STRONG).unwrap();
     let spec = parsed.spec();
     assert!(!spec.contains("onextwin"));
@@ -658,6 +663,7 @@ fn onext_spec() {
             assert_eq!(h.onext, 0);
             assert_eq!(h.onextwin, 0);
             assert!(!h.onextleaf);
+            assert_eq!(h.deal, Deal::Block);
         }
         other => panic!("{other:?}"),
     }
