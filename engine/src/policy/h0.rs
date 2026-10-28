@@ -179,13 +179,30 @@ pub fn builtin_value_v66() -> Arc<ValueNet> {
         .clone()
 }
 
-/// Resolve a built-in value leaf by committed name (`builtin`, `h0-linear-v4`, `h0-value-v64`, `h0-value-v65`, `h0-value-v66`).
+const BUILTIN_VALUE_V69_JSON: &str = include_str!("../../models/h0-value-v69.json");
+/// Committed name of the served-bot residual value leaf (`engine/models/h0-value-v69.json`).
+pub const BUILTIN_VALUE_V69_NAME: &str = "h0-value-v69";
+static BUILTIN_VALUE_V69: OnceLock<Arc<ValueNet>> = OnceLock::new();
+
+/// The built-in `h0-value-v69` residual leaf, parsed once. A parse failure is a
+/// build defect.
+pub fn builtin_value_v69() -> Arc<ValueNet> {
+    BUILTIN_VALUE_V69
+        .get_or_init(|| {
+            ValueNet::from_json_named(BUILTIN_VALUE_V69_NAME, BUILTIN_VALUE_V69_JSON)
+                .expect("built-in h0-value-v69 parses")
+        })
+        .clone()
+}
+
+/// Resolve a built-in value leaf by committed name (`builtin`, `h0-linear-v4`, `h0-value-v64`, `h0-value-v65`, `h0-value-v66`, `h0-value-v69`).
 pub fn builtin_net_by_name(name: &str) -> Option<Arc<ValueNet>> {
     match name {
         "builtin" | BUILTIN_NET_NAME => Some(builtin_net()),
         BUILTIN_VALUE_V64_NAME => Some(builtin_value_v64()),
         BUILTIN_VALUE_V65_NAME => Some(builtin_value_v65()),
         BUILTIN_VALUE_V66_NAME => Some(builtin_value_v66()),
+        BUILTIN_VALUE_V69_NAME => Some(builtin_value_v69()),
         _ => None,
     }
 }
