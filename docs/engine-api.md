@@ -1144,7 +1144,7 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v69`) is the spec used whenever the request's `policy` is an
+`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
 exact token `info=all`. The default includes `okill=8` since sweep 48 (2026-10-10).
 `okill=15` since 2026-10-19 (sweep 58, +6 Elo at eight worlds): after each of its lines the bot looks for the opponent's kill also through a Ward-break prefix, slot-freeing trades and play-through lines (plays that only open evolve lines, one follower attack per target); it thinks ≈ 5–7 % longer per decision.
@@ -1176,6 +1176,10 @@ ranks its own moves with a small neural network trained on the search's own scor
 +4 Elo against brief YE's `h0-value-v65`, +9 against brief YC's `h0-value-v64`, itself +32 against
 `h0-linear-v4`, all at eight worlds): the bot scores the end of each line it reads with a small neural network
 trained on the results of its own games instead of the linear `h0-linear-v4`; it thinks about as long as before.
+`deal=block` since brief YK (2026-10-28; sweeps 70 and 70b: +5 Elo against the same stack with independent
+deals, at eight worlds): the bot's worlds deal the opponent's hidden hand as consecutive blocks of one shuffle of
+the cards it cannot rule out, so together they cover his possible hands evenly. The cheater (`info=all`) sees the
+true hand and keeps its spec. The bot thinks as long as before (sweeps 70 and 70b's self-play: × 0.993 and × 0.964 games per hour against independent deals).
 `--cheat` (default
 `h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v69`)
 is used for h0 variants whose keys include `info=all` (full-information
@@ -1247,7 +1251,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v69, 28 cpus)` or
+select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69, 28 cpus)` or
 `bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
 selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.
