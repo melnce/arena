@@ -261,6 +261,7 @@ impl PyGame {
                         "deal": explain_json.get("deal"),
                         "deal_seed": explain_json.get("deal_seed"),
                         "hread": explain_json.get("hread"),
+                        "mull": explain_json.get("mull"),
                     }),
                 )
             }

@@ -19,7 +19,8 @@ mod record;
 use crate::determinize::{HREAD_DELTA, HREAD_EPS_FA, HREAD_EPS_S};
 
 pub use explain::{
-    CandidateRecord, ChoosePath, ExplainRecord, LostRerankRecord, PvEnd, PvLeaf, WorldRecord,
+    CandidateRecord, ChoosePath, ExplainRecord, LostRerankRecord, MullExplainRecord, PvEnd, PvLeaf,
+    WorldRecord,
 };
 pub use fuse_guard::fuse_is_noop;
 pub use h0::job::{
@@ -186,12 +187,15 @@ impl AnyPolicy {
     /// in `(0, 1]`; default `0.5` is the sweep-10 flip), and `clip=<c>`
     /// (`c ≥ 0`; standardised-input clamp for the learned leaf; default `5`
     /// is the sweep-10 flip; ignored with `value=v0` / `value=v1`),
-    /// `mull=builtin|rule|random|<path>` (opening keep policy; default
+    /// `mull=builtin|rule|random|leaf|<path>` (opening keep policy; default
     /// `builtin` is the embedded `mulligan-v3` table; `rule` is cost ≥ 4
     /// send back; `random` draws one `next_u64()` from the rng passed to
     /// `choose` and sends back slot `i` iff bit `i` is set, `i < hand
-    /// length`, at most 4 — deterministic for a seed; `<path>` loads a
-    /// keep table at parse time like `net=`).
+    /// length`, at most 4 — deterministic for a seed; `leaf` scores each legal
+    /// mulligan mask with the value leaf over determinized post-mulligan
+    /// positions (`mulls=` sample count, default 32; `mullm=` table margin in
+    /// leaf points, default `0`); `<path>` loads a keep table at parse time
+    /// like `net=`).
     ///
     /// `Err` names the offending token: unknown policy, unknown key, or bad
     /// number.
@@ -221,7 +225,7 @@ impl AnyPolicy {
     /// non-default `pess`, `tt=0` when the table is off, `alloc=root`
     /// when the allocator is the pre-#46 root-major spend, `info=fair`
     /// / `info=draws` / `info=all` when the information regime is not the
-    /// default `open`, `mull=rule` / `mull=random` / `mull=<path>` when the
+    /// default `open`, `mull=rule` / `mull=random` / `mull=leaf` / `mull=<path>` when the
     /// mulligan mode is not the built-in table, any non-default weight,
     /// non-default `lcap`, non-default `clip`, non-default `horizon`,
     /// non-default `hres`, `deal=block`, `hread=on` or custom weights, and
@@ -432,6 +436,15 @@ fn h0_spec(h: &H0) -> String {
     match h.mull {
         MullMode::Rule => parts.push("mull=rule".to_string()),
         MullMode::Random => parts.push("mull=random".to_string()),
+        MullMode::Leaf => {
+            parts.push("mull=leaf".to_string());
+            if h.mulls != 32 {
+                parts.push(format!("mulls={}", h.mulls));
+            }
+            if h.mullm != 0.0 {
+                parts.push(format!("mullm={}", h.mullm));
+            }
+        }
         MullMode::Table => {
             if let Some(path) = &h.mull_path {
                 parts.push(format!("mull={path}"));
@@ -479,6 +492,8 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.clip == b.clip
         && a.mull == b.mull
         && a.mull_path == b.mull_path
+        && a.mulls == b.mulls
+        && a.mullm == b.mullm
         && a.bpp1 == b.bpp1
         && a.bpp2 == b.bpp2
         && a.bppv == b.bppv
@@ -797,9 +812,34 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     h.mull_table = None;
                     h.mull_path = None;
                 }
+                "leaf" => {
+                    h.mull = MullMode::Leaf;
+                    h.mull_table = Some(crate::policy::h0::builtin_mulligan());
+                    h.mull_path = None;
+                }
                 "" => return Err("missing key 'mull'".to_string()),
                 other => mull_path = Some(other.to_string()),
             },
+            "mulls" => {
+                if h.mull != MullMode::Leaf {
+                    return Err("mulls requires mull=leaf".to_string());
+                }
+                let v: u32 = parse_num(val)?;
+                if !(1..=256).contains(&v) {
+                    return Err(format!("mulls out of range '{val}'"));
+                }
+                h.mulls = v;
+            }
+            "mullm" => {
+                if h.mull != MullMode::Leaf {
+                    return Err("mullm requires mull=leaf".to_string());
+                }
+                let v: f32 = val.parse().map_err(|_| format!("bad mullm '{val}'"))?;
+                if !v.is_finite() || v < 0.0 {
+                    return Err(format!("mullm out of range '{val}'"));
+                }
+                h.mullm = v;
+            }
             other => return Err(format!("unknown key '{other}'")),
         }
     }

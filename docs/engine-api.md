@@ -631,11 +631,15 @@ default `1` = today; `6` = never),
 `bppv=<f32≥0>` (value prior: add `bppv` per usable Bonus PP charge for the
 evaluated player, subtract for the opponent; all value versions; default `0` =
 today),
-`mull=builtin|rule|random|<path>` (opening keep policy; default `builtin`
+`mull=builtin|rule|random|leaf|<path>` (opening keep policy; default `builtin`
 is the embedded `mulligan-v3` table; `rule` sends back cost ≥ 4;
 `random` draws one `next_u64()` from the rng passed to `choose` and
 sends back slot `i` iff bit `i` is set, `i < hand length`, at most 4
-— deterministic for a seed; `<path>` loads a keep table at parse time
+— deterministic for a seed; `leaf` scores each legal mulligan mask with
+the value leaf over determinized post-mulligan positions (`mulls=` sample
+count 1–256, default 32; `mullm=` margin in leaf points, default `0` —
+prefer the keep table when the best leaf mean beats the table by less than
+`mullm`; both keys require `mull=leaf`); `<path>` loads a keep table at parse time
 like `net=`). `Err` names the offending token. `AnyPolicy::spec` is the
 canonical form (`"h0:depth=…,beam=…,k=…,nodes=…"` plus `value=v0` /
 `value=v1` or `value=net,net=<name|path>` — the built-in net is not printed,
@@ -643,7 +647,7 @@ non-default `odepth` / `obeam`, `olethal=0` / non-default `osteps` when set,
 `oevo=0` when the evolve branch is off, non-default `wv`, non-default `pess`, `tt=0` when the table is off, `alloc=root` when the
 allocator is the pre-#46 root-major spend, `info=fair` / `info=draws`
 / `info=all` when the information regime is not the default `open`,
-`mull=rule` / `mull=random` / `mull=<path>` when the mulligan mode is
+`mull=rule` / `mull=random` / `mull=leaf` / `mull=<path>` when the mulligan mode is
 not the built-in table, and any non-default weight, or the short
 names). `"h0"` still round-trips to `"h0"`. `by_name` is
 `parse_spec(name).ok()`; `names()` stays
@@ -709,7 +713,9 @@ streams and output as before). `H0` is a determinized search bot:
 | `lcap` | 0.5 | in `(0, 1]`: the consensus-lethal check before the search may spend at most `floor(lcap × node_cap)` nodes; running out counts as "no consensus lethal", and the search gets what is left. Sweep 10 pooled 0.503 [0.491, 0.516] / +2.1 Elo vs the pre-flip default on the 16-deck meta pool (4 096 + 2 048 games per candidate). Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `clip` | 5 | `≥ 0`: clamp each standardised input of the learned leaf to `[−clip, clip]`; `0` is off. Accepted and ignored with `value=v0` / `value=v1`. Sweep 10 pooled 0.531 [0.519, 0.543] / +21.6 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `fusemacro` | 1 | on the bot's own turn only: at a Main node each `Fuse` contributes one child — its best completion by immediate value (single partners; pairs too for hosts with fuse recipes) — and inside the bot's own `FusePartners` choice every completion is a child with no leaf ever scored inside that choice. Sweep 10 pooled 0.499 [0.486, 0.511] / −1.0 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |
-| `mull` | `builtin` (`mulligan-v3`) | opening mulligan: built-in keep table from sweep 51 pooled 0.5060 [0.4944, 0.5176] / +4.2 Elo vs `mulligan-v2` on the 16-deck meta pool (7 168 final games). `engine/models/mulligan-v1.json` and `engine/models/mulligan-v2.json` remain available via `mull=<path>`. `rule` = cost ≥ 4 send back; `random` = uniform random mask; `<path>` = JSON keep table (see below) |
+| `mull` | `builtin` (`mulligan-v3`) | opening mulligan: built-in keep table from sweep 51 pooled 0.5060 [0.4944, 0.5176] / +4.2 Elo vs `mulligan-v2` on the 16-deck meta pool (7 168 final games). `engine/models/mulligan-v1.json` and `engine/models/mulligan-v2.json` remain available via `mull=<path>`. `rule` = cost ≥ 4 send back; `random` = uniform random mask; `leaf` = leaf-scored masks (default off; not served — see below); `<path>` = JSON keep table (see below) |
+| `mulls` | 32 | with `mull=leaf` only: independent determinized samples per decision (`1`–`256`) |
+| `mullm` | 0 | with `mull=leaf` only: keep-table margin in leaf points (≥ 0); when the best leaf mean beats the table by less than `mullm`, the table mask is kept |
 | `tt` | 1 | per-decision transposition table; `0` restores the pre-#32 search |
 | `alloc` | `fair` | budget spend across `(root, candidate)` pairs; `fair` = per-pair share so every candidate is scored on every determinization; `root` = pre-#46 root-major (later pairs skipped when the cap binds); `world` = even split across worlds after consensus lethal, fair within each world (each world has its own node counter and transposition table) |
 | `threads` | `1` | native-only parallelism: with `alloc=world`, worlds run on up to `min(threads, k)` workers; with `tkill>0` and `tkroll>0`, the deterministic and roll kill solvers overlap. Does not change the chosen index, `last_value`, explain record, or `SearchStats` |
@@ -1351,6 +1357,7 @@ For `h0`, the dict also carries:
 | `hread` | object \| null | When `hread` is on: `{eps_fa, eps_s, delta, m}`. Absent when off. |
 | `lost_rerank` | object \| null | When `lostrank>0` re-ranked a lost turn: `{aggregates, nodes, chosen_index}` (`aggregates` in candidate order; `chosen_index` is the legal index picked). Absent when the trigger did not fire. |
 | `fuse_dropped` | int | Root fuse candidates dropped when `fuseguard=1` (`0` when off). |
+| `mull` | object \| null | When `mull=leaf`: `{mode, samples, kept, margin, values, table_index}` — one mean leaf value per legal mulligan index, the built-in table index, and how many samples contributed. Absent for other mulligan modes. |
 
 Each candidate entry:
 
@@ -1512,7 +1519,21 @@ stored with their **signed** values.
 The default `h0` uses the built-in `mulligan-v3` table
 (`engine/models/mulligan-v3.json`, embedded like `h0-linear-v4`). `mull=builtin`
 requests it explicitly; `mull=rule` restores cost ≥ 4 send back.
-`mull=random` explores uniformly. `mull=<path>` loads a JSON keep table at
+`mull=random` explores uniformly. `mull=leaf` (default off; not served in
+`py/serve.py` or the UI bot levels) scores every legal mulligan mask on the
+bot's own mulligan: for each of `mulls` samples (default 32) it
+determinizes the decision state from the bot's side with the spec's `info`
+(`determinize_block`, independent deals), applies the mask on that sample, and
+if the bot mulligans first applies the opponent's keep-all mask; if the side to
+move is then the opponent, it ends that turn (at most eight actions) until the
+bot's first turn with the bot to move — the position the value leaf was trained
+on. Each mask's value is the leaf from the bot's side (`Evaluator::value`, same
+vocabulary as search). The mask with the highest sample mean wins (ties: lowest
+legal index); if `mullm>0` and the best mean beats the built-in table by less
+than `mullm`, the table mask is kept; if every sample drops, the table mask is
+used. `mull=leaf` loads the built-in keep table for that fallback and for
+`mullm`; it requires a value leaf (`net=` or the default `h0-linear-v4`). A
+sweep on the owner's box decides whether to serve it. `mull=<path>` loads a JSON keep table at
 parse time (same path rules as `net=`); `engine/models/mulligan-v1.json` and
 `engine/models/mulligan-v2.json` replay earlier defaults exactly. At the bot's
 own mulligan the engine computes a
