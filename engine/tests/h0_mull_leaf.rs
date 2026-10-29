@@ -1,5 +1,7 @@
 //! `mull=leaf`: leaf-scored opening mulligan (default off).
 
+use std::collections::BTreeMap;
+
 use arena_engine::{
     acting_player, apply, legal_actions, new_game, policy_rng, Action, AnyPolicy, CardDb, First,
     GameConfig, H0Job, JobStep, MullMode, OpeningHands, Phase, PlayerId, Policy, H0,
@@ -97,6 +99,37 @@ fn job_mull_index(spec: &str, db: &CardDb, st: &arena_engine::State, seed: u64) 
     }
 }
 
+fn hand_card_counts(hand: &[arena_engine::CardInstance]) -> BTreeMap<String, u32> {
+    let mut out = BTreeMap::new();
+    for c in hand {
+        *out.entry(c.card.to_string()).or_insert(0) += 1;
+    }
+    out
+}
+
+fn kept_ids_from_mask(
+    state: &arena_engine::State,
+    me: PlayerId,
+    legal: &[Action],
+    mask_index: usize,
+) -> BTreeMap<String, u32> {
+    let Action::MulliganConfirm { swap } = &legal[mask_index] else {
+        panic!("expected MulliganConfirm");
+    };
+    let mut out = BTreeMap::new();
+    for (i, inst) in state.player(me).hand.iter().enumerate().take(4) {
+        if !swap[i] {
+            *out.entry(inst.card.to_string()).or_insert(0) += 1;
+        }
+    }
+    out
+}
+
+fn multiset_subset(sub: &BTreeMap<String, u32>, sup: &BTreeMap<String, u32>) -> bool {
+    sub.iter()
+        .all(|(id, n)| sup.get(id).copied().unwrap_or(0) >= *n)
+}
+
 #[test]
 fn mull_leaf_spec_round_trips() {
     for spec in [
@@ -181,19 +214,19 @@ fn mull_leaf_meta_pool() {
 
                     let mut margin = parse_h0("h0:net=h0-value-v69,mull=leaf,mullm=1000");
                     let mut rng4 = policy_rng(seed ^ 0xdead_beef);
-                    let table_idx = parse_h0("h0:net=h0-value-v69,mull=builtin").choose(
-                        &db,
-                        &st,
-                        &legal,
-                        &mut policy_rng(seed ^ 0xdead_beef),
-                    );
-                    let margin_idx = margin.choose(&db, &st, &legal, &mut rng4);
+                    let mut table_h = parse_h0("h0:net=h0-value-v69,mull=builtin");
+                    let table_idx = table_h.choose(&db, &st, &legal, &mut rng4);
+                    let margin_idx =
+                        margin.choose(&db, &st, &legal, &mut policy_rng(seed ^ 0xdead_beef));
                     assert_eq!(margin_idx, table_idx, "mullm table {stem} seed={seed}");
 
                     let mut builtin = parse_h0("h0:net=h0-value-v69,mull=builtin");
                     let builtin_idx =
-                        builtin.choose(&db, &st, &legal, &mut policy_rng(seed ^ 0xcafe));
-                    let _ = builtin_idx;
+                        builtin.choose(&db, &st, &legal, &mut policy_rng(seed ^ 0xdead_beef));
+                    assert_eq!(
+                        builtin_idx, table_idx,
+                        "mull=builtin vs table {stem} {opp_name} second={meta_is_second} seed={seed}"
+                    );
                 }
             }
         }
@@ -202,20 +235,59 @@ fn mull_leaf_meta_pool() {
 
 #[test]
 #[cfg_attr(debug_assertions, ignore)]
-fn mull_leaf_scored_position_shape() {
+fn mull_leaf_scored_position_meta_pool() {
     let db = load_db();
-    let meta = load_meta("meta-rune-test-subject");
-    let opp = load_meta("meta-sword-rally");
-    let st = reach_meta_mulligan(&db, &meta, &opp, 99, false);
-    let legal = legal_actions(&db, &st);
+    let stems = meta_stems();
+    assert_eq!(stems.len(), 16);
     let h = parse_h0(LEAF);
-    let me = acting_player(&st);
-    let pos = h
-        .mull_leaf_scored_position(&db, &st, &legal, 0, 12345)
-        .expect("position");
-    assert_eq!(pos.active, me);
-    assert!(matches!(pos.phase, Phase::Main | Phase::Combat));
-    assert_eq!(pos.turn, 1);
+    let mut cases = 0u64;
+    for stem in &stems {
+        let meta = load_meta(stem);
+        for opp_name in OPPONENTS {
+            let opp = load_meta(opp_name);
+            for meta_is_second in [false, true] {
+                for &seed in &SEEDS {
+                    cases += 1;
+                    let st = reach_meta_mulligan(&db, &meta, &opp, seed, meta_is_second);
+                    let legal = legal_actions(&db, &st);
+                    let me = acting_player(&st);
+                    let sample_seed = seed ^ 0x5eed;
+                    for mask_index in 0..legal.len() {
+                        let pos = h
+                            .mull_leaf_scored_position(&db, &st, &legal, mask_index, sample_seed)
+                            .unwrap_or_else(|| {
+                                panic!(
+                                    "dropped sample {stem} {opp_name} second={meta_is_second} seed={seed} mask={mask_index}"
+                                )
+                            });
+                        assert_eq!(
+                            pos.active, me,
+                            "{stem} {opp_name} second={meta_is_second} seed={seed} mask={mask_index}"
+                        );
+                        assert!(
+                            matches!(pos.phase, Phase::Main | Phase::Combat),
+                            "{stem} phase {:?}",
+                            pos.phase
+                        );
+                        assert_eq!(pos.turn, 1, "{stem} seed={seed}");
+                        assert!(pos.winner.is_none(), "{stem} winner={:?}", pos.winner);
+                        assert_eq!(
+                            pos.player(me).hand.len(),
+                            5,
+                            "{stem} {opp_name} second={meta_is_second} seed={seed} mask={mask_index}: expected 5-card hand after first-turn draw"
+                        );
+                        let kept = kept_ids_from_mask(&st, me, &legal, mask_index);
+                        let hand_ids = hand_card_counts(&pos.player(me).hand);
+                        assert!(
+                            multiset_subset(&kept, &hand_ids),
+                            "{stem} kept={kept:?} hand={hand_ids:?} mask={mask_index}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+    assert_eq!(cases, 512, "meta pool case count");
 }
 
 #[test]
