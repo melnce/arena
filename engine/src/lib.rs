@@ -53,7 +53,7 @@ pub use lethal::{
     forced_lethal_det, lethal_action_kind, roll_confirm_seed, LethalActionKind, LethalVerdict,
 };
 pub use limits::{MAX_ACTIONS, MAX_TURNS};
-pub use play::{play_game, End, MulliganRecord, Outcome};
+pub use play::{play_game, play_game_record, End, MulliganRecord, Outcome};
 pub use policy::{
     builtin_mulligan, builtin_net, builtin_net_by_name, builtin_order, builtin_order_by_name,
     builtin_order_v59, builtin_value_v64, builtin_value_v65, builtin_value_v66, builtin_value_v69,

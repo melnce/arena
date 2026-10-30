@@ -11,7 +11,7 @@ use crate::rng::Xoshiro256ss;
 use crate::state::{Phase, State};
 
 use super::h0::value_v0;
-use super::Policy;
+use super::{ChoosePath, Policy};
 
 /// One acting-player decision. `label` is `0.0` until [`Recorder::label`].
 #[derive(Debug, Clone)]
@@ -137,6 +137,14 @@ impl Policy for Recorder {
             search_v,
         });
         idx
+    }
+
+    fn last_value(&self) -> Option<f32> {
+        self.inner.last_value()
+    }
+
+    fn last_path(&self) -> Option<ChoosePath> {
+        self.inner.last_path()
     }
 }
 

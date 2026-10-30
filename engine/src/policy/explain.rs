@@ -33,6 +33,31 @@ pub enum ChoosePath {
     Unscored,
 }
 
+impl ChoosePath {
+    /// Stable code for replay archives: declaration order `0` … `9`.
+    pub fn code(self) -> u8 {
+        match self {
+            Self::SingleLegal => 0,
+            Self::Mulligan => 1,
+            Self::OnePly => 2,
+            Self::ConsensusLethal => 3,
+            Self::TakeKill => 4,
+            Self::TakeKillRoll => 5,
+            Self::HoldbackTrade => 6,
+            Self::HoldbackResample => 7,
+            Self::Search => 8,
+            Self::Unscored => 9,
+        }
+    }
+}
+
+/// [`ChoosePath::code`] for [`Policy::last_path`] when it returns `None`.
+pub const CHOOSE_PATH_NONE: u8 = 255;
+
+pub fn choose_path_code(path: Option<ChoosePath>) -> u8 {
+    path.map(ChoosePath::code).unwrap_or(CHOOSE_PATH_NONE)
+}
+
 /// How a principal-variation line ended.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
