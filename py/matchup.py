@@ -327,6 +327,19 @@ def write_record_games(
 def json_for_out(result: dict) -> dict:
     out = dict(result)
     out.pop("game_records", None)
+    trace_keys = ("chosen", "paths", "values", "final_hash")
+    recs = out.get("records")
+    if isinstance(recs, list):
+        stripped = []
+        for rec in recs:
+            if isinstance(rec, dict):
+                row = dict(rec)
+                for k in trace_keys:
+                    row.pop(k, None)
+                stripped.append(row)
+            else:
+                stripped.append(rec)
+        out["records"] = stripped
     return out
 
 

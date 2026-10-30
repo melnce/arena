@@ -172,6 +172,12 @@ pub fn py_matchup<'py>(
         ));
     }
 
+    if record_games && export.is_some_and(|p| !p.is_empty()) {
+        return Err(py_err_msg(
+            "record_games together with export is not supported",
+        ));
+    }
+
     let export_dir = match export {
         Some(p) if !p.is_empty() => Some(PathBuf::from(p)),
         _ => None,

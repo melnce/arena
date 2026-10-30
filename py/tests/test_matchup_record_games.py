@@ -71,6 +71,17 @@ def test_record_games_replay_and_out_unchanged(tmp_path: Path) -> None:
 
     assert strip_timing(with_rec) == strip_timing(without)
 
+    games_only = tmp_path / "rec2.jsonl.gz"
+    rec_only = _run_matchup(tmp_path, "c", "--records")
+    rec_and_games = _run_matchup(
+        tmp_path,
+        "d",
+        "--records",
+        "--record-games",
+        str(games_only),
+    )
+    assert strip_timing(rec_only) == strip_timing(rec_and_games)
+
     import gzip
 
     lines = gzip.open(games_path, "rt", encoding="utf-8").read().splitlines()
@@ -91,3 +102,22 @@ def test_record_games_replay_and_out_unchanged(tmp_path: Path) -> None:
         assert len(row["chosen"]) == row["actions"]
         for code in row["paths"]:
             assert code == 255 or 0 <= code <= 9
+
+
+def test_record_games_with_export_raises(db, root: Path, tmp_path: Path) -> None:
+    import arena
+
+    decks = {
+        "basic-forest": _deck("basic-forest"),
+    }
+    with pytest.raises(ValueError, match="record_games together with export"):
+        arena.matchup(
+            db,
+            decks,
+            1,
+            1,
+            policy="random",
+            threads=1,
+            export=str(tmp_path / "shards"),
+            record_games=True,
+        )
