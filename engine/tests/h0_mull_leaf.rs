@@ -13,6 +13,11 @@ use common::*;
 const LEAF: &str = "h0:net=h0-value-v69,mull=leaf";
 const SERVED_PLUS_LEAF: &str = "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69,mull=leaf";
 
+/// `py/serve.py` `DEFAULT_STRONG` (opening mulligan uses leaf, not search nodes).
+const SERVED_STRONG: &str = "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69,mull=leaf,mulls=256";
+/// Main served strong before brief YN (keep table default).
+const SERVED_STRONG_KEEP_TABLE: &str = "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69";
+
 const OPPONENTS: [&str; 4] = [
     "meta-sword-rally",
     "meta-forest-combo",
@@ -341,6 +346,45 @@ fn mull_leaf_mode_is_leaf() {
     assert_eq!(h.mull, MullMode::Leaf);
     assert_eq!(h.mulls, 32);
     assert_eq!(h.mullm, 0.0);
+}
+
+#[test]
+#[cfg_attr(debug_assertions, ignore)]
+fn served_strong_mull_leaf_choose_and_job() {
+    let db = load_db();
+    for stem in OPPONENTS {
+        let meta = load_meta(stem);
+        for opp_name in OPPONENTS {
+            let opp = load_meta(opp_name);
+            for meta_is_second in [false, true] {
+                for &seed in &SEEDS {
+                    let st = reach_meta_mulligan(&db, &meta, &opp, seed, meta_is_second);
+                    let legal = legal_actions(&db, &st);
+                    let bot_seed = seed ^ 0xdead_beef;
+
+                    let mut leaf = parse_h0(SERVED_STRONG);
+                    leaf.arm_explain();
+                    let choose_idx = leaf.choose(&db, &st, &legal, &mut policy_rng(bot_seed));
+                    let rec = leaf.take_explain().expect("explain");
+                    let m = rec.mull.as_ref().expect("mull explain");
+                    assert_eq!(m.mode, "leaf");
+                    assert_eq!(m.samples, 256);
+
+                    let job_idx = job_mull_index(SERVED_STRONG, &db, &st, bot_seed);
+                    assert_eq!(
+                        choose_idx, job_idx,
+                        "{stem} vs {opp_name} second={meta_is_second} seed={seed}"
+                    );
+
+                    let mut keep_table = parse_h0(SERVED_STRONG_KEEP_TABLE);
+                    let table_idx = keep_table.choose(&db, &st, &legal, &mut policy_rng(bot_seed));
+                    let mut builtin = parse_h0("h0:mull=builtin");
+                    let builtin_idx = builtin.choose(&db, &st, &legal, &mut policy_rng(bot_seed));
+                    assert_eq!(table_idx, builtin_idx, "keep table {stem} seed={seed}");
+                }
+            }
+        }
+    }
 }
 
 const STACK: &str = "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69";
