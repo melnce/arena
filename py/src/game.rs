@@ -96,6 +96,19 @@ impl PyGame {
         value_to_py(py, &serde_json::Value::Array(vals))
     }
 
+    /// NeutralAction dicts in [`legal_actions`] order (indices match recorded
+    /// `chosen`; duplicates are kept unlike [`Self::legal`]).
+    fn legal_engine<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let legal = legal_actions(&self.db, &self.state);
+        let vals: Vec<serde_json::Value> = legal
+            .iter()
+            .map(|a| {
+                serde_json::to_value(to_neutral(&self.state, a)).unwrap_or(serde_json::Value::Null)
+            })
+            .collect();
+        value_to_py(py, &serde_json::Value::Array(vals))
+    }
+
     /// Apply a NeutralAction dict. Optional `rng` is that action line's pick
     /// array (`docs/trace-format.md`) — used to replay committed traces.
     #[pyo3(signature = (action, rng = None))]
