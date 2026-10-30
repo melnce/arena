@@ -468,6 +468,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--skip-summary", action="store_true")
     p.add_argument("--skip-publish", action="store_true")
     p.add_argument("--publish", action="store_true", help="copy artifacts to the results worktree and push")
+    p.add_argument(
+        "--no-record-games",
+        action="store_true",
+        help="do not write per-game replay archives alongside each matchup",
+    )
     p.add_argument("--publish-remote", default="origin")
     p.add_argument("--publish-branch", default="results")
     p.add_argument(
@@ -635,6 +640,7 @@ class Runner:
             return data
         run = new_run(self._argv_list(), self.repo)
         run["final_game_offset"] = int(self.args.screen_games)
+        run["record_games"] = not self.args.no_record_games
         return run
 
     def save_run(self) -> None:
@@ -687,6 +693,12 @@ class Runner:
             return int(self.run["final_game_offset"])
         return 0
 
+    def _record_games_argv(self, out_stem: str) -> list[str]:
+        if self.args.no_record_games:
+            return []
+        path = self.tag_dir / f"{out_stem}.games.jsonl.gz"
+        return ["--record-games", str(path)]
+
     def run_matchup(
         self,
         extra: list[str],
@@ -707,6 +719,7 @@ class Runner:
             threads=self.args.threads,
             game_offset=game_offset,
         )
+        cmd.extend(self._record_games_argv(out_stem))
         self.tee(cmd, log, stage)
 
     def screen_outputs_exist(self) -> bool:
@@ -922,6 +935,7 @@ class Runner:
             threads=self.args.threads,
             game_offset=game_offset,
         )
+        cmd.extend(self._record_games_argv(part_stem))
         self.tee(cmd, log, "final")
 
     def _chunk_matchup_argv(
