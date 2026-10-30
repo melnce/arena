@@ -14,7 +14,7 @@ const LEAF: &str = "h0:net=h0-value-v69,mull=leaf";
 const SERVED_PLUS_LEAF: &str = "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69,mull=leaf";
 
 /// `py/serve.py` `DEFAULT_STRONG` (opening mulligan uses leaf, not search nodes).
-const SERVED_STRONG: &str = "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69,mull=leaf,mulls=256";
+const SERVED_STRONG: &str = "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v73,mull=leaf,mulls=256";
 /// Main served strong before brief YN (keep table default).
 const SERVED_STRONG_KEEP_TABLE: &str = "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69";
 
