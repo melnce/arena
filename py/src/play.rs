@@ -17,6 +17,7 @@ pub fn play_one(
     play_one_record(db, seed, deck_a, deck_b, first, pol_a, pol_b, false)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn play_one_record(
     db: &CardDb,
     seed: u64,
