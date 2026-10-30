@@ -9,7 +9,7 @@ use crate::card::CardId;
 use crate::db::CardDb;
 use crate::ids::PlayerId;
 use crate::limits::{MAX_ACTIONS, MAX_TURNS};
-use crate::policy::Policy;
+use crate::policy::{choose_path_code, Policy};
 use crate::rng::Xoshiro256ss;
 use crate::state::{Phase, State};
 
@@ -45,7 +45,7 @@ impl End {
 }
 
 /// Result of [`play_game`].
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Outcome {
     pub winner: Option<PlayerId>,
     pub first: PlayerId,
@@ -54,6 +54,36 @@ pub struct Outcome {
     pub end: End,
     /// Per-player mulligan, indexed by [`PlayerId`] (`A` = 0, `B` = 1).
     pub mulligans: [Option<MulliganRecord>; 2],
+    /// Legal index applied at each step (after clamp), in order. Empty unless
+    /// [`play_game_record`] was used with `record = true`.
+    pub chosen: Vec<u16>,
+    /// Per-step [`Policy::last_path`] code (`255` = none). Empty unless recorded.
+    pub paths: Vec<u8>,
+    /// Per-step [`Policy::last_value`] (`NaN` = none). Empty unless recorded.
+    pub values: Vec<f32>,
+    /// [`crate::hash`] at game end. `0` unless recorded.
+    pub final_hash: u64,
+}
+
+impl PartialEq for Outcome {
+    fn eq(&self, other: &Self) -> bool {
+        self.winner == other.winner
+            && self.first == other.first
+            && self.turns == other.turns
+            && self.actions == other.actions
+            && self.end == other.end
+            && self.mulligans == other.mulligans
+            && self.chosen == other.chosen
+            && self.paths == other.paths
+            && values_eq(&self.values, &other.values)
+            && self.final_hash == other.final_hash
+    }
+}
+
+impl Eq for Outcome {}
+
+fn values_eq(a: &[f32], b: &[f32]) -> bool {
+    a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.to_bits() == y.to_bits())
 }
 
 /// Drives `state` to the end with `pol_a` acting for A and `pol_b` for B.
@@ -71,10 +101,39 @@ pub fn play_game(
     pol_b: &mut dyn Policy,
     rng: &mut Xoshiro256ss,
 ) -> Outcome {
+    play_game_record(db, state, pol_a, pol_b, rng, false)
+}
+
+/// Like [`play_game`], but when `record` is true fills `chosen`, `paths`,
+/// `values`, and `final_hash` on the outcome (pre-reserves up to
+/// [`MAX_ACTIONS`] steps).
+pub fn play_game_record(
+    db: &CardDb,
+    state: &mut State,
+    pol_a: &mut dyn Policy,
+    pol_b: &mut dyn Policy,
+    rng: &mut Xoshiro256ss,
+    record: bool,
+) -> Outcome {
     let first = state.first;
     let mut actions = 0u32;
     let mut end = End::NoLegal;
     let mut mulligans: [Option<MulliganRecord>; 2] = [None, None];
+    let mut chosen = if record {
+        Vec::with_capacity(MAX_ACTIONS as usize)
+    } else {
+        Vec::new()
+    };
+    let mut paths = if record {
+        Vec::with_capacity(MAX_ACTIONS as usize)
+    } else {
+        Vec::new()
+    };
+    let mut values = if record {
+        Vec::with_capacity(MAX_ACTIONS as usize)
+    } else {
+        Vec::new()
+    };
     while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
         if state.turn > MAX_TURNS {
             end = End::TurnCap;
@@ -89,11 +148,17 @@ pub fn play_game(
             end = End::NoLegal;
             break;
         }
-        let idx = match acting_player(state) {
-            PlayerId::A => pol_a.choose(db, state, &legal, rng),
-            PlayerId::B => pol_b.choose(db, state, &legal, rng),
+        let pol: &mut dyn Policy = match acting_player(state) {
+            PlayerId::A => pol_a,
+            PlayerId::B => pol_b,
         };
+        let idx = pol.choose(db, state, &legal, rng);
         let idx = idx.min(legal.len().saturating_sub(1));
+        if record {
+            chosen.push(idx as u16);
+            paths.push(choose_path_code(pol.last_path()));
+            values.push(pol.last_value().unwrap_or(f32::NAN));
+        }
         if let Action::MulliganConfirm { swap } = &legal[idx] {
             let me = acting_player(state);
             let hand: Vec<CardId> = state
@@ -119,6 +184,7 @@ pub fn play_game(
             End::Deckout
         };
     }
+    let final_hash = if record { crate::hash(state) } else { 0 };
     Outcome {
         winner: state.winner,
         first,
@@ -126,5 +192,9 @@ pub fn play_game(
         actions,
         end,
         mulligans,
+        chosen,
+        paths,
+        values,
+        final_hash,
     }
 }

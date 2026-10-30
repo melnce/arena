@@ -1,8 +1,8 @@
 //! Shared self-play via `engine::play::play_game`.
 
 use arena_engine::{
-    encode::EncodingVersion, new_game, play_game, policy_rng, AnyPolicy, CardDb, CardId, First,
-    GameConfig, Outcome, PlayerId, Recorder, Sample,
+    encode::EncodingVersion, new_game, play_game_record, policy_rng, AnyPolicy, CardDb, CardId,
+    First, GameConfig, Outcome, PlayerId, Recorder, Sample,
 };
 
 pub fn play_one(
@@ -13,6 +13,20 @@ pub fn play_one(
     first: First,
     pol_a: &str,
     pol_b: &str,
+) -> Result<Outcome, String> {
+    play_one_record(db, seed, deck_a, deck_b, first, pol_a, pol_b, false)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn play_one_record(
+    db: &CardDb,
+    seed: u64,
+    deck_a: &[CardId],
+    deck_b: &[CardId],
+    first: First,
+    pol_a: &str,
+    pol_b: &str,
+    record: bool,
 ) -> Result<Outcome, String> {
     let mut state = new_game(
         db,
@@ -28,7 +42,9 @@ pub fn play_one(
     let mut a = AnyPolicy::parse_spec(pol_a)?;
     let mut b = AnyPolicy::parse_spec(pol_b)?;
     let mut rng = policy_rng(seed);
-    Ok(play_game(db, &mut state, &mut a, &mut b, &mut rng))
+    Ok(arena_engine::play_game_record(
+        db, &mut state, &mut a, &mut b, &mut rng, record,
+    ))
 }
 
 /// Same as [`play_one`], wrapping both seats in [`Recorder`]s. Labels both
@@ -63,7 +79,7 @@ pub fn play_one_export(
         .with_epsilon(epsilon)
         .with_encoding(encoding);
     let mut rng = policy_rng(seed);
-    let out = play_game(db, &mut state, &mut a, &mut b, &mut rng);
+    let out = play_game_record(db, &mut state, &mut a, &mut b, &mut rng, false);
     a.label(&out);
     b.label(&out);
     Ok((out, a.take(), b.take()))

@@ -282,6 +282,16 @@ fn pick_after_world_merge(
             rec.tie_set = cand.to_vec();
         }
         rec.candidates = explain_cands.to_vec();
+        h.last_path = Some(rec.path);
+    } else {
+        let path = if !any_scored {
+            ChoosePath::Unscored
+        } else if let Some(p) = override_path {
+            p
+        } else {
+            ChoosePath::Search
+        };
+        h.last_path = Some(path);
     }
     chosen
 }
@@ -296,6 +306,7 @@ fn run_h0_decision_mode(
     prepared: Option<&PreparedRoots>,
 ) -> usize {
     h.last_value = None;
+    h.last_path = None;
     if mode != JobExecMode::ViaJobPostKill {
         h.stats.decisions += 1;
     }
@@ -317,6 +328,7 @@ fn run_h0_decision_mode(
             h.stamp_explain_deal(&mut rec, None);
             h.explain = Some(rec);
         }
+        h.last_path = Some(ChoosePath::SingleLegal);
         return 0;
     }
     if matches!(state.phase, Phase::Mulligan { .. }) {
@@ -329,6 +341,7 @@ fn run_h0_decision_mode(
             h.stamp_explain_deal(&mut rec, None);
             h.explain = Some(rec);
         }
+        h.last_path = Some(ChoosePath::Mulligan);
         return idx;
     }
 
@@ -372,9 +385,13 @@ fn run_h0_decision_mode(
             ),
             Err(JobStep::Done { index, value }) => {
                 h.last_value = value;
+                h.last_path = Some(ChoosePath::SingleLegal);
                 return index as usize;
             }
-            Err(_) => return 0,
+            Err(_) => {
+                h.last_path = Some(ChoosePath::SingleLegal);
+                return 0;
+            }
         }
     };
     if cand.is_empty() {
@@ -387,6 +404,7 @@ fn run_h0_decision_mode(
             h.stamp_explain_deal(&mut rec, None);
             h.explain = Some(rec);
         }
+        h.last_path = Some(ChoosePath::SingleLegal);
         return 0;
     }
     if cand.len() == 1 {
@@ -399,6 +417,7 @@ fn run_h0_decision_mode(
             h.stamp_explain_deal(&mut rec, None);
             h.explain = Some(rec);
         }
+        h.last_path = Some(ChoosePath::SingleLegal);
         return cand[0];
     }
     let mut nodes = 0u32;
@@ -463,6 +482,7 @@ fn run_h0_decision_mode(
         };
         if let Some((idx, path)) = kill {
             h.last_value = Some(h.wv);
+            h.last_path = Some(path);
             if let Some(rec) = &mut explain_rec {
                 rec.path = path;
                 rec.chosen_index = idx;
@@ -522,6 +542,7 @@ fn run_h0_decision_mode(
             },
         );
         h.last_value = Some(v);
+        h.last_path = Some(ChoosePath::OnePly);
         if let Some(rec) = &mut explain_rec {
             rec.chosen_index = cand[j];
             rec.tie_set = tie_set;
@@ -540,6 +561,7 @@ fn run_h0_decision_mode(
                 rec.tie_set = vec![cand[j]];
             }
             h.last_value = Some(h.wv);
+            h.last_path = Some(ChoosePath::ConsensusLethal);
             cand[j]
         } else {
             if let Some(rec) = &mut explain_rec {
@@ -792,6 +814,9 @@ fn run_h0_decision_mode(
     if let Some(mut rec) = explain_rec {
         rec.nodes = nodes;
         rec.horizon_nodes = dec_stats.horizon_nodes as u32;
+        if h.last_path.is_none() {
+            h.last_path = Some(rec.path);
+        }
         h.explain = Some(rec);
     }
     pick

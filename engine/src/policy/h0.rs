@@ -782,6 +782,9 @@ pub struct H0 {
     /// Root value of the most recent [`Policy::choose`]. Reset every
     /// `choose`; ignored by `h0_fields_eq` and `spec()`.
     pub last_value: Option<f32>,
+    /// Decision branch of the most recent `choose`; ignored by `h0_fields_eq`
+    /// and `spec()`.
+    pub last_path: Option<ChoosePath>,
     /// When set before [`Policy::choose`], the next decision is recorded
     /// into [`explain`]. Ignored by `h0_fields_eq` and `spec()`.
     pub explain_armed: bool,
@@ -875,6 +878,7 @@ impl Default for H0 {
             mullm: 0.0,
             stats: SearchStats::default(),
             last_value: None,
+            last_path: None,
             explain_armed: false,
             explain: None,
             pending_mull_explain: None,
@@ -1207,6 +1211,10 @@ impl Policy for H0 {
 
     fn last_value(&self) -> Option<f32> {
         self.last_value
+    }
+
+    fn last_path(&self) -> Option<ChoosePath> {
+        self.last_path
     }
 }
 

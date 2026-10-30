@@ -19,8 +19,8 @@ mod record;
 use crate::determinize::{HREAD_DELTA, HREAD_EPS_FA, HREAD_EPS_S};
 
 pub use explain::{
-    CandidateRecord, ChoosePath, ExplainRecord, LostRerankRecord, MullExplainRecord, PvEnd, PvLeaf,
-    WorldRecord,
+    choose_path_code, CandidateRecord, ChoosePath, ExplainRecord, LostRerankRecord,
+    MullExplainRecord, PvEnd, PvLeaf, WorldRecord, CHOOSE_PATH_NONE,
 };
 pub use fuse_guard::fuse_is_noop;
 pub use h0::job::{
@@ -60,6 +60,13 @@ pub trait Policy {
     /// [`choose`], from the acting player's perspective, on the leaf's
     /// scale (`[-wv, wv]`). `None` when it did not search.
     fn last_value(&self) -> Option<f32> {
+        None
+    }
+
+    /// Which branch decided at the most recent [`choose`]. `None` for policies
+    /// that do not track it (`Random`, `FirstLegal`). `H0` mirrors the explain
+    /// record's `path` for that decision.
+    fn last_path(&self) -> Option<ChoosePath> {
         None
     }
 }
@@ -937,6 +944,14 @@ impl Policy for AnyPolicy {
             AnyPolicy::Random(p) => p.last_value(),
             AnyPolicy::FirstLegal(p) => p.last_value(),
             AnyPolicy::H0(p) => p.last_value(),
+        }
+    }
+
+    fn last_path(&self) -> Option<ChoosePath> {
+        match self {
+            AnyPolicy::Random(p) => p.last_path(),
+            AnyPolicy::FirstLegal(p) => p.last_path(),
+            AnyPolicy::H0(p) => p.last_path(),
         }
     }
 }

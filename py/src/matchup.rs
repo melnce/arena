@@ -16,7 +16,7 @@ use rayon::prelude::*;
 
 use crate::convert::{deck_from_value, py_err_msg, py_to_value, value_to_py};
 use crate::game::PyCardDb;
-use crate::play::{game_seed, play_one, play_one_export};
+use crate::play::{game_seed, play_one_export, play_one_record};
 
 const AUX_COLUMNS: &[&str] = &[
     "game_index",
@@ -113,6 +113,7 @@ struct GameRow {
         export_epsilon = 0.0,
         encoding = 1,
         game_offset = 0,
+        record_games = false,
     )
 )]
 #[allow(clippy::too_many_arguments)]
@@ -132,6 +133,7 @@ pub fn py_matchup<'py>(
     export_epsilon: f32,
     encoding: u8,
     game_offset: u32,
+    record_games: bool,
 ) -> PyResult<Bound<'py, PyAny>> {
     let encoding = EncodingVersion::parse(encoding)
         .ok_or_else(|| py_err_msg(format!("encoding must be 1, 2 or 3 (got {encoding})")))?;
@@ -170,6 +172,12 @@ pub fn py_matchup<'py>(
         ));
     }
 
+    if record_games && export.is_some_and(|p| !p.is_empty()) {
+        return Err(py_err_msg(
+            "record_games together with export is not supported",
+        ));
+    }
+
     let export_dir = match export {
         Some(p) if !p.is_empty() => Some(PathBuf::from(p)),
         _ => None,
@@ -196,6 +204,7 @@ pub fn py_matchup<'py>(
             sink: sink.clone(),
             epsilon: export_epsilon,
             encoding,
+            record_games,
         })
     })?;
 
@@ -307,35 +316,20 @@ pub fn py_matchup<'py>(
     if records {
         let recs: Vec<serde_json::Value> = rows
             .iter()
-            .map(|row| {
-                {
-                    let mut rec = serde_json::json!({
-                        "a": names[row.i],
-                        "b": names[row.j],
-                        "g": row.g,
-                        "seed": row.seed,
-                        "first": row.out.first.as_str(),
-                        "winner": row.out.winner.map(|w| serde_json::Value::String(w.as_str().into())).unwrap_or(serde_json::Value::Null),
-                        "turns": row.out.turns,
-                        "actions": row.out.actions,
-                        "end": row.out.end.as_str(),
-                    });
-                    let obj = rec.as_object_mut().expect("object");
-                    obj.insert(
-                        "mull_a".into(),
-                        mulligan_json(row.out.mulligans[PlayerId::A.idx()].clone()),
-                    );
-                    obj.insert(
-                        "mull_b".into(),
-                        mulligan_json(row.out.mulligans[PlayerId::B.idx()].clone()),
-                    );
-                    rec
-                }
-            })
+            .map(|row| game_record_json(&names, row, record_games))
             .collect();
         top.as_object_mut()
             .expect("object")
             .insert("records".into(), serde_json::Value::Array(recs));
+    }
+    if record_games {
+        let recs: Vec<serde_json::Value> = rows
+            .iter()
+            .map(|row| game_record_json(&names, row, true))
+            .collect();
+        top.as_object_mut()
+            .expect("object")
+            .insert("game_records".into(), serde_json::Value::Array(recs));
     }
     if let Some((dir, samples, n_games)) = export_info {
         top.as_object_mut().expect("object").insert(
@@ -361,6 +355,69 @@ fn mulligan_json(rec: Option<MulliganRecord>) -> serde_json::Value {
     }
 }
 
+fn game_record_json(names: &[String], row: &GameRow, with_trace: bool) -> serde_json::Value {
+    let mut rec = serde_json::json!({
+        "a": names[row.i],
+        "b": names[row.j],
+        "g": row.g,
+        "seed": row.seed,
+        "first": row.out.first.as_str(),
+        "winner": row.out.winner.map(|w| serde_json::Value::String(w.as_str().into())).unwrap_or(serde_json::Value::Null),
+        "turns": row.out.turns,
+        "actions": row.out.actions,
+        "end": row.out.end.as_str(),
+    });
+    let obj = rec.as_object_mut().expect("object");
+    obj.insert(
+        "mull_a".into(),
+        mulligan_json(row.out.mulligans[PlayerId::A.idx()].clone()),
+    );
+    obj.insert(
+        "mull_b".into(),
+        mulligan_json(row.out.mulligans[PlayerId::B.idx()].clone()),
+    );
+    if with_trace {
+        obj.insert(
+            "chosen".into(),
+            serde_json::Value::Array(
+                row.out
+                    .chosen
+                    .iter()
+                    .map(|i| serde_json::Value::from(*i))
+                    .collect(),
+            ),
+        );
+        obj.insert(
+            "paths".into(),
+            serde_json::Value::Array(
+                row.out
+                    .paths
+                    .iter()
+                    .map(|p| serde_json::Value::from(*p))
+                    .collect(),
+            ),
+        );
+        let values: Vec<serde_json::Value> = row
+            .out
+            .values
+            .iter()
+            .map(|v| {
+                if v.is_nan() {
+                    serde_json::Value::Null
+                } else {
+                    serde_json::json!(v)
+                }
+            })
+            .collect();
+        obj.insert("values".into(), serde_json::Value::Array(values));
+        obj.insert(
+            "final_hash".into(),
+            serde_json::Value::String(format!("{:016x}", row.out.final_hash)),
+        );
+    }
+    rec
+}
+
 fn num_cpus_hint() -> usize {
     std::thread::available_parallelism()
         .map(|n| n.get())
@@ -381,6 +438,7 @@ struct JobSet<'a> {
     sink: Option<Arc<Mutex<ExportSink>>>,
     epsilon: f32,
     encoding: EncodingVersion,
+    record_games: bool,
 }
 
 fn run_jobs(set: JobSet<'_>) -> PyResult<Vec<GameRow>> {
@@ -420,7 +478,7 @@ fn run_jobs(set: JobSet<'_>) -> PyResult<Vec<GameRow>> {
                 out,
             })
         } else {
-            play_one(
+            play_one_record(
                 set.db,
                 s,
                 &set.lists[i],
@@ -428,6 +486,7 @@ fn run_jobs(set: JobSet<'_>) -> PyResult<Vec<GameRow>> {
                 first,
                 set.pol_a,
                 set.pol_b,
+                set.record_games,
             )
             .map(|out| GameRow {
                 i,

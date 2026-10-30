@@ -16,10 +16,23 @@ _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
-from runlib import flag_given  # noqa: E402
+from runlib import flag_given, git_head  # noqa: E402
 
 SIDECAR_STEMS = frozenset({"POOLS", "meta-pool"})
 DEFAULT_POOL = "meta"
+
+RECORD_PATH_NAMES = [
+    "single_legal",
+    "mulligan",
+    "one_ply",
+    "consensus_lethal",
+    "take_kill",
+    "take_kill_roll",
+    "holdback_trade",
+    "holdback_resample",
+    "search",
+    "unscored",
+]
 
 
 def repo_root() -> Path:
@@ -278,6 +291,58 @@ def summarize(
     return out
 
 
+def write_record_games(
+    path: Path,
+    game_records: list[dict],
+    *,
+    policy_a: str,
+    policy_b: str,
+    seed: int,
+    game_offset: int,
+    games: int,
+    first: str,
+    engine: str | None,
+) -> None:
+    import gzip
+
+    header = {
+        "v": 1,
+        "policy_a": policy_a,
+        "policy_b": policy_b,
+        "seed": seed,
+        "game_offset": game_offset,
+        "games": games,
+        "first": first,
+        "engine": engine,
+        "paths": RECORD_PATH_NAMES,
+    }
+    rows = sorted(game_records, key=lambda r: (r["a"], r["b"], r["g"]))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with gzip.open(path, "wt", encoding="utf-8") as f:
+        f.write(json.dumps(header, separators=(",", ":")) + "\n")
+        for row in rows:
+            f.write(json.dumps(row, separators=(",", ":")) + "\n")
+
+
+def json_for_out(result: dict) -> dict:
+    out = dict(result)
+    out.pop("game_records", None)
+    trace_keys = ("chosen", "paths", "values", "final_hash")
+    recs = out.get("records")
+    if isinstance(recs, list):
+        stripped = []
+        for rec in recs:
+            if isinstance(rec, dict):
+                row = dict(rec)
+                for k in trace_keys:
+                    row.pop(k, None)
+                stripped.append(row)
+            else:
+                stripped.append(rec)
+        out["records"] = stripped
+    return out
+
+
 def format_summary(s: dict) -> str:
     lo, hi = s["wilson95"]
     e = s["end"]
@@ -367,6 +432,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=0,
         help="first game index per pair (default 0; games K..K+games-1)",
     )
+    parser.add_argument(
+        "--record-games",
+        default=None,
+        metavar="PATH",
+        help="write replayable per-game traces (gzip JSON lines) to PATH",
+    )
     parser.add_argument("--cards", default=None, help="cards/ or repo root (default: repo cards/)")
     args = parser.parse_args(raw)
     args._argv = raw
@@ -424,7 +495,21 @@ def main(argv: list[str] | None = None) -> int:
         export_epsilon=args.export_epsilon,
         encoding=args.encoding,
         game_offset=args.game_offset,
+        record_games=args.record_games is not None,
     )
+    if args.record_games:
+        recs = result.pop("game_records", [])
+        write_record_games(
+            Path(args.record_games),
+            recs,
+            policy_a=policy_a,
+            policy_b=policy_b,
+            seed=args.seed,
+            game_offset=args.game_offset,
+            games=args.games,
+            first=args.first,
+            engine=git_head(root),
+        )
     secs = time.perf_counter() - t0
     gps = total / secs if secs > 0 else 0.0
     add_wilson95(result["matrix"], names)
@@ -439,7 +524,7 @@ def main(argv: list[str] | None = None) -> int:
     print(format_summary(summary))
     print(f"\n{total} games in {secs:.3f}s ({gps:.1f} games/s)", file=sys.stderr)
     out = Path(args.out)
-    out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    out.write_text(json.dumps(json_for_out(result), indent=2, sort_keys=True) + "\n")
     print(f"wrote {out}", file=sys.stderr)
     return 0
 
