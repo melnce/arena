@@ -1170,7 +1170,7 @@ server constructs the policy per call (no cache). Unknown specs raise
 `ValueError` naming the policy and `names()`.
 
 Bind `127.0.0.1` only (`--host`, `--port 8765`). `--strong` (default
-`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69`) is the spec used whenever the request's `policy` is an
+`h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69,mull=leaf,mulls=256`) is the spec used whenever the request's `policy` is an
 h0 variant (`h0`, `h0:nodes=6000`, `h0:…`) whose keys do **not** include the
 exact token `info=all`. The default includes `okill=8` since sweep 48 (2026-10-10).
 `okill=15` since 2026-10-19 (sweep 58, +6 Elo at eight worlds): after each of its lines the bot looks for the opponent's kill also through a Ward-break prefix, slot-freeing trades and play-through lines (plays that only open evolve lines, one follower attack per target); it thinks ≈ 5–7 % longer per decision.
@@ -1206,6 +1206,11 @@ trained on the results of its own games instead of the linear `h0-linear-v4`; it
 deals, at eight worlds): the bot's worlds deal the opponent's hidden hand as consecutive blocks of one shuffle of
 the cards it cannot rule out, so together they cover his possible hands evenly. The cheater (`info=all`) sees the
 true hand and keeps its spec. The bot thinks as long as before (sweeps 70 and 70b's self-play: × 0.993 and × 0.964 games per hour against independent deals).
+`mull=leaf,mulls=256` since brief YN (2026-10-30; sweeps 72 and 72b: +3.8 Elo against the same stack with the keep table, at eight
+worlds): the bot keeps or swaps its first four cards by the leaf's value of every swap mask over 256 deals of the
+cards it cannot see, not by the per-card keep table `mulligan-v3`. The cheater (`info=all`) keeps its spec. The
+mulligan decision takes ≈ 0.1 s natively; the games it leads to take ≈ 8 % longer to think through (sweeps 72
+and 72b's self-play: × 0.92 games per hour).
 `--cheat` (default
 `h0:nodes=64000,horizon=3,k=16,info=all,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,net=h0-value-v69`)
 is used for h0 variants whose keys include `info=all` (full-information
@@ -1277,7 +1282,7 @@ any failure is silent (`console.debug` at most) and the badge reads
 `bot: browser`. A settings toggle **"Use local bot server when available"**
 (`localStorage` `svwb.localBot`, default on) gates the probe and the
 remote step. The badge (`#botBackendBadge`, next to the vs-bot policy
-select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69, 28 cpus)` or
+select) is `bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69,mull=leaf,mulls=256, 28 cpus)` or
 `bot: local server (<cheat spec>, 28 cpus)` when the cheater policy is
 selected, or `bot: browser`. While a remote decision is pending the badge reads
 `bot: local server — thinking…`.

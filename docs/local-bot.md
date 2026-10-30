@@ -46,7 +46,7 @@ browser still blocks the request, run the UI with `cd ui && npm run dev`.
 Settings → **Use local bot server when available** (on by default; the
 `?localbot=0` query flag also skips the probe and every `/bot` POST).
 In vs-bot the badge next to the policy select should read something like
-`bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69, 28 cpus)`. No server → `bot: browser` when idle, or `bot: browser (<running spec>)` during a vs-bot game (e.g. `bot: browser (h0:nodes=6000)`). Menu labels name each bot (Quick / Medium / Full strength / Custom spec…); **Full strength** is `py/serve.py`’s `DEFAULT_STRONG` at build time. When the local server is up, it plays **its** spec for every `h0` menu choice—the hint under the policy select says so.
+`bot: local server (h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69,mull=leaf,mulls=256, 28 cpus)`. No server → `bot: browser` when idle, or `bot: browser (<running spec>)` during a vs-bot game (e.g. `bot: browser (h0:nodes=6000)`). Menu labels name each bot (Quick / Medium / Full strength / Custom spec…); **Full strength** is `py/serve.py`’s `DEFAULT_STRONG` at build time. When the local server is up, it plays **its** spec for every `h0` menu choice—the hint under the policy select says so.
 The default samples sixteen worlds at twice the previous node cap. The served bot
 takes a deterministic kill before searching (`tkill`, up to 10 000 solver
 applies outside the node cap; runbook 32 audit at results `e2c8e1d`) and a
@@ -98,7 +98,12 @@ trained on the results of its own games instead of the linear `h0-linear-v4`; it
 `deal=block` since brief YK (2026-10-28; sweeps 70 and 70b: +5 Elo against the same stack with independent
 deals, at eight worlds): the bot's worlds deal the opponent's hidden hand as consecutive blocks of one shuffle of
 the cards it cannot rule out, so together they cover his possible hands evenly. The cheater (`info=all`) sees the
-true hand and keeps its spec. The bot thinks as long as before (sweeps 70 and 70b's self-play: × 0.993 and × 0.964 games per hour against independent deals). The client's
+true hand and keeps its spec. The bot thinks as long as before (sweeps 70 and 70b's self-play: × 0.993 and × 0.964 games per hour against independent deals).
+`mull=leaf,mulls=256` since brief YN (2026-10-30; sweeps 72 and 72b: +3.8 Elo against the same stack with the keep table, at eight
+worlds): the bot keeps or swaps its first four cards by the leaf's value of every swap mask over 256 deals of the
+cards it cannot see, not by the per-card keep table `mulligan-v3`. The cheater (`info=all`) keeps its spec. The
+mulligan decision takes ≈ 0.1 s natively; the games it leads to take ≈ 8 % longer to think through (sweeps 72
+and 72b's self-play: × 0.92 games per hour). The client's
 "h0 (strong)" option is ignored for node count; change it here:
 
 ```
@@ -132,7 +137,7 @@ server)`).
 Each decision prints one stdout line:
 
 ```
-bot policy=h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
+bot policy=h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=h0-value-v69,mull=leaf,mulls=256 turn=3 ms=412.0 hash=ok game=1-a1b2c3d4
 ```
 
 `hash=ok` means the client's `Game.hash()` matched the replayed
