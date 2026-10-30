@@ -4,8 +4,8 @@ mod common;
 
 use arena_engine::policy::Policy;
 use arena_engine::{
-    acting_player, apply, legal_actions, new_game, play_game_record, policy_rng, AnyPolicy,
-    CardId, First, GameConfig, PlayerId,
+    acting_player, apply, legal_actions, new_game, play_game_record, policy_rng, AnyPolicy, CardId,
+    First, GameConfig, PlayerId,
 };
 
 use common::{load_db, load_deck_file, repo_root};
