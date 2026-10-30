@@ -88,7 +88,7 @@ Training: `py/train_value.py --data results/net10/data-e0 results/net10/data-e10
 
 sha256 `76685509ff4aef49e34ae37793385d40b477d0756b52141299300f4cb85d8c95`
 
-Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v69`](#h0-value-v69) since brief YJ (`h0-value-v64` from brief YC, `h0-value-v65` from brief YE, `h0-value-v66` from brief YF). Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
+Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v73`](#h0-value-v73) since brief YP (`h0-value-v64` from brief YC, `h0-value-v65` from brief YE, `h0-value-v66` from brief YF, `h0-value-v69` from brief YJ). Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
 
 # `h0-value-v64`
 
@@ -226,7 +226,41 @@ Sweeps 69 and 69b (engine `d49783c`, results `sweep69/` at `823f36b`, `sweep69b/
 sha256 `8c30ae8632d9161444fda5b65c637d60977a02d40105a7b7ccf670d8e1f230a3`
 
 Reach it with `net=h0-value-v69` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
-Full-strength bot score their lines with it since brief YJ.
+Full-strength bot scored their lines with it from brief YJ to brief YP ([`h0-value-v73`](#h0-value-v73) since).
+
+# `h0-value-v73`
+
+The `h0-value-v73` value model (the leaf) — `arch: residual` on encoding 3, the same architecture as
+[`h0-value-v69`](#h0-value-v69): `h0-linear-v4`'s linear part unchanged plus a ReLU MLP residual with 32 hidden
+units on the 961 standardized features and an 8-dimensional embedding per card and zone (13 zones), `scale` 60.
+Its residual is three quarters of the trained network's (`w2`, `b2` scaled by 0.75: `trained_on.shrink` 0.75).
+
+## Provenance
+
+Trained on the owner's box inside runbook 73 (`fit73.py`, `fit66.py`'s code), with `h0-value-v69`'s recipe
+exactly: every search decision with two or more scored candidates of the box's eighteen teach archives teach52 …
+teach72 (94 208 games of the served search — teach72, 8 192 of them, played on `main`'s play-reaction order of
+10-28 and with the leaf's own mulligan —, 6.59 M states from both seats, 5.25 M of them for training), each encoded
+from the decider's side, split by game (crc32). Targets: TD(λ 0.95) returns from four cross-fitted networks of
+`h0-value-v64`'s recipe; then 10 epochs of the squared error of `60·tanh(pre)` (AdamW lr 1e-4, weight decay 1e-3,
+a moving average of the weights over one epoch; best epoch 10). On the 9 489 held-out games of those sets, at turn
+starts (where the search uses the leaf), Brier score: this file 0.1853, the full network 0.1832, `h0-value-v69`
+0.1873, `h0-linear-v4` 0.2208.
+
+## Yardstick
+
+Sweep 73 (engine `c30242d`, results `sweep73/` at `30f93be`), all 16 meta decks: `net=<this file>` vs
+`h0-value-v69`, both on `h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,mull=leaf,mulls=256`
+(the leaf in both roles: the search's and the mulligan's):
+
+- screen 252 / 512 = 0.492;
+- final main 1 873 / 3 584 = 0.523, reverse 1 052 / 2 048 = 0.514, **pooled 2 925 / 5 632 = 0.519 [0.506, 0.532], +13.5 Elo** (adopted directly by the registered rule, ≥ 0.51; the early stop settled at look 11);
+- self-play throughput × 1.04.
+
+sha256 `5df505c67336e0c25bb9d8b24b3713e6d215b216ec80d926dc264eb1a9700efd`
+
+Reach it with `net=h0-value-v73` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
+Full-strength bot score their lines with it since brief YP.
 
 # `h0-order-v53`
 
