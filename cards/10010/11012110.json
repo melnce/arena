@@ -1,0 +1,54 @@
+{
+  "id": "11012110",
+  "name": "Inquiring Mischief",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "When this follower enters the field, if there are at least 2 other 1-base-cost allied cards on the field, give it +2/+1.\n\nRush",
+  "attack": 1,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "enter",
+      "printed": "When this follower enters the field, if there are at least 2 other 1-base-cost allied cards on the field, give it +2/+1.",
+      "effects": [
+        {
+          "printed": "if there are at least 2 other 1-base-cost allied cards on the field, give it +2/+1.",
+          "op": "if",
+          "cond": {
+            "countAtLeast": {
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "card",
+                "filter": {
+                  "baseCostEq": 1
+                },
+                "other": true
+              },
+              "n": 2
+            }
+          },
+          "then": [
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 2,
+              "defense": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

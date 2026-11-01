@@ -1,0 +1,60 @@
+{
+  "id": "11014110",
+  "name": "Nosche, Theriophone Detective",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Summon a Sleuth's Best Friend and Inquiring Mischief.\n\nSuper-Evolve: Give all other allied followers on the field +2/+0.",
+  "attack": 5,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Sleuth's Best Friend and Inquiring Mischief.",
+      "effects": [
+        {
+          "printed": "Summon a Sleuth's Best Friend and Inquiring Mischief.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "11013110"
+              },
+              "count": 1
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "11012110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give all other allied followers on the field +2/+0.",
+      "effects": [
+        {
+          "printed": "Give all other allied followers on the field +2/+0.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "other": true
+          },
+          "attack": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

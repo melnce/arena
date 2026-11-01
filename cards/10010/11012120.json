@@ -1,0 +1,43 @@
+{
+  "id": "11012120",
+  "name": "Garden Elf",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "At the end of your turn, add a Deepwood Bounty and Fairy to your hand.",
+  "attack": 0,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, add a Deepwood Bounty and Fairy to your hand.",
+      "effects": [
+        {
+          "printed": "add a Deepwood Bounty and Fairy to your hand.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90011310"
+              },
+              "count": 1
+            },
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90011110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
