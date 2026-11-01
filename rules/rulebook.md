@@ -243,6 +243,8 @@ Both turn boundaries use a **two-phase** model: first, conditions are checked an
 1. Max PP increases and PP refills.
 2. Your "at the start of your turn" crests trigger; crest Countdowns advance; any crest reaching Countdown 0 is lost and its Last Words is queued. (Anything these trigger is queued.) A crest whose Countdown ends in this step still resolves the start-of-turn trigger that was queued in the same step — Lapinette `crest:11064110` Countdown (1); Fruitless Testimony `crest:11063310` Countdown (2). Super-Evolve "Delay this crest by 1" (Lapinette) pushes the Countdown so the same crest summons on two successive turns.
 3. Your board's "at the start of your turn" abilities trigger; your amulets' Countdowns advance; any amulet reaching Countdown 0 has its Last Words queued.
+
+**Engine:** Step 2 is implemented as written — crest start-of-turn abilities are queued, then crest Countdowns advance. A crest that reaches Countdown 0 in that same step still resolves its already-queued start-of-turn trigger (rulebook: losing an ability at the same step does not cancel the other; Slaus owner ruling 2026-08-13). That is a scoped exception to E40 for crest Countdown losses in step 2 only; a crest removed any other way still has its queued non–Last Words items dropped. Amulet Countdowns still advance before the board's start-of-turn triggers are queued (step 3's written order is a documented gap — no catalog card has an amulet with both Countdown and a start-of-turn ability; flagged for the owner).
 4. The opponent's "at the start of your opponent's turn" crests trigger.
 5. The opponent's board's "at the start of your opponent's turn" abilities trigger.
 6. Direct summons occur; any "when directly summoned" abilities are queued.

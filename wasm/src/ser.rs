@@ -73,6 +73,9 @@ fn event_json(event: &Event) -> Value {
         Event::CrestRemove { player, id } => {
             json!({"crest_remove": {"player": pl(*player), "id": id}})
         }
+        Event::CrestTurnStartCountdownLost { player, id } => {
+            json!({"crest_turn_start_countdown_lost": {"player": pl(*player), "id": id}})
+        }
         Event::Fuse { host, partners } => {
             json!({"fuse": {"host": host.as_str(), "partners": ids(partners)}})
         }
@@ -100,8 +103,8 @@ pub fn full_json(state: &State) -> Result<String, String> {
         "next_instance": state.next_instance,
         "crest_order": state.crest_order,
         "picks": state.picks,
-        "pending_work": state.pending_work.iter().map(work_frame).collect::<Vec<_>>(),
-        "queue": state.queue.iter().map(queued).collect::<Vec<_>>(),
+        "pending_work": state.pending_work.iter().map(|w| work_frame(state, w)).collect::<Vec<_>>(),
+        "queue": state.queue.iter().map(|q| queued(state, q)).collect::<Vec<_>>(),
         "suppress_last_words": state.suppress_last_words,
         "bindings": state.bindings.iter().map(|(k, v)| {
             (k.clone(), json!(v.iter().map(bound_ref).collect::<Vec<_>>()))
@@ -302,7 +305,7 @@ fn target_opt(t: &TargetOpt) -> Value {
     }
 }
 
-fn work_frame(w: &WorkFrame) -> Value {
+fn work_frame(state: &State, w: &WorkFrame) -> Value {
     match w {
         WorkFrame::Effects {
             controller,
@@ -315,7 +318,7 @@ fn work_frame(w: &WorkFrame) -> Value {
         } => json!({
             "effects": {
                 "controller": pl(*controller),
-                "source": source_ref(source),
+                "source": source_ref(state, source),
                 "effects": effects,
                 "index": index,
                 "subject": subject.as_ref().map(target_opt),
@@ -327,13 +330,13 @@ fn work_frame(w: &WorkFrame) -> Value {
     }
 }
 
-fn queued(q: &QueuedTrigger) -> Value {
+fn queued(state: &State, q: &QueuedTrigger) -> Value {
     json!({
         "category": q.category,
         "entry": q.entry,
         "printed_order": q.printed_order,
         "controller": pl(q.controller),
-        "source": source_ref(&q.source),
+        "source": source_ref(state, &q.source),
         "tag": q.tag,
         "effects": q.effects,
         "subject": q.subject.as_ref().map(target_opt),
@@ -341,12 +344,27 @@ fn queued(q: &QueuedTrigger) -> Value {
     })
 }
 
-fn source_ref(s: &SourceRef) -> Value {
+fn source_ref(state: &State, s: &SourceRef) -> Value {
     match *s {
         SourceRef::Field { player, id } => json!({"field": {"player": pl(player), "id": id}}),
         SourceRef::Hand { player, id } => json!({"hand": {"player": pl(player), "id": id}}),
-        SourceRef::Crest { player, index } => {
-            json!({"crest": {"player": pl(player), "index": index}})
+        // Identity: while the crest is on the board, emit its current position
+        // (same JSON as the old index-keyed SourceRef). Step-2-lost crests use
+        // granted_order so a neighbour cannot steal the slot.
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => {
+            if let Some(index) = state
+                .player(player)
+                .crests
+                .iter()
+                .position(|c| c.granted_order == granted_order)
+            {
+                json!({"crest": {"player": pl(player), "index": index}})
+            } else {
+                json!({"crest": {"player": pl(player), "granted_order": granted_order}})
+            }
         }
         SourceRef::Spell { player, card } => {
             json!({"spell": {"player": pl(player), "card": card.as_str()}})

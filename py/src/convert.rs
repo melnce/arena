@@ -211,6 +211,9 @@ pub fn event_to_value(ev: &Event) -> Value {
         Event::CrestRemove { player, id } => {
             json!({"crest_remove": {"player": player_str(*player), "id": id}})
         }
+        Event::CrestTurnStartCountdownLost { player, id } => {
+            json!({"crest_turn_start_countdown_lost": {"player": player_str(*player), "id": id}})
+        }
         Event::Fuse { host, partners } => json!({
             "fuse": {
                 "host": host.as_str(),

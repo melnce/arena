@@ -157,13 +157,13 @@ pub fn load_db() -> CardDb {
 /// Also loads the Earrings Engage as-recorded overlay (see
 /// `fixtures/as-recorded/earrings-engage-noop/`).
 pub fn load_recorded_db() -> CardDb {
-    with_play_reactions_as_recorded(with_kukishiro_crest_as_recorded(
-        with_earrings_engage_as_recorded({
+    with_crest_turn_start_as_recorded(with_play_reactions_as_recorded(
+        with_kukishiro_crest_as_recorded(with_earrings_engage_as_recorded({
             let mut db = load_db();
             db.load_replace_dir(repo_root().join("oracle/cards-as-recorded"))
                 .expect("recorded overlay");
             db
-        }),
+        })),
     ))
 }
 
@@ -174,6 +174,16 @@ pub fn load_recorded_db() -> CardDb {
 pub fn with_play_reactions_as_recorded(db: CardDb) -> CardDb {
     let mut db = db;
     db.as_recorded.play_reactions_before_body = true;
+    db
+}
+
+/// Recordings before the crest turn-start PR: crest Countdowns advanced before
+/// crest start-of-turn triggers were queued (Slaus's crest fired twice). Used
+/// with [`with_play_reactions_as_recorded`] for h0_exact pins / games and
+/// [`load_recorded_db`] — never new games.
+pub fn with_crest_turn_start_as_recorded(db: CardDb) -> CardDb {
+    let mut db = db;
+    db.as_recorded.crest_countdown_before_start_triggers = true;
     db
 }
 
