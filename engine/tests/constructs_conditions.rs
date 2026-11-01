@@ -98,6 +98,7 @@ fn put_crest(
             granted_order: order,
             granted: vec![],
             choose_used: Default::default(),
+            sequence_index: 0,
         });
 }
 

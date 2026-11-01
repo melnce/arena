@@ -98,6 +98,7 @@ fn put_crest(
             granted_order: order,
             granted: vec![],
             choose_used: Default::default(),
+            sequence_index: 0,
         });
 }
 
@@ -1099,4 +1100,40 @@ fn construct_faith_counter() {
     let s = put_field(&db, &mut st, PlayerId::A, EVO);
     evolve_slot(&db, &mut st, s, false);
     assert_eq!(st.player(PlayerId::A).faith, 1);
+}
+
+#[test]
+fn construct_ability_event_ally_fuse() {
+    // no-op engine: silent
+    let db = load_db();
+    let mut st = started(&db, 492);
+    watcher(&db, &mut st, "89800407");
+    st.player_mut(PlayerId::A).hand.clear();
+    put_hand(&db, &mut st, PlayerId::A, "11072310"); // Fuse: Amulets
+    put_hand(&db, &mut st, PlayerId::A, "90001210");
+    apply(&db, &mut st, Action::Fuse { host: 0 }).expect("fuse");
+    if matches!(st.phase, Phase::Choice { .. }) {
+        choose(&db, &mut st, 0);
+        confirm(&db, &mut st);
+    }
+    drain_choice(&db, &mut st);
+    assert_eq!(opp_def(&st), 19);
+}
+
+#[test]
+fn construct_ability_event_ally_fuse_amulet() {
+    // no-op engine: silent
+    let db = load_db();
+    let mut st = started(&db, 493);
+    watcher(&db, &mut st, "89800408");
+    st.player_mut(PlayerId::A).hand.clear();
+    put_hand(&db, &mut st, PlayerId::A, "11072310");
+    put_hand(&db, &mut st, PlayerId::A, "90001210");
+    apply(&db, &mut st, Action::Fuse { host: 0 }).expect("fuse");
+    if matches!(st.phase, Phase::Choice { .. }) {
+        choose(&db, &mut st, 0);
+        confirm(&db, &mut st);
+    }
+    drain_choice(&db, &mut st);
+    assert_eq!(opp_def(&st), 19);
 }

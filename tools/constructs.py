@@ -125,6 +125,7 @@ def enumerate_effect_slugs(schema: dict) -> list[str]:
 
     slugs.append("op_leaderModifier_maxDefense_set")
     slugs.append("op_leaderModifier_maxDefense_delta")
+    slugs.append("op_leaderModifier_maxDefense_halve")
     slugs.append("op_leaderModifier_damageCap")
     slugs.append("op_leaderModifier_damageTakenBonus")
     slugs.append("op_leaderModifier_until")

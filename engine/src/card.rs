@@ -283,6 +283,11 @@ pub enum EventName {
     AllyDraw,
     AllyEarthRite,
     AllyEngage,
+    /// Whenever you Fuse (once per Fuse action). `11074120` Dimensional Wanderer.
+    AllyFuse,
+    /// Whenever you Fuse an amulet — see `FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION`.
+    /// `11072110` Extinctionist Socialite / `11073110` Extinctionist Dandy.
+    AllyFuseAmulet,
     LeaderRestored,
     SelfBuffedUp,
     SelfBanished,
@@ -725,6 +730,14 @@ pub struct Filter {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "notBound")]
     pub not_bound: Option<String>,
+    /// Same printed name as a bound target (Lineage `11074110` "all enemy copies of it").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "sameNameAs")]
+    pub same_name_as: Option<BoundSelector>,
+    /// Card prints `Fuse:` (Socialite Evolve `11072110` "Draw a card with Fuse").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "hasFuse")]
+    pub has_fuse: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1184,13 +1197,22 @@ pub struct SequenceStep {
     pub effects: Vec<Effect>,
 }
 
-/// Forced `leaderModifier.maxDefense` construction — `{set: N}` or `{delta: N}`.
+/// Forced `leaderModifier.maxDefense` construction — `{set: N}`, `{delta: N}`,
+/// or `{halve: true}` (Lineage `11074110`: new max = ⌈max / 2⌉).
 /// Same split as `cost.set` / `cost.delta`; no sign-dependent bare int.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum MaxDefenseChange {
-    Set { set: Amount },
-    Delta { delta: Amount },
+    Set {
+        set: Amount,
+    },
+    Delta {
+        delta: Amount,
+    },
+    /// `halve: true` only — schema const. Engine choice (not a ruling): ceil.
+    Halve {
+        halve: bool,
+    },
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -1235,6 +1257,30 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[serde(rename = "untilEndOfTurn")]
         until_end_of_turn: Option<bool>,
+    },
+    /// Set absolute attack and defense (and max defense) — Placid Dilettante `11023110`.
+    #[serde(rename = "setStats")]
+    SetStats {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        printed: Option<String>,
+        #[serde(default, rename = "as", skip_serializing_if = "Option::is_none")]
+        as_bind: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        when: Option<Condition>,
+        select: Selector,
+        attack: Amount,
+        defense: Amount,
+    },
+    /// Swap attack ↔ defense (and max defense ← old attack) — Guileless Newsie `11021110`.
+    #[serde(rename = "swapStats")]
+    SwapStats {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        printed: Option<String>,
+        #[serde(default, rename = "as", skip_serializing_if = "Option::is_none")]
+        as_bind: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        when: Option<Condition>,
+        select: Selector,
     },
     /// Selection with no effect on the chosen card (Cassius `10473110`).
     Select {
@@ -1643,6 +1689,8 @@ impl Effect {
             Effect::Damage { printed, .. }
             | Effect::Restore { printed, .. }
             | Effect::Buff { printed, .. }
+            | Effect::SetStats { printed, .. }
+            | Effect::SwapStats { printed, .. }
             | Effect::Select { printed, .. }
             | Effect::Destroy { printed, .. }
             | Effect::Banish { printed, .. }
@@ -1686,6 +1734,8 @@ impl Effect {
             Effect::Damage { when, .. }
             | Effect::Restore { when, .. }
             | Effect::Buff { when, .. }
+            | Effect::SetStats { when, .. }
+            | Effect::SwapStats { when, .. }
             | Effect::Select { when, .. }
             | Effect::Destroy { when, .. }
             | Effect::Banish { when, .. }
@@ -1729,6 +1779,8 @@ impl Effect {
             Effect::Damage { as_bind, .. }
             | Effect::Restore { as_bind, .. }
             | Effect::Buff { as_bind, .. }
+            | Effect::SetStats { as_bind, .. }
+            | Effect::SwapStats { as_bind, .. }
             | Effect::Select { as_bind, .. }
             | Effect::Destroy { as_bind, .. }
             | Effect::Banish { as_bind, .. }
@@ -2655,6 +2707,17 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
                 walk_amount(a, used);
             }
         }
+        Effect::SetStats {
+            select,
+            attack,
+            defense,
+            ..
+        } => {
+            walk_selector(select, used);
+            walk_amount(attack, used);
+            walk_amount(defense, used);
+        }
+        Effect::SwapStats { select, .. } => walk_selector(select, used),
         Effect::Destroy { select, .. }
         | Effect::Select { select, .. }
         | Effect::Banish { select, .. }
@@ -2675,7 +2738,7 @@ fn walk_effect(e: &Effect, produced: &mut BTreeSet<String>, used: &mut BTreeSet<
             match max_defense {
                 Some(MaxDefenseChange::Set { set }) => walk_amount(set, used),
                 Some(MaxDefenseChange::Delta { delta }) => walk_amount(delta, used),
-                None => {}
+                Some(MaxDefenseChange::Halve { .. }) | None => {}
             }
         }
         Effect::Countdown { select, delta, .. } => {

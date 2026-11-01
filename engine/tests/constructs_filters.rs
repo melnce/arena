@@ -98,6 +98,7 @@ fn put_crest(
             granted_order: order,
             granted: vec![],
             choose_used: Default::default(),
+            sequence_index: 0,
         });
 }
 
@@ -485,4 +486,50 @@ fn construct_filter_sameCostGroup() {
     put_field(&db, &mut st, PlayerId::A, "89600033");
     play_costed(&db, &mut st, TANK1, 1);
     assert_eq!(opp_def(&st), 20);
+}
+
+#[test]
+fn construct_filter_hasFuse() {
+    // no-op engine: draws vanilla too
+    let db = load_db();
+    let mut st = started(&db, 234);
+    let me = PlayerId::A;
+    st.player_mut(me).hand.clear();
+    st.player_mut(me).deck.clear();
+    put_deck(&db, &mut st, me, "11072310"); // Hand of Extinction has Fuse
+    put_deck(&db, &mut st, me, TANK1);
+    play_costed(&db, &mut st, "89600034", 1);
+    assert!(hand_has(&st, me, "11072310"), "draws Fuse card");
+    assert!(!hand_has(&st, me, TANK1), "skips non-Fuse");
+}
+
+#[test]
+fn construct_filter_sameNameAs() {
+    // no-op engine: only destroys the chosen one
+    let db = load_db();
+    let mut st = started(&db, 235);
+    put_field(&db, &mut st, PlayerId::B, TANK1);
+    put_field(&db, &mut st, PlayerId::B, TANK1);
+    put_field(&db, &mut st, PlayerId::B, VANILLA);
+    clear_hand(&mut st, PlayerId::A);
+    give_pp(&mut st, PlayerId::A, 1, 1);
+    play_id(&db, &mut st, PlayerId::A, "89600035");
+    choose(&db, &mut st, 0); // first tank
+    drain_choice(&db, &mut st);
+    let tanks = st
+        .player(PlayerId::B)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == TANK1)
+        .count();
+    let other = st
+        .player(PlayerId::B)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == VANILLA)
+        .count();
+    assert_eq!(tanks, 0, "all same-name copies destroyed");
+    assert_eq!(other, 1, "differently named survives");
 }

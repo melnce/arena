@@ -338,6 +338,7 @@ fn istyndet_crest_destroys_random_last_words_at_eot() {
             granted_order: 0,
             granted: vec![],
             choose_used: Default::default(),
+            sequence_index: 0,
         });
     end_turn(&db, &mut st);
     assert!(

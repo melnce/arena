@@ -108,6 +108,8 @@ pub struct InstStatic {
     /// Printed trigger tags at construction; `granted` snapshot is instance − this.
     pub printed_tags: BTreeSet<String>,
     pub tribes: Vec<Tribe>,
+    /// Card prints `Fuse:` — for `filter.hasFuse` (Socialite `11072110`).
+    pub has_fuse: bool,
 }
 
 /// A `grantTraits` that expires at a turn boundary.
@@ -144,6 +146,7 @@ impl CardInstance {
                 name: card.name().to_string(),
                 printed_tags: card.printed_trigger_tags(),
                 tribes: card.tribes().to_vec(),
+                has_fuse: card.fuse().is_some(),
             }),
             flags: InstanceFlags {
                 ambush_active: ambush,
@@ -252,6 +255,9 @@ pub struct CrestInstance {
     pub granted: Vec<Ability>,
     /// Option indices already fired by `choose by: randomUnused` on this crest.
     pub choose_used: BTreeSet<u8>,
+    /// Next `op:sequence` step (Almaelys / Noeinhowell Interrogation crests).
+    /// Default 0; omitted from search_key / hash while zero.
+    pub sequence_index: u32,
 }
 
 #[derive(Debug, Clone)]

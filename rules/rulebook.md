@@ -515,6 +515,20 @@ This section enumerates the keyword abilities and major mechanics of SVWB. Each 
 
 **Owner ruling — Artifact fuse chain (2026-09-05), refined by official Q&A (2026-09-06), partners corrected 2026-09-10:** Gears fuse with any Artifact amulet (printed "Fuse: Artifact amulets"; the 2026-09-05 "gears only" recollection is superseded); the gear fused _into_ decides the body (Ambition → Striker, Remembrance → Fortifier). Striker/Fortifier host any Artifact cards and transform by partners' total cost (1 → Ominous α, 2 → β, 3+ → γ). **Ominous Artifact α** accepts **Ominous Artifact β** and **Ominous Artifact γ** only; each fused partner is banished. Fusing only one kind does not transform α immediately, but α **remembers** which kinds have been fused. When **both** β and γ have been fused to the same α instance — in one fuse action or across turns — it transforms into **Masterwork Artifact Ω**. Already-fused kinds cannot be selected again. β, γ, and Ω cannot initiate fuse. Official Q&A (`90073110`): fusing β one turn and γ to the same α the next turn **does** produce Ω.
 
+**Set 10 readings (Forest / Sword / Rune / Portal — Deicide in Nacreheim):**
+
+- **1-base-cost allied cards** means followers **and** amulets with printed base cost 1; `other` excludes self.
+- **Heartening Hyphae** (`11014120`, Q&A): on a near-full field, only the first drawn Forestcraft follower summons — later draws stay in hand. Super-Evolve with a full hand: overflow destroys the draws, so none are summoned.
+- **Untamed Testimony** crest (Countdown 2): start-of-turn triggers are **queued before** the same step's countdown advance; losing the crest to that tick does **not** cancel the already-queued trigger (two Mischiefs over two turns).
+- **Guileless Newsie** (`11021110`): `swapStats` then `buff +1/+0`. Printed "exact copy" → `exact: true`; "a copy" / "copies" → `exact: false`.
+- **Almaelys** sequence + Super-Evolve Delay 2 → four activations (sequence cursor wraps; delay does not reset it).
+- **Noeinhowell Interrogation** crest: `choose by: randomUnused` (no repetition); the third activation destroys.
+- **Noeinhowell** crest: once per your turn, recover 1 PP when you Engage an amulet.
+- **Infernal Chimera** (`11034120`, Q&A): X=0 deals **no** damage (not a 0-split). "All enemies" includes the enemy leader. **Lineage** (`11074110`) `{halve: true}` — engine choice: ⌈max/2⌉.
+- **Fuse once per action** (Sephie-style once-per-instance still applies). **"Whenever you Fuse an amulet"** (`ally_fuse_amulet`, Socialite `11072110` / Dandy `11073110`) — **pending owner**; engine constant `FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION = true` (once per Fuse action that includes ≥1 amulet, not per amulet partner). JA has no "for each".
+- **Dimensional Wanderer** crest advance = countdown −1; bounce on re-gain.
+- **Enter reactions wait until the play sequence finishes** (Ruler of Tempests) — same E34 / play-reaction timing as above.
+
 **Crests (Countdown / Last Words / end of turn).** Crests use the same timing machinery as amulets. A Countdown (N) on a crest ticks −1 at the start of its owner's turn (the same window as amulet countdowns), and the crest is destroyed at 0. Last Words on a crest fire when it is destroyed (including by countdown reaching 0). "At the end of your turn" on a crest fires at that owner's end of turn (e.g. Corruption: deal 2 to your leader each end of turn while active). _Example Last Words:_ Belial's crest — Countdown (4), Last Words: deal 20 to the enemy leader when it reaches 0.
 
 **Sequence abilities.** When a card activates abilities "in sequence" from a numbered list, each trigger runs the next step in order; after the last step, the sequence **wraps** back to the first step on the next trigger (official Q&A: Omerio, Winged Revenant — after the third ability, the next allied amulet destruction fires step 1 again).

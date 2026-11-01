@@ -1,0 +1,32 @@
+{
+  "id": "89200611",
+  "name": "op_setStats",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Set an enemy follower's attack and defense to 1/1.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Set an enemy follower's attack and defense to 1/1.",
+      "effects": [
+        {
+          "op": "setStats",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "attack": 1,
+          "defense": 1,
+          "printed": "Set an enemy follower's attack and defense to 1/1."
+        }
+      ]
+    }
+  ]
+}
