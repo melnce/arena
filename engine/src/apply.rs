@@ -2642,11 +2642,7 @@ fn expire_crest(
     Ok(())
 }
 
-fn crest_by_order(
-    state: &State,
-    who: PlayerId,
-    granted_order: u32,
-) -> Option<&CrestInstance> {
+fn crest_by_order(state: &State, who: PlayerId, granted_order: u32) -> Option<&CrestInstance> {
     state
         .player(who)
         .crests
@@ -3225,6 +3221,9 @@ fn enqueue_when_on(
                 _ => continue,
             };
             let Ok(def) = db.crest(&id) else { continue };
+            // `entry` stays the board index at enqueue (identity with pre-fix
+            // search keys). `SourceRef` / `mark_crest` key by granted_order so
+            // a Countdown loss cannot retarget a neighbour.
             collect_when_from_list(
                 &scan,
                 state,
@@ -3232,7 +3231,7 @@ fn enqueue_when_on(
                 0,
                 WhenLoc {
                     zone: AbilityZone::Field,
-                    entry: granted_order,
+                    entry: i as u32,
                     source: SourceRef::Crest {
                         player: observer_side,
                         granted_order,
@@ -3258,7 +3257,7 @@ fn enqueue_when_on(
                     def.abilities().len(),
                     WhenLoc {
                         zone: AbilityZone::Field,
-                        entry: granted_order,
+                        entry: i as u32,
                         source: SourceRef::Crest {
                             player: observer_side,
                             granted_order,
