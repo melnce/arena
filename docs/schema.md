@@ -114,7 +114,7 @@ Booleans / small ints only. No `effects`.
 | `rush` | `10564120` Kukishiro |
 | `storm` | `90061110` Holy Falcon |
 | `ambush` | `10574110` Slaus |
-| `aura` | `10654110` Armes |
+| `aura` | `10654110` Armes; also required on every tribe-`clue` card (glossary: "Cards with Clue can't be selected for enemy abilities" — same mechanism as Aura; `tools/validate.mjs` enforces) |
 | `intimidate` | `10904110` Zerael |
 | `drain` | `10933110` (granted) |
 | `barrier` | `10704110` (granted) |
