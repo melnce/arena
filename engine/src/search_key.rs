@@ -900,9 +900,18 @@ fn hash_source(w: &mut Writer, state: &State, s: &SourceRef) {
                 .position(|c| c.granted_order == *granted_order)
             {
                 w.u32(i as u32);
-            } else {
-                // Step-2-lost (or otherwise absent): not identity-stable.
+            } else if state
+                .crest_step2_lost
+                .iter()
+                .any(|(p, c)| *p == *player && c.granted_order == *granted_order)
+            {
+                // Step-2-lost only: marker so search keys diverge when a SoT
+                // crest is retained past Countdown 0.
                 w.u32(0x8000_0000 | granted_order);
+            } else {
+                // Absent (e.g. Last Words after expire_crest): same as main's
+                // `index: 0`.
+                w.u32(0);
             }
         }
         SourceRef::Spell { player, card } => {

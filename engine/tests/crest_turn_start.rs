@@ -9,12 +9,17 @@ mod common;
 use common::*;
 
 const SLAUS_CREST: &str = "crest:10574110";
+const FAITH_YIDMETRA: &str = "faith:10624120";
+const YOUNGER_KUKISHIRO: &str = "crest:10564120";
 const OLDER_DEAL1: &str = "crest:89990101";
 const YOUNGER_DEAL7: &str = "crest:89990102";
 const YOUNGER_DEAL7_CD1: &str = "crest:89990103";
 const REMOVE_CRESTS_SOT: &str = "crest:89990104";
 const SOT_DESTROY_ALLIES: &str = "89990201";
 const SOT_DEAL1_FOLLOWER: &str = "89990202";
+const VANILLA: &str = "88001110";
+/// Last-Words-only countdown crest (must not enter `crest_step2_lost`).
+const LW_ONLY_CD1: &str = "crest:10412310";
 
 fn load_crest_turn_start_db() -> CardDb {
     let mut db = load_db();
@@ -26,10 +31,26 @@ fn load_crest_turn_start_db() -> CardDb {
 fn put_crest_cd(st: &mut State, who: PlayerId, id: &str, cd: i32) {
     let order = st.crest_order;
     st.crest_order += 1;
+    let faith = id.starts_with("faith:");
     st.player_mut(who).crests.push(CrestInstance {
         id: id.into(),
         countdown: Some(cd),
-        faith: false,
+        faith,
+        once_used: vec![],
+        granted_order: order,
+        granted: vec![],
+        choose_used: Default::default(),
+    });
+}
+
+fn put_crest_no_cd(st: &mut State, who: PlayerId, id: &str) {
+    let order = st.crest_order;
+    st.crest_order += 1;
+    let faith = id.starts_with("faith:");
+    st.player_mut(who).crests.push(CrestInstance {
+        id: id.into(),
+        countdown: None,
+        faith,
         once_used: vec![],
         granted_order: order,
         granted: vec![],
@@ -56,41 +77,153 @@ fn end_opponent_turn_events(db: &CardDb, st: &mut State, who: PlayerId) -> Vec<E
     apply(db, st, Action::EndTurn).expect("end opponent turn")
 }
 
-#[test]
-fn slaus_crest_three_distinct_activations_over_seeds() {
+/// Slaus options: 0 = +1 hand cost EOT; 1 = allied −2/−2; 2 = deal 3 to own leader.
+fn assert_slaus_option_effect(
+    st: &State,
+    me: PlayerId,
+    option: u8,
+    hp_before: i32,
+    follower_atk: i32,
+    follower_def: i32,
+    hand_cost_before: i32,
+) {
+    let hp = st.player(me).leader_defense;
+    let follower = st
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card == cid(VANILLA))
+        .expect("probe follower present");
+    let hand = st
+        .player(me)
+        .hand
+        .iter()
+        .find(|c| c.card == cid(VANILLA))
+        .expect("probe hand card present");
+
+    match option {
+        0 => {
+            assert_eq!(hp, hp_before, "option 0: no self-damage");
+            assert_eq!(follower.attack, follower_atk, "option 0: no −2/−2 atk");
+            assert_eq!(follower.defense, follower_def, "option 0: no −2/−2 def");
+            assert_eq!(hand.cost, hand_cost_before + 1, "option 0: +1 hand cost");
+            assert_eq!(
+                hand.flags.eot_cost,
+                Some(hand_cost_before),
+                "option 0: eot_cost snapshots prior cost"
+            );
+        }
+        1 => {
+            assert_eq!(hp, hp_before, "option 1: no self-damage");
+            assert_eq!(follower.attack, follower_atk - 2, "option 1: −2 atk");
+            assert_eq!(follower.defense, follower_def - 2, "option 1: −2 def");
+            assert_eq!(hand.cost, hand_cost_before, "option 1: hand cost unchanged");
+            assert!(hand.flags.eot_cost.is_none(), "option 1: no eot cost");
+        }
+        2 => {
+            assert_eq!(hp, hp_before - 3, "option 2: deal 3 to own leader");
+            assert_eq!(follower.attack, follower_atk, "option 2: no −2/−2 atk");
+            assert_eq!(follower.defense, follower_def, "option 2: no −2/−2 def");
+            assert_eq!(hand.cost, hand_cost_before, "option 2: hand cost unchanged");
+            assert!(hand.flags.eot_cost.is_none(), "option 2: no eot cost");
+        }
+        other => panic!("unexpected Slaus option {other}"),
+    }
+}
+
+/// Run three Slaus activations; on the third, assert the remaining option's
+/// effect exactly (and thereby that the other two did not fire). `older` /
+/// `younger` optional board neighbours (Faith before / Kukishiro after).
+fn slaus_three_activations_shape(
+    seed_lo: u64,
+    seed_hi: u64,
+    older: Option<&str>,
+    younger: Option<&str>,
+) {
     let db = load_crest_turn_start_db();
     let me = PlayerId::A;
     let mut seeds_ok = 0u32;
-    for seed in 0u64..220 {
+    for seed in seed_lo..seed_hi {
         let mut st = started(&db, seed);
+        if let Some(id) = older {
+            put_crest_no_cd(&mut st, me, id);
+        }
         put_crest_cd(&mut st, me, SLAUS_CREST, 3);
-        let mut used_sizes = Vec::new();
+        if let Some(id) = younger {
+            put_crest_no_cd(&mut st, me, id);
+        }
+        let mut used = std::collections::BTreeSet::<u8>::new();
         for turn in 0..3 {
             let before = crest_by_id(&st, me, SLAUS_CREST)
                 .map(|c| c.choose_used.clone())
                 .expect("slaus crest present before activation");
-            end_turns_to_owner_start(&db, &mut st, me);
             if turn < 2 {
+                end_turns_to_owner_start(&db, &mut st, me);
                 let after = crest_by_id(&st, me, SLAUS_CREST).expect("crest survives first two");
                 assert_eq!(
                     after.choose_used.len(),
                     before.len() + 1,
                     "seed={seed} turn={turn}: exactly one new option"
                 );
-                used_sizes.push(after.choose_used.len());
+                let new_opt = after
+                    .choose_used
+                    .difference(&before)
+                    .next()
+                    .copied()
+                    .expect("new option");
+                used.insert(new_opt);
             } else {
+                // Third turn: remaining option must fire with its exact effect.
+                let remaining: Vec<u8> = [0u8, 1, 2]
+                    .into_iter()
+                    .filter(|o| !before.contains(o))
+                    .collect();
+                assert_eq!(remaining.len(), 1, "seed={seed}: exactly one option left");
+                let rem = remaining[0];
+
+                // End current turn first so any prior +1-cost EOT mods clear,
+                // then place probes on the opponent's turn before our start.
+                end_turn(&db, &mut st);
+                assert_eq!(st.active, me.opponent());
+                let slot = put_field(&db, &mut st, me, VANILLA);
+                {
+                    let f = st.field_inst_mut(me, slot).expect("probe follower");
+                    f.attack = 4;
+                    f.defense = 5;
+                    f.max_defense = 5;
+                }
+                put_hand(&db, &mut st, me, VANILLA);
+                let hp_before = st.player(me).leader_defense;
+                let follower_atk = 4;
+                let follower_def = 5;
+                let hand_cost_before = st
+                    .player(me)
+                    .hand
+                    .iter()
+                    .find(|c| c.card == cid(VANILLA))
+                    .map(|c| c.cost)
+                    .expect("hand probe");
+
+                let _ = end_opponent_turn_events(&db, &mut st, me);
                 assert!(
                     crest_by_id(&st, me, SLAUS_CREST).is_none(),
                     "seed={seed}: crest gone after third Countdown"
                 );
-                used_sizes.push(3);
+                assert_slaus_option_effect(
+                    &st,
+                    me,
+                    rem,
+                    hp_before,
+                    follower_atk,
+                    follower_def,
+                    hand_cost_before,
+                );
+                used.insert(rem);
             }
         }
+        assert_eq!(used.len(), 3, "seed={seed}: all three options over the life");
         // Fourth owner turn start: nothing (crest already gone).
-        assert!(
-            crest_by_id(&st, me, SLAUS_CREST).is_none(),
-            "seed={seed}: crest still gone before fourth start"
-        );
         let hp_before = st.player(me).leader_defense;
         end_turns_to_owner_start(&db, &mut st, me);
         assert!(
@@ -102,10 +235,26 @@ fn slaus_crest_three_distinct_activations_over_seeds() {
             hp_before,
             "seed={seed}: no fourth self-damage activation"
         );
-        assert_eq!(used_sizes, vec![1, 2, 3], "seed={seed}: three activations");
         seeds_ok += 1;
     }
-    assert!(seeds_ok >= 200, "ran {seeds_ok} seeds");
+    assert!(seeds_ok >= (seed_hi - seed_lo) as u32, "ran {seeds_ok} seeds");
+}
+
+#[test]
+fn slaus_crest_three_distinct_activations_over_seeds() {
+    slaus_three_activations_shape(0, 220, None, None);
+}
+
+#[test]
+fn slaus_crest_three_activations_with_older_faith() {
+    // Probe shape: Faith before Slaus (real meta board order).
+    slaus_three_activations_shape(0, 80, Some(FAITH_YIDMETRA), None);
+}
+
+#[test]
+fn slaus_crest_three_activations_with_younger_crest() {
+    // Probe shape: Slaus then Kukishiro crest after.
+    slaus_three_activations_shape(0, 80, None, Some(YOUNGER_KUKISHIRO));
 }
 
 #[test]
@@ -161,31 +310,63 @@ fn slaus_crest_as_recorded_only_two_activations() {
 
 #[test]
 fn younger_crest_resolves_against_itself_when_older_expires() {
+    // Older CD1 SoT deal1 expires in the same step; younger Slaus must read/write
+    // its own choose_used (positional SourceRef would miss after the shift).
     let db = load_crest_turn_start_db();
     let me = PlayerId::A;
     let mut st = started(&db, 11);
     put_crest_cd(&mut st, me, OLDER_DEAL1, 1);
-    put_crest_cd(&mut st, me, YOUNGER_DEAL7, 5);
+    put_crest_cd(&mut st, me, SLAUS_CREST, 3);
     let older_order = crest_by_id(&st, me, OLDER_DEAL1).unwrap().granted_order;
-    let younger_order = crest_by_id(&st, me, YOUNGER_DEAL7).unwrap().granted_order;
+    let younger_order = crest_by_id(&st, me, SLAUS_CREST).unwrap().granted_order;
     assert!(older_order < younger_order);
+
+    let slot = put_field(&db, &mut st, me, VANILLA);
+    {
+        let f = st.field_inst_mut(me, slot).expect("probe");
+        f.attack = 4;
+        f.defense = 5;
+        f.max_defense = 5;
+    }
+    put_hand(&db, &mut st, me, VANILLA);
+    let hp_before = st.player(me).leader_defense;
     let opp_hp = st.player(me.opponent()).leader_defense;
+    let hand_cost_before = st
+        .player(me)
+        .hand
+        .iter()
+        .find(|c| c.card == cid(VANILLA))
+        .map(|c| c.cost)
+        .unwrap();
+
     end_turns_to_owner_start(&db, &mut st, me);
+
     assert!(
         crest_by_id(&st, me, OLDER_DEAL1).is_none(),
         "older crest lost to Countdown"
     );
-    let younger = crest_by_id(&st, me, YOUNGER_DEAL7).expect("younger remains");
-    assert_eq!(younger.countdown, Some(4));
+    let younger = crest_by_id(&st, me, SLAUS_CREST).expect("younger Slaus remains");
+    assert_eq!(younger.countdown, Some(2));
+    assert_eq!(younger.granted_order, younger_order);
     assert_eq!(
-        younger.granted_order, younger_order,
-        "younger identity unchanged"
+        younger.choose_used.len(),
+        1,
+        "younger choose_used advances by exactly one"
     );
+    let opted = *younger.choose_used.iter().next().unwrap();
+    assert_slaus_option_effect(&st, me, opted, hp_before, 4, 5, hand_cost_before);
     assert_eq!(
         st.player(me.opponent()).leader_defense,
-        opp_hp - 1 - 7,
-        "both SoTs resolve: older deal1 + younger deal7 (not neighbour theft)"
+        opp_hp - 1,
+        "older deal1 still resolves"
     );
+    // Expired neighbour is gone — its state cannot have absorbed the younger write.
+    assert!(st
+        .player(me)
+        .crests
+        .iter()
+        .filter(|c| c.id == SLAUS_CREST)
+        .all(|c| c.choose_used.len() == 1));
 }
 
 #[test]
@@ -217,6 +398,42 @@ fn both_expiring_crests_resolve_oldest_first() {
         lost,
         vec![OLDER_DEAL1, YOUNGER_DEAL7_CD1],
         "oldest granted first in the countdown-lost event order"
+    );
+}
+
+#[test]
+fn lw_only_countdown_crest_does_not_enter_step2_lost() {
+    // Last-Words-only countdown crests expire via expire_crest: no step2 list,
+    // no CrestTurnStartCountdownLost, and CrestRemove discarded at turn start.
+    let db = load_crest_turn_start_db();
+    let me = PlayerId::A;
+    let mut st = started(&db, 31);
+    put_crest_cd(&mut st, me, LW_ONLY_CD1, 1);
+    let opp_hp = st.player(me.opponent()).leader_defense;
+    end_turn(&db, &mut st);
+    let events = end_opponent_turn_events(&db, &mut st, me);
+    assert!(crest_by_id(&st, me, LW_ONLY_CD1).is_none());
+    assert!(
+        st.crest_step2_lost.is_empty(),
+        "LW-only crest must not enter crest_step2_lost"
+    );
+    assert!(
+        !events
+            .iter()
+            .any(|e| matches!(e, Event::CrestTurnStartCountdownLost { .. })),
+        "no CrestTurnStartCountdownLost for LW-only"
+    );
+    assert!(
+        !events
+            .iter()
+            .any(|e| matches!(e, Event::CrestRemove { id, .. } if id == LW_ONLY_CD1)),
+        "turn-start expire_crest discards CrestRemove (main behaviour)"
+    );
+    // Last Words: deal 1 to enemy leader (+ add Starry Sky to hand).
+    assert_eq!(
+        st.player(me.opponent()).leader_defense,
+        opp_hp - 1,
+        "LW still resolves"
     );
 }
 

@@ -2536,9 +2536,11 @@ fn queue_turn_boundary(
     }
 }
 
-/// Advance crest Countdowns. When `retain_for_step2`, crests that hit 0 are
-/// moved to `crest_step2_lost` so their already-queued start-of-turn triggers
-/// still resolve (rulebook step 2 / Slaus); otherwise they are removed as today.
+/// Advance crest Countdowns. When `retain_for_step2`, crests that hit 0 **and**
+/// have a start-of-turn trigger queued this step are moved to
+/// `crest_step2_lost` so that trigger still resolves (rulebook step 2 / Slaus).
+/// Last-Words-only countdown crests (and the recording-switch path) expire via
+/// `expire_crest` with discarded events — same as `main`.
 fn tick_crests(
     db: &CardDb,
     state: &mut State,
@@ -2551,15 +2553,16 @@ fn tick_crests(
         if let Some(cd) = c.countdown.as_mut() {
             *cd -= 1;
             if *cd <= 0 {
-                doomed.push(c.granted_order);
+                doomed.push((c.granted_order, c.id.clone()));
             }
         }
     }
-    for order in doomed {
-        if retain_for_step2 {
+    for (order, id) in doomed {
+        if retain_for_step2 && crest_has_start_of_turn(db, &id) {
             let _ = expire_crest_step2(db, state, who, order, events);
         } else {
-            let _ = expire_crest(db, state, who, order, events);
+            // Discard CrestRemove at turn start — main discarded via `&mut Vec::new()`.
+            let _ = expire_crest(db, state, who, order, &mut Vec::new());
         }
     }
 }
@@ -2573,7 +2576,8 @@ fn crest_has_start_of_turn(db: &CardDb, id: &str) -> bool {
         .any(|a| matches!(a, Ability::StartOfTurn { .. }))
 }
 
-/// Turn-start step 2 Countdown expiry: leave the board, keep the instance in
+/// Turn-start step 2 Countdown expiry for a crest that had a start-of-turn
+/// trigger queued this step: leave the board, keep the instance in
 /// `crest_step2_lost` for already-queued SoT / choose_used, queue Last Words.
 fn expire_crest_step2(
     db: &CardDb,
@@ -2591,12 +2595,10 @@ fn expire_crest_step2(
         player: who,
         id: c.id.clone(),
     });
-    if crest_has_start_of_turn(db, &c.id) {
-        events.push(Event::CrestTurnStartCountdownLost {
-            player: who,
-            id: c.id.clone(),
-        });
-    }
+    events.push(Event::CrestTurnStartCountdownLost {
+        player: who,
+        id: c.id.clone(),
+    });
     let src = SourceRef::Crest {
         player: who,
         granted_order: c.granted_order,

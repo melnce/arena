@@ -483,7 +483,7 @@ fn set10_identity_crest_turn_start_diffs() {
     );
     for (i, seed, hit) in &differing {
         eprintln!(
-            "  game_id={i} seed={seed} first_differing_ply={} crest={}",
+            "  game_id={i} seed={seed} event_ply={} crest={}",
             hit.ply, hit.crest_id
         );
     }
