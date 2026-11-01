@@ -1,0 +1,46 @@
+{
+  "id": "11053310",
+  "name": "Nocturne's Interrogation",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 1,
+  "text": "Deal X damage to all enemy followers. X is the number of clues you have. Banish all allied Clue amulets from the field.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal X damage to all enemy followers. X is the number of clues you have. Banish all allied Clue amulets from the field.",
+      "effects": [
+        {
+          "printed": "Deal X damage to all enemy followers. X is the number of clues you have.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": {
+            "counter": "clues"
+          }
+        },
+        {
+          "printed": "Banish all allied Clue amulets from the field.",
+          "op": "banish",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "amulet",
+            "filter": {
+              "tribe": "clue"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

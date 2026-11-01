@@ -1,0 +1,49 @@
+{
+  "id": "11062120",
+  "name": "Winged Accordionist",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 4,
+  "attack": 1,
+  "defense": 1,
+  "text": "Fanfare: Summon a Holy Falcon.\n\nEvolve: Give all other allied followers on the field +1/+1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Holy Falcon.",
+      "effects": [
+        {
+          "printed": "Summon a Holy Falcon.",
+          "op": "summon",
+          "card": {
+            "named": "90061110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Give all other allied followers on the field +1/+1.",
+      "effects": [
+        {
+          "printed": "Give all other allied followers on the field +1/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "other": true
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

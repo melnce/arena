@@ -10,6 +10,8 @@ Coverage is enforced by `python3 tools/constructs.py --check` (all families).
 | `op_damage` | effect | `construct_op_damage` | `engine/tests/constructs_effects.rs` |
 | `op_restore` | effect | `construct_op_restore` | `engine/tests/constructs_effects.rs` |
 | `op_buff` | effect | `construct_op_buff` | `engine/tests/constructs_effects.rs` |
+| `op_setStats` | effect | `construct_op_setStats` | `engine/tests/constructs_effects.rs` |
+| `op_swapStats` | effect | `construct_op_swapStats` | `engine/tests/constructs_effects.rs` |
 | `op_select` | effect | `construct_op_select` | `engine/tests/constructs_effects.rs` |
 | `op_destroy` | effect | `construct_op_destroy` | `engine/tests/constructs_effects.rs` |
 | `op_banish` | effect | `construct_op_banish` | `engine/tests/constructs_effects.rs` |
@@ -66,6 +68,7 @@ Coverage is enforced by `python3 tools/constructs.py --check` (all families).
 | `op_pay_resource_clues` | effect | `construct_op_pay_resource_clues` | `engine/tests/constructs_effects.rs` |
 | `op_leaderModifier_maxDefense_set` | effect | `construct_op_leaderModifier_maxDefense_set` | `engine/tests/constructs_effects.rs` |
 | `op_leaderModifier_maxDefense_delta` | effect | `construct_op_leaderModifier_maxDefense_delta` | `engine/tests/constructs_effects.rs` |
+| `op_leaderModifier_maxDefense_halve` | effect | `construct_op_leaderModifier_maxDefense_halve` | `engine/tests/constructs_effects.rs` |
 | `op_leaderModifier_damageCap` | effect | `construct_op_leaderModifier_damageCap` | `engine/tests/constructs_effects.rs` |
 | `op_leaderModifier_damageTakenBonus` | effect | `construct_op_leaderModifier_damageTakenBonus` | `engine/tests/constructs_effects.rs` |
 | `op_leaderModifier_until` | effect | `construct_op_leaderModifier_until` | `engine/tests/constructs_effects.rs` |
@@ -220,6 +223,8 @@ Coverage is enforced by `python3 tools/constructs.py --check` (all families).
 | `filter_didNotAttackThisTurn` | filter | `construct_filter_didNotAttackThisTurn` | `engine/tests/constructs_filters.rs` |
 | `filter_superEvolved` | filter | `construct_filter_superEvolved` | `engine/tests/constructs_filters.rs` |
 | `filter_notBound` | filter | `construct_filter_notBound` | `engine/tests/constructs_filters.rs` |
+| `filter_sameNameAs` | filter | `construct_filter_sameNameAs` | `engine/tests/constructs_filters.rs` |
+| `filter_hasFuse` | filter | `construct_filter_hasFuse` | `engine/tests/constructs_filters.rs` |
 | `amount_int` | amount | `construct_amount_int` | `engine/tests/constructs_amounts.rs` |
 | `amount_count` | amount | `construct_amount_count` | `engine/tests/constructs_amounts.rs` |
 | `amount_counter` | amount | `construct_amount_counter` | `engine/tests/constructs_amounts.rs` |
@@ -267,6 +272,8 @@ Coverage is enforced by `python3 tools/constructs.py --check` (all families).
 | `ability_event_ally_draw` | ability | `construct_ability_event_ally_draw` | `engine/tests/constructs_abilities.rs` |
 | `ability_event_ally_earth_rite` | ability | `construct_ability_event_ally_earth_rite` | `engine/tests/constructs_abilities.rs` |
 | `ability_event_ally_engage` | ability | `construct_ability_event_ally_engage` | `engine/tests/constructs_abilities.rs` |
+| `ability_event_ally_fuse` | ability | `construct_ability_event_ally_fuse` | `engine/tests/constructs_abilities.rs` |
+| `ability_event_ally_fuse_amulet` | ability | `construct_ability_event_ally_fuse_amulet` | `engine/tests/constructs_abilities.rs` |
 | `ability_event_leader_restored` | ability | `construct_ability_event_leader_restored` | `engine/tests/constructs_abilities.rs` |
 | `ability_event_self_buffed_up` | ability | `construct_ability_event_self_buffed_up` | `engine/tests/constructs_abilities.rs` |
 | `ability_event_self_banished` | ability | `construct_ability_event_self_banished` | `engine/tests/constructs_abilities.rs` |

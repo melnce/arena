@@ -1,0 +1,84 @@
+{
+  "id": "11021110",
+  "name": "Guileless Newsie",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Activates in hand. Whenever you Engage a Clue amulet, swap this follower's attack and defense and give it +1/+0.\n\nEnhance (4): Summon an exact copy of this card.\n\nRush\nLast Words: Summon a Divine Evidence.",
+  "attack": 2,
+  "defense": 1,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "zone": "hand",
+      "filter": {
+        "tribe": "clue"
+      },
+      "printed": "Activates in hand. Whenever you Engage a Clue amulet, swap this follower's attack and defense and give it +1/+0.",
+      "effects": [
+        {
+          "printed": "swap this follower's attack and defense and give it +1/+0.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "swapStats",
+              "select": {
+                "pick": "self"
+              }
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 1,
+              "defense": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Divine Evidence.",
+      "effects": [
+        {
+          "printed": "Summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 4,
+      "printed": "Enhance (4): Summon an exact copy of this card.",
+      "effects": [
+        {
+          "printed": "Summon an exact copy of this card.",
+          "op": "summon",
+          "card": {
+            "copyOf": {
+              "pick": "self"
+            },
+            "exact": true
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

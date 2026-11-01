@@ -1,0 +1,41 @@
+{
+  "id": "11042110",
+  "name": "Obliviationist Smuggler",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "attack": 5,
+  "defense": 5,
+  "text": "Fanfare: Select 2 enemy followers on the field and destroy them. Add 2 copies of Divine Evidence to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select 2 enemy followers on the field and destroy them. Add 2 copies of Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "Select 2 enemy followers on the field and destroy them.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "count": 2
+          }
+        },
+        {
+          "printed": "Add 2 copies of Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,71 @@
+{
+  "id": "11043110",
+  "name": "Obliviationist Mugger",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 4,
+  "attack": 3,
+  "defense": 3,
+  "text": "Fanfare: If you have a Clue amulet in your hand, discard a random Clue amulet and gain 1 max play point.\n\nEvolve: Select an enemy follower on the field and deal it 3 damage.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If you have a Clue amulet in your hand, discard a random Clue amulet and gain 1 max play point.",
+      "effects": [
+        {
+          "printed": "If you have a Clue amulet in your hand, discard a random Clue amulet and gain 1 max play point.",
+          "op": "if",
+          "cond": {
+            "handHas": {
+              "filter": {
+                "tribe": "clue",
+                "kind": "amulet"
+              },
+              "n": 1
+            }
+          },
+          "then": [
+            {
+              "op": "discard",
+              "select": {
+                "pick": "random",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "amulet",
+                "filter": {
+                  "tribe": "clue"
+                }
+              }
+            },
+            {
+              "op": "pp",
+              "action": "gainMax",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and deal it 3 damage.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 3 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

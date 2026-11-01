@@ -1,0 +1,28 @@
+{
+  "id": "crest:89990101",
+  "name": "Crest: Older SoT Deal1",
+  "grantedBy": [],
+  "faith": false,
+  "text": "Countdown (1)\nAt the start of your turn, deal 1 damage to the enemy leader.",
+  "countdown": 1,
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "deal 1 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

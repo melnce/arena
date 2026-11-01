@@ -1,0 +1,58 @@
+{
+  "id": "11022120",
+  "name": "Errant Knight",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: If there's an allied amulet on the field, select an enemy follower on the field and banish it.\n\nWard\n\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 8,
+  "defense": 8,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If there's an allied amulet on the field, select an enemy follower on the field and banish it.",
+      "effects": [
+        {
+          "printed": "If there's an allied amulet on the field, select an enemy follower on the field and banish it.",
+          "op": "if",
+          "cond": {
+            "fieldHas": {
+              "filter": {},
+              "kind": "amulet",
+              "side": "ally"
+            }
+          },
+          "then": [
+            {
+              "op": "banish",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

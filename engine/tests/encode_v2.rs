@@ -32,6 +32,7 @@ fn thestae_crest() -> arena_engine::state::CrestInstance {
         granted_order: 1,
         granted: vec![],
         choose_used: Default::default(),
+        sequence_index: 0,
     }
 }
 

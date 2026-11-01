@@ -10,6 +10,7 @@
 
 use std::path::PathBuf;
 
+use arena_engine::event::Event;
 use arena_engine::{
     apply, encode_version, hash, legal_actions, new_game, policy_rng, snapshot_json, to_neutral,
     trace::fnv1a64, CardDb, CardId, EncodingVersion, First, GameConfig, Phase, PlayerId,
@@ -131,6 +132,25 @@ fn parse_deck_cards(cards: &[String]) -> Vec<CardId> {
 }
 
 fn play_digest(db: &CardDb, seed: u64, deck_a: &[CardId], deck_b: &[CardId]) -> (u64, u64) {
+    let (digest, final_hash, _) = play_digest_tracking(db, seed, deck_a, deck_b, false);
+    (digest, final_hash)
+}
+
+#[derive(Debug, Clone)]
+struct CrestCountdownLostHit {
+    ply: u32,
+    crest_id: String,
+}
+
+/// Same schedule walk as [`play_digest`], optionally recording the first ply at
+/// which a crest with a start-of-turn ability was lost to Countdown in step 2.
+fn play_digest_tracking(
+    db: &CardDb,
+    seed: u64,
+    deck_a: &[CardId],
+    deck_b: &[CardId],
+    track_crest_event: bool,
+) -> (u64, u64, Option<CrestCountdownLostHit>) {
     let mut state = new_game(
         db,
         GameConfig {
@@ -145,6 +165,7 @@ fn play_digest(db: &CardDb, seed: u64, deck_a: &[CardId], deck_b: &[CardId]) -> 
     let mut policy = policy_rng(seed);
     let mut digest = 0xcbf2_9ce4_8422_2325u64;
     let mut actions = 0u32;
+    let mut first_crest_event = None;
     while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
         assert!(actions < MAX_ACTIONS, "seed={seed}: game did not terminate");
         digest = fold_ply(digest, db, &state);
@@ -154,14 +175,25 @@ fn play_digest(db: &CardDb, seed: u64, deck_a: &[CardId], deck_b: &[CardId]) -> 
             "seed={seed}: empty legal before terminal"
         );
         let idx = policy.gen_range(legal.len() as u32) as usize;
-        apply(db, &mut state, legal[idx].clone()).unwrap_or_else(|e| {
+        let events = apply(db, &mut state, legal[idx].clone()).unwrap_or_else(|e| {
             panic!("seed={seed}: legal action failed: {e:?}");
         });
+        if track_crest_event && first_crest_event.is_none() {
+            if let Some(Event::CrestTurnStartCountdownLost { id, .. }) = events
+                .iter()
+                .find(|e| matches!(e, Event::CrestTurnStartCountdownLost { .. }))
+            {
+                first_crest_event = Some(CrestCountdownLostHit {
+                    ply: actions,
+                    crest_id: id.clone(),
+                });
+            }
+        }
         actions += 1;
     }
     // Terminal / post-game ply: include final public state once more.
     digest = fold_ply(digest, db, &state);
-    (digest, hash(&state))
+    (digest, hash(&state), first_crest_event)
 }
 
 fn build_schedule(n_decks: usize) -> Vec<(u64, usize, usize)> {
@@ -348,7 +380,9 @@ fn verify_golden(db: &CardDb, golden: &GoldenFile) {
 
 #[test]
 fn set10_identity_golden() {
-    let db = load_db();
+    // Part 1: recording switch on → byte-identical to the committed golden
+    // (crest Countdown before SoT, matching the tree that wrote the golden).
+    let db = with_crest_turn_start_as_recorded(load_db());
     let path = golden_path();
     let write = std::env::var("ARENA_SET10_IDENTITY_WRITE")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
@@ -356,6 +390,8 @@ fn set10_identity_golden() {
 
     let start = std::time::Instant::now();
     if write {
+        // Writes must use the same recording-order switch the golden was built
+        // under; do not regenerate under the new crest turn-start default.
         let golden = write_golden(&db);
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).expect("mkdir golden dir");
@@ -383,7 +419,7 @@ fn set10_identity_golden() {
     verify_golden(&db, &golden);
     let elapsed = start.elapsed().as_secs_f64();
     eprintln!(
-        "set10_identity VERIFY ok: {} decks, {} games (main_sha={}), elapsed={:.2}s",
+        "set10_identity VERIFY ok (crest switch on): {} decks, {} games (main_sha={}), elapsed={:.2}s",
         golden.decks.len(),
         golden.games.len(),
         golden.main_sha,
@@ -393,4 +429,62 @@ fn set10_identity_golden() {
         elapsed < 60.0,
         "set10_identity exceeded 60s release budget: {elapsed:.2}s"
     );
+}
+
+/// Part 2: under the new crest turn-start default, digests match the golden
+/// except games where a crest with a start-of-turn ability was lost to its
+/// Countdown at a turn start (`CrestTurnStartCountdownLost`). That set must be
+/// non-empty; every differing game must show the event.
+#[test]
+fn set10_identity_crest_turn_start_diffs() {
+    let db_new = load_db();
+    let path = golden_path();
+    let text = std::fs::read_to_string(&path).expect("golden.json");
+    let golden: GoldenFile = serde_json::from_str(&text).expect("parse golden");
+
+    let parsed: Vec<Vec<CardId>> = golden
+        .decks
+        .iter()
+        .map(|d| parse_deck_cards(&d.cards))
+        .collect();
+
+    let mut differing: Vec<(usize, u64, CrestCountdownLostHit)> = Vec::new();
+    let start = std::time::Instant::now();
+    for (i, g) in golden.games.iter().enumerate() {
+        let (digest, final_hash, hit) =
+            play_digest_tracking(&db_new, g.seed, &parsed[g.deck_a], &parsed[g.deck_b], true);
+        let digest_ok = hex_u64(digest) == g.digest;
+        let hash_ok = hex_u64(final_hash) == g.final_hash;
+        if digest_ok && hash_ok {
+            assert!(
+                hit.is_none(),
+                "game {i} seed={}: identical digest but saw CrestTurnStartCountdownLost at {:?}",
+                g.seed,
+                hit
+            );
+            continue;
+        }
+        let hit = hit.unwrap_or_else(|| {
+            panic!(
+                "game {i} seed={}: digest differs without CrestTurnStartCountdownLost",
+                g.seed
+            )
+        });
+        differing.push((i, g.seed, hit));
+    }
+    assert!(
+        !differing.is_empty(),
+        "expected at least one golden game to differ under crest turn-start default"
+    );
+    eprintln!(
+        "set10_identity crest-turn-start diffs: {} games (elapsed={:.2}s)",
+        differing.len(),
+        start.elapsed().as_secs_f64()
+    );
+    for (i, seed, hit) in &differing {
+        eprintln!(
+            "  game_id={i} seed={seed} event_ply={} crest={}",
+            hit.ply, hit.crest_id
+        );
+    }
 }

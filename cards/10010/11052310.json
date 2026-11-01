@@ -1,0 +1,36 @@
+{
+  "id": "11052310",
+  "name": "Last Will and Testament",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Summon a Divine Evidence. Add a Divine Evidence to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Divine Evidence. Add a Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "Summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Add a Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,4 +1,6 @@
-//! Set-10 Neutral soak: ≥200 seeded games of `set10-neutral` vs two meta decks.
+//! Set-10 soak: ≥200 seeded games per synthetic deck vs two meta decks.
+//! Covers Neutral + Forest / Sword / Rune / Portal (part 2) and Dragon / Abyss /
+//! Haven (part 3).
 //! Invariants: at most one Clue amulet per side; every field Clue has count ≥ 1.
 //! Also a short h0 pass that must offer/choose Engage on a Clue amulet sometimes.
 
@@ -78,16 +80,15 @@ fn play_pair(
     actions
 }
 
-#[test]
-fn set10_neutral_vs_meta_soak() {
+fn set10_vs_meta_soak(label: &str, deck_path: &str, seed_base: u64) {
     let n: u32 = std::env::var("ARENA_SET10_SOAK_GAMES")
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(200);
     let db = load_db();
-    let set10 = load_deck_file("engine/tests/fixtures/decks/set10-neutral.json");
-    assert!(deck_ready(&db, &set10));
-    assert_eq!(set10.len(), 40);
+    let set10 = load_deck_file(deck_path);
+    assert!(deck_ready(&db, &set10), "{label} deck not ready");
+    assert_eq!(set10.len(), 40, "{label} must be 40 cards");
     let meta_a = load_deck_file("oracle/decks/meta-sword-rally.json");
     let meta_b = load_deck_file("oracle/decks/meta-haven-kukishiro.json");
     assert!(deck_ready(&db, &meta_a) && deck_ready(&db, &meta_b));
@@ -95,14 +96,13 @@ fn set10_neutral_vs_meta_soak() {
     let start = std::time::Instant::now();
     let mut games = 0u32;
     let mut actions = 0u64;
-    // Half vs each meta, both seatings.
     let per = (n / 4).max(1);
     for (i, meta) in [meta_a.as_slice(), meta_b.as_slice()]
         .into_iter()
         .enumerate()
     {
         for g in 0..per {
-            let seed = 60_000 + (i as u64) * 1_000 + u64::from(g);
+            let seed = seed_base + (i as u64) * 1_000 + u64::from(g);
             actions += u64::from(play_pair(&db, seed, &set10, meta));
             games += 1;
             actions += u64::from(play_pair(&db, seed + 500, meta, &set10));
@@ -110,11 +110,86 @@ fn set10_neutral_vs_meta_soak() {
         }
     }
     eprintln!(
-        "set10_soak {games} games: mean_actions={} elapsed={:.2}s",
+        "set10_soak {label} {games} games: mean_actions={} elapsed={:.2}s",
         actions / u64::from(games.max(1)),
         start.elapsed().as_secs_f64()
     );
-    assert!(games >= 200, "need ≥ 200 games, got {games}");
+    assert!(
+        games >= n,
+        "{label}: need ≥ {n} games (ARENA_SET10_SOAK_GAMES / default 200), got {games}"
+    );
+}
+
+#[test]
+fn set10_neutral_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "neutral",
+        "engine/tests/fixtures/decks/set10-neutral.json",
+        60_000,
+    );
+}
+
+#[test]
+fn set10_dragon_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "dragon",
+        "engine/tests/fixtures/decks/set10-dragon.json",
+        61_000,
+    );
+}
+
+#[test]
+fn set10_abyss_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "abyss",
+        "engine/tests/fixtures/decks/set10-abyss.json",
+        62_000,
+    );
+}
+
+#[test]
+fn set10_haven_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "haven",
+        "engine/tests/fixtures/decks/set10-haven.json",
+        63_000,
+    );
+}
+
+#[test]
+fn set10_forest_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "forest",
+        "engine/tests/fixtures/decks/set10-forest.json",
+        64_000,
+    );
+}
+
+#[test]
+fn set10_sword_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "sword",
+        "engine/tests/fixtures/decks/set10-sword.json",
+        65_000,
+    );
+}
+
+#[test]
+fn set10_rune_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "rune",
+        "engine/tests/fixtures/decks/set10-rune.json",
+        66_000,
+    );
+}
+
+#[test]
+fn set10_portal_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "portal",
+        "engine/tests/fixtures/decks/set10-portal.json",
+        67_000,
+    );
 }
 
 #[test]

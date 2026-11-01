@@ -76,6 +76,67 @@ fn tracked_engage_changes_search_key_and_hash() {
         json["players"]["a"]["engaged_amulet_this_turn"], true,
         "JSON must include engage flags when tracked"
     );
+
+    // Post-Engage vs clone with both history flags forced false on both players.
+    let mut cleared = st.clone();
+    cleared.player_mut(PlayerId::A).engaged_amulet_this_turn = false;
+    cleared
+        .player_mut(PlayerId::A)
+        .engaged_clue_amulet_this_turn = false;
+    cleared.player_mut(PlayerId::B).engaged_amulet_this_turn = false;
+    cleared
+        .player_mut(PlayerId::B)
+        .engaged_clue_amulet_this_turn = false;
+    assert_ne!(
+        search_key(&st),
+        search_key(&cleared),
+        "search_key must differ when tracked flags are cleared on the clone"
+    );
+    assert_ne!(
+        hash(&st),
+        hash(&cleared),
+        "hash must differ when tracked flags are cleared on the clone"
+    );
+}
+
+#[test]
+fn discerning_melody_deck_tracks_engage_in_search_key_and_hash() {
+    let db = load_db();
+    // Real Set-10 card that reads engagedAmuletThisTurn.
+    let mut st = started_decks(&db, 42_004, &["11032310"], &["88001110"]);
+    assert!(
+        st.track_engage_history,
+        "Discerning Melody in starting deck must enable engage tracking"
+    );
+    let slot = put_field(&db, &mut st, PlayerId::A, AMULET_ENGAGE);
+    give_pp(&mut st, PlayerId::A, 10, 10);
+    apply(&db, &mut st, Action::Engage { slot: Slot(slot) }).expect("engage");
+    assert!(st.player(PlayerId::A).engaged_amulet_this_turn);
+    let json = snapshot_json(&st);
+    assert_eq!(
+        json["players"]["a"]["engaged_amulet_this_turn"], true,
+        "snapshot_json must carry engaged_amulet_this_turn: true"
+    );
+
+    let mut cleared = st.clone();
+    cleared.player_mut(PlayerId::A).engaged_amulet_this_turn = false;
+    cleared
+        .player_mut(PlayerId::A)
+        .engaged_clue_amulet_this_turn = false;
+    cleared.player_mut(PlayerId::B).engaged_amulet_this_turn = false;
+    cleared
+        .player_mut(PlayerId::B)
+        .engaged_clue_amulet_this_turn = false;
+    assert_ne!(
+        search_key(&st),
+        search_key(&cleared),
+        "search_key differs from flags-cleared clone after Engage"
+    );
+    assert_ne!(
+        hash(&st),
+        hash(&cleared),
+        "hash differs from flags-cleared clone after Engage"
+    );
 }
 
 #[test]

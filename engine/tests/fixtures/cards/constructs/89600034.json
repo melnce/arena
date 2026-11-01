@@ -1,0 +1,28 @@
+{
+  "id": "89600034",
+  "name": "filter_hasFuse",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Draw a card with Fuse.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Draw a card with Fuse.",
+      "effects": [
+        {
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "hasFuse": true
+          },
+          "printed": "Draw a card with Fuse."
+        }
+      ]
+    }
+  ]
+}

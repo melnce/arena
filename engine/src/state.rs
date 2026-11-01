@@ -108,6 +108,8 @@ pub struct InstStatic {
     /// Printed trigger tags at construction; `granted` snapshot is instance − this.
     pub printed_tags: BTreeSet<String>,
     pub tribes: Vec<Tribe>,
+    /// Card prints `Fuse:` — for `filter.hasFuse` (Socialite `11072110`).
+    pub has_fuse: bool,
 }
 
 /// A `grantTraits` that expires at a turn boundary.
@@ -144,6 +146,7 @@ impl CardInstance {
                 name: card.name().to_string(),
                 printed_tags: card.printed_trigger_tags(),
                 tribes: card.tribes().to_vec(),
+                has_fuse: card.fuse().is_some(),
             }),
             flags: InstanceFlags {
                 ambush_active: ambush,
@@ -252,6 +255,9 @@ pub struct CrestInstance {
     pub granted: Vec<Ability>,
     /// Option indices already fired by `choose by: randomUnused` on this crest.
     pub choose_used: BTreeSet<u8>,
+    /// Next `op:sequence` step (Almaelys / Noeinhowell Interrogation crests).
+    /// Default 0; omitted from search_key / hash while zero.
+    pub sequence_index: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -757,6 +763,11 @@ pub struct State {
     pub step_counter: u64,
     pub next_instance: u32,
     pub crest_order: u32,
+    /// Crests lost to Countdown during this turn-start step 2 while their
+    /// start-of-turn triggers are still queued. Lookups by `granted_order`
+    /// fall back here; emptied once that turn start's queue has resolved.
+    /// Empty ⇒ absent from search keys / snapshot / encodings (identity).
+    pub crest_step2_lost: Vec<(PlayerId, CrestInstance)>,
     /// Picks recorded while applying the current action.
     pub picks: Vec<crate::trace::Pick>,
     pub pending_work: Vec<WorkFrame>,
@@ -877,11 +888,28 @@ pub enum PlayForm {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SourceRef {
-    Field { player: PlayerId, id: u32 },
-    Hand { player: PlayerId, id: u32 },
-    Crest { player: PlayerId, index: usize },
-    Spell { player: PlayerId, card: CardId },
-    Leader { player: PlayerId },
+    Field {
+        player: PlayerId,
+        id: u32,
+    },
+    Hand {
+        player: PlayerId,
+        id: u32,
+    },
+    /// Crest keyed by `granted_order` (not board index) so a Countdown
+    /// expiry cannot retarget a neighbour. Lookups fall back to
+    /// `State.crest_step2_lost` for the rulebook step-2 E40 exception.
+    Crest {
+        player: PlayerId,
+        granted_order: u32,
+    },
+    Spell {
+        player: PlayerId,
+        card: CardId,
+    },
+    Leader {
+        player: PlayerId,
+    },
 }
 
 #[derive(Debug, Clone)]

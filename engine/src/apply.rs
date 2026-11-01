@@ -31,6 +31,13 @@ use crate::trace::{NeutralAction, Pick, PickChose, PickWhat};
 /// "yes any card". Set `false` to count allied field only (old engine).
 const WORLD_OF_GAMES_COUNTS_EITHER_SIDE: bool = true;
 
+/// Owner ruling 2026-11-01: "Whenever you Fuse an amulet" (Socialite 11072110 /
+/// Dandy 11073110) — "the effects only trigger once per fuse no matter how many
+/// amulets you fuse at once". JA 「自分がアミュレットを【融合】したとき」 has no
+/// "for each". `true` = once per Fuse action that includes ≥1 amulet.
+/// `false` = once per amulet partner fused in the action (pre-ruling alternate).
+pub const FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION: bool = true;
+
 // =========================================================================
 // Construction
 // =========================================================================
@@ -70,6 +77,7 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         step_counter: 0,
         next_instance: 1,
         crest_order: 1,
+        crest_step2_lost: Vec::new(),
         picks: Vec::new(),
         pending_work: Vec::new(),
         queue: Vec::new(),
@@ -975,6 +983,8 @@ fn choose_ok_one(
         Effect::Damage { select, .. }
         | Effect::Restore { select, .. }
         | Effect::Buff { select, .. }
+        | Effect::SetStats { select, .. }
+        | Effect::SwapStats { select, .. }
         | Effect::Select { select, .. }
         | Effect::Destroy { select, .. }
         | Effect::Banish { select, .. }
@@ -1518,25 +1528,7 @@ fn banish_from_field(
         return Ok(());
     };
     // Self-banished While still on the field (SelfBuffedUp-style).
-    raise_when(db, state, who, EventName::SelfBanished, Some(&inst), who);
-    raise_when(
-        db,
-        state,
-        who,
-        EventName::AllyCardBanished,
-        Some(&inst),
-        who,
-    );
-    if inst.kind == CardKind::Follower {
-        raise_when(
-            db,
-            state,
-            who.opponent(),
-            EventName::EnemyFollowerBanished,
-            Some(&inst),
-            who,
-        );
-    }
+    raise_banished_from_field(db, state, who, &inst);
     if let Some(taken) = state.player_mut(who).field[slot as usize].take() {
         events.push(Event::Banish {
             card: taken.card,
@@ -2177,6 +2169,7 @@ fn commit_fuse(
     }
     let mut partners = Vec::new();
     let mut partner_ids = Vec::new();
+    let mut partner_was_amulet = Vec::new();
     let mut total_cost = 0;
     let mut sorted: Vec<u8> = picked.to_vec();
     sorted.sort_by(|a, b| b.cmp(a));
@@ -2185,6 +2178,7 @@ fn commit_fuse(
             let inst = state.player_mut(me).hand.remove(pos as usize);
             total_cost += inst.cost;
             partner_ids.push(inst.card);
+            partner_was_amulet.push(inst.kind == CardKind::Amulet);
             partners.push(inst);
         }
     }
@@ -2282,6 +2276,26 @@ fn commit_fuse(
             fx.extend(a.effects().iter().cloned());
         }
         push_effects(state, me, src, fx);
+    }
+    // Fuse reactions fire after the host's own `on: fused` abilities.
+    let host_inst = state
+        .player(me)
+        .hand
+        .iter()
+        .find(|c| c.id == host_id)
+        .cloned();
+    if let Some(ref host_ci) = host_inst {
+        raise_when(db, state, me, EventName::AllyFuse, Some(host_ci), me);
+        let amulet_count = partner_was_amulet.iter().filter(|&&b| b).count();
+        if amulet_count > 0 {
+            if FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION {
+                raise_when(db, state, me, EventName::AllyFuseAmulet, Some(host_ci), me);
+            } else {
+                for _ in 0..amulet_count {
+                    raise_when(db, state, me, EventName::AllyFuseAmulet, Some(host_ci), me);
+                }
+            }
+        }
     }
     Ok(())
 }
@@ -2428,7 +2442,7 @@ fn apply_end_turn(db: &CardDb, state: &mut State, events: &mut Vec<Event>) -> Re
     }
     events.push(Event::TurnEnd { player: me });
     // two-phase end sequence — rulebook Start-of-Turn and End-of-Turn Sequences
-    queue_turn_boundary(db, state, me, false);
+    queue_turn_boundary(db, state, me, false, events);
     state
         .pending_work
         .push(WorkFrame::Aftermath(Aftermath::ContinueTurnEnd { step: 7 }));
@@ -2488,7 +2502,7 @@ fn start_turn_full(
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
     begin_turn(state, who, events)?;
-    queue_turn_boundary(db, state, who, true);
+    queue_turn_boundary(db, state, who, true, events);
     state
         .pending_work
         .push(WorkFrame::Aftermath(Aftermath::ContinueTurnStart {
@@ -2497,17 +2511,32 @@ fn start_turn_full(
     Ok(())
 }
 
-fn queue_turn_boundary(db: &CardDb, state: &mut State, whose_turn: PlayerId, start: bool) {
+fn queue_turn_boundary(
+    db: &CardDb,
+    state: &mut State,
+    whose_turn: PlayerId,
+    start: bool,
+    events: &mut Vec<Event>,
+) {
     // One Invoke copy per card id per boundary window (official glossary).
     if start {
         state.invoked_ids.clear();
+        state.crest_step2_lost.clear();
     }
     // crests before board; owner-scoped — ruling 2026-08-31
     let own = whose_turn;
     let opp = whose_turn.opponent();
     if start {
-        tick_crests(db, state, own);
-        enqueue_boundary(db, state, own, true, Whose::Own, 3, start);
+        // Rulebook step 2: queue crest start-of-turn, then advance Countdown.
+        // Recording switch: countdown before queue (Slaus fired twice).
+        // Amulets unchanged: tick_amulets still before the board's SoT enqueue.
+        if db.as_recorded.crest_countdown_before_start_triggers {
+            tick_crests(db, state, own, false, events);
+            enqueue_boundary(db, state, own, true, Whose::Own, 3, start);
+        } else {
+            enqueue_boundary(db, state, own, true, Whose::Own, 3, start);
+            tick_crests(db, state, own, true, events);
+        }
         tick_amulets(db, state, own);
         enqueue_boundary(db, state, own, false, Whose::Own, 4, start);
         enqueue_boundary(db, state, opp, true, Whose::Opponent, 5, start);
@@ -2520,19 +2549,82 @@ fn queue_turn_boundary(db: &CardDb, state: &mut State, whose_turn: PlayerId, sta
     }
 }
 
-fn tick_crests(db: &CardDb, state: &mut State, who: PlayerId) {
+/// Advance crest Countdowns. When `retain_for_step2`, crests that hit 0 **and**
+/// have a start-of-turn trigger queued this step are moved to
+/// `crest_step2_lost` so that trigger still resolves (rulebook step 2 / Slaus).
+/// Last-Words-only countdown crests (and the recording-switch path) expire via
+/// `expire_crest` with discarded events — same as `main`.
+fn tick_crests(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    retain_for_step2: bool,
+    events: &mut Vec<Event>,
+) {
     let mut doomed = Vec::new();
     for c in state.player_mut(who).crests.iter_mut() {
         if let Some(cd) = c.countdown.as_mut() {
             *cd -= 1;
             if *cd <= 0 {
-                doomed.push(c.granted_order);
+                doomed.push((c.granted_order, c.id.clone()));
             }
         }
     }
-    for order in doomed {
-        let _ = expire_crest(db, state, who, order, &mut Vec::new());
+    for (order, id) in doomed {
+        if retain_for_step2 && crest_has_start_of_turn(db, &id) {
+            let _ = expire_crest_step2(db, state, who, order, events);
+        } else {
+            // Discard CrestRemove at turn start — main discarded via `&mut Vec::new()`.
+            let _ = expire_crest(db, state, who, order, &mut Vec::new());
+        }
     }
+}
+
+fn crest_has_start_of_turn(db: &CardDb, id: &str) -> bool {
+    let Ok(def) = db.crest(id) else {
+        return false;
+    };
+    def.abilities()
+        .iter()
+        .any(|a| matches!(a, Ability::StartOfTurn { .. }))
+}
+
+/// Turn-start step 2 Countdown expiry for a crest that had a start-of-turn
+/// trigger queued this step: leave the board, keep the instance in
+/// `crest_step2_lost` for already-queued SoT / choose_used, queue Last Words.
+fn expire_crest_step2(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    order: u32,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let crests = &mut state.player_mut(who).crests;
+    let Some(i) = crests.iter().position(|c| c.granted_order == order) else {
+        return Ok(());
+    };
+    let c = crests.remove(i);
+    events.push(Event::CrestRemove {
+        player: who,
+        id: c.id.clone(),
+    });
+    events.push(Event::CrestTurnStartCountdownLost {
+        player: who,
+        id: c.id.clone(),
+    });
+    let src = SourceRef::Crest {
+        player: who,
+        granted_order: c.granted_order,
+    };
+    if let Ok(def) = db.crest(&c.id) {
+        for a in def.abilities() {
+            if matches!(a, Ability::LastWords { .. }) {
+                push_effects(state, who, src, a.effects().to_vec());
+            }
+        }
+    }
+    state.crest_step2_lost.push((who, c));
+    Ok(())
 }
 
 fn expire_crest(
@@ -2554,7 +2646,7 @@ fn expire_crest(
     if let Ok(def) = db.crest(&c.id) {
         let src = SourceRef::Crest {
             player: who,
-            index: 0,
+            granted_order: c.granted_order,
         };
         for a in def.abilities() {
             if matches!(a, Ability::LastWords { .. }) {
@@ -2563,6 +2655,41 @@ fn expire_crest(
         }
     }
     Ok(())
+}
+
+fn crest_by_order(state: &State, who: PlayerId, granted_order: u32) -> Option<&CrestInstance> {
+    state
+        .player(who)
+        .crests
+        .iter()
+        .find(|c| c.granted_order == granted_order)
+        .or_else(|| {
+            state
+                .crest_step2_lost
+                .iter()
+                .find(|(p, c)| *p == who && c.granted_order == granted_order)
+                .map(|(_, c)| c)
+        })
+}
+
+fn crest_by_order_mut(
+    state: &mut State,
+    who: PlayerId,
+    granted_order: u32,
+) -> Option<&mut CrestInstance> {
+    if let Some(i) = state
+        .player(who)
+        .crests
+        .iter()
+        .position(|c| c.granted_order == granted_order)
+    {
+        return state.player_mut(who).crests.get_mut(i);
+    }
+    state
+        .crest_step2_lost
+        .iter_mut()
+        .find(|(p, c)| *p == who && c.granted_order == granted_order)
+        .map(|(_, c)| c)
 }
 
 fn tick_amulets(db: &CardDb, state: &mut State, who: PlayerId) {
@@ -2607,12 +2734,15 @@ fn enqueue_boundary(
                 }
             }
         }
-        for (entry, printed, index, id) in pending {
+        for (entry, printed, _index, id) in pending {
             let Ok(def) = db.crest(&id) else { continue };
             let Some(a) = def.abilities().get(printed as usize) else {
                 continue;
             };
-            let source = SourceRef::Crest { player: who, index };
+            let source = SourceRef::Crest {
+                player: who,
+                granted_order: entry,
+            };
             if !boundary_when_ok(db, state, who, source, a) {
                 continue;
             }
@@ -2959,7 +3089,8 @@ struct PendingWhen {
     source: SourceRef,
     ability: Ability,
     mark_id: Option<u32>,
-    mark_crest: Option<usize>,
+    /// Crest `granted_order` (not board index).
+    mark_crest: Option<u32>,
 }
 
 struct WhenScan<'a> {
@@ -2975,7 +3106,8 @@ struct WhenLoc {
     entry: u32,
     source: SourceRef,
     mark_id: Option<u32>,
-    mark_crest: Option<usize>,
+    /// Crest `granted_order` (not board index).
+    mark_crest: Option<u32>,
 }
 
 struct WhenCand {
@@ -3095,11 +3227,18 @@ fn enqueue_when_on(
             .map(|(i, c)| (i, c.id.clone(), !c.granted.is_empty()))
             .collect();
         for (i, id, has_granted) in crest_cands {
+            let granted_order = match state.player(observer_side).crests.get(i) {
+                Some(c) if c.id == id => c.granted_order,
+                _ => continue,
+            };
             let once_when = match state.player(observer_side).crests.get(i) {
                 Some(c) if c.id == id => c.once_used.contains(&TriggerTag::When),
                 _ => continue,
             };
             let Ok(def) = db.crest(&id) else { continue };
+            // `entry` stays the board index at enqueue (identity with pre-fix
+            // search keys). `SourceRef` / `mark_crest` key by granted_order so
+            // a Countdown loss cannot retarget a neighbour.
             collect_when_from_list(
                 &scan,
                 state,
@@ -3110,10 +3249,10 @@ fn enqueue_when_on(
                     entry: i as u32,
                     source: SourceRef::Crest {
                         player: observer_side,
-                        index: i,
+                        granted_order,
                     },
                     mark_id: None,
-                    mark_crest: Some(i),
+                    mark_crest: Some(granted_order),
                 },
                 once_when,
                 None,
@@ -3136,10 +3275,10 @@ fn enqueue_when_on(
                         entry: i as u32,
                         source: SourceRef::Crest {
                             player: observer_side,
-                            index: i,
+                            granted_order,
                         },
                         mark_id: None,
-                        mark_crest: Some(i),
+                        mark_crest: Some(granted_order),
                     },
                     once_when,
                     None,
@@ -3296,8 +3435,8 @@ fn enqueue_when_on(
                     h.once_used.push(TriggerTag::When);
                 }
             }
-            if let Some(ci) = mark_crest {
-                if let Some(c) = state.player_mut(observer_side).crests.get_mut(ci) {
+            if let Some(order) = mark_crest {
+                if let Some(c) = crest_by_order_mut(state, observer_side, order) {
                     c.once_used.push(TriggerTag::When);
                 }
             }
@@ -3540,6 +3679,9 @@ fn run_aftermath(
             start_turn_full(db, state, next, events)?;
         }
         Aftermath::ContinueTurnStart { step: 8 } => {
+            // Turn-start queue has resolved; step-2-lost crests are no longer
+            // readable (nothing else may see them as present).
+            state.crest_step2_lost.clear();
             let who = state.active;
             if let Some(out) = draw_one(state, who, None, &[])? {
                 events.push(Event::Draw {
@@ -4063,6 +4205,8 @@ fn effect_accepts_play_capture(e: &Effect) -> bool {
         Effect::Damage { select, .. }
         | Effect::Restore { select, .. }
         | Effect::Buff { select, .. }
+        | Effect::SetStats { select, .. }
+        | Effect::SwapStats { select, .. }
         | Effect::Select { select, .. }
         | Effect::Destroy { select, .. }
         | Effect::Banish { select, .. }
@@ -4470,7 +4614,13 @@ fn trigger_source_still_present(state: &State, source: SourceRef) -> bool {
             let p = state.player(player);
             p.hand.iter().any(|c| c.id == id) || p.deck.iter().any(|c| c.id == id)
         }
-        SourceRef::Crest { player, index } => state.player(player).crests.get(index).is_some(),
+        // Live board crest, or step-2 Countdown-lost crest still held for its
+        // already-queued start-of-turn trigger (rulebook exception to E40).
+        // Removed any other way → absent → E40 drops the item.
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => crest_by_order(state, player, granted_order).is_some(),
         SourceRef::Spell { .. } | SourceRef::Leader { .. } => true,
     }
 }
@@ -4648,6 +4798,8 @@ fn effect_choice_node(
         Effect::Damage { select, .. }
         | Effect::Restore { select, .. }
         | Effect::Buff { select, .. }
+        | Effect::SetStats { select, .. }
+        | Effect::SwapStats { select, .. }
         | Effect::Select { select, .. }
         | Effect::Destroy { select, .. }
         | Effect::Banish { select, .. }
@@ -4782,6 +4934,22 @@ fn apply_effect_with_targets(
                 .unwrap_or(0);
             apply_each_captured(state, targets, |st, t| {
                 buff_opt(db, st, t, da, dd, until_end_of_turn.unwrap_or(false));
+                Ok(())
+            })?;
+        }
+        Effect::SetStats {
+            attack, defense, ..
+        } => {
+            let atk = eval_amount(db, state, controller, Some(source), attack);
+            let def = eval_amount(db, state, controller, Some(source), defense);
+            apply_each_captured(state, targets, |st, t| {
+                set_stats_opt(st, t, atk, def);
+                Ok(())
+            })?;
+        }
+        Effect::SwapStats { .. } => {
+            apply_each_captured(state, targets, |st, t| {
+                swap_stats_opt(st, t);
                 Ok(())
             })?;
         }
@@ -5110,6 +5278,29 @@ fn apply_effect(
             })?;
             maybe_bind(state, e, &ts);
         }
+        Effect::SetStats {
+            select,
+            attack,
+            defense,
+            ..
+        } => {
+            let atk = eval_amount(db, state, controller, Some(source), attack);
+            let def = eval_amount(db, state, controller, Some(source), defense);
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            apply_each_captured(state, &ts, |st, t| {
+                set_stats_opt(st, t, atk, def);
+                Ok(())
+            })?;
+            maybe_bind(state, e, &ts);
+        }
+        Effect::SwapStats { select, .. } => {
+            let ts = resolve_select_rolling(db, state, controller, source, select)?;
+            apply_each_captured(state, &ts, |st, t| {
+                swap_stats_opt(st, t);
+                Ok(())
+            })?;
+            maybe_bind(state, e, &ts);
+        }
         Effect::Select { select, .. } => {
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
             maybe_bind(state, e, &ts);
@@ -5386,12 +5577,13 @@ fn apply_effect(
         } => {
             let md_change = max_defense.as_ref().map(|md| match md {
                 MaxDefenseChange::Set { set } => {
-                    (true, eval_amount(db, state, controller, Some(source), set))
+                    MdChange::Set(eval_amount(db, state, controller, Some(source), set))
                 }
-                MaxDefenseChange::Delta { delta } => (
-                    false,
-                    eval_amount(db, state, controller, Some(source), delta),
-                ),
+                MaxDefenseChange::Delta { delta } => {
+                    MdChange::Delta(eval_amount(db, state, controller, Some(source), delta))
+                }
+                // Engine choice (not a ruling): ceil half — Lineage `11074110`.
+                MaxDefenseChange::Halve { .. } => MdChange::Halve,
             });
             let cap_v = damage_cap
                 .as_ref()
@@ -5416,12 +5608,18 @@ fn apply_effect(
             };
             for player in players {
                 let p = state.player_mut(player);
-                if let Some((is_set, v)) = md_change {
-                    if is_set {
-                        p.leader_max = v.max(0);
-                    } else {
-                        // Delta floors at 0; max 0 clamps defense to 0 and is lethal.
-                        p.leader_max = (p.leader_max + v).max(0);
+                if let Some(change) = md_change {
+                    match change {
+                        MdChange::Set(v) => {
+                            p.leader_max = v.max(0);
+                        }
+                        MdChange::Delta(v) => {
+                            // Delta floors at 0; max 0 clamps defense to 0 and is lethal.
+                            p.leader_max = (p.leader_max + v).max(0);
+                        }
+                        MdChange::Halve => {
+                            p.leader_max = (p.leader_max + 1) / 2;
+                        }
                     }
                     p.leader_defense = p.leader_defense.min(p.leader_max);
                 }
@@ -5944,6 +6142,13 @@ fn restore_leader(db: &CardDb, state: &mut State, who: PlayerId, n: i32, events:
     raise_when(db, state, who, EventName::LeaderRestored, None, who);
 }
 
+#[derive(Clone, Copy)]
+enum MdChange {
+    Set(i32),
+    Delta(i32),
+    Halve,
+}
+
 fn buff_opt(db: &CardDb, state: &mut State, t: &TargetOpt, da: i32, dd: i32, eot: bool) {
     match t {
         TargetOpt::Slot { player, slot } => {
@@ -5986,6 +6191,76 @@ fn buff_opt(db: &CardDb, state: &mut State, t: &TargetOpt, da: i32, dd: i32, eot
                 c.attack += da;
                 c.max_defense += dd;
                 c.defense += dd;
+            }
+        }
+        _ => {}
+    }
+}
+
+fn set_stats_opt(state: &mut State, t: &TargetOpt, atk: i32, def: i32) {
+    match t {
+        TargetOpt::Slot { player, slot } => {
+            if let Some(f) = state.field_inst_mut(*player, *slot) {
+                f.attack = atk;
+                f.defense = def;
+                f.max_defense = def;
+            }
+        }
+        TargetOpt::Hand { player, pos } => {
+            if let Some(h) = state.player_mut(*player).hand.get_mut(*pos as usize) {
+                h.attack = atk;
+                h.defense = def;
+                h.max_defense = def;
+            }
+        }
+        TargetOpt::Deck { player, id } => {
+            if let Some(c) = state
+                .player_mut(*player)
+                .deck
+                .iter_mut()
+                .find(|c| c.id == *id)
+            {
+                c.attack = atk;
+                c.defense = def;
+                c.max_defense = def;
+            }
+        }
+        _ => {}
+    }
+}
+
+fn swap_stats_opt(state: &mut State, t: &TargetOpt) {
+    match t {
+        TargetOpt::Slot { player, slot } => {
+            if let Some(f) = state.field_inst_mut(*player, *slot) {
+                let old_atk = f.attack;
+                let old_def = f.defense;
+                f.attack = old_def;
+                f.defense = old_atk;
+                f.max_defense = old_atk;
+            }
+        }
+        TargetOpt::Hand { player, pos } => {
+            if let Some(h) = state.player_mut(*player).hand.get_mut(*pos as usize) {
+                let old_atk = h.attack;
+                let old_def = h.defense;
+                h.attack = old_def;
+                h.defense = old_atk;
+                h.max_defense = old_atk;
+            }
+        }
+        TargetOpt::Deck { player, id } => {
+            if let Some(c) = state
+                .player_mut(*player)
+                .deck
+                .iter_mut()
+                .find(|c| c.id == *id)
+            {
+                let old_atk = c.attack;
+                let old_def = c.defense;
+                c.attack = old_def;
+                c.defense = old_atk;
+                c.max_defense = old_atk;
             }
         }
         _ => {}
@@ -6165,6 +6440,23 @@ fn leave_redirects_to_banish(db: &CardDb, inst: &CardInstance) -> bool {
     })
 }
 
+/// Raise banished-from-field observers for a field card that is leaving via
+/// banish (including Ghost leave-redirect). Same events as `banish_from_field`.
+fn raise_banished_from_field(db: &CardDb, state: &mut State, who: PlayerId, inst: &CardInstance) {
+    raise_when(db, state, who, EventName::SelfBanished, Some(inst), who);
+    raise_when(db, state, who, EventName::AllyCardBanished, Some(inst), who);
+    if inst.kind == CardKind::Follower {
+        raise_when(
+            db,
+            state,
+            who.opponent(),
+            EventName::EnemyFollowerBanished,
+            Some(inst),
+            who,
+        );
+    }
+}
+
 fn effect_is_banish_self(e: &Effect) -> bool {
     match e {
         Effect::Banish {
@@ -6305,10 +6597,15 @@ fn destroy_slot(
     };
     if leave_redirects_to_banish(db, &inst) {
         // Ghost-style "When this card leaves the field, banish it."
+        // JA 場を離れる場合、これを消滅 — banished from the field (Nocturne
+        // `11054110` / Solemn `11052110` / Amanuensis `11053110` ally_card_banished).
+        // Keep destroy-observer raises for pre-existing destroy reactions; also
+        // raise banished-from-field observers (brief: all four banish routes).
         events.push(Event::Banish {
             card: inst.card,
             from: ZoneLabel::Field,
         });
+        raise_banished_from_field(db, state, who, &inst);
         raise_when(
             db,
             state,
@@ -6888,6 +7185,19 @@ fn summon_source(
                 n.id = state.alloc_id();
                 n.flags.summoning_sick = true;
                 n
+            } else if let Some(c) = entering_copy_from_banished(state, copy_of) {
+                // Parareligious Idol `11064120`: enemy_follower_banished queues
+                // with subject still on field; by resolution the instance is
+                // in the banished pile — look it up via event_inst_id.
+                let mut n = if *ex {
+                    c
+                } else {
+                    let card = db.card(c.card).map_err(|_| Illegal::NotLegal)?;
+                    CardInstance::from_card(card, 0)
+                };
+                n.id = state.alloc_id();
+                n.flags.summoning_sick = true;
+                n
             } else {
                 return Ok(None);
             }
@@ -7012,6 +7322,22 @@ fn bound_copy_from_banished(state: &State, copy_of: &Selector) -> Option<CardIns
             if let Some(c) = state.player(*player).cemetery.iter().find(|c| c.id == *id) {
                 return Some(c.clone());
             }
+        }
+    }
+    None
+}
+
+fn entering_copy_from_banished(state: &State, copy_of: &Selector) -> Option<CardInstance> {
+    let Selector::Ref(r) = copy_of else {
+        return None;
+    };
+    if r.pick != RefPick::Entering {
+        return None;
+    }
+    let id = state.event_inst_id?;
+    for p in PlayerId::ALL {
+        if let Some(c) = state.player(p).banished.iter().find(|c| c.id == id) {
+            return Some(c.clone());
         }
     }
     None
@@ -7335,17 +7661,34 @@ fn sequence_index_of(state: &State, source: SourceRef) -> u32 {
             .and_then(|s| state.field_inst(player, s))
             .map(|c| c.sequence_index)
             .unwrap_or(0),
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => crest_by_order(state, player, granted_order)
+            .map(|c| c.sequence_index)
+            .unwrap_or(0),
         _ => 0,
     }
 }
 
 fn set_sequence_index(state: &mut State, source: SourceRef, v: u32) {
-    if let SourceRef::Field { player, id } = source {
-        if let Some(slot) = state.find_field(player, id) {
-            if let Some(c) = state.field_inst_mut(player, slot) {
+    match source {
+        SourceRef::Field { player, id } => {
+            if let Some(slot) = state.find_field(player, id) {
+                if let Some(c) = state.field_inst_mut(player, slot) {
+                    c.sequence_index = v;
+                }
+            }
+        }
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => {
+            if let Some(c) = crest_by_order_mut(state, player, granted_order) {
                 c.sequence_index = v;
             }
         }
+        _ => {}
     }
 }
 
@@ -7356,10 +7699,10 @@ fn choose_used_of(state: &State, source: SourceRef) -> std::collections::BTreeSe
             .and_then(|s| state.field_inst(player, s))
             .map(|c| c.choose_used.clone())
             .unwrap_or_default(),
-        SourceRef::Crest { player, index } => state
-            .player(player)
-            .crests
-            .get(index)
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => crest_by_order(state, player, granted_order)
             .map(|c| c.choose_used.clone())
             .unwrap_or_default(),
         _ => std::collections::BTreeSet::new(),
@@ -7375,8 +7718,11 @@ fn mark_choose_used(state: &mut State, source: SourceRef, i: u8) {
                 }
             }
         }
-        SourceRef::Crest { player, index } => {
-            if let Some(c) = state.player_mut(player).crests.get_mut(index) {
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => {
+            if let Some(c) = crest_by_order_mut(state, player, granted_order) {
                 c.choose_used.insert(i);
             }
         }
@@ -7834,6 +8180,7 @@ fn gain_crest(db: &CardDb, state: &mut State, who: PlayerId, id: &str, events: &
         granted_order: order,
         granted: Vec::new(),
         choose_used: std::collections::BTreeSet::new(),
+        sequence_index: 0,
     });
     events.push(Event::CrestGain {
         player: who,
@@ -8845,7 +9192,70 @@ fn inst_matches_filter(_state: &State, _who: PlayerId, c: &CardInstance, f: &Fil
             }
         }
     }
+    if let Some(b) = f.has_fuse {
+        if c.statics.has_fuse != b {
+            return false;
+        }
+    }
+    if let Some(sel) = &f.same_name_as {
+        let Some(refs) = _state.bindings.get(&sel.ref_name) else {
+            return false;
+        };
+        let mut any = false;
+        let mut matched = false;
+        for r in refs {
+            if let Some(name) = bound_instance_name(_state, r) {
+                any = true;
+                if name == c.statics.name {
+                    matched = true;
+                    break;
+                }
+            } else if let BoundRef::Field { card, .. } = r {
+                // Instance gone from every zone — same printed card ⇒ same name.
+                any = true;
+                if c.card == *card {
+                    matched = true;
+                    break;
+                }
+            }
+        }
+        if !any || !matched {
+            return false;
+        }
+    }
     true
+}
+
+fn bound_instance_name(state: &State, r: &BoundRef) -> Option<String> {
+    match r {
+        BoundRef::Field { player, id, .. } => {
+            if let Some(slot) = state.find_field(*player, *id) {
+                if let Some(c) = state.field_inst(*player, slot) {
+                    return Some(c.statics.name.clone());
+                }
+            }
+            if let Some(c) = state.player(*player).cemetery.iter().find(|c| c.id == *id) {
+                return Some(c.statics.name.clone());
+            }
+            if let Some(c) = state.player(*player).banished.iter().find(|c| c.id == *id) {
+                return Some(c.statics.name.clone());
+            }
+            None
+        }
+        BoundRef::Hand { player, id } => state
+            .player(*player)
+            .hand
+            .iter()
+            .find(|c| c.id == *id)
+            .map(|c| c.statics.name.clone()),
+        BoundRef::Deck { player, id } => state
+            .player(*player)
+            .deck
+            .iter()
+            .find(|c| c.id == *id)
+            .map(|c| c.statics.name.clone()),
+        BoundRef::Card(_) | BoundRef::Leader { .. } => None,
+    }
 }
 
 fn filter_matches_card(state: &State, who: PlayerId, inst: &CardInstance, f: &Filter) -> bool {
@@ -8943,6 +9353,7 @@ fn inst_stat(state: &State, t: &TargetOpt, which: StatWhich) -> Option<i32> {
     if let TargetOpt::Leader { player } = t {
         return Some(match which {
             StatWhich::Defense => state.player(*player).leader_defense,
+            StatWhich::MaxDefense => state.player(*player).leader_max,
             StatWhich::Attack | StatWhich::Cost | StatWhich::BaseCost => 0,
         });
     }
@@ -8959,6 +9370,7 @@ fn inst_stat(state: &State, t: &TargetOpt, which: StatWhich) -> Option<i32> {
         StatWhich::Defense => c.defense,
         StatWhich::Cost => c.cost,
         StatWhich::BaseCost => c.base_cost,
+        StatWhich::MaxDefense => c.max_defense,
     })
 }
 
@@ -9107,6 +9519,9 @@ pub(crate) fn eval_cond(
             }
         }
         Condition::WasFused { was_fused } => {
+            // Spells resolve from the cemetery corpse (same as skybound / vars).
+            // Hand of Extinction `11072310` Fanfare reads wasFused after the spell
+            // has already left hand.
             let flag = match source {
                 Some(SourceRef::Field { player, id } | SourceRef::Hand { player, id }) => state
                     .player(player)
@@ -9119,6 +9534,14 @@ pub(crate) fn eval_cond(
                             .find_field(player, id)
                             .and_then(|s| state.field_inst(player, s).map(|c| c.flags.was_fused))
                     })
+                    .unwrap_or(false),
+                Some(SourceRef::Spell { player, card }) => state
+                    .player(player)
+                    .cemetery
+                    .iter()
+                    .rev()
+                    .find(|c| c.card == card)
+                    .map(|c| c.flags.was_fused)
                     .unwrap_or(false),
                 _ => false,
             };
@@ -9259,19 +9682,17 @@ pub(crate) fn eval_cond(
             let Some(refs) = state.bindings.get(&bound_has.ref_name) else {
                 return false;
             };
+            let side_ok = |player: PlayerId| match bound_has.side {
+                Some(Side::Ally) => player == who,
+                Some(Side::Enemy) => player == who.opponent(),
+                Some(Side::Any) | None => true,
+            };
             refs.iter().any(|r| match r {
                 BoundRef::Field {
                     player, card, kind, ..
                 } => {
-                    if let Some(side) = bound_has.side {
-                        let want = match side {
-                            Side::Ally => who,
-                            Side::Enemy => who.opponent(),
-                            Side::Any => *player,
-                        };
-                        if *player != want && side != Side::Any {
-                            return false;
-                        }
+                    if !side_ok(*player) {
+                        return false;
                     }
                     let Ok(def) = db.card(*card) else {
                         return false;
@@ -9279,6 +9700,28 @@ pub(crate) fn eval_cond(
                     let mut inst = CardInstance::from_card(def, 0);
                     inst.kind = *kind;
                     inst_matches_filter(state, *player, &inst, &bound_has.filter)
+                }
+                BoundRef::Hand { player, id } => {
+                    if !side_ok(*player) {
+                        return false;
+                    }
+                    state
+                        .player(*player)
+                        .hand
+                        .iter()
+                        .find(|c| c.id == *id)
+                        .is_some_and(|c| inst_matches_filter(state, *player, c, &bound_has.filter))
+                }
+                BoundRef::Deck { player, id } => {
+                    if !side_ok(*player) {
+                        return false;
+                    }
+                    state
+                        .player(*player)
+                        .deck
+                        .iter()
+                        .find(|c| c.id == *id)
+                        .is_some_and(|c| inst_matches_filter(state, *player, c, &bound_has.filter))
                 }
                 BoundRef::Card(id) => {
                     let Ok(def) = db.card(*id) else {
@@ -9493,6 +9936,12 @@ fn pick_extremum(
         .filter(|t| order_key(state, t, p.order_by) == best)
         .collect();
     if !highest {
+        // No count → all tied (Tyrannical Fists `10552310`).
+        // `count: 1` → one random among lowest (Bunnies of Desolation `90061140`).
+        if let Some(c) = &p.count {
+            let n = eval_amount_simple(c).max(0) as usize;
+            return random_pool_apply(state, tied, n, false);
+        }
         return Ok(tied);
     }
     random_pool_apply(state, tied, 1, false)

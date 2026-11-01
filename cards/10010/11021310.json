@@ -1,0 +1,52 @@
+{
+  "id": "11021310",
+  "name": "Onward, Charge!",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "text": "Summon 2 copies of Steelclad Knight, evolve them, and give them Barrier.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon 2 copies of Steelclad Knight, evolve them, and give them Barrier.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Steelclad Knight, evolve them, and give them Barrier.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90021120"
+              },
+              "count": 2,
+              "as": "k"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "k"
+              },
+              "super": false
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "k"
+              },
+              "traits": {
+                "barrier": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

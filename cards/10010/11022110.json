@@ -1,0 +1,93 @@
+{
+  "id": "11022110",
+  "name": "Cheeky Architect",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Activates in hand. Whenever you Engage a Clue amulet, swap this follower's attack and defense and give it +1/+0.\n\nFanfare: Select an enemy follower on the field and deal it X damage. X is this follower's attack. Summon a Divine Evidence.\n\nEvolve: Summon a Guileless Newsie.",
+  "attack": 1,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "zone": "hand",
+      "filter": {
+        "tribe": "clue"
+      },
+      "printed": "Activates in hand. Whenever you Engage a Clue amulet, swap this follower's attack and defense and give it +1/+0.",
+      "effects": [
+        {
+          "printed": "swap this follower's attack and defense and give it +1/+0.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "swapStats",
+              "select": {
+                "pick": "self"
+              }
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 1,
+              "defense": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it X damage. X is this follower's attack. Summon a Divine Evidence.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it X damage. X is this follower's attack.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": {
+            "stat": {
+              "of": {
+                "pick": "self"
+              },
+              "which": "attack"
+            }
+          }
+        },
+        {
+          "printed": "Summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon a Guileless Newsie.",
+      "effects": [
+        {
+          "printed": "Summon a Guileless Newsie.",
+          "op": "summon",
+          "card": {
+            "named": "11021110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

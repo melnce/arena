@@ -290,6 +290,26 @@
         "notBound": {
           "type": "string",
           "minLength": 1
+        },
+        "sameNameAs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pick": {
+              "const": "bound"
+            },
+            "ref": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "pick",
+            "ref"
+          ]
+        },
+        "hasFuse": {
+          "type": "boolean"
         }
       }
     },
@@ -501,7 +521,8 @@
                     "attack",
                     "defense",
                     "cost",
-                    "baseCost"
+                    "baseCost",
+                    "maxDefense"
                   ]
                 }
               },
@@ -1453,6 +1474,68 @@
           "additionalProperties": false,
           "properties": {
             "op": {
+              "const": "setStats"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            },
+            "attack": {
+              "$ref": "#/$defs/Amount"
+            },
+            "defense": {
+              "$ref": "#/$defs/Amount"
+            }
+          },
+          "required": [
+            "op",
+            "select",
+            "attack",
+            "defense"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "swapStats"
+            },
+            "printed": {
+              "type": "string",
+              "minLength": 1
+            },
+            "as": {
+              "type": "string",
+              "minLength": 1
+            },
+            "when": {
+              "$ref": "#/$defs/Condition"
+            },
+            "select": {
+              "$ref": "#/$defs/Selector"
+            }
+          },
+          "required": [
+            "op",
+            "select"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
               "const": "select"
             },
             "printed": {
@@ -2333,6 +2416,18 @@
                   },
                   "required": [
                     "delta"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "halve": {
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "halve"
                   ]
                 }
               ]
@@ -3591,6 +3686,8 @@
                 "ally_draw",
                 "ally_earth_rite",
                 "ally_engage",
+                "ally_fuse",
+                "ally_fuse_amulet",
                 "leader_restored",
                 "self_buffed_up",
                 "self_banished",

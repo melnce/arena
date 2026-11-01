@@ -1,0 +1,28 @@
+{
+  "id": "11051310",
+  "name": "Runaway Souls",
+  "kind": "spell",
+  "class": "abysscraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Add a Ghost to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Add a Ghost to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Ghost to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90051130"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

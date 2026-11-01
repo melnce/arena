@@ -1,0 +1,38 @@
+{
+  "id": "11051110",
+  "name": "Diligent Undertaker",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "attack": 2,
+  "defense": 2,
+  "text": "Last Words: Summon a Divine Evidence. Add a Divine Evidence to your hand.",
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Divine Evidence. Add a Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "Summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Add a Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

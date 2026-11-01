@@ -1,0 +1,27 @@
+{
+  "id": "crest:11064110",
+  "name": "Crest: Lapinette, Calamity of Desolation",
+  "grantedBy": [
+    "11064110"
+  ],
+  "faith": false,
+  "countdown": 1,
+  "text": "Countdown (1)\nAt the start of your turn, summon a Bunnies of Desolation.",
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, summon a Bunnies of Desolation.",
+      "effects": [
+        {
+          "printed": "summon a Bunnies of Desolation.",
+          "op": "summon",
+          "card": {
+            "named": "90061140"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

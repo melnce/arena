@@ -1,0 +1,60 @@
+{
+  "id": "11063310",
+  "name": "Fruitless Testimony",
+  "kind": "spell",
+  "class": "havencraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Select a Mode to activate.\n1. Deal 4 damage to a random enemy follower. Gain Crest: Fruitless Testimony.\n2. Summon a Bunnies of Desolation.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select a Mode to activate.\n1. Deal 4 damage to a random enemy follower. Gain Crest: Fruitless Testimony.\n2. Summon a Bunnies of Desolation.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Deal 4 damage to a random enemy follower. Gain Crest: Fruitless Testimony.\n2. Summon a Bunnies of Desolation.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Deal 4 damage to a random enemy follower. Gain Crest: Fruitless Testimony.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "random",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  },
+                  "amount": 4
+                },
+                {
+                  "op": "crest",
+                  "gain": "crest:11063310",
+                  "player": "self"
+                }
+              ]
+            },
+            {
+              "printed": "2. Summon a Bunnies of Desolation.",
+              "effects": [
+                {
+                  "op": "summon",
+                  "card": {
+                    "named": "90061140"
+                  },
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

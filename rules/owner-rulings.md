@@ -880,6 +880,14 @@ Supporting source (original Shadowverse effect-processing wiki; no official Cyga
 
 **Pinned:** `engine/tests/play_reaction_after_body.rs` (including `stormy_blast_wog_after_spell_text_both_prints`, `flowering_artisan_damage_after_stormy_blast_text`); `play_time_selection::stormy_blast_spell_damage_before_artisan_damage_after_pick`; `engine/tests/crest_play_reaction_order.rs`; `m2_wave2::world_of_games_breaks_after_enamored_enhance_summons`; `owner_capture_asher_game` (split replay). Asher + Cutthroat two-destroy coverage is an engine test (`crest_play_reaction_order`) and matches the RAGE sighting above.
 
+## "Whenever you Fuse an amulet" triggers once per fuse action — 2026-11-01
+
+<!-- rulebook: absorbed #classmechanic-specific-keywords » **Owner ruling (2026-11-01):** _"the effects only trigger once per fuse no matter how many amulets you fuse at once"_ -->
+
+> "the effects only trigger once per fuse no matter how many amulets you fuse at once"
+
+Extinctionist Socialite (`11072110`) and Extinctionist Dandy (`11073110`) print _"Whenever you Fuse an amulet"_. Fusing several amulet partners in one Fuse action raises the trigger **once**, not once per amulet. The Japanese 「自分がアミュレットを【融合】したとき」 has no "for each". Engine constant `FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION = true` (same pattern as `WORLD_OF_GAMES_COUNTS_EITHER_SIDE`).
+
 ## Goddess of Starlight (`10502110`) selects as many as it can — 2026-09-18
 
 <!-- rulebook: pending — "Select N, take as many as you can" not written through to rulebook -->

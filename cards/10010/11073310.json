@@ -1,0 +1,69 @@
+{
+  "id": "11073310",
+  "name": "Calamity in Custody",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 1,
+  "text": "Fuse: Amulets\nWhenever you Fuse to this card, summon a Divine Evidence.\n\nRestore 2 defense to your leader. Consume 2 clues to destroy a random enemy follower with the highest attack.",
+  "fuse": {
+    "partners": {
+      "kind": "amulet"
+    },
+    "printed": "Fuse: Amulets"
+  },
+  "abilities": [
+    {
+      "on": "fused",
+      "printed": "Whenever you Fuse to this card, summon a Divine Evidence.",
+      "effects": [
+        {
+          "printed": "summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Restore 2 defense to your leader. Consume 2 clues to destroy a random enemy follower with the highest attack.",
+      "effects": [
+        {
+          "printed": "Restore 2 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        },
+        {
+          "printed": "Consume 2 clues to destroy a random enemy follower with the highest attack.",
+          "op": "pay",
+          "resource": "clues",
+          "amount": 2,
+          "effects": [
+            {
+              "op": "destroy",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "highest",
+                "orderBy": "attack"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

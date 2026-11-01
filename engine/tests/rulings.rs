@@ -248,6 +248,7 @@ fn crest_cap_five() {
                 granted_order: i as u32,
                 granted: vec![],
                 choose_used: Default::default(),
+                sequence_index: 0,
             });
     }
     assert_eq!(st.player(me).crests.len(), 5);

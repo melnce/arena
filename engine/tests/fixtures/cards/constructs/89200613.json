@@ -1,0 +1,33 @@
+{
+  "id": "89200613",
+  "name": "op_leaderModifier_maxDefense_halve",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Halve the enemy leader's max defense.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Halve the enemy leader's max defense.",
+      "effects": [
+        {
+          "op": "leaderModifier",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "maxDefense": {
+            "halve": true
+          },
+          "printed": "Halve the enemy leader's max defense."
+        }
+      ]
+    }
+  ]
+}

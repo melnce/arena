@@ -1,0 +1,46 @@
+{
+  "id": "11062310",
+  "name": "Destructive Propagation",
+  "kind": "spell",
+  "class": "havencraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Summon 2 copies of Bunnies of Desolation.\nEnhance (8): Summon 4 instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon 2 copies of Bunnies of Desolation.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Bunnies of Desolation.",
+          "op": "summon",
+          "card": {
+            "named": "90061140"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 8,
+      "replacesBase": true,
+      "printed": "Enhance (8): Summon 4 instead.",
+      "effects": [
+        {
+          "printed": "Summon 4 instead.",
+          "op": "summon",
+          "card": {
+            "named": "90061140"
+          },
+          "count": 4
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

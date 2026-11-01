@@ -1,0 +1,72 @@
+{
+  "id": "11064110",
+  "name": "Lapinette, Calamity of Desolation",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "attack": 4,
+  "defense": 4,
+  "text": "Fanfare: Select an enemy follower on the field and banish it. Summon a Bunnies of Desolation.\n\nEvolve: Gain Crest: Lapinette, Calamity of Desolation.\nSuper-Evolve: Delay the count of your Crest: Lapinette, Calamity of Desolation by 1.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and banish it. Summon a Bunnies of Desolation.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and banish it.",
+          "op": "banish",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        },
+        {
+          "printed": "Summon a Bunnies of Desolation.",
+          "op": "summon",
+          "card": {
+            "named": "90061140"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Gain Crest: Lapinette, Calamity of Desolation.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Lapinette, Calamity of Desolation.",
+          "op": "crest",
+          "gain": "crest:11064110",
+          "player": "self"
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Delay the count of your Crest: Lapinette, Calamity of Desolation by 1.",
+      "effects": [
+        {
+          "printed": "Delay the count of your Crest: Lapinette, Calamity of Desolation by 1.",
+          "op": "countdown",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "crests",
+            "kind": "card",
+            "filter": {
+              "card": "11064110"
+            }
+          },
+          "delta": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -70,6 +70,12 @@
 //! | `V2_DEFAULT_FINGERPRINTS` | 79 | meta-haven-evo | `0x5cca9048c37e96c9` → `0x6c3461eed232775e` | 58 | branch B `attack` slot 0 slot 0; main B `attack` slot 1 slot 0 (seat-B first diff). |
 //! | `V2_DEFAULT_FINGERPRINTS` | 97 | meta-haven-kukishiro | `0x46e6103324ea959f` → `0xccfa14793ef8e148` | 4 | branch B `play` `10021110`; main B `bonus_pp` (seat-B first diff). |
 //!
+//! ## Crest turn-start order (recording switch, no pin moves)
+//!
+//! Crest start-of-turn now queues before crest Countdown (rulebook step 2 / Slaus).
+//! `with_crest_turn_start_as_recorded` / `load_recorded_db` keep the pre-fix order
+//! for h0_exact pins and games — no fingerprint or pin rows change in this table.
+//!
 //! ## Play reactions after whole Fanfare (`main` → PR #172)
 //!
 //! | table | seed | deck | main → branch | n | note |

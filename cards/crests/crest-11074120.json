@@ -1,0 +1,47 @@
+{
+  "id": "crest:11074120",
+  "name": "Crest: Dimensional Wanderer",
+  "grantedBy": [
+    "11074120"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nWhenever you Fuse, advance this crest's count by 1.\nLast Words: Summon a Dimensional Wanderer.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_fuse",
+      "printed": "Whenever you Fuse, advance this crest's count by 1.",
+      "effects": [
+        {
+          "printed": "advance this crest's count by 1.",
+          "op": "countdown",
+          "select": {
+            "filter": {
+              "card": "11074120"
+            },
+            "kind": "card",
+            "pick": "all",
+            "side": "ally",
+            "zone": "crests"
+          },
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Summon a Dimensional Wanderer.",
+      "effects": [
+        {
+          "printed": "Summon a Dimensional Wanderer.",
+          "op": "summon",
+          "card": {
+            "named": "11074120"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

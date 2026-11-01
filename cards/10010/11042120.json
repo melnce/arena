@@ -1,0 +1,40 @@
+{
+  "id": "11042120",
+  "name": "Dragonewt Scout",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "attack": 1,
+  "defense": 3,
+  "text": "Ambush\nStrike: Evolve another random unevolved allied follower on the field.",
+  "traits": {
+    "ambush": true
+  },
+  "abilities": [
+    {
+      "on": "strike",
+      "printed": "Strike: Evolve another random unevolved allied follower on the field.",
+      "effects": [
+        {
+          "printed": "Evolve another random unevolved allied follower on the field.",
+          "op": "evolve",
+          "select": {
+            "pick": "random",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "other": true,
+            "filter": {
+              "unevolved": true
+            }
+          },
+          "super": false
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

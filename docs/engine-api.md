@@ -1326,7 +1326,8 @@ every deck id. `State: Send` and `CardDb: Sync` so rayon can share one db.
 |---|---|
 | `arena.load_cards(root: str = "cards") -> CardDb` | Filesystem load, serde-validated. |
 | `arena.deck_fingerprint(deck: dict[str, int]) -> str` | Canonical deck fingerprint: distinct ids sorted ascending as `<id>x<count>`, joined with `,`. Same as the engine's `deck_fingerprint_counts`. |
-| `Game(db, seed, deck_a, deck_b, first="coin", opening_hands=None)` | `deck_*` are `{id: count}`; `opening_hands` is the trace header shape. |
+| `Game(db, seed, deck_a, deck_b, first="coin", opening_hands=None, crest_order="rulebook")` | `deck_*` are `{id: count}`; `opening_hands` is the trace header shape. `crest_order` is `"rulebook"` (default: crest start-of-turn before Countdown) or `"as_recorded"` (pre-fix Countdown-before-SoT for bots-thread replay). Any other value raises `ValueError`. Inherited by `clone()` and every `bot_action_*` / search path (the game holds an `Arc<CardDb>` with the matching `as_recorded` flag). Invisible to `hash()`, `full()`, encodings, and explain records. |
+| `Game.crest_order` | Read-only `"rulebook"` \| `"as_recorded"`. |
 | `Game.legal() -> list[dict]` | `NeutralAction` dicts, engine order. Identical `NeutralAction`s appear once (the two copies of one card in a `choose {card}` choice are one action), so positions in this list can differ from the engine's legal indices, the `legal_index` / `chosen_index` of explain records. |
 | `Game.legal_engine() -> list[dict]` | Same as `legal_actions` order (indices match recorded `chosen`; duplicates kept). Replay: `g.apply(g.legal_engine()[chosen[i]])`. |
 | `Game.vocab() -> list[int]` | Sorted card-id vocabulary (`CardId.0`) for histogram encoding at this state — the `root_vocab` H0 uses for every leaf of a decision taken here. |

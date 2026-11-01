@@ -1,0 +1,44 @@
+{
+  "id": "11023310",
+  "name": "No Life's Cross-Examination",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 1,
+  "text": "Summon a Divine Evidence. If you've Engaged a Clue amulet this turn, summon a Guileless Newsie.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Divine Evidence. If you've Engaged a Clue amulet this turn, summon a Guileless Newsie.",
+      "effects": [
+        {
+          "printed": "Summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        },
+        {
+          "printed": "If you've Engaged a Clue amulet this turn, summon a Guileless Newsie.",
+          "op": "if",
+          "cond": {
+            "engagedClueAmuletThisTurn": true
+          },
+          "then": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "11021110"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

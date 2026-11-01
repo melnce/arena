@@ -97,9 +97,9 @@ test("sweep: every crest-granting catalog card paints name + text panels", async
       .filter((row) => row.crests.length > 0);
   });
 
-  expect(cards.length, "cards with ≥1 crest").toBe(43);
+  expect(cards.length, "cards with ≥1 crest").toBe(51);
   const crestIds = new Set(cards.flatMap((row) => row.crests.map((c) => c.id)));
-  expect(crestIds.size, "distinct crests across those cards").toBe(43);
+  expect(crestIds.size, "distinct crests across those cards").toBe(51);
 
   const tip = page.locator("#cardTooltip");
   for (const row of cards) {
@@ -260,7 +260,7 @@ test("crest icon: granting-card crop geometry, frame on top, abort fallback", as
   await expect(tip.locator("div.tooltip-crest-icon")).toHaveCount(0);
 });
 
-test("crest icon contact sheet of all 43", async ({ page }) => {
+test("crest icon contact sheet of all 51", async ({ page }) => {
   test.setTimeout(120_000);
   await boot(page);
   const id = await importDeck(page, "sheet.json", { [MAJESTIC]: 40 });
@@ -278,6 +278,7 @@ test("crest icon contact sheet of all 43", async ({ page }) => {
       "crest:10622310",
       "crest:10712310",
       "crest:10713310",
+      "crest:11063310",
     ]);
     const catalog = (await fetch("catalog-images.json").then((r) => r.json())) as Record<
       string,
@@ -352,7 +353,7 @@ test("crest icon contact sheet of all 43", async ({ page }) => {
     return { count: crests.length, art: loaded > 0, loaded };
   });
 
-  expect(loaded.count).toBe(43);
+  expect(loaded.count).toBe(51);
   if (!loaded.art) {
     test.info().annotations.push({
       type: "note",

@@ -1,0 +1,76 @@
+{
+  "id": "11044120",
+  "name": "Jerva, Wyrm Unyielding",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "attack": 4,
+  "defense": 4,
+  "text": "Fanfare: Deal X damage split between all enemy followers. X is the enemy leader's max defense minus its defense.\n\nSuper-Evolve: Give this follower Storm and Ward.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal X damage split between all enemy followers. X is the enemy leader's max defense minus its defense.",
+      "effects": [
+        {
+          "printed": "Deal X damage split between all enemy followers. X is the enemy leader's max defense minus its defense.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": {
+            "sub": [
+              {
+                "stat": {
+                  "of": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "which": "maxDefense"
+                }
+              },
+              {
+                "stat": {
+                  "of": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "which": "defense"
+                }
+              }
+            ]
+          },
+          "split": true
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give this follower Storm and Ward.",
+      "effects": [
+        {
+          "printed": "Give this follower Storm and Ward.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "storm": true,
+            "ward": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

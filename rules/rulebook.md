@@ -241,13 +241,15 @@ Both turn boundaries use a **two-phase** model: first, conditions are checked an
 **Start of your turn:**
 
 1. Max PP increases and PP refills.
-2. Your "at the start of your turn" crests trigger; crest Countdowns advance; any crest reaching Countdown 0 is lost and its Last Words is queued. (Anything these trigger is queued.)
+2. Your "at the start of your turn" crests trigger; crest Countdowns advance; any crest reaching Countdown 0 is lost and its Last Words is queued. (Anything these trigger is queued.) A crest whose Countdown ends in this step still resolves the start-of-turn trigger that was queued in the same step — Lapinette `crest:11064110` Countdown (1); Fruitless Testimony `crest:11063310` Countdown (2). Super-Evolve "Delay this crest by 1" (Lapinette) pushes the Countdown so the same crest summons on two successive turns.
 3. Your board's "at the start of your turn" abilities trigger; your amulets' Countdowns advance; any amulet reaching Countdown 0 has its Last Words queued.
 4. The opponent's "at the start of your opponent's turn" crests trigger.
 5. The opponent's board's "at the start of your opponent's turn" abilities trigger.
 6. Direct summons occur; any "when directly summoned" abilities are queued.
 7. Resolve the queued abilities in the same order (the step-2 queue, then step-3, then 4, 5, 6…). Each resolution may queue further triggers, worked through in self-then-opponent order.
 8. Draw 1 card for the turn. The player may now act.
+
+**Engine:** Step 2 is implemented as written — crest start-of-turn abilities are queued, then crest Countdowns advance. A crest that reaches Countdown 0 in that same step still resolves its already-queued start-of-turn trigger (rulebook: losing an ability at the same step does not cancel the other; Slaus owner ruling 2026-08-13). That is a scoped exception to E40 for crest Countdown losses in step 2 only; a crest removed any other way still has its queued non–Last Words items dropped. Last-Words-only countdown crests expire as today and do not enter the step-2-lost list. Amulet Countdowns still advance before the board's start-of-turn triggers are queued (step 3's written order is a documented gap — no catalog card has an amulet with both Countdown and a start-of-turn ability; flagged for the owner).
 
 **End of your turn** (after End Turn is pressed; the player can no longer act):
 
@@ -461,6 +463,8 @@ This section enumerates the keyword abilities and major mechanics of SVWB. Each 
 - **Engage history:** "If you've Engaged a Clue amulet this turn" / "If you've Engaged an amulet this turn" are per-player, per-turn facts, true once such an Engage was activated this turn, even if that amulet is gone since.
 - **Enemy clues:** "summon an enemy Divine Evidence" (Scene of Deicide `11002210`) puts it on the opponent's field, where it merges with *their* Clue amulets (their banish reactions follow their own conditions).
 - **Sentence rule** (owner 2026-09-08): a separate sentence or a plain "and" is independent; only "if you did so" makes a clause dependent. So Scene of Deicide still summons the enemy Divine Evidence when there is no enemy follower to banish.
+- **Hand Clue discard is one conditional** (printed "If you have a Clue amulet in your hand, discard a random Clue amulet and …"; Collection Manifest `11042310`, Obliviationist Mugger `11043110`, etc.): the whole sentence is gated — with no Clue in hand, neither the discard nor the following clause runs.
+- **Ghost leave-redirect** (Ghost `90051130` "When this card leaves the field, banish it." / JA 場を離れる場合、これを消滅): a Ghost reduced to 0 defense is **destroyed** (genuine destruction — owner ruling 2026-09-08: `_destroyed` only for genuine destruction; printed banish / bounce that is not destruction stays on the banish/bounce axes alone). It then goes to the **banished** zone instead of the cemetery. The engine therefore raises the destroyed-axis events **and** the banished-axis ones (`ally_card_banished` / `enemy_follower_banished`), in that order — Nocturne `11054110`, Solemn Gravekeeper `11052110`, Attending Amanuensis `11053110` see the banish. The Ghost's own end-of-turn "banish this card" is a printed field banish (banish-axis only).
 - **Engage reactions:** the engine raises `ally_engage` (and resolves those reactions) **before** the Engage ability's own text — the existing `ally_engage` order, not a separate ruling. (Play reactions were reordered to run after the played body — owner 2026-10-27/28 — but Engage was left as-is.)
 - _Test case:_ Divine Evidence on the field (count 1), play Nacreheim → Evidence is banished (Nacreheim's "when banished" does not fire for Evidence's empty LW; Evidence itself has none), Nacreheim enters at count 2; Engage Nacreheim at count 1 destroys it (shadow +1), does not banish-heal.
 
@@ -515,6 +519,20 @@ This section enumerates the keyword abilities and major mechanics of SVWB. Each 
 
 **Owner ruling — Artifact fuse chain (2026-09-05), refined by official Q&A (2026-09-06), partners corrected 2026-09-10:** Gears fuse with any Artifact amulet (printed "Fuse: Artifact amulets"; the 2026-09-05 "gears only" recollection is superseded); the gear fused _into_ decides the body (Ambition → Striker, Remembrance → Fortifier). Striker/Fortifier host any Artifact cards and transform by partners' total cost (1 → Ominous α, 2 → β, 3+ → γ). **Ominous Artifact α** accepts **Ominous Artifact β** and **Ominous Artifact γ** only; each fused partner is banished. Fusing only one kind does not transform α immediately, but α **remembers** which kinds have been fused. When **both** β and γ have been fused to the same α instance — in one fuse action or across turns — it transforms into **Masterwork Artifact Ω**. Already-fused kinds cannot be selected again. β, γ, and Ω cannot initiate fuse. Official Q&A (`90073110`): fusing β one turn and γ to the same α the next turn **does** produce Ω.
 
+**Set 10 readings (Forest / Sword / Rune / Portal — Deicide in Nacreheim):**
+
+- **1-base-cost allied cards** means followers **and** amulets with printed base cost 1; `other` excludes self.
+- **Heartening Hyphae** (`11014120`, Q&A): on a near-full field, only the first drawn Forestcraft follower summons — later draws stay in hand. Super-Evolve with a full hand: overflow destroys the draws, so none are summoned.
+- **Untamed Testimony** crest (Countdown 2): start-of-turn triggers are **queued before** the same step's countdown advance; losing the crest to that tick does **not** cancel the already-queued trigger (two Mischiefs over two turns).
+- **Guileless Newsie** (`11021110`): `swapStats` then `buff +1/+0`. Printed "exact copy" → `exact: true`; "a copy" / "copies" → `exact: false`.
+- **Almaelys** sequence + Super-Evolve Delay 2 → four activations (sequence cursor wraps; delay does not reset it).
+- **Noeinhowell Interrogation** crest: `sequence` in order without repetition; the third activation destroys.
+- **Noeinhowell** crest: once per your turn, recover 1 PP when you Engage an amulet.
+- **Infernal Chimera** (`11034120`, Q&A): X=0 deals **no** damage (not a 0-split). "All enemies" includes the enemy leader. **Lineage** (`11074110`) `{halve: true}` — engine choice: ⌈max/2⌉.
+- **Fuse once per action** (Sephie-style once-per-instance still applies). **"Whenever you Fuse an amulet"** (`ally_fuse_amulet`, Socialite `11072110` / Dandy `11073110`) — **Owner ruling (2026-11-01):** _"the effects only trigger once per fuse no matter how many amulets you fuse at once"_; engine constant `FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION = true` (once per Fuse action that includes ≥1 amulet, not per amulet partner). JA has no "for each".
+- **Dimensional Wanderer** crest advance = countdown −1; bounce on re-gain.
+- **Enter reactions wait until the play sequence finishes** (Ruler of Tempests) — same E34 / play-reaction timing as above.
+
 **Crests (Countdown / Last Words / end of turn).** Crests use the same timing machinery as amulets. A Countdown (N) on a crest ticks −1 at the start of its owner's turn (the same window as amulet countdowns), and the crest is destroyed at 0. Last Words on a crest fire when it is destroyed (including by countdown reaching 0). "At the end of your turn" on a crest fires at that owner's end of turn (e.g. Corruption: deal 2 to your leader each end of turn while active). _Example Last Words:_ Belial's crest — Countdown (4), Last Words: deal 20 to the enemy leader when it reaches 0.
 
 **Sequence abilities.** When a card activates abilities "in sequence" from a numbered list, each trigger runs the next step in order; after the last step, the sequence **wraps** back to the first step on the next trigger (official Q&A: Omerio, Winged Revenant — after the third ability, the next allied amulet destruction fires step 1 again).
@@ -567,6 +585,8 @@ A player's EP evolve always runs the full `evolve[]` / `superevolve[]` script fo
 Rule: split damage allocates against each follower's current defense, oldest to newest; allocated points are consumed from the pool even when Barrier reduces dealt damage to 0 and is consumed. Worked example: 10 split damage — a 1/6 with Barrier (oldest) absorbs an allocation of 6 (stays 1/6, Barrier gone); the 1/5 behind it takes the remaining 4 and becomes 1/1. Do not change without owner sign-off.
 
 A damage instance of **0** still counts as the follower **taking damage** for any "whenever this follower takes damage" trigger, as long as the follower remains on the field and is not destroyed by that event. (Barrier blocking a positive hit also counts as taking damage; see Combat.)
+
+**Official Q&A — X = 0 deals nothing** (Jerva, Wyrm Unyielding `11044120`; Infernal Chimera `11034120`): when X evaluates to 0 ("X is the enemy leader's max defense minus its defense"), "deal X damage …" deals **nothing**. That matches the engine's existing paths: a split with pool 0 allocates no shares and deals nothing; `deal_follower` with 0 changes no defense and leaves Barrier intact. It is not a separate early-return before target selection.
 
 **Owner ruling — Damage prevented by super-evolve still counts as "taking damage" (2026-08-23):**
 
@@ -673,3 +693,5 @@ Hidden information mainly concerns cards in hand and deck:
 - **"a copy"** / **"copies of"** (without "exact") copies the **base/printed card** — a fresh template from the card database (destroyed-history recreations, named token summons, etc.).
 
 When card text says "Summon 2 copies of Fairy," that is base copies of the named card. When it says "summon an exact copy of this card" or "add an exact copy of a random card in your opponent's hand," that is an instance clone of the referenced card.
+
+**Bunnies of Desolation `90061140` (engine reading):** enter text is two sentences — banish a random lowest-cost card in your hand, then evolve by effect. An empty hand still evolves (separate sentences). Several Bunnies summoned by one effect (Destructive Propagation Enhance `11062310`) **all enter as that one effect**; their enter reactions then queue and resolve in **entry order** (oldest first) — the same model as Trap in the Woods vs three Knights (owner ruling 2026-09-10). "A random card among the lowest-cost cards" with a single pick is uniform among tied current costs.
