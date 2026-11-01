@@ -1,0 +1,39 @@
+{
+  "id": "89501033",
+  "name": "condition_engagedClueAmuletThisTurn",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: If you've Engaged a Clue amulet this turn, deal 1.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: If you've Engaged a Clue amulet this turn, deal 1.",
+      "effects": [
+        {
+          "printed": "Fanfare: If you've Engaged a Clue amulet this turn, deal 1.",
+          "op": "if",
+          "cond": { "engagedClueAmuletThisTurn": true },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -2,13 +2,13 @@
 
 `schema/cards.schema.json` is draft 2020-12. `additionalProperties: false` on every object. Discriminated unions are `oneOf` + a `const` on `kind` / `on` / `op` / `pick`. No `patternProperties`, no free-form maps.
 
-A value with no card in the 572+43 pool is omitted. Each value below names at least one justifying id.
+A value with no card in the 573+42 pool is omitted. Each value below names at least one justifying id.
 
 Regenerate the schema JSON with `python3 tools/gen_schema.py`.
 
 ## Official integer maps (from Cygames `common` / `specific_effect_card_info`)
 
-Derived from the live card-list API (`cards/official/catalog.json` `_meta.maps`), then cross-checked against cards whose kind/class/tribe is known. Authored `kind` is still only `follower` / `spell` / `amulet` — official type 2 and type 3 both map to `amulet`. Extra official tribes (`luminous`, `levin`, `shikigami`) appear in the catalog; the closed authored-card enum stays the 12 pool tribes below unless an authored file needs one.
+Derived from the live card-list API (`cards/official/catalog.json` `_meta.maps`), then cross-checked against cards whose kind/class/tribe is known. Authored `kind` is still only `follower` / `spell` / `amulet` — official type 2 and type 3 both map to `amulet`. Extra official tribes (`luminous`, `levin`, `shikigami`) appear in the catalog; the closed authored-card enum stays the 13 pool tribes below unless an authored file needs one.
 
 | official int | authored name | evidence |
 |---|---|---|
@@ -44,6 +44,7 @@ Derived from the live card-list API (`cards/official/catalog.json` `_meta.maps`)
 | `tribe` 18 | `loot` | Gilded Blade `90021310` |
 | `tribe` 19 | `encroacher` | Sathanid `10614120` |
 | `tribe` 20 | `anathema` | Gildaria `10724110` |
+| `tribe` 21 | `clue` | Divine Evidence `90001210`, Nacreheim `11003210` |
 | SE type 1 | `crest` | Slaus `10574110` / `10412312` |
 | SE type 2 | `crystallize` | Venerating Dyer `10662110` cost 1 |
 | SE type 3 | `accelerate` | Shoddy Plaything `10671110` cost 2 |
@@ -100,7 +101,7 @@ Evolved stats are not authored. Measured: official records have no per-card evo 
 
 ## Tribes
 
-`anathema` `10724110` · `artifact` `90071210` · `departed` `90051140` · `earth sigil` `90031210` · `encroacher` `10604110` · `golem` (Emperor of Elements `10533110`) · `loot` `90021310` · `marine` `10541120` · `mysteria` `10833110` · `officer` `90021120` · `pixie` `90011110` · `puppetry` `90071110`
+`anathema` `10724110` · `artifact` `90071210` · `clue` `90001210` · `departed` `90051140` · `earth sigil` `90031210` · `encroacher` `10604110` · `golem` (Emperor of Elements `10533110`) · `loot` `90021310` · `marine` `10541120` · `mysteria` `10833110` · `officer` `90021120` · `pixie` `90011110` · `puppetry` `90071110`
 
 ## Traits
 
@@ -113,7 +114,7 @@ Booleans / small ints only. No `effects`.
 | `rush` | `10564120` Kukishiro |
 | `storm` | `90061110` Holy Falcon |
 | `ambush` | `10574110` Slaus |
-| `aura` | `10654110` Armes |
+| `aura` | `10654110` Armes; also required on every tribe-`clue` card (glossary: "Cards with Clue can't be selected for enemy abilities" — same mechanism as Aura; `tools/validate.mjs` enforces) |
 | `intimidate` | `10904110` Zerael |
 | `drain` | `10933110` (granted) |
 | `barrier` | `10704110` (granted) |
@@ -182,8 +183,11 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 | `ally_engage` | `10062120` Sacred Griffon |
 | `leader_restored` | `10563110` Saint of Rehabilitation; `10961110` Follower of the Tenets; `10963110` Executor of the Vow — 0-heal still fires (official Q&A Burnite `10144110`) |
 | `self_buffed_up` | `10812110` Ruflet |
+| `self_banished` | `11003210` Nacreheim ("When this card is banished from the field") |
+| `ally_card_banished` | `11054110` Nocturne / `11052110` Solemn Gravekeeper |
+| `enemy_follower_banished` | `11064120` Parareligious Idol |
 
-Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`. Ghost's leave is `on: leave`, not an event. The schema lists the 16 events in the table. `enemy_follower_destroyed` is forced by Lifestealer `10553110` "Whenever a Skeleton is destroyed" (any side).
+Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`. Ghost's leave is `on: leave`, not an event. The schema lists the events in the table. `enemy_follower_destroyed` is forced by Lifestealer `10553110` "Whenever a Skeleton is destroyed" (any side).
 
 ## Effects
 
@@ -221,8 +225,8 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `crest` | `gain` + `player` self `10434120` / opponent `10574110` |
 | `removeCrests` | `10453310` Corruption Super Skybound (pool) |
 | `countdown` | `delta` −1 advance `90021210`; +1 delay `10703210` |
-| `counter` | `earth` `10434120`; `combo` `10714110`; `skyboundHand` `10471120`; `shadows` via `pay`; `faith` `faith:10634120`; `{var: X}` `10131320` |
-| `pay` | `shadows` `10754120`; `earth` `10031110`; `pp` `10934110`; `faith` `10624120` Yidmetra |
+| `counter` | `earth` `10434120`; `combo` `10714110`; `skyboundHand` `10471120`; `shadows` via `pay`; `faith` `faith:10634120`; `clues` `11053310` Nocturne's Interrogation; `{var: X}` `10131320` |
+| `pay` | `shadows` `10754120`; `earth` `10031110`; `pp` `10934110`; `faith` `10624120` Yidmetra; `clues` `90001210` Divine Evidence / `11073310` Calamity in Custody |
 | `transform` | `10534120`, `10573310` |
 | `leaderModifier` | Forced `maxDefense: {set: N}` Zooey `10444120` (existing file; was a bare int) or `maxDefense: {delta: N}` Lhynkal `crest:10534110` — same split as `cost`. After either, current defense clamps to the new max. `delta` floors the max at 0; a leader whose max (and therefore defense) is 0 is destroyed. `damageCap` + `until` `10444120` |
 | `replicate` | `10604110`, `10923110` |
@@ -271,7 +275,7 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Condition
 
-`all`/`any`/`not` · `countAtLeast` (`filter` `10521110` "If you selected a spell") · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `boundHas` `10663210` Sublime Eld Tome ("If you selected an allied amulet") · `attackedLeaderLastTurn` `10944110` · `attackingFollower` `10843110` Giada / `crest:10864110` Verdilia ("attacks a follower") · `attackingLeader` Lu Woh crest `crest:10474110` "attacks a leader" · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120` · `amountAtLeast` `10502120` Behemoth · `deckHasNoDuplicates` Bluerust Underling `10971110` / Cutthroat `10974110` "If there are no duplicates in your deck". Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
+`all`/`any`/`not` · `countAtLeast` (`filter` `10521110` "If you selected a spell") · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `boundHas` `10663210` Sublime Eld Tome ("If you selected an allied amulet") · `attackedLeaderLastTurn` `10944110` · `engagedAmuletThisTurn` `11032310` Discerning Melody · `engagedClueAmuletThisTurn` `11022310` Dichotomous Forensics / `11023310` No Life's Cross-Examination · `attackingFollower` `10843110` Giada / `crest:10864110` Verdilia ("attacks a follower") · `attackingLeader` Lu Woh crest `crest:10474110` "attacks a leader" · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120` · `amountAtLeast` `10502120` Behemoth · `deckHasNoDuplicates` Bluerust Underling `10971110` / Cutthroat `10974110` "If there are no duplicates in your deck". Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
 
 ## Modes
 

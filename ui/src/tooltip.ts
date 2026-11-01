@@ -5,10 +5,10 @@ import { cardHasSpellboost, formatGateLine, isFormGate } from "./info.ts";
 import type { CardForm, CardInstance, CrestInstance, CrestText, GateInfo } from "./types.ts";
 
 const KEYWORD_LINE_RE =
-  /^(Fanfare|Ward|Rush|Storm|Bane|Drain|Barrier|Aura|Ambush|Intimidate|Last Words|Super-Evolve|Super Evolve|Enhance(?: \(\d+\))?|Accelerate(?: \(\d+\))?|Crystallize(?: \(\d+\))?|Engage|Evolve|Countdown(?: \(\d+\))?|Necromancy(?: \(\d+\))?|Rally(?: \(\d+\))?|Combo(?: \(\d+\))?|Overflow|Earth Rite|Spellboost|Fusion|Fuse|Ongoing|Skybound Art)\s*:?\s*(.*)$/i;
+  /^(Fanfare|Ward|Rush|Storm|Bane|Drain|Barrier|Aura|Clue|Ambush|Intimidate|Last Words|Super-Evolve|Super Evolve|Enhance(?: \(\d+\))?|Accelerate(?: \(\d+\))?|Crystallize(?: \(\d+\))?|Engage|Evolve|Countdown(?: \(\d+\))?|Necromancy(?: \(\d+\))?|Rally(?: \(\d+\))?|Combo(?: \(\d+\))?|Overflow|Earth Rite|Spellboost|Fusion|Fuse|Ongoing|Skybound Art)\s*:?\s*(.*)$/i;
 
 const KEYWORD_INLINE_RE =
-  /\b(Fanfare|Last Words|Evolve|Super-Evolve|Super Evolve|Enhance|Accelerate|Crystallize|Necromancy|Rally|Combo|Overflow|Earth Rite|Spellboost|Ward|Storm|Rush|Bane|Drain|Barrier|Ambush|Aura|Countdown|Fusion|Fuse|Ongoing|Skybound Art)\b/gi;
+  /\b(Fanfare|Last Words|Evolve|Super-Evolve|Super Evolve|Enhance|Accelerate|Crystallize|Necromancy|Rally|Combo|Overflow|Earth Rite|Spellboost|Ward|Storm|Rush|Bane|Drain|Barrier|Ambush|Aura|Clue|Countdown|Fusion|Fuse|Ongoing|Skybound Art)\b/gi;
 
 const RALLY_RE = /Rally(?:\s*\((\d+)\))?/i;
 const SKYBOUND_RE = /Skybound Art(?:\s*\((\d+)\))?/i;

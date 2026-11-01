@@ -262,6 +262,9 @@ pub fn put_field(db: &CardDb, state: &mut State, who: PlayerId, id: &str) -> u8 
             state.player_mut(who).earth = 1;
         }
     }
+    if inst.is_clue() {
+        inst.clue_count = 1;
+    }
     state.player_mut(who).field[slot as usize] = Some(inst);
     slot
 }

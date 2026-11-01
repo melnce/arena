@@ -1,6 +1,6 @@
 # Official Cygames per-card Q&A
 
-Fetched 2026-10-02 from https://shadowverse-wb.com (lang=en). 149 Q&A entries across 120 cards (904 catalog ids).
+Fetched 2026-10-31 from https://shadowverse-wb.com (lang=en). 160 Q&A entries across 129 cards (982 catalog ids).
 
 ## 10001210 Detective's Lens
 
@@ -783,6 +783,68 @@ For example, if the field consists of a 10/5 Caravan Mammoth, 4/5 Quake Goliath,
 **Q:** If an allied amulet is destroyed after my Omerio, Winged Revenant's third ability has been activated, will Omerio's first ability activate?
 
 **A:** Yes, it will.
+
+## 11003210 Nacreheim, Utopian World
+
+**Q:** If I have Nacreheim, Utopian World on the field when I play a Divine Evidence, will its "When this card is banished from the field" ability activate?
+
+**A:** Yes, it will.
+
+**Q:** If I engage Nacreheim, Utopian World when it has 1 clue, will its "When this card is banished from the field" ability activate?
+
+**A:** No. When it drops to 0 clues, it will be destroyed, not banished.
+
+## 11004110 Rezeal, Goddess of Nacreheim
+
+**Q:** 
+
+**A:** 
+
+## 11014120 Heartening Hyphae
+
+**Q:** I have 3 copies of Fairy on the field. If I play a Heartening Hyphae and draw 2 Forestcraft followers, will Heartening Hyphae summon both of them?
+
+**A:** No. You will summon the first follower drawn, but the second will remain in your hand because your field will be full after summoning the first.
+
+**Q:** What happens if I super-evolve Heartening Hyphae when my hand is full?
+
+**A:** The cards you draw will disappear, so you won't be able to summon any Forestcraft followers drawn.
+
+## 11034120 Infernal Chimera
+
+**Q:** If I play Infernal Chimera when I have no earth sigils, will I deal 0 damage split between all enemies?
+
+**A:** No. You won't deal any damage at all.
+
+## 11044120 Jerva, Wyrm Unyielding
+
+**Q:** If I play Jerva, Wyrm Unyielding when the enemy leader's max and current defense are both 20, will I deal 0 damage split between all enemy followers?
+
+**A:** No. You won't deal any damage at all.
+
+## 11054110 Nocturne, Postmortem Detective
+
+**Q:** If I play a Divine Evidence when I have Nocturne, Postmortem Detective and another Divine Evidence on the field, will Nocturne's "whenever an allied card is banished from the field" ability activate?
+
+**A:** Yes, it will.
+
+## 11054120 Gremory, Doom Dispeller
+
+**Q:** If my Gremory, Doom Dispeller is destroyed when I have 1 shadow, will its Necromancy (2) ability activate?
+
+**A:** Yes. You gain another shadow when Gremory is destroyed, giving you the 2 shadows required to activate Necromancy (2).
+
+## 11073310 Calamity in Custody
+
+**Q:** If I play Calamity in Custody when I have 1 clue, will its "Consume 2 clues" ability activate?
+
+**A:** No. However, it will still restore 2 defense to your leader.
+
+## 11074110 Lineage, Calamity of Extinction
+
+**Q:** Does Lineage, Calamity of Extinction's Fanfare ability destroy the selected follower as well?
+
+**A:** Yes, it does.
 
 ## 90004130 Demon of Purgatory
 

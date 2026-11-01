@@ -42,7 +42,7 @@ Measured on the old authored sets at `8f491f9` (`python3` walk of every object w
 - **34** distinct ops; **90** distinct field names across those ops.
 - One concept (a triggered ability) is spread across `fanfare`, `evolve`, `superevolve`, `spell`, `keywords`, `crest`, plus a `triggers` array.
 
-Reviewers spent a fortnight writing gates that a type system would have refused. The new schema uses `additionalProperties: false` on every object and `oneOf` + a `const` discriminator. One effect, one construction. A value with no card in the 572+43 pool is deleted.
+Reviewers spent a fortnight writing gates that a type system would have refused. The new schema uses `additionalProperties: false` on every object and `oneOf` + a `const` discriminator. One effect, one construction. A value with no card in the 573+42 pool is deleted.
 
 ## Traits, abilities, modes
 
@@ -76,11 +76,11 @@ The old repo stays running. Both engines emit [`trace-format.md`](trace-format.m
 
 ## Rotation scope
 
-M0–M3 cover Rotation only: 516 rotation-legal collectibles, 56 tokens reachable by walking `related_card_ids` from those 516, and 43 crest/faith entries (38 Crest + 5 Faith). Unlimited-only cards are out of scope except `10131320` Stormy Blast (set 10001, rotation-legal). Fuse is in scope: the Artifact chain is reachable from five rotation cards and used by the Artifact Portalcraft meta deck.
+M0–M3 cover Rotation only: 516 rotation-legal collectibles, 57 tokens reachable by walking `related_card_ids` from those 516, and 42 crest/faith entries (37 Crest + 5 Faith). Unlimited-only cards are out of scope except `10131320` Stormy Blast (set 10001, rotation-legal). Fuse is in scope: the Artifact chain is reachable from five rotation cards and used by the Artifact Portalcraft meta deck.
 
 ## Second-system risk
 
-A rewrite that authors 572 cards into a new shape can silently change meaning. The milestones defend against that:
+A rewrite that authors 573 cards into a new shape can silently change meaning. The milestones defend against that:
 
 - M0 freezes the schema before any engine logic.
 - M1 is Basic (56) plus one meta-deck mirror, with a differential gate against the old engine on that deck, plus an explicit go/no-go on Rust.

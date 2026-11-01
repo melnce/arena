@@ -1,6 +1,6 @@
 # Official Cygames keyword glossary
 
-Fetched 2026-09-10 from https://shadowverse-wb.com/web/System/glossaryList. 78 entries (English headings; Japanese is the original client text).
+Fetched 2026-11-01 from https://shadowverse-wb.com/web/System/glossaryList. 79 entries (English headings; Japanese is the original client text).
 
 ## Accelerate
 
@@ -62,9 +62,9 @@ Followers with Bane destroy any followers they attack or are attacked by, after 
 
 ## Banish
 
-Banishing a card removes it from the field, hand, or deck without adding a shadow to its controller's cemetery or activating Last Words or other abilities that activate when a card is destroyed.
+Banishing a card removes it from the field, leader area, hand, or deck without adding a shadow to its controller's cemetery or activating Last Words or other abilities that activate when a card is destroyed.
 
-> **消滅** — 墓場を増やさずに、カードを場や手札、デッキから取り除くことです。
+> **消滅** — 墓場を増やさずに、カードを場やリーダーエリア、手札、デッキから取り除くことです。
 > カードが消滅したときは、ラストワードなど、カードが破壊されたときに働く能力は働きません。
 
 ## Barrier
@@ -106,6 +106,16 @@ Leaders also belong to a class. For example, Dreizehn is a Portalcraft leader an
 > **クラス** — カードが持つ特性の1つで、「エルフ」「ロイヤル」「ウィッチ」「ドラゴン」「ナイトメア」「ビショップ」「ネメシス」「ニュートラル」の8つがあります。
 > リーダーにもクラスがあり、ネメシスのリーダーであるドライツェーンは、ネメシスのカードが使えます。
 > ニュートラルのカードはどのリーダーでも使えます。
+
+## Clue
+
+When an amulet with Clue enters the field, its clue count is set to 1 and displayed on the bottom right of the card. Any other allied amulets with Clue on the field will be banished, and their clue counts added on to the new amulet.
+
+Cards with Clue can't be selected for enemy abilities. They are destroyed when their clue count falls to 0.
+
+> **証拠** — 証拠を持つアミュレットが場に出たとき、証拠の数が1になって、カードの右下に表示されます。自分の場に他の証拠・アミュレットがある場合、それらすべてを消滅させて、証拠の数を合算します。
+> 証拠を持つカードは相手の能力で選べません。
+> 証拠の数が0になると、破壊されます。
 
 ## Combo
 
@@ -169,10 +179,10 @@ The amount of damage a follower or leader can take, indicated at the bottom righ
 
 ## Destroy
 
-Destroying a follower or amulet removes it from the field. Every allied follower or amulet destroyed adds a shadow to your cemetery.
+Destroying a card removes it from the field or leader area. Every allied card destroyed on the field adds a shadow to your cemetery.
 
-> **破壊** — フォロワーやアミュレットを場から取り除くことです。
-> 破壊された数だけ、墓場を増やします。
+> **破壊** — カードを場やリーダーエリアから取り除くことです。
+> 場で破壊された数だけ、墓場を増やします。
 
 ## Discard
 

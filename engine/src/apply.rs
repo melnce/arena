@@ -47,6 +47,16 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
             db.require_supported(created)?;
         }
     }
+    // Track Engage history only when a deck (or its named_reachable closure)
+    // can read it — otherwise Set-10-free games keep main-identical hash /
+    // search_key / snapshot JSON. Closure is complete: RandomFrom draws from
+    // the deck; Named / RandomNamed ids are in named_reachable.
+    let track_engage_history = cfg
+        .deck_a
+        .iter()
+        .chain(cfg.deck_b.iter())
+        .flat_map(|id| std::iter::once(*id).chain(support::named_reachable(db, *id)))
+        .any(|id| db.card_reads_engage_history(id));
     let mut state = State {
         players: [PlayerState::new(), PlayerState::new()],
         turn: 0,
@@ -79,6 +89,7 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         combat_opposing: None,
         combat_attacker: None,
         combat_defender_id: None,
+        track_engage_history,
     };
     fill_deck(db, &mut state, PlayerId::A, &cfg.deck_a)?;
     fill_deck(db, &mut state, PlayerId::B, &cfg.deck_b)?;
@@ -1329,7 +1340,10 @@ fn enter_from_play(
 ) -> Result<(), Illegal> {
     inst.flags.summoning_sick = true;
     inst.flags.attacks_left = inst.traits.attacks_per_turn.unwrap_or(1);
-    if inst.is_earth_sigil() && merge_earth(db, state, me, &inst, events)? {
+    // Play already requires a free slot; merge Clue allies before place.
+    if inst.is_clue() {
+        merge_clue(db, state, me, &mut inst, events)?;
+    } else if inst.is_earth_sigil() && merge_earth(db, state, me, &inst, events)? {
         let src = SourceRef::Field {
             player: me,
             id: inst.id,
@@ -1453,6 +1467,85 @@ fn merge_earth(
     state.player_mut(me).earth = stack;
     state.player_mut(me).earth_slot = None;
     Ok(false)
+}
+
+/// Glossary Clue: when a Clue amulet enters, every *other* allied Clue is
+/// banished (no shadow, no Last Words) and their clue counts add to the new
+/// amulet. Caller must ensure a free slot first (full field → no merge).
+/// Sets `incoming.clue_count = 1 + sum` before place.
+fn merge_clue(
+    db: &CardDb,
+    state: &mut State,
+    me: PlayerId,
+    incoming: &mut CardInstance,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let holders: Vec<u32> = state
+        .player(me)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.is_clue())
+        .map(|c| c.id)
+        .collect();
+    let mut sum = 0i32;
+    for id in holders {
+        let Some(slot) = state.find_field(me, id) else {
+            continue;
+        };
+        let count = state
+            .field_inst(me, slot)
+            .map(|c| c.clue_count.max(1))
+            .unwrap_or(1);
+        banish_from_field(db, state, me, slot, events)?;
+        sum += count;
+    }
+    incoming.clue_count = 1 + sum;
+    Ok(())
+}
+
+/// Banish a field card: fire `self_banished` on the leaving card, then
+/// `ally_card_banished` / `enemy_follower_banished` observers. No shadow, no
+/// Last Words. Reuses `Event::Banish`.
+fn banish_from_field(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    slot: u8,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let Some(inst) = state.field_inst(who, slot).cloned() else {
+        return Ok(());
+    };
+    // Self-banished While still on the field (SelfBuffedUp-style).
+    raise_when(db, state, who, EventName::SelfBanished, Some(&inst), who);
+    raise_when(
+        db,
+        state,
+        who,
+        EventName::AllyCardBanished,
+        Some(&inst),
+        who,
+    );
+    if inst.kind == CardKind::Follower {
+        raise_when(
+            db,
+            state,
+            who.opponent(),
+            EventName::EnemyFollowerBanished,
+            Some(&inst),
+            who,
+        );
+    }
+    if let Some(taken) = state.player_mut(who).field[slot as usize].take() {
+        events.push(Event::Banish {
+            card: taken.card,
+            from: ZoneLabel::Field,
+        });
+        state.player_mut(who).banished.push(taken);
+        state.player_mut(who).compact_field();
+    }
+    Ok(())
 }
 
 fn spellboost_hand(
@@ -1781,6 +1874,15 @@ fn apply_engage(
     state.player_mut(me).spend_pp(cost);
     if let Some(f) = state.field_inst_mut(me, slot.0) {
         f.flags.engaged_this_turn = true;
+    }
+    // Per-player Engage history (Clue / "Engaged an amulet this turn").
+    // Order: raise ally_engage reactions, then Engage body — leave as-is
+    // (reactions before body; play reactions were fixed separately).
+    if inst.kind == CardKind::Amulet {
+        state.player_mut(me).engaged_amulet_this_turn = true;
+        if inst.is_clue() {
+            state.player_mut(me).engaged_clue_amulet_this_turn = true;
+        }
     }
     raise_when(db, state, me, EventName::AllyEngage, Some(&inst), me);
     let src = SourceRef::Field {
@@ -2336,6 +2438,11 @@ fn apply_end_turn(db: &CardDb, state: &mut State, events: &mut Vec<Event>) -> Re
 fn begin_turn(state: &mut State, who: PlayerId, events: &mut Vec<Event>) -> Result<(), Illegal> {
     state.active = who;
     state.phase = Phase::Main;
+    // "This turn" = the current turn: clear Engage history for both players.
+    for p in &mut state.players {
+        p.engaged_amulet_this_turn = false;
+        p.engaged_clue_amulet_this_turn = false;
+    }
     let turn = {
         let p = state.player_mut(who);
         p.turns_taken += 1;
@@ -2812,7 +2919,7 @@ fn raise_when(
     let prev_subject = state.event_subject.clone();
     let prev_base = state.event_base_cost;
     let prev_inst = state.event_inst_id;
-    if event == EventName::SelfBuffedUp {
+    if event == EventName::SelfBuffedUp || event == EventName::SelfBanished {
         if let Some(inst) = subject {
             enqueue_when_on(
                 db,
@@ -2945,16 +3052,26 @@ fn enqueue_when_on(
                 inst.statics.clone(),
             )
         };
+        // Self-banished leaves the field before the queue drains — use a
+        // Spell source like Last Words so e40 does not drop the trigger.
+        let source = if scan.event == EventName::SelfBanished {
+            SourceRef::Spell {
+                player: observer_side,
+                card: cand.card,
+            }
+        } else {
+            SourceRef::Field {
+                player: observer_side,
+                id: cand.id,
+            }
+        };
         collect_when_from_abilities(
             &scan,
             state,
             WhenLoc {
                 zone: AbilityZone::Field,
                 entry: cand.entry,
-                source: SourceRef::Field {
-                    player: observer_side,
-                    id: cand.id,
-                },
+                source,
                 mark_id: Some(cand.id),
                 mark_crest: None,
             },
@@ -4641,7 +4758,7 @@ fn apply_effect_with_targets(
                 .filter_map(|t| target_as_card(state, t))
                 .collect();
             apply_each_captured(state, targets, |st, t| {
-                banish_opt(st, t, events);
+                banish_opt(db, st, t, events);
                 Ok(())
             })?;
             if targets.iter().any(|t| !matches!(t, TargetOpt::Slot { .. })) {
@@ -4878,7 +4995,7 @@ fn apply_effect(
             ..
         } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
-            if pay_resource(state, controller, *resource, n) {
+            if pay_resource(db, state, controller, *resource, n, events)? {
                 if *resource == PayResource::Earth {
                     raise_when(
                         db,
@@ -5014,7 +5131,7 @@ fn apply_effect(
             let bound: Vec<TargetOpt> =
                 ts.iter().filter_map(|t| target_as_card(state, t)).collect();
             apply_each_captured(state, &ts, |st, t| {
-                banish_opt(st, t, events);
+                banish_opt(db, st, t, events);
                 Ok(())
             })?;
             if ts.iter().any(|t| !matches!(t, TargetOpt::Slot { .. })) {
@@ -5418,6 +5535,17 @@ fn apply_effect(
     Ok(())
 }
 
+fn allied_clue_count(state: &State, who: PlayerId) -> i32 {
+    state
+        .player(who)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.is_clue())
+        .map(|c| c.clue_count)
+        .sum()
+}
+
 fn resource_payable(state: &State, who: PlayerId, res: PayResource, n: i32) -> bool {
     let p = state.player(who);
     match res {
@@ -5425,20 +5553,28 @@ fn resource_payable(state: &State, who: PlayerId, res: PayResource, n: i32) -> b
         PayResource::Earth => p.earth >= n,
         PayResource::Pp => p.usable_pp() >= n,
         PayResource::Faith => p.faith >= n,
+        PayResource::Clues => allied_clue_count(state, who) >= n,
     }
 }
 
-fn pay_resource(state: &mut State, who: PlayerId, res: PayResource, n: i32) -> bool {
+fn pay_resource(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    res: PayResource,
+    n: i32,
+    events: &mut Vec<Event>,
+) -> Result<bool, Illegal> {
     if !resource_payable(state, who, res, n) {
-        return false;
+        return Ok(false);
     }
-    let p = state.player_mut(who);
     match res {
         PayResource::Shadows => {
-            p.shadows -= n;
-            true
+            state.player_mut(who).shadows -= n;
+            Ok(true)
         }
         PayResource::Earth => {
+            let p = state.player_mut(who);
             if p.earth >= n {
                 p.earth -= n;
                 if p.earth <= 0 {
@@ -5451,18 +5587,41 @@ fn pay_resource(state: &mut State, who: PlayerId, res: PayResource, n: i32) -> b
                     }
                     p.earth = 0;
                 }
-                true
+                Ok(true)
             } else {
-                false
+                Ok(false)
             }
         }
         PayResource::Pp => {
-            p.spend_pp(n);
-            true
+            state.player_mut(who).spend_pp(n);
+            Ok(true)
         }
         PayResource::Faith => {
-            p.faith -= n;
-            true
+            state.player_mut(who).faith -= n;
+            Ok(true)
+        }
+        PayResource::Clues => {
+            let slot = state
+                .player(who)
+                .field
+                .iter()
+                .enumerate()
+                .find_map(|(i, s)| s.as_ref().filter(|c| c.is_clue()).map(|_| i as u8));
+            let Some(slot) = slot else {
+                return Ok(false);
+            };
+            let Some(inst) = state.field_inst_mut(who, slot) else {
+                return Ok(false);
+            };
+            if inst.clue_count < n {
+                return Ok(false);
+            }
+            inst.clue_count -= n;
+            if inst.clue_count <= 0 {
+                // Zero destroys (shadow, LW, destroy reactions) — not banish.
+                destroy_slot(db, state, who, slot, false, events)?;
+            }
+            Ok(true)
         }
     }
 }
@@ -6226,17 +6385,10 @@ fn destroy_slot(
     Ok(())
 }
 
-fn banish_opt(state: &mut State, t: &TargetOpt, events: &mut Vec<Event>) {
+fn banish_opt(db: &CardDb, state: &mut State, t: &TargetOpt, events: &mut Vec<Event>) {
     match t {
         TargetOpt::Slot { player, slot } => {
-            if let Some(inst) = state.player_mut(*player).field[*slot as usize].take() {
-                events.push(Event::Banish {
-                    card: inst.card,
-                    from: ZoneLabel::Field,
-                });
-                state.player_mut(*player).banished.push(inst);
-                state.player_mut(*player).compact_field();
-            }
+            let _ = banish_from_field(db, state, *player, *slot, events);
         }
         TargetOpt::Hand { player, pos } if (*pos as usize) < state.player(*player).hand.len() => {
             let inst = state.player_mut(*player).hand.remove(*pos as usize);
@@ -6798,7 +6950,13 @@ fn summon_source(
     let _ = exact;
     let mut inst = inst;
     inst.flags.summoning_sick = true;
-    if inst.is_earth_sigil() && merge_earth(db, state, who, &inst, events)? {
+    // Clue: full field skips merge entirely (unlike Earth Sigil).
+    if inst.is_clue() {
+        if state.player(who).first_empty_slot().is_none() {
+            return Ok(None);
+        }
+        merge_clue(db, state, who, &mut inst, events)?;
+    } else if inst.is_earth_sigil() && merge_earth(db, state, who, &inst, events)? {
         return Ok(None);
     }
     let Some(slot) = state.player(who).first_empty_slot() else {
@@ -7364,7 +7522,10 @@ fn apply_invoke(
     state.invoked_ids.insert(card_id);
     inst.flags.summoning_sick = true;
     inst.flags.attacks_left = inst.traits.attacks_per_turn.unwrap_or(1);
-    if inst.is_earth_sigil() && merge_earth(db, state, controller, &inst, events)? {
+    // Free-slot check already ran above; Clue merges before place.
+    if inst.is_clue() {
+        merge_clue(db, state, controller, &mut inst, events)?;
+    } else if inst.is_earth_sigil() && merge_earth(db, state, controller, &inst, events)? {
         return Ok(());
     }
     let Some(slot) = state.player(controller).first_empty_slot() else {
@@ -7824,7 +7985,12 @@ fn summon_from_opt(
     // is awkward; place the instance here the same way summon_source does.
     let mut inst = inst;
     inst.flags.summoning_sick = true;
-    if inst.is_earth_sigil() && merge_earth(db, state, who, &inst, events)? {
+    if inst.is_clue() {
+        if state.player(who).first_empty_slot().is_none() {
+            return Ok(None);
+        }
+        merge_clue(db, state, who, &mut inst, events)?;
+    } else if inst.is_earth_sigil() && merge_earth(db, state, who, &inst, events)? {
         return Ok(None);
     }
     let Some(slot) = state.player(who).first_empty_slot() else {
@@ -8158,6 +8324,7 @@ fn pool_candidates(
                         }
                     }
                     // Aura: not selectable by the enemy for `pick: choose`.
+                    // Clue cards carry `traits.aura: true` (one mechanism).
                     // Random still rolls them (M1 ramp traces); Earth Sigil
                     // amulets are also `kind: amulet` so follower random skips them.
                     if who != controller && c.is_aura() && p.pick == PoolPick::Choose {
@@ -8713,6 +8880,7 @@ pub(crate) fn eval_amount(
             CounterKey::Named(NamedCounter::Earth) => state.player(who).earth,
             CounterKey::Named(NamedCounter::Shadows) => state.player(who).shadows,
             CounterKey::Named(NamedCounter::Faith) => state.player(who).faith,
+            CounterKey::Named(NamedCounter::Clues) => allied_clue_count(state, who),
             _ => 0,
         },
         Amount::Add { add } => {
@@ -8962,6 +9130,12 @@ pub(crate) fn eval_cond(
         Condition::AttackedLeaderLastTurn {
             attacked_leader_last_turn,
         } => state.player(who).attacked_leader_last_turn == *attacked_leader_last_turn,
+        Condition::EngagedAmuletThisTurn {
+            engaged_amulet_this_turn,
+        } => state.player(who).engaged_amulet_this_turn == *engaged_amulet_this_turn,
+        Condition::EngagedClueAmuletThisTurn {
+            engaged_clue_amulet_this_turn,
+        } => state.player(who).engaged_clue_amulet_this_turn == *engaged_clue_amulet_this_turn,
         Condition::AttackingFollower { attacking_follower } => {
             state.attacking_follower == *attacking_follower
         }

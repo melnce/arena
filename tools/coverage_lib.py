@@ -38,6 +38,7 @@ OP_RULES: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"increase your Combo|your Combo by|Combo by \d+", re.I), "counter"),
     (re.compile(r"earth sigil|faith(?:'s)? value|shadows", re.I), "counter"),
     (re.compile(r"\bNecromancy\b|\bEarth Rite\b", re.I), "pay"),
+    (re.compile(r"\bConsume (?:a clue|\d+ clues?)\b", re.I), "pay"),
     (re.compile(r"Reduce your faith's value|spend \d+ play points", re.I), "pay"),
     (re.compile(r"Spellboost your hand", re.I), "spellboostHand"),
     (re.compile(r"\bReanimate\b", re.I), "reanimate"),

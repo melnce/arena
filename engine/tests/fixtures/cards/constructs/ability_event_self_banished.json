@@ -1,0 +1,33 @@
+{
+  "id": "89800116",
+  "name": "ability_event_self_banished",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "When this card is banished from the field, deal 1 to the enemy leader.",
+  "tribes": ["clue"],
+  "traits": { "aura": true },
+  "abilities": [
+    {
+      "on": "when",
+      "printed": "When this card is banished from the field, deal 1.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "When this card is banished from the field, deal 1."
+        }
+      ],
+      "event": "self_banished"
+    }
+  ]
+}

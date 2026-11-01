@@ -1,0 +1,50 @@
+{
+  "id": "11002110",
+  "name": "Dynames, Angel of Piety",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "attack": 2,
+  "defense": 2,
+  "text": "Fanfare: Select an enemy follower on the field and deal it 2 damage. Add a Divine Evidence to your hand.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and deal it 2 damage. Add a Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 2 damage.",
+          "op": "damage",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 2
+        },
+        {
+          "printed": "Add a Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": { "named": "90001210" },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "op": "replicate",
+          "ability": "fanfare",
+          "printed": "Replicate the effects of this card's Fanfare ability."
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

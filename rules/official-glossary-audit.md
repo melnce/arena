@@ -1,16 +1,16 @@
-# Official glossary audit (2026-09-10)
+# Official glossary audit (2026-09-10; refreshed 2026-11-01 for set 10)
 
-Source: `rules/official-glossary.md` (78 entries from `GET https://shadowverse-wb.com/web/System/glossaryList`). Compared against `rules/rulebook.md` and `rules/owner-rulings.md`. Owner-rulings.md is **not** edited — conflicts are reported only.
+Source: `rules/official-glossary.md` (79 entries from `GET https://shadowverse-wb.com/web/System/glossaryList`; was 78 on 2026-09-10). Compared against `rules/rulebook.md` and `rules/owner-rulings.md`. Owner-rulings.md is **not** edited — conflicts are reported only.
 
 ## Summary
 
 | Verdict | Count |
 |---|---:|
 | agrees | 58 |
-| rulebook silent → added | 17 |
+| rulebook silent → added | 18 |
 | conflict | 3 |
 
-The 17 **rulebook silent** entries received glossary sentences in `rules/rulebook.md` tagged `(official glossary, 2026-09-10)` on 2026-09-10. The 3 **conflict** rows are listed under [Conflicts for the owner](#conflicts-for-the-owner) below.
+The 17 **rulebook silent** entries from 2026-09-10 received glossary sentences in `rules/rulebook.md` tagged `(official glossary, 2026-09-10)`. **Clue** (set 10; glossary 2026-11-01) received its rulebook section tagged `(official glossary, 2026-11-01)`. The 3 **conflict** rows are listed under [Conflicts for the owner](#conflicts-for-the-owner) below.
 
 ## Audit table
 
@@ -22,6 +22,7 @@ The 17 **rulebook silent** entries received glossary sentences in `rules/ruleboo
 | Crest | [Zones](rulebook.md#zones-and-card-locations) — leader area, one of each (owner 2026-09-05 duplicate bounce) | agrees |
 | Token | [Card Types](rulebook.md#card-types-and-terminology); owner 2026-08-29 Basic A set | agrees |
 | Class | [Card Types](rulebook.md#card-types-and-terminology) — eight crafts + Neutral | agrees |
+| Clue | [Clue](rulebook.md#classmechanic-specific-keywords) — merge on enter, banish peers, enemy-untargetable, destroy at 0 (official glossary, 2026-11-01) | rulebook silent → **added** |
 | Trait | [Card Types](rulebook.md#card-types-and-terminology) — tribes, no standalone effect | agrees |
 | Cost | [Playing Cards](rulebook.md#playing-cards-from-hand) — PP to play | agrees |
 | Attack (Stat) | [Card Types](rulebook.md#card-types-and-terminology) — combat damage stat | agrees |

@@ -1,0 +1,30 @@
+{
+  "id": "89911002",
+  "name": "Random Banish Enemy Amulet",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Banish a random enemy amulet from the field.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Banish a random enemy amulet from the field.",
+      "effects": [
+        {
+          "printed": "Banish a random enemy amulet from the field.",
+          "op": "banish",
+          "select": {
+            "pick": "random",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "amulet"
+          }
+        }
+      ]
+    }
+  ]
+}

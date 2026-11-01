@@ -165,6 +165,7 @@ Projection both engines can produce. Keys sorted.
   "can_attack": true,
   "card": "10574110",
   "countdown": null,
+  "clue_count": 2,          // optional; Clue amulets only, omitted when absent/0
   "defense": 3,
   "evolved": false,
   "max_defense": 3,
@@ -174,6 +175,8 @@ Projection both engines can produce. Keys sorted.
   "granted": ["lastWords"]  // optional; sorted trigger tags, not printed text
 }
 ```
+
+`clue_count` is public (like `earth`). Merge-banish of Clue amulets still emits the existing apply `Event::Banish` (no new NeutralAction / trace Event kind); card `When` triggers use schema EventNames `self_banished` / `ally_card_banished` / `enemy_follower_banished`.
 
 `hand` is in draw order: `[{card, cost, vars?, skybound?}, …]`. `vars` is Stormy Blast's X (and any other `{X,Y,Z}`). `skybound` is the number of allied evolves witnessed while **that hand copy** was in hand (omitted when 0); the Skybound Art gauge is `turn` + that count, added at evaluation, not stored.
 

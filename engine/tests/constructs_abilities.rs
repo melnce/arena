@@ -621,6 +621,51 @@ fn construct_ability_event_self_buffed_up() {
 }
 
 #[test]
+fn construct_ability_event_self_banished() {
+    // no-op engine: silent
+    let db = load_db();
+    let mut st = started(&db, 446);
+    put_field(&db, &mut st, PlayerId::A, "89800116");
+    // Playing another Clue merges and banishes the first (self_banished).
+    play_costed(&db, &mut st, "89500033", 1);
+    assert_eq!(opp_def(&st), 19);
+}
+
+#[test]
+fn construct_ability_event_ally_card_banished() {
+    // no-op engine: silent
+    let db = load_db();
+    let mut st = started(&db, 447);
+    watcher(&db, &mut st, "89800117");
+    put_field(&db, &mut st, PlayerId::A, "89500033");
+    play_costed(&db, &mut st, "89500033", 1);
+    assert_eq!(opp_def(&st), 19);
+    // Negative: destroy (not banish) must not fire.
+    let mut st = started(&db, 447);
+    watcher(&db, &mut st, "89800117");
+    put_field(&db, &mut st, PlayerId::A, TANK1);
+    play_costed(&db, &mut st, "89500031", 1);
+    assert_eq!(opp_def(&st), 20);
+}
+
+#[test]
+fn construct_ability_event_enemy_follower_banished() {
+    // no-op engine: silent
+    let db = load_db();
+    let mut st = started(&db, 448);
+    watcher(&db, &mut st, "89800118");
+    put_field(&db, &mut st, PlayerId::B, TANK1);
+    play_costed(&db, &mut st, "89200070", 0);
+    assert_eq!(opp_def(&st), 19);
+    // Negative: destroy (not banish) must not fire.
+    let mut st = started(&db, 448);
+    watcher(&db, &mut st, "89800118");
+    put_field(&db, &mut st, PlayerId::B, TANK1);
+    play_costed(&db, &mut st, "89500026", 1);
+    assert_eq!(opp_def(&st), 20);
+}
+
+#[test]
 fn construct_ability_oncePerTurn() {
     // no-op engine: fires on the second enter too
     let db = load_db();

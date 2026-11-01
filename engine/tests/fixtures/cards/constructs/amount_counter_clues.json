@@ -1,0 +1,28 @@
+{
+  "id": "89700018",
+  "name": "amount_counter_clues",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Fanfare: Gain attack equal to your clues.",
+  "attack": 2,
+  "defense": 8,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Gain attack equal to your clues.",
+      "effects": [
+        {
+          "op": "buff",
+          "select": { "pick": "self" },
+          "attack": { "counter": "clues" },
+          "printed": "Fanfare: Gain attack equal to your clues."
+        }
+      ]
+    }
+  ]
+}

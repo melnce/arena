@@ -156,7 +156,7 @@ fn player_json(p: &PlayerState) -> Value {
 }
 
 fn instance_json(c: &CardInstance) -> Value {
-    json!({
+    let mut v = json!({
         "id": c.id,
         "card": c.card.as_str(),
         "name": c.statics.name,
@@ -193,7 +193,11 @@ fn instance_json(c: &CardInstance) -> Value {
         "spellboost_count": c.spellboost_count,
         "tribes": c.statics.tribes,
         "once_used": c.once_used,
-    })
+    });
+    if c.is_clue() || c.clue_count > 0 {
+        v["clue_count"] = json!(c.clue_count);
+    }
+    v
 }
 
 fn crest_json(c: &CrestInstance) -> Value {

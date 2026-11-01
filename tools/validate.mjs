@@ -601,6 +601,19 @@ function main() {
     }
   }
 
+  // Clue untargetability is Aura (glossary: "Cards with Clue can't be selected
+  // for enemy abilities"). One mechanism — every tribe-clue card must set aura.
+  for (const { file, data } of docs) {
+    const tribes = data.tribes ?? [];
+    if (!tribes.includes("clue")) continue;
+    if (data.traits?.aura !== true) {
+      fail(
+        file,
+        `tribe clue requires traits.aura: true (glossary: "Cards with Clue can't be selected for enemy abilities")`,
+      );
+    }
+  }
+
   if (errors.length) {
     for (const e of errors) console.error(e);
     console.error(`\n${errors.length} error(s), ${files.length} file(s)`);

@@ -96,6 +96,9 @@ pub struct CardInstance {
     /// outside the hand. Snapshot-neutral — not in `CanonicalState`, `hash`,
     /// or `search_key`.
     pub hand_since: u32,
+    /// Clue count on a Clue-tribe amulet on the field (≥1 while present).
+    /// Default 0; omitted from search_key / snapshot while zero.
+    pub clue_count: i32,
 }
 
 /// The parts of a [`CardInstance`] that come from its card and almost never change.
@@ -159,6 +162,7 @@ impl CardInstance {
             temp_traits: Vec::new(),
             choose_used: BTreeSet::new(),
             hand_since: 0,
+            clue_count: 0,
         }
     }
 
@@ -201,6 +205,9 @@ impl CardInstance {
     }
     pub fn is_earth_sigil(&self) -> bool {
         self.statics.tribes.contains(&Tribe::EarthSigil)
+    }
+    pub fn is_clue(&self) -> bool {
+        self.statics.tribes.contains(&Tribe::Clue)
     }
     pub fn damaged(&self) -> bool {
         self.defense < self.max_defense
@@ -343,6 +350,14 @@ pub struct PlayerState {
     /// Turn-end snapshots for hand-reading (`hread`). Snapshot-neutral —
     /// not in `CanonicalState`, `hash`, or `search_key`.
     pub turn_ends: Memo<Vec<TurnEnd>>,
+    /// True once an allied amulet was Engaged this turn (survives that
+    /// amulet leaving). Cleared for **both** players at every turn start.
+    /// Enters `search_key` / `CanonicalState` / snapshot JSON only when
+    /// [`State::track_engage_history`] is true.
+    pub engaged_amulet_this_turn: bool,
+    /// True once an allied Clue amulet was Engaged this turn. Same
+    /// snapshot / search_key rules as `engaged_amulet_this_turn`.
+    pub engaged_clue_amulet_this_turn: bool,
 }
 
 impl PlayerState {
@@ -385,6 +400,8 @@ impl PlayerState {
             hidden_cemetery_restores: Memo::default(),
             public_hand_additions: Memo::default(),
             turn_ends: Memo::default(),
+            engaged_amulet_this_turn: false,
+            engaged_clue_amulet_this_turn: false,
         }
     }
 
@@ -783,6 +800,13 @@ pub struct State {
     /// Instance id of the defending follower (None vs a leader). Matched
     /// against the trigger `source` so `pick: opposing` survives `compact_field`.
     pub combat_defender_id: Option<u32>,
+    /// Per-game constant: true iff some card in either starting deck (or its
+    /// [`support::named_reachable`] closure) reads Engage history. Set in
+    /// `new_game`; clones / determinize keep it. Gates whether engage-history
+    /// flags enter hash / search_key / snapshot JSON. The closure is complete
+    /// because card creation never leaves it (`RandomFrom` draws from the deck;
+    /// `Named` / `RandomNamed` ids are in `named_reachable`).
+    pub track_engage_history: bool,
 }
 
 #[derive(Debug, Clone)]

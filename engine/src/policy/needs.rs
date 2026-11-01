@@ -262,7 +262,7 @@ fn push_pay(
         PayResource::Shadows => ("pay shadows", Some("shadows")),
         PayResource::Earth => ("pay earth", Some("earth")),
         PayResource::Faith => ("pay faith", Some("faith")),
-        PayResource::Pp => return,
+        PayResource::Pp | PayResource::Clues => return,
     };
     match amount_int(amount) {
         Some(n) => match dest {

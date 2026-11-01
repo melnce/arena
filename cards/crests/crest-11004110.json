@@ -1,0 +1,51 @@
+{
+  "id": "crest:11004110",
+  "name": "Crest: Rezeal, Goddess of Nacreheim",
+  "grantedBy": ["11004110"],
+  "faith": false,
+  "text": "Whenever you play a follower, give it \"Last Words: Summon a copy of this card\" and, until the end of the turn, \"Can't attack followers or leaders.\"",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_card_played",
+      "filter": { "kind": "follower" },
+      "printed": "Whenever you play a follower, give it \"Last Words: Summon a copy of this card\" and, until the end of the turn, \"Can't attack followers or leaders.\"",
+      "effects": [
+        {
+          "printed": "give it \"Last Words: Summon a copy of this card\" and, until the end of the turn, \"Can't attack followers or leaders.\"",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "grantAbility",
+              "select": { "pick": "entering" },
+              "ability": {
+                "on": "lastWords",
+                "printed": "Last Words: Summon a copy of this card",
+                "effects": [
+                  {
+                    "printed": "Summon a copy of this card",
+                    "op": "summon",
+                    "card": {
+                      "copyOf": { "pick": "self" },
+                      "exact": false
+                    },
+                    "count": 1
+                  }
+                ]
+              }
+            },
+            {
+              "op": "grantTraits",
+              "select": { "pick": "entering" },
+              "traits": {
+                "cantAttackFollowers": true,
+                "cantAttackLeader": true
+              },
+              "until": "endOfTurn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

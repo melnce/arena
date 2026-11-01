@@ -59,6 +59,11 @@ jobs:
         # CI uses 100 for both.
         run: ARENA_SOAK_GAMES=100 cargo test --release soak -- --nocapture
 
+      - name: set10 identity golden
+        # Bit-identical hashes/encodings/legal lists on a frozen schedule of
+        # POOLS.json pool "all" decks (inputs frozen inside golden.json).
+        run: cargo test --release --test set10_identity -- --nocapture
+
       - name: meta-deck soak
         run: ARENA_META_SOAK_GAMES=1 cargo test --release --test meta_soak -- --nocapture
 

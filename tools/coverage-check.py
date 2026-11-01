@@ -40,8 +40,8 @@ def main() -> int:
     rows = parse_coverage_table(COVERAGE.read_text())
     catalog = load_catalog()
     errors: list[str] = []
-    if len(rows) != 615:
-        errors.append(f"expected 615 coverage rows, got {len(rows)}")
+    if len(rows) != 623:
+        errors.append(f"expected 623 coverage rows, got {len(rows)}")
     for row in rows:
         cid = row["id"]
         name, text = official_record(catalog, cid)

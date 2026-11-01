@@ -32,6 +32,11 @@ pub struct CanonicalPlayer {
     pub crests: Vec<CanonicalCrest>,
     pub deck: BTreeMap<String, u32>,
     pub earth: i32,
+    /// Present only when [`State::track_engage_history`] (Set-10-free games omit).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub engaged_amulet_this_turn: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub engaged_clue_amulet_this_turn: Option<bool>,
     pub ep: i32,
     pub evolves_used: i32,
     pub faith: i32,
@@ -70,6 +75,8 @@ pub struct CanonicalField {
     pub attacks_left: i32,
     pub can_attack: bool,
     pub card: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clue_count: Option<i32>,
     pub countdown: Option<i32>,
     pub defense: i32,
     pub evolved: bool,
@@ -142,7 +149,7 @@ fn vars_map(v: &BTreeMap<VarKey, i32>) -> Option<BTreeMap<String, i32>> {
     }
 }
 
-fn snap_player(p: &PlayerState) -> CanonicalPlayer {
+fn snap_player(p: &PlayerState, track_engage_history: bool) -> CanonicalPlayer {
     let mut field: [Option<CanonicalField>; FIELD_SIZE] = Default::default();
     for (i, slot) in p.field.iter().enumerate() {
         field[i] = slot.as_ref().map(|c| CanonicalField {
@@ -150,6 +157,11 @@ fn snap_player(p: &PlayerState) -> CanonicalPlayer {
             attacks_left: c.flags.attacks_left,
             can_attack: can_attack_now(c),
             card: c.card.as_str(),
+            clue_count: if c.is_clue() && c.clue_count > 0 {
+                Some(c.clue_count)
+            } else {
+                None
+            },
             countdown: c.countdown,
             defense: c.defense,
             evolved: c.evolved,
@@ -174,6 +186,14 @@ fn snap_player(p: &PlayerState) -> CanonicalPlayer {
             },
         })
         .collect();
+    let (engaged_amulet_this_turn, engaged_clue_amulet_this_turn) = if track_engage_history {
+        (
+            Some(p.engaged_amulet_this_turn),
+            Some(p.engaged_clue_amulet_this_turn),
+        )
+    } else {
+        (None, None)
+    };
     CanonicalPlayer {
         banished: multiset(&p.banished),
         cemetery: multiset(&p.cemetery),
@@ -188,6 +208,8 @@ fn snap_player(p: &PlayerState) -> CanonicalPlayer {
             .collect(),
         deck: multiset(&p.deck),
         earth: p.earth,
+        engaged_amulet_this_turn,
+        engaged_clue_amulet_this_turn,
         ep: p.ep,
         evolves_used: p.evolves_used,
         faith: p.faith,
@@ -235,8 +257,8 @@ pub fn snapshot(state: &State) -> CanonicalState {
         active: state.active.as_str().into(),
         phase: phase_str(&state.phase),
         players: CanonicalPlayers {
-            a: snap_player(&state.players[0]),
-            b: snap_player(&state.players[1]),
+            a: snap_player(&state.players[0], state.track_engage_history),
+            b: snap_player(&state.players[1], state.track_engage_history),
         },
         turn: state.turn,
         winner: state.winner.map(|w| w.as_str().to_string()),
@@ -309,6 +331,10 @@ struct SortedPlayer<'a> {
     crests: &'a [CanonicalCrest],
     deck: &'a BTreeMap<String, u32>,
     earth: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    engaged_amulet_this_turn: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    engaged_clue_amulet_this_turn: Option<bool>,
     ep: i32,
     evolves_used: i32,
     faith: i32,
@@ -340,6 +366,8 @@ struct SortedField<'a> {
     attacks_left: i32,
     can_attack: bool,
     card: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    clue_count: Option<i32>,
     countdown: Option<i32>,
     defense: i32,
     evolved: bool,
@@ -377,6 +405,7 @@ impl<'a> SortedPlayer<'a> {
                 attacks_left: f.attacks_left,
                 can_attack: f.can_attack,
                 card: &f.card,
+                clue_count: f.clue_count,
                 countdown: f.countdown,
                 defense: f.defense,
                 evolved: f.evolved,
@@ -394,6 +423,8 @@ impl<'a> SortedPlayer<'a> {
             crests: &p.crests,
             deck: &p.deck,
             earth: p.earth,
+            engaged_amulet_this_turn: p.engaged_amulet_this_turn,
+            engaged_clue_amulet_this_turn: p.engaged_clue_amulet_this_turn,
             ep: p.ep,
             evolves_used: p.evolves_used,
             faith: p.faith,

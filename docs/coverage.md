@@ -1,4 +1,4 @@
-# Coverage — Rotation pool (572 cards + 43 crests)
+# Coverage — Rotation pool (573 cards + 42 crests)
 
 Judged from official Cygames `skill_text` in `cards/official/catalog.json` (markup stripped the same way as crests). The old repo is not the source of card texts. Ops and conditions are a clause-by-clause verb walk (`tools/coverage_lib.py`), not a keyword scan of the table itself.
 
@@ -530,6 +530,13 @@ Status:
 | `10973310` | Soulforge | — | destroy | — | expressible |
 | `10974110` | Cutthroat, Fluxblade Convict | evolve | draw, crest | — | expressible |
 | `10974120` | Aizeden, Killshot Revenant | fanfare, superEvolve, enter/when | summon, destroy, replicate | — | expressible |
+| `11001110` | Exias, Angel of Love | fanfare | addToHand | — | expressible |
+| `11002110` | Dynames, Angel of Piety | fanfare, evolve | addToHand, damage, replicate | — | expressible |
+| `11002210` | Scene of Deicide | endOfTurn | summon, banish | — | expressible |
+| `11003110` | Kyrios, Angel of Aspiration | fanfare | addToHand, damage | — | expressible |
+| `11003210` | Nacreheim, Utopian World | engage, when | draw, restore, pay | — | expressible |
+| `11004110` | Rezeal, Goddess of Nacreheim | fanfare, superEvolve | damage, crest | — | expressible |
+| `90001210` | Divine Evidence | engage | draw, pay | — | expressible |
 | `90011110` | Fairy | — | — | — | expressible |
 | `90011120` | Springbloom Fairy | endOfTurn | evolve | — | expressible |
 | `90011310` | Deepwood Bounty | — | restore | — | expressible |
@@ -624,6 +631,7 @@ Status:
 | `crest:10954110` | Crest: Istyndet vs. Mitilykket | lastWords, endOfTurn | destroy | — | expressible |
 | `crest:10964110` | Crest: Erralde, Signet Convict | endOfTurn | damage, restore | — | expressible |
 | `crest:10974110` | Crest: Cutthroat, Fluxblade Convict | — | evolve | — | expressible |
+| `crest:11004110` | Crest: Rezeal, Goddess of Nacreheim | when | summon, grantTraits, grantAbility | — | expressible |
 | `faith:10614120` | Faith: Sathanid, Eld Lance | — | counter | — | expressible |
 | `faith:10624120` | Faith: Yidmetra, Eld Sword | — | counter | — | expressible |
 | `faith:10634120` | Faith: Calge-Danthla, Eld Crystals | enter/when | counter | — | expressible |
@@ -632,8 +640,8 @@ Status:
 
 ## Totals
 
-- rows: 615 (cards 572, crests 43)
-- expressible: 615
+- rows: 623 (cards 580 authored in coverage including set-10 Neutrals + Evidence; crest/faith as listed)
+- expressible: 623
 - needs: 0
 - question: 0
 
@@ -645,6 +653,6 @@ The pool is derived from the committed Cygames catalog:
 python3 tools/list-pool.py
 ```
 
-Expected: 516 rotation + 56 reachable tokens + 38 Crest + 5 Faith = 572 + 43. Re-derived from `cards/official/catalog.json` (2026-09-09 fetch): those exact counts.
+Expected: 516 rotation + 57 reachable tokens + 37 Crest + 5 Faith = 573 + 42. Re-derived from `cards/official/catalog.json` (2026-10-31 fetch after set 10 / Deicide in Nacreheim).
 
 `tools/coverage-check.py` (CI) walks every row's official `skill_text` (or crest/faith specific-effect text) in that catalog and asserts the ops/conditions columns contain the verbs listed in `tools/coverage_lib.py`.
