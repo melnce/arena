@@ -29,8 +29,8 @@ pub use h0::job::{
 pub use h0::{
     builtin_mulligan, builtin_net, builtin_net_by_name, builtin_order, builtin_order_by_name,
     builtin_order_v59, builtin_value_v64, builtin_value_v65, builtin_value_v66, builtin_value_v69,
-    builtin_value_v73, builtin_value_v75, fuse_completion_partner_sets, Alloc, Deal, Info, MullMode,
-    SearchStats, ValueVersion, Weights, Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME,
+    builtin_value_v73, builtin_value_v75, fuse_completion_partner_sets, Alloc, Deal, Info,
+    MullMode, SearchStats, ValueVersion, Weights, Wseed, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME,
     BUILTIN_ORDER_NAME, BUILTIN_ORDER_V59_NAME, BUILTIN_VALUE_V64_NAME, BUILTIN_VALUE_V65_NAME,
     BUILTIN_VALUE_V66_NAME, BUILTIN_VALUE_V69_NAME, BUILTIN_VALUE_V73_NAME, BUILTIN_VALUE_V75_NAME,
     H0,
