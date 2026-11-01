@@ -101,6 +101,8 @@ export type CardInstance = {
   vars: Record<string, number>;
   skybound: number;
   countdown: number | null;
+  /** Present when the instance is a Clue amulet (wasm emits when is_clue || count > 0). */
+  clue_count?: number;
   spellboost_count: number;
   tribes: string[];
 };

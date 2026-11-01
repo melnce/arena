@@ -47,6 +47,7 @@ export function cardSignature(c: CardInstance | null, extras = ""): string {
     (c.traits || []).join(","),
     (c.printed_tags || []).join(","),
     c.countdown ?? "",
+    c.clue_count ?? "",
     namedCounterValue(c) ?? "",
     JSON.stringify(c.vars ?? {}),
     c.spellboost_count ?? "",
@@ -284,6 +285,11 @@ function paintStats(wrap: HTMLElement, inst: CardInstance, earthStack?: number |
     cd.className = "card-stats bottom-right countdown-badge";
     cd.textContent = String(inst.countdown);
     wrap.appendChild(cd);
+  } else if ((inst.clue_count ?? 0) > 0) {
+    const clue = document.createElement("div");
+    clue.className = "card-stats bottom-right countdown-badge";
+    clue.textContent = String(inst.clue_count);
+    wrap.appendChild(clue);
   } else if (earthStack != null) {
     const badge = document.createElement("div");
     badge.className = "card-stats bottom-right countdown-badge earth-sigil-badge";
