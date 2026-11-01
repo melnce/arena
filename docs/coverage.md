@@ -536,6 +536,46 @@ Status:
 | `11003110` | Kyrios, Angel of Aspiration | fanfare | addToHand, damage | — | expressible |
 | `11003210` | Nacreheim, Utopian World | engage, when | draw, restore, pay | — | expressible |
 | `11004110` | Rezeal, Goddess of Nacreheim | fanfare, superEvolve | damage, crest | — | expressible |
+| `11011110` | Debonair Dogsitter | fanfare, evolve | summon, restore | — | expressible |
+| `11011120` | Wolf Pack Lackey | fanfare, evolve | summon, replicate | — | expressible |
+| `11011310` | Natural Reincarnation | fanfare | summon, evolve, mode:enhance | — | expressible |
+| `11012110` | Inquiring Mischief | enter | buff | — | expressible |
+| `11012120` | Garden Elf | endOfTurn | addToHand | — | expressible |
+| `11012310` | Untamed Testimony | fanfare | summon, crest | — | expressible |
+| `11013110` | Sleuth's Best Friend | fanfare, evolve | summon | — | expressible |
+| `11013310` | Nosche's Interrogation | fanfare | addToHand, damage, grantTraits | — | expressible |
+| `11014110` | Nosche, Theriophone Detective | fanfare, superEvolve | summon, buff | — | expressible |
+| `11014120` | Heartening Hyphae | fanfare, superEvolve | summon, draw, replicate, repeat | — | expressible |
+| `11021110` | Guileless Newsie | when, lastWords | summon, buff, swapStats, mode:enhance | — | expressible |
+| `11021120` | Bejeweled Lady | fanfare, when | addToHand, damage | — | expressible |
+| `11021310` | Onward, Charge! | fanfare | summon, grantTraits, evolve | — | expressible |
+| `11022110` | Cheeky Architect | when, fanfare, evolve | summon, damage, buff, swapStats | — | expressible |
+| `11022120` | Errant Knight | fanfare, superEvolve | banish, replicate | — | expressible |
+| `11022310` | Dichotomous Forensics | fanfare | damage | engagedClueAmuletThisTurn | expressible |
+| `11023110` | Placid Dilettante | when, fanfare, evolve | summon, buff, swapStats, setStats, grantTraits | — | expressible |
+| `11023310` | No Life's Cross-Examination | fanfare | summon | engagedClueAmuletThisTurn | expressible |
+| `11024110` | No Life, Dichotomous Detective | when, fanfare | summon, buff, swapStats, grantTraits | — | expressible |
+| `11024120` | Almaelys, Affluent Strategist | fanfare, evolve, superEvolve | addToHand, crest | — | expressible |
+| `11031110` | Dedicated Aide | fanfare, when | summon, buff | — | expressible |
+| `11031120` | Wily Witch | fanfare | damage, counter, pay, choose | — | expressible |
+| `11031310` | Atelier Relocation | fanfare | summon, grantTraits, mode:enhance | — | expressible |
+| `11032110` | Leisurely Attendant | when, fanfare | summon, restore, cost | — | expressible |
+| `11032120` | Ruler of Tempests | fanfare, enter/when, evolve | summon, damage, pay, replicate | — | expressible |
+| `11032310` | Discerning Melody | fanfare | summon, damage | engagedAmuletThisTurn | expressible |
+| `11033110` | Dramatic Assistant | fanfare, when, evolve | summon, damage, pp | — | expressible |
+| `11033310` | Noeinhowell's Interrogation | fanfare | addToHand, crest | — | expressible |
+| `11034110` | Noeinhowell, Hymnodic Detective | fanfare, when, evolve | summon, damage, crest | — | expressible |
+| `11034120` | Infernal Chimera | fanfare | damage, counter | — | expressible |
+| `11071110` | Extinctionist Majordomo | lastWords | addToHand | — | expressible |
+| `11071120` | Otherworldly Intruder | — | — | — | expressible |
+| `11071310` | Incohesive Construction | fanfare | addToHand, grantTraits | — | expressible |
+| `11072110` | Extinctionist Socialite | fanfare, when, evolve | addToHand, draw, damage | — | expressible |
+| `11072120` | Bestial Beamcannoneer | fanfare | summon | — | expressible |
+| `11072310` | Hand of Extinction | fused, fanfare | summon, damage | wasFused | expressible |
+| `11073110` | Extinctionist Dandy | fanfare, when | addToHand, restore, destroy | — | expressible |
+| `11073310` | Calamity in Custody | fused, fanfare | summon, restore, destroy, pay | — | expressible |
+| `11074110` | Lineage, Calamity of Extinction | fused, fanfare | summon, leaderModifier, destroy | wasFused | expressible |
+| `11074120` | Dimensional Wanderer | when, lastWords, superEvolve | grantTraits, crest | — | expressible |
 | `90001210` | Divine Evidence | engage | draw, pay | — | expressible |
 | `90011110` | Fairy | — | — | — | expressible |
 | `90011120` | Springbloom Fairy | endOfTurn | evolve | — | expressible |
@@ -632,6 +672,11 @@ Status:
 | `crest:10964110` | Crest: Erralde, Signet Convict | endOfTurn | damage, restore | — | expressible |
 | `crest:10974110` | Crest: Cutthroat, Fluxblade Convict | — | evolve | — | expressible |
 | `crest:11004110` | Crest: Rezeal, Goddess of Nacreheim | when | summon, grantTraits, grantAbility | — | expressible |
+| `crest:11012310` | Crest: Untamed Testimony | startOfTurn | summon | — | expressible |
+| `crest:11024120` | Crest: Almaelys, Affluent Strategist | endOfTurn | addToHand, cost, sequence | — | expressible |
+| `crest:11033310` | Crest: Noeinhowell's Interrogation | when | damage, restore, destroy, ep, sequence | — | expressible |
+| `crest:11034110` | Crest: Noeinhowell, Hymnodic Detective | when | pp | — | expressible |
+| `crest:11074120` | Crest: Dimensional Wanderer | when, lastWords | summon | — | expressible |
 | `faith:10614120` | Faith: Sathanid, Eld Lance | — | counter | — | expressible |
 | `faith:10624120` | Faith: Yidmetra, Eld Sword | — | counter | — | expressible |
 | `faith:10634120` | Faith: Calge-Danthla, Eld Crystals | enter/when | counter | — | expressible |
@@ -640,8 +685,8 @@ Status:
 
 ## Totals
 
-- rows: 623 (cards 580 authored in coverage including set-10 Neutrals + Evidence; crest/faith as listed)
-- expressible: 623
+- rows: 668 (cards 620 authored in coverage including set-10 Neutrals + Forest/Sword/Rune/Portal + Evidence; crest/faith as listed)
+- expressible: 668
 - needs: 0
 - question: 0
 

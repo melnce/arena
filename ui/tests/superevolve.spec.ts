@@ -113,7 +113,7 @@ test("sweep: every Super-Evolve catalog card stays one keyword line", async ({ p
       .filter((row) => /super[- ]evolve:/i.test(row.text));
   });
 
-  expect(cards.length, "cards whose text matches /super[- ]evolve:/i").toBe(61);
+  expect(cards.length, "cards whose text matches /super[- ]evolve:/i").toBe(66);
 
   const tip = page.locator("#cardTooltip");
   for (const row of cards) {

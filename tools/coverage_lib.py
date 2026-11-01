@@ -18,6 +18,8 @@ OP_RULES: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"restore .{0,20}?defense", re.I), "restore"),
     (re.compile(r"give .{0,80}?[+-]\d+/[+-]?\d+", re.I), "buff"),
     (re.compile(r"give this (?:follower|card) [+-]\d+", re.I), "buff"),
+    (re.compile(r"swap this follower's attack and defense", re.I), "swapStats"),
+    (re.compile(r"set (?:their|its|this follower's) attack and defense", re.I), "setStats"),
     (re.compile(rf"give .{{0,80}}?\b(?:{TRAIT_WORDS})\b", re.I), "grantTraits"),
     (re.compile(r'give .{0,80}?"(?:Can\'t attack|Can attack)', re.I), "grantTraits"),
     (re.compile(r"remove (?:all )?abilit", re.I), "removeAbilities"),
@@ -59,6 +61,8 @@ COND_RULES: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"Skybound Art|Super Skybound"), "skyboundArt"),
     (re.compile(r"if this follower is evolved|if .{0,40}evolved", re.I), "evolved"),
     (re.compile(r"If you've Fused|if you have Fused|Fused both|you've Fused", re.I), "wasFused"),
+    (re.compile(r"Engaged a Clue amulet this turn", re.I), "engagedClueAmuletThisTurn"),
+    (re.compile(r"Engaged an amulet this turn", re.I), "engagedAmuletThisTurn"),
     (re.compile(r"during your turn|during the opponent", re.I), "turnOwner"),
     (re.compile(r"super-evolved this match|evolved .{0,20}this match", re.I), "evolvedCountAtLeast"),
 ]
