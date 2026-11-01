@@ -1,0 +1,40 @@
+{
+  "id": "11003110",
+  "name": "Kyrios, Angel of Aspiration",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "attack": 2,
+  "defense": 5,
+  "text": "Fanfare: Deal 2 damage to all enemy followers. Add 2 copies of Divine Evidence to your hand.\n\nWard",
+  "traits": { "ward": true },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal 2 damage to all enemy followers. Add 2 copies of Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 2
+        },
+        {
+          "printed": "Add 2 copies of Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": { "named": "90001210" },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

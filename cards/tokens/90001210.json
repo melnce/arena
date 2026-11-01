@@ -1,0 +1,35 @@
+{
+  "id": "90001210",
+  "name": "Divine Evidence",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Clue\n\nEngage (1): Draw a card. Consume a clue.",
+  "tribes": ["clue"],
+  "traits": { "aura": true },
+  "abilities": [
+    {
+      "on": "engage",
+      "cost": 1,
+      "sacrifice": false,
+      "printed": "Engage (1): Draw a card. Consume a clue.",
+      "effects": [
+        {
+          "printed": "Draw a card.",
+          "op": "draw",
+          "count": 1
+        },
+        {
+          "printed": "Consume a clue.",
+          "op": "pay",
+          "resource": "clues",
+          "amount": 1,
+          "effects": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "11001110",
+  "name": "Exias, Angel of Love",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "attack": 2,
+  "defense": 1,
+  "text": "Fanfare: Add a Divine Evidence to your hand.\n\nRush",
+  "traits": { "rush": true },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": { "named": "90001210" },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

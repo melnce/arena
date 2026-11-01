@@ -1,0 +1,30 @@
+{
+  "id": "89911001",
+  "name": "Choose Destroy Enemy Amulet",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Select an enemy amulet on the field and destroy it.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy amulet on the field and destroy it.",
+      "effects": [
+        {
+          "printed": "Select an enemy amulet on the field and destroy it.",
+          "op": "destroy",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "amulet"
+          }
+        }
+      ]
+    }
+  ]
+}

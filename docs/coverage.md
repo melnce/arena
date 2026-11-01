@@ -530,6 +530,13 @@ Status:
 | `10973310` | Soulforge | — | destroy | — | expressible |
 | `10974110` | Cutthroat, Fluxblade Convict | evolve | draw, crest | — | expressible |
 | `10974120` | Aizeden, Killshot Revenant | fanfare, superEvolve, enter/when | summon, destroy, replicate | — | expressible |
+| `11001110` | Exias, Angel of Love | fanfare | addToHand | — | expressible |
+| `11002110` | Dynames, Angel of Piety | fanfare, evolve | addToHand, damage, replicate | — | expressible |
+| `11002210` | Scene of Deicide | endOfTurn | summon, banish | — | expressible |
+| `11003110` | Kyrios, Angel of Aspiration | fanfare | addToHand, damage | — | expressible |
+| `11003210` | Nacreheim, Utopian World | engage, when | draw, restore, pay | — | expressible |
+| `11004110` | Rezeal, Goddess of Nacreheim | fanfare, superEvolve | damage, crest | — | expressible |
+| `90001210` | Divine Evidence | engage | draw, pay | — | expressible |
 | `90011110` | Fairy | — | — | — | expressible |
 | `90011120` | Springbloom Fairy | endOfTurn | evolve | — | expressible |
 | `90011310` | Deepwood Bounty | — | restore | — | expressible |
@@ -624,6 +631,7 @@ Status:
 | `crest:10954110` | Crest: Istyndet vs. Mitilykket | lastWords, endOfTurn | destroy | — | expressible |
 | `crest:10964110` | Crest: Erralde, Signet Convict | endOfTurn | damage, restore | — | expressible |
 | `crest:10974110` | Crest: Cutthroat, Fluxblade Convict | — | evolve | — | expressible |
+| `crest:11004110` | Crest: Rezeal, Goddess of Nacreheim | when | summon, grantTraits, grantAbility | — | expressible |
 | `faith:10614120` | Faith: Sathanid, Eld Lance | — | counter | — | expressible |
 | `faith:10624120` | Faith: Yidmetra, Eld Sword | — | counter | — | expressible |
 | `faith:10634120` | Faith: Calge-Danthla, Eld Crystals | enter/when | counter | — | expressible |
@@ -632,8 +640,8 @@ Status:
 
 ## Totals
 
-- rows: 615 (cards 573, crests 42) — recount after set 10; regenerate coverage rows when authored
-- expressible: 615
+- rows: 623 (cards 580 authored in coverage including set-10 Neutrals + Evidence; crest/faith as listed)
+- expressible: 623
 - needs: 0
 - question: 0
 
