@@ -29,6 +29,14 @@ fn canonical_bytes(state: &State) -> Vec<u8> {
     w.u64(state.step_counter);
     w.u32(state.next_instance);
     w.u32(state.crest_order);
+    // Emitted only while non-empty (identity: empty ≡ absent from the key).
+    if !state.crest_step2_lost.is_empty() {
+        w.u32(state.crest_step2_lost.len() as u32);
+        for (who, c) in &state.crest_step2_lost {
+            w.u8(*who as u8);
+            hash_crest(&mut w, c);
+        }
+    }
     w.bool(state.suppress_last_words);
     match state.pending_play_rally {
         Some(p) => {
@@ -42,7 +50,7 @@ fn canonical_bytes(state: &State) -> Vec<u8> {
             w.u8(1);
             w.u32(rx.len() as u32);
             for q in rx {
-                hash_queued(&mut w, q);
+                hash_queued(&mut w, state, q);
             }
         }
         None => w.u8(0),
@@ -57,7 +65,7 @@ fn canonical_bytes(state: &State) -> Vec<u8> {
     match &state.pending_play_choices {
         Some(p) => {
             w.u8(1);
-            hash_pending_play_choices(&mut w, p);
+            hash_pending_play_choices(&mut w, state, p);
         }
         None => w.u8(0),
     }
@@ -101,11 +109,11 @@ fn canonical_bytes(state: &State) -> Vec<u8> {
     }
     w.u32(state.pending_work.len() as u32);
     for frame in &state.pending_work {
-        hash_work(&mut w, frame);
+        hash_work(&mut w, state, frame);
     }
     w.u32(state.queue.len() as u32);
     for q in &state.queue {
-        hash_queued(&mut w, q);
+        hash_queued(&mut w, state, q);
     }
     w.u32(state.bindings.len() as u32);
     for (k, refs) in &state.bindings {
@@ -165,7 +173,7 @@ pub(crate) fn lethal_key_with(state: &State, public: u64) -> u64 {
             w.u8(1);
             w.u32(rx.len() as u32);
             for q in rx {
-                hash_queued(&mut w, q);
+                hash_queued(&mut w, state, q);
             }
         }
         None => w.u8(0),
@@ -180,7 +188,7 @@ pub(crate) fn lethal_key_with(state: &State, public: u64) -> u64 {
     match &state.pending_play_choices {
         Some(p) => {
             w.u8(1);
-            hash_pending_play_choices(&mut w, p);
+            hash_pending_play_choices(&mut w, state, p);
         }
         None => w.u8(0),
     }
@@ -217,11 +225,11 @@ pub(crate) fn lethal_key_with(state: &State, public: u64) -> u64 {
     }
     w.u32(state.pending_work.len() as u32);
     for frame in &state.pending_work {
-        hash_work(&mut w, frame);
+        hash_work(&mut w, state, frame);
     }
     w.u32(state.queue.len() as u32);
     for q in &state.queue {
-        hash_queued(&mut w, q);
+        hash_queued(&mut w, state, q);
     }
     w.u32(state.bindings.len() as u32);
     for (k, refs) in &state.bindings {
@@ -802,7 +810,7 @@ fn hash_tag(w: &mut Writer, t: TriggerTag) {
     w.u8(t as u8);
 }
 
-fn hash_work(w: &mut Writer, frame: &WorkFrame) {
+fn hash_work(w: &mut Writer, state: &State, frame: &WorkFrame) {
     w.json(&work_tag(frame));
     match frame {
         WorkFrame::Effects {
@@ -815,7 +823,7 @@ fn hash_work(w: &mut Writer, frame: &WorkFrame) {
             e40,
         } => {
             w.u8(*controller as u8);
-            hash_source(w, source);
+            hash_source(w, state, source);
             w.u32(effects.len() as u32);
             for e in effects {
                 w.json(e);
@@ -844,12 +852,12 @@ fn work_tag(frame: &WorkFrame) -> u8 {
     }
 }
 
-fn hash_queued(w: &mut Writer, q: &QueuedTrigger) {
+fn hash_queued(w: &mut Writer, state: &State, q: &QueuedTrigger) {
     w.u8(q.category);
     w.u32(q.entry);
     w.u8(q.printed_order);
     w.u8(q.controller as u8);
-    hash_source(w, &q.source);
+    hash_source(w, state, &q.source);
     hash_tag(w, q.tag);
     w.u32(q.effects.len() as u32);
     for e in &q.effects {
@@ -865,7 +873,7 @@ fn hash_queued(w: &mut Writer, q: &QueuedTrigger) {
     }
 }
 
-fn hash_source(w: &mut Writer, s: &SourceRef) {
+fn hash_source(w: &mut Writer, state: &State, s: &SourceRef) {
     match s {
         SourceRef::Field { player, id } => {
             w.u8(0);
@@ -877,10 +885,34 @@ fn hash_source(w: &mut Writer, s: &SourceRef) {
             w.u8(*player as u8);
             w.u32(*id);
         }
-        SourceRef::Crest { player, index } => {
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => {
+            // Identity: while the crest is on the board, write its current
+            // position (same bytes as the old index-keyed SourceRef).
             w.u8(2);
             w.u8(*player as u8);
-            w.u32(*index as u32);
+            if let Some(i) = state
+                .player(*player)
+                .crests
+                .iter()
+                .position(|c| c.granted_order == *granted_order)
+            {
+                w.u32(i as u32);
+            } else if state
+                .crest_step2_lost
+                .iter()
+                .any(|(p, c)| *p == *player && c.granted_order == *granted_order)
+            {
+                // Step-2-lost only: marker so search keys diverge when a SoT
+                // crest is retained past Countdown 0.
+                w.u32(0x8000_0000 | granted_order);
+            } else {
+                // Absent (e.g. Last Words after expire_crest): same as main's
+                // `index: 0`.
+                w.u32(0);
+            }
         }
         SourceRef::Spell { player, card } => {
             w.u8(3);
@@ -957,16 +989,16 @@ fn hash_play_picks(w: &mut Writer, picks: &PlayPickState) {
     }
 }
 
-fn hash_pending_play_choices(w: &mut Writer, p: &PendingPlayChoices) {
+fn hash_pending_play_choices(w: &mut Writer, state: &State, p: &PendingPlayChoices) {
     // `played_id` and `body_insert_idx` are not hashed: `source`
     // already distinguishes Spell vs Field and the played instance id; plays only
     // happen at quiescence with empty `pending_work`, so `body_insert_idx` is 0.
     w.u32(p.step_idx as u32);
     w.u8(p.controller as u8);
-    hash_source(w, &p.source);
+    hash_source(w, state, &p.source);
     w.u32(p.deferred_rx.len() as u32);
     for q in &p.deferred_rx {
-        hash_queued(w, q);
+        hash_queued(w, state, q);
     }
     w.u32(p.steps.len() as u32);
     for step in &p.steps {

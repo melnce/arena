@@ -1,0 +1,409 @@
+{
+ "made_on": "bcfb6cd (pre-fix main) unless noted",
+ "crest_order": null,
+ "schedule": "seed = 1000003*pair_index + 17*k + 5; decks = product(sorted(POOLS['meta']), repeat=2)[pair_index]; first = 'a' if k % 2 == 0 else 'b'; actions = random.Random(seed).randrange(len(legal))",
+ "slaus_games": [
+  [
+   145,
+   0
+  ],
+  [
+   147,
+   0
+  ],
+  [
+   150,
+   1
+  ],
+  [
+   151,
+   1
+  ],
+  [
+   233,
+   0
+  ]
+ ],
+ "games": [
+  {
+   "pair": [
+    "meta-portal-cutthroat",
+    "meta-abyss-midrange"
+   ],
+   "pair_index": 145,
+   "k": 0,
+   "seed": 145000440,
+   "steps": 62,
+   "final_hash": "58a70cb1e79ae9ac",
+   "digest": "b75861e77e13f20ebf973691"
+  },
+  {
+   "pair": [
+    "meta-portal-cutthroat",
+    "meta-dragon-ramp"
+   ],
+   "pair_index": 147,
+   "k": 0,
+   "seed": 147000446,
+   "steps": 94,
+   "final_hash": "345995928db927f7",
+   "digest": "1572f00e021daf982cb416e2"
+  },
+  {
+   "pair": [
+    "meta-portal-cutthroat",
+    "meta-haven-evo"
+   ],
+   "pair_index": 150,
+   "k": 1,
+   "seed": 150000472,
+   "steps": 157,
+   "final_hash": "066c065830db47fe",
+   "digest": "a4950a7553acc12d94d23c6c"
+  },
+  {
+   "pair": [
+    "meta-portal-cutthroat",
+    "meta-haven-kukishiro"
+   ],
+   "pair_index": 151,
+   "k": 1,
+   "seed": 151000475,
+   "steps": 87,
+   "final_hash": "d5429cbd6d4d52d6",
+   "digest": "37bad203df2b784b0697451b"
+  },
+  {
+   "pair": [
+    "meta-sword-loot",
+    "meta-portal-cutthroat"
+   ],
+   "pair_index": 233,
+   "k": 0,
+   "seed": 233000704,
+   "steps": 60,
+   "final_hash": "631a8b9b61ddd6fd",
+   "digest": "7ac9181acfc9895c902c5dfa"
+  },
+  {
+   "pair": [
+    "meta-portal-cutthroat",
+    "meta-abyss-aggro"
+   ],
+   "pair_index": 144,
+   "k": 0,
+   "seed": 144000437,
+   "steps": 75,
+   "final_hash": "f8ee8980712ebcd9",
+   "digest": "6195d09b547cfd4b539f4725"
+  },
+  {
+   "pair": [
+    "meta-portal-cutthroat",
+    "meta-dragon-aggro"
+   ],
+   "pair_index": 146,
+   "k": 1,
+   "seed": 146000460,
+   "steps": 63,
+   "final_hash": "736d3f3e6cc21336",
+   "digest": "ff3904cbd43e5ffc21690892"
+  },
+  {
+   "pair": [
+    "meta-abyss-midrange",
+    "meta-portal-cutthroat"
+   ],
+   "pair_index": 25,
+   "k": 0,
+   "seed": 25000080,
+   "steps": 106,
+   "final_hash": "52c27bd03bb351b8",
+   "digest": "f89f6674b6917095d99a49be"
+  },
+  {
+   "pair": [
+    "meta-abyss-aggro",
+    "meta-abyss-aggro"
+   ],
+   "pair_index": 0,
+   "k": 0,
+   "seed": 5,
+   "steps": 57,
+   "final_hash": "aee694428f577321",
+   "digest": "af07fc412fcd89798a202058"
+  },
+  {
+   "pair": [
+    "meta-haven-evo",
+    "meta-forest-combo"
+   ],
+   "pair_index": 100,
+   "k": 1,
+   "seed": 100000322,
+   "steps": 55,
+   "final_hash": "49e4ad8780c7057e",
+   "digest": "4936dbdb75044daf80b5eb67"
+  }
+ ],
+ "explain": {
+  "game": [
+   145,
+   0
+  ],
+  "spec": "h0:nodes=3000,horizon=3,k=4",
+  "seed_rule": "seed + step",
+  "rows": [
+   {
+    "step": 39,
+    "state_hash": "fa2c5f964549fb34",
+    "chosen_index": 3,
+    "path": "search",
+    "nodes": 2954,
+    "horizon_nodes": 18413,
+    "nodes_lethal": 388,
+    "tie_set": [
+     3
+    ],
+    "value": -7.7825,
+    "candidates": [
+     {
+      "legal_index": 0,
+      "n": 4,
+      "root_agg": -8.7587
+     },
+     {
+      "legal_index": 1,
+      "n": 4,
+      "root_agg": -41.5929
+     },
+     {
+      "legal_index": 2,
+      "n": 4,
+      "root_agg": -40.7141
+     },
+     {
+      "legal_index": 3,
+      "n": 4,
+      "root_agg": -7.7825
+     },
+     {
+      "legal_index": 4,
+      "n": 4,
+      "root_agg": -27.2119
+     },
+     {
+      "legal_index": 5,
+      "n": 4,
+      "root_agg": -28.392
+     },
+     {
+      "legal_index": 6,
+      "n": 4,
+      "root_agg": -16.7526
+     },
+     {
+      "legal_index": 7,
+      "n": 4,
+      "root_agg": -47.9331
+     }
+    ]
+   },
+   {
+    "step": 40,
+    "state_hash": "76bf1759d9f0abb2",
+    "chosen_index": 2,
+    "path": "search",
+    "nodes": 2981,
+    "horizon_nodes": 16230,
+    "nodes_lethal": 280,
+    "tie_set": [
+     2
+    ],
+    "value": -22.902,
+    "candidates": [
+     {
+      "legal_index": 0,
+      "n": 4,
+      "root_agg": -40.6114
+     },
+     {
+      "legal_index": 1,
+      "n": 4,
+      "root_agg": -46.605
+     },
+     {
+      "legal_index": 2,
+      "n": 4,
+      "root_agg": -22.902
+     },
+     {
+      "legal_index": 3,
+      "n": 4,
+      "root_agg": -28.9015
+     },
+     {
+      "legal_index": 4,
+      "n": 4,
+      "root_agg": -40.7448
+     },
+     {
+      "legal_index": 5,
+      "n": 4,
+      "root_agg": -35.6907
+     },
+     {
+      "legal_index": 6,
+      "n": 4,
+      "root_agg": -38.8755
+     },
+     {
+      "legal_index": 7,
+      "n": 4,
+      "root_agg": -39.0775
+     },
+     {
+      "legal_index": 8,
+      "n": 4,
+      "root_agg": -47.1196
+     }
+    ]
+   },
+   {
+    "step": 41,
+    "state_hash": "f4f12afad3f698ee",
+    "chosen_index": 2,
+    "path": "search",
+    "nodes": 2814,
+    "horizon_nodes": 7644,
+    "nodes_lethal": 102,
+    "tie_set": [
+     2
+    ],
+    "value": -24.7206,
+    "candidates": [
+     {
+      "legal_index": 0,
+      "n": 4,
+      "root_agg": -44.2617
+     },
+     {
+      "legal_index": 1,
+      "n": 4,
+      "root_agg": -40.1623
+     },
+     {
+      "legal_index": 2,
+      "n": 4,
+      "root_agg": -24.7206
+     },
+     {
+      "legal_index": 3,
+      "n": 4,
+      "root_agg": -38.7194
+     },
+     {
+      "legal_index": 4,
+      "n": 4,
+      "root_agg": -30.7112
+     },
+     {
+      "legal_index": 5,
+      "n": 4,
+      "root_agg": -34.5932
+     },
+     {
+      "legal_index": 6,
+      "n": 4,
+      "root_agg": -51.3639
+     }
+    ]
+   },
+   {
+    "step": 42,
+    "state_hash": "4fa954f4cae68b8a",
+    "chosen_index": 0,
+    "path": "search",
+    "nodes": 455,
+    "horizon_nodes": 0,
+    "nodes_lethal": 1,
+    "tie_set": [
+     0
+    ],
+    "value": -39.7476,
+    "candidates": [
+     {
+      "legal_index": 0,
+      "n": 4,
+      "root_agg": -39.7476
+     },
+     {
+      "legal_index": 1,
+      "n": 4,
+      "root_agg": -47.3616
+     }
+    ]
+   },
+   {
+    "step": 43,
+    "state_hash": "b693c81a8189f9df",
+    "chosen_index": 1,
+    "path": "search",
+    "nodes": 2990,
+    "horizon_nodes": 24098,
+    "nodes_lethal": 467,
+    "tie_set": [
+     1
+    ],
+    "value": 58.9108,
+    "candidates": [
+     {
+      "legal_index": 0,
+      "n": 4,
+      "root_agg": 51.8217
+     },
+     {
+      "legal_index": 1,
+      "n": 4,
+      "root_agg": 58.9108
+     },
+     {
+      "legal_index": 2,
+      "n": 4,
+      "root_agg": 58.6649
+     },
+     {
+      "legal_index": 3,
+      "n": 4,
+      "root_agg": 52.7714
+     },
+     {
+      "legal_index": 4,
+      "n": 4,
+      "root_agg": 58.8456
+     },
+     {
+      "legal_index": 5,
+      "n": 4,
+      "root_agg": 56.9906
+     },
+     {
+      "legal_index": 6,
+      "n": 4,
+      "root_agg": 57.0344
+     },
+     {
+      "legal_index": 7,
+      "n": 4,
+      "root_agg": 58.7717
+     },
+     {
+      "legal_index": 8,
+      "n": 4,
+      "root_agg": -18.7826
+     }
+    ]
+   }
+  ]
+ }
+}

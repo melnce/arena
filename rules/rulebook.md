@@ -249,6 +249,8 @@ Both turn boundaries use a **two-phase** model: first, conditions are checked an
 7. Resolve the queued abilities in the same order (the step-2 queue, then step-3, then 4, 5, 6…). Each resolution may queue further triggers, worked through in self-then-opponent order.
 8. Draw 1 card for the turn. The player may now act.
 
+**Engine:** Step 2 is implemented as written — crest start-of-turn abilities are queued, then crest Countdowns advance. A crest that reaches Countdown 0 in that same step still resolves its already-queued start-of-turn trigger (rulebook: losing an ability at the same step does not cancel the other; Slaus owner ruling 2026-08-13). That is a scoped exception to E40 for crest Countdown losses in step 2 only; a crest removed any other way still has its queued non–Last Words items dropped. Last-Words-only countdown crests expire as today and do not enter the step-2-lost list. Amulet Countdowns still advance before the board's start-of-turn triggers are queued (step 3's written order is a documented gap — no catalog card has an amulet with both Countdown and a start-of-turn ability; flagged for the owner).
+
 **End of your turn** (after End Turn is pressed; the player can no longer act):
 
 1. Your "at the end of your turn" crests trigger.
