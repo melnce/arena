@@ -501,7 +501,8 @@
                     "attack",
                     "defense",
                     "cost",
-                    "baseCost"
+                    "baseCost",
+                    "maxDefense"
                   ]
                 }
               },

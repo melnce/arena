@@ -1518,25 +1518,7 @@ fn banish_from_field(
         return Ok(());
     };
     // Self-banished While still on the field (SelfBuffedUp-style).
-    raise_when(db, state, who, EventName::SelfBanished, Some(&inst), who);
-    raise_when(
-        db,
-        state,
-        who,
-        EventName::AllyCardBanished,
-        Some(&inst),
-        who,
-    );
-    if inst.kind == CardKind::Follower {
-        raise_when(
-            db,
-            state,
-            who.opponent(),
-            EventName::EnemyFollowerBanished,
-            Some(&inst),
-            who,
-        );
-    }
+    raise_banished_from_field(db, state, who, &inst);
     if let Some(taken) = state.player_mut(who).field[slot as usize].take() {
         events.push(Event::Banish {
             card: taken.card,
@@ -2503,13 +2485,17 @@ fn queue_turn_boundary(db: &CardDb, state: &mut State, whose_turn: PlayerId, sta
         state.invoked_ids.clear();
     }
     // crests before board; owner-scoped — ruling 2026-08-31
+    // Rulebook start-of-turn §2–3: queue "at the start of your turn" first,
+    // then advance Countdown / expire. A crest/amulet whose countdown ends
+    // this step still has its start-of-turn trigger resolve (Lapinette
+    // `crest:11064110` Countdown (1); Fruitless `crest:11063310`).
     let own = whose_turn;
     let opp = whose_turn.opponent();
     if start {
-        tick_crests(db, state, own);
         enqueue_boundary(db, state, own, true, Whose::Own, 3, start);
-        tick_amulets(db, state, own);
+        tick_crests(db, state, own);
         enqueue_boundary(db, state, own, false, Whose::Own, 4, start);
+        tick_amulets(db, state, own);
         enqueue_boundary(db, state, opp, true, Whose::Opponent, 5, start);
         enqueue_boundary(db, state, opp, false, Whose::Opponent, 6, start);
     } else {
@@ -4470,7 +4456,11 @@ fn trigger_source_still_present(state: &State, source: SourceRef) -> bool {
             let p = state.player(player);
             p.hand.iter().any(|c| c.id == id) || p.deck.iter().any(|c| c.id == id)
         }
-        SourceRef::Crest { player, index } => state.player(player).crests.get(index).is_some(),
+        // Crest turn-boundary triggers are queued before countdown expiry in
+        // the same step (rulebook start-of-turn §2). Keep them alive for E40
+        // when the crest is then removed for countdown 0 — Lapinette /
+        // Fruitless Testimony. Crest effect bodies do not need the instance.
+        SourceRef::Crest { .. } => true,
         SourceRef::Spell { .. } | SourceRef::Leader { .. } => true,
     }
 }
@@ -4727,9 +4717,11 @@ fn apply_effect_with_targets(
     match e {
         Effect::Damage { amount, .. } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
-            apply_each_captured(state, targets, |st, t| {
-                deal_to_opt(db, st, controller, t, n, events)
-            })?;
+            if n > 0 {
+                apply_each_captured(state, targets, |st, t| {
+                    deal_to_opt(db, st, controller, t, n, events)
+                })?;
+            }
         }
         Effect::Restore { amount, .. } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
@@ -5069,7 +5061,13 @@ fn apply_effect(
         } => {
             // Targets for this op only, selected now (E24) — not when the
             // enclosing list started.
+            // X = 0 deals nothing at all (Jerva `11044120` / Infernal Chimera
+            // `11034120` / Nocturne's Interrogation `11053310` official Q&A).
             let n = eval_amount(db, state, controller, Some(source), amount);
+            if n <= 0 {
+                maybe_bind(state, e, &[]);
+                return Ok(());
+            }
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
             if *split == Some(true) {
                 split_damage(db, state, controller, &ts, n, events)?;
@@ -6165,6 +6163,23 @@ fn leave_redirects_to_banish(db: &CardDb, inst: &CardInstance) -> bool {
     })
 }
 
+/// Raise banished-from-field observers for a field card that is leaving via
+/// banish (including Ghost leave-redirect). Same events as `banish_from_field`.
+fn raise_banished_from_field(db: &CardDb, state: &mut State, who: PlayerId, inst: &CardInstance) {
+    raise_when(db, state, who, EventName::SelfBanished, Some(inst), who);
+    raise_when(db, state, who, EventName::AllyCardBanished, Some(inst), who);
+    if inst.kind == CardKind::Follower {
+        raise_when(
+            db,
+            state,
+            who.opponent(),
+            EventName::EnemyFollowerBanished,
+            Some(inst),
+            who,
+        );
+    }
+}
+
 fn effect_is_banish_self(e: &Effect) -> bool {
     match e {
         Effect::Banish {
@@ -6305,10 +6320,15 @@ fn destroy_slot(
     };
     if leave_redirects_to_banish(db, &inst) {
         // Ghost-style "When this card leaves the field, banish it."
+        // JA 場を離れる場合、これを消滅 — banished from the field (Nocturne
+        // `11054110` / Solemn `11052110` / Amanuensis `11053110` ally_card_banished).
+        // Keep destroy-observer raises for pre-existing destroy reactions; also
+        // raise banished-from-field observers (brief: all four banish routes).
         events.push(Event::Banish {
             card: inst.card,
             from: ZoneLabel::Field,
         });
+        raise_banished_from_field(db, state, who, &inst);
         raise_when(
             db,
             state,
@@ -6888,6 +6908,19 @@ fn summon_source(
                 n.id = state.alloc_id();
                 n.flags.summoning_sick = true;
                 n
+            } else if let Some(c) = entering_copy_from_banished(state, copy_of) {
+                // Parareligious Idol `11064120`: enemy_follower_banished queues
+                // with subject still on field; by resolution the instance is
+                // in the banished pile — look it up via event_inst_id.
+                let mut n = if *ex {
+                    c
+                } else {
+                    let card = db.card(c.card).map_err(|_| Illegal::NotLegal)?;
+                    CardInstance::from_card(card, 0)
+                };
+                n.id = state.alloc_id();
+                n.flags.summoning_sick = true;
+                n
             } else {
                 return Ok(None);
             }
@@ -7012,6 +7045,22 @@ fn bound_copy_from_banished(state: &State, copy_of: &Selector) -> Option<CardIns
             if let Some(c) = state.player(*player).cemetery.iter().find(|c| c.id == *id) {
                 return Some(c.clone());
             }
+        }
+    }
+    None
+}
+
+fn entering_copy_from_banished(state: &State, copy_of: &Selector) -> Option<CardInstance> {
+    let Selector::Ref(r) = copy_of else {
+        return None;
+    };
+    if r.pick != RefPick::Entering {
+        return None;
+    }
+    let id = state.event_inst_id?;
+    for p in PlayerId::ALL {
+        if let Some(c) = state.player(p).banished.iter().find(|c| c.id == id) {
+            return Some(c.clone());
         }
     }
     None
@@ -8943,6 +8992,7 @@ fn inst_stat(state: &State, t: &TargetOpt, which: StatWhich) -> Option<i32> {
     if let TargetOpt::Leader { player } = t {
         return Some(match which {
             StatWhich::Defense => state.player(*player).leader_defense,
+            StatWhich::MaxDefense => state.player(*player).leader_max,
             StatWhich::Attack | StatWhich::Cost | StatWhich::BaseCost => 0,
         });
     }
@@ -8959,6 +9009,7 @@ fn inst_stat(state: &State, t: &TargetOpt, which: StatWhich) -> Option<i32> {
         StatWhich::Defense => c.defense,
         StatWhich::Cost => c.cost,
         StatWhich::BaseCost => c.base_cost,
+        StatWhich::MaxDefense => c.max_defense,
     })
 }
 
@@ -9493,6 +9544,12 @@ fn pick_extremum(
         .filter(|t| order_key(state, t, p.order_by) == best)
         .collect();
     if !highest {
+        // No count → all tied (Tyrannical Fists `10552310`).
+        // `count: 1` → one random among lowest (Bunnies of Desolation `90061140`).
+        if let Some(c) = &p.count {
+            let n = eval_amount_simple(c).max(0) as usize;
+            return random_pool_apply(state, tied, n, false);
+        }
         return Ok(tied);
     }
     random_pool_apply(state, tied, 1, false)

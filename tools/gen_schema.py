@@ -226,7 +226,15 @@ def amount_schema():
                     "stat": closed(
                         {
                             "of": {"$ref": "#/$defs/Selector"},
-                            "which": {"enum": ["attack", "defense", "cost", "baseCost"]},
+                            "which": {
+                                "enum": [
+                                    "attack",
+                                    "defense",
+                                    "cost",
+                                    "baseCost",
+                                    "maxDefense",
+                                ]
+                            },
                         },
                         required=["of", "which"],
                     )
