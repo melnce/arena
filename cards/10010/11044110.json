@@ -1,0 +1,78 @@
+{
+  "id": "11044110",
+  "name": "Leizaut, Calamity of Obliviation",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 10,
+  "attack": 8,
+  "defense": 10,
+  "text": "Fanfare: Banish all cards with base costs of 4 or less from your deck. Discard all Clue amulets. Do this X times: \"Deal 8 damage to a random enemy follower.\" X is the number of cards you discarded.\n\nStorm",
+  "traits": {
+    "storm": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Banish all cards with base costs of 4 or less from your deck. Discard all Clue amulets. Do this X times: \"Deal 8 damage to a random enemy follower.\" X is the number of cards you discarded.",
+      "effects": [
+        {
+          "printed": "Banish all cards with base costs of 4 or less from your deck.",
+          "op": "banish",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "deck",
+            "kind": "card",
+            "filter": {
+              "baseCostLte": 4
+            }
+          }
+        },
+        {
+          "printed": "Discard all Clue amulets. Do this X times: \"Deal 8 damage to a random enemy follower.\" X is the number of cards you discarded.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "discard",
+              "as": "d",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "amulet",
+                "filter": {
+                  "tribe": "clue"
+                }
+              }
+            },
+            {
+              "op": "repeat",
+              "times": {
+                "count": {
+                  "pick": "bound",
+                  "ref": "d"
+                }
+              },
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "random",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  },
+                  "amount": 8
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

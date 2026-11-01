@@ -328,10 +328,10 @@ mod tests {
         }
 
         assert_eq!(
-            gain_text_cards, 36,
+            gain_text_cards, 39,
             "cards whose text matches (?i)gain crest:"
         );
-        assert_eq!(walked_cards, 39, "cards that walk a crest gain");
+        assert_eq!(walked_cards, 42, "cards that walk a crest gain");
         extra_ids.sort();
         assert_eq!(
             extra_ids,

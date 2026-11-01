@@ -1,0 +1,49 @@
+{
+  "id": "11061120",
+  "name": "Combative Monk",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "attack": 4,
+  "defense": 4,
+  "text": "Rush\nCan attack 2 times per turn.\nStrike: Give this follower +2/+2 and Barrier.",
+  "traits": {
+    "rush": true,
+    "attacksPerTurn": 2
+  },
+  "abilities": [
+    {
+      "on": "strike",
+      "printed": "Strike: Give this follower +2/+2 and Barrier.",
+      "effects": [
+        {
+          "printed": "Give this follower +2/+2 and Barrier.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 2,
+              "defense": 2
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "self"
+              },
+              "traits": {
+                "barrier": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

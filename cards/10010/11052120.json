@@ -1,0 +1,43 @@
+{
+  "id": "11052120",
+  "name": "Restive Centaur",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 7,
+  "attack": 6,
+  "defense": 6,
+  "text": "Rush\nStrike: Necromancy (4) - Deal 4 damage to all enemy followers.",
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "strike",
+      "printed": "Strike: Necromancy (4) - Deal 4 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "Necromancy (4) - Deal 4 damage to all enemy followers.",
+          "op": "pay",
+          "resource": "shadows",
+          "amount": 4,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

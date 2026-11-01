@@ -536,6 +536,37 @@ Status:
 | `11003110` | Kyrios, Angel of Aspiration | fanfare | addToHand, damage | — | expressible |
 | `11003210` | Nacreheim, Utopian World | engage, when | draw, restore, pay | — | expressible |
 | `11004110` | Rezeal, Goddess of Nacreheim | fanfare, superEvolve | damage, crest | — | expressible |
+| `11012110` | Inquiring Mischief | enter/when | buff | — | expressible |
+| `11041110` | Obliviationist Marauder | lastWords | addToHand | — | expressible |
+| `11041120` | Freezing Icenewt | fanfare | damage, buff, mode:enhance | — | expressible |
+| `11041310` | Dance of the Waterwyrm | fanfare | draw, restore | overflow | expressible |
+| `11042110` | Obliviationist Smuggler | fanfare | addToHand, destroy | — | expressible |
+| `11042120` | Dragonewt Scout | strike | evolve | — | expressible |
+| `11042310` | Collection Manifest | fanfare | draw, damage, discard | — | expressible |
+| `11043110` | Obliviationist Mugger | fanfare, evolve | damage, discard | — | expressible |
+| `11043310` | Bird's-Eye View | fanfare | choose, addToHand, summon, damage, buff | — | expressible |
+| `11044110` | Leizaut, Calamity of Obliviation | fanfare | damage, banish, discard | — | expressible |
+| `11044120` | Jerva, Wyrm Unyielding | fanfare, superEvolve | damage, grantTraits, leaderModifier | — | expressible |
+| `11051110` | Diligent Undertaker | lastWords | addToHand, summon | — | expressible |
+| `11051120` | Vengeful Capra | lastWords | damage | — | expressible |
+| `11051310` | Runaway Souls | fanfare | addToHand | — | expressible |
+| `11052110` | Solemn Gravekeeper | fanfare, when, evolve | summon, buff, grantTraits | turnOwner | expressible |
+| `11052120` | Restive Centaur | strike | damage, pay | — | expressible |
+| `11052310` | Last Will and Testament | fanfare | addToHand, summon | — | expressible |
+| `11053110` | Attending Amanuensis | fanfare, when, superEvolve | summon, restore, grantTraits, replicate | turnOwner | expressible |
+| `11053310` | Nocturne's Interrogation | fanfare | damage, banish | — | expressible |
+| `11054110` | Nocturne, Postmortem Detective | fanfare, when, evolve | addToHand, summon, buff, grantTraits | turnOwner | expressible |
+| `11054120` | Gremory, Doom Dispeller | lastWords, evolve | draw, crest, pay | — | expressible |
+| `11061110` | Desolationist Refiner | lastWords | addToHand | — | expressible |
+| `11061120` | Combative Monk | strike | buff, grantTraits | — | expressible |
+| `11061310` | Solitary Cultivation | fanfare | buff, grantTraits | — | expressible |
+| `11062110` | Desolationist Tamer | fanfare, evolve | addToHand, pp | — | expressible |
+| `11062120` | Winged Accordionist | fanfare, evolve | summon, buff | — | expressible |
+| `11062310` | Destructive Propagation | fanfare | summon, mode:enhance | — | expressible |
+| `11063110` | Desolationist Rehabilitator | fanfare, superEvolve | summon, draw, restore, banish | — | expressible |
+| `11063310` | Fruitless Testimony | fanfare | summon, damage, crest, choose | — | expressible |
+| `11064110` | Lapinette, Calamity of Desolation | fanfare, evolve, superEvolve | summon, banish, crest | — | expressible |
+| `11064120` | Parareligious Idol | when, evolve | summon, banish | turnOwner | expressible |
 | `90001210` | Divine Evidence | engage | draw, pay | — | expressible |
 | `90011110` | Fairy | — | — | — | expressible |
 | `90011120` | Springbloom Fairy | endOfTurn | evolve | — | expressible |
@@ -570,6 +601,7 @@ Status:
 | `90051120` | Bat | — | — | — | expressible |
 | `90051130` | Ghost | endOfTurn | banish | — | expressible |
 | `90051140` | Rotting Zombie | lastWords | summon | — | expressible |
+| `90061140` | Bunnies of Desolation | enter/when, lastWords | damage, banish, evolve | — | expressible |
 | `90054330` | Depths of the Eld Sight | — | draw | — | expressible |
 | `90061110` | Holy Falcon | — | — | — | expressible |
 | `90061120` | Holyflame Tiger | — | — | — | expressible |
@@ -632,6 +664,9 @@ Status:
 | `crest:10964110` | Crest: Erralde, Signet Convict | endOfTurn | damage, restore | — | expressible |
 | `crest:10974110` | Crest: Cutthroat, Fluxblade Convict | — | evolve | — | expressible |
 | `crest:11004110` | Crest: Rezeal, Goddess of Nacreheim | when | summon, grantTraits, grantAbility | — | expressible |
+| `crest:11054120` | Crest: Gremory, Doom Dispeller | endOfTurn | counter | — | expressible |
+| `crest:11063310` | Crest: Fruitless Testimony | startOfTurn | addToHand, restore | — | expressible |
+| `crest:11064110` | Crest: Lapinette, Calamity of Desolation | startOfTurn | summon | — | expressible |
 | `faith:10614120` | Faith: Sathanid, Eld Lance | — | counter | — | expressible |
 | `faith:10624120` | Faith: Yidmetra, Eld Sword | — | counter | — | expressible |
 | `faith:10634120` | Faith: Calge-Danthla, Eld Crystals | enter/when | counter | — | expressible |
@@ -640,8 +675,8 @@ Status:
 
 ## Totals
 
-- rows: 623 (cards 580 authored in coverage including set-10 Neutrals + Evidence; crest/faith as listed)
-- expressible: 623
+- rows: 658 (cards 612 authored in coverage including set-10 Dragon/Abyss/Haven + Mischief + Bunnies + Neutrals + Evidence; crest/faith as listed)
+- expressible: 658
 - needs: 0
 - question: 0
 
@@ -653,6 +688,6 @@ The pool is derived from the committed Cygames catalog:
 python3 tools/list-pool.py
 ```
 
-Expected: 516 rotation + 57 reachable tokens + 37 Crest + 5 Faith = 573 + 42. Re-derived from `cards/official/catalog.json` (2026-10-31 fetch after set 10 / Deicide in Nacreheim).
+Expected: 516 rotation + 58 reachable tokens + 40 Crest + 5 Faith = 573 + 46 (part 3 adds Bunnies + 3 crests; class cards already in the 516). Re-derived from `cards/official/catalog.json` (2026-10-31 fetch after set 10 / Deicide in Nacreheim).
 
 `tools/coverage-check.py` (CI) walks every row's official `skill_text` (or crest/faith specific-effect text) in that catalog and asserts the ops/conditions columns contain the verbs listed in `tools/coverage_lib.py`.

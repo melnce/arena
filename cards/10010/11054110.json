@@ -1,0 +1,103 @@
+{
+  "id": "11054110",
+  "name": "Nocturne, Postmortem Detective",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "attack": 4,
+  "defense": 4,
+  "text": "Fanfare: Summon a Ghost and give it Bane.\n\nDuring your turn, whenever an allied card is banished from the field, summon a Skeleton and give it +2/+4 and Ward.\n\nEvolve: Add a Last Will and Testament to your hand.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Ghost and give it Bane.",
+      "effects": [
+        {
+          "printed": "Summon a Ghost and give it Bane.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "as": "g",
+              "card": {
+                "named": "90051130"
+              },
+              "count": 1
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "g"
+              },
+              "traits": {
+                "bane": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_card_banished",
+      "when": {
+        "turnOwner": "self"
+      },
+      "printed": "During your turn, whenever an allied card is banished from the field, summon a Skeleton and give it +2/+4 and Ward.",
+      "effects": [
+        {
+          "printed": "summon a Skeleton and give it +2/+4 and Ward.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "as": "s",
+              "card": {
+                "named": "90051110"
+              },
+              "count": 1
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "attack": 2,
+              "defense": 4
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "s"
+              },
+              "traits": {
+                "ward": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Add a Last Will and Testament to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Last Will and Testament to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "11052310"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

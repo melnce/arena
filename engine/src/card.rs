@@ -395,6 +395,9 @@ pub enum StatWhich {
     Defense,
     Cost,
     BaseCost,
+    /// Leader `leader_max` / follower `max_defense` — Jerva `11044120`
+    /// ("enemy leader's max defense minus its defense").
+    MaxDefense,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

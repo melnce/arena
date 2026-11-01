@@ -1519,25 +1519,7 @@ fn banish_from_field(
         return Ok(());
     };
     // Self-banished While still on the field (SelfBuffedUp-style).
-    raise_when(db, state, who, EventName::SelfBanished, Some(&inst), who);
-    raise_when(
-        db,
-        state,
-        who,
-        EventName::AllyCardBanished,
-        Some(&inst),
-        who,
-    );
-    if inst.kind == CardKind::Follower {
-        raise_when(
-            db,
-            state,
-            who.opponent(),
-            EventName::EnemyFollowerBanished,
-            Some(&inst),
-            who,
-        );
-    }
+    raise_banished_from_field(db, state, who, &inst);
     if let Some(taken) = state.player_mut(who).field[slot as usize].take() {
         events.push(Event::Banish {
             card: taken.card,
@@ -6300,6 +6282,23 @@ fn leave_redirects_to_banish(db: &CardDb, inst: &CardInstance) -> bool {
     })
 }
 
+/// Raise banished-from-field observers for a field card that is leaving via
+/// banish (including Ghost leave-redirect). Same events as `banish_from_field`.
+fn raise_banished_from_field(db: &CardDb, state: &mut State, who: PlayerId, inst: &CardInstance) {
+    raise_when(db, state, who, EventName::SelfBanished, Some(inst), who);
+    raise_when(db, state, who, EventName::AllyCardBanished, Some(inst), who);
+    if inst.kind == CardKind::Follower {
+        raise_when(
+            db,
+            state,
+            who.opponent(),
+            EventName::EnemyFollowerBanished,
+            Some(inst),
+            who,
+        );
+    }
+}
+
 fn effect_is_banish_self(e: &Effect) -> bool {
     match e {
         Effect::Banish {
@@ -6440,10 +6439,15 @@ fn destroy_slot(
     };
     if leave_redirects_to_banish(db, &inst) {
         // Ghost-style "When this card leaves the field, banish it."
+        // JA 場を離れる場合、これを消滅 — banished from the field (Nocturne
+        // `11054110` / Solemn `11052110` / Amanuensis `11053110` ally_card_banished).
+        // Keep destroy-observer raises for pre-existing destroy reactions; also
+        // raise banished-from-field observers (brief: all four banish routes).
         events.push(Event::Banish {
             card: inst.card,
             from: ZoneLabel::Field,
         });
+        raise_banished_from_field(db, state, who, &inst);
         raise_when(
             db,
             state,
@@ -7023,6 +7027,19 @@ fn summon_source(
                 n.id = state.alloc_id();
                 n.flags.summoning_sick = true;
                 n
+            } else if let Some(c) = entering_copy_from_banished(state, copy_of) {
+                // Parareligious Idol `11064120`: enemy_follower_banished queues
+                // with subject still on field; by resolution the instance is
+                // in the banished pile — look it up via event_inst_id.
+                let mut n = if *ex {
+                    c
+                } else {
+                    let card = db.card(c.card).map_err(|_| Illegal::NotLegal)?;
+                    CardInstance::from_card(card, 0)
+                };
+                n.id = state.alloc_id();
+                n.flags.summoning_sick = true;
+                n
             } else {
                 return Ok(None);
             }
@@ -7147,6 +7164,22 @@ fn bound_copy_from_banished(state: &State, copy_of: &Selector) -> Option<CardIns
             if let Some(c) = state.player(*player).cemetery.iter().find(|c| c.id == *id) {
                 return Some(c.clone());
             }
+        }
+    }
+    None
+}
+
+fn entering_copy_from_banished(state: &State, copy_of: &Selector) -> Option<CardInstance> {
+    let Selector::Ref(r) = copy_of else {
+        return None;
+    };
+    if r.pick != RefPick::Entering {
+        return None;
+    }
+    let id = state.event_inst_id?;
+    for p in PlayerId::ALL {
+        if let Some(c) = state.player(p).banished.iter().find(|c| c.id == id) {
+            return Some(c.clone());
         }
     }
     None
@@ -9081,6 +9114,7 @@ fn inst_stat(state: &State, t: &TargetOpt, which: StatWhich) -> Option<i32> {
     if let TargetOpt::Leader { player } = t {
         return Some(match which {
             StatWhich::Defense => state.player(*player).leader_defense,
+            StatWhich::MaxDefense => state.player(*player).leader_max,
             StatWhich::Attack | StatWhich::Cost | StatWhich::BaseCost => 0,
         });
     }
@@ -9097,6 +9131,7 @@ fn inst_stat(state: &State, t: &TargetOpt, which: StatWhich) -> Option<i32> {
         StatWhich::Defense => c.defense,
         StatWhich::Cost => c.cost,
         StatWhich::BaseCost => c.base_cost,
+        StatWhich::MaxDefense => c.max_defense,
     })
 }
 
@@ -9631,6 +9666,12 @@ fn pick_extremum(
         .filter(|t| order_key(state, t, p.order_by) == best)
         .collect();
     if !highest {
+        // No count → all tied (Tyrannical Fists `10552310`).
+        // `count: 1` → one random among lowest (Bunnies of Desolation `90061140`).
+        if let Some(c) = &p.count {
+            let n = eval_amount_simple(c).max(0) as usize;
+            return random_pool_apply(state, tied, n, false);
+        }
         return Ok(tied);
     }
     random_pool_apply(state, tied, 1, false)

@@ -241,7 +241,7 @@ Both turn boundaries use a **two-phase** model: first, conditions are checked an
 **Start of your turn:**
 
 1. Max PP increases and PP refills.
-2. Your "at the start of your turn" crests trigger; crest Countdowns advance; any crest reaching Countdown 0 is lost and its Last Words is queued. (Anything these trigger is queued.)
+2. Your "at the start of your turn" crests trigger; crest Countdowns advance; any crest reaching Countdown 0 is lost and its Last Words is queued. (Anything these trigger is queued.) A crest whose Countdown ends in this step still resolves the start-of-turn trigger that was queued in the same step — Lapinette `crest:11064110` Countdown (1); Fruitless Testimony `crest:11063310` Countdown (2). Super-Evolve "Delay this crest by 1" (Lapinette) pushes the Countdown so the same crest summons on two successive turns.
 3. Your board's "at the start of your turn" abilities trigger; your amulets' Countdowns advance; any amulet reaching Countdown 0 has its Last Words queued.
 4. The opponent's "at the start of your opponent's turn" crests trigger.
 5. The opponent's board's "at the start of your opponent's turn" abilities trigger.
@@ -463,6 +463,8 @@ This section enumerates the keyword abilities and major mechanics of SVWB. Each 
 - **Engage history:** "If you've Engaged a Clue amulet this turn" / "If you've Engaged an amulet this turn" are per-player, per-turn facts, true once such an Engage was activated this turn, even if that amulet is gone since.
 - **Enemy clues:** "summon an enemy Divine Evidence" (Scene of Deicide `11002210`) puts it on the opponent's field, where it merges with *their* Clue amulets (their banish reactions follow their own conditions).
 - **Sentence rule** (owner 2026-09-08): a separate sentence or a plain "and" is independent; only "if you did so" makes a clause dependent. So Scene of Deicide still summons the enemy Divine Evidence when there is no enemy follower to banish.
+- **Hand Clue discard is one conditional** (printed "If you have a Clue amulet in your hand, discard a random Clue amulet and …"; Collection Manifest `11042310`, Obliviationist Mugger `11043110`, etc.): the whole sentence is gated — with no Clue in hand, neither the discard nor the following clause runs.
+- **Ghost leave-redirect** (Ghost `90051130` "When this card leaves the field, banish it." / JA 場を離れる場合、これを消滅): a Ghost reduced to 0 defense is **destroyed** (genuine destruction — owner ruling 2026-09-08: `_destroyed` only for genuine destruction; printed banish / bounce that is not destruction stays on the banish/bounce axes alone). It then goes to the **banished** zone instead of the cemetery. The engine therefore raises the destroyed-axis events **and** the banished-axis ones (`ally_card_banished` / `enemy_follower_banished`), in that order — Nocturne `11054110`, Solemn Gravekeeper `11052110`, Attending Amanuensis `11053110` see the banish. The Ghost's own end-of-turn "banish this card" is a printed field banish (banish-axis only).
 - **Engage reactions:** the engine raises `ally_engage` (and resolves those reactions) **before** the Engage ability's own text — the existing `ally_engage` order, not a separate ruling. (Play reactions were reordered to run after the played body — owner 2026-10-27/28 — but Engage was left as-is.)
 - _Test case:_ Divine Evidence on the field (count 1), play Nacreheim → Evidence is banished (Nacreheim's "when banished" does not fire for Evidence's empty LW; Evidence itself has none), Nacreheim enters at count 2; Engage Nacreheim at count 1 destroys it (shadow +1), does not banish-heal.
 
@@ -570,6 +572,8 @@ Rule: split damage allocates against each follower's current defense, oldest to 
 
 A damage instance of **0** still counts as the follower **taking damage** for any "whenever this follower takes damage" trigger, as long as the follower remains on the field and is not destroyed by that event. (Barrier blocking a positive hit also counts as taking damage; see Combat.)
 
+**Official Q&A — X = 0 deals nothing** (Jerva, Wyrm Unyielding `11044120`; Infernal Chimera `11034120`): when X evaluates to 0 ("X is the enemy leader's max defense minus its defense"), "deal X damage …" deals **nothing**. That matches the engine's existing paths: a split with pool 0 allocates no shares and deals nothing; `deal_follower` with 0 changes no defense and leaves Barrier intact. It is not a separate early-return before target selection.
+
 **Owner ruling — Damage prevented by super-evolve still counts as "taking damage" (2026-08-23):**
 
 > "even if superevolved the followers 'take damage' even if it is reduced to 0."
@@ -675,3 +679,5 @@ Hidden information mainly concerns cards in hand and deck:
 - **"a copy"** / **"copies of"** (without "exact") copies the **base/printed card** — a fresh template from the card database (destroyed-history recreations, named token summons, etc.).
 
 When card text says "Summon 2 copies of Fairy," that is base copies of the named card. When it says "summon an exact copy of this card" or "add an exact copy of a random card in your opponent's hand," that is an instance clone of the referenced card.
+
+**Bunnies of Desolation `90061140` (owner 2026-09-08 / 2026-09-05):** enter text is two sentences — banish a random lowest-cost card in your hand, then evolve by effect. An empty hand still evolves (separate sentences). Several Bunnies summoned by one effect (Destructive Propagation Enhance `11062310`) **all enter as that one effect**; their enter reactions then queue and resolve in **entry order** (oldest first) — the same model as Trap in the Woods vs three Knights (owner ruling 2026-09-10). "A random card among the lowest-cost cards" with a single pick is uniform among tied current costs.

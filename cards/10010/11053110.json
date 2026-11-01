@@ -1,0 +1,78 @@
+{
+  "id": "11053110",
+  "name": "Attending Amanuensis",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 7,
+  "attack": 6,
+  "defense": 6,
+  "text": "Fanfare: Summon a Ghost and give it Bane.\n\nDuring your turn, whenever an allied card is banished from the field, restore 2 defense to your leader.\n\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Ghost and give it Bane.",
+      "effects": [
+        {
+          "printed": "Summon a Ghost and give it Bane.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "as": "g",
+              "card": {
+                "named": "90051130"
+              },
+              "count": 1
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "g"
+              },
+              "traits": {
+                "bane": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_card_banished",
+      "when": {
+        "turnOwner": "self"
+      },
+      "printed": "During your turn, whenever an allied card is banished from the field, restore 2 defense to your leader.",
+      "effects": [
+        {
+          "printed": "restore 2 defense to your leader.",
+          "op": "restore",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

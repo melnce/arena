@@ -1,0 +1,55 @@
+{
+  "id": "11061310",
+  "name": "Solitary Cultivation",
+  "kind": "spell",
+  "class": "havencraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Select an allied follower on the field and give it +2/+2 and Barrier.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an allied follower on the field and give it +2/+2 and Barrier.",
+      "effects": [
+        {
+          "printed": "Select an allied follower on the field and give it +2/+2 and Barrier.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "select",
+              "as": "t",
+              "select": {
+                "pick": "choose",
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower"
+              }
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "attack": 2,
+              "defense": 2
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "traits": {
+                "barrier": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
