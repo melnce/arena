@@ -172,6 +172,37 @@ fn construct_condition_attackedLeaderLastTurn() {
 }
 
 #[test]
+fn construct_condition_engagedAmuletThisTurn() {
+    // no-op engine: damages even when the flag is false
+    let db = load_db();
+    let mut st = started(&db, 132);
+    let s = put_field(&db, &mut st, PlayerId::A, "89500021");
+    apply(&db, &mut st, Action::Engage { slot: Slot(s) }).expect("engage");
+    play_costed(&db, &mut st, "89501032", 1);
+    assert_eq!(opp_def(&st), 19);
+    let mut st = started(&db, 132);
+    play_costed(&db, &mut st, "89501032", 1);
+    assert_eq!(opp_def(&st), 20);
+}
+
+#[test]
+fn construct_condition_engagedClueAmuletThisTurn() {
+    // no-op engine: damages even when the flag is false
+    let db = load_db();
+    let mut st = started(&db, 133);
+    let s = put_field(&db, &mut st, PlayerId::A, "89500033");
+    apply(&db, &mut st, Action::Engage { slot: Slot(s) }).expect("engage");
+    play_costed(&db, &mut st, "89501033", 1);
+    assert_eq!(opp_def(&st), 19);
+    // Non-clue amulet engage must not set the Clue flag.
+    let mut st = started(&db, 133);
+    let s = put_field(&db, &mut st, PlayerId::A, "89500021");
+    apply(&db, &mut st, Action::Engage { slot: Slot(s) }).expect("engage");
+    play_costed(&db, &mut st, "89501033", 1);
+    assert_eq!(opp_def(&st), 20);
+}
+
+#[test]
 fn construct_condition_attackingFollower() {
     // no-op engine: damages on a leader attack too
     let db = load_db();

@@ -63,6 +63,7 @@ Coverage is enforced by `python3 tools/constructs.py --check` (all families).
 | `op_pay_resource_earth` | effect | `construct_op_pay_resource_earth` | `engine/tests/constructs_effects.rs` |
 | `op_pay_resource_pp` | effect | `construct_op_pay_resource_pp` | `engine/tests/constructs_effects.rs` |
 | `op_pay_resource_faith` | effect | `construct_op_pay_resource_faith` | `engine/tests/constructs_effects.rs` |
+| `op_pay_resource_clues` | effect | `construct_op_pay_resource_clues` | `engine/tests/constructs_effects.rs` |
 | `op_leaderModifier_maxDefense_set` | effect | `construct_op_leaderModifier_maxDefense_set` | `engine/tests/constructs_effects.rs` |
 | `op_leaderModifier_maxDefense_delta` | effect | `construct_op_leaderModifier_maxDefense_delta` | `engine/tests/constructs_effects.rs` |
 | `op_leaderModifier_damageCap` | effect | `construct_op_leaderModifier_damageCap` | `engine/tests/constructs_effects.rs` |
@@ -170,6 +171,8 @@ Coverage is enforced by `python3 tools/constructs.py --check` (all families).
 | `condition_wasFused` | condition | `construct_condition_wasFused` | `engine/tests/constructs_conditions.rs` |
 | `condition_did` | condition | `construct_condition_did` | `engine/tests/constructs_conditions.rs` |
 | `condition_attackedLeaderLastTurn` | condition | `construct_condition_attackedLeaderLastTurn` | `engine/tests/constructs_conditions.rs` |
+| `condition_engagedAmuletThisTurn` | condition | `construct_condition_engagedAmuletThisTurn` | `engine/tests/constructs_conditions.rs` |
+| `condition_engagedClueAmuletThisTurn` | condition | `construct_condition_engagedClueAmuletThisTurn` | `engine/tests/constructs_conditions.rs` |
 | `condition_attackingFollower` | condition | `construct_condition_attackingFollower` | `engine/tests/constructs_conditions.rs` |
 | `condition_turnOwner` | condition | `construct_condition_turnOwner` | `engine/tests/constructs_conditions.rs` |
 | `condition_evolvedCountAtLeast` | condition | `construct_condition_evolvedCountAtLeast` | `engine/tests/constructs_conditions.rs` |
@@ -266,6 +269,9 @@ Coverage is enforced by `python3 tools/constructs.py --check` (all families).
 | `ability_event_ally_engage` | ability | `construct_ability_event_ally_engage` | `engine/tests/constructs_abilities.rs` |
 | `ability_event_leader_restored` | ability | `construct_ability_event_leader_restored` | `engine/tests/constructs_abilities.rs` |
 | `ability_event_self_buffed_up` | ability | `construct_ability_event_self_buffed_up` | `engine/tests/constructs_abilities.rs` |
+| `ability_event_self_banished` | ability | `construct_ability_event_self_banished` | `engine/tests/constructs_abilities.rs` |
+| `ability_event_ally_card_banished` | ability | `construct_ability_event_ally_card_banished` | `engine/tests/constructs_abilities.rs` |
+| `ability_event_enemy_follower_banished` | ability | `construct_ability_event_enemy_follower_banished` | `engine/tests/constructs_abilities.rs` |
 | `ability_oncePerTurn` | ability | `construct_ability_oncePerTurn` | `engine/tests/constructs_abilities.rs` |
 | `ability_when_turnOwner` | ability | `construct_ability_when_turnOwner` | `engine/tests/constructs_abilities.rs` |
 | `ability_zone_hand` | ability | `construct_ability_zone_hand` | `engine/tests/constructs_abilities.rs` |

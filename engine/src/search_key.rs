@@ -536,6 +536,12 @@ fn hash_player(w: &mut Writer, p: &PlayerState) {
     w.raw(p.starting_deck.canonical());
     w.raw(p.public_removals.canonical());
     w.raw(p.public_hand_additions.canonical());
+    // Trailing optional: emit nothing while both false (identity-safe).
+    if p.engaged_amulet_this_turn || p.engaged_clue_amulet_this_turn {
+        w.u8(1);
+        w.bool(p.engaged_amulet_this_turn);
+        w.bool(p.engaged_clue_amulet_this_turn);
+    }
 }
 
 // Each zone's part of the walk: its length, then each element, exactly as `hash_player` wrote them inline. A
@@ -732,6 +738,12 @@ fn hash_inst(w: &mut Writer, c: &CardInstance) {
     w.u32(c.choose_used.len() as u32);
     for i in &c.choose_used {
         w.u8(*i);
+    }
+    // Trailing optional: emit nothing at the default so pre-Clue states
+    // keep a bit-identical walk.
+    if c.clue_count != 0 {
+        w.u8(1);
+        w.i32(c.clue_count);
     }
 }
 

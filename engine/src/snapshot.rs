@@ -70,6 +70,8 @@ pub struct CanonicalField {
     pub attacks_left: i32,
     pub can_attack: bool,
     pub card: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clue_count: Option<i32>,
     pub countdown: Option<i32>,
     pub defense: i32,
     pub evolved: bool,
@@ -150,6 +152,11 @@ fn snap_player(p: &PlayerState) -> CanonicalPlayer {
             attacks_left: c.flags.attacks_left,
             can_attack: can_attack_now(c),
             card: c.card.as_str(),
+            clue_count: if c.is_clue() && c.clue_count > 0 {
+                Some(c.clue_count)
+            } else {
+                None
+            },
             countdown: c.countdown,
             defense: c.defense,
             evolved: c.evolved,
@@ -340,6 +347,8 @@ struct SortedField<'a> {
     attacks_left: i32,
     can_attack: bool,
     card: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    clue_count: Option<i32>,
     countdown: Option<i32>,
     defense: i32,
     evolved: bool,
@@ -377,6 +386,7 @@ impl<'a> SortedPlayer<'a> {
                 attacks_left: f.attacks_left,
                 can_attack: f.can_attack,
                 card: &f.card,
+                clue_count: f.clue_count,
                 countdown: f.countdown,
                 defense: f.defense,
                 evolved: f.evolved,

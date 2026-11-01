@@ -112,7 +112,8 @@
             "earth",
             "faith",
             "shadows",
-            "skyboundHand"
+            "skyboundHand",
+            "clues"
           ]
         },
         {
@@ -935,6 +936,30 @@
           },
           "required": [
             "attackedLeaderLastTurn"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "engagedAmuletThisTurn": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "engagedAmuletThisTurn"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "engagedClueAmuletThisTurn": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "engagedClueAmuletThisTurn"
           ]
         },
         {
@@ -2211,7 +2236,8 @@
                 "shadows",
                 "earth",
                 "pp",
-                "faith"
+                "faith",
+                "clues"
               ]
             },
             "amount": {
@@ -2221,8 +2247,7 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/Effect"
-              },
-              "minItems": 1
+              }
             }
           },
           "required": [
@@ -3567,7 +3592,10 @@
                 "ally_earth_rite",
                 "ally_engage",
                 "leader_restored",
-                "self_buffed_up"
+                "self_buffed_up",
+                "self_banished",
+                "ally_card_banished",
+                "enemy_follower_banished"
               ]
             },
             "filter": {

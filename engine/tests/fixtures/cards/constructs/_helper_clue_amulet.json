@@ -1,0 +1,29 @@
+{
+  "id": "89500033",
+  "name": "Clue Helper",
+  "kind": "amulet",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Clue\nEngage (0): Do nothing.",
+  "tribes": ["clue"],
+  "traits": { "aura": true },
+  "abilities": [
+    {
+      "on": "engage",
+      "printed": "Engage (0): Do nothing.",
+      "effects": [
+        {
+          "op": "restore",
+          "select": { "pick": "self" },
+          "amount": 0,
+          "printed": "Engage (0): Do nothing."
+        }
+      ],
+      "cost": 0,
+      "sacrifice": false
+    }
+  ]
+}

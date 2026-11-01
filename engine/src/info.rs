@@ -604,7 +604,7 @@ fn walk_effect(ctx: WalkCtx<'_>, effect: &Effect, gates: &mut Vec<GateInfo>) {
                             true,
                         );
                     }
-                    PayResource::Pp | PayResource::Faith => {}
+                    PayResource::Pp | PayResource::Faith | PayResource::Clues => {}
                 }
             }
             walk_effects(ctx, effects, gates);
@@ -958,6 +958,15 @@ fn counter_have(
         CounterKey::Named(NamedCounter::Faith) => ("faith".into(), p.faith),
         CounterKey::Named(NamedCounter::Shadows) => ("shadows".into(), p.shadows),
         CounterKey::Named(NamedCounter::SkyboundHand) => ("skybound art".into(), inst.skybound),
+        CounterKey::Named(NamedCounter::Clues) => (
+            "clues".into(),
+            p.field
+                .iter()
+                .flatten()
+                .filter(|c| c.is_clue())
+                .map(|c| c.clue_count)
+                .sum(),
+        ),
         CounterKey::Var { var } => ("variable".into(), inst.vars.get(var).copied().unwrap_or(0)),
     }
 }

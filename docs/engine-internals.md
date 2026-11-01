@@ -190,6 +190,7 @@ A stat debuff lowers `max_defense` by the same amount; current defense drops by 
 - `enter_counts` is every follower entry this match (play, summon, reanimate), keyed by card id. Obsessed Test Subject's "5 other allied copies have entered" subtracts this copy. Reanimate is an enter (glossary: it summons a copy onto the field).
 - `Condition.deckHasNoDuplicates` is a deck-multiset uniqueness check (Cutthroat / Bluerust). `pick: lowest` over leaders returns **all ties** (Tyrannical Fists Q&A). `grantTraits.until` stores instance `temp_traits` (caster-relative; see above) and `merge_remove`s at the matching end-of-turn. `leaderModifier.damageTakenBonus` applies to the **selected** leader and stacks (Beelzebub Q&A). Crest Last Words fire when countdown hits 0 (`expire_crest`). `enemy_follower_destroyed` is raised on the opponent of the destroyed follower's owner (Lifestealer). `addToDeck` appends (`position: random` is a multiset). Multi-choose binds **append** across remaining picks of the same op (`bind_append`) so a later `bound` sees every pick. `op: select` opens a choice and binds (`as`) with no other effect — an empty pool binds nothing, so a later `Amount.stat` is 0 (Cassius `10473110`).
 - Earth sigils: a counter plus `earth_slot` (which amulet holds the stack). When an Earth Sigil amulet enters, every other allied Earth Sigil is **banished** (no shadow, no Last Words) and the new amulet takes their counts (official glossary Earth Sigil; owner 2026-09-10 "yes banish them instead"). "Gain X earth sigils" increments the holder on the field, else summons one Magic Sediment with count X; no holder and a full board loses the sigil. A full board still blocks *playing* an Earth Sigil amulet (ruling 2026-09-10).
+- Clue: per-instance `clue_count` on Clue-tribe amulets (default 0; omitted from search_key / snapshot while zero). On enter (play/summon/invoke), other allied Clues are banished via `banish_from_field` (raises `self_banished` / `ally_card_banished`; no shadow, no Last Words) and their counts add to the new amulet (`clue_count = 1 + sum`). Unlike Earth Sigil, a full field skips merge entirely. `pay resource: clues` subtracts from the allied Clue amulet; at ≤0 it is **destroyed** (shadow, LW, destroy reactions). Enemy `pick: choose` skips Clue amulets (Aura rule). Per-player `engaged_amulet_this_turn` / `engaged_clue_amulet_this_turn` (cleared at begin_turn; omitted from snapshot; search_key emits only when non-default). Engage reaction order is unchanged (raise `ally_engage` then Engage body).
 - `hash` is FNV-1a 64 of the sorted-key canonical snapshot JSON.
 
 ## Construct match arms (post-M3 audit)
@@ -198,7 +199,7 @@ Every `match` on `Condition`, `Filter` / `inst_matches_filter`, `Amount`, `Trigg
 
 | Arm | Status | Reason |
 |---|---|---|
-| `Condition` (all 31 keys) | live | `eval_cond` covers every variant. Parameters `n` / `of` / `key` / `filter` / `select` / `card` / `side` / `kind` / `other` / `ref` are fields of those keys, not constructs. |
+| `Condition` (all keys incl. `engagedAmuletThisTurn` / `engagedClueAmuletThisTurn`) | live | `eval_cond` covers every variant. Parameters `n` / `of` / `key` / `filter` / `select` / `card` / `side` / `kind` / `other` / `ref` are fields of those keys, not constructs. |
 | `Filter` keys except `destroyedThisMatch` | live | `inst_matches_filter`. `destroyedThisMatch` switches the candidate pool (`pool_destroyed_history`) rather than scoring a live instance. |
 | `Amount` variants | live | `eval_amount`. `Amount::Counter` for `var` / `skyboundHand` is **0** — Skybound lives on the hand instance (`skybound_of`), and `op:counter skyboundHand` stays an honest stub. Filter predicates use `eval_amount_simple` (non-int Amount → 0); pool filters author integer literals. |
 | `Amount::Sub` | live, no floor | Marlone wraps `max(0, sub(…))`. A bare `sub` may be negative (`Amount::Neg` is the authored negative). |
@@ -207,7 +208,7 @@ Every `match` on `Condition`, `Filter` / `inst_matches_filter`, `Amount`, `Trigg
 | `Ability::replaces` | SuperEvolve only | `replaces_evolve` ignores `replaces` on any other `on`. Pool use is Super-Evolve `instead` (`10002110`). |
 | `Ability::Static.tag()` | maps to `When` | Static has no `effects`; it is never enqueued as a When. |
 | `TriggerTag::Enhance` | mode, not `on` | Enhance is `Mode::Enhance`. The tag exists so `suppress: ["enhance"]` can strip the mode. `play_form` also requires `printed_tags` to still contain `enhance` (`removeAbilities`). |
-| `EventName` (all 16) | live | Raised at enter / destroy / play / attack / evolve / draw / earth-rite / engage / restore / self-buff. |
+| `EventName` (all 19) | live | Raised at enter / destroy / play / attack / evolve / draw / earth-rite / engage / restore / self-buff / self-banished / ally-card-banished / enemy-follower-banished. |
 | `pool_candidates` `Zone::Crests` | empty | Crests are not card instances. `countdown` / `removeCrests` / `grantAbility` special-case `zone: crests`. |
 
 `on:static` is no longer in `m1_unsupported_list` — suppress resolves. `Zone::Cemetery` is a live pool (card ids).

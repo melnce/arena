@@ -183,8 +183,11 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 | `ally_engage` | `10062120` Sacred Griffon |
 | `leader_restored` | `10563110` Saint of Rehabilitation; `10961110` Follower of the Tenets; `10963110` Executor of the Vow — 0-heal still fires (official Q&A Burnite `10144110`) |
 | `self_buffed_up` | `10812110` Ruflet |
+| `self_banished` | `11003210` Nacreheim ("When this card is banished from the field") |
+| `ally_card_banished` | `11054110` Nocturne / `11052110` Solemn Gravekeeper |
+| `enemy_follower_banished` | `11064120` Parareligious Idol |
 
-Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`. Ghost's leave is `on: leave`, not an event. The schema lists the 16 events in the table. `enemy_follower_destroyed` is forced by Lifestealer `10553110` "Whenever a Skeleton is destroyed" (any side).
+Omitted (no pool card): `leaderStrike`, `self_damaged`, `enemy_follower_defense_down`, `ally_follower_leaves_field`. Ghost's leave is `on: leave`, not an event. The schema lists the events in the table. `enemy_follower_destroyed` is forced by Lifestealer `10553110` "Whenever a Skeleton is destroyed" (any side).
 
 ## Effects
 
@@ -222,8 +225,8 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `crest` | `gain` + `player` self `10434120` / opponent `10574110` |
 | `removeCrests` | `10453310` Corruption Super Skybound (pool) |
 | `countdown` | `delta` −1 advance `90021210`; +1 delay `10703210` |
-| `counter` | `earth` `10434120`; `combo` `10714110`; `skyboundHand` `10471120`; `shadows` via `pay`; `faith` `faith:10634120`; `{var: X}` `10131320` |
-| `pay` | `shadows` `10754120`; `earth` `10031110`; `pp` `10934110`; `faith` `10624120` Yidmetra |
+| `counter` | `earth` `10434120`; `combo` `10714110`; `skyboundHand` `10471120`; `shadows` via `pay`; `faith` `faith:10634120`; `clues` `11053310` Nocturne's Interrogation; `{var: X}` `10131320` |
+| `pay` | `shadows` `10754120`; `earth` `10031110`; `pp` `10934110`; `faith` `10624120` Yidmetra; `clues` `90001210` Divine Evidence / `11073310` Calamity in Custody |
 | `transform` | `10534120`, `10573310` |
 | `leaderModifier` | Forced `maxDefense: {set: N}` Zooey `10444120` (existing file; was a bare int) or `maxDefense: {delta: N}` Lhynkal `crest:10534110` — same split as `cost`. After either, current defense clamps to the new max. `delta` floors the max at 0; a leader whose max (and therefore defense) is 0 is destroyed. `damageCap` + `until` `10444120` |
 | `replicate` | `10604110`, `10923110` |
@@ -272,7 +275,7 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Condition
 
-`all`/`any`/`not` · `countAtLeast` (`filter` `10521110` "If you selected a spell") · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `boundHas` `10663210` Sublime Eld Tome ("If you selected an allied amulet") · `attackedLeaderLastTurn` `10944110` · `attackingFollower` `10843110` Giada / `crest:10864110` Verdilia ("attacks a follower") · `attackingLeader` Lu Woh crest `crest:10474110` "attacks a leader" · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120` · `amountAtLeast` `10502120` Behemoth · `deckHasNoDuplicates` Bluerust Underling `10971110` / Cutthroat `10974110` "If there are no duplicates in your deck". Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
+`all`/`any`/`not` · `countAtLeast` (`filter` `10521110` "If you selected a spell") · `counterAtLeast` · `evolved` `10574110` · `superEvolutionUnlocked` `10401120` Vyrn · `combo` `10012110` · `rally` `10724110` · `overflow` `10041310` · `maxPpAtLeast` `10042310` · `skyboundArt` `10434120` · `wasFused` `10933110` / `"both"` `90073110` · `did` `10653110` "If you selected one" · `boundHas` `10663210` Sublime Eld Tome ("If you selected an allied amulet") · `attackedLeaderLastTurn` `10944110` · `engagedAmuletThisTurn` `11032310` Discerning Melody · `engagedClueAmuletThisTurn` `11022310` Dichotomous Forensics / `11023310` No Life's Cross-Examination · `attackingFollower` `10843110` Giada / `crest:10864110` Verdilia ("attacks a follower") · `attackingLeader` Lu Woh crest `crest:10474110` "attacks a leader" · `turnOwner` `10724110` · `evolvedCountAtLeast` `10404110` · `playedBaseCostsThisMatch` `10904110` · `handHas` · `fieldHas` `crest:10954110` · `leaderDefenseLte` `10841110` Gido · `varAtLeast` `10833310` (`key` ∈ {X,Y,Z}) · `enterCountAtLeast` `{card, n}` `10931110` · `handSameCostAtLeast` `10554120` · `amountAtLeast` `10502120` Behemoth · `deckHasNoDuplicates` Bluerust Underling `10971110` / Cutthroat `10974110` "If there are no duplicates in your deck". Omitted: `survived` (ruling exists, no printed card), `ppAtLeast`, `isEvolvedFollowerEntering`.
 
 ## Modes
 

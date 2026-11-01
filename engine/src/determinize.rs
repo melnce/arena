@@ -71,6 +71,10 @@ pub struct OpenStats {
 /// uniformly from the pool, leftover pool cards become the deck. Own side
 /// is untouched. `State.rng` is reseeded from `seed`.
 ///
+/// Field `clue_count` and player Engage-history flags
+/// (`engaged_amulet_this_turn` / `engaged_clue_amulet_this_turn`) are public
+/// and preserved by the state clone — they are not reshuffled or randomized.
+///
 /// This is the [`Info::Draws`] path and is bit-identical to the pre-`info`
 /// function.
 pub fn determinize(state: &State, perspective: PlayerId, seed: u64) -> State {

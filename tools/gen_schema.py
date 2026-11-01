@@ -73,6 +73,9 @@ EVENTS = [
     "ally_engage",
     "leader_restored",
     "self_buffed_up",
+    "self_banished",
+    "ally_card_banished",
+    "enemy_follower_banished",
 ]
 
 REF_PICKS = ["self", "entering", "attacker", "defender", "opposing", "selected"]
@@ -345,6 +348,11 @@ def condition_schema():
             ),
             closed({"did": {"type": "string", "minLength": 1}}, required=["did"]),
             closed({"attackedLeaderLastTurn": {"type": "boolean"}}, required=["attackedLeaderLastTurn"]),
+            closed({"engagedAmuletThisTurn": {"type": "boolean"}}, required=["engagedAmuletThisTurn"]),
+            closed(
+                {"engagedClueAmuletThisTurn": {"type": "boolean"}},
+                required=["engagedClueAmuletThisTurn"],
+            ),
             closed({"attackingFollower": {"type": "boolean"}}, required=["attackingFollower"]),
             closed({"turnOwner": {"enum": ["self", "opponent"]}}, required=["turnOwner"]),
             closed(
@@ -582,10 +590,12 @@ def effect_schema():
             "how": {"enum": ["add", "set"]},
             "amount": {"$ref": "#/$defs/Amount"},
         }, ["key", "how", "amount"]),
+        # `effects` may be empty: standalone "Consume a clue" (`90001210`) has no
+        # dependent body; "Consume N to X" nests X inside `effects`.
         leaf("pay", {
-            "resource": {"enum": ["shadows", "earth", "pp", "faith"]},
+            "resource": {"enum": ["shadows", "earth", "pp", "faith", "clues"]},
             "amount": {"$ref": "#/$defs/Amount"},
-            "effects": {"type": "array", "items": {"$ref": "#/$defs/Effect"}, "minItems": 1},
+            "effects": {"type": "array", "items": {"$ref": "#/$defs/Effect"}},
         }, ["resource", "amount", "effects"]),
         leaf("transform", {
             "select": {"$ref": "#/$defs/Selector"},
@@ -876,7 +886,7 @@ def build():
             "Traits": traits_schema(),
             "CounterKey": {
                 "oneOf": [
-                    {"enum": ["combo", "earth", "faith", "shadows", "skyboundHand"]},
+                    {"enum": ["combo", "earth", "faith", "shadows", "skyboundHand", "clues"]},
                     closed({"var": {"enum": VARS}}, required=["var"]),
                 ]
             },

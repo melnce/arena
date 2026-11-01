@@ -203,6 +203,25 @@ fn construct_amount_counter() {
 }
 
 #[test]
+fn construct_amount_counter_clues() {
+    // no-op engine: +0
+    let db = load_db();
+    let mut st = started(&db, 318);
+    put_field(&db, &mut st, PlayerId::A, "89500033");
+    if let Some(c) = st
+        .player_mut(PlayerId::A)
+        .field
+        .iter_mut()
+        .flatten()
+        .find(|c| c.is_clue())
+    {
+        c.clue_count = 4;
+    }
+    play_costed(&db, &mut st, "89700018", 1);
+    assert_eq!(atk_of(&st, "89700018"), 6);
+}
+
+#[test]
 fn construct_amount_distinctNames() {
     // no-op engine: sums entries instead of distinct names
     let db = load_db();

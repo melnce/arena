@@ -285,6 +285,9 @@ pub enum EventName {
     AllyEngage,
     LeaderRestored,
     SelfBuffedUp,
+    SelfBanished,
+    AllyCardBanished,
+    EnemyFollowerBanished,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -353,6 +356,7 @@ pub enum PayResource {
     Earth,
     Pp,
     Faith,
+    Clues,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -645,6 +649,7 @@ pub enum NamedCounter {
     Faith,
     Shadows,
     SkyboundHand,
+    Clues,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -931,6 +936,14 @@ pub enum Condition {
     AttackedLeaderLastTurn {
         #[serde(rename = "attackedLeaderLastTurn")]
         attacked_leader_last_turn: bool,
+    },
+    EngagedAmuletThisTurn {
+        #[serde(rename = "engagedAmuletThisTurn")]
+        engaged_amulet_this_turn: bool,
+    },
+    EngagedClueAmuletThisTurn {
+        #[serde(rename = "engagedClueAmuletThisTurn")]
+        engaged_clue_amulet_this_turn: bool,
     },
     /// Verdilia crest: "Whenever a super-evolved allied follower attacks a follower"
     AttackingFollower {

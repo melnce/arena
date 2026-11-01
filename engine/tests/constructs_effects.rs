@@ -741,6 +741,42 @@ fn construct_op_pay_resource_faith() {
 }
 
 #[test]
+fn construct_op_pay_resource_clues() {
+    // no-op engine: 5 damage lands with 0 clues
+    pay_unaffordable("89201460", |_st| {});
+    let (db, mut st) = db_st();
+    put_field(&db, &mut st, PlayerId::A, "89500033");
+    assert_eq!(
+        st.player(PlayerId::A)
+            .field
+            .iter()
+            .flatten()
+            .find(|c| c.is_clue())
+            .map(|c| c.clue_count),
+        Some(1)
+    );
+    cast(&db, &mut st, "89201460");
+    assert_eq!(b_hp(&st), 15);
+    assert!(
+        st.player(PlayerId::A)
+            .field
+            .iter()
+            .flatten()
+            .all(|c| !c.is_clue()),
+        "paying the last clue destroys the amulet"
+    );
+    // Spell corpse + destroyed Clue amulet.
+    assert_eq!(st.player(PlayerId::A).shadows, 2);
+    assert!(
+        st.player(PlayerId::A)
+            .cemetery
+            .iter()
+            .any(|c| c.card.as_str() == "89500033"),
+        "zero-clue amulet is destroyed (cemetery), not banished"
+    );
+}
+
+#[test]
 fn construct_op_leaderModifier_maxDefense_set() {
     // no-op engine: max stays 20
     let (db, mut st) = db_st();
