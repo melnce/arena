@@ -17,7 +17,7 @@ The phrase is normalized so rows compare across cards, in this order:
 
 The construction shape is the node's JSON with every `printed` removed, numeric literals → `N`, card/crest ids → `ID`, binding names (`as`, `ref`) → `REF`, then canonical JSON (sorted keys). Ability `on`/`whose` and mode `kind`/`cost` are omitted from the shape — they are the stripped prefix. Two nodes share a construction when the shapes are byte-equal. Divergence is judged per node kind (ability / mode / clause) so a Fanfare wrapper is not compared to its inner clause.
 
-Index: **2262** rows, **934** distinct phrases, **918** with one shape (per kind), **16** divergent (22 kind×phrase groups).
+Index: **2262** rows, **933** distinct phrases, **918** with one shape (per kind), **15** divergent (20 kind×phrase groups).
 
 ## Phrases
 
@@ -41,7 +41,7 @@ Index: **2262** rows, **934** distinct phrases, **918** with one shape (per kind
 | (ability) Activates in hand. Whenever an allied follower super-evolves, reduce the cost of this card by N | `{"effects":[{"delta":"N","op":"cost","select":{"pick":"self"}}],"event":"ally_super_evolve","zone":"hand"}` | 1 | `10862120` |
 | (ability) Activates in hand. Whenever an allied follower super-evolves, set the cost of this card to N | `{"effects":[{"op":"cost","select":{"pick":"self"},"set":"N"}],"event":"ally_super_evolve","zone":"hand"}` | 1 | `10721110` |
 | (ability) Activates in hand. Whenever an allied follower with a base cost of N or more enters the field, reduce the cost of this card by N until the end of the turn | `{"effects":[{"delta":"N","op":"cost","select":{"pick":"self"},"untilEndOfTurn":true}],"event":"ally_follower_enter","filter":{"baseCostGte":"N"},"zone":"hand"}` | 1 | `10673310` |
-| (ability) Activates in hand. Whenever you Engage a Clue amulet, swap this follower's attack and defense and give it +N/+N | `{"effects":[{"effects":[{"op":"swapStats","select":{"pick":"self"}},{"attack":"N","op":"buff","select":{"pick":"self"}}],"op":"seq"}],"event":"ally_engage","filter":{"tribe":"clue"},"zone":"hand"}` | 4 | `11021110`, `11022110`, `11023110`, … |
+| (ability) Activates in hand. Whenever you Engage a Clue amulet, swap this follower's attack and defense and give it +N/+N | `{"effects":[{"effects":[{"op":"swapStats","select":{"pick":"self"}},{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}],"op":"seq"}],"event":"ally_engage","filter":{"tribe":"clue"},"zone":"hand"}` | 4 | `11021110`, `11022110`, `11023110`, … |
 | (ability) Activates in hand. Whenever you Engage an amulet, reduce the cost of this card by N | `{"effects":[{"delta":"N","op":"cost","select":{"pick":"self"}}],"event":"ally_engage","zone":"hand"}` | 2 | `10462210`, `11032110` |
 | (ability) Activates in hand. Whenever you perform Earth Rite, reduce the cost of this card by N | `{"effects":[{"delta":"N","op":"cost","select":{"pick":"self"}}],"event":"ally_earth_rite","zone":"hand"}` | 2 | `10731310`, `10733310` |
 | (ability) Activates in hand. Whenever you play a card, reduce the cost of this card by N until the end of the turn | `{"effects":[{"delta":"N","op":"cost","select":{"pick":"self"},"untilEndOfTurn":true}],"event":"ally_card_played","zone":"hand"}` | 1 | `10914120` |
@@ -234,8 +234,8 @@ Index: **2262** rows, **934** distinct phrases, **918** with one shape (per kind
 | (ability) Deal N damage to your leader | `{"effects":[{"amount":"N","op":"damage","select":{"kind":"leader","pick":"all","side":"ally","zone":"leader"}}]}` | 1 | `10051120` |
 | (clause) Deal N damage to your leader | `{"amount":"N","op":"damage","select":{"kind":"leader","pick":"all","side":"ally","zone":"leader"}}` | 5 | `10051120`, `10451120`, `10451310`, … |
 | (ability) Deal N damage to your leader. Gain CREST | `{"effects":[{"amount":"N","op":"damage","select":{"kind":"leader","pick":"all","side":"ally","zone":"leader"}},{"gain":"ID","op":"crest","player":"self"}]}` | 1 | `10451310` |
-| (ability) Deal X damage split between all enemies. X is the number of earth sigils you have | `{"effects":[{"cond":{"counterAtLeast":{"key":"earth","n":"N"}},"op":"if","then":[{"amount":{"counter":"earth"},"op":"damage","select":{"kind":"character","pick":"all","side":"enemy","zone":"field"},"split":true}]}]}` | 1 | `11034120` |
-| (clause) Deal X damage split between all enemies. X is the number of earth sigils you have | `{"cond":{"counterAtLeast":{"key":"earth","n":"N"}},"op":"if","then":[{"amount":{"counter":"earth"},"op":"damage","select":{"kind":"character","pick":"all","side":"enemy","zone":"field"},"split":true}]}` | 1 | `11034120` |
+| (ability) Deal X damage split between all enemies. X is the number of earth sigils you have | `{"effects":[{"amount":{"counter":"earth"},"op":"damage","select":{"includeLeader":true,"kind":"character","pick":"all","side":"enemy","zone":"field"},"split":true}]}` | 1 | `11034120` |
+| (clause) Deal X damage split between all enemies. X is the number of earth sigils you have | `{"amount":{"counter":"earth"},"op":"damage","select":{"includeLeader":true,"kind":"character","pick":"all","side":"enemy","zone":"field"},"split":true}` | 1 | `11034120` |
 | (clause) Deal X damage split between all enemy followers. X is the number of cards you banished | `{"amount":{"count":{"pick":"bound","ref":"REF"}},"op":"damage","select":{"kind":"follower","pick":"all","side":"enemy","zone":"field"},"split":true}` | 1 | `10543110` |
 | (clause) Deal X damage to N random enemy followers. X is the number of Neutral cards in your hand | `{"amount":{"count":{"filter":{"class":"neutral"},"kind":"card","pick":"all","side":"ally","zone":"hand"}},"op":"damage","select":{"count":"N","kind":"follower","pick":"randomDistinct","side":"enemy","zone":"field"}}` | 1 | `10903110` |
 | (clause) Deal X damage to a random enemy follower. X is the cost of the card you drew | `{"amount":{"stat":{"of":{"pick":"bound","ref":"REF"},"which":"cost"}},"op":"damage","select":{"kind":"follower","pick":"random","side":"enemy","zone":"field"}}` | 1 | `10541310` |
@@ -428,10 +428,8 @@ Index: **2262** rows, **934** distinct phrases, **918** with one shape (per kind
 | (ability) Give all other allied Abysscraft followers on the field +N/+N | `{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"filter":{"class":"abysscraft"},"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}]}` | 1 | `10754110` |
 | (clause) Give all other allied Abysscraft followers on the field +N/+N | `{"attack":"N","defense":"N","op":"buff","select":{"filter":{"class":"abysscraft"},"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}` | 1 | `10754110` |
 | (clause) Give all other allied Swordcraft followers on the field +N/+N and Ward | `{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"filter":{"class":"swordcraft"},"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}},{"op":"grantTraits","select":{"filter":{"class":"swordcraft"},"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"},"traits":{"ward":true}}],"op":"seq"}` | 1 | `10724120` |
-| (ability) Give all other allied followers on the field +N/+N | `{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}]}` | 2 | `10523110`, `10624110` |
-| (ability) Give all other allied followers on the field +N/+N | `{"effects":[{"attack":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}]}` | 1 | `11014110` |
-| (clause) Give all other allied followers on the field +N/+N | `{"attack":"N","defense":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}` | 3 | `10523110`, `10624110`, `10814110` |
-| (clause) Give all other allied followers on the field +N/+N | `{"attack":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}` | 1 | `11014110` |
+| (ability) Give all other allied followers on the field +N/+N | `{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}]}` | 3 | `10523110`, `10624110`, `11014110` |
+| (clause) Give all other allied followers on the field +N/+N | `{"attack":"N","defense":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}` | 4 | `10523110`, `10624110`, `10814110`, … |
 | (ability) Give all other allied followers on the field Bane | `{"effects":[{"op":"grantTraits","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"},"traits":{"bane":true}}]}` | 1 | `11023110` |
 | (clause) Give all other allied followers on the field Bane | `{"op":"grantTraits","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"},"traits":{"bane":true}}` | 1 | `11023110` |
 | (ability) Give all other allied followers on the field Barrier | `{"effects":[{"op":"grantTraits","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"},"traits":{"barrier":true}}]}` | 1 | `10462120` |
@@ -1106,7 +1104,7 @@ Index: **2262** rows, **934** distinct phrases, **918** with one shape (per kind
 | (ability) When this card is discarded, summon a NAME | `{"effects":[{"card":{"named":"ID"},"count":"N","op":"summon"}]}` | 1 | `10644120` |
 | (ability) When this card leaves the field, banish it | `{"effects":[{"op":"banish","select":{"pick":"self"}}]}` | 1 | `90051130` |
 | (ability) When this follower enters the field, if at least N other allied copies of NAME have entered the field this match, give it +N/+N | `{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}],"when":{"enterCountAtLeast":{"card":"ID","n":"N","other":true,"side":"ally"}}}` | 1 | `10931110` |
-| (ability) When this follower enters the field, if there are at least N other N-base-cost allied cards on the field, give it +N/+N | `{"effects":[{"cond":{"countAtLeast":{"n":"N","select":{"filter":{"baseCostEq":"N"},"kind":"card","other":true,"pick":"all","side":"ally","zone":"field"}}},"op":"if","then":[{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}]}]}` | 1 | `11012110` |
+| (ability) When this follower enters the field, if there are at least N other N-base-cost allied cards on the field, give it +N/+N | `{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}],"when":{"countAtLeast":{"n":"N","select":{"filter":{"baseCostEq":"N"},"kind":"card","other":true,"pick":"all","side":"ally","zone":"field"}}}}` | 1 | `11012110` |
 | (ability) When this follower enters the field, restore N defense to your leader | `{"effects":[{"amount":"N","op":"restore","select":{"kind":"leader","pick":"all","side":"ally","zone":"leader"}}]}` | 1 | `10661110` |
 | (ability) When this follower evolves, add a NAME to your hand | `{"effects":[{"card":{"named":"ID"},"count":"N","op":"addToHand"}]}` | 1 | `10654120` |
 | (ability) When this follower evolves, deal N damage to all enemies | `{"effects":[{"amount":"N","op":"damage","select":{"includeLeader":true,"kind":"character","pick":"all","side":"enemy","zone":"field"}}]}` | 1 | `10642120` |
@@ -1228,7 +1226,7 @@ Index: **2262** rows, **934** distinct phrases, **918** with one shape (per kind
 | (clause) give all other followers on the field -N/-N | `{"attack":"N","defense":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"any","zone":"field"}}` | 1 | `10564110` |
 | (clause) give it "Last Words: Summon a copy of this card" and, until the end of the turn, "Can't attack followers or leaders." | `{"effects":[{"ability":{"effects":[{"card":{"copyOf":{"pick":"self"},"exact":false},"count":"N","op":"summon"}],"on":"lastWords"},"op":"grantAbility","select":{"pick":"entering"}},{"op":"grantTraits","select":{"pick":"entering"},"traits":{"cantAttackFollowers":true,"cantAttackLeader":true},"until":"endOfTurn"}],"op":"seq"}` | 1 | `crest:11004110` |
 | (clause) give it +N/+N | `{"attack":"N","defense":"N","op":"buff","select":{"pick":"entering"}}` | 3 | `10022210`, `crest:10634110`, `crest:10841130` |
-| (clause) give it +N/+N | `{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}` | 1 | `10931110` |
+| (clause) give it +N/+N | `{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}` | 2 | `10931110`, `11012110` |
 | (clause) give it +N/+N and Rush and give this follower +N/+N | `{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"pick":"entering"}},{"op":"grantTraits","select":{"pick":"entering"},"traits":{"rush":true}},{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}],"op":"seq"}` | 1 | `10824120` |
 | (clause) give it +N/+N until the end of the turn | `{"attack":"N","defense":"N","op":"buff","select":{"pick":"entering"},"untilEndOfTurn":true}` | 1 | `crest:10544120` |
 | (clause) give it +N/+N, Rush, and Ward and deal N damage to the enemy leader | `{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"pick":"entering"}},{"op":"grantTraits","select":{"pick":"entering"},"traits":{"rush":true,"ward":true}},{"amount":"N","op":"damage","select":{"kind":"leader","pick":"all","side":"enemy","zone":"leader"}}],"op":"seq"}` | 1 | `10754120` |
@@ -1248,7 +1246,6 @@ Index: **2262** rows, **934** distinct phrases, **918** with one shape (per kind
 | (clause) if its cost is N, add a NAME to your hand and set its cost to N | `{"cond":{"costEq":"N"},"op":"if","then":[{"as":"REF","card":{"named":"ID"},"count":"N","op":"addToHand"},{"op":"cost","select":{"pick":"bound","ref":"REF"},"set":"N"}]}` | 1 | `10643310` |
 | (clause) if its cost is N, add an NAME to your hand and set its cost to N | `{"cond":{"costEq":"N"},"op":"if","then":[{"as":"REF","card":{"named":"ID"},"count":"N","op":"addToHand"},{"op":"cost","select":{"pick":"bound","ref":"REF"},"set":"N"}]}` | 1 | `10641310` |
 | (clause) if there are at least N allied amulets on the field, deal N damage to all enemies | `{"cond":{"countAtLeast":{"n":"N","select":{"kind":"amulet","pick":"all","side":"ally","zone":"field"}}},"op":"if","then":[{"amount":"N","op":"damage","select":{"includeLeader":true,"kind":"character","pick":"all","side":"enemy","zone":"field"}}]}` | 1 | `90064210` |
-| (clause) if there are at least N other N-base-cost allied cards on the field, give it +N/+N | `{"cond":{"countAtLeast":{"n":"N","select":{"filter":{"baseCostEq":"N"},"kind":"card","other":true,"pick":"all","side":"ally","zone":"field"}}},"op":"if","then":[{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}]}` | 1 | `11012110` |
 | (clause) if there's an allied card on the field with a base cost of N or more, deal N damage to the enemy leader and restore N defense to your leader | `{"cond":{"fieldHas":{"filter":{"baseCostGte":"N"},"kind":"card","side":"ally"}},"op":"if","then":[{"amount":"N","op":"damage","select":{"kind":"leader","pick":"all","side":"enemy","zone":"leader"}},{"amount":"N","op":"restore","select":{"kind":"leader","pick":"all","side":"ally","zone":"leader"}}]}` | 1 | `crest:10964110` |
 | (clause) if there's an evolved allied follower on the field, restore N defense to your leader | `{"cond":{"fieldHas":{"filter":{"evolved":true},"kind":"follower","side":"ally"}},"op":"if","then":[{"amount":"N","op":"restore","select":{"kind":"leader","pick":"all","side":"ally","zone":"leader"}}]}` | 1 | `10863210` |
 | (clause) if this follower is unevolved, deal N damage to N random enemy followers and restore N defense to your leader | `{"cond":{"evolved":false},"op":"if","then":[{"amount":"N","op":"damage","select":{"count":"N","kind":"follower","pick":"randomDistinct","side":"enemy","zone":"field"}},{"amount":"N","op":"restore","select":{"kind":"leader","pick":"all","side":"ally","zone":"leader"}}]}` | 1 | `10544110` |
@@ -1277,7 +1274,7 @@ Index: **2262** rows, **934** distinct phrases, **918** with one shape (per kind
 | (clause) summon a NAME or NAME at random | `{"card":{"randomNamed":["ID","ID"]},"count":"N","op":"summon"}` | 1 | `crest:10564120` |
 | (clause) summon an NAME | `{"card":{"named":"ID"},"count":"N","op":"summon"}` | 2 | `10574120`, `crest:11012310` |
 | (clause) summon an enemy NAME or NAME at random | `{"card":{"randomNamed":["ID","ID"]},"controller":"opponent","count":"N","op":"summon"}` | 1 | `crest:10564120` |
-| (clause) swap this follower's attack and defense and give it +N/+N | `{"effects":[{"op":"swapStats","select":{"pick":"self"}},{"attack":"N","op":"buff","select":{"pick":"self"}}],"op":"seq"}` | 4 | `11021110`, `11022110`, `11023110`, … |
+| (clause) swap this follower's attack and defense and give it +N/+N | `{"effects":[{"op":"swapStats","select":{"pick":"self"}},{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}],"op":"seq"}` | 4 | `11021110`, `11022110`, `11023110`, … |
 
 ## Divergent phrases
 
@@ -1308,16 +1305,6 @@ Every same-kind phrase with more than one construction shape. Unlisted divergenc
 
 - `{"as":"REF","count":"N","filter":{"kind":"follower"},"op":"draw"}` — `10541310`
 - `{"count":"N","filter":{"kind":"follower"},"op":"draw"}` — `10002210`
-
-### `(ability) Give all other allied followers on the field +N/+N`
-
-- `{"effects":[{"attack":"N","defense":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}]}` — `10523110`, `10624110`
-- `{"effects":[{"attack":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}]}` — `11014110`
-
-### `(clause) Give all other allied followers on the field +N/+N`
-
-- `{"attack":"N","defense":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}` — `10523110`, `10624110`, `10814110`
-- `{"attack":"N","op":"buff","select":{"kind":"follower","other":true,"pick":"all","side":"ally","zone":"field"}}` — `11014110`
 
 ### `(clause) Give them Storm`
 
@@ -1400,7 +1387,7 @@ Every same-kind phrase with more than one construction shape. Unlisted divergenc
 ### `(clause) give it +N/+N`
 
 - `{"attack":"N","defense":"N","op":"buff","select":{"pick":"entering"}}` — `10022210`, `crest:10634110`, `crest:10841130`
-- `{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}` — `10931110`
+- `{"attack":"N","defense":"N","op":"buff","select":{"pick":"self"}}` — `10931110`, `11012110`
 
 ## Exceptions
 
@@ -1422,5 +1409,4 @@ From `tools/phrase-index-exceptions.json`. Each entry names ids and the sentence
 | Whenever a NAME is destroyed, restore N defense to your leader | Lifestealer 10553110 prints "a Skeleton" with no side, so both ally_follower_destroyed and enemy_follower_destroyed are required (docs/schema.md Events). | `10553110` |
 | Whenever an allied Marine follower attacks, give it +N/+N until the end of the turn and, once on each of your turns, add a NAME to your hand | Yube's crest is one printed sentence with two triggers (always-buff vs once-per-your-turn add), so the same phrase is two abilities. | `crest:10544120` |
 | give it +N/+N | On a when-enter ability "it" is pick:entering; on Obsessed Test Subject 10931110 the enter-route subject is pick:self (owner 2026-08-30 named_enter_count). | `10931110`, `10022210` |
-| Give all other allied followers on the field +N/+N | Nosche 11014110 prints +2/+0 (attack-only buff). Digit normalization collapses it onto the +N/+N phrase used by Unmoving Tactician / similar +N/+N Super-Evolves. | `11014110`, `10523110`, `10624110`, `10814110` |
 | Give them Storm | Marionette Master 10571110 grants Storm to two separately bound summons (seq of two grantTraits). Atelier Relocation 11031310 grants Storm once to a single bound summon group of Clay Golems. | `10571110`, `11031310` |

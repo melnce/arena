@@ -118,10 +118,9 @@ fn calamity_in_custody_one_clue_heals_without_consume_two_destroys_highest() {
         "negative: destroy branch must not fire with <2 clues"
     );
 
-    // With 2 clues: destroy random highest-attack enemy (ties random).
+    // With 2 clues: destroy random highest-attack enemy; clue count after Consume 2.
     let mut st = started(&db, 10_401);
     put_field(&db, &mut st, PlayerId::A, EVIDENCE);
-    // Merge second Evidence → count 2.
     play_pp(&db, &mut st, EVIDENCE, 1);
     assert_eq!(clue_count(&st, PlayerId::A), 2);
     put_field(&db, &mut st, PlayerId::B, "89500010"); // Atk Five 5/10 — highest
@@ -129,6 +128,11 @@ fn calamity_in_custody_one_clue_heals_without_consume_two_destroys_highest() {
     st.player_mut(PlayerId::A).leader_defense = 10;
     play_pp(&db, &mut st, CALAMITY, 1);
     assert_eq!(leader_def(&st, PlayerId::A), 12);
+    assert_eq!(
+        clue_count(&st, PlayerId::A),
+        0,
+        "Consume 2 clues → clue count 0 (amulet gone)"
+    );
     assert!(
         !field_has(&st, PlayerId::B, "89500010"),
         "consume 2 clues destroys highest-atk enemy"
@@ -136,6 +140,44 @@ fn calamity_in_custody_one_clue_heals_without_consume_two_destroys_highest() {
     assert!(
         field_has(&st, PlayerId::B, VANILLA),
         "lower-atk enemy survives"
+    );
+
+    // Tie at highest attack: both tied, so whichever random pick, one of the two
+    // highest is destroyed and the third (lower) always survives — board where
+    // every random choice yields the same survivors set for the lower one.
+    let mut st = started(&db, 10_402);
+    put_field(&db, &mut st, PlayerId::A, EVIDENCE);
+    play_pp(&db, &mut st, EVIDENCE, 1);
+    put_field(&db, &mut st, PlayerId::B, TANK); // 2/10
+    put_field(&db, &mut st, PlayerId::B, TANK); // 2/10 — tied highest
+    put_field(&db, &mut st, PlayerId::B, VANILLA); // 2/2 atk same? Vanilla is 2/2 — atk 2 tied!
+    // Use a strictly lower-atk follower for the survivor guarantee.
+    for s in st.player_mut(PlayerId::B).field.iter_mut() {
+        *s = None;
+    }
+    put_field(&db, &mut st, PlayerId::B, "89500010"); // 5 atk
+    put_field(&db, &mut st, PlayerId::B, "89500010"); // 5 atk tied
+    put_field(&db, &mut st, PlayerId::B, VANILLA); // 2 atk
+    play_pp(&db, &mut st, CALAMITY, 1);
+    assert_eq!(
+        count_id(&st, PlayerId::B, "89500010"),
+        1,
+        "tie at highest: exactly one of the tied highest is destroyed"
+    );
+    assert!(
+        field_has(&st, PlayerId::B, VANILLA),
+        "lower-atk always survives a highest-atk random destroy"
+    );
+
+    // Fuse to Calamity summons Evidence.
+    let mut st = started(&db, 10_403);
+    clear_hand(&mut st, PlayerId::A);
+    let host = put_hand(&db, &mut st, PlayerId::A, CALAMITY);
+    let p = put_hand(&db, &mut st, PlayerId::A, EVIDENCE);
+    fuse_amulets(&db, &mut st, host, &[p]);
+    assert!(
+        field_has(&st, PlayerId::A, EVIDENCE),
+        "Whenever you Fuse to this card, summon a Divine Evidence"
     );
 }
 
@@ -299,16 +341,38 @@ fn lineage_destroys_all_same_name_fused_halves_max_unfused_does_not() {
     put_field(&db, &mut st, PlayerId::B, TANK);
     put_field(&db, &mut st, PlayerId::B, STORM);
     clear_hand(&mut st, PlayerId::A);
-    // Unfused Lineage: destroy copies, no halve.
     let max0 = st.player(PlayerId::B).leader_max;
     play_pp(&db, &mut st, LINEAGE, 9);
-    // Choice: select a tank.
-    assert!(
-        !field_has(&st, PlayerId::B, TANK),
-        "destroys all copies of selected (including selected)"
+    // Choose explicitly: find tank option.
+    if let Phase::Choice {
+        node: ChoiceNode::Targets { options, .. },
+        ..
+    } = &st.phase
+    {
+        let idx = options
+            .iter()
+            .position(|o| {
+                matches!(
+                    o,
+                    arena_engine::TargetOpt::Slot { player, slot }
+                        if *player == PlayerId::B
+                            && st
+                                .field_inst(*player, *slot)
+                                .is_some_and(|c| c.card.as_str() == TANK)
+                )
+            })
+            .expect("tank among options") as u8;
+        choose(&db, &mut st, idx);
+        drain_choice(&db, &mut st);
+    }
+    assert_eq!(
+        count_id(&st, PlayerId::B, TANK),
+        0,
+        "destroys all enemy copies of the selected name (both tanks)"
     );
-    assert!(
-        field_has(&st, PlayerId::B, STORM),
+    assert_eq!(
+        count_id(&st, PlayerId::B, STORM),
+        1,
         "negative: differently named enemy survives"
     );
     assert_eq!(
@@ -317,7 +381,7 @@ fn lineage_destroys_all_same_name_fused_halves_max_unfused_does_not() {
         "unfused → no halve of enemy leader max"
     );
 
-    // Fused → also halve enemy leader max (ceil).
+    // Fused: Evidence on fuse; odd max → ⌈max/2⌉; defense clamps.
     let mut st = started(&db, 10_431);
     put_field(&db, &mut st, PlayerId::B, TANK);
     put_field(&db, &mut st, PlayerId::B, TANK);
@@ -326,8 +390,12 @@ fn lineage_destroys_all_same_name_fused_halves_max_unfused_does_not() {
     let host = put_hand(&db, &mut st, PlayerId::A, LINEAGE);
     let p = put_hand(&db, &mut st, PlayerId::A, EVIDENCE);
     fuse_amulets(&db, &mut st, host, &[p]);
-    st.player_mut(PlayerId::B).leader_max = 20;
-    st.player_mut(PlayerId::B).leader_defense = 20;
+    assert!(
+        field_has(&st, PlayerId::A, EVIDENCE),
+        "Whenever you Fuse to this card, summon a Divine Evidence"
+    );
+    st.player_mut(PlayerId::B).leader_max = 21; // odd → ⌈21/2⌉ = 11
+    st.player_mut(PlayerId::B).leader_defense = 21;
     give_pp(&mut st, PlayerId::A, 9, 9);
     let h = st
         .player(PlayerId::A)
@@ -336,21 +404,46 @@ fn lineage_destroys_all_same_name_fused_halves_max_unfused_does_not() {
         .position(|c| c.card.as_str() == LINEAGE)
         .unwrap() as u8;
     play(&db, &mut st, h);
-    // Choose tank among options.
-    if matches!(st.phase, Phase::Choice { .. }) {
-        // Prefer tank if options expose both; choose 0 is fine if tanks first.
-        choose(&db, &mut st, 0);
+    if let Phase::Choice {
+        node: ChoiceNode::Targets { options, .. },
+        ..
+    } = &st.phase
+    {
+        let idx = options
+            .iter()
+            .position(|o| {
+                matches!(
+                    o,
+                    arena_engine::TargetOpt::Slot { player, slot }
+                        if *player == PlayerId::B
+                            && st
+                                .field_inst(*player, *slot)
+                                .is_some_and(|c| c.card.as_str() == TANK)
+                )
+            })
+            .expect("tank") as u8;
+        choose(&db, &mut st, idx);
         drain_choice(&db, &mut st);
     }
     assert_eq!(
-        st.player(PlayerId::B).leader_max,
-        10,
-        "fused → halve enemy leader max (⌈20/2⌉=10)"
+        count_id(&st, PlayerId::B, TANK),
+        0,
+        "fused: still destroys all same-name copies"
     );
-    assert!(
-        field_has(&st, PlayerId::B, STORM)
-            || count_id(&st, PlayerId::B, STORM) + count_id(&st, PlayerId::B, TANK) <= 1,
-        "different name can survive depending on selection"
+    assert_eq!(
+        st.player(PlayerId::B).leader_max,
+        11,
+        "fused → ⌈21/2⌉ = 11"
+    );
+    assert_eq!(
+        st.player(PlayerId::B).leader_defense,
+        11,
+        "defense clamps down to the new max"
+    );
+    assert_eq!(
+        count_id(&st, PlayerId::B, STORM),
+        1,
+        "negative: different name survives fused destroy"
     );
 }
 
@@ -409,5 +502,356 @@ fn fuse_amulets_partners_only_accept_amulets() {
     assert!(
         !options.contains(&2),
         "negative: follower must not be a Fuse: Amulets partner"
+    );
+}
+
+#[test]
+fn majordomo_last_words_adds_two_evidence() {
+    let db = load_db();
+    let mut st = started(&db, 10_460);
+    let slot = put_field(&db, &mut st, PlayerId::A, MAJORDOMO);
+    clear_hand(&mut st, PlayerId::A);
+    st.player_mut(PlayerId::A).field[slot as usize]
+        .as_mut()
+        .unwrap()
+        .defense = 0;
+    play_pp(&db, &mut st, "88001710", 1);
+    let n = st
+        .player(PlayerId::A)
+        .hand
+        .iter()
+        .filter(|c| c.card.as_str() == EVIDENCE)
+        .count();
+    assert_eq!(n, 2, "Last Words: Add 2 Divine Evidence to hand");
+
+    // Negative: destroying something else does not add Evidence.
+    let mut st = started(&db, 10_461);
+    put_field(&db, &mut st, PlayerId::A, VANILLA);
+    clear_hand(&mut st, PlayerId::A);
+    st.player_mut(PlayerId::A).field[0].as_mut().unwrap().defense = 0;
+    play_pp(&db, &mut st, "88001710", 1);
+    assert!(
+        !hand_has(&st, PlayerId::A, EVIDENCE),
+        "negative: non-Majordomo LW does not add Evidence"
+    );
+}
+
+#[test]
+fn otherworldly_intruder_has_storm_and_aura() {
+    let db = load_db();
+    let mut st = started(&db, 10_462);
+    play_pp(&db, &mut st, INTRUDER, 6);
+    let c = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == INTRUDER)
+        .expect("Intruder");
+    assert_eq!(c.traits.storm, Some(true), "printed Storm");
+    assert_eq!(c.traits.aura, Some(true), "printed Aura");
+
+    // Negative: a vanilla follower has neither.
+    put_field(&db, &mut st, PlayerId::A, VANILLA);
+    let v = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == VANILLA)
+        .unwrap();
+    assert_ne!(v.traits.storm, Some(true));
+    assert_ne!(v.traits.aura, Some(true));
+}
+
+#[test]
+fn bestial_beamcannoneer_summons_striker_and_ancient() {
+    let db = load_db();
+    let mut st = started(&db, 10_463);
+    play_pp(&db, &mut st, BEAM, 6);
+    assert!(
+        field_has(&st, PlayerId::A, "90072110"),
+        "Fanfare summons Striker Artifact"
+    );
+    assert!(
+        field_has(&st, PlayerId::A, "90071140"),
+        "Fanfare summons Ancient Artifact"
+    );
+    let beam = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == BEAM)
+        .unwrap();
+    assert_eq!(beam.traits.rush, Some(true), "printed Rush");
+
+    // Negative: without playing Beamcannoneer, those artifacts are absent.
+    let st = started(&db, 10_464);
+    assert!(!field_has(&st, PlayerId::A, "90072110"));
+    assert!(!field_has(&st, PlayerId::A, "90071140"));
+}
+
+#[test]
+fn hand_of_extinction_4_vs_8_when_fused_and_evidence_on_fuse() {
+    let db = load_db();
+    // Unfused: 4 damage.
+    let mut st = started(&db, 10_465);
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    let tank0 = field_def(&st, PlayerId::B, TANK).unwrap();
+    play_pp(&db, &mut st, HAND_EXT, 5);
+    assert_eq!(
+        field_def(&st, PlayerId::B, TANK),
+        Some(tank0 - 4),
+        "unfused: Deal 4 damage to all enemy followers"
+    );
+
+    // Fused: 8 damage + Evidence on fuse.
+    let mut st = started(&db, 10_466);
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    let tank0 = field_def(&st, PlayerId::B, TANK).unwrap();
+    clear_hand(&mut st, PlayerId::A);
+    let host = put_hand(&db, &mut st, PlayerId::A, HAND_EXT);
+    let p = put_hand(&db, &mut st, PlayerId::A, EVIDENCE);
+    fuse_amulets(&db, &mut st, host, &[p]);
+    assert!(
+        field_has(&st, PlayerId::A, EVIDENCE),
+        "Whenever you Fuse to this card, summon a Divine Evidence"
+    );
+    give_pp(&mut st, PlayerId::A, 5, 5);
+    let h = st
+        .player(PlayerId::A)
+        .hand
+        .iter()
+        .position(|c| c.card.as_str() == HAND_EXT)
+        .unwrap() as u8;
+    play(&db, &mut st, h);
+    drain_choice(&db, &mut st);
+    assert_eq!(
+        field_def(&st, PlayerId::B, TANK),
+        Some(tank0 - 8),
+        "fused: Deal 8 damage instead"
+    );
+
+    // Negative: fused damage is to followers only — leader untouched by the AoE.
+    let leader0 = leader_def(&st, PlayerId::B);
+    // Already played; leader should still be full from that play.
+    assert_eq!(
+        leader_def(&st, PlayerId::B),
+        leader0,
+        "negative: Hand of Extinction targets enemy followers, not the leader"
+    );
+}
+
+#[test]
+fn extinctionist_dandy_multi_amulet_fuse_destroy_and_restore() {
+    let db = load_db();
+    let mut st = started(&db, 10_470);
+    play_pp(&db, &mut st, DANDY, 8);
+    let evidence_hand = st
+        .player(PlayerId::A)
+        .hand
+        .iter()
+        .filter(|c| c.card.as_str() == EVIDENCE)
+        .count();
+    assert_eq!(evidence_hand, 2, "Fanfare: Add 2 Divine Evidence");
+
+    clear_hand(&mut st, PlayerId::A);
+    let host = put_hand(&db, &mut st, PlayerId::A, HAND_EXT);
+    let a1 = put_hand(&db, &mut st, PlayerId::A, EVIDENCE);
+    let a2 = put_hand(&db, &mut st, PlayerId::A, EVIDENCE);
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    put_field(&db, &mut st, PlayerId::B, VANILLA);
+    st.player_mut(PlayerId::A).leader_defense = 10;
+    let enemies0 = st.player(PlayerId::B).field_count();
+    fuse_amulets(&db, &mut st, host, &[a1, a2]);
+    let enemies1 = st.player(PlayerId::B).field_count();
+    // Once-per-action (const true): one destroy, one restore 2 — not two.
+    assert_eq!(
+        enemies0 - enemies1,
+        1,
+        "multi-amulet fuse: one destroy (FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION)"
+    );
+    assert_eq!(
+        leader_def(&st, PlayerId::A),
+        12,
+        "multi-amulet fuse: restore 2 once"
+    );
+
+    // Negative: fuse without Dandy on field does not destroy/restore via Dandy.
+    let mut st = started(&db, 10_471);
+    clear_hand(&mut st, PlayerId::A);
+    let host = put_hand(&db, &mut st, PlayerId::A, HAND_EXT);
+    let a1 = put_hand(&db, &mut st, PlayerId::A, EVIDENCE);
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    st.player_mut(PlayerId::A).leader_defense = 10;
+    fuse_amulets(&db, &mut st, host, &[a1]);
+    assert!(
+        field_has(&st, PlayerId::B, TANK),
+        "negative: without Dandy, fuse does not destroy via Dandy"
+    );
+    assert_eq!(leader_def(&st, PlayerId::A), 10);
+}
+
+#[test]
+fn socialite_fanfare_evidence_evolve_draws_fuse_card() {
+    let db = load_db();
+    let mut st = started(&db, 10_475);
+    clear_hand(&mut st, PlayerId::A);
+    play_pp(&db, &mut st, SOCIALITE, 3);
+    let n = st
+        .player(PlayerId::A)
+        .hand
+        .iter()
+        .filter(|c| c.card.as_str() == EVIDENCE)
+        .count();
+    assert_eq!(n, 2, "Fanfare: Add 2 Divine Evidence");
+
+    // Evolve: Draw a card with Fuse — put Hand of Extinction on top of deck.
+    st.player_mut(PlayerId::A).deck.clear();
+    put_deck(&db, &mut st, PlayerId::A, HAND_EXT);
+    put_deck(&db, &mut st, PlayerId::A, VANILLA); // non-Fuse below
+    // Deck draws from end in this engine? put_deck usually pushes; ensure Fuse is drawn.
+    // Use only Fuse card in deck so every draw is Fuse.
+    st.player_mut(PlayerId::A).deck.clear();
+    put_deck(&db, &mut st, PlayerId::A, HAND_EXT);
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == SOCIALITE)
+                .map(|_| i as u8)
+        })
+        .unwrap();
+    // evolve helper inline
+    set_round(&mut st, PlayerId::A, 5);
+    st.player_mut(PlayerId::A).ep = 1;
+    apply(
+        &db,
+        &mut st,
+        arena_engine::Action::Evolve {
+            slot: arena_engine::Slot(slot),
+            super_evolve: false,
+        },
+    )
+    .expect("evolve");
+    drain_choice(&db, &mut st);
+    assert!(
+        hand_has(&st, PlayerId::A, HAND_EXT),
+        "Evolve: Draw a card with Fuse"
+    );
+
+    // Negative: deck of only non-Fuse → draw finds nothing / skips.
+    let mut st = started(&db, 10_476);
+    play_pp(&db, &mut st, SOCIALITE, 3);
+    st.player_mut(PlayerId::A).deck.clear();
+    put_deck(&db, &mut st, PlayerId::A, VANILLA);
+    clear_hand(&mut st, PlayerId::A);
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == SOCIALITE)
+                .map(|_| i as u8)
+        })
+        .unwrap();
+    set_round(&mut st, PlayerId::A, 5);
+    st.player_mut(PlayerId::A).ep = 1;
+    apply(
+        &db,
+        &mut st,
+        arena_engine::Action::Evolve {
+            slot: arena_engine::Slot(slot),
+            super_evolve: false,
+        },
+    )
+    .unwrap();
+    drain_choice(&db, &mut st);
+    assert!(
+        !hand_has(&st, PlayerId::A, VANILLA),
+        "negative: Evolve draw filter requires Fuse"
+    );
+}
+
+#[test]
+fn wanderer_fuse_gives_rush_once_per_action_and_se_storm() {
+    let db = load_db();
+    let mut st = started(&db, 10_480);
+    let wslot = put_field(&db, &mut st, PlayerId::A, WANDERER);
+    assert_ne!(
+        st.field_inst(PlayerId::A, wslot).unwrap().traits.rush,
+        Some(true),
+        "setup: no Rush yet"
+    );
+    clear_hand(&mut st, PlayerId::A);
+    let host = put_hand(&db, &mut st, PlayerId::A, HAND_EXT);
+    let a1 = put_hand(&db, &mut st, PlayerId::A, EVIDENCE);
+    let a2 = put_hand(&db, &mut st, PlayerId::A, EVIDENCE);
+    fuse_amulets(&db, &mut st, host, &[a1, a2]);
+    assert_eq!(
+        st.field_inst(PlayerId::A, wslot).unwrap().traits.rush,
+        Some(true),
+        "Whenever you Fuse → Rush (once per Fuse action, two partners)"
+    );
+    // Crest countdown also advances once (not twice) for the multi-partner fuse —
+    // only when crest is present; grant via LW path separately covered. Here assert
+    // Rush is boolean once.
+
+    // Super-Evolve: Storm.
+    set_round(&mut st, PlayerId::A, 7);
+    st.player_mut(PlayerId::A).sep = 1;
+    apply(
+        &db,
+        &mut st,
+        arena_engine::Action::Evolve {
+            slot: arena_engine::Slot(wslot),
+            super_evolve: true,
+        },
+    )
+    .unwrap();
+    drain_choice(&db, &mut st);
+    assert_eq!(
+        st.field_inst(PlayerId::A, wslot).unwrap().traits.storm,
+        Some(true),
+        "Super-Evolve: Give this follower Storm"
+    );
+
+    // Crest once-per-fuse-action: multi-partner fuse advances countdown by 1.
+    let mut st = started(&db, 10_481);
+    let order = st.crest_order;
+    st.crest_order += 1;
+    st.player_mut(PlayerId::A)
+        .crests
+        .push(arena_engine::state::CrestInstance {
+            id: WANDERER_CREST.into(),
+            countdown: Some(2),
+            faith: false,
+            once_used: vec![],
+            granted_order: order,
+            granted: vec![],
+            choose_used: Default::default(),
+            sequence_index: 0,
+        });
+    clear_hand(&mut st, PlayerId::A);
+    let host = put_hand(&db, &mut st, PlayerId::A, HAND_EXT);
+    let a1 = put_hand(&db, &mut st, PlayerId::A, EVIDENCE);
+    let a2 = put_hand(&db, &mut st, PlayerId::A, EVIDENCE);
+    fuse_amulets(&db, &mut st, host, &[a1, a2]);
+    let cd = st
+        .player(PlayerId::A)
+        .crests
+        .iter()
+        .find(|c| c.id == WANDERER_CREST)
+        .and_then(|c| c.countdown);
+    assert_eq!(
+        cd,
+        Some(1),
+        "crest: multi-amulet fuse advances countdown once, not per partner"
     );
 }

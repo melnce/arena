@@ -522,7 +522,7 @@ This section enumerates the keyword abilities and major mechanics of SVWB. Each 
 - **Untamed Testimony** crest (Countdown 2): start-of-turn triggers are **queued before** the same step's countdown advance; losing the crest to that tick does **not** cancel the already-queued trigger (two Mischiefs over two turns).
 - **Guileless Newsie** (`11021110`): `swapStats` then `buff +1/+0`. Printed "exact copy" → `exact: true`; "a copy" / "copies" → `exact: false`.
 - **Almaelys** sequence + Super-Evolve Delay 2 → four activations (sequence cursor wraps; delay does not reset it).
-- **Noeinhowell Interrogation** crest: `choose by: randomUnused` (no repetition); the third activation destroys.
+- **Noeinhowell Interrogation** crest: `sequence` in order without repetition; the third activation destroys.
 - **Noeinhowell** crest: once per your turn, recover 1 PP when you Engage an amulet.
 - **Infernal Chimera** (`11034120`, Q&A): X=0 deals **no** damage (not a 0-split). "All enemies" includes the enemy leader. **Lineage** (`11074110`) `{halve: true}` — engine choice: ⌈max/2⌉.
 - **Fuse once per action** (Sephie-style once-per-instance still applies). **"Whenever you Fuse an amulet"** (`ally_fuse_amulet`, Socialite `11072110` / Dandy `11073110`) — **pending owner**; engine constant `FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION = true` (once per Fuse action that includes ≥1 amulet, not per amulet partner). JA has no "for each".

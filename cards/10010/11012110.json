@@ -7,9 +7,9 @@
   "rarity": "silver",
   "token": false,
   "cost": 1,
-  "text": "When this follower enters the field, if there are at least 2 other 1-base-cost allied cards on the field, give it +2/+1.\n\nRush",
   "attack": 1,
   "defense": 1,
+  "text": "When this follower enters the field, if there are at least 2 other 1-base-cost allied cards on the field, give it +2/+1.\n\nRush",
   "traits": {
     "rush": true
   },
@@ -17,35 +17,30 @@
     {
       "on": "enter",
       "printed": "When this follower enters the field, if there are at least 2 other 1-base-cost allied cards on the field, give it +2/+1.",
+      "when": {
+        "countAtLeast": {
+          "n": 2,
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "card",
+            "other": true,
+            "filter": {
+              "baseCostEq": 1
+            }
+          }
+        }
+      },
       "effects": [
         {
-          "printed": "if there are at least 2 other 1-base-cost allied cards on the field, give it +2/+1.",
-          "op": "if",
-          "cond": {
-            "countAtLeast": {
-              "select": {
-                "pick": "all",
-                "side": "ally",
-                "zone": "field",
-                "kind": "card",
-                "filter": {
-                  "baseCostEq": 1
-                },
-                "other": true
-              },
-              "n": 2
-            }
+          "printed": "give it +2/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "self"
           },
-          "then": [
-            {
-              "op": "buff",
-              "select": {
-                "pick": "self"
-              },
-              "attack": 2,
-              "defense": 1
-            }
-          ]
+          "attack": 2,
+          "defense": 1
         }
       ]
     }

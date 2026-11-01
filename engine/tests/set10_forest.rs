@@ -184,12 +184,18 @@ fn untamed_testimony_crest_summons_mischief_two_turns_not_on_enemy_turn() {
 #[test]
 fn nosches_interrogation_storm_gated_on_two_one_cost_allies() {
     let db = load_db();
-    // With ≥2 one-cost allies, added Mischief has Storm.
+    // Lone enemy tank: every random pick deals the printed 5 to it.
     let mut st = started(&db, 10_120);
     put_field(&db, &mut st, PlayerId::A, FAIRY);
     put_field(&db, &mut st, PlayerId::A, EVIDENCE);
     put_field(&db, &mut st, PlayerId::B, TANK);
+    let tank0 = field_def(&st, PlayerId::B, TANK).unwrap();
     play_pp(&db, &mut st, INTERROGATION, 3);
+    assert_eq!(
+        field_def(&st, PlayerId::B, TANK),
+        Some(tank0 - 5),
+        "printed: Deal 5 damage to a random enemy follower"
+    );
     let hand_m = st
         .player(PlayerId::A)
         .hand
@@ -202,11 +208,17 @@ fn nosches_interrogation_storm_gated_on_two_one_cost_allies() {
         "≥2 one-cost allies → Storm on added Mischief"
     );
 
-    // Negative: without two one-cost allies, no Storm.
+    // Negative: without two one-cost allies, no Storm; damage still 5.
     let mut st = started(&db, 10_121);
     put_field(&db, &mut st, PlayerId::A, FAIRY);
     put_field(&db, &mut st, PlayerId::B, TANK);
+    let tank0 = field_def(&st, PlayerId::B, TANK).unwrap();
     play_pp(&db, &mut st, INTERROGATION, 3);
+    assert_eq!(
+        field_def(&st, PlayerId::B, TANK),
+        Some(tank0 - 5),
+        "damage is still exactly 5 without the Storm branch"
+    );
     let hand_m = st
         .player(PlayerId::A)
         .hand
@@ -230,11 +242,6 @@ fn wolf_pack_lackey_fanfare_copies_no_nested_summon_evolve_replicates() {
         3,
         "Fanfare summons 2 copies (self + 2)"
     );
-    // Negative: copies do not themselves Fanfare-summon further Lackeys.
-    assert!(
-        count_id(&st, PlayerId::A, LACKEY) < 5,
-        "negative: summoned copies must not run Fanfare"
-    );
 
     let slot = st
         .player(PlayerId::A)
@@ -247,13 +254,30 @@ fn wolf_pack_lackey_fanfare_copies_no_nested_summon_evolve_replicates() {
                 .map(|_| i as u8)
         })
         .expect("unevolved Lackey");
-    // Need two empty slots for Evolve replicate (2 more copies). Clear space if needed.
-    // Field has 3; Evolve adds 2 → needs 2 free → currently 2 free. OK.
+    // Field has 3; Evolve adds 2 → needs 2 free → currently 2 free.
     evolve_slot(&db, &mut st, slot, false);
     assert_eq!(
         count_id(&st, PlayerId::A, LACKEY),
         5,
         "Evolve replicates Fanfare → two more copies"
+    );
+
+    // Negative: with only one free slot, Fanfare summons one copy (not two) —
+    // summoned copies are still not played, so no nested Fanfare fills the rest.
+    let mut st = started(&db, 10_131);
+    for _ in 0..3 {
+        put_field(&db, &mut st, PlayerId::A, VANILLA);
+    }
+    play_pp(&db, &mut st, LACKEY, 7);
+    assert_eq!(
+        count_id(&st, PlayerId::A, LACKEY),
+        2,
+        "negative: one free slot → only one summoned copy; no nested Fanfare"
+    );
+    assert_eq!(
+        st.player(PlayerId::A).field_count(),
+        5,
+        "negative: field stays full; excess summon skipped"
     );
 }
 
@@ -340,5 +364,219 @@ fn heartening_hyphae_full_field_second_draw_stays_hand_se_full_hand_burns() {
             .count()
             >= 2,
         "negative: both non-forest draws remain in hand"
+    );
+}
+
+#[test]
+fn debonair_dogsitter_evolve_restores_with_two_one_cost_allies() {
+    let db = load_db();
+    let mut st = started(&db, 10_150);
+    play_pp(&db, &mut st, DOGSITTER, 2);
+    assert!(field_has(&st, PlayerId::A, EVIDENCE), "Fanfare summons Evidence");
+    // Evidence (1) + Mischief (1) → two 1-cost allies; Dogsitter itself is 2-cost.
+    put_field(&db, &mut st, PlayerId::A, MISCHIEF);
+    st.player_mut(PlayerId::A).leader_defense = 10;
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == DOGSITTER)
+                .map(|_| i as u8)
+        })
+        .expect("Dogsitter");
+    evolve_slot(&db, &mut st, slot, false);
+    assert_eq!(
+        leader_def(&st, PlayerId::A),
+        12,
+        "Evolve with ≥2 one-cost allies restores 2"
+    );
+
+    // Negative: fewer than two 1-cost allies → no restore.
+    let mut st = started(&db, 10_151);
+    play_pp(&db, &mut st, DOGSITTER, 2);
+    // Only Evidence (1); no second 1-cost.
+    st.player_mut(PlayerId::A).leader_defense = 10;
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == DOGSITTER)
+                .map(|_| i as u8)
+        })
+        .expect("Dogsitter");
+    evolve_slot(&db, &mut st, slot, false);
+    assert_eq!(
+        leader_def(&st, PlayerId::A),
+        10,
+        "negative: fewer than two 1-cost allies → no restore"
+    );
+}
+
+#[test]
+fn natural_reincarnation_enhance_6_summons_3_and_evolves_all_3() {
+    let db = load_db();
+    // Base: summon 1 Fairy and evolve it.
+    let mut st = started(&db, 10_160);
+    play_pp(&db, &mut st, REINCARNATION, 3);
+    assert_eq!(count_id(&st, PlayerId::A, FAIRY), 1);
+    let f = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == FAIRY)
+        .expect("Fairy");
+    assert!(f.evolved, "base: the summoned Fairy is evolved");
+
+    // Enhance (6): Summon 3 instead — and evolve all 3 (bound evolve on the group).
+    let mut st = started(&db, 10_161);
+    play_pp(&db, &mut st, REINCARNATION, 6);
+    assert_eq!(
+        count_id(&st, PlayerId::A, FAIRY),
+        3,
+        "Enhance (6) summons 3 Fairies"
+    );
+    let evolved = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == FAIRY && c.evolved)
+        .count();
+    assert_eq!(
+        evolved, 3,
+        "Enhance (6) evolves all 3 summoned Fairies"
+    );
+
+    // Negative: paying only 3 does not summon three.
+    let mut st = started(&db, 10_162);
+    play_pp(&db, &mut st, REINCARNATION, 3);
+    assert_eq!(
+        count_id(&st, PlayerId::A, FAIRY),
+        1,
+        "negative: without Enhance cost, only one Fairy"
+    );
+}
+
+#[test]
+fn garden_elf_end_of_own_turn_adds_bounty_and_fairy() {
+    let db = load_db();
+    let mut st = started(&db, 10_170);
+    play_pp(&db, &mut st, GARDEN_ELF, 3);
+    clear_hand(&mut st, PlayerId::A);
+    end_turn(&db, &mut st); // A's end → adds
+    assert!(
+        hand_has(&st, PlayerId::A, "90011310"),
+        "end of your turn adds Deepwood Bounty"
+    );
+    assert!(
+        hand_has(&st, PlayerId::A, FAIRY),
+        "end of your turn adds Fairy"
+    );
+
+    // Negative: enemy end of turn does not add.
+    clear_hand(&mut st, PlayerId::A);
+    end_turn(&db, &mut st); // B's end
+    assert!(
+        !hand_has(&st, PlayerId::A, "90011310") && !hand_has(&st, PlayerId::A, FAIRY),
+        "negative: opponent's end of turn must not add"
+    );
+}
+
+#[test]
+fn sleuths_best_friend_evolve_summons_mischief_with_two_one_cost() {
+    let db = load_db();
+    let mut st = started(&db, 10_180);
+    play_pp(&db, &mut st, BEST_FRIEND, 4);
+    assert!(field_has(&st, PlayerId::A, EVIDENCE), "Fanfare Evidence");
+    put_field(&db, &mut st, PlayerId::A, FAIRY); // Evidence + Fairy = two 1-cost
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == BEST_FRIEND)
+                .map(|_| i as u8)
+        })
+        .expect("Best Friend");
+    evolve_slot(&db, &mut st, slot, false);
+    assert_eq!(
+        count_id(&st, PlayerId::A, MISCHIEF),
+        1,
+        "Evolve with ≥2 one-cost allies summons Mischief"
+    );
+
+    // Negative: only Evidence (one 1-cost) → no Mischief.
+    let mut st = started(&db, 10_181);
+    play_pp(&db, &mut st, BEST_FRIEND, 4);
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == BEST_FRIEND)
+                .map(|_| i as u8)
+        })
+        .expect("Best Friend");
+    evolve_slot(&db, &mut st, slot, false);
+    assert_eq!(
+        count_id(&st, PlayerId::A, MISCHIEF),
+        0,
+        "negative: fewer than two 1-cost allies → no Mischief"
+    );
+}
+
+#[test]
+fn nosche_fanfare_summons_and_super_evolve_plus_2_plus_0_other_allies() {
+    let db = load_db();
+    // Fanfare summons.
+    let mut st = started(&db, 10_190);
+    play_pp(&db, &mut st, NOSCHE, 6);
+    assert!(
+        field_has(&st, PlayerId::A, BEST_FRIEND),
+        "Fanfare summons Sleuth's Best Friend"
+    );
+    assert!(
+        field_has(&st, PlayerId::A, MISCHIEF),
+        "Fanfare summons Inquiring Mischief"
+    );
+
+    // SE +2/+0 on a clean board: only Nosche + one other ally (clear Fanfare summons).
+    let mut st = started(&db, 10_191);
+    put_field(&db, &mut st, PlayerId::A, VANILLA);
+    let vanilla_atk0 = field_atk(&st, PlayerId::A, VANILLA).unwrap();
+    let vanilla_def0 = field_def(&st, PlayerId::A, VANILLA).unwrap();
+    let nslot = put_field(&db, &mut st, PlayerId::A, NOSCHE);
+    let nosche_atk0 = field_atk(&st, PlayerId::A, NOSCHE).unwrap();
+    let nosche_def0 = field_def(&st, PlayerId::A, NOSCHE).unwrap();
+    evolve_slot(&db, &mut st, nslot, true);
+    assert_eq!(
+        field_atk(&st, PlayerId::A, VANILLA),
+        Some(vanilla_atk0 + 2),
+        "SE: +2/+0 to other allied followers"
+    );
+    assert_eq!(
+        field_def(&st, PlayerId::A, VANILLA),
+        Some(vanilla_def0),
+        "+2/+0 leaves other allies' defense unchanged"
+    );
+    // Negative: Nosche gets only the SE body +3/+3, not the printed +2/+0.
+    assert_eq!(
+        (
+            field_atk(&st, PlayerId::A, NOSCHE),
+            field_def(&st, PlayerId::A, NOSCHE)
+        ),
+        (Some(nosche_atk0 + 3), Some(nosche_def0 + 3)),
+        "negative: other:true excludes Nosche from the +2/+0 buff"
     );
 }

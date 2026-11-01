@@ -51,7 +51,8 @@
             "kind": "follower",
             "other": true
           },
-          "attack": 2
+          "attack": 2,
+          "defense": 0
         }
       ]
     }

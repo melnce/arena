@@ -17,28 +17,18 @@
       "effects": [
         {
           "printed": "Deal X damage split between all enemies. X is the number of earth sigils you have.",
-          "op": "if",
-          "cond": {
-            "counterAtLeast": {
-              "key": "earth",
-              "n": 1
-            }
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "character",
+            "pick": "all",
+            "includeLeader": true
           },
-          "then": [
-            {
-              "op": "damage",
-              "select": {
-                "side": "enemy",
-                "zone": "field",
-                "kind": "character",
-                "pick": "all"
-              },
-              "amount": {
-                "counter": "earth"
-              },
-              "split": true
-            }
-          ]
+          "amount": {
+            "counter": "earth"
+          },
+          "split": true
         }
       ]
     }

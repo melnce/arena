@@ -22,6 +22,7 @@ const BLADE: &str = "90021310";
 const GOBLET: &str = "90021320";
 const GOLD: &str = "90021350";
 const TANK: &str = "89500001";
+const VANILLA: &str = "88001110";
 const ENGAGE_HELPER: &str = "89500021"; // non-Clue Engage amulet
 const SPELL_PING: &str = "88001640"; // cheap spell (restore) to trigger Lady
 
@@ -213,13 +214,10 @@ fn dichotomous_forensics_and_cross_exam_use_engaged_clue_flag() {
 #[test]
 fn dilettante_sets_newsie_copies_to_self_stats_not_exact() {
     let db = load_db();
+    // Printed Dilettante 5/1 — X=5 ≠ Newsie's printed attack 2.
     let mut st = started(&db, 10_220);
     clear_hand(&mut st, PlayerId::A);
-    // Buff Dilettante in hand via Clue Engages: base 5/1.
-    // 1 engage: 1/5 +1 → 2/5
     put_hand(&db, &mut st, PlayerId::A, DILETTANTE);
-    let slot = put_field(&db, &mut st, PlayerId::A, EVIDENCE);
-    engage_slot(&db, &mut st, slot);
     let dil = st
         .player(PlayerId::A)
         .hand
@@ -227,7 +225,8 @@ fn dilettante_sets_newsie_copies_to_self_stats_not_exact() {
         .find(|c| c.card.as_str() == DILETTANTE)
         .expect("dilettante");
     let (x, y) = (dil.attack, dil.defense);
-    assert_eq!((x, y), (2, 5));
+    assert_eq!((x, y), (5, 1));
+    assert_ne!(x, 2, "X must differ from Newsie's printed attack");
 
     give_pp(&mut st, PlayerId::A, 6, 6);
     let h = st
@@ -247,11 +246,53 @@ fn dilettante_sets_newsie_copies_to_self_stats_not_exact() {
         .collect();
     assert_eq!(news.len(), 2, "summons 2 Newsie copies");
     assert!(
-        news.iter().all(|c| c.attack == x && c.defense == y),
-        "copies set to X/Y = self atk/def ({x}/{y})"
+        news.iter()
+            .all(|c| c.attack == x && c.defense == y && c.max_defense == y),
+        "copies set attack={x}, defense and max_defense={y}; got {:?}",
+        news.iter()
+            .map(|c| (c.attack, c.defense, c.max_defense))
+            .collect::<Vec<_>>()
     );
-    // Negative control: copies are not exact hand-buff snapshots of a Newsie —
-    // they are fresh prints with attack/defense set to X/Y only (asserted above).
+    // Negative: copies are not Newsie's printed 2/1.
+    assert!(
+        news.iter().all(|c| !(c.attack == 2 && c.defense == 1)),
+        "negative: must not leave Newsie at printed 2/1"
+    );
+
+    // Evolve: Give all other allied followers Bane.
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == DILETTANTE)
+                .map(|_| i as u8)
+        })
+        .expect("Dilettante");
+    evolve_slot(&db, &mut st, slot, false);
+    assert!(
+        st.player(PlayerId::A)
+            .field
+            .iter()
+            .flatten()
+            .filter(|c| c.card.as_str() == NEWSIE)
+            .all(|c| c.traits.bane == Some(true)),
+        "Evolve: other allied followers gain Bane"
+    );
+    let dil = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == DILETTANTE)
+        .unwrap();
+    assert_ne!(
+        dil.traits.bane,
+        Some(true),
+        "negative: Evolve Bane is other-only"
+    );
 }
 
 #[test]
@@ -403,7 +444,11 @@ fn no_life_atk_def_branches_bane_drain_ward_storm_or_neither() {
             .iter()
             .find(|c| c.card.as_str() == NO_LIFE)
             .unwrap();
-        assert!(n.attack > n.defense, "setup atk>def via swap");
+        assert_eq!(
+            (n.attack, n.defense, n.max_defense),
+            (7, 5, 5),
+            "one Clue Engage → 7/5 exact"
+        );
     }
     give_pp(&mut st, PlayerId::A, 9, 9);
     let h = st
@@ -431,6 +476,16 @@ fn no_life_atk_def_branches_bane_drain_ward_storm_or_neither() {
         .find(|c| c.traits.ward == Some(true))
         .expect("copy Ward");
     assert!(self_c.id != copy_c.id);
+    assert_eq!(
+        (copy_c.attack, copy_c.defense, copy_c.max_defense),
+        (7, 5, 5),
+        "exact copy keeps 7/5"
+    );
+    assert_eq!(
+        (self_c.attack, self_c.defense, self_c.max_defense),
+        (7, 5, 5),
+        "self also 7/5 after Fanfare"
+    );
     assert_ne!(
         self_c.traits.drain,
         Some(true),
@@ -503,5 +558,230 @@ fn bejeweled_lady_once_per_turn_spell_damages_all_enemies_including_leader() {
         field_def(&st, PlayerId::B, TANK).unwrap_or(0),
         tank1,
         "negative: once per turn on followers too"
+    );
+}
+
+#[test]
+fn newsie_last_words_summons_evidence_no_swap_while_on_field() {
+    let db = load_db();
+    let mut st = started(&db, 10_260);
+    play_pp(&db, &mut st, NEWSIE, 2);
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == NEWSIE)
+                .map(|_| i as u8)
+        })
+        .expect("Newsie");
+    let (atk0, def0) = {
+        let n = st.field_inst(PlayerId::A, slot).unwrap();
+        (n.attack, n.defense)
+    };
+    // Negative: Clue Engage while Newsie is on the field does not swap it.
+    let eslot = put_field(&db, &mut st, PlayerId::A, EVIDENCE);
+    engage_slot(&db, &mut st, eslot);
+    let n = st.field_inst(PlayerId::A, slot).expect("Newsie still on field");
+    assert_eq!(
+        (n.attack, n.defense),
+        (atk0, def0),
+        "negative: in-hand Engage trigger does not swap a Newsie on the field"
+    );
+
+    // Last Words: destroy Newsie → Divine Evidence.
+    st.player_mut(PlayerId::A).field[slot as usize]
+        .as_mut()
+        .unwrap()
+        .defense = 0;
+    play_pp(&db, &mut st, "88001710", 1); // destroy random highest
+    assert!(
+        field_has(&st, PlayerId::A, EVIDENCE),
+        "Last Words: Summon a Divine Evidence"
+    );
+}
+
+#[test]
+fn bejeweled_lady_fanfare_adds_gilded_necklace() {
+    let db = load_db();
+    let mut st = started(&db, 10_261);
+    clear_hand(&mut st, PlayerId::A);
+    play_pp(&db, &mut st, BEJEWELED, 5);
+    assert!(
+        hand_has(&st, PlayerId::A, "90021340"),
+        "Fanfare: Add a Gilded Necklace to your hand"
+    );
+    // Negative: Necklace is not summoned to field.
+    assert!(
+        !field_has(&st, PlayerId::A, "90021340"),
+        "negative: Necklace goes to hand, not field"
+    );
+}
+
+#[test]
+fn onward_charge_summons_two_evolved_knights_with_barrier() {
+    let db = load_db();
+    const KNIGHT: &str = "90021120";
+    let mut st = started(&db, 10_262);
+    play_pp(&db, &mut st, CHARGE, 7);
+    let knights: Vec<_> = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == KNIGHT)
+        .collect();
+    assert_eq!(knights.len(), 2, "summons 2 Steelclad Knights");
+    assert!(
+        knights.iter().all(|c| c.evolved && c.traits.barrier == Some(true)),
+        "both evolved with Barrier"
+    );
+
+    // Negative: playing nothing else leaves no third knight.
+    assert_eq!(
+        st.player(PlayerId::A).field_count(),
+        2,
+        "negative: exactly two knights, no extras"
+    );
+}
+
+#[test]
+fn cheeky_architect_in_hand_swap_fanfare_x_damage_evolve_newsie() {
+    let db = load_db();
+    let mut st = started(&db, 10_263);
+    clear_hand(&mut st, PlayerId::A);
+    put_hand(&db, &mut st, PlayerId::A, ARCHITECT); // printed 1/4
+    // One Clue Engage: 1/4 → 4/1 +1 → 5/1.
+    let slot = put_field(&db, &mut st, PlayerId::A, EVIDENCE);
+    engage_slot(&db, &mut st, slot);
+    let a = st
+        .player(PlayerId::A)
+        .hand
+        .iter()
+        .find(|c| c.card.as_str() == ARCHITECT)
+        .unwrap();
+    assert_eq!((a.attack, a.defense), (5, 1), "in-hand swap then +1/+0");
+    let x = a.attack;
+
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    let tank0 = field_def(&st, PlayerId::B, TANK).unwrap();
+    give_pp(&mut st, PlayerId::A, 3, 3);
+    let h = st
+        .player(PlayerId::A)
+        .hand
+        .iter()
+        .position(|c| c.card.as_str() == ARCHITECT)
+        .unwrap() as u8;
+    play(&db, &mut st, h);
+    // Choose the tank.
+    if matches!(st.phase, Phase::Choice { .. }) {
+        choose(&db, &mut st, 0);
+        drain_choice(&db, &mut st);
+    }
+    assert_eq!(
+        field_def(&st, PlayerId::B, TANK),
+        Some(tank0 - x),
+        "Fanfare deals X = this follower's attack ({x})"
+    );
+    assert!(field_has(&st, PlayerId::A, EVIDENCE), "Fanfare summons Evidence");
+
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == ARCHITECT)
+                .map(|_| i as u8)
+        })
+        .unwrap();
+    evolve_slot(&db, &mut st, slot, false);
+    assert!(
+        field_has(&st, PlayerId::A, NEWSIE),
+        "Evolve: Summon a Guileless Newsie"
+    );
+
+    // Negative: without Clue Engage, Architect stays 1/4 and deals 1.
+    let mut st = started(&db, 10_264);
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    let tank0 = field_def(&st, PlayerId::B, TANK).unwrap();
+    play_pp(&db, &mut st, ARCHITECT, 3);
+    if matches!(st.phase, Phase::Choice { .. }) {
+        choose(&db, &mut st, 0);
+        drain_choice(&db, &mut st);
+    }
+    assert_eq!(
+        field_def(&st, PlayerId::B, TANK),
+        Some(tank0 - 1),
+        "negative: printed attack 1 without hand swaps"
+    );
+}
+
+#[test]
+fn errant_knight_banish_requires_allied_amulet_se_replicates() {
+    let db = load_db();
+    // With allied amulet: banish chosen enemy.
+    let mut st = started(&db, 10_265);
+    put_field(&db, &mut st, PlayerId::A, EVIDENCE);
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    put_field(&db, &mut st, PlayerId::B, VANILLA);
+    play_pp(&db, &mut st, ERRANT, 7);
+    if matches!(st.phase, Phase::Choice { .. }) {
+        // Prefer tank if listed first; either way one enemy is banished.
+        choose(&db, &mut st, 0);
+        drain_choice(&db, &mut st);
+    }
+    let enemies = st.player(PlayerId::B).field_count();
+    assert_eq!(enemies, 1, "banishes one enemy follower when allied amulet present");
+
+    // Negative: no allied amulet → no banish.
+    let mut st = started(&db, 10_266);
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    play_pp(&db, &mut st, ERRANT, 7);
+    assert!(
+        field_has(&st, PlayerId::B, TANK),
+        "negative: without allied amulet, Fanfare does not banish"
+    );
+
+    // Super-Evolve replicates Fanfare (needs amulet + enemy).
+    let mut st = started(&db, 10_267);
+    put_field(&db, &mut st, PlayerId::A, EVIDENCE);
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    put_field(&db, &mut st, PlayerId::B, VANILLA);
+    play_pp(&db, &mut st, ERRANT, 7);
+    if matches!(st.phase, Phase::Choice { .. }) {
+        choose(&db, &mut st, 0);
+        drain_choice(&db, &mut st);
+    }
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == ERRANT)
+                .map(|_| i as u8)
+        })
+        .unwrap();
+    // Ensure amulet still present for SE replicate.
+    if !field_has(&st, PlayerId::A, EVIDENCE) {
+        put_field(&db, &mut st, PlayerId::A, EVIDENCE);
+    }
+    if st.player(PlayerId::B).field_count() == 0 {
+        put_field(&db, &mut st, PlayerId::B, TANK);
+    }
+    evolve_slot(&db, &mut st, slot, true);
+    if matches!(st.phase, Phase::Choice { .. }) {
+        choose(&db, &mut st, 0);
+        drain_choice(&db, &mut st);
+    }
+    assert_eq!(
+        st.player(PlayerId::B).field_count(),
+        0,
+        "SE replicates Fanfare banish"
     );
 }

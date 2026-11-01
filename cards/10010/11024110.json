@@ -38,7 +38,8 @@
               "select": {
                 "pick": "self"
               },
-              "attack": 1
+              "attack": 1,
+              "defense": 0
             }
           ]
         }

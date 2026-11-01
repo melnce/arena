@@ -9351,6 +9351,9 @@ pub(crate) fn eval_cond(
             }
         }
         Condition::WasFused { was_fused } => {
+            // Spells resolve from the cemetery corpse (same as skybound / vars).
+            // Hand of Extinction `11072310` Fanfare reads wasFused after the spell
+            // has already left hand.
             let flag = match source {
                 Some(SourceRef::Field { player, id } | SourceRef::Hand { player, id }) => state
                     .player(player)
@@ -9363,6 +9366,14 @@ pub(crate) fn eval_cond(
                             .find_field(player, id)
                             .and_then(|s| state.field_inst(player, s).map(|c| c.flags.was_fused))
                     })
+                    .unwrap_or(false),
+                Some(SourceRef::Spell { player, card }) => state
+                    .player(player)
+                    .cemetery
+                    .iter()
+                    .rev()
+                    .find(|c| c.card == card)
+                    .map(|c| c.flags.was_fused)
                     .unwrap_or(false),
                 _ => false,
             };
