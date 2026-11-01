@@ -1,0 +1,84 @@
+{
+  "id": "11043310",
+  "name": "Bird's-Eye View",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Select 2 Modes to activate.\n1. Summon an Inquiring Mischief.\n2. Give the 2 leftmost allied followers on the field +1/+0.\n3. Add 3 copies of Divine Evidence to your hand.\n4. Deal 4 damage to a random enemy follower.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select 2 Modes to activate.\n1. Summon an Inquiring Mischief.\n2. Give the 2 leftmost allied followers on the field +1/+0.\n3. Add 3 copies of Divine Evidence to your hand.\n4. Deal 4 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Select 2 Modes to activate.\n1. Summon an Inquiring Mischief.\n2. Give the 2 leftmost allied followers on the field +1/+0.\n3. Add 3 copies of Divine Evidence to your hand.\n4. Deal 4 damage to a random enemy follower.",
+          "op": "choose",
+          "pick": 2,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Summon an Inquiring Mischief.",
+              "effects": [
+                {
+                  "op": "summon",
+                  "card": {
+                    "named": "11012110"
+                  },
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "printed": "2. Give the 2 leftmost allied followers on the field +1/+0.",
+              "effects": [
+                {
+                  "op": "buff",
+                  "select": {
+                    "pick": "leftmost",
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "follower",
+                    "count": 2
+                  },
+                  "attack": 1,
+                  "defense": 0
+                }
+              ]
+            },
+            {
+              "printed": "3. Add 3 copies of Divine Evidence to your hand.",
+              "effects": [
+                {
+                  "op": "addToHand",
+                  "card": {
+                    "named": "90001210"
+                  },
+                  "count": 3
+                }
+              ]
+            },
+            {
+              "printed": "4. Deal 4 damage to a random enemy follower.",
+              "effects": [
+                {
+                  "op": "damage",
+                  "select": {
+                    "pick": "random",
+                    "side": "enemy",
+                    "zone": "field",
+                    "kind": "follower"
+                  },
+                  "amount": 4
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

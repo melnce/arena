@@ -1,0 +1,65 @@
+{
+  "id": "11042310",
+  "name": "Collection Manifest",
+  "kind": "spell",
+  "class": "dragoncraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Deal 4 damage to a random enemy follower. If you have a Clue amulet in your hand, discard a random Clue amulet and draw a card with a base cost of 5 or more.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 4 damage to a random enemy follower. If you have a Clue amulet in your hand, discard a random Clue amulet and draw a card with a base cost of 5 or more.",
+      "effects": [
+        {
+          "printed": "Deal 4 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "pick": "random",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "amount": 4
+        },
+        {
+          "printed": "If you have a Clue amulet in your hand, discard a random Clue amulet and draw a card with a base cost of 5 or more.",
+          "op": "if",
+          "cond": {
+            "handHas": {
+              "filter": {
+                "tribe": "clue",
+                "kind": "amulet"
+              },
+              "n": 1
+            }
+          },
+          "then": [
+            {
+              "op": "discard",
+              "select": {
+                "pick": "random",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "amulet",
+                "filter": {
+                  "tribe": "clue"
+                }
+              }
+            },
+            {
+              "op": "draw",
+              "count": 1,
+              "filter": {
+                "baseCostGte": 5
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

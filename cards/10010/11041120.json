@@ -1,0 +1,75 @@
+{
+  "id": "11041120",
+  "name": "Freezing Icenewt",
+  "kind": "follower",
+  "class": "dragoncraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "attack": 2,
+  "defense": 2,
+  "text": "Fanfare: Do this 1 time: \"Deal 3 damage to a random enemy follower.\"\nEnhance (7): Do it 3 times instead. Give this follower +5/+5.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Do this 1 time: \"Deal 3 damage to a random enemy follower.\"",
+      "effects": [
+        {
+          "printed": "Do this 1 time: \"Deal 3 damage to a random enemy follower.\"",
+          "op": "repeat",
+          "times": 1,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 7,
+      "replacesBase": true,
+      "printed": "Enhance (7): Do it 3 times instead. Give this follower +5/+5.",
+      "effects": [
+        {
+          "printed": "Do it 3 times instead.",
+          "op": "repeat",
+          "times": 3,
+          "effects": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "random",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 3
+            }
+          ]
+        },
+        {
+          "printed": "Give this follower +5/+5.",
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": 5,
+          "defense": 5
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
