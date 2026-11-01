@@ -1,0 +1,61 @@
+{
+  "id": "11074120",
+  "name": "Dimensional Wanderer",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 3,
+  "text": "Whenever you Fuse, give this follower Rush.\nLast Words: Gain Crest: Dimensional Wanderer.\n\nSuper-Evolve: Give this follower Storm.",
+  "attack": 2,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_fuse",
+      "printed": "Whenever you Fuse, give this follower Rush.",
+      "effects": [
+        {
+          "printed": "give this follower Rush.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "rush": true
+          }
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Gain Crest: Dimensional Wanderer.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Dimensional Wanderer.",
+          "op": "crest",
+          "gain": "crest:11074120",
+          "player": "self"
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Give this follower Storm.",
+      "effects": [
+        {
+          "printed": "Give this follower Storm.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "self"
+          },
+          "traits": {
+            "storm": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

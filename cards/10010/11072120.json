@@ -1,0 +1,45 @@
+{
+  "id": "11072120",
+  "name": "Bestial Beamcannoneer",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Summon a Striker Artifact and Ancient Artifact.\n\nRush",
+  "attack": 6,
+  "defense": 4,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Striker Artifact and Ancient Artifact.",
+      "effects": [
+        {
+          "printed": "Summon a Striker Artifact and Ancient Artifact.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90072110"
+              },
+              "count": 1
+            },
+            {
+              "op": "summon",
+              "card": {
+                "named": "90071140"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

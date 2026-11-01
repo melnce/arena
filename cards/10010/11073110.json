@@ -1,0 +1,65 @@
+{
+  "id": "11073110",
+  "name": "Extinctionist Dandy",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Add 2 copies of Divine Evidence to your hand.\n\nWhenever you Fuse an amulet, destroy a random enemy follower and restore 2 defense to your leader.\nWard",
+  "attack": 6,
+  "defense": 6,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add 2 copies of Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "Add 2 copies of Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_fuse_amulet",
+      "printed": "Whenever you Fuse an amulet, destroy a random enemy follower and restore 2 defense to your leader.",
+      "effects": [
+        {
+          "printed": "destroy a random enemy follower and restore 2 defense to your leader.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "destroy",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "random"
+              }
+            },
+            {
+              "op": "restore",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

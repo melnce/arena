@@ -1,0 +1,71 @@
+{
+  "id": "11071310",
+  "name": "Incohesive Construction",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 1,
+  "text": "Add an Enhanced Puppet to your hand and give it Bane or Ward at random.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Add an Enhanced Puppet to your hand and give it Bane or Ward at random.",
+      "effects": [
+        {
+          "printed": "Add an Enhanced Puppet to your hand and give it Bane or Ward at random.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90071120"
+              },
+              "count": 1,
+              "as": "p"
+            },
+            {
+              "op": "choose",
+              "pick": 1,
+              "by": "random",
+              "options": [
+                {
+                  "printed": "Bane",
+                  "effects": [
+                    {
+                      "op": "grantTraits",
+                      "select": {
+                        "pick": "bound",
+                        "ref": "p"
+                      },
+                      "traits": {
+                        "bane": true
+                      }
+                    }
+                  ]
+                },
+                {
+                  "printed": "Ward",
+                  "effects": [
+                    {
+                      "op": "grantTraits",
+                      "select": {
+                        "pick": "bound",
+                        "ref": "p"
+                      },
+                      "traits": {
+                        "ward": true
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

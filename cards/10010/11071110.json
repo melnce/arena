@@ -1,0 +1,33 @@
+{
+  "id": "11071110",
+  "name": "Extinctionist Majordomo",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Ward\nLast Words: Add 2 copies of Divine Evidence to your hand.",
+  "attack": 2,
+  "defense": 2,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add 2 copies of Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "Add 2 copies of Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,93 @@
+{
+  "id": "11074110",
+  "name": "Lineage, Calamity of Extinction",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "Fuse: Amulets\nWhenever you Fuse to this card, summon a Divine Evidence.\n\nFanfare: Select an enemy follower on the field and destroy all enemy copies of it. If you've Fused to this card, halve the enemy leader's max defense.",
+  "attack": 7,
+  "defense": 7,
+  "fuse": {
+    "partners": {
+      "kind": "amulet"
+    },
+    "printed": "Fuse: Amulets"
+  },
+  "abilities": [
+    {
+      "on": "fused",
+      "printed": "Whenever you Fuse to this card, summon a Divine Evidence.",
+      "effects": [
+        {
+          "printed": "summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select an enemy follower on the field and destroy all enemy copies of it. If you've Fused to this card, halve the enemy leader's max defense.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and destroy all enemy copies of it. If you've Fused to this card, halve the enemy leader's max defense.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "select",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "as": "t"
+            },
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "filter": {
+                  "sameNameAs": {
+                    "pick": "bound",
+                    "ref": "t"
+                  }
+                }
+              }
+            },
+            {
+              "op": "if",
+              "cond": {
+                "wasFused": true
+              },
+              "then": [
+                {
+                  "op": "leaderModifier",
+                  "select": {
+                    "pick": "all",
+                    "side": "enemy",
+                    "zone": "leader",
+                    "kind": "leader"
+                  },
+                  "maxDefense": {
+                    "halve": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
