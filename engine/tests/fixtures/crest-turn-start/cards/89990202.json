@@ -1,0 +1,34 @@
+{
+  "id": "89990202",
+  "name": "SoT Deal1 Younger",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89990,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "At the start of your turn, deal 1 damage to the enemy leader.",
+  "attack": 1,
+  "defense": 5,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, deal 1 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 1,
+          "printed": "deal 1 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}

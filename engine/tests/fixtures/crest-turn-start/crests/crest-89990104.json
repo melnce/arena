@@ -1,0 +1,27 @@
+{
+  "id": "crest:89990104",
+  "name": "Crest: Remove Ally Crests SoT",
+  "grantedBy": [],
+  "faith": false,
+  "text": "Countdown (5)\nAt the start of your turn, remove all your Crests.",
+  "countdown": 5,
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, remove all your Crests.",
+      "effects": [
+        {
+          "op": "removeCrests",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "crests",
+            "kind": "card"
+          },
+          "printed": "remove all your Crests."
+        }
+      ]
+    }
+  ]
+}

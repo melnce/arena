@@ -20,6 +20,10 @@ use crate::support;
 pub struct AsRecorded {
     /// Pre–PR-#172 recordings: every play reaction flushed before the played body (E39).
     pub play_reactions_before_body: bool,
+    /// Recordings before the crest turn-start PR: crest Countdowns advanced
+    /// before crest start-of-turn triggers were queued (Slaus's crest fired
+    /// twice). With this on, `queue_turn_boundary` matches today's `main`.
+    pub crest_countdown_before_start_triggers: bool,
 }
 
 #[derive(Debug, Clone)]
