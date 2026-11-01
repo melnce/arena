@@ -76,6 +76,13 @@ pub enum Event {
         player: PlayerId,
         id: String,
     },
+    /// A crest with a start-of-turn ability reached Countdown 0 during turn-start
+    /// step 2 (queued SoT still resolves — rulebook / Slaus). Identity uses this
+    /// to mark games whose digests may differ under the crest turn-start fix.
+    CrestTurnStartCountdownLost {
+        player: PlayerId,
+        id: String,
+    },
     Fuse {
         host: CardId,
         partners: Vec<CardId>,

@@ -77,6 +77,7 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         step_counter: 0,
         next_instance: 1,
         crest_order: 1,
+        crest_step2_lost: Vec::new(),
         picks: Vec::new(),
         pending_work: Vec::new(),
         queue: Vec::new(),
@@ -2459,7 +2460,7 @@ fn apply_end_turn(db: &CardDb, state: &mut State, events: &mut Vec<Event>) -> Re
     }
     events.push(Event::TurnEnd { player: me });
     // two-phase end sequence — rulebook Start-of-Turn and End-of-Turn Sequences
-    queue_turn_boundary(db, state, me, false);
+    queue_turn_boundary(db, state, me, false, events);
     state
         .pending_work
         .push(WorkFrame::Aftermath(Aftermath::ContinueTurnEnd { step: 7 }));
@@ -2519,7 +2520,7 @@ fn start_turn_full(
     events: &mut Vec<Event>,
 ) -> Result<(), Illegal> {
     begin_turn(state, who, events)?;
-    queue_turn_boundary(db, state, who, true);
+    queue_turn_boundary(db, state, who, true, events);
     state
         .pending_work
         .push(WorkFrame::Aftermath(Aftermath::ContinueTurnStart {
@@ -2528,23 +2529,34 @@ fn start_turn_full(
     Ok(())
 }
 
-fn queue_turn_boundary(db: &CardDb, state: &mut State, whose_turn: PlayerId, start: bool) {
+fn queue_turn_boundary(
+    db: &CardDb,
+    state: &mut State,
+    whose_turn: PlayerId,
+    start: bool,
+    events: &mut Vec<Event>,
+) {
     // One Invoke copy per card id per boundary window (official glossary).
     if start {
         state.invoked_ids.clear();
+        state.crest_step2_lost.clear();
     }
     // crests before board; owner-scoped — ruling 2026-08-31
     let own = whose_turn;
     let opp = whose_turn.opponent();
     if start {
-        // Rulebook start-of-turn step 2/3: queue "at the start of your turn"
-        // triggers, then advance Countdowns. Losing a crest/amulet to the same
-        // step's countdown must not cancel the already-queued trigger
-        // (Untamed Testimony / Slaus Countdown caps).
-        enqueue_boundary(db, state, own, true, Whose::Own, 3, start);
-        tick_crests(db, state, own);
-        enqueue_boundary(db, state, own, false, Whose::Own, 4, start);
+        // Rulebook step 2: queue crest start-of-turn, then advance Countdown.
+        // Recording switch: countdown before queue (Slaus fired twice).
+        // Amulets unchanged: tick_amulets still before the board's SoT enqueue.
+        if db.as_recorded.crest_countdown_before_start_triggers {
+            tick_crests(db, state, own, false, events);
+            enqueue_boundary(db, state, own, true, Whose::Own, 3, start);
+        } else {
+            enqueue_boundary(db, state, own, true, Whose::Own, 3, start);
+            tick_crests(db, state, own, true, events);
+        }
         tick_amulets(db, state, own);
+        enqueue_boundary(db, state, own, false, Whose::Own, 4, start);
         enqueue_boundary(db, state, opp, true, Whose::Opponent, 5, start);
         enqueue_boundary(db, state, opp, false, Whose::Opponent, 6, start);
     } else {
@@ -2555,19 +2567,82 @@ fn queue_turn_boundary(db: &CardDb, state: &mut State, whose_turn: PlayerId, sta
     }
 }
 
-fn tick_crests(db: &CardDb, state: &mut State, who: PlayerId) {
+/// Advance crest Countdowns. When `retain_for_step2`, crests that hit 0 **and**
+/// have a start-of-turn trigger queued this step are moved to
+/// `crest_step2_lost` so that trigger still resolves (rulebook step 2 / Slaus).
+/// Last-Words-only countdown crests (and the recording-switch path) expire via
+/// `expire_crest` with discarded events — same as `main`.
+fn tick_crests(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    retain_for_step2: bool,
+    events: &mut Vec<Event>,
+) {
     let mut doomed = Vec::new();
     for c in state.player_mut(who).crests.iter_mut() {
         if let Some(cd) = c.countdown.as_mut() {
             *cd -= 1;
             if *cd <= 0 {
-                doomed.push(c.granted_order);
+                doomed.push((c.granted_order, c.id.clone()));
             }
         }
     }
-    for order in doomed {
-        let _ = expire_crest(db, state, who, order, &mut Vec::new());
+    for (order, id) in doomed {
+        if retain_for_step2 && crest_has_start_of_turn(db, &id) {
+            let _ = expire_crest_step2(db, state, who, order, events);
+        } else {
+            // Discard CrestRemove at turn start — main discarded via `&mut Vec::new()`.
+            let _ = expire_crest(db, state, who, order, &mut Vec::new());
+        }
     }
+}
+
+fn crest_has_start_of_turn(db: &CardDb, id: &str) -> bool {
+    let Ok(def) = db.crest(id) else {
+        return false;
+    };
+    def.abilities()
+        .iter()
+        .any(|a| matches!(a, Ability::StartOfTurn { .. }))
+}
+
+/// Turn-start step 2 Countdown expiry for a crest that had a start-of-turn
+/// trigger queued this step: leave the board, keep the instance in
+/// `crest_step2_lost` for already-queued SoT / choose_used, queue Last Words.
+fn expire_crest_step2(
+    db: &CardDb,
+    state: &mut State,
+    who: PlayerId,
+    order: u32,
+    events: &mut Vec<Event>,
+) -> Result<(), Illegal> {
+    let crests = &mut state.player_mut(who).crests;
+    let Some(i) = crests.iter().position(|c| c.granted_order == order) else {
+        return Ok(());
+    };
+    let c = crests.remove(i);
+    events.push(Event::CrestRemove {
+        player: who,
+        id: c.id.clone(),
+    });
+    events.push(Event::CrestTurnStartCountdownLost {
+        player: who,
+        id: c.id.clone(),
+    });
+    let src = SourceRef::Crest {
+        player: who,
+        granted_order: c.granted_order,
+    };
+    if let Ok(def) = db.crest(&c.id) {
+        for a in def.abilities() {
+            if matches!(a, Ability::LastWords { .. }) {
+                push_effects(state, who, src, a.effects().to_vec());
+            }
+        }
+    }
+    state.crest_step2_lost.push((who, c));
+    Ok(())
 }
 
 fn expire_crest(
@@ -2589,7 +2664,7 @@ fn expire_crest(
     if let Ok(def) = db.crest(&c.id) {
         let src = SourceRef::Crest {
             player: who,
-            index: 0,
+            granted_order: c.granted_order,
         };
         for a in def.abilities() {
             if matches!(a, Ability::LastWords { .. }) {
@@ -2598,6 +2673,41 @@ fn expire_crest(
         }
     }
     Ok(())
+}
+
+fn crest_by_order(state: &State, who: PlayerId, granted_order: u32) -> Option<&CrestInstance> {
+    state
+        .player(who)
+        .crests
+        .iter()
+        .find(|c| c.granted_order == granted_order)
+        .or_else(|| {
+            state
+                .crest_step2_lost
+                .iter()
+                .find(|(p, c)| *p == who && c.granted_order == granted_order)
+                .map(|(_, c)| c)
+        })
+}
+
+fn crest_by_order_mut(
+    state: &mut State,
+    who: PlayerId,
+    granted_order: u32,
+) -> Option<&mut CrestInstance> {
+    if let Some(i) = state
+        .player(who)
+        .crests
+        .iter()
+        .position(|c| c.granted_order == granted_order)
+    {
+        return state.player_mut(who).crests.get_mut(i);
+    }
+    state
+        .crest_step2_lost
+        .iter_mut()
+        .find(|(p, c)| *p == who && c.granted_order == granted_order)
+        .map(|(_, c)| c)
 }
 
 fn tick_amulets(db: &CardDb, state: &mut State, who: PlayerId) {
@@ -2642,12 +2752,15 @@ fn enqueue_boundary(
                 }
             }
         }
-        for (entry, printed, index, id) in pending {
+        for (entry, printed, _index, id) in pending {
             let Ok(def) = db.crest(&id) else { continue };
             let Some(a) = def.abilities().get(printed as usize) else {
                 continue;
             };
-            let source = SourceRef::Crest { player: who, index };
+            let source = SourceRef::Crest {
+                player: who,
+                granted_order: entry,
+            };
             if !boundary_when_ok(db, state, who, source, a) {
                 continue;
             }
@@ -2994,7 +3107,8 @@ struct PendingWhen {
     source: SourceRef,
     ability: Ability,
     mark_id: Option<u32>,
-    mark_crest: Option<usize>,
+    /// Crest `granted_order` (not board index).
+    mark_crest: Option<u32>,
 }
 
 struct WhenScan<'a> {
@@ -3010,7 +3124,8 @@ struct WhenLoc {
     entry: u32,
     source: SourceRef,
     mark_id: Option<u32>,
-    mark_crest: Option<usize>,
+    /// Crest `granted_order` (not board index).
+    mark_crest: Option<u32>,
 }
 
 struct WhenCand {
@@ -3130,11 +3245,18 @@ fn enqueue_when_on(
             .map(|(i, c)| (i, c.id.clone(), !c.granted.is_empty()))
             .collect();
         for (i, id, has_granted) in crest_cands {
+            let granted_order = match state.player(observer_side).crests.get(i) {
+                Some(c) if c.id == id => c.granted_order,
+                _ => continue,
+            };
             let once_when = match state.player(observer_side).crests.get(i) {
                 Some(c) if c.id == id => c.once_used.contains(&TriggerTag::When),
                 _ => continue,
             };
             let Ok(def) = db.crest(&id) else { continue };
+            // `entry` stays the board index at enqueue (identity with pre-fix
+            // search keys). `SourceRef` / `mark_crest` key by granted_order so
+            // a Countdown loss cannot retarget a neighbour.
             collect_when_from_list(
                 &scan,
                 state,
@@ -3145,10 +3267,10 @@ fn enqueue_when_on(
                     entry: i as u32,
                     source: SourceRef::Crest {
                         player: observer_side,
-                        index: i,
+                        granted_order,
                     },
                     mark_id: None,
-                    mark_crest: Some(i),
+                    mark_crest: Some(granted_order),
                 },
                 once_when,
                 None,
@@ -3171,10 +3293,10 @@ fn enqueue_when_on(
                         entry: i as u32,
                         source: SourceRef::Crest {
                             player: observer_side,
-                            index: i,
+                            granted_order,
                         },
                         mark_id: None,
-                        mark_crest: Some(i),
+                        mark_crest: Some(granted_order),
                     },
                     once_when,
                     None,
@@ -3331,8 +3453,8 @@ fn enqueue_when_on(
                     h.once_used.push(TriggerTag::When);
                 }
             }
-            if let Some(ci) = mark_crest {
-                if let Some(c) = state.player_mut(observer_side).crests.get_mut(ci) {
+            if let Some(order) = mark_crest {
+                if let Some(c) = crest_by_order_mut(state, observer_side, order) {
                     c.once_used.push(TriggerTag::When);
                 }
             }
@@ -3575,6 +3697,9 @@ fn run_aftermath(
             start_turn_full(db, state, next, events)?;
         }
         Aftermath::ContinueTurnStart { step: 8 } => {
+            // Turn-start queue has resolved; step-2-lost crests are no longer
+            // readable (nothing else may see them as present).
+            state.crest_step2_lost.clear();
             let who = state.active;
             if let Some(out) = draw_one(state, who, None, &[])? {
                 events.push(Event::Draw {
@@ -4487,9 +4612,6 @@ fn drain_queue(db: &CardDb, state: &mut State, _events: &mut [Event]) -> Result<
 }
 
 fn e40_applies(tag: TriggerTag) -> bool {
-    // StartOfTurn is excluded so a crest/amulet Countdown that reaches 0 in the
-    // same start-of-turn step (queued before tick) still resolves — rulebook
-    // "losing it does not cancel" / Untamed Testimony.
     !matches!(
         tag,
         TriggerTag::LastWords
@@ -4497,7 +4619,6 @@ fn e40_applies(tag: TriggerTag) -> bool {
             | TriggerTag::Strike
             | TriggerTag::FollowerStrike
             | TriggerTag::Clash
-            | TriggerTag::StartOfTurn
     )
 }
 
@@ -4511,7 +4632,13 @@ fn trigger_source_still_present(state: &State, source: SourceRef) -> bool {
             let p = state.player(player);
             p.hand.iter().any(|c| c.id == id) || p.deck.iter().any(|c| c.id == id)
         }
-        SourceRef::Crest { player, index } => state.player(player).crests.get(index).is_some(),
+        // Live board crest, or step-2 Countdown-lost crest still held for its
+        // already-queued start-of-turn trigger (rulebook exception to E40).
+        // Removed any other way → absent → E40 drops the item.
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => crest_by_order(state, player, granted_order).is_some(),
         SourceRef::Spell { .. } | SourceRef::Leader { .. } => true,
     }
 }
@@ -7501,10 +7628,10 @@ fn sequence_index_of(state: &State, source: SourceRef) -> u32 {
             .and_then(|s| state.field_inst(player, s))
             .map(|c| c.sequence_index)
             .unwrap_or(0),
-        SourceRef::Crest { player, index } => state
-            .player(player)
-            .crests
-            .get(index)
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => crest_by_order(state, player, granted_order)
             .map(|c| c.sequence_index)
             .unwrap_or(0),
         _ => 0,
@@ -7520,8 +7647,11 @@ fn set_sequence_index(state: &mut State, source: SourceRef, v: u32) {
                 }
             }
         }
-        SourceRef::Crest { player, index } => {
-            if let Some(c) = state.player_mut(player).crests.get_mut(index) {
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => {
+            if let Some(c) = crest_by_order_mut(state, player, granted_order) {
                 c.sequence_index = v;
             }
         }
@@ -7536,10 +7666,10 @@ fn choose_used_of(state: &State, source: SourceRef) -> std::collections::BTreeSe
             .and_then(|s| state.field_inst(player, s))
             .map(|c| c.choose_used.clone())
             .unwrap_or_default(),
-        SourceRef::Crest { player, index } => state
-            .player(player)
-            .crests
-            .get(index)
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => crest_by_order(state, player, granted_order)
             .map(|c| c.choose_used.clone())
             .unwrap_or_default(),
         _ => std::collections::BTreeSet::new(),
@@ -7555,8 +7685,11 @@ fn mark_choose_used(state: &mut State, source: SourceRef, i: u8) {
                 }
             }
         }
-        SourceRef::Crest { player, index } => {
-            if let Some(c) = state.player_mut(player).crests.get_mut(index) {
+        SourceRef::Crest {
+            player,
+            granted_order,
+        } => {
+            if let Some(c) = crest_by_order_mut(state, player, granted_order) {
                 c.choose_used.insert(i);
             }
         }

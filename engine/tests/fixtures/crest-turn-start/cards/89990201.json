@@ -1,0 +1,33 @@
+{
+  "id": "89990201",
+  "name": "SoT Destroy Allies",
+  "kind": "follower",
+  "class": "neutral",
+  "set": 89990,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "At the start of your turn, destroy all allied followers.",
+  "attack": 1,
+  "defense": 5,
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, destroy all allied followers.",
+      "effects": [
+        {
+          "op": "destroy",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "printed": "destroy all allied followers."
+        }
+      ]
+    }
+  ]
+}

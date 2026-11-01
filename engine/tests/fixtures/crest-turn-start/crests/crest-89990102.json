@@ -1,0 +1,28 @@
+{
+  "id": "crest:89990102",
+  "name": "Crest: Younger SoT Deal7",
+  "grantedBy": [],
+  "faith": false,
+  "text": "Countdown (5)\nAt the start of your turn, deal 7 damage to the enemy leader.",
+  "countdown": 5,
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, deal 7 damage to the enemy leader.",
+      "effects": [
+        {
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 7,
+          "printed": "deal 7 damage to the enemy leader."
+        }
+      ]
+    }
+  ]
+}
