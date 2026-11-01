@@ -1,0 +1,49 @@
+{
+  "id": "11054120",
+  "name": "Gremory, Doom Dispeller",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 2,
+  "attack": 1,
+  "defense": 3,
+  "text": "Ward\nLast Words: Necromancy (2) - Draw a card.\n\nEvolve: Gain Crest: Gremory, Doom Dispeller.",
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Necromancy (2) - Draw a card.",
+      "effects": [
+        {
+          "printed": "Necromancy (2) - Draw a card.",
+          "op": "pay",
+          "resource": "shadows",
+          "amount": 2,
+          "effects": [
+            {
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Gain Crest: Gremory, Doom Dispeller.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Gremory, Doom Dispeller.",
+          "op": "crest",
+          "gain": "crest:11054120",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

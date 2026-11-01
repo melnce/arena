@@ -1,0 +1,25 @@
+{
+  "id": "crest:11054120",
+  "name": "Crest: Gremory, Doom Dispeller",
+  "grantedBy": [
+    "11054120"
+  ],
+  "faith": false,
+  "text": "At the end of your turn, gain 2 shadows.",
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, gain 2 shadows.",
+      "effects": [
+        {
+          "printed": "gain 2 shadows.",
+          "op": "counter",
+          "key": "shadows",
+          "how": "add",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

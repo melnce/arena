@@ -1,0 +1,92 @@
+{
+  "id": "11052110",
+  "name": "Solemn Gravekeeper",
+  "kind": "follower",
+  "class": "abysscraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "attack": 4,
+  "defense": 4,
+  "text": "Fanfare: Summon a Rotting Zombie.\n\nDuring your turn, whenever an allied card is banished from the field, give a random allied Departed follower on the field +2/+2 and Rush.\n\nEvolve: Summon a Divine Evidence.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Rotting Zombie.",
+      "effects": [
+        {
+          "printed": "Summon a Rotting Zombie.",
+          "op": "summon",
+          "card": {
+            "named": "90051140"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_card_banished",
+      "when": {
+        "turnOwner": "self"
+      },
+      "printed": "During your turn, whenever an allied card is banished from the field, give a random allied Departed follower on the field +2/+2 and Rush.",
+      "effects": [
+        {
+          "printed": "give a random allied Departed follower on the field +2/+2 and Rush.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "select",
+              "as": "t",
+              "select": {
+                "pick": "random",
+                "side": "ally",
+                "zone": "field",
+                "kind": "follower",
+                "filter": {
+                  "tribe": "departed"
+                }
+              }
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "attack": 2,
+              "defense": 2
+            },
+            {
+              "op": "grantTraits",
+              "select": {
+                "pick": "bound",
+                "ref": "t"
+              },
+              "traits": {
+                "rush": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Summon a Divine Evidence.",
+      "effects": [
+        {
+          "printed": "Summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
