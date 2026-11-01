@@ -1,0 +1,62 @@
+{
+  "id": "11072110",
+  "name": "Extinctionist Socialite",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Add 2 copies of Divine Evidence to your hand.\n\nWhenever you Fuse an amulet, deal 1 damage to all enemy followers.\n\nEvolve: Draw a card with Fuse.",
+  "attack": 1,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add 2 copies of Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "Add 2 copies of Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_fuse_amulet",
+      "printed": "Whenever you Fuse an amulet, deal 1 damage to all enemy followers.",
+      "effects": [
+        {
+          "printed": "deal 1 damage to all enemy followers.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "all"
+          },
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Draw a card with Fuse.",
+      "effects": [
+        {
+          "printed": "Draw a card with Fuse.",
+          "op": "draw",
+          "count": 1,
+          "filter": {
+            "hasFuse": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

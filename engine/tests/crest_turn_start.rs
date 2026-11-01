@@ -40,6 +40,7 @@ fn put_crest_cd(st: &mut State, who: PlayerId, id: &str, cd: i32) {
         granted_order: order,
         granted: vec![],
         choose_used: Default::default(),
+        sequence_index: 0,
     });
 }
 
@@ -55,6 +56,7 @@ fn put_crest_no_cd(st: &mut State, who: PlayerId, id: &str) {
         granted_order: order,
         granted: vec![],
         choose_used: Default::default(),
+        sequence_index: 0,
     });
 }
 

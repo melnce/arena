@@ -1,0 +1,63 @@
+{
+  "id": "11031120",
+  "name": "Wily Witch",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Select a Mode to activate.\n1. Earth Rite (1) - Deal 2 damage to a random enemy follower.\n2. Gain 2 earth sigils.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Select a Mode to activate.\n1. Earth Rite (1) - Deal 2 damage to a random enemy follower.\n2. Gain 2 earth sigils.",
+      "effects": [
+        {
+          "printed": "Select a Mode to activate.\n1. Earth Rite (1) - Deal 2 damage to a random enemy follower.\n2. Gain 2 earth sigils.",
+          "op": "choose",
+          "pick": 1,
+          "by": "player",
+          "options": [
+            {
+              "printed": "1. Earth Rite (1) - Deal 2 damage to a random enemy follower.",
+              "effects": [
+                {
+                  "op": "pay",
+                  "resource": "earth",
+                  "amount": 1,
+                  "effects": [
+                    {
+                      "op": "damage",
+                      "select": {
+                        "side": "enemy",
+                        "zone": "field",
+                        "kind": "follower",
+                        "pick": "random"
+                      },
+                      "amount": 2
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "printed": "2. Gain 2 earth sigils.",
+              "effects": [
+                {
+                  "op": "counter",
+                  "key": "earth",
+                  "how": "add",
+                  "amount": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

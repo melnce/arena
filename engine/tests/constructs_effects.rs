@@ -1259,3 +1259,36 @@ fn construct_op_when() {
     play_id(&db, &mut st, PlayerId::A, "89201070");
     assert_eq!(b_hp(&st), 16);
 }
+
+#[test]
+fn construct_op_setStats() {
+    // no-op engine: enemy stays 2/2
+    let (db, mut st) = db_st();
+    put_field(&db, &mut st, PlayerId::B, "88001110");
+    cast(&db, &mut st, "89200611");
+    let f = first_field(&st, PlayerId::B);
+    assert_eq!((f.attack, f.defense, f.max_defense), (1, 1, 1));
+}
+
+#[test]
+fn construct_op_swapStats() {
+    // no-op engine: enemy stays asymmetric without swap
+    let (db, mut st) = db_st();
+    let slot = put_field(&db, &mut st, PlayerId::B, "88001110");
+    if let Some(f) = st.field_inst_mut(PlayerId::B, slot) {
+        f.attack = 5;
+        f.defense = 2;
+        f.max_defense = 2;
+    }
+    cast(&db, &mut st, "89200612");
+    let f = first_field(&st, PlayerId::B);
+    assert_eq!((f.attack, f.defense, f.max_defense), (2, 5, 5));
+}
+
+#[test]
+fn construct_op_leaderModifier_maxDefense_halve() {
+    // no-op engine: max stays 20
+    let (db, mut st) = db_st();
+    cast(&db, &mut st, "89200613");
+    assert_eq!(st.player(PlayerId::B).leader_max, 10);
+}

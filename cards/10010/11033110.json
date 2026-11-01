@@ -1,0 +1,60 @@
+{
+  "id": "11033110",
+  "name": "Dramatic Assistant",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Summon a Dedicated Aide.\n\nWhenever you Engage an amulet, deal 5 damage to a random enemy follower.\n\nEvolve: Recover 1 play point.",
+  "attack": 5,
+  "defense": 4,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Dedicated Aide.",
+      "effects": [
+        {
+          "printed": "Summon a Dedicated Aide.",
+          "op": "summon",
+          "card": {
+            "named": "11031110"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "printed": "Whenever you Engage an amulet, deal 5 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "deal 5 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Recover 1 play point.",
+      "effects": [
+        {
+          "printed": "Recover 1 play point.",
+          "op": "pp",
+          "action": "recover",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,171 @@
+{
+  "id": "11024110",
+  "name": "No Life, Dichotomous Detective",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 9,
+  "text": "Activates in hand. Whenever you Engage a Clue amulet, swap this follower's attack and defense and give it +1/+0.\n\nFanfare: Summon an exact copy of this card. If this follower's attack is lower than its defense, give the exact copy Bane and this follower Drain. If this follower's attack is higher than its defense, give the exact copy Ward and this follower Storm.\n\nRush",
+  "attack": 5,
+  "defense": 6,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "zone": "hand",
+      "filter": {
+        "tribe": "clue"
+      },
+      "printed": "Activates in hand. Whenever you Engage a Clue amulet, swap this follower's attack and defense and give it +1/+0.",
+      "effects": [
+        {
+          "printed": "swap this follower's attack and defense and give it +1/+0.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "swapStats",
+              "select": {
+                "pick": "self"
+              }
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 1,
+              "defense": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon an exact copy of this card. If this follower's attack is lower than its defense, give the exact copy Bane and this follower Drain. If this follower's attack is higher than its defense, give the exact copy Ward and this follower Storm.",
+      "effects": [
+        {
+          "printed": "Summon an exact copy of this card. If this follower's attack is lower than its defense, give the exact copy Bane and this follower Drain. If this follower's attack is higher than its defense, give the exact copy Ward and this follower Storm.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "copyOf": {
+                  "pick": "self"
+                },
+                "exact": true
+              },
+              "count": 1,
+              "as": "c"
+            },
+            {
+              "op": "if",
+              "cond": {
+                "amountAtLeast": {
+                  "of": {
+                    "stat": {
+                      "of": {
+                        "pick": "self"
+                      },
+                      "which": "defense"
+                    }
+                  },
+                  "n": {
+                    "add": [
+                      {
+                        "stat": {
+                          "of": {
+                            "pick": "self"
+                          },
+                          "which": "attack"
+                        }
+                      },
+                      1
+                    ]
+                  }
+                }
+              },
+              "then": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "c"
+                  },
+                  "traits": {
+                    "bane": true
+                  }
+                },
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "drain": true
+                  }
+                }
+              ]
+            },
+            {
+              "op": "if",
+              "cond": {
+                "amountAtLeast": {
+                  "of": {
+                    "stat": {
+                      "of": {
+                        "pick": "self"
+                      },
+                      "which": "attack"
+                    }
+                  },
+                  "n": {
+                    "add": [
+                      {
+                        "stat": {
+                          "of": {
+                            "pick": "self"
+                          },
+                          "which": "defense"
+                        }
+                      },
+                      1
+                    ]
+                  }
+                }
+              },
+              "then": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "c"
+                  },
+                  "traits": {
+                    "ward": true
+                  }
+                },
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "self"
+                  },
+                  "traits": {
+                    "storm": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

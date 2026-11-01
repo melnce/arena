@@ -1,0 +1,51 @@
+{
+  "id": "11022310",
+  "name": "Dichotomous Forensics",
+  "kind": "spell",
+  "class": "swordcraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Select an enemy follower on the field and deal it 5 damage. If you've Engaged a Clue amulet this turn, deal 10 damage instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower on the field and deal it 5 damage. If you've Engaged a Clue amulet this turn, deal 10 damage instead.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and deal it 5 damage. If you've Engaged a Clue amulet this turn, deal 10 damage instead.",
+          "op": "if",
+          "cond": {
+            "engagedClueAmuletThisTurn": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 10
+            }
+          ],
+          "else": [
+            {
+              "op": "damage",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              },
+              "amount": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

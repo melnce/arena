@@ -71,6 +71,8 @@ EVENTS = [
     "ally_draw",
     "ally_earth_rite",
     "ally_engage",
+    "ally_fuse",
+    "ally_fuse_amulet",
     "leader_restored",
     "self_buffed_up",
     "self_banished",
@@ -186,6 +188,14 @@ def filter_schema():
             "didNotAttackThisTurn": {"type": "boolean"},
             "superEvolved": {"type": "boolean"},
             "notBound": {"type": "string", "minLength": 1},
+            "sameNameAs": closed(
+                {
+                    "pick": {"const": "bound"},
+                    "ref": {"type": "string", "minLength": 1},
+                },
+                required=["pick", "ref"],
+            ),
+            "hasFuse": {"type": "boolean"},
         }
     )
 
@@ -514,6 +524,14 @@ def effect_schema():
             "defense": {"$ref": "#/$defs/Amount"},
             "untilEndOfTurn": {"type": "boolean"},
         }, ["select"]),
+        leaf("setStats", {
+            "select": {"$ref": "#/$defs/Selector"},
+            "attack": {"$ref": "#/$defs/Amount"},
+            "defense": {"$ref": "#/$defs/Amount"},
+        }, ["select", "attack", "defense"]),
+        leaf("swapStats", {
+            "select": {"$ref": "#/$defs/Selector"},
+        }, ["select"]),
         leaf("select", {
             "select": {"$ref": "#/$defs/Selector"},
         }, ["select", "as"]),
@@ -615,6 +633,7 @@ def effect_schema():
                 "oneOf": [
                     closed({"set": {"$ref": "#/$defs/Amount"}}, required=["set"]),
                     closed({"delta": {"$ref": "#/$defs/Amount"}}, required=["delta"]),
+                    closed({"halve": {"const": True}}, required=["halve"]),
                 ]
             },
             "damageCap": {"$ref": "#/$defs/Amount"},

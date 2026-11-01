@@ -1,4 +1,4 @@
-# Coverage — Rotation pool (573 cards + 42 crests)
+# Coverage — Rotation pool (573 cards + 47 crests)
 
 Judged from official Cygames `skill_text` in `cards/official/catalog.json` (markup stripped the same way as crests). The old repo is not the source of card texts. Ops and conditions are a clause-by-clause verb walk (`tools/coverage_lib.py`), not a keyword scan of the table itself.
 
@@ -536,7 +536,36 @@ Status:
 | `11003110` | Kyrios, Angel of Aspiration | fanfare | addToHand, damage | — | expressible |
 | `11003210` | Nacreheim, Utopian World | engage, when | draw, restore, pay | — | expressible |
 | `11004110` | Rezeal, Goddess of Nacreheim | fanfare, superEvolve | damage, crest | — | expressible |
+| `11011110` | Debonair Dogsitter | fanfare, evolve | summon, restore | — | expressible |
+| `11011120` | Wolf Pack Lackey | fanfare, evolve | summon, replicate | — | expressible |
+| `11011310` | Natural Reincarnation | fanfare | summon, evolve, mode:enhance | — | expressible |
 | `11012110` | Inquiring Mischief | enter/when | buff | — | expressible |
+| `11012120` | Garden Elf | endOfTurn | addToHand | — | expressible |
+| `11012310` | Untamed Testimony | fanfare | summon, crest | — | expressible |
+| `11013110` | Sleuth's Best Friend | fanfare, evolve | summon | — | expressible |
+| `11013310` | Nosche's Interrogation | fanfare | addToHand, damage, grantTraits | — | expressible |
+| `11014110` | Nosche, Theriophone Detective | fanfare, superEvolve | summon, buff | — | expressible |
+| `11014120` | Heartening Hyphae | fanfare, superEvolve | summon, draw, replicate, repeat | — | expressible |
+| `11021110` | Guileless Newsie | when, lastWords | summon, buff, swapStats, mode:enhance | — | expressible |
+| `11021120` | Bejeweled Lady | fanfare, when | addToHand, damage | — | expressible |
+| `11021310` | Onward, Charge! | fanfare | summon, grantTraits, evolve | — | expressible |
+| `11022110` | Cheeky Architect | when, fanfare, evolve | summon, damage, buff, swapStats | — | expressible |
+| `11022120` | Errant Knight | fanfare, superEvolve | banish, replicate | — | expressible |
+| `11022310` | Dichotomous Forensics | fanfare | damage | engagedClueAmuletThisTurn | expressible |
+| `11023110` | Placid Dilettante | when, fanfare, evolve | summon, buff, swapStats, setStats, grantTraits | — | expressible |
+| `11023310` | No Life's Cross-Examination | fanfare | summon | engagedClueAmuletThisTurn | expressible |
+| `11024110` | No Life, Dichotomous Detective | when, fanfare | summon, buff, swapStats, grantTraits | — | expressible |
+| `11024120` | Almaelys, Affluent Strategist | fanfare, evolve, superEvolve | addToHand, crest | — | expressible |
+| `11031110` | Dedicated Aide | fanfare, when | summon, buff | — | expressible |
+| `11031120` | Wily Witch | fanfare | damage, counter, pay, choose | — | expressible |
+| `11031310` | Atelier Relocation | fanfare | summon, grantTraits, mode:enhance | — | expressible |
+| `11032110` | Leisurely Attendant | when, fanfare | summon, restore, cost | — | expressible |
+| `11032120` | Ruler of Tempests | fanfare, enter/when, evolve | summon, damage, pay, replicate | — | expressible |
+| `11032310` | Discerning Melody | fanfare | summon, damage | engagedAmuletThisTurn | expressible |
+| `11033110` | Dramatic Assistant | fanfare, when, evolve | summon, damage, pp | — | expressible |
+| `11033310` | Noeinhowell's Interrogation | fanfare | addToHand, crest | — | expressible |
+| `11034110` | Noeinhowell, Hymnodic Detective | fanfare, when, evolve | summon, damage, crest | — | expressible |
+| `11034120` | Infernal Chimera | fanfare | damage, counter | — | expressible |
 | `11041110` | Obliviationist Marauder | lastWords | addToHand | — | expressible |
 | `11041120` | Freezing Icenewt | fanfare | damage, buff, mode:enhance | — | expressible |
 | `11041310` | Dance of the Waterwyrm | fanfare | draw, restore | overflow | expressible |
@@ -567,6 +596,16 @@ Status:
 | `11063310` | Fruitless Testimony | fanfare | summon, damage, crest, choose | — | expressible |
 | `11064110` | Lapinette, Calamity of Desolation | fanfare, evolve, superEvolve | summon, banish, crest | — | expressible |
 | `11064120` | Parareligious Idol | when, evolve | summon, banish | turnOwner | expressible |
+| `11071110` | Extinctionist Majordomo | lastWords | addToHand | — | expressible |
+| `11071120` | Otherworldly Intruder | — | — | — | expressible |
+| `11071310` | Incohesive Construction | fanfare | addToHand, grantTraits | — | expressible |
+| `11072110` | Extinctionist Socialite | fanfare, when, evolve | addToHand, draw, damage | — | expressible |
+| `11072120` | Bestial Beamcannoneer | fanfare | summon | — | expressible |
+| `11072310` | Hand of Extinction | fused, fanfare | summon, damage | wasFused | expressible |
+| `11073110` | Extinctionist Dandy | fanfare, when | addToHand, restore, destroy | — | expressible |
+| `11073310` | Calamity in Custody | fused, fanfare | summon, restore, destroy, pay | — | expressible |
+| `11074110` | Lineage, Calamity of Extinction | fused, fanfare | summon, leaderModifier, destroy | wasFused | expressible |
+| `11074120` | Dimensional Wanderer | when, lastWords, superEvolve | grantTraits, crest | — | expressible |
 | `90001210` | Divine Evidence | engage | draw, pay | — | expressible |
 | `90011110` | Fairy | — | — | — | expressible |
 | `90011120` | Springbloom Fairy | endOfTurn | evolve | — | expressible |
@@ -601,11 +640,11 @@ Status:
 | `90051120` | Bat | — | — | — | expressible |
 | `90051130` | Ghost | endOfTurn | banish | — | expressible |
 | `90051140` | Rotting Zombie | lastWords | summon | — | expressible |
-| `90061140` | Bunnies of Desolation | enter/when, lastWords | damage, banish, evolve | — | expressible |
 | `90054330` | Depths of the Eld Sight | — | draw | — | expressible |
 | `90061110` | Holy Falcon | — | — | — | expressible |
 | `90061120` | Holyflame Tiger | — | — | — | expressible |
 | `90061130` | Regal Falcon | — | — | — | expressible |
+| `90061140` | Bunnies of Desolation | enter/when, lastWords | damage, banish, evolve | — | expressible |
 | `90064210` | Rings of Moonlight | endOfTurn | damage | — | expressible |
 | `90064320` | Depths of the Eld Tome | — | addToHand, damage, destroy | — | expressible |
 | `90071110` | Puppet | — | destroy | — | expressible |
@@ -664,9 +703,14 @@ Status:
 | `crest:10964110` | Crest: Erralde, Signet Convict | endOfTurn | damage, restore | — | expressible |
 | `crest:10974110` | Crest: Cutthroat, Fluxblade Convict | — | evolve | — | expressible |
 | `crest:11004110` | Crest: Rezeal, Goddess of Nacreheim | when | summon, grantTraits, grantAbility | — | expressible |
+| `crest:11012310` | Crest: Untamed Testimony | startOfTurn | summon | — | expressible |
+| `crest:11024120` | Crest: Almaelys, Affluent Strategist | endOfTurn | addToHand, cost, sequence | — | expressible |
+| `crest:11033310` | Crest: Noeinhowell's Interrogation | when | damage, restore, destroy, ep, sequence | — | expressible |
+| `crest:11034110` | Crest: Noeinhowell, Hymnodic Detective | when | pp | — | expressible |
 | `crest:11054120` | Crest: Gremory, Doom Dispeller | endOfTurn | counter | — | expressible |
 | `crest:11063310` | Crest: Fruitless Testimony | startOfTurn | addToHand, restore | — | expressible |
 | `crest:11064110` | Crest: Lapinette, Calamity of Desolation | startOfTurn | summon | — | expressible |
+| `crest:11074120` | Crest: Dimensional Wanderer | when, lastWords | summon | — | expressible |
 | `faith:10614120` | Faith: Sathanid, Eld Lance | — | counter | — | expressible |
 | `faith:10624120` | Faith: Yidmetra, Eld Sword | — | counter | — | expressible |
 | `faith:10634120` | Faith: Calge-Danthla, Eld Crystals | enter/when | counter | — | expressible |
@@ -675,8 +719,8 @@ Status:
 
 ## Totals
 
-- rows: 658 (cards 612 authored in coverage including set-10 Dragon/Abyss/Haven + Mischief + Bunnies + Neutrals + Evidence; crest/faith as listed)
-- expressible: 658
+- rows: 702 (cards 650 authored in coverage including set-10 Neutrals + Forest/Sword/Rune/Portal + Dragon/Abyss/Haven + Mischief + Bunnies + Evidence; crest/faith as listed)
+- expressible: 702
 - needs: 0
 - question: 0
 
@@ -688,6 +732,6 @@ The pool is derived from the committed Cygames catalog:
 python3 tools/list-pool.py
 ```
 
-Expected: 516 rotation + 58 reachable tokens + 40 Crest + 5 Faith = 573 + 46 (part 3 adds Bunnies + 3 crests; class cards already in the 516). Re-derived from `cards/official/catalog.json` (2026-10-31 fetch after set 10 / Deicide in Nacreheim).
+Expected: 516 rotation + 58 reachable tokens + 40 Crest + 5 Faith = 573 + 51 (set-10 parts 2+3 add Bunnies + 8 crests; class cards already in the 516). Re-derived from `cards/official/catalog.json` (2026-10-31 fetch after set 10 / Deicide in Nacreheim).
 
 `tools/coverage-check.py` (CI) walks every row's official `skill_text` (or crest/faith specific-effect text) in that catalog and asserts the ops/conditions columns contain the verbs listed in `tools/coverage_lib.py`.

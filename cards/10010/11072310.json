@@ -1,0 +1,71 @@
+{
+  "id": "11072310",
+  "name": "Hand of Extinction",
+  "kind": "spell",
+  "class": "portalcraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 5,
+  "text": "Fuse: Amulets\nWhenever you Fuse to this card, summon a Divine Evidence.\n\nDeal 4 damage to all enemy followers. If you've Fused to this card, deal 8 damage instead.",
+  "fuse": {
+    "partners": {
+      "kind": "amulet"
+    },
+    "printed": "Fuse: Amulets"
+  },
+  "abilities": [
+    {
+      "on": "fused",
+      "printed": "Whenever you Fuse to this card, summon a Divine Evidence.",
+      "effects": [
+        {
+          "printed": "summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Deal 4 damage to all enemy followers. If you've Fused to this card, deal 8 damage instead.",
+      "effects": [
+        {
+          "printed": "Deal 4 damage to all enemy followers. If you've Fused to this card, deal 8 damage instead.",
+          "op": "if",
+          "cond": {
+            "wasFused": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "all"
+              },
+              "amount": 8
+            }
+          ],
+          "else": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "all"
+              },
+              "amount": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

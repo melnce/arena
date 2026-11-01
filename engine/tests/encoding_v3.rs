@@ -176,6 +176,7 @@ fn v3_block_values_on_constructed_states() {
             granted_order: 1,
             granted: vec![],
             choose_used: Default::default(),
+            sequence_index: 0,
         });
     st.player_mut(opp)
         .crests
@@ -187,6 +188,7 @@ fn v3_block_values_on_constructed_states() {
             granted_order: 1,
             granted: vec![],
             choose_used: Default::default(),
+            sequence_index: 0,
         });
     let amulet_id = cid("90031210");
     let mut own_amulet = arena_engine::state::CardInstance::from_card(

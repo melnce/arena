@@ -1,0 +1,66 @@
+{
+  "id": "11011110",
+  "name": "Debonair Dogsitter",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "text": "Fanfare: Summon a Divine Evidence.\n\nEvolve: If there are at least two 1-base-cost allied cards on the field, restore 2 defense to your leader.",
+  "attack": 2,
+  "defense": 2,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Divine Evidence.",
+      "effects": [
+        {
+          "printed": "Summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: If there are at least two 1-base-cost allied cards on the field, restore 2 defense to your leader.",
+      "effects": [
+        {
+          "printed": "If there are at least two 1-base-cost allied cards on the field, restore 2 defense to your leader.",
+          "op": "if",
+          "cond": {
+            "countAtLeast": {
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "field",
+                "kind": "card",
+                "filter": {
+                  "baseCostEq": 1
+                }
+              },
+              "n": 2
+            }
+          },
+          "then": [
+            {
+              "op": "restore",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

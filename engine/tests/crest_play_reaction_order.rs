@@ -71,6 +71,7 @@ fn put_crest_countdown(st: &mut State, who: PlayerId, id: &str, cd: i32) {
         granted_order: order,
         granted: vec![],
         choose_used: Default::default(),
+        sequence_index: 0,
     });
 }
 

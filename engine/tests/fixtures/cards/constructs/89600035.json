@@ -1,0 +1,51 @@
+{
+  "id": "89600035",
+  "name": "filter_sameNameAs",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 1,
+  "text": "Select an enemy follower and destroy all enemy copies of it.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Select an enemy follower and destroy all enemy copies of it.",
+      "effects": [
+        {
+          "op": "seq",
+          "printed": "Select an enemy follower and destroy all enemy copies of it.",
+          "effects": [
+            {
+              "op": "select",
+              "as": "t",
+              "select": {
+                "pick": "choose",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower"
+              }
+            },
+            {
+              "op": "destroy",
+              "select": {
+                "pick": "all",
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "filter": {
+                  "sameNameAs": {
+                    "pick": "bound",
+                    "ref": "t"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

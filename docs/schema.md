@@ -181,6 +181,8 @@ Blanket `cantAttack` is omitted (no pool card). Use `cantAttackFollowers` + `can
 | `ally_draw` | `10561120`, `crest:10564120` |
 | `ally_earth_rite` | `10731310` Heel, My Dearie |
 | `ally_engage` | `10062120` Sacred Griffon |
+| `ally_fuse` | `11074120` Dimensional Wanderer |
+| `ally_fuse_amulet` | `11072110` Extinctionist Socialite / `11073110` Extinctionist Dandy — see `FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION` |
 | `leader_restored` | `10563110` Saint of Rehabilitation; `10961110` Follower of the Tenets; `10963110` Executor of the Vow — 0-heal still fires (official Q&A Burnite `10144110`) |
 | `self_buffed_up` | `10812110` Ruflet |
 | `self_banished` | `11003210` Nacreheim ("When this card is banished from the field") |
@@ -203,7 +205,8 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `restore` | `10002110` |
 | `buff` | `10001110`; negative via `Amount.neg` `10714110`; `untilEndOfTurn` `10574110` option 1 (cost, not buff) — buff until EOT: `10474110` Lu Woh |
 | `select` | `10473110` Cassius: "Select an Artifact follower in your hand and deal X damage to all enemy followers. X is the selected follower's attack" — opens the choice, binds (`as`), does nothing else. Empty pool binds nothing; a later `Amount.stat` of an empty binding is 0 (official Q&A: the ability still resolves). |
-| `setStats` | omitted — no pool card sets a follower's ATK/DEF to a number (Zooey sets leader max defense via `leaderModifier`) |
+| `setStats` | Placid Dilettante `11023110` — absolute attack/defense (and max defense) |
+| `swapStats` | Guileless Newsie `11021110` — attack ↔ defense (max defense ← old attack) |
 | `destroy` | `10963210` |
 | `banish` | `10574110`, `10443310` |
 | `returnToHand` | `10404110` invoked |
@@ -228,7 +231,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `counter` | `earth` `10434120`; `combo` `10714110`; `skyboundHand` `10471120`; `shadows` via `pay`; `faith` `faith:10634120`; `clues` `11053310` Nocturne's Interrogation; `{var: X}` `10131320` |
 | `pay` | `shadows` `10754120`; `earth` `10031110`; `pp` `10934110`; `faith` `10624120` Yidmetra; `clues` `90001210` Divine Evidence / `11073310` Calamity in Custody |
 | `transform` | `10534120`, `10573310` |
-| `leaderModifier` | Forced `maxDefense: {set: N}` Zooey `10444120` (existing file; was a bare int) or `maxDefense: {delta: N}` Lhynkal `crest:10534110` — same split as `cost`. After either, current defense clamps to the new max. `delta` floors the max at 0; a leader whose max (and therefore defense) is 0 is destroyed. `damageCap` + `until` `10444120` |
+| `leaderModifier` | Forced `maxDefense: {set: N}` Zooey `10444120` (existing file; was a bare int), `maxDefense: {delta: N}` Lhynkal `crest:10534110`, or `maxDefense: {halve: true}` Lineage `11074110` (engine choice: ⌈max/2⌉) — same split as `cost`. After any, current defense clamps to the new max. `delta` floors the max at 0; a leader whose max (and therefore defense) is 0 is destroyed. `damageCap` + `until` `10444120` |
 | `replicate` | `10604110`, `10923110` |
 | `invoke` | `10404110`, `10904110` |
 | `spellboostHand` | `10031110`; optional `select` `10931120` Key Spirit ("spellboost it 4 times") |
@@ -273,7 +276,7 @@ integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{s
 
 ## Filter
 
-`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `hasSpellboost` `10931120` Key Spirit ("a card in your hand with On Spellboost") · `destroyedThisMatch` `10901310` · `didNotAttackThisTurn` `10464110` Galleon ("that didn't attack this turn") · `superEvolved` `10863210` Academy Hijinks · `notBound` `10901110` Jailor ("unselected")
+`all` / `any` / `not` · `tribe` `10754120` · `card` / `cards` / `notCard` (Cygames ids, never names) `10933110` · `kind` · `class` `10021310` · `costEq`/`Lte`/`Gte`/`In` `crest:10564120` · `baseCost*` `10901310` / `10674110` · `attack*`/`defense*` · `evolved`/`unevolved` `10564110` · `damaged` · `hasTrait` enum of trait keys `10564110` Ward · `enhanced` `10622310` Majestic Conquest · `sameCostGroup` `10503210` World of Games · `hasLastWords` `crest:10954110` · `hasSpellboost` `10931120` Key Spirit ("a card in your hand with On Spellboost") · `destroyedThisMatch` `10901310` · `didNotAttackThisTurn` `10464110` Galleon ("that didn't attack this turn") · `superEvolved` `10863210` Academy Hijinks · `notBound` `10901110` Jailor ("unselected") · `sameNameAs` Lineage `11074110` ("all enemy copies of it") · `hasFuse` Socialite Evolve `11072110` ("a card with Fuse")
 
 ## Condition
 
@@ -285,7 +288,7 @@ Three closed shapes. `enhance` `{kind, cost, printed, effects, replacesBase?}` `
 
 ## Fuse
 
-Required `printed` (the literal `Fuse: …` line) plus `partners` Filter. "Cards" → empty filter `10934110`. Artifact cards → `{tribe: artifact}` `90072110` / `90072120`. Artifact amulets → `{tribe: artifact, kind: amulet}` `90071210` / `90071220` (owner ruling 2026-09-10; printed text was right).
+Required `printed` (the literal `Fuse: …` line) plus `partners` Filter. "Cards" → empty filter `10934110`. Artifact cards → `{tribe: artifact}` `90072110` / `90072120`. Artifact amulets → `{tribe: artifact, kind: amulet}` `90071210` / `90071220` (owner ruling 2026-09-10; printed text was right). Fuse: Amulets → `{kind: amulet}` partners (Socialite / Dandy).
 
 What a fuse does to the **host** is `recipes` data (`partners`, cost conditions, `requires: [ids]`, `result`). The action enumerator reads recipes without running effects. `on: fused` exists only for effects *beyond* the host transform (Sephie `10934110` summon). Ability `effects` is `minItems: 1` — no empty fused stub.
 

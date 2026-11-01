@@ -1,0 +1,34 @@
+{
+  "id": "11033310",
+  "name": "Noeinhowell's Interrogation",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 2,
+  "text": "Add a Divine Evidence to your hand. Gain Crest: Noeinhowell's Interrogation.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Add a Divine Evidence to your hand. Gain Crest: Noeinhowell's Interrogation.",
+      "effects": [
+        {
+          "printed": "Add a Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Gain Crest: Noeinhowell's Interrogation.",
+          "op": "crest",
+          "gain": "crest:11033310",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -430,6 +430,7 @@ fn crest_without_countdown_omits_the_key() {
             granted_order: 1,
             granted: vec![],
             choose_used: Default::default(),
+            sequence_index: 0,
         });
     let snap = snapshot_json(&st);
     let crest = &snap["players"]["a"]["crests"][0];

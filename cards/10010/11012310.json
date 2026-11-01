@@ -1,0 +1,34 @@
+{
+  "id": "11012310",
+  "name": "Untamed Testimony",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 2,
+  "text": "Summon a Divine Evidence. Gain Crest: Untamed Testimony.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Divine Evidence. Gain Crest: Untamed Testimony.",
+      "effects": [
+        {
+          "printed": "Summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        },
+        {
+          "printed": "Gain Crest: Untamed Testimony.",
+          "op": "crest",
+          "gain": "crest:11012310",
+          "player": "self"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

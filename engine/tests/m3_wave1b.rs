@@ -760,6 +760,7 @@ fn yuel_crest_evolves_played_follower_after_fanfare_once_per_turn() {
         granted_order: order,
         granted: vec![],
         choose_used: Default::default(),
+        sequence_index: 0,
     });
     give_pp(&mut st, me, 2, 2);
     st.player_mut(me).hand.clear();

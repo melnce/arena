@@ -1,0 +1,74 @@
+{
+  "id": "11013310",
+  "name": "Nosche's Interrogation",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 3,
+  "text": "Deal 5 damage to a random enemy follower. Add an Inquiring Mischief to your hand and, if there are at least two 1-base-cost allied cards on the field, give it Storm.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Deal 5 damage to a random enemy follower. Add an Inquiring Mischief to your hand and, if there are at least two 1-base-cost allied cards on the field, give it Storm.",
+      "effects": [
+        {
+          "printed": "Deal 5 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 5
+        },
+        {
+          "printed": "Add an Inquiring Mischief to your hand and, if there are at least two 1-base-cost allied cards on the field, give it Storm.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "11012110"
+              },
+              "count": 1,
+              "as": "m"
+            },
+            {
+              "op": "if",
+              "cond": {
+                "countAtLeast": {
+                  "select": {
+                    "pick": "all",
+                    "side": "ally",
+                    "zone": "field",
+                    "kind": "card",
+                    "filter": {
+                      "baseCostEq": 1
+                    }
+                  },
+                  "n": 2
+                }
+              },
+              "then": [
+                {
+                  "op": "grantTraits",
+                  "select": {
+                    "pick": "bound",
+                    "ref": "m"
+                  },
+                  "traits": {
+                    "storm": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,44 @@
+{
+  "id": "11011120",
+  "name": "Wolf Pack Lackey",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 7,
+  "text": "Fanfare: Summon 2 copies of Wolf Pack Lackey.\n\nRush\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 4,
+  "defense": 3,
+  "traits": {
+    "rush": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Wolf Pack Lackey.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Wolf Pack Lackey.",
+          "op": "summon",
+          "card": {
+            "named": "11011120"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

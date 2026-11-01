@@ -627,6 +627,7 @@ fn cutthroat_crest_once_per_your_turn() {
             granted_order: 0,
             granted: vec![],
             choose_used: Default::default(),
+            sequence_index: 0,
         });
     give_pp(&mut st, me, 3, 3);
     st.player_mut(me).hand.clear();

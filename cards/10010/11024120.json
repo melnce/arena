@@ -1,0 +1,62 @@
+{
+  "id": "11024120",
+  "name": "Almaelys, Affluent Strategist",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Add a Glittering Gold to your hand.\n\nEvolve: Gain Crest: Almaelys, Affluent Strategist.\nSuper-Evolve: Delay the count of your Crest: Almaelys, Affluent Strategist by 2.",
+  "attack": 2,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Glittering Gold to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Glittering Gold to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021350"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Gain Crest: Almaelys, Affluent Strategist.",
+      "effects": [
+        {
+          "printed": "Gain Crest: Almaelys, Affluent Strategist.",
+          "op": "crest",
+          "gain": "crest:11024120",
+          "player": "self"
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Delay the count of your Crest: Almaelys, Affluent Strategist by 2.",
+      "effects": [
+        {
+          "printed": "Delay the count of your Crest: Almaelys, Affluent Strategist by 2.",
+          "op": "countdown",
+          "select": {
+            "filter": {
+              "card": "11024120"
+            },
+            "kind": "card",
+            "pick": "all",
+            "side": "ally",
+            "zone": "crests"
+          },
+          "delta": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

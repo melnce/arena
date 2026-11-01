@@ -1,0 +1,74 @@
+{
+  "id": "11014120",
+  "name": "Heartening Hyphae",
+  "kind": "follower",
+  "class": "forestcraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Do this 2 times: \"Draw a card. Summon any Forestcraft followers drawn.\"\n\nSuper-Evolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 6,
+  "defense": 6,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Do this 2 times: \"Draw a card. Summon any Forestcraft followers drawn.\"",
+      "effects": [
+        {
+          "printed": "Do this 2 times: \"Draw a card. Summon any Forestcraft followers drawn.\"",
+          "op": "repeat",
+          "times": 2,
+          "effects": [
+            {
+              "op": "seq",
+              "effects": [
+                {
+                  "op": "draw",
+                  "count": 1,
+                  "as": "d"
+                },
+                {
+                  "op": "if",
+                  "cond": {
+                    "boundHas": {
+                      "ref": "d",
+                      "filter": {
+                        "class": "forestcraft",
+                        "kind": "follower"
+                      }
+                    }
+                  },
+                  "then": [
+                    {
+                      "op": "summon",
+                      "card": {
+                        "from": {
+                          "pick": "bound",
+                          "ref": "d"
+                        }
+                      },
+                      "count": 1
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "superEvolve",
+      "printed": "Super-Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

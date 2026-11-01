@@ -1,0 +1,74 @@
+{
+  "id": "11011310",
+  "name": "Natural Reincarnation",
+  "kind": "spell",
+  "class": "forestcraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Summon a Fairy and evolve it.\nEnhance (6): Summon 3 instead.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Fairy and evolve it.",
+      "effects": [
+        {
+          "printed": "Summon a Fairy and evolve it.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90011110"
+              },
+              "count": 1,
+              "as": "f"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "f"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 6,
+      "printed": "Enhance (6): Summon 3 instead.",
+      "replacesBase": true,
+      "effects": [
+        {
+          "printed": "Summon 3 instead.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90011110"
+              },
+              "count": 3,
+              "as": "f"
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "bound",
+                "ref": "f"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

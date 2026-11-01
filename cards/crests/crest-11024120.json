@@ -1,0 +1,77 @@
+{
+  "id": "crest:11024120",
+  "name": "Crest: Almaelys, Affluent Strategist",
+  "grantedBy": [
+    "11024120"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nAt the end of your turn, activate an ability in sequence from the following.\n1. Add a Gilded Blade to your hand and set its cost to 0.\n2. Add a Gilded Goblet to your hand and set its cost to 0.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "endOfTurn",
+      "whose": "own",
+      "printed": "At the end of your turn, activate an ability in sequence from the following.\n1. Add a Gilded Blade to your hand and set its cost to 0.\n2. Add a Gilded Goblet to your hand and set its cost to 0.",
+      "effects": [
+        {
+          "printed": "activate an ability in sequence from the following.\n1. Add a Gilded Blade to your hand and set its cost to 0.\n2. Add a Gilded Goblet to your hand and set its cost to 0.",
+          "op": "sequence",
+          "steps": [
+            {
+              "printed": "1. Add a Gilded Blade to your hand and set its cost to 0.",
+              "effects": [
+                {
+                  "op": "seq",
+                  "effects": [
+                    {
+                      "op": "addToHand",
+                      "card": {
+                        "named": "90021310"
+                      },
+                      "count": 1,
+                      "as": "b"
+                    },
+                    {
+                      "op": "cost",
+                      "select": {
+                        "pick": "bound",
+                        "ref": "b"
+                      },
+                      "set": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "printed": "2. Add a Gilded Goblet to your hand and set its cost to 0.",
+              "effects": [
+                {
+                  "op": "seq",
+                  "effects": [
+                    {
+                      "op": "addToHand",
+                      "card": {
+                        "named": "90021320"
+                      },
+                      "count": 1,
+                      "as": "g"
+                    },
+                    {
+                      "op": "cost",
+                      "select": {
+                        "pick": "bound",
+                        "ref": "g"
+                      },
+                      "set": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

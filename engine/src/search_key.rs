@@ -679,6 +679,12 @@ fn hash_crest(w: &mut Writer, c: &CrestInstance) {
     for i in &c.choose_used {
         w.u8(*i);
     }
+    // Trailing optional: omit at default so pre-sequence crest states stay
+    // bit-identical (identity golden / hard rule).
+    if c.sequence_index != 0 {
+        w.u8(1);
+        w.u32(c.sequence_index);
+    }
 }
 
 fn hash_destroyed(w: &mut Writer, d: &DestroyedRecord) {

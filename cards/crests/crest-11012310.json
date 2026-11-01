@@ -1,0 +1,27 @@
+{
+  "id": "crest:11012310",
+  "name": "Crest: Untamed Testimony",
+  "grantedBy": [
+    "11012310"
+  ],
+  "faith": false,
+  "text": "Countdown (2)\nAt the start of your turn, summon an Inquiring Mischief.",
+  "countdown": 2,
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, summon an Inquiring Mischief.",
+      "effects": [
+        {
+          "printed": "summon an Inquiring Mischief.",
+          "op": "summon",
+          "card": {
+            "named": "11012110"
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

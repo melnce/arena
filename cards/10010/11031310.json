@@ -1,0 +1,49 @@
+{
+  "id": "11031310",
+  "name": "Atelier Relocation",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 4,
+  "text": "Summon 3 copies of Clay Golem.\nEnhance (8): Give them Storm.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon 3 copies of Clay Golem.",
+      "effects": [
+        {
+          "printed": "Summon 3 copies of Clay Golem.",
+          "op": "summon",
+          "card": {
+            "named": "90031110"
+          },
+          "count": 3,
+          "as": "g"
+        }
+      ]
+    }
+  ],
+  "modes": [
+    {
+      "kind": "enhance",
+      "cost": 8,
+      "printed": "Enhance (8): Give them Storm.",
+      "effects": [
+        {
+          "printed": "Give them Storm.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "bound",
+            "ref": "g"
+          },
+          "traits": {
+            "storm": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,49 @@
+{
+  "id": "11031110",
+  "name": "Dedicated Aide",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 3,
+  "text": "Fanfare: Summon a Divine Evidence.\n\nWard\nWhenever you Engage an amulet, give this follower +1/+1.",
+  "attack": 3,
+  "defense": 3,
+  "traits": {
+    "ward": true
+  },
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon a Divine Evidence.",
+      "effects": [
+        {
+          "printed": "Summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "printed": "Whenever you Engage an amulet, give this follower +1/+1.",
+      "effects": [
+        {
+          "printed": "give this follower +1/+1.",
+          "op": "buff",
+          "select": {
+            "pick": "self"
+          },
+          "attack": 1,
+          "defense": 1
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

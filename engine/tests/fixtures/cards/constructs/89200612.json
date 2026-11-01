@@ -1,0 +1,30 @@
+{
+  "id": "89200612",
+  "name": "op_swapStats",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "Swap an enemy follower's attack and defense.",
+  "tribes": [],
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Swap an enemy follower's attack and defense.",
+      "effects": [
+        {
+          "op": "swapStats",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          },
+          "printed": "Swap an enemy follower's attack and defense."
+        }
+      ]
+    }
+  ]
+}

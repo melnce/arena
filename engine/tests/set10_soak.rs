@@ -1,5 +1,6 @@
-//! Set-10 soak: ≥200 seeded games per synthetic deck (`set10-neutral`,
-//! `set10-dragon`, `set10-abyss`, `set10-haven`) vs two meta decks.
+//! Set-10 soak: ≥200 seeded games per synthetic deck vs two meta decks.
+//! Covers Neutral + Forest / Sword / Rune / Portal (part 2) and Dragon / Abyss /
+//! Haven (part 3).
 //! Invariants: at most one Clue amulet per side; every field Clue has count ≥ 1.
 //! Also a short h0 pass that must offer/choose Engage on a Clue amulet sometimes.
 
@@ -95,7 +96,6 @@ fn set10_vs_meta_soak(label: &str, deck_path: &str, seed_base: u64) {
     let start = std::time::Instant::now();
     let mut games = 0u32;
     let mut actions = 0u64;
-    // Half vs each meta, both seatings.
     let per = (n / 4).max(1);
     for (i, meta) in [meta_a.as_slice(), meta_b.as_slice()]
         .into_iter()
@@ -153,6 +153,42 @@ fn set10_haven_vs_meta_soak() {
         "haven",
         "engine/tests/fixtures/decks/set10-haven.json",
         63_000,
+    );
+}
+
+#[test]
+fn set10_forest_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "forest",
+        "engine/tests/fixtures/decks/set10-forest.json",
+        64_000,
+    );
+}
+
+#[test]
+fn set10_sword_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "sword",
+        "engine/tests/fixtures/decks/set10-sword.json",
+        65_000,
+    );
+}
+
+#[test]
+fn set10_rune_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "rune",
+        "engine/tests/fixtures/decks/set10-rune.json",
+        66_000,
+    );
+}
+
+#[test]
+fn set10_portal_vs_meta_soak() {
+    set10_vs_meta_soak(
+        "portal",
+        "engine/tests/fixtures/decks/set10-portal.json",
+        67_000,
     );
 }
 

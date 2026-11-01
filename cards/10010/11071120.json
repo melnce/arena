@@ -1,0 +1,18 @@
+{
+  "id": "11071120",
+  "name": "Otherworldly Intruder",
+  "kind": "follower",
+  "class": "portalcraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 6,
+  "text": "Storm\nAura",
+  "attack": 4,
+  "defense": 4,
+  "traits": {
+    "storm": true,
+    "aura": true
+  },
+  "tribes": []
+}
