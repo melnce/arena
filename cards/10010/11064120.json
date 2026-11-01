@@ -1,0 +1,59 @@
+{
+  "id": "11064120",
+  "name": "Parareligious Idol",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 6,
+  "attack": 0,
+  "defense": 4,
+  "text": "Intimidate\nAura\nCan't attack followers or leaders.\nDuring your turn, whenever an enemy follower is banished from the field, summon an exact copy of it.\n\nEvolve: Select an enemy follower on the field and banish it.",
+  "traits": {
+    "intimidate": true,
+    "aura": true,
+    "cantAttackFollowers": true,
+    "cantAttackLeader": true
+  },
+  "abilities": [
+    {
+      "on": "when",
+      "event": "enemy_follower_banished",
+      "when": {
+        "turnOwner": "self"
+      },
+      "printed": "During your turn, whenever an enemy follower is banished from the field, summon an exact copy of it.",
+      "effects": [
+        {
+          "printed": "summon an exact copy of it.",
+          "op": "summon",
+          "card": {
+            "copyOf": {
+              "pick": "entering"
+            },
+            "exact": true
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Select an enemy follower on the field and banish it.",
+      "effects": [
+        {
+          "printed": "Select an enemy follower on the field and banish it.",
+          "op": "banish",
+          "select": {
+            "pick": "choose",
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower"
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

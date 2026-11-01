@@ -1,0 +1,63 @@
+{
+  "id": "90061140",
+  "name": "Bunnies of Desolation",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 90000,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 2,
+  "attack": 1,
+  "defense": 1,
+  "text": "When this follower enters the field, banish a random card with the lowest cost from your hand and evolve this follower.\n\nLast Words: Deal 2 damage to the enemy leader.",
+  "abilities": [
+    {
+      "on": "enter",
+      "printed": "When this follower enters the field, banish a random card with the lowest cost from your hand and evolve this follower.",
+      "effects": [
+        {
+          "printed": "banish a random card with the lowest cost from your hand and evolve this follower.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "banish",
+              "select": {
+                "pick": "lowest",
+                "side": "ally",
+                "zone": "hand",
+                "kind": "card",
+                "orderBy": "cost",
+                "count": 1
+              }
+            },
+            {
+              "op": "evolve",
+              "select": {
+                "pick": "self"
+              },
+              "super": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Deal 2 damage to the enemy leader.",
+      "effects": [
+        {
+          "printed": "Deal 2 damage to the enemy leader.",
+          "op": "damage",
+          "select": {
+            "pick": "all",
+            "side": "enemy",
+            "zone": "leader",
+            "kind": "leader"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

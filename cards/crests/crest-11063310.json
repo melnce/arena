@@ -1,0 +1,42 @@
+{
+  "id": "crest:11063310",
+  "name": "Crest: Fruitless Testimony",
+  "grantedBy": [
+    "11063310"
+  ],
+  "faith": false,
+  "countdown": 2,
+  "text": "Countdown (2)\nAt the start of your turn, restore 1 defense to your leader and add a Divine Evidence to your hand.",
+  "abilities": [
+    {
+      "on": "startOfTurn",
+      "whose": "own",
+      "printed": "At the start of your turn, restore 1 defense to your leader and add a Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "restore 1 defense to your leader and add a Divine Evidence to your hand.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "restore",
+              "select": {
+                "pick": "all",
+                "side": "ally",
+                "zone": "leader",
+                "kind": "leader"
+              },
+              "amount": 1
+            },
+            {
+              "op": "addToHand",
+              "card": {
+                "named": "90001210"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

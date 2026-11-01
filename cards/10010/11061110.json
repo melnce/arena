@@ -1,0 +1,30 @@
+{
+  "id": "11061110",
+  "name": "Desolationist Refiner",
+  "kind": "follower",
+  "class": "havencraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 2,
+  "attack": 3,
+  "defense": 1,
+  "text": "Last Words: Add 2 copies of Divine Evidence to your hand.",
+  "abilities": [
+    {
+      "on": "lastWords",
+      "printed": "Last Words: Add 2 copies of Divine Evidence to your hand.",
+      "effects": [
+        {
+          "printed": "Add 2 copies of Divine Evidence to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
