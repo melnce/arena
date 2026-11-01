@@ -251,11 +251,7 @@ fn attending_amanuensis_banish_restore_fanfare_bane_super_evolve() {
     let def0 = st.player(me).leader_defense;
     put_field(&db, &mut st, me, EVIDENCE);
     play_pp(&db, &mut st, EVIDENCE, 1); // merge banishes
-    assert_eq!(
-        st.player(me).leader_defense,
-        def0 + 2,
-        "banish → restore 2"
-    );
+    assert_eq!(st.player(me).leader_defense, def0 + 2, "banish → restore 2");
 
     // Super-Evolve replicates Fanfare → another Ghost with Bane.
     let mut st = started(&db, 110_506);
@@ -329,18 +325,11 @@ fn gremory_evolve_crest_eot_shadows_and_ward() {
     let sh0 = st.player(me).shadows;
     evolve_now(&db, &mut st, g, false);
     assert!(
-        st.player(me)
-            .crests
-            .iter()
-            .any(|c| c.id == GREMORY_CREST),
+        st.player(me).crests.iter().any(|c| c.id == GREMORY_CREST),
         "Evolve → Crest: Gremory"
     );
     end_turn(&db, &mut st); // crest EoT on A's end
-    assert_eq!(
-        st.player(me).shadows,
-        sh0 + 2,
-        "crest EoT: gain 2 shadows"
-    );
+    assert_eq!(st.player(me).shadows, sh0 + 2, "crest EoT: gain 2 shadows");
 
     // Negative: without Evolve, no crest EoT shadows.
     let mut st = started(&db, 110_509);

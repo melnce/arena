@@ -269,10 +269,7 @@ fn fruitless_testimony_modes_crest_two_turns_and_with_lapinette() {
     assert_eq!(st.player(me).leader_defense, def0 + 2);
     assert_eq!(hand_count(&st, me, EVIDENCE), ev0 + 2);
     assert!(
-        st.player(me)
-            .crests
-            .iter()
-            .all(|c| c.id != FRUITLESS_CREST),
+        st.player(me).crests.iter().all(|c| c.id != FRUITLESS_CREST),
         "crest expired after two starts"
     );
 
@@ -290,10 +287,7 @@ fn fruitless_testimony_modes_crest_two_turns_and_with_lapinette() {
         "mode 2: Summon a Bunnies of Desolation"
     );
     assert!(
-        st.player(me)
-            .crests
-            .iter()
-            .all(|c| c.id != FRUITLESS_CREST),
+        st.player(me).crests.iter().all(|c| c.id != FRUITLESS_CREST),
         "mode 2 does not gain crest"
     );
 
@@ -323,15 +317,8 @@ fn fruitless_testimony_modes_crest_two_turns_and_with_lapinette() {
     play(&db, &mut st, h);
     choose(&db, &mut st, 0); // Fruitless crest CD2
     assert!(
-        st.player(me)
-            .crests
-            .iter()
-            .any(|c| c.id == LAPINETTE_CREST)
-            && st
-                .player(me)
-                .crests
-                .iter()
-                .any(|c| c.id == FRUITLESS_CREST),
+        st.player(me).crests.iter().any(|c| c.id == LAPINETTE_CREST)
+            && st.player(me).crests.iter().any(|c| c.id == FRUITLESS_CREST),
         "both crests active together"
     );
     // Dual-crest SoT: Lapinette summons; Fruitless restores. Evidence add is
@@ -353,10 +340,7 @@ fn fruitless_testimony_modes_crest_two_turns_and_with_lapinette() {
         "Fruitless crest restores 1 alongside Lapinette"
     );
     assert!(
-        st.player(me)
-            .crests
-            .iter()
-            .all(|c| c.id != LAPINETTE_CREST),
+        st.player(me).crests.iter().all(|c| c.id != LAPINETTE_CREST),
         "Lapinette crest CD1 gone"
     );
     assert_eq!(crest_cd(&st, me, FRUITLESS_CREST), Some(1));
@@ -386,7 +370,11 @@ fn parareligious_idol_copy_full_field_and_opponents_turn_negative() {
         .flatten()
         .find(|c| c.card.as_str() == TANK)
         .expect("Idol exact copy");
-    assert_eq!((copy.attack, copy.defense), (5, 8), "copy keeps buffed stats");
+    assert_eq!(
+        (copy.attack, copy.defense),
+        (5, 8),
+        "copy keeps buffed stats"
+    );
     assert_eq!(
         copy.traits.barrier,
         Some(true),
@@ -650,10 +638,7 @@ fn lapinette_normal_evolve_exactly_one_summon() {
         "exactly one summon on one turn start"
     );
     assert!(
-        st.player(me)
-            .crests
-            .iter()
-            .all(|c| c.id != LAPINETTE_CREST),
+        st.player(me).crests.iter().all(|c| c.id != LAPINETTE_CREST),
         "crest gone after CD1 turn start"
     );
 
@@ -729,7 +714,11 @@ fn combative_monk_two_attacks_third_rejected_rush() {
         choose(&db, &mut st, 0);
     }
     let monk2 = st.field_inst(me, monk).unwrap();
-    assert_eq!(monk2.attack, atk0 + 4, "Strike fires on each of two attacks");
+    assert_eq!(
+        monk2.attack,
+        atk0 + 4,
+        "Strike fires on each of two attacks"
+    );
     assert_eq!(monk2.defense, def0 + 4, "second Strike Barrier absorbs");
 
     // Third attack rejected.
