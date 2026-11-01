@@ -1,4 +1,4 @@
-# Coverage — Rotation pool (572 cards + 43 crests)
+# Coverage — Rotation pool (573 cards + 42 crests)
 
 Judged from official Cygames `skill_text` in `cards/official/catalog.json` (markup stripped the same way as crests). The old repo is not the source of card texts. Ops and conditions are a clause-by-clause verb walk (`tools/coverage_lib.py`), not a keyword scan of the table itself.
 
@@ -632,7 +632,7 @@ Status:
 
 ## Totals
 
-- rows: 615 (cards 572, crests 43)
+- rows: 615 (cards 573, crests 42) — recount after set 10; regenerate coverage rows when authored
 - expressible: 615
 - needs: 0
 - question: 0
@@ -645,6 +645,6 @@ The pool is derived from the committed Cygames catalog:
 python3 tools/list-pool.py
 ```
 
-Expected: 516 rotation + 56 reachable tokens + 38 Crest + 5 Faith = 572 + 43. Re-derived from `cards/official/catalog.json` (2026-09-09 fetch): those exact counts.
+Expected: 516 rotation + 57 reachable tokens + 37 Crest + 5 Faith = 573 + 42. Re-derived from `cards/official/catalog.json` (2026-10-31 fetch after set 10 / Deicide in Nacreheim).
 
 `tools/coverage-check.py` (CI) walks every row's official `skill_text` (or crest/faith specific-effect text) in that catalog and asserts the ops/conditions columns contain the verbs listed in `tools/coverage_lib.py`.

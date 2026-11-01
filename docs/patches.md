@@ -1,5 +1,20 @@
 # Balance patch log
 
+## 2026-10-28 (UTC) — card set 10 release
+
+- **Source:** live Cygames card list (`https://shadowverse-wb.com/web/CardList/cardList`); set **Deicide in Nacreheim** (`10010`) released 2026-10-28; set `10004` left Rotation the same day.
+- **Arena commit:** _(filled at merge)_
+
+| group | change |
+|---|---|
+| set `10010` (76 collectibles) | new records in `cards/official/catalog.json` |
+| tokens `90001210` Divine Evidence, `90061140` Bunnies of Desolation | new token records (Evidence carries tribe `clue` / official int 21) |
+| set `10004` (76 collectibles) | `rotation` `true → false` |
+| `90071210` Gear of Ambition | `related_card_ids` `[90072110, 90073110, 90073120, 90073130, 90074110]` → `[90072110]` (official metadata; printed text/stats unchanged; transitive related closure of every prior catalog record unchanged — 0 of 904 differ) |
+| `90071220` Gear of Remembrance | `related_card_ids` `[90072120, 90073110, 90073120, 90073130, 90074110]` → `[90072120]` (same as Ambition; closure unchanged) |
+
+No authored card-file edits for the Gears; no `oracle/cards-as-recorded/` entry (nothing played changes). Pool recount from the refreshed catalog: **516** rotation + **57** reachable tokens = **573**; **37** Crest + **5** Faith (= **42**).
+
 ## 2026-09-29 (UTC)
 
 - **Source:** [Cygames maintenance notice](https://shadowverse-wb.com/en/news/detail/?id=01M1GEHYM6FH0137A65FTXFWBQ)

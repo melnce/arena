@@ -100,6 +100,7 @@ fn tribe_str(t: Tribe) -> &'static str {
     match t {
         Tribe::Anathema => "Anathema",
         Tribe::Artifact => "Artifact",
+        Tribe::Clue => "Clue",
         Tribe::Departed => "Departed",
         Tribe::EarthSigil => "Earth Sigil",
         Tribe::Encroacher => "Encroacher",

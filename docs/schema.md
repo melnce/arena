@@ -2,13 +2,13 @@
 
 `schema/cards.schema.json` is draft 2020-12. `additionalProperties: false` on every object. Discriminated unions are `oneOf` + a `const` on `kind` / `on` / `op` / `pick`. No `patternProperties`, no free-form maps.
 
-A value with no card in the 572+43 pool is omitted. Each value below names at least one justifying id.
+A value with no card in the 573+42 pool is omitted. Each value below names at least one justifying id.
 
 Regenerate the schema JSON with `python3 tools/gen_schema.py`.
 
 ## Official integer maps (from Cygames `common` / `specific_effect_card_info`)
 
-Derived from the live card-list API (`cards/official/catalog.json` `_meta.maps`), then cross-checked against cards whose kind/class/tribe is known. Authored `kind` is still only `follower` / `spell` / `amulet` — official type 2 and type 3 both map to `amulet`. Extra official tribes (`luminous`, `levin`, `shikigami`) appear in the catalog; the closed authored-card enum stays the 12 pool tribes below unless an authored file needs one.
+Derived from the live card-list API (`cards/official/catalog.json` `_meta.maps`), then cross-checked against cards whose kind/class/tribe is known. Authored `kind` is still only `follower` / `spell` / `amulet` — official type 2 and type 3 both map to `amulet`. Extra official tribes (`luminous`, `levin`, `shikigami`) appear in the catalog; the closed authored-card enum stays the 13 pool tribes below unless an authored file needs one.
 
 | official int | authored name | evidence |
 |---|---|---|
@@ -44,6 +44,7 @@ Derived from the live card-list API (`cards/official/catalog.json` `_meta.maps`)
 | `tribe` 18 | `loot` | Gilded Blade `90021310` |
 | `tribe` 19 | `encroacher` | Sathanid `10614120` |
 | `tribe` 20 | `anathema` | Gildaria `10724110` |
+| `tribe` 21 | `clue` | Divine Evidence `90001210`, Nacreheim `11003210` |
 | SE type 1 | `crest` | Slaus `10574110` / `10412312` |
 | SE type 2 | `crystallize` | Venerating Dyer `10662110` cost 1 |
 | SE type 3 | `accelerate` | Shoddy Plaything `10671110` cost 2 |
@@ -100,7 +101,7 @@ Evolved stats are not authored. Measured: official records have no per-card evo 
 
 ## Tribes
 
-`anathema` `10724110` · `artifact` `90071210` · `departed` `90051140` · `earth sigil` `90031210` · `encroacher` `10604110` · `golem` (Emperor of Elements `10533110`) · `loot` `90021310` · `marine` `10541120` · `mysteria` `10833110` · `officer` `90021120` · `pixie` `90011110` · `puppetry` `90071110`
+`anathema` `10724110` · `artifact` `90071210` · `clue` `90001210` · `departed` `90051140` · `earth sigil` `90031210` · `encroacher` `10604110` · `golem` (Emperor of Elements `10533110`) · `loot` `90021310` · `marine` `10541120` · `mysteria` `10833110` · `officer` `90021120` · `pixie` `90011110` · `puppetry` `90071110`
 
 ## Traits
 

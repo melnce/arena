@@ -26,6 +26,7 @@ def const_obj(name, value):
 TRIBES = [
     "anathema",
     "artifact",
+    "clue",
     "departed",
     "earth sigil",
     "encroacher",

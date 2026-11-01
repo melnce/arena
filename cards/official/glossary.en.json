@@ -1,9 +1,9 @@
 {
   "_meta": {
     "source": "https://shadowverse-wb.com/web/System/glossaryList",
-    "fetched_at": "2026-09-10T08:53:46.587Z",
+    "fetched_at": "2026-11-01T01:35:46.390Z",
     "lang": "en",
-    "count": 78
+    "count": 79
   },
   "entries": [
     {
@@ -49,7 +49,7 @@
     {
       "ordinal": 61,
       "title": "Banish",
-      "text": "Banishing a card removes it from the field, hand, or deck without adding a shadow to its controller's cemetery or activating Last Words or other abilities that activate when a card is destroyed."
+      "text": "Banishing a card removes it from the field, leader area, hand, or deck without adding a shadow to its controller's cemetery or activating Last Words or other abilities that activate when a card is destroyed."
     },
     {
       "ordinal": 43,
@@ -75,6 +75,11 @@
       "ordinal": 5,
       "title": "Class",
       "text": "Cards belong to one of eight classes: Forestcraft, Swordcraft, Runecraft, Dragoncraft, Abysscraft, Havencraft, Portalcraft, or Neutral.\n\nLeaders also belong to a class. For example, Dreizehn is a Portalcraft leader and can therefore use Portalcraft cards. Neutral cards can be used by leaders of any class."
+    },
+    {
+      "ordinal": 78,
+      "title": "Clue",
+      "text": "When an amulet with Clue enters the field, its clue count is set to 1 and displayed on the bottom right of the card. Any other allied amulets with Clue on the field will be banished, and their clue counts added on to the new amulet.\n\nCards with Clue can't be selected for enemy abilities. They are destroyed when their clue count falls to 0."
     },
     {
       "ordinal": 27,
@@ -119,7 +124,7 @@
     {
       "ordinal": 60,
       "title": "Destroy",
-      "text": "Destroying a follower or amulet removes it from the field. Every allied follower or amulet destroyed adds a shadow to your cemetery."
+      "text": "Destroying a card removes it from the field or leader area. Every allied card destroyed on the field adds a shadow to your cemetery."
     },
     {
       "ordinal": 68,

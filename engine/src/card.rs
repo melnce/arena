@@ -101,6 +101,7 @@ pub enum Rarity {
 pub enum Tribe {
     Anathema,
     Artifact,
+    Clue,
     Departed,
     #[serde(rename = "earth sigil")]
     EarthSigil,

@@ -55,6 +55,7 @@ const TRIBE = {
   18: "loot",
   19: "encroacher",
   20: "anathema",
+  21: "clue",
 };
 const SE_TYPE = {
   1: "crest",

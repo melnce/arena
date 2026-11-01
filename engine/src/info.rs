@@ -1095,6 +1095,7 @@ fn tribe_name(t: Tribe) -> &'static str {
     match t {
         Tribe::Anathema => "anathema",
         Tribe::Artifact => "artifact",
+        Tribe::Clue => "clue",
         Tribe::Departed => "departed",
         Tribe::EarthSigil => "earth sigil",
         Tribe::Encroacher => "encroacher",

@@ -53,7 +53,7 @@ Historical distinct-count measurements (17 named archetypes, **199** distinct ro
 
 ## M3 card list
 
-All 516 rotation collectibles + 56 reachable tokens + 43 crest/faith entries (38 Crest + 5 Faith). Same derivation as M0 from `cards/official/catalog.json`. Tokens: walk `related_card_ids` from the 516, keep `token == true`.
+All 516 rotation collectibles + 57 reachable tokens + 42 crest/faith entries (37 Crest + 5 Faith). Same derivation as M0 from `cards/official/catalog.json`. Tokens: walk `related_card_ids` from the 516, keep `token == true`.
 
 **Gate:** differential green on the full pool.
 
