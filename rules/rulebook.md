@@ -529,7 +529,7 @@ This section enumerates the keyword abilities and major mechanics of SVWB. Each 
 - **Noeinhowell Interrogation** crest: `sequence` in order without repetition; the third activation destroys.
 - **Noeinhowell** crest: once per your turn, recover 1 PP when you Engage an amulet.
 - **Infernal Chimera** (`11034120`, Q&A): X=0 deals **no** damage (not a 0-split). "All enemies" includes the enemy leader. **Lineage** (`11074110`) `{halve: true}` — engine choice: ⌈max/2⌉.
-- **Fuse once per action** (Sephie-style once-per-instance still applies). **"Whenever you Fuse an amulet"** (`ally_fuse_amulet`, Socialite `11072110` / Dandy `11073110`) — **pending owner**; engine constant `FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION = true` (once per Fuse action that includes ≥1 amulet, not per amulet partner). JA has no "for each".
+- **Fuse once per action** (Sephie-style once-per-instance still applies). **"Whenever you Fuse an amulet"** (`ally_fuse_amulet`, Socialite `11072110` / Dandy `11073110`) — **Owner ruling (2026-11-01):** _"the effects only trigger once per fuse no matter how many amulets you fuse at once"_; engine constant `FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION = true` (once per Fuse action that includes ≥1 amulet, not per amulet partner). JA has no "for each".
 - **Dimensional Wanderer** crest advance = countdown −1; bounce on re-gain.
 - **Enter reactions wait until the play sequence finishes** (Ruler of Tempests) — same E34 / play-reaction timing as above.
 

@@ -31,11 +31,11 @@ use crate::trace::{NeutralAction, Pick, PickChose, PickWhat};
 /// "yes any card". Set `false` to count allied field only (old engine).
 const WORLD_OF_GAMES_COUNTS_EITHER_SIDE: bool = true;
 
-/// Pending owner: "Whenever you Fuse an amulet" (Socialite 11072110 / Dandy 11073110).
-/// JA 「自分がアミュレットを【融合】したとき」 has no "for each".
-/// `true` = once per Fuse action that includes ≥1 amulet.
-/// `false` = once per amulet partner fused in the action.
-/// Marked pending-owner in rules/rulebook.md.
+/// Owner ruling 2026-11-01: "Whenever you Fuse an amulet" (Socialite 11072110 /
+/// Dandy 11073110) — "the effects only trigger once per fuse no matter how many
+/// amulets you fuse at once". JA 「自分がアミュレットを【融合】したとき」 has no
+/// "for each". `true` = once per Fuse action that includes ≥1 amulet.
+/// `false` = once per amulet partner fused in the action (pre-ruling alternate).
 pub const FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION: bool = true;
 
 // =========================================================================
