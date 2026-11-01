@@ -1,0 +1,109 @@
+{
+  "id": "11023110",
+  "name": "Placid Dilettante",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10010,
+  "rarity": "gold",
+  "token": false,
+  "cost": 6,
+  "text": "Activates in hand. Whenever you Engage a Clue amulet, swap this follower's attack and defense and give it +1/+0.\n\nFanfare: Summon 2 copies of Guileless Newsie and set their attack and defense to X/Y. X and Y are this follower's attack and defense.\n\nEvolve: Give all other allied followers on the field Bane.",
+  "attack": 5,
+  "defense": 1,
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "zone": "hand",
+      "filter": {
+        "tribe": "clue"
+      },
+      "printed": "Activates in hand. Whenever you Engage a Clue amulet, swap this follower's attack and defense and give it +1/+0.",
+      "effects": [
+        {
+          "printed": "swap this follower's attack and defense and give it +1/+0.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "swapStats",
+              "select": {
+                "pick": "self"
+              }
+            },
+            {
+              "op": "buff",
+              "select": {
+                "pick": "self"
+              },
+              "attack": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Summon 2 copies of Guileless Newsie and set their attack and defense to X/Y. X and Y are this follower's attack and defense.",
+      "effects": [
+        {
+          "printed": "Summon 2 copies of Guileless Newsie and set their attack and defense to X/Y. X and Y are this follower's attack and defense.",
+          "op": "seq",
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "11021110"
+              },
+              "count": 2,
+              "as": "n"
+            },
+            {
+              "op": "setStats",
+              "select": {
+                "pick": "bound",
+                "ref": "n"
+              },
+              "attack": {
+                "stat": {
+                  "of": {
+                    "pick": "self"
+                  },
+                  "which": "attack"
+                }
+              },
+              "defense": {
+                "stat": {
+                  "of": {
+                    "pick": "self"
+                  },
+                  "which": "defense"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Give all other allied followers on the field Bane.",
+      "effects": [
+        {
+          "printed": "Give all other allied followers on the field Bane.",
+          "op": "grantTraits",
+          "select": {
+            "pick": "all",
+            "side": "ally",
+            "zone": "field",
+            "kind": "follower",
+            "other": true
+          },
+          "traits": {
+            "bane": true
+          }
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

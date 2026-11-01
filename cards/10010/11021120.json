@@ -1,0 +1,52 @@
+{
+  "id": "11021120",
+  "name": "Bejeweled Lady",
+  "kind": "follower",
+  "class": "swordcraft",
+  "set": 10010,
+  "rarity": "bronze",
+  "token": false,
+  "cost": 5,
+  "text": "Fanfare: Add a Gilded Necklace to your hand.\n\nOnce on each of your turns, when you play a spell, deal 2 damage to all enemies.",
+  "attack": 3,
+  "defense": 3,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Add a Gilded Necklace to your hand.",
+      "effects": [
+        {
+          "printed": "Add a Gilded Necklace to your hand.",
+          "op": "addToHand",
+          "card": {
+            "named": "90021340"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_spell_played",
+      "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      },
+      "printed": "Once on each of your turns, when you play a spell, deal 2 damage to all enemies.",
+      "effects": [
+        {
+          "printed": "deal 2 damage to all enemies.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "character",
+            "pick": "all"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
