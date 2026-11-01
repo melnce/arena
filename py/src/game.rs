@@ -1,6 +1,6 @@
 //! `CardDb` and `Game` pyclasses.
 
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use arena_engine::trace::NeutralAction;
 use arena_engine::trace::Pick;
@@ -19,10 +19,57 @@ use crate::convert::{
 };
 use crate::play::play_one;
 
+/// Crest turn-start Countdown vs SoT order for a `Game`.
+/// `"rulebook"` (default) queues crest start-of-turn before Countdown;
+/// `"as_recorded"` restores the pre-fix order used by older bots recordings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CrestOrder {
+    Rulebook,
+    AsRecorded,
+}
+
+impl CrestOrder {
+    fn parse(s: &str) -> PyResult<Self> {
+        match s {
+            "rulebook" => Ok(Self::Rulebook),
+            "as_recorded" => Ok(Self::AsRecorded),
+            other => Err(py_err_msg(format!(
+                "crest_order must be \"rulebook\" or \"as_recorded\" (got {other:?})"
+            ))),
+        }
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Rulebook => "rulebook",
+            Self::AsRecorded => "as_recorded",
+        }
+    }
+}
+
 #[pyclass(module = "arena", name = "CardDb")]
 #[derive(Clone)]
 pub struct PyCardDb {
     pub inner: Arc<CardDb>,
+    /// Lazily built `CardDb` with `crest_countdown_before_start_triggers`.
+    /// Shared across `PyCardDb` clones of the same load (`Arc<OnceLock<…>>`).
+    as_recorded_crest: Arc<OnceLock<Arc<CardDb>>>,
+}
+
+impl PyCardDb {
+    fn db_for_crest_order(&self, order: CrestOrder) -> Arc<CardDb> {
+        match order {
+            CrestOrder::Rulebook => self.inner.clone(),
+            CrestOrder::AsRecorded => self
+                .as_recorded_crest
+                .get_or_init(|| {
+                    let mut db = (*self.inner).clone();
+                    db.as_recorded.crest_countdown_before_start_triggers = true;
+                    Arc::new(db)
+                })
+                .clone(),
+        }
+    }
 }
 
 #[pyclass(module = "arena", name = "Game")]
@@ -31,6 +78,7 @@ pub struct PyGame {
     db: Arc<CardDb>,
     state: arena_engine::State,
     seed: u64,
+    crest_order: CrestOrder,
 }
 
 #[pyfunction]
@@ -47,13 +95,22 @@ pub fn load_cards(root: &str) -> PyResult<PyCardDb> {
     }
     Ok(PyCardDb {
         inner: Arc::new(db),
+        as_recorded_crest: Arc::new(OnceLock::new()),
     })
 }
 
 #[pymethods]
 impl PyGame {
     #[new]
-    #[pyo3(signature = (db, seed, deck_a, deck_b, first = "coin", opening_hands = None))]
+    #[pyo3(signature = (
+        db,
+        seed,
+        deck_a,
+        deck_b,
+        first = "coin",
+        opening_hands = None,
+        crest_order = "rulebook",
+    ))]
     fn new(
         db: &PyCardDb,
         seed: u64,
@@ -61,7 +118,10 @@ impl PyGame {
         deck_b: Bound<'_, PyAny>,
         first: &str,
         opening_hands: Option<Bound<'_, PyAny>>,
+        crest_order: &str,
     ) -> PyResult<Self> {
+        let order = CrestOrder::parse(crest_order)?;
+        let engine_db = db.db_for_crest_order(order);
         let da = deck_from_value(&py_to_value(&deck_a)?)?;
         let dbk = deck_from_value(&py_to_value(&deck_b)?)?;
         let opening = match opening_hands {
@@ -69,7 +129,7 @@ impl PyGame {
             _ => None,
         };
         let state = new_game(
-            &db.inner,
+            &engine_db,
             GameConfig {
                 seed,
                 deck_a: da,
@@ -80,10 +140,17 @@ impl PyGame {
         )
         .map_err(py_err_load)?;
         Ok(Self {
-            db: db.inner.clone(),
+            db: engine_db,
             state,
             seed,
+            crest_order: order,
         })
+    }
+
+    /// `"rulebook"` (default) or `"as_recorded"` — crest turn-start Countdown order.
+    #[getter]
+    fn crest_order(&self) -> &'static str {
+        self.crest_order.as_str()
     }
 
     /// NeutralAction dicts, engine order (`legal_actions_neutral`).
