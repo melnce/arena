@@ -2,7 +2,8 @@
 //! Clue merge/destroy/untargetable, Scene of Deicide, Engage-after-merge.
 //! Assert against card text and the Clue rules — never against incidental engine state.
 
-use arena_engine::{apply, legal_actions, Action, Phase, PlayerId, Slot};
+use arena_engine::event::Event;
+use arena_engine::{apply, legal_actions, Action, AttackTarget, Phase, PlayerId, Slot};
 
 mod common;
 use common::*;
@@ -15,8 +16,8 @@ const KYRIOS: &str = "11003110";
 const SCENE: &str = "11002210";
 const REZEAL: &str = "11004110";
 const REZEAL_CREST: &str = "crest:11004110";
-const TANK: &str = "89500001";
-const VANILLA: &str = "88001110";
+const TANK: &str = "89500001"; // 2/10
+const STORM: &str = "88001120"; // 2/2 Storm
 const CHOOSE_DESTROY_AMULET: &str = "89911001";
 const RANDOM_BANISH_AMULET: &str = "89911002";
 
@@ -217,29 +218,46 @@ fn clue_untargetable_by_enemy_choose_but_random_hits() {
 fn engage_merged_amulet_same_turn() {
     let db = load_db();
     let mut st = started(&db, 10_017);
-    let old = put_field(&db, &mut st, PlayerId::A, EVIDENCE);
-    engage_slot(&db, &mut st, old);
-    // Old Evidence destroyed by consume. Put another, play Nacreheim, Engage survivor.
-    put_field(&db, &mut st, PlayerId::A, EVIDENCE);
-    // Manually mark engaged on the field Evidence, then play Nacreheim (merge).
-    if let Some(c) = st
-        .player_mut(PlayerId::A)
-        .field
-        .iter_mut()
-        .flatten()
-        .find(|c| c.is_clue())
-    {
-        c.flags.engaged_this_turn = true;
-    }
-    play_pp(&db, &mut st, NACREHEIM, 1);
+    // Real merge path: play Evidence, play Evidence (count 2).
+    play_pp(&db, &mut st, EVIDENCE, 1);
+    assert_eq!(clue_count(&st, PlayerId::A), 1);
+    play_pp(&db, &mut st, EVIDENCE, 1);
+    assert_eq!(clue_count(&st, PlayerId::A), 2, "two Evidence merge to count 2");
     let slot = st
         .player(PlayerId::A)
         .field
         .iter()
         .enumerate()
         .find_map(|(i, s)| s.as_ref().filter(|c| c.is_clue()).map(|_| i as u8))
+        .expect("clue");
+    engage_slot(&db, &mut st, slot);
+    assert_eq!(clue_count(&st, PlayerId::A), 1, "Engage consumes a clue");
+    assert!(
+        st.player(PlayerId::A)
+            .field
+            .iter()
+            .flatten()
+            .any(|c| c.is_clue() && c.flags.engaged_this_turn),
+        "Evidence engaged this turn"
+    );
+    // Play Nacreheim → merge onto a new instance at count 2.
+    play_pp(&db, &mut st, NACREHEIM, 1);
+    assert_eq!(clue_count(&st, PlayerId::A), 2);
+    let (slot, engaged) = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.is_clue())
+                .map(|c| (i as u8, c.flags.engaged_this_turn))
+        })
         .expect("merged clue");
-    // Survivor may Engage this turn (new instance) — needs PP for Engage (1).
+    assert!(
+        !engaged,
+        "merge survivor is a new instance (engaged_this_turn does not carry)"
+    );
     give_pp(&mut st, PlayerId::A, 10, 10);
     let legal = legal_actions(&db, &st);
     assert!(
@@ -251,6 +269,7 @@ fn engage_merged_amulet_same_turn() {
     let hand0 = st.player(PlayerId::A).hand.len();
     engage_slot(&db, &mut st, slot);
     assert!(st.player(PlayerId::A).hand.len() > hand0, "Engage drew");
+    assert_eq!(clue_count(&st, PlayerId::A), 1, "second Engage consumes to 1");
 }
 
 #[test]
@@ -443,68 +462,195 @@ fn scene_of_deicide_with_and_without_enemy_and_full_field() {
 #[test]
 fn rezeal_fanfare_and_crest_play_reaction() {
     let db = load_db();
+    // Fanfare: exactly 9 damage to the chosen tank; second enemy untouched.
     let mut st = started(&db, 10_040);
     put_field(&db, &mut st, PlayerId::B, TANK);
+    put_field(&db, &mut st, PlayerId::B, TANK);
     play_pp(&db, &mut st, REZEAL, 9);
+    let defs: Vec<i32> = st
+        .player(PlayerId::B)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == TANK)
+        .map(|c| c.defense)
+        .collect();
+    assert_eq!(defs.len(), 2, "both tanks still on the field");
     assert!(
-        !field_has(&st, PlayerId::B, TANK)
-            || st
-                .player(PlayerId::B)
-                .field
-                .iter()
-                .flatten()
-                .any(|c| c.card.as_str() == TANK && c.defense <= c.max_defense.saturating_sub(9)),
-        "Fanfare dealt 9"
+        defs.contains(&1) && defs.contains(&10),
+        "chosen tank at exactly 1 (9 damage); other still 10; got {defs:?}"
     );
 
-    // Grant crest via put, then play a follower: LW grant + cant-attack EOT.
+    // Crest via real Super-Evolve of Rezeal.
     let mut st = started(&db, 10_041);
-    // Super-evolve path needs SEP; put crest directly for the crest text.
-    use arena_engine::state::CrestInstance;
-    let order = st.crest_order;
-    st.crest_order += 1;
-    st.player_mut(PlayerId::A).crests.push(CrestInstance {
-        id: REZEAL_CREST.into(),
-        countdown: None,
-        faith: false,
-        once_used: vec![],
-        granted_order: order,
-        granted: vec![],
-        choose_used: Default::default(),
-    });
-    play_pp(&db, &mut st, VANILLA, 1);
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    play_pp(&db, &mut st, REZEAL, 9);
+    let rezeal_slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == REZEAL)
+                .map(|_| i as u8)
+        })
+        .expect("rezeal");
+    st.player_mut(PlayerId::A).turns_taken = 7;
+    st.player_mut(PlayerId::A).sep = 1;
+    apply(
+        &db,
+        &mut st,
+        Action::Evolve {
+            slot: Slot(rezeal_slot),
+            super_evolve: true,
+        },
+    )
+    .expect("super-evolve");
+    assert!(
+        st.player(PlayerId::A)
+            .crests
+            .iter()
+            .any(|c| c.id == REZEAL_CREST),
+        "Super-Evolve gained Crest: Rezeal"
+    );
+
+    // Play Dynames under the crest: Fanfare (Damage) before crest grants.
+    put_field(&db, &mut st, PlayerId::B, TANK);
+    give_pp(&mut st, PlayerId::A, 10, 10);
+    let hand = put_hand(&db, &mut st, PlayerId::A, DYNAMES);
+    let mut events = apply(&db, &mut st, Action::Play { hand }).expect("play dynames");
+    assert!(
+        matches!(st.phase, Phase::Choice { .. }),
+        "Fanfare target choice before crest grant"
+    );
+    let mid = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .find(|c| c.card.as_str() == DYNAMES)
+        .expect("dynames");
+    assert!(
+        mid.granted.is_empty() && mid.traits.cant_attack_followers.is_none(),
+        "crest grant must not land before Fanfare resolves"
+    );
+    while matches!(st.phase, Phase::Choice { .. }) {
+        events.extend(apply(&db, &mut st, Action::Choose(0)).expect("choose"));
+    }
+    let play_i = events
+        .iter()
+        .position(|e| matches!(e, Event::Play { card, .. } if card.as_str() == DYNAMES))
+        .expect("Play event");
+    let dmg_i = events
+        .iter()
+        .position(|e| matches!(e, Event::Damage { .. }))
+        .expect("Fanfare Damage event");
+    assert!(
+        play_i < dmg_i,
+        "Play before Fanfare Damage in events ({play_i} < {dmg_i})"
+    );
     let f = st
         .player(PlayerId::A)
         .field
         .iter()
         .flatten()
-        .find(|c| c.card.as_str() == VANILLA)
-        .expect("vanilla");
+        .find(|c| c.card.as_str() == DYNAMES)
+        .expect("dynames after");
     assert!(
         f.granted
             .iter()
             .any(|a| matches!(a, arena_engine::card::Ability::LastWords { .. })),
-        "crest gave Last Words: Summon a copy"
+        "crest gave Last Words after Fanfare"
     );
     assert_eq!(f.traits.cant_attack_followers, Some(true));
     assert_eq!(f.traits.cant_attack_leader, Some(true));
+
+    // Storm under crest: can't attack this turn; can next turn; LW summons a fresh copy.
+    give_pp(&mut st, PlayerId::A, 10, 10);
+    let hand = put_hand(&db, &mut st, PlayerId::A, STORM);
+    apply(&db, &mut st, Action::Play { hand }).expect("play storm");
+    let storm_slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == STORM)
+                .map(|_| i as u8)
+        })
+        .expect("storm");
+    let legal = legal_actions(&db, &st);
+    assert!(
+        !legal
+            .iter()
+            .any(|a| matches!(a, Action::Attack { attacker: Slot(s), .. } if *s == storm_slot)),
+        "Storm under crest can't attack this turn"
+    );
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
+    let storm_slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == STORM)
+                .map(|_| i as u8)
+        })
+        .expect("storm still there");
+    let legal = legal_actions(&db, &st);
+    assert!(
+        legal
+            .iter()
+            .any(|a| matches!(a, Action::Attack { attacker: Slot(s), .. } if *s == storm_slot)),
+        "Storm can attack next turn after cant-attack expires"
+    );
+    // Trade Storm into a Tank (2 atk) → Storm dies → LW summons a fresh printed copy.
+    let tank_slot = st
+        .player(PlayerId::B)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == TANK)
+                .map(|_| i as u8)
+        })
+        .expect("enemy tank");
+    apply(
+        &db,
+        &mut st,
+        Action::Attack {
+            attacker: Slot(storm_slot),
+            target: AttackTarget::Slot(Slot(tank_slot)),
+        },
+    )
+    .expect("storm trades");
+    let copies: Vec<_> = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.card.as_str() == STORM)
+        .collect();
+    assert_eq!(copies.len(), 1, "LW summoned exactly one Storm copy");
+    let copy = copies[0];
+    assert_eq!(copy.attack, 2);
+    assert_eq!(copy.defense, 2);
+    assert!(
+        copy.granted.is_empty(),
+        "fresh copy has no granted Last Words"
+    );
+    assert!(
+        copy.traits.cant_attack_followers.is_none() && copy.traits.cant_attack_leader.is_none(),
+        "fresh copy has no cant-attack grant"
+    );
+
     // Negative: crest must not fire on amulet play.
-    let amulets_before = st
-        .player(PlayerId::A)
-        .field
-        .iter()
-        .flatten()
-        .filter(|c| c.kind == arena_engine::card::CardKind::Amulet)
-        .count();
     play_pp(&db, &mut st, EVIDENCE, 1);
-    let amulets_after = st
-        .player(PlayerId::A)
-        .field
-        .iter()
-        .flatten()
-        .filter(|c| c.kind == arena_engine::card::CardKind::Amulet)
-        .count();
-    assert!(amulets_after >= amulets_before);
     let evidence = clue_on_field(&st, PlayerId::A).expect("evidence");
     assert!(
         evidence
