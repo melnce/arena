@@ -68,5 +68,15 @@
     "phrase": "give it +N/+N",
     "reason": "On a when-enter ability \"it\" is pick:entering; on Obsessed Test Subject 10931110 the enter-route subject is pick:self (owner 2026-08-30 named_enter_count).",
     "ids": ["10931110", "10022210"]
+  },
+  {
+    "phrase": "Give all other allied followers on the field +N/+N",
+    "reason": "Nosche 11014110 prints +2/+0 (attack-only buff). Digit normalization collapses it onto the +N/+N phrase used by Unmoving Tactician / similar +N/+N Super-Evolves.",
+    "ids": ["11014110", "10523110", "10624110", "10814110"]
+  },
+  {
+    "phrase": "Give them Storm",
+    "reason": "Marionette Master 10571110 grants Storm to two separately bound summons (seq of two grantTraits). Atelier Relocation 11031310 grants Storm once to a single bound summon group of Clay Golems.",
+    "ids": ["10571110", "11031310"]
   }
 ]

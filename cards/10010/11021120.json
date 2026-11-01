@@ -41,7 +41,8 @@
             "side": "enemy",
             "zone": "field",
             "kind": "character",
-            "pick": "all"
+            "pick": "all",
+            "includeLeader": true
           },
           "amount": 2
         }
