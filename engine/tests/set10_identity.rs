@@ -136,6 +136,12 @@ fn play_digest(db: &CardDb, seed: u64, deck_a: &[CardId], deck_b: &[CardId]) -> 
     (digest, final_hash)
 }
 
+#[derive(Debug, Clone)]
+struct CrestCountdownLostHit {
+    ply: u32,
+    crest_id: String,
+}
+
 /// Same schedule walk as [`play_digest`], optionally recording the first ply at
 /// which a crest with a start-of-turn ability was lost to Countdown in step 2.
 fn play_digest_tracking(
@@ -144,7 +150,7 @@ fn play_digest_tracking(
     deck_a: &[CardId],
     deck_b: &[CardId],
     track_crest_event: bool,
-) -> (u64, u64, Option<u32>) {
+) -> (u64, u64, Option<CrestCountdownLostHit>) {
     let mut state = new_game(
         db,
         GameConfig {
@@ -159,7 +165,7 @@ fn play_digest_tracking(
     let mut policy = policy_rng(seed);
     let mut digest = 0xcbf2_9ce4_8422_2325u64;
     let mut actions = 0u32;
-    let mut first_crest_event_ply = None;
+    let mut first_crest_event = None;
     while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
         assert!(actions < MAX_ACTIONS, "seed={seed}: game did not terminate");
         digest = fold_ply(digest, db, &state);
@@ -172,19 +178,22 @@ fn play_digest_tracking(
         let events = apply(db, &mut state, legal[idx].clone()).unwrap_or_else(|e| {
             panic!("seed={seed}: legal action failed: {e:?}");
         });
-        if track_crest_event && first_crest_event_ply.is_none() {
-            if events
+        if track_crest_event && first_crest_event.is_none() {
+            if let Some(Event::CrestTurnStartCountdownLost { id, .. }) = events
                 .iter()
-                .any(|e| matches!(e, Event::CrestTurnStartCountdownLost { .. }))
+                .find(|e| matches!(e, Event::CrestTurnStartCountdownLost { .. }))
             {
-                first_crest_event_ply = Some(actions);
+                first_crest_event = Some(CrestCountdownLostHit {
+                    ply: actions,
+                    crest_id: id.clone(),
+                });
             }
         }
         actions += 1;
     }
     // Terminal / post-game ply: include final public state once more.
     digest = fold_ply(digest, db, &state);
-    (digest, hash(&state), first_crest_event_ply)
+    (digest, hash(&state), first_crest_event)
 }
 
 fn build_schedule(n_decks: usize) -> Vec<(u64, usize, usize)> {
@@ -439,28 +448,29 @@ fn set10_identity_crest_turn_start_diffs() {
         .map(|d| parse_deck_cards(&d.cards))
         .collect();
 
-    let mut differing: Vec<(usize, u64, Option<u32>)> = Vec::new();
+    let mut differing: Vec<(usize, u64, CrestCountdownLostHit)> = Vec::new();
     let start = std::time::Instant::now();
     for (i, g) in golden.games.iter().enumerate() {
-        let (digest, final_hash, first_ply) =
+        let (digest, final_hash, hit) =
             play_digest_tracking(&db_new, g.seed, &parsed[g.deck_a], &parsed[g.deck_b], true);
         let digest_ok = hex_u64(digest) == g.digest;
         let hash_ok = hex_u64(final_hash) == g.final_hash;
         if digest_ok && hash_ok {
             assert!(
-                first_ply.is_none(),
-                "game {i} seed={}: identical digest but saw CrestTurnStartCountdownLost at ply {:?}",
+                hit.is_none(),
+                "game {i} seed={}: identical digest but saw CrestTurnStartCountdownLost at {:?}",
                 g.seed,
-                first_ply
+                hit
             );
             continue;
         }
-        differing.push((i, g.seed, first_ply));
-        assert!(
-            first_ply.is_some(),
-            "game {i} seed={}: digest differs without CrestTurnStartCountdownLost",
-            g.seed
-        );
+        let hit = hit.unwrap_or_else(|| {
+            panic!(
+                "game {i} seed={}: digest differs without CrestTurnStartCountdownLost",
+                g.seed
+            )
+        });
+        differing.push((i, g.seed, hit));
     }
     assert!(
         !differing.is_empty(),
@@ -471,10 +481,10 @@ fn set10_identity_crest_turn_start_diffs() {
         differing.len(),
         start.elapsed().as_secs_f64()
     );
-    for (i, seed, ply) in &differing {
+    for (i, seed, hit) in &differing {
         eprintln!(
-            "  game_id={i} seed={seed} first_crest_turn_start_countdown_lost_ply={}",
-            ply.expect("checked")
+            "  game_id={i} seed={seed} first_differing_ply={} crest={}",
+            hit.ply, hit.crest_id
         );
     }
 }
