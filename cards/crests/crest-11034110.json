@@ -1,0 +1,28 @@
+{
+  "id": "crest:11034110",
+  "name": "Crest: Noeinhowell, Hymnodic Detective",
+  "grantedBy": [
+    "11034110"
+  ],
+  "faith": false,
+  "text": "Once on each of your turns, when you Engage an amulet, recover 1 play point.",
+  "abilities": [
+    {
+      "on": "when",
+      "event": "ally_engage",
+      "oncePerTurn": true,
+      "when": {
+        "turnOwner": "self"
+      },
+      "printed": "Once on each of your turns, when you Engage an amulet, recover 1 play point.",
+      "effects": [
+        {
+          "printed": "recover 1 play point.",
+          "op": "pp",
+          "action": "recover",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

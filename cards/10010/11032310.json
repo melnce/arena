@@ -1,0 +1,47 @@
+{
+  "id": "11032310",
+  "name": "Discerning Melody",
+  "kind": "spell",
+  "class": "runecraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 1,
+  "text": "Summon a Divine Evidence. If you've Engaged an amulet this turn, deal 3 damage to a random enemy follower.",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Summon a Divine Evidence. If you've Engaged an amulet this turn, deal 3 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "Summon a Divine Evidence.",
+          "op": "summon",
+          "card": {
+            "named": "90001210"
+          },
+          "count": 1
+        },
+        {
+          "printed": "If you've Engaged an amulet this turn, deal 3 damage to a random enemy follower.",
+          "op": "if",
+          "cond": {
+            "engagedAmuletThisTurn": true
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "follower",
+                "pick": "random"
+              },
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

@@ -1,0 +1,69 @@
+{
+  "id": "11032120",
+  "name": "Ruler of Tempests",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10010,
+  "rarity": "silver",
+  "token": false,
+  "cost": 6,
+  "text": "Fanfare: Earth Rite (1) - Summon a Guardian Golem.\n\nWhenever an allied Golem follower enters the field, deal 3 damage to a random enemy follower.\n\nEvolve: Replicate the effects of this card's Fanfare ability.",
+  "attack": 5,
+  "defense": 5,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Earth Rite (1) - Summon a Guardian Golem.",
+      "effects": [
+        {
+          "printed": "Earth Rite (1) - Summon a Guardian Golem.",
+          "op": "pay",
+          "resource": "earth",
+          "amount": 1,
+          "effects": [
+            {
+              "op": "summon",
+              "card": {
+                "named": "90031120"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "on": "when",
+      "event": "ally_follower_enter",
+      "filter": {
+        "tribe": "golem"
+      },
+      "printed": "Whenever an allied Golem follower enters the field, deal 3 damage to a random enemy follower.",
+      "effects": [
+        {
+          "printed": "deal 3 damage to a random enemy follower.",
+          "op": "damage",
+          "select": {
+            "side": "enemy",
+            "zone": "field",
+            "kind": "follower",
+            "pick": "random"
+          },
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "on": "evolve",
+      "printed": "Evolve: Replicate the effects of this card's Fanfare ability.",
+      "effects": [
+        {
+          "printed": "Replicate the effects of this card's Fanfare ability.",
+          "op": "replicate",
+          "ability": "fanfare"
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}

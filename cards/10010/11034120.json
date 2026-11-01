@@ -1,0 +1,47 @@
+{
+  "id": "11034120",
+  "name": "Infernal Chimera",
+  "kind": "follower",
+  "class": "runecraft",
+  "set": 10010,
+  "rarity": "legendary",
+  "token": false,
+  "cost": 8,
+  "text": "Fanfare: Deal X damage split between all enemies. X is the number of earth sigils you have.",
+  "attack": 8,
+  "defense": 8,
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "Fanfare: Deal X damage split between all enemies. X is the number of earth sigils you have.",
+      "effects": [
+        {
+          "printed": "Deal X damage split between all enemies. X is the number of earth sigils you have.",
+          "op": "if",
+          "cond": {
+            "counterAtLeast": {
+              "key": "earth",
+              "n": 1
+            }
+          },
+          "then": [
+            {
+              "op": "damage",
+              "select": {
+                "side": "enemy",
+                "zone": "field",
+                "kind": "character",
+                "pick": "all"
+              },
+              "amount": {
+                "counter": "earth"
+              },
+              "split": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tribes": []
+}
