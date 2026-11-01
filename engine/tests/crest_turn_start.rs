@@ -222,7 +222,11 @@ fn slaus_three_activations_shape(
                 used.insert(rem);
             }
         }
-        assert_eq!(used.len(), 3, "seed={seed}: all three options over the life");
+        assert_eq!(
+            used.len(),
+            3,
+            "seed={seed}: all three options over the life"
+        );
         // Fourth owner turn start: nothing (crest already gone).
         let hp_before = st.player(me).leader_defense;
         end_turns_to_owner_start(&db, &mut st, me);
@@ -237,7 +241,10 @@ fn slaus_three_activations_shape(
         );
         seeds_ok += 1;
     }
-    assert!(seeds_ok >= (seed_hi - seed_lo) as u32, "ran {seeds_ok} seeds");
+    assert!(
+        seeds_ok >= (seed_hi - seed_lo) as u32,
+        "ran {seeds_ok} seeds"
+    );
 }
 
 #[test]
