@@ -398,6 +398,123 @@ fn almaelys_super_evolve_delays_crest_four_activations_without_se_only_two() {
     );
 }
 
+/// Older countdown crest expires and shifts Almaelys's board index; sequence
+/// must keep advancing via `granted_order` (not vec index).
+#[test]
+fn almaelys_sequence_survives_older_countdown_crest_expiry() {
+    let db = load_db();
+    let mut st = started(&db, 10_232);
+    // Older neighbour: Countdown 1, expires at A's next start (before Almaelys's
+    // second end-of-turn sequence step).
+    let older_order = st.crest_order;
+    st.crest_order += 1;
+    st.player_mut(PlayerId::A)
+        .crests
+        .push(arena_engine::state::CrestInstance {
+            id: "crest:test-older-cd".into(),
+            countdown: Some(1),
+            faith: false,
+            once_used: vec![],
+            granted_order: older_order,
+            granted: vec![],
+            choose_used: Default::default(),
+            sequence_index: 0,
+        });
+
+    play_pp(&db, &mut st, ALMAELYS, 3);
+    let slot = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .enumerate()
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == ALMAELYS)
+                .map(|_| i as u8)
+        })
+        .expect("almaelys");
+    evolve_slot(&db, &mut st, slot, false);
+    assert_eq!(
+        st.player(PlayerId::A).crests.len(),
+        2,
+        "older crest + Almaelys crest"
+    );
+    assert_eq!(
+        st.player(PlayerId::A).crests[0].id,
+        "crest:test-older-cd",
+        "older crest is ahead in the vec"
+    );
+    let alma_order = st
+        .player(PlayerId::A)
+        .crests
+        .iter()
+        .find(|c| c.id == ALMAELYS_CREST)
+        .map(|c| c.granted_order)
+        .expect("almaelys crest");
+    assert!(
+        alma_order > older_order,
+        "Almaelys granted after the older crest"
+    );
+
+    clear_hand(&mut st, PlayerId::A);
+    end_turn(&db, &mut st); // A's end → Blade; sequence_index → 1
+    assert!(hand_has(&st, PlayerId::A, BLADE), "first step: Blade");
+    assert!(
+        !hand_has(&st, PlayerId::A, GOBLET),
+        "Goblet must wait for step 2"
+    );
+    let alma = st
+        .player(PlayerId::A)
+        .crests
+        .iter()
+        .find(|c| c.id == ALMAELYS_CREST)
+        .expect("almaelys crest after Blade");
+    assert_eq!(alma.sequence_index, 1, "sequence advanced after Blade");
+    assert_eq!(alma.granted_order, alma_order);
+
+    end_turn(&db, &mut st); // B's end → A's start: older CD hits 0 and is removed
+    assert!(
+        st.player(PlayerId::A)
+            .crests
+            .iter()
+            .all(|c| c.id != "crest:test-older-cd"),
+        "older countdown crest expired and left the board"
+    );
+    let alma = st
+        .player(PlayerId::A)
+        .crests
+        .iter()
+        .find(|c| c.id == ALMAELYS_CREST)
+        .expect("almaelys crest after neighbour expiry");
+    assert_eq!(
+        alma.granted_order, alma_order,
+        "granted_order identity unchanged"
+    );
+    assert_eq!(
+        alma.sequence_index, 1,
+        "sequence_index must survive neighbour removal (keyed by granted_order)"
+    );
+    assert_eq!(
+        st.player(PlayerId::A)
+            .crests
+            .iter()
+            .position(|c| c.id == ALMAELYS_CREST),
+        Some(0),
+        "Almaelys shifted to index 0 after neighbour expiry"
+    );
+
+    clear_hand(&mut st, PlayerId::A);
+    end_turn(&db, &mut st); // A's end → Goblet via preserved sequence_index
+    assert!(
+        hand_has(&st, PlayerId::A, GOBLET),
+        "second step: Goblet after older crest expiry shifted board index"
+    );
+    assert!(
+        !hand_has(&st, PlayerId::A, BLADE),
+        "must not re-fire Blade if sequence_index was lost to index shift"
+    );
+}
+
 #[test]
 fn no_life_atk_def_branches_bane_drain_ward_storm_or_neither() {
     let db = load_db();
