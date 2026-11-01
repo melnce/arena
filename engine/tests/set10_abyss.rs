@@ -737,12 +737,14 @@ fn runaway_last_will_negatives_and_undertaker_both() {
         },
     )
     .expect("kill undertaker");
-    assert!(
-        field_count(&st, me, EVIDENCE) >= field0 + 1,
+    assert_eq!(
+        field_count(&st, me, EVIDENCE),
+        field0 + 1,
         "Undertaker LW: Summon a Divine Evidence"
     );
-    assert!(
-        hand_count(&st, me, EVIDENCE) >= hand0 + 1,
+    assert_eq!(
+        hand_count(&st, me, EVIDENCE),
+        hand0 + 1,
         "Undertaker LW: Add a Divine Evidence to your hand"
     );
 }
