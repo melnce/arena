@@ -4842,11 +4842,9 @@ fn apply_effect_with_targets(
     match e {
         Effect::Damage { amount, .. } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
-            if n > 0 {
-                apply_each_captured(state, targets, |st, t| {
-                    deal_to_opt(db, st, controller, t, n, events)
-                })?;
-            }
+            apply_each_captured(state, targets, |st, t| {
+                deal_to_opt(db, st, controller, t, n, events)
+            })?;
         }
         Effect::Restore { amount, .. } => {
             let n = eval_amount(db, state, controller, Some(source), amount);
@@ -5186,13 +5184,7 @@ fn apply_effect(
         } => {
             // Targets for this op only, selected now (E24) — not when the
             // enclosing list started.
-            // X = 0 deals nothing at all (Jerva `11044120` / Infernal Chimera
-            // `11034120` / Nocturne's Interrogation `11053310` official Q&A).
             let n = eval_amount(db, state, controller, Some(source), amount);
-            if n <= 0 {
-                maybe_bind(state, e, &[]);
-                return Ok(());
-            }
             let ts = resolve_select_rolling(db, state, controller, source, select)?;
             if *split == Some(true) {
                 split_damage(db, state, controller, &ts, n, events)?;
