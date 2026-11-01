@@ -68,5 +68,10 @@
     "phrase": "give it +N/+N",
     "reason": "On a when-enter ability \"it\" is pick:entering; on Obsessed Test Subject 10931110 the enter-route subject is pick:self (owner 2026-08-30 named_enter_count).",
     "ids": ["10931110", "10022210"]
+  },
+  {
+    "phrase": "Do it N times instead",
+    "reason": "Enhance substitutes only the repeat count; the quoted body stays the card's Fanfare quote (Icenewt 11041120: follower-only 3; Avaricious Manifestation 10952310: follower 3 + both leaders 1).",
+    "ids": ["11041120", "10952310"]
   }
 ]

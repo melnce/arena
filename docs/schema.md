@@ -257,6 +257,8 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 
 integer · `{count: Selector}` `10554120` · `{counter}` `90034330` faith · `{stat: {of, which}}` `10714110` · `{var}` `10131320` · `{add}/{sub}/{max}/{min}` `10811110` Marlone (sub) · `{neg}` `10714110` · `{distinctNames}` `10773310` · `{enteredThisMatch}` `10773310` · `{sumHighestBaseCosts: {n, select}}` `10502120` Behemoth ("the sum of the 3 highest base costs in your hand"). `{turn}` omitted (no pool card).
 
+`stat.which` ∈ `{attack, defense, cost, baseCost, maxDefense}`. `maxDefense` is the leader's max defense (`leader_max`) or a follower's `max_defense` — Jerva, Wyrm Unyielding `11044120` ("X is the enemy leader's max defense minus its defense").
+
 ## Selector
 
 `oneOf` two closed shapes.
