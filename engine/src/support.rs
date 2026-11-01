@@ -340,3 +340,85 @@ fn named_from_card_id(db: &CardDb, id: CardId) -> Vec<CardId> {
     }
     out
 }
+
+/// True when `card`'s printed abilities / modes contain
+/// `engagedAmuletThisTurn` or `engagedClueAmuletThisTurn`.
+pub fn card_reads_engage_history(card: &Card) -> bool {
+    for a in card.abilities() {
+        if ability_reads_engage_history(a) {
+            return true;
+        }
+    }
+    for m in card.modes() {
+        if mode_reads_engage_history(m) {
+            return true;
+        }
+    }
+    false
+}
+
+fn mode_reads_engage_history(mode: &Mode) -> bool {
+    match mode {
+        Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => {
+            effects.iter().any(effect_reads_engage_history)
+        }
+        Mode::Crystallize { abilities, .. } => abilities
+            .as_ref()
+            .is_some_and(|abs| abs.iter().any(ability_reads_engage_history)),
+    }
+}
+
+fn ability_reads_engage_history(a: &Ability) -> bool {
+    if a.when_cond().is_some_and(condition_reads_engage_history) {
+        return true;
+    }
+    a.effects().iter().any(effect_reads_engage_history)
+}
+
+fn effect_reads_engage_history(e: &Effect) -> bool {
+    if e.when_cond().is_some_and(condition_reads_engage_history) {
+        return true;
+    }
+    match e {
+        Effect::Pay { effects, .. }
+        | Effect::Seq { effects, .. }
+        | Effect::Repeat { effects, .. }
+        | Effect::RandomSplit { effects, .. } => {
+            effects.iter().any(effect_reads_engage_history)
+        }
+        Effect::If {
+            cond,
+            then,
+            else_effects,
+            ..
+        } => {
+            condition_reads_engage_history(cond)
+                || then.iter().any(effect_reads_engage_history)
+                || else_effects
+                    .as_ref()
+                    .is_some_and(|els| els.iter().any(effect_reads_engage_history))
+        }
+        Effect::Choose {
+            options: Some(opts),
+            ..
+        } => opts
+            .iter()
+            .any(|o| o.effects.iter().any(effect_reads_engage_history)),
+        Effect::Sequence { steps, .. } => steps
+            .iter()
+            .any(|s| s.effects.iter().any(effect_reads_engage_history)),
+        Effect::GrantAbility { ability, .. } => ability_reads_engage_history(ability),
+        _ => false,
+    }
+}
+
+fn condition_reads_engage_history(c: &Condition) -> bool {
+    match c {
+        Condition::EngagedAmuletThisTurn { .. }
+        | Condition::EngagedClueAmuletThisTurn { .. } => true,
+        Condition::All { all } => all.iter().any(condition_reads_engage_history),
+        Condition::Any { any } => any.iter().any(condition_reads_engage_history),
+        Condition::Not { not } => condition_reads_engage_history(not),
+        _ => false,
+    }
+}

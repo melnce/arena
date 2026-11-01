@@ -46,6 +46,10 @@ pub struct CardDb {
     static_crests: FxSet<String>,
     /// State-free resource needs (Pay / Rally / Spellboost / Last Words).
     needs: NeedsTable,
+    /// Cards whose printed text (abilities / modes) reads Engage history
+    /// (`engagedAmuletThisTurn` / `engagedClueAmuletThisTurn`). Rebuilt with
+    /// the other indexes after every load.
+    reads_engage_history: FxSet<CardId>,
     #[doc(hidden)]
     pub as_recorded: AsRecorded,
 }
@@ -65,6 +69,7 @@ impl CardDb {
             static_cards: FxSet::default(),
             static_crests: FxSet::default(),
             needs: NeedsTable::default(),
+            reads_engage_history: FxSet::default(),
             as_recorded: AsRecorded::default(),
         }
     }
@@ -109,6 +114,7 @@ impl CardDb {
         db.rebuild_boundary_index();
         db.rebuild_static_index();
         db.rebuild_needs_index();
+        db.rebuild_engage_history_index();
         Ok(db)
     }
 
@@ -126,6 +132,7 @@ impl CardDb {
         self.rebuild_boundary_index();
         self.rebuild_static_index();
         self.rebuild_needs_index();
+        self.rebuild_engage_history_index();
         Ok(())
     }
 
@@ -142,6 +149,7 @@ impl CardDb {
         self.rebuild_boundary_index();
         self.rebuild_static_index();
         self.rebuild_needs_index();
+        self.rebuild_engage_history_index();
         Ok(())
     }
 
@@ -424,6 +432,22 @@ impl CardDb {
 
     fn rebuild_needs_index(&mut self) {
         self.needs = NeedsTable::build(self);
+    }
+
+    fn rebuild_engage_history_index(&mut self) {
+        let mut reads = FxSet::default();
+        for (id, card) in &self.cards {
+            if support::card_reads_engage_history(card) {
+                reads.insert(*id);
+            }
+        }
+        self.reads_engage_history = reads;
+    }
+
+    /// True when this card's printed text reads Engage history conditions.
+    #[inline]
+    pub fn card_reads_engage_history(&self, id: CardId) -> bool {
+        self.reads_engage_history.contains(&id)
     }
 }
 

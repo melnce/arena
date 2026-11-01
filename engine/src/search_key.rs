@@ -93,7 +93,7 @@ fn canonical_bytes(state: &State) -> Vec<u8> {
         None => w.u8(0),
     }
     for p in &state.players {
-        hash_player(&mut w, p);
+        hash_player(&mut w, p, state.track_engage_history);
     }
     w.u32(state.picks.len() as u32);
     for pick in &state.picks {
@@ -485,7 +485,7 @@ fn hash_opt_target(w: &mut Writer, t: Option<&TargetOpt>) {
     }
 }
 
-fn hash_player(w: &mut Writer, p: &PlayerState) {
+fn hash_player(w: &mut Writer, p: &PlayerState, track_engage_history: bool) {
     w.i32(p.leader_defense);
     w.i32(p.leader_max);
     w.i32(p.pp);
@@ -536,8 +536,9 @@ fn hash_player(w: &mut Writer, p: &PlayerState) {
     w.raw(p.starting_deck.canonical());
     w.raw(p.public_removals.canonical());
     w.raw(p.public_hand_additions.canonical());
-    // Trailing optional: emit nothing while both false (identity-safe).
-    if p.engaged_amulet_this_turn || p.engaged_clue_amulet_this_turn {
+    // Only when this game can read Engage history (else Set-10-free identity).
+    // When tracking, always emit both bools so true/false distinguish.
+    if track_engage_history {
         w.u8(1);
         w.bool(p.engaged_amulet_this_turn);
         w.bool(p.engaged_clue_amulet_this_turn);

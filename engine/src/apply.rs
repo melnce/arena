@@ -47,6 +47,18 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
             db.require_supported(created)?;
         }
     }
+    // Track Engage history only when a deck (or its named_reachable closure)
+    // can read it — otherwise Set-10-free games keep main-identical hash /
+    // search_key / snapshot JSON. Closure is complete: RandomFrom draws from
+    // the deck; Named / RandomNamed ids are in named_reachable.
+    let track_engage_history = cfg
+        .deck_a
+        .iter()
+        .chain(cfg.deck_b.iter())
+        .flat_map(|id| {
+            std::iter::once(*id).chain(support::named_reachable(db, *id))
+        })
+        .any(|id| db.card_reads_engage_history(id));
     let mut state = State {
         players: [PlayerState::new(), PlayerState::new()],
         turn: 0,
@@ -79,6 +91,7 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         combat_opposing: None,
         combat_attacker: None,
         combat_defender_id: None,
+        track_engage_history,
     };
     fill_deck(db, &mut state, PlayerId::A, &cfg.deck_a)?;
     fill_deck(db, &mut state, PlayerId::B, &cfg.deck_b)?;
@@ -2427,6 +2440,11 @@ fn apply_end_turn(db: &CardDb, state: &mut State, events: &mut Vec<Event>) -> Re
 fn begin_turn(state: &mut State, who: PlayerId, events: &mut Vec<Event>) -> Result<(), Illegal> {
     state.active = who;
     state.phase = Phase::Main;
+    // "This turn" = the current turn: clear Engage history for both players.
+    for p in &mut state.players {
+        p.engaged_amulet_this_turn = false;
+        p.engaged_clue_amulet_this_turn = false;
+    }
     let turn = {
         let p = state.player_mut(who);
         p.turns_taken += 1;
@@ -2444,8 +2462,6 @@ fn begin_turn(state: &mut State, who: PlayerId, events: &mut Vec<Event>) -> Resu
         p.played_this_turn.clear();
         p.attacked_leader_last_turn = p.attacked_leader_this_turn;
         p.attacked_leader_this_turn = false;
-        p.engaged_amulet_this_turn = false;
-        p.engaged_clue_amulet_this_turn = false;
         for slot in p.field.iter_mut().flatten() {
             slot.flags.engaged_this_turn = false;
             slot.flags.attacked_this_turn = false;
@@ -8309,13 +8325,11 @@ fn pool_candidates(
                             continue;
                         }
                     }
-                    // Aura / Clue: not selectable by the enemy for `pick: choose`.
+                    // Aura: not selectable by the enemy for `pick: choose`.
+                    // Clue cards carry `traits.aura: true` (one mechanism).
                     // Random still rolls them (M1 ramp traces); Earth Sigil
                     // amulets are also `kind: amulet` so follower random skips them.
-                    if who != controller
-                        && (c.is_aura() || c.is_clue())
-                        && p.pick == PoolPick::Choose
-                    {
+                    if who != controller && c.is_aura() && p.pick == PoolPick::Choose {
                         continue;
                     }
                     if who != controller && c.ambush_blocks() && p.pick == PoolPick::Choose {

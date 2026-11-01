@@ -351,8 +351,9 @@ pub struct PlayerState {
     /// not in `CanonicalState`, `hash`, or `search_key`.
     pub turn_ends: Memo<Vec<TurnEnd>>,
     /// True once an allied amulet was Engaged this turn (survives that
-    /// amulet leaving). Snapshot-neutral while false — not in
-    /// `CanonicalState`; search_key emits only when true.
+    /// amulet leaving). Cleared for **both** players at every turn start.
+    /// Enters `search_key` / `CanonicalState` / snapshot JSON only when
+    /// [`State::track_engage_history`] is true.
     pub engaged_amulet_this_turn: bool,
     /// True once an allied Clue amulet was Engaged this turn. Same
     /// snapshot / search_key rules as `engaged_amulet_this_turn`.
@@ -799,6 +800,13 @@ pub struct State {
     /// Instance id of the defending follower (None vs a leader). Matched
     /// against the trigger `source` so `pick: opposing` survives `compact_field`.
     pub combat_defender_id: Option<u32>,
+    /// Per-game constant: true iff some card in either starting deck (or its
+    /// [`support::named_reachable`] closure) reads Engage history. Set in
+    /// `new_game`; clones / determinize keep it. Gates whether engage-history
+    /// flags enter hash / search_key / snapshot JSON. The closure is complete
+    /// because card creation never leaves it (`RandomFrom` draws from the deck;
+    /// `Named` / `RandomNamed` ids are in `named_reachable`).
+    pub track_engage_history: bool,
 }
 
 #[derive(Debug, Clone)]
