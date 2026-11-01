@@ -100,10 +100,19 @@ fn fuse_amulet_dandy_trigger_count_matches_const() {
     let destroyed = enemies0 - st.player(PlayerId::B).field_count();
     let healed = leader_def(&st, PlayerId::A) - 10;
     if FUSE_AMULET_TRIGGERS_ONCE_PER_ACTION {
-        assert_eq!(destroyed, 1, "const true → Dandy destroys once; destroyed={destroyed}");
+        assert_eq!(
+            destroyed, 1,
+            "const true → Dandy destroys once; destroyed={destroyed}"
+        );
         assert_eq!(healed, 2, "const true → restore 2 once; healed={healed}");
     } else {
-        assert_eq!(destroyed, 2, "const false → Dandy destroys per amulet; destroyed={destroyed}");
-        assert_eq!(healed, 4, "const false → restore 2 per amulet; healed={healed}");
+        assert_eq!(
+            destroyed, 2,
+            "const false → Dandy destroys per amulet; destroyed={destroyed}"
+        );
+        assert_eq!(
+            healed, 4,
+            "const false → restore 2 per amulet; healed={healed}"
+        );
     }
 }

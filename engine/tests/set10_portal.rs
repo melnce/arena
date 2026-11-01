@@ -151,7 +151,7 @@ fn calamity_in_custody_one_clue_heals_without_consume_two_destroys_highest() {
     put_field(&db, &mut st, PlayerId::B, TANK); // 2/10
     put_field(&db, &mut st, PlayerId::B, TANK); // 2/10 — tied highest
     put_field(&db, &mut st, PlayerId::B, VANILLA); // 2/2 atk same? Vanilla is 2/2 — atk 2 tied!
-    // Use a strictly lower-atk follower for the survivor guarantee.
+                                                   // Use a strictly lower-atk follower for the survivor guarantee.
     for s in st.player_mut(PlayerId::B).field.iter_mut() {
         *s = None;
     }
@@ -430,11 +430,7 @@ fn lineage_destroys_all_same_name_fused_halves_max_unfused_does_not() {
         0,
         "fused: still destroys all same-name copies"
     );
-    assert_eq!(
-        st.player(PlayerId::B).leader_max,
-        11,
-        "fused → ⌈21/2⌉ = 11"
-    );
+    assert_eq!(st.player(PlayerId::B).leader_max, 11, "fused → ⌈21/2⌉ = 11");
     assert_eq!(
         st.player(PlayerId::B).leader_defense,
         11,
@@ -528,7 +524,10 @@ fn majordomo_last_words_adds_two_evidence() {
     let mut st = started(&db, 10_461);
     put_field(&db, &mut st, PlayerId::A, VANILLA);
     clear_hand(&mut st, PlayerId::A);
-    st.player_mut(PlayerId::A).field[0].as_mut().unwrap().defense = 0;
+    st.player_mut(PlayerId::A).field[0]
+        .as_mut()
+        .unwrap()
+        .defense = 0;
     play_pp(&db, &mut st, "88001710", 1);
     assert!(
         !hand_has(&st, PlayerId::A, EVIDENCE),
@@ -711,8 +710,8 @@ fn socialite_fanfare_evidence_evolve_draws_fuse_card() {
     st.player_mut(PlayerId::A).deck.clear();
     put_deck(&db, &mut st, PlayerId::A, HAND_EXT);
     put_deck(&db, &mut st, PlayerId::A, VANILLA); // non-Fuse below
-    // Deck draws from end in this engine? put_deck usually pushes; ensure Fuse is drawn.
-    // Use only Fuse card in deck so every draw is Fuse.
+                                                  // Deck draws from end in this engine? put_deck usually pushes; ensure Fuse is drawn.
+                                                  // Use only Fuse card in deck so every draw is Fuse.
     st.player_mut(PlayerId::A).deck.clear();
     put_deck(&db, &mut st, PlayerId::A, HAND_EXT);
     let slot = st

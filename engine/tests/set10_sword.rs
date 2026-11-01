@@ -584,7 +584,9 @@ fn newsie_last_words_summons_evidence_no_swap_while_on_field() {
     // Negative: Clue Engage while Newsie is on the field does not swap it.
     let eslot = put_field(&db, &mut st, PlayerId::A, EVIDENCE);
     engage_slot(&db, &mut st, eslot);
-    let n = st.field_inst(PlayerId::A, slot).expect("Newsie still on field");
+    let n = st
+        .field_inst(PlayerId::A, slot)
+        .expect("Newsie still on field");
     assert_eq!(
         (n.attack, n.defense),
         (atk0, def0),
@@ -635,7 +637,9 @@ fn onward_charge_summons_two_evolved_knights_with_barrier() {
         .collect();
     assert_eq!(knights.len(), 2, "summons 2 Steelclad Knights");
     assert!(
-        knights.iter().all(|c| c.evolved && c.traits.barrier == Some(true)),
+        knights
+            .iter()
+            .all(|c| c.evolved && c.traits.barrier == Some(true)),
         "both evolved with Barrier"
     );
 
@@ -653,7 +657,7 @@ fn cheeky_architect_in_hand_swap_fanfare_x_damage_evolve_newsie() {
     let mut st = started(&db, 10_263);
     clear_hand(&mut st, PlayerId::A);
     put_hand(&db, &mut st, PlayerId::A, ARCHITECT); // printed 1/4
-    // One Clue Engage: 1/4 → 4/1 +1 → 5/1.
+                                                    // One Clue Engage: 1/4 → 4/1 +1 → 5/1.
     let slot = put_field(&db, &mut st, PlayerId::A, EVIDENCE);
     engage_slot(&db, &mut st, slot);
     let a = st
@@ -685,7 +689,10 @@ fn cheeky_architect_in_hand_swap_fanfare_x_damage_evolve_newsie() {
         Some(tank0 - x),
         "Fanfare deals X = this follower's attack ({x})"
     );
-    assert!(field_has(&st, PlayerId::A, EVIDENCE), "Fanfare summons Evidence");
+    assert!(
+        field_has(&st, PlayerId::A, EVIDENCE),
+        "Fanfare summons Evidence"
+    );
 
     let slot = st
         .player(PlayerId::A)
@@ -735,7 +742,10 @@ fn errant_knight_banish_requires_allied_amulet_se_replicates() {
         drain_choice(&db, &mut st);
     }
     let enemies = st.player(PlayerId::B).field_count();
-    assert_eq!(enemies, 1, "banishes one enemy follower when allied amulet present");
+    assert_eq!(
+        enemies, 1,
+        "banishes one enemy follower when allied amulet present"
+    );
 
     // Negative: no allied amulet → no banish.
     let mut st = started(&db, 10_266);

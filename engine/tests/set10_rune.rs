@@ -1,8 +1,8 @@
 //! Set 10 Runecraft — Discerning Melody, Interrogation / Noeinhowell crests,
 //! Leisurely Attendant, Infernal Chimera, Ruler of Tempests.
 
-use arena_engine::{apply, Action, Phase, PlayerId, Slot};
 use arena_engine::state::LeaderMod;
+use arena_engine::{apply, Action, Phase, PlayerId, Slot};
 
 mod common;
 use common::*;
@@ -306,7 +306,10 @@ fn leisurely_attendant_in_hand_each_engage_lowers_cost() {
     // Fanfare summons Evidence; field Engage restores 1.
     let mut st = started(&db, 10_331);
     play_pp(&db, &mut st, ATTENDANT, 4);
-    assert!(field_has(&st, PlayerId::A, EVIDENCE), "Fanfare summons Evidence");
+    assert!(
+        field_has(&st, PlayerId::A, EVIDENCE),
+        "Fanfare summons Evidence"
+    );
     st.player_mut(PlayerId::A).leader_defense = 10;
     // Clear Evidence (engaged away) and Engage a helper while Attendant is on field.
     for s in st.player_mut(PlayerId::A).field.iter_mut() {
@@ -380,11 +383,7 @@ fn infernal_chimera_split_all_enemies_exact_allocations() {
     });
     let tank0 = field_def(&st, PlayerId::B, TANK).unwrap();
     let leader0 = leader_def(&st, PlayerId::B);
-    let barrier0 = st
-        .field_inst(PlayerId::B, slot)
-        .unwrap()
-        .traits
-        .barrier;
+    let barrier0 = st.field_inst(PlayerId::B, slot).unwrap().traits.barrier;
     play_pp(&db, &mut st, CHIMERA, 8);
     assert_eq!(
         field_def(&st, PlayerId::B, TANK),
@@ -523,7 +522,10 @@ fn dedicated_aide_fanfare_evidence_engage_plus_1_1() {
     let db = load_db();
     let mut st = started(&db, 10_360);
     play_pp(&db, &mut st, AIDE, 3);
-    assert!(field_has(&st, PlayerId::A, EVIDENCE), "Fanfare summons Evidence");
+    assert!(
+        field_has(&st, PlayerId::A, EVIDENCE),
+        "Fanfare summons Evidence"
+    );
     let atk0 = field_atk(&st, PlayerId::A, AIDE).unwrap();
     let def0 = field_def(&st, PlayerId::A, AIDE).unwrap();
     // Evidence was summoned — Engage it (or a helper if Evidence was consumed).
@@ -656,7 +658,10 @@ fn dramatic_assistant_engage_deals_5_evolve_recovers_1_pp() {
     let db = load_db();
     let mut st = started(&db, 10_390);
     play_pp(&db, &mut st, ASSISTANT, 5);
-    assert!(field_has(&st, PlayerId::A, AIDE), "Fanfare summons Dedicated Aide");
+    assert!(
+        field_has(&st, PlayerId::A, AIDE),
+        "Fanfare summons Dedicated Aide"
+    );
     put_field(&db, &mut st, PlayerId::B, TANK);
     let tank0 = field_def(&st, PlayerId::B, TANK).unwrap();
     // Clear Evidence from Aide Fanfare if present; Engage a helper.
@@ -703,11 +708,7 @@ fn dramatic_assistant_engage_deals_5_evolve_recovers_1_pp() {
     )
     .expect("evolve");
     drain_choice(&db, &mut st);
-    assert_eq!(
-        st.player(PlayerId::A).pp,
-        4,
-        "Evolve: Recover 1 play point"
-    );
+    assert_eq!(st.player(PlayerId::A).pp, 4, "Evolve: Recover 1 play point");
 
     // Negative: without an enemy follower, Engage deals nothing (leader untouched).
     let mut st = started(&db, 10_391);

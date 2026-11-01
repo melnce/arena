@@ -372,7 +372,10 @@ fn debonair_dogsitter_evolve_restores_with_two_one_cost_allies() {
     let db = load_db();
     let mut st = started(&db, 10_150);
     play_pp(&db, &mut st, DOGSITTER, 2);
-    assert!(field_has(&st, PlayerId::A, EVIDENCE), "Fanfare summons Evidence");
+    assert!(
+        field_has(&st, PlayerId::A, EVIDENCE),
+        "Fanfare summons Evidence"
+    );
     // Evidence (1) + Mischief (1) → two 1-cost allies; Dogsitter itself is 2-cost.
     put_field(&db, &mut st, PlayerId::A, MISCHIEF);
     st.player_mut(PlayerId::A).leader_defense = 10;
@@ -449,10 +452,7 @@ fn natural_reincarnation_enhance_6_summons_3_and_evolves_all_3() {
         .flatten()
         .filter(|c| c.card.as_str() == FAIRY && c.evolved)
         .count();
-    assert_eq!(
-        evolved, 3,
-        "Enhance (6) evolves all 3 summoned Fairies"
-    );
+    assert_eq!(evolved, 3, "Enhance (6) evolves all 3 summoned Fairies");
 
     // Negative: paying only 3 does not summon three.
     let mut st = started(&db, 10_162);
