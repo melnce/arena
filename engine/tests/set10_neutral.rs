@@ -222,7 +222,11 @@ fn engage_merged_amulet_same_turn() {
     play_pp(&db, &mut st, EVIDENCE, 1);
     assert_eq!(clue_count(&st, PlayerId::A), 1);
     play_pp(&db, &mut st, EVIDENCE, 1);
-    assert_eq!(clue_count(&st, PlayerId::A), 2, "two Evidence merge to count 2");
+    assert_eq!(
+        clue_count(&st, PlayerId::A),
+        2,
+        "two Evidence merge to count 2"
+    );
     let slot = st
         .player(PlayerId::A)
         .field
@@ -269,7 +273,11 @@ fn engage_merged_amulet_same_turn() {
     let hand0 = st.player(PlayerId::A).hand.len();
     engage_slot(&db, &mut st, slot);
     assert!(st.player(PlayerId::A).hand.len() > hand0, "Engage drew");
-    assert_eq!(clue_count(&st, PlayerId::A), 1, "second Engage consumes to 1");
+    assert_eq!(
+        clue_count(&st, PlayerId::A),
+        1,
+        "second Engage consumes to 1"
+    );
 }
 
 #[test]

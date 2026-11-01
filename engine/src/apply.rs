@@ -55,9 +55,7 @@ pub fn new_game(db: &CardDb, cfg: GameConfig) -> Result<State, LoadError> {
         .deck_a
         .iter()
         .chain(cfg.deck_b.iter())
-        .flat_map(|id| {
-            std::iter::once(*id).chain(support::named_reachable(db, *id))
-        })
+        .flat_map(|id| std::iter::once(*id).chain(support::named_reachable(db, *id)))
         .any(|id| db.card_reads_engage_history(id));
     let mut state = State {
         players: [PlayerState::new(), PlayerState::new()],

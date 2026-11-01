@@ -383,9 +383,7 @@ fn effect_reads_engage_history(e: &Effect) -> bool {
         Effect::Pay { effects, .. }
         | Effect::Seq { effects, .. }
         | Effect::Repeat { effects, .. }
-        | Effect::RandomSplit { effects, .. } => {
-            effects.iter().any(effect_reads_engage_history)
-        }
+        | Effect::RandomSplit { effects, .. } => effects.iter().any(effect_reads_engage_history),
         Effect::If {
             cond,
             then,
@@ -414,8 +412,9 @@ fn effect_reads_engage_history(e: &Effect) -> bool {
 
 fn condition_reads_engage_history(c: &Condition) -> bool {
     match c {
-        Condition::EngagedAmuletThisTurn { .. }
-        | Condition::EngagedClueAmuletThisTurn { .. } => true,
+        Condition::EngagedAmuletThisTurn { .. } | Condition::EngagedClueAmuletThisTurn { .. } => {
+            true
+        }
         Condition::All { all } => all.iter().any(condition_reads_engage_history),
         Condition::Any { any } => any.iter().any(condition_reads_engage_history),
         Condition::Not { not } => condition_reads_engage_history(not),

@@ -1,8 +1,6 @@
 //! Engage-history tracking: invisible in Set-10-free games; hashed when readable.
 
-use arena_engine::{
-    apply, hash, search_key, snapshot_json, Action, PlayerId, Slot,
-};
+use arena_engine::{apply, hash, search_key, snapshot_json, Action, PlayerId, Slot};
 
 mod common;
 use common::*;
@@ -33,7 +31,11 @@ fn set10_free_engage_invisible_in_hash_search_key_json() {
     clone.player_mut(PlayerId::B).engaged_amulet_this_turn = false;
     clone.player_mut(PlayerId::B).engaged_clue_amulet_this_turn = false;
 
-    assert_eq!(sk, search_key(&clone), "search_key ignores flags when untracked");
+    assert_eq!(
+        sk,
+        search_key(&clone),
+        "search_key ignores flags when untracked"
+    );
     assert_eq!(h, hash(&clone), "hash ignores flags when untracked");
     assert_eq!(
         json,
@@ -41,7 +43,9 @@ fn set10_free_engage_invisible_in_hash_search_key_json() {
         "snapshot_json ignores flags when untracked"
     );
     assert!(
-        json["players"]["a"].get("engaged_amulet_this_turn").is_none(),
+        json["players"]["a"]
+            .get("engaged_amulet_this_turn")
+            .is_none(),
         "JSON must omit engage flags when untracked"
     );
 }
@@ -69,8 +73,7 @@ fn tracked_engage_changes_search_key_and_hash() {
     assert_ne!(h0, hash(&st), "Engage must change hash when tracked");
     let json = snapshot_json(&st);
     assert_eq!(
-        json["players"]["a"]["engaged_amulet_this_turn"],
-        true,
+        json["players"]["a"]["engaged_amulet_this_turn"], true,
         "JSON must include engage flags when tracked"
     );
 }
