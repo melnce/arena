@@ -2,9 +2,7 @@
 //! Clue merge/destroy/untargetable, Scene of Deicide, Engage-after-merge.
 //! Assert against card text and the Clue rules — never against incidental engine state.
 
-use arena_engine::{
-    apply, legal_actions, Action, Phase, PlayerId, Slot,
-};
+use arena_engine::{apply, legal_actions, Action, Phase, PlayerId, Slot};
 
 mod common;
 use common::*;
@@ -22,9 +20,7 @@ const VANILLA: &str = "88001110";
 const CHOOSE_DESTROY_AMULET: &str = "89911001";
 const RANDOM_BANISH_AMULET: &str = "89911002";
 
-const SET10_NEUTRALS: &[&str] = &[
-    EVIDENCE, NACREHEIM, EXIAS, DYNAMES, KYRIOS, SCENE, REZEAL,
-];
+const SET10_NEUTRALS: &[&str] = &[EVIDENCE, NACREHEIM, EXIAS, DYNAMES, KYRIOS, SCENE, REZEAL];
 
 fn clue_on_field(st: &arena_engine::State, who: PlayerId) -> Option<&arena_engine::CardInstance> {
     st.player(who).field.iter().flatten().find(|c| c.is_clue())
@@ -109,18 +105,21 @@ fn nacreheim_banish_heals_destroy_at_zero_does_not() {
     st.player_mut(PlayerId::A).leader_defense = 10;
     play_pp(&db, &mut st, EVIDENCE, 1);
     assert_eq!(clue_count(&st, PlayerId::A), 2, "merge adds counts");
-    assert_eq!(clues_on_side(&st, PlayerId::A), 1, "only the new amulet remains");
+    assert_eq!(
+        clues_on_side(&st, PlayerId::A),
+        1,
+        "only the new amulet remains"
+    );
     assert_eq!(
         leader_def(&st, PlayerId::A),
         12,
         "Q&A #1: banished Nacreheim restores 2"
     );
-    assert!(
-        st.player(PlayerId::A)
-            .banished
-            .iter()
-            .any(|c| c.card.as_str() == NACREHEIM)
-    );
+    assert!(st
+        .player(PlayerId::A)
+        .banished
+        .iter()
+        .any(|c| c.card.as_str() == NACREHEIM));
     // Negative: no shadow from the merge banish.
     assert_eq!(st.player(PlayerId::A).shadows, 0);
 
@@ -169,7 +168,11 @@ fn clue_merge_two_and_three() {
     // Nacreheim enters at 1+2=3; previous Evidence banished (no self_banished heal on Evidence).
     assert_eq!(clue_count(&st, PlayerId::A), 3);
     assert_eq!(clues_on_side(&st, PlayerId::A), 1);
-    assert_eq!(leader_def(&st, PlayerId::A), 10, "Evidence has no banish heal");
+    assert_eq!(
+        leader_def(&st, PlayerId::A),
+        10,
+        "Evidence has no banish heal"
+    );
     assert_eq!(st.player(PlayerId::A).shadows, 0);
 }
 
@@ -179,7 +182,7 @@ fn clue_untargetable_by_enemy_choose_but_random_hits() {
     let mut st = started(&db, 10_015);
     put_field(&db, &mut st, PlayerId::B, EVIDENCE);
     put_field(&db, &mut st, PlayerId::B, "89100020"); // countdown amulet stand-in
-    // Choose destroy: only the non-Clue amulet is offered.
+                                                      // Choose destroy: only the non-Clue amulet is offered.
     give_pp(&mut st, PlayerId::A, 1, 1);
     let h = put_hand(&db, &mut st, PlayerId::A, CHOOSE_DESTROY_AMULET);
     play(&db, &mut st, h);
@@ -203,12 +206,11 @@ fn clue_untargetable_by_enemy_choose_but_random_hits() {
     put_field(&db, &mut st, PlayerId::B, EVIDENCE);
     play_pp(&db, &mut st, RANDOM_BANISH_AMULET, 0);
     assert_eq!(clues_on_side(&st, PlayerId::B), 0);
-    assert!(
-        st.player(PlayerId::B)
-            .banished
-            .iter()
-            .any(|c| c.card.as_str() == EVIDENCE)
-    );
+    assert!(st
+        .player(PlayerId::B)
+        .banished
+        .iter()
+        .any(|c| c.card.as_str() == EVIDENCE));
 }
 
 #[test]
@@ -220,7 +222,13 @@ fn engage_merged_amulet_same_turn() {
     // Old Evidence destroyed by consume. Put another, play Nacreheim, Engage survivor.
     put_field(&db, &mut st, PlayerId::A, EVIDENCE);
     // Manually mark engaged on the field Evidence, then play Nacreheim (merge).
-    if let Some(c) = st.player_mut(PlayerId::A).field.iter_mut().flatten().find(|c| c.is_clue()) {
+    if let Some(c) = st
+        .player_mut(PlayerId::A)
+        .field
+        .iter_mut()
+        .flatten()
+        .find(|c| c.is_clue())
+    {
         c.flags.engaged_this_turn = true;
     }
     play_pp(&db, &mut st, NACREHEIM, 1);
@@ -235,7 +243,9 @@ fn engage_merged_amulet_same_turn() {
     give_pp(&mut st, PlayerId::A, 10, 10);
     let legal = legal_actions(&db, &st);
     assert!(
-        legal.iter().any(|a| matches!(a, Action::Engage { slot: Slot(s) } if *s == slot)),
+        legal
+            .iter()
+            .any(|a| matches!(a, Action::Engage { slot: Slot(s) } if *s == slot)),
         "merged Clue amulet may Engage the same turn"
     );
     let hand0 = st.player(PlayerId::A).hand.len();
@@ -284,7 +294,11 @@ fn dynames_fanfare_and_evolve_replicate() {
         .field
         .iter()
         .enumerate()
-        .find_map(|(i, s)| s.as_ref().filter(|c| c.card.as_str() == DYNAMES).map(|_| i as u8))
+        .find_map(|(i, s)| {
+            s.as_ref()
+                .filter(|c| c.card.as_str() == DYNAMES)
+                .map(|_| i as u8)
+        })
         .expect("dynames");
     st.player_mut(PlayerId::A).ep = 1;
     st.player_mut(PlayerId::A).turns_taken = 5; // first-player evolve unlock
@@ -312,7 +326,11 @@ fn dynames_fanfare_and_evolve_replicate() {
         .iter()
         .filter(|c| c.card.as_str() == EVIDENCE)
         .count();
-    assert_eq!(hand_after, hand_before + 1, "Evolve replicates add Evidence");
+    assert_eq!(
+        hand_after,
+        hand_before + 1,
+        "Evolve replicates add Evidence"
+    );
 }
 
 #[test]
@@ -330,13 +348,12 @@ fn kyrios_aoe_and_two_evidence_ward() {
             .count(),
         2
     );
-    assert!(
-        st.player(PlayerId::B)
-            .field
-            .iter()
-            .flatten()
-            .all(|c| c.defense <= c.max_defense - 2)
-    );
+    assert!(st
+        .player(PlayerId::B)
+        .field
+        .iter()
+        .flatten()
+        .all(|c| c.defense <= c.max_defense - 2));
     let f = st
         .player(PlayerId::A)
         .field
@@ -356,7 +373,7 @@ fn scene_of_deicide_with_and_without_enemy_and_full_field() {
     put_field(&db, &mut st, PlayerId::B, TANK);
     // Advance to end of A's turn with Scene already on field.
     end_turn(&db, &mut st); // A ends → Scene endOfTurn fires before B's turn?
-    // endOfTurn whose:own fires at end of controller's turn.
+                            // endOfTurn whose:own fires at end of controller's turn.
     assert!(
         !field_has(&st, PlayerId::B, TANK),
         "enemy follower banished"
@@ -464,15 +481,29 @@ fn rezeal_fanfare_and_crest_play_reaction() {
         .find(|c| c.card.as_str() == VANILLA)
         .expect("vanilla");
     assert!(
-        f.granted.iter().any(|a| matches!(a, arena_engine::card::Ability::LastWords { .. })),
+        f.granted
+            .iter()
+            .any(|a| matches!(a, arena_engine::card::Ability::LastWords { .. })),
         "crest gave Last Words: Summon a copy"
     );
     assert_eq!(f.traits.cant_attack_followers, Some(true));
     assert_eq!(f.traits.cant_attack_leader, Some(true));
     // Negative: crest must not fire on amulet play.
-    let amulets_before = st.player(PlayerId::A).field.iter().flatten().filter(|c| c.kind == arena_engine::card::CardKind::Amulet).count();
+    let amulets_before = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.kind == arena_engine::card::CardKind::Amulet)
+        .count();
     play_pp(&db, &mut st, EVIDENCE, 1);
-    let amulets_after = st.player(PlayerId::A).field.iter().flatten().filter(|c| c.kind == arena_engine::card::CardKind::Amulet).count();
+    let amulets_after = st
+        .player(PlayerId::A)
+        .field
+        .iter()
+        .flatten()
+        .filter(|c| c.kind == arena_engine::card::CardKind::Amulet)
+        .count();
     assert!(amulets_after >= amulets_before);
     let evidence = clue_on_field(&st, PlayerId::A).expect("evidence");
     assert!(

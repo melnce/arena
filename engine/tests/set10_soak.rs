@@ -97,7 +97,10 @@ fn set10_neutral_vs_meta_soak() {
     let mut actions = 0u64;
     // Half vs each meta, both seatings.
     let per = (n / 4).max(1);
-    for (i, meta) in [meta_a.as_slice(), meta_b.as_slice()].into_iter().enumerate() {
+    for (i, meta) in [meta_a.as_slice(), meta_b.as_slice()]
+        .into_iter()
+        .enumerate()
+    {
         for g in 0..per {
             let seed = 60_000 + (i as u64) * 1_000 + u64::from(g);
             actions += u64::from(play_pair(&db, seed, &set10, meta));
@@ -154,10 +157,7 @@ fn set10_h0_engages_clue_sometimes() {
             let me = arena_engine::acting_player(&state);
             for act in &legal {
                 if let Action::Engage { slot } = act {
-                    if state
-                        .field_inst(me, slot.0)
-                        .is_some_and(|c| c.is_clue())
-                    {
+                    if state.field_inst(me, slot.0).is_some_and(|c| c.is_clue()) {
                         offered += 1;
                     }
                 }
@@ -168,10 +168,7 @@ fn set10_h0_engages_clue_sometimes() {
             };
             let act = legal[idx.min(legal.len().saturating_sub(1))].clone();
             if let Action::Engage { slot } = &act {
-                if state
-                    .field_inst(me, slot.0)
-                    .is_some_and(|c| c.is_clue())
-                {
+                if state.field_inst(me, slot.0).is_some_and(|c| c.is_clue()) {
                     chosen += 1;
                 }
             }
@@ -180,6 +177,9 @@ fn set10_h0_engages_clue_sometimes() {
         }
     }
     eprintln!("set10_h0 clue engage offered={offered} chosen={chosen}");
-    assert!(offered > 0, "Engage on a Clue amulet must be offered sometimes");
+    assert!(
+        offered > 0,
+        "Engage on a Clue amulet must be offered sometimes"
+    );
     assert!(chosen > 0, "h0 must choose Clue Engage sometimes");
 }

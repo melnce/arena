@@ -1507,14 +1507,7 @@ fn banish_from_field(
         return Ok(());
     };
     // Self-banished While still on the field (SelfBuffedUp-style).
-    raise_when(
-        db,
-        state,
-        who,
-        EventName::SelfBanished,
-        Some(&inst),
-        who,
-    );
+    raise_when(db, state, who, EventName::SelfBanished, Some(&inst), who);
     raise_when(
         db,
         state,

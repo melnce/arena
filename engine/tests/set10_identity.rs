@@ -130,12 +130,7 @@ fn parse_deck_cards(cards: &[String]) -> Vec<CardId> {
         .collect()
 }
 
-fn play_digest(
-    db: &CardDb,
-    seed: u64,
-    deck_a: &[CardId],
-    deck_b: &[CardId],
-) -> (u64, u64) {
+fn play_digest(db: &CardDb, seed: u64, deck_a: &[CardId], deck_b: &[CardId]) -> (u64, u64) {
     let mut state = new_game(
         db,
         GameConfig {
@@ -154,7 +149,10 @@ fn play_digest(
         assert!(actions < MAX_ACTIONS, "seed={seed}: game did not terminate");
         digest = fold_ply(digest, db, &state);
         let legal = legal_actions(db, &state);
-        assert!(!legal.is_empty(), "seed={seed}: empty legal before terminal");
+        assert!(
+            !legal.is_empty(),
+            "seed={seed}: empty legal before terminal"
+        );
         let idx = policy.gen_range(legal.len() as u32) as usize;
         apply(db, &mut state, legal[idx].clone()).unwrap_or_else(|e| {
             panic!("seed={seed}: legal action failed: {e:?}");
@@ -292,10 +290,7 @@ fn verify_golden(db: &CardDb, golden: &GoldenFile) {
         "golden has {} games, need ≥ 300",
         golden.games.len()
     );
-    assert!(
-        golden.decks.len() >= 2,
-        "golden must freeze ≥ 2 decks"
-    );
+    assert!(golden.decks.len() >= 2, "golden must freeze ≥ 2 decks");
 
     let parsed: Vec<Vec<CardId>> = golden
         .decks
@@ -328,8 +323,7 @@ fn verify_golden(db: &CardDb, golden: &GoldenFile) {
 
     let mut schedule_h = 0xcbf2_9ce4_8422_2325u64;
     for (i, g) in golden.games.iter().enumerate() {
-        let (digest, final_hash) =
-            play_digest(db, g.seed, &parsed[g.deck_a], &parsed[g.deck_b]);
+        let (digest, final_hash) = play_digest(db, g.seed, &parsed[g.deck_a], &parsed[g.deck_b]);
         assert_eq!(
             hex_u64(digest),
             g.digest,
