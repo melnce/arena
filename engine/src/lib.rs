@@ -57,7 +57,7 @@ pub use play::{play_game, play_game_record, End, MulliganRecord, Outcome};
 pub use policy::{
     builtin_mulligan, builtin_net, builtin_net_by_name, builtin_order, builtin_order_by_name,
     builtin_order_v59, builtin_value_v64, builtin_value_v65, builtin_value_v66, builtin_value_v69,
-    builtin_value_v73, builtin_value_v75, by_name, deck_fingerprint_counts,
+    builtin_value_v73, builtin_value_v75, builtin_value_v77, by_name, deck_fingerprint_counts,
     deck_fingerprint_player, fuse_is_noop, kill_det, kill_roll, mulligan_seat, names, world,
     AnyPolicy, CandidateRecord, CardNeeds, ChoosePath, DeckMulligan, ExplainRecord, FirstLegal,
     H0Job, JobStep, KillDetOutcome, KillRollOutcome, MullMode, MulliganTable, NeedsTable, NetArch,
@@ -65,7 +65,7 @@ pub use policy::{
     Weights, WorldOutcome, WorldRecord, BUILTIN_MULLIGAN_NAME, BUILTIN_NET_NAME,
     BUILTIN_ORDER_NAME, BUILTIN_ORDER_V59_NAME, BUILTIN_VALUE_V64_NAME, BUILTIN_VALUE_V65_NAME,
     BUILTIN_VALUE_V66_NAME, BUILTIN_VALUE_V69_NAME, BUILTIN_VALUE_V73_NAME, BUILTIN_VALUE_V75_NAME,
-    H0,
+    BUILTIN_VALUE_V77_NAME, H0,
 };
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
 pub use search_key::{lethal_key, search_key, search_key_id};
