@@ -199,7 +199,7 @@ pub fn builtin_value_v69() -> Arc<ValueNet> {
 }
 
 const BUILTIN_VALUE_V73_JSON: &str = include_str!("../../models/h0-value-v73.json");
-/// Committed name of the served-bot residual value leaf (`engine/models/h0-value-v73.json`).
+/// Committed name of the served-bot residual value leaf from brief YP to brief YQ (`engine/models/h0-value-v73.json`).
 pub const BUILTIN_VALUE_V73_NAME: &str = "h0-value-v73";
 static BUILTIN_VALUE_V73: OnceLock<Arc<ValueNet>> = OnceLock::new();
 
@@ -215,7 +215,7 @@ pub fn builtin_value_v73() -> Arc<ValueNet> {
 }
 
 const BUILTIN_VALUE_V75_JSON: &str = include_str!("../../models/h0-value-v75.json");
-/// Committed name of the served-bot residual value leaf (`engine/models/h0-value-v75.json`).
+/// Committed name of the served-bot residual value leaf from brief YQ to brief YR (`engine/models/h0-value-v75.json`).
 pub const BUILTIN_VALUE_V75_NAME: &str = "h0-value-v75";
 static BUILTIN_VALUE_V75: OnceLock<Arc<ValueNet>> = OnceLock::new();
 
@@ -230,7 +230,23 @@ pub fn builtin_value_v75() -> Arc<ValueNet> {
         .clone()
 }
 
-/// Resolve a built-in value leaf by committed name (`builtin`, `h0-linear-v4`, `h0-value-v64`, `h0-value-v65`, `h0-value-v66`, `h0-value-v69`, `h0-value-v73`, `h0-value-v75`).
+const BUILTIN_VALUE_V77_JSON: &str = include_str!("../../models/h0-value-v77.json");
+/// Committed name of the served-bot residual value leaf since brief YR (`engine/models/h0-value-v77.json`).
+pub const BUILTIN_VALUE_V77_NAME: &str = "h0-value-v77";
+static BUILTIN_VALUE_V77: OnceLock<Arc<ValueNet>> = OnceLock::new();
+
+/// The built-in `h0-value-v77` residual leaf, parsed once. A parse failure is a
+/// build defect.
+pub fn builtin_value_v77() -> Arc<ValueNet> {
+    BUILTIN_VALUE_V77
+        .get_or_init(|| {
+            ValueNet::from_json_named(BUILTIN_VALUE_V77_NAME, BUILTIN_VALUE_V77_JSON)
+                .expect("built-in h0-value-v77 parses")
+        })
+        .clone()
+}
+
+/// Resolve a built-in value leaf by committed name (`builtin`, `h0-linear-v4`, `h0-value-v64`, `h0-value-v65`, `h0-value-v66`, `h0-value-v69`, `h0-value-v73`, `h0-value-v75`, `h0-value-v77`).
 pub fn builtin_net_by_name(name: &str) -> Option<Arc<ValueNet>> {
     match name {
         "builtin" | BUILTIN_NET_NAME => Some(builtin_net()),
@@ -240,6 +256,7 @@ pub fn builtin_net_by_name(name: &str) -> Option<Arc<ValueNet>> {
         BUILTIN_VALUE_V69_NAME => Some(builtin_value_v69()),
         BUILTIN_VALUE_V73_NAME => Some(builtin_value_v73()),
         BUILTIN_VALUE_V75_NAME => Some(builtin_value_v75()),
+        BUILTIN_VALUE_V77_NAME => Some(builtin_value_v77()),
         _ => None,
     }
 }
