@@ -341,9 +341,57 @@
       "wall_seconds": 11378.0,
       "cpu_seconds": 317057.6,
       "end": "2026-11-03 09:53:43 UTC"
+    },
+    {
+      "start": "2026-11-03 09:56:31 UTC",
+      "workers": 28,
+      "todo": 1024,
+      "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+      "games_per_pair": 20,
+      "games": 1024,
+      "error_games": 0,
+      "wall_seconds": 2879.1,
+      "cpu_seconds": 79847.4,
+      "end": "2026-11-03 10:44:30 UTC"
+    },
+    {
+      "start": "2026-11-03 10:45:28 UTC",
+      "workers": 28,
+      "todo": 1024,
+      "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+      "games_per_pair": 24,
+      "games": 1024,
+      "error_games": 0,
+      "wall_seconds": 2882.4,
+      "cpu_seconds": 79669.1,
+      "end": "2026-11-03 11:33:31 UTC"
+    },
+    {
+      "start": "2026-11-03 11:34:22 UTC",
+      "workers": 28,
+      "todo": 1024,
+      "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+      "games_per_pair": 28,
+      "games": 1024,
+      "error_games": 0,
+      "wall_seconds": 2952.5,
+      "cpu_seconds": 81247.5,
+      "end": "2026-11-03 12:23:35 UTC"
+    },
+    {
+      "start": "2026-11-03 12:24:16 UTC",
+      "workers": 28,
+      "todo": 1024,
+      "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+      "games_per_pair": 32,
+      "games": 1024,
+      "error_games": 0,
+      "wall_seconds": 3065.5,
+      "cpu_seconds": 84405.2,
+      "end": "2026-11-03 13:15:22 UTC"
     }
   ],
-  "games_per_pair": 16,
-  "total_games": 4096,
-  "finished": "2026-11-03 09:53:43 UTC"
+  "games_per_pair": 32,
+  "total_games": 8192,
+  "finished": "2026-11-03 13:15:22 UTC"
 }
