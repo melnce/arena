@@ -3,41 +3,41 @@
 - verdict: DATA OK
 - teacher: `h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=results/run77/leaf77q.json,mull=leaf,mulls=256`
 - engine: `bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150`, seed 7801
-- games: 4096 of 4096 planned (0 stopped at 1000 decisions, 0 raised errors, 0 unreadable files moved aside); 3.01 h in 1 segment(s), 1362.0 games/h
-- replay check (every game replayed from its seed and actions): 4096 of 4096 (100.00 %)
-- check: search decisions that played a candidate with the best aggregate: 287518 of 287518 (100.00 %)
-- check: candidates whose aggregate is the mean of their worlds: 1569034 of 1569034 (100.00 %)
-- decisions: 377209; with two or more candidates: 292430
-- paths: {'search': 290619, 'single_legal': 58076, 'take_kill': 16469, 'mulligan': 8192, 'take_kill_roll': 1968, 'holdback_trade': 1248, 'holdback_resample': 563, 'consensus_lethal': 74}
-- candidates per decision (2+): {'n': 292430, 'mean': 5.366, 'median': 5, 'p90': 10, 'p99': 16, 'max': 39}
-- duplicate candidates (same values, line ends and lengths in every world as an earlier candidate): 92115 of 1493633 (6.17 %)
-- gap between the best and second-best aggregate: {'n': 292430, 'mean': 4.911, 'median': 1.685, 'p90': 12.625, 'p99': 46.603, 'max': 160.0}
-- hbk ran 3089 times, flipped 563; hbcheck ran 2526 times; lostrank ran 3101 times (played another move than the first best-scored one: 2331; left out of the search check)
-- world line ends over all candidates (12552272; O = opp_open, N = opp_next, W = own_next, X = next_leaf, ? = unknown): {'o': 4257412, 'O': 3845843, 'C': 1926875, 'L': 1053539, 'D': 717984, 't': 713976, 'T': 20022, 'c': 16368, 'd': 253}
-- seconds per decision, one core: {'n': 377209, 'mean': 0.8, 'median': 0.195, 'p90': 2.431, 'p99': 5.695, 'max': 27.431}
-- seconds per search decision, one core: {'n': 290619, 'mean': 1.027, 'median': 0.467, 'p90': 2.794, 'p99': 6.084, 'max': 25.797}
-- seconds per turn (all of one player's decisions in a turn), one core: {'n': 71312, 'mean': 4.212, 'median': 1.453, 'p90': 12.315, 'p99': 29.842, 'max': 74.496}
-- decisions per game: {'n': 4096, 'mean': 92.092, 'median': 89, 'p90': 128, 'p99': 167, 'max': 209}; turns: {'n': 4096, 'mean': 8.992, 'median': 9, 'p90': 12, 'p99': 14, 'max': 19}
-- first-seat win rate: 0.5603 over 4096 decisive games
-- data: 90.1 MB in 4096 files; archive teach78-games.jsonl.gz 87.8 MB
+- games: 8192 of 8192 planned (0 stopped at 1000 decisions, 0 raised errors, 0 unreadable files moved aside); 6.16 h in 5 segment(s), 1330.4 games/h
+- replay check (every game replayed from its seed and actions): 8192 of 8192 (100.00 %)
+- check: search decisions that played a candidate with the best aggregate: 577793 of 577793 (100.00 %)
+- check: candidates whose aggregate is the mean of their worlds: 3159172 of 3159172 (100.00 %)
+- decisions: 757485; with two or more candidates: 587771
+- paths: {'search': 584110, 'single_legal': 116270, 'take_kill': 33142, 'mulligan': 16384, 'take_kill_roll': 3770, 'holdback_trade': 2509, 'holdback_resample': 1152, 'consensus_lethal': 148}
+- candidates per decision (2+): {'n': 587771, 'mean': 5.375, 'median': 5, 'p90': 10, 'p99': 16, 'max': 39}
+- duplicate candidates (same values, line ends and lengths in every world as an earlier candidate): 185031 of 3007105 (6.15 %)
+- gap between the best and second-best aggregate: {'n': 587771, 'mean': 4.868, 'median': 1.681, 'p90': 12.505, 'p99': 45.897, 'max': 160.0}
+- hbk ran 6170 times, flipped 1152; hbcheck ran 5018 times; lostrank ran 6317 times (played another move than the first best-scored one: 4800; left out of the search check)
+- world line ends over all candidates (25273376; O = opp_open, N = opp_next, W = own_next, X = next_leaf, ? = unknown): {'o': 8561276, 'O': 7755559, 'C': 3900272, 'L': 2104906, 'D': 1441747, 't': 1429608, 'T': 45201, 'c': 34371, 'd': 436}
+- seconds per decision, one core: {'n': 757485, 'mean': 0.811, 'median': 0.199, 'p90': 2.463, 'p99': 5.756, 'max': 27.431}
+- seconds per search decision, one core: {'n': 584110, 'mean': 1.04, 'median': 0.474, 'p90': 2.825, 'p99': 6.152, 'max': 25.797}
+- seconds per turn (all of one player's decisions in a turn), one core: {'n': 142963, 'mean': 4.277, 'median': 1.492, 'p90': 12.425, 'p99': 30.348, 'max': 75.385}
+- decisions per game: {'n': 8192, 'mean': 92.466, 'median': 90, 'p90': 128, 'p99': 168, 'max': 209}; turns: {'n': 8192, 'mean': 9.013, 'median': 9, 'p90': 12, 'p99': 15, 'max': 21}
+- first-seat win rate: 0.5598 over 8192 decisive games
+- data: 181.4 MB in 8192 files; archive teach78-games.jsonl.gz 176.8 MB
 
 ## Win rate by deck (both seats, mirrors included)
 
 | deck | win rate |
 |---|---|
-| meta-rune-test-subject | 0.676 |
-| meta-haven-evo | 0.648 |
-| meta-portal-evo | 0.562 |
-| meta-sword-rally | 0.562 |
-| meta-portal-af | 0.537 |
-| meta-portal-cutthroat | 0.516 |
-| meta-forest-combo | 0.508 |
-| meta-abyss-midrange | 0.502 |
-| meta-sword-loot | 0.488 |
-| meta-dragon-ramp | 0.480 |
-| meta-haven-kukishiro | 0.467 |
-| meta-abyss-aggro | 0.459 |
-| meta-rune-spell | 0.424 |
-| meta-haven-amulet | 0.422 |
-| meta-dragon-aggro | 0.410 |
-| meta-rune-crystal | 0.338 |
+| meta-haven-evo | 0.652 |
+| meta-rune-test-subject | 0.647 |
+| meta-portal-af | 0.557 |
+| meta-portal-evo | 0.557 |
+| meta-sword-rally | 0.550 |
+| meta-abyss-midrange | 0.527 |
+| meta-portal-cutthroat | 0.507 |
+| meta-sword-loot | 0.493 |
+| meta-dragon-ramp | 0.487 |
+| meta-forest-combo | 0.483 |
+| meta-haven-kukishiro | 0.466 |
+| meta-abyss-aggro | 0.443 |
+| meta-rune-spell | 0.439 |
+| meta-haven-amulet | 0.429 |
+| meta-dragon-aggro | 0.414 |
+| meta-rune-crystal | 0.349 |
