@@ -7,7 +7,9 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    # ubuntu-24.04, not -latest: the exact pins (h0_exact_pins, h0_exact_games, …) were made on its glibc; 26.04's
+    # float maths differs in the last bit (brief YT, 2026-11-09). Move only together with a deliberate re-pin.
+    runs-on: ubuntu-24.04
     # ≈ 18–19 min before #133; post–#142 soak/bench can exceed 30 m on cold cache.
     timeout-minutes: 35
     # Thin LTO + codegen-units = 1 (root Cargo.toml) are for the Python extension, the wasm bot and the slow
@@ -122,7 +124,7 @@ jobs:
         run: node validate.mjs --schema-only ../oracle/cards-as-recorded
 
   wasm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -182,7 +184,7 @@ jobs:
         run: node wasm/tests/job.test.mjs
 
   ui:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # ≈ 20–24 min measured on 2026-10-12; two-thirds rule
     timeout-minutes: 40
     steps:
@@ -233,7 +235,7 @@ jobs:
         run: npx playwright test
 
   py:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Push run of PR #122 (2026-10-07) measured 20 m 53 s.
     timeout-minutes: 35
     steps:
