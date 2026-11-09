@@ -56,7 +56,9 @@ jobs:
   # lethal ~3s release tests (cloud-agent 2026-10-13); timeout 15 like encode_v2
   suite:
     name: slow (${{ matrix.suite }})
-    runs-on: ubuntu-latest
+    # ubuntu-24.04, not -latest: the exact pins (h0_exact_pins, h0_exact_games, …) were made on its glibc; 26.04's
+    # float maths differs in the last bit (brief YT, 2026-11-09). Move only together with a deliberate re-pin.
+    runs-on: ubuntu-24.04
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
       fail-fast: false
@@ -271,7 +273,7 @@ jobs:
     name: slow (track)
     needs: suite
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
       GH_REPO: ${{ github.repository }}
