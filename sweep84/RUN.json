@@ -1,0 +1,323 @@
+{
+  "argv": [
+    "C:\\Users\\agban\\projects\\arena\\.venv\\Scripts\\python.exe",
+    "C:\\Users\\agban\\projects\\arena\\py\\sweep.py",
+    "--tag",
+    "sweep84",
+    "--seed",
+    "84",
+    "--pool",
+    "meta",
+    "--baseline",
+    "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=results/run83/leaf83rq.json,mull=leaf,mulls=256",
+    "--screen-games",
+    "2",
+    "--final-games",
+    "16",
+    "--final-reverse",
+    "8",
+    "--tp-games",
+    "1",
+    "--finalists",
+    "1",
+    "--candidates",
+    "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=results/run84/leaf84q.json,mull=leaf,mulls=256",
+    "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=results/run84/leaf84mq.json,mull=leaf,mulls=256",
+    "--early-stop",
+    "--stop-thresholds",
+    "0.50",
+    "0.51",
+    "--publish"
+  ],
+  "git": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+  "python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "cpu_count": 28,
+  "stages": {
+    "screen": {
+      "start": "2026-11-09T23:11:59.352546+00:00",
+      "end": "2026-11-10T00:36:26.023256+00:00"
+    },
+    "final": {
+      "start": "2026-11-10T00:36:26.046013+00:00",
+      "end": "2026-11-10T05:14:54.045990+00:00"
+    },
+    "summary": {
+      "start": "2026-11-10T05:14:54.070926+00:00",
+      "end": "2026-11-10T05:14:54.094598+00:00"
+    },
+    "publish": {
+      "start": "2026-11-10T05:14:54.166252+00:00"
+    }
+  },
+  "final_game_offset": 2,
+  "record_games": true,
+  "sizing": {
+    "pool": "meta",
+    "decks": [
+      "meta-abyss-aggro",
+      "meta-abyss-midrange",
+      "meta-dragon-aggro",
+      "meta-dragon-ramp",
+      "meta-forest-combo",
+      "meta-haven-amulet",
+      "meta-haven-evo",
+      "meta-haven-kukishiro",
+      "meta-portal-af",
+      "meta-portal-cutthroat",
+      "meta-portal-evo",
+      "meta-rune-crystal",
+      "meta-rune-spell",
+      "meta-rune-test-subject",
+      "meta-sword-loot",
+      "meta-sword-rally"
+    ],
+    "n_decks": 16,
+    "pairs": 256,
+    "games_per_pair": {
+      "screen": 2,
+      "final": 16,
+      "reverse": 8,
+      "tp": 1
+    },
+    "totals": {
+      "screen": 512,
+      "final": 4096,
+      "reverse": 2048,
+      "tp": 256
+    },
+    "target_games": null,
+    "block": "pool: meta\ndecks: 16 (meta-abyss-aggro, meta-abyss-midrange, meta-dragon-aggro, meta-dragon-ramp, meta-forest-combo, meta-haven-amulet, meta-haven-evo, meta-haven-kukishiro, meta-portal-af, meta-portal-cutthroat, meta-portal-evo, meta-rune-crystal, meta-rune-spell, meta-rune-test-subject, meta-sword-loot, meta-sword-rally)\npairs: 256 (16 x 16, mirrors included)\nscreen    2 games/pair x 256 =   512\nfinal    16 games/pair x 256 =  4096\nreverse   8 games/pair x 256 =  2048\ntp        1 games/pair x 256 =   256"
+  },
+  "finalist_decisions": [
+    {
+      "index": 1,
+      "spec": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=results/run84/leaf84q.json,mull=leaf,mulls=256",
+      "decision": "not in top 1"
+    },
+    {
+      "index": 2,
+      "spec": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=results/run84/leaf84mq.json,mull=leaf,mulls=256",
+      "decision": "finalist"
+    }
+  ],
+  "early_stop": {
+    "chunk": 2,
+    "thresholds": [
+      0.5,
+      0.51
+    ],
+    "gamma": 0.02,
+    "min_games": 1024,
+    "combine": null,
+    "finalists": {
+      "c02": {
+        "looks": [
+          {
+            "main_games": 512,
+            "main_planned": 4096,
+            "reverse_games": 0,
+            "reverse_planned": 2048,
+            "main_rate": 0.517578125,
+            "reverse_rate": 0.0,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.46473652327316717,
+              "not better, pooled \u2265 0.5": 0.030258662762323384,
+              "not better, pooled \u2265 0.51": 0.24481594085863337,
+              "better, pooled \u2265 0.51": 0.26018887310587596
+            },
+            "best_class": "not better, pooled < 0.5, < 0.51",
+            "best_prob": 0.46473652327316717,
+            "games_this_run": 512
+          },
+          {
+            "main_games": 512,
+            "main_planned": 4096,
+            "reverse_games": 512,
+            "reverse_planned": 2048,
+            "main_rate": 0.517578125,
+            "reverse_rate": 0.513671875,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.14088428243499204,
+              "not better, pooled \u2265 0.5": 0.1997365863784479,
+              "not better, pooled \u2265 0.51": 0.47651810700474034,
+              "better, pooled \u2265 0.51": 0.1828610241818197
+            },
+            "best_class": "not better, pooled \u2265 0.51",
+            "best_prob": 0.47651810700474034,
+            "games_this_run": 1024
+          },
+          {
+            "main_games": 1024,
+            "main_planned": 4096,
+            "reverse_games": 512,
+            "reverse_planned": 2048,
+            "main_rate": 0.509765625,
+            "reverse_rate": 0.513671875,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.156584894412672,
+              "not better, pooled \u2265 0.5": 0.3058927190414588,
+              "not better, pooled \u2265 0.51": 0.4225562815853914,
+              "better, pooled \u2265 0.51": 0.11496610496047777
+            },
+            "best_class": "not better, pooled \u2265 0.51",
+            "best_prob": 0.4225562815853914,
+            "games_this_run": 1536
+          },
+          {
+            "main_games": 1536,
+            "main_planned": 4096,
+            "reverse_games": 512,
+            "reverse_planned": 2048,
+            "main_rate": 0.5221354166666666,
+            "reverse_rate": 0.513671875,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.01816485441775129,
+              "not better, pooled \u2265 0.5": 0.13974226611500334,
+              "not better, pooled \u2265 0.51": 0.5892624948400333,
+              "better, pooled \u2265 0.51": 0.25283038462721197
+            },
+            "best_class": "not better, pooled \u2265 0.51",
+            "best_prob": 0.5892624948400333,
+            "games_this_run": 2048
+          },
+          {
+            "main_games": 1536,
+            "main_planned": 4096,
+            "reverse_games": 1024,
+            "reverse_planned": 2048,
+            "main_rate": 0.5221354166666666,
+            "reverse_rate": 0.4970703125,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.03527235127626138,
+              "not better, pooled \u2265 0.5": 0.27630498683794946,
+              "not better, pooled \u2265 0.51": 0.678856153365475,
+              "better, pooled \u2265 0.51": 0.009566508520314133
+            },
+            "best_class": "not better, pooled \u2265 0.51",
+            "best_prob": 0.678856153365475,
+            "games_this_run": 2560
+          },
+          {
+            "main_games": 2048,
+            "main_planned": 4096,
+            "reverse_games": 1024,
+            "reverse_planned": 2048,
+            "main_rate": 0.52001953125,
+            "reverse_rate": 0.4970703125,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.025427323607807795,
+              "not better, pooled \u2265 0.5": 0.330366306335915,
+              "not better, pooled \u2265 0.51": 0.6349373946709123,
+              "better, pooled \u2265 0.51": 0.009268975385365074
+            },
+            "best_class": "not better, pooled \u2265 0.51",
+            "best_prob": 0.6349373946709123,
+            "games_this_run": 3072
+          },
+          {
+            "main_games": 2560,
+            "main_planned": 4096,
+            "reverse_games": 1024,
+            "reverse_planned": 2048,
+            "main_rate": 0.508203125,
+            "reverse_rate": 0.4970703125,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.2011289176546231,
+              "not better, pooled \u2265 0.5": 0.6428040696560217,
+              "not better, pooled \u2265 0.51": 0.15451983833834285,
+              "better, pooled \u2265 0.51": 0.001547174351012432
+            },
+            "best_class": "not better, pooled \u2265 0.5",
+            "best_prob": 0.6428040696560217,
+            "games_this_run": 3584
+          },
+          {
+            "main_games": 2560,
+            "main_planned": 4096,
+            "reverse_games": 1536,
+            "reverse_planned": 2048,
+            "main_rate": 0.508203125,
+            "reverse_rate": 0.4921875,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.25910539261467863,
+              "not better, pooled \u2265 0.5": 0.6824479816421436,
+              "not better, pooled \u2265 0.51": 0.05844642631644528,
+              "better, pooled \u2265 0.51": 1.9942673252427052e-07
+            },
+            "best_class": "not better, pooled \u2265 0.5",
+            "best_prob": 0.6824479816421436,
+            "games_this_run": 4096
+          },
+          {
+            "main_games": 3072,
+            "main_planned": 4096,
+            "reverse_games": 1536,
+            "reverse_planned": 2048,
+            "main_rate": 0.5016276041666666,
+            "reverse_rate": 0.4921875,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.6518433271897572,
+              "not better, pooled \u2265 0.5": 0.34729255516228763,
+              "not better, pooled \u2265 0.51": 0.0008641156186830732,
+              "better, pooled \u2265 0.51": 2.029272078532192e-09
+            },
+            "best_class": "not better, pooled < 0.5, < 0.51",
+            "best_prob": 0.6518433271897572,
+            "games_this_run": 4608
+          },
+          {
+            "main_games": 3584,
+            "main_planned": 4096,
+            "reverse_games": 1536,
+            "reverse_planned": 2048,
+            "main_rate": 0.49720982142857145,
+            "reverse_rate": 0.4921875,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.9348242822388956,
+              "not better, pooled \u2265 0.5": 0.06517544238532744,
+              "not better, pooled \u2265 0.51": 2.75375776341796e-07,
+              "better, pooled \u2265 0.51": 6.057663692558053e-16
+            },
+            "best_class": "not better, pooled < 0.5, < 0.51",
+            "best_prob": 0.9348242822388956,
+            "games_this_run": 5120
+          },
+          {
+            "main_games": 3584,
+            "main_planned": 4096,
+            "reverse_games": 2048,
+            "reverse_planned": 2048,
+            "main_rate": 0.49720982142857145,
+            "reverse_rate": 0.49560546875,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 0.9503376478898604,
+              "not better, pooled \u2265 0.5": 0.04966235210607959,
+              "not better, pooled \u2265 0.51": 4.059932930789417e-12
+            },
+            "best_class": "not better, pooled < 0.5, < 0.51",
+            "best_prob": 0.9503376478898604,
+            "games_this_run": 5632
+          },
+          {
+            "main_games": 4096,
+            "main_planned": 4096,
+            "reverse_games": 2048,
+            "reverse_planned": 2048,
+            "main_rate": 0.49462890625,
+            "reverse_rate": 0.49560546875,
+            "class_probs": {
+              "not better, pooled < 0.5, < 0.51": 1.0
+            },
+            "best_class": "not better, pooled < 0.5, < 0.51",
+            "best_prob": 1.0,
+            "games_this_run": 6144
+          }
+        ],
+        "stopped": true,
+        "stopped_at_look": 12,
+        "settled_class": "not better, pooled < 0.5, < 0.51",
+        "settled_prob": 1.0
+      }
+    }
+  }
+}
