@@ -343,6 +343,12 @@ fn h0_spec(h: &H0) -> String {
     if h.pess != def.pess {
         parts.push(format!("pess={}", h.pess));
     }
+    if h.spreadpess != def.spreadpess {
+        parts.push(format!("spreadpess={}", h.spreadpess));
+    }
+    if h.wargmax {
+        parts.push("wargmax=1".to_string());
+    }
     if !h.tt {
         parts.push("tt=0".to_string());
     }
@@ -488,6 +494,8 @@ fn h0_fields_eq(a: &H0, b: &H0) -> bool {
         && a.osteps == b.osteps
         && a.wv == b.wv
         && a.pess == b.pess
+        && a.spreadpess == b.spreadpess
+        && a.wargmax == b.wargmax
         && a.tt == b.tt
         && a.alloc == b.alloc
         && a.threads == b.threads
@@ -663,6 +671,20 @@ fn parse_h0_params(body: &str) -> Result<H0, String> {
                     return Err(format!("pess out of range '{val}'"));
                 }
                 h.pess = v;
+            }
+            "spreadpess" => {
+                let v: f32 = val.parse().map_err(|_| format!("bad spreadpess '{val}'"))?;
+                if !(0.0..=1.0).contains(&v) {
+                    return Err(format!("spreadpess out of range '{val}'"));
+                }
+                h.spreadpess = v;
+            }
+            "wargmax" => {
+                h.wargmax = match val {
+                    "0" => false,
+                    "1" => true,
+                    other => return Err(format!("unknown wargmax '{other}'")),
+                };
             }
             "tt" => {
                 h.tt = match val {

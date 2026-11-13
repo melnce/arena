@@ -22,9 +22,9 @@ use crate::policy::fuse_guard::filter_cand_fuseguard;
 use super::try_take_kill_parallel;
 use super::{
     all_cands_lost, consensus_lethal, finite, kill_det_on_roots, kill_roll_on_roots, line_key,
-    one_ply, own_fuse_partners, root_agg, search_own, search_world, tie_set_search, try_apply,
-    try_holdback_resample, try_holdback_trade, try_lost_rerank, try_take_kill, useful_action,
-    Alloc, Deal, Info, SearchStats, WorldSearchResult, H0,
+    one_ply, own_fuse_partners, root_agg, root_agg_spread, search_own, search_world,
+    tie_set_search, try_apply, try_holdback_resample, try_holdback_trade, try_lost_rerank,
+    try_take_kill, useful_action, Alloc, Deal, Info, SearchStats, WorldSearchResult, H0,
 };
 
 /// Run one full [`H0::choose`] (in-process).
@@ -66,6 +66,9 @@ fn merge_world_results(
     acc: &mut [f32],
     n: &mut [u32],
     worst: &mut [f32],
+    best: &mut [f32],
+    votes: &mut [u32],
+    wargmax: bool,
     dec_stats: &mut SearchStats,
     explain_cands: &mut [CandidateRecord],
     recording: bool,
@@ -84,10 +87,30 @@ fn merge_world_results(
                 }
             }
         }
+        if wargmax {
+            let mut world_best_j = None;
+            let mut world_best_v = f32::NEG_INFINITY;
+            for j in 0..subset_len {
+                if wr.n[j] == 0 {
+                    continue;
+                }
+                let v = root_agg(wr.acc[j], wr.n[j], wr.worst[j], 0.0);
+                if v > world_best_v {
+                    world_best_v = v;
+                    world_best_j = Some(j);
+                }
+            }
+            if let Some(j) = world_best_j {
+                votes[j] += 1;
+            }
+        }
         for j in 0..subset_len {
             acc[j] += wr.acc[j];
             if wr.n[j] > 0 && wr.worst[j] < worst[j] {
                 worst[j] = wr.worst[j];
+            }
+            if wr.n[j] > 0 && wr.best[j] > best[j] {
+                best[j] = wr.best[j];
             }
             n[j] += wr.n[j];
         }
@@ -112,6 +135,9 @@ fn pick_after_world_merge(
     acc: &[f32],
     n: &[u32],
     worst: &[f32],
+    best: &[f32],
+    votes: &[u32],
+    wargmax: bool,
     pairs_skipped_add: u64,
     recording: bool,
     explain_rec: &mut Option<ExplainRecord>,
@@ -123,20 +149,53 @@ fn pick_after_world_merge(
     let mut best_i = 0usize;
     let mut best_v = f32::NEG_INFINITY;
     let mut any_scored = false;
-    for (j, &c) in n.iter().enumerate() {
-        if c == 0 {
-            continue;
+    let agg = |j: usize, c: u32| -> f32 {
+        root_agg_spread(acc[j], c, worst[j], best[j], h.pess, h.spreadpess, h.wv)
+    };
+    if wargmax {
+        let mut max_votes = 0u32;
+        let mut vote_winners: Vec<usize> = Vec::new();
+        for (j, &v) in votes.iter().enumerate() {
+            if n[j] == 0 {
+                continue;
+            }
+            any_scored = true;
+            if v > max_votes {
+                max_votes = v;
+                vote_winners.clear();
+                vote_winners.push(j);
+            } else if v == max_votes {
+                vote_winners.push(j);
+            }
         }
-        any_scored = true;
-        let v = root_agg(acc[j], c, worst[j], h.pess);
-        if recording {
-            explain_cands[j].root_agg = v;
-            explain_cands[j].worst = worst[j];
-            explain_cands[j].n = c;
+        for &j in &vote_winners {
+            let v = agg(j, n[j]);
+            if recording {
+                explain_cands[j].root_agg = v;
+                explain_cands[j].worst = worst[j];
+                explain_cands[j].n = n[j];
+            }
+            if v > best_v || (v == best_v && j < best_i) {
+                best_v = v;
+                best_i = j;
+            }
         }
-        if v > best_v {
-            best_v = v;
-            best_i = j;
+    } else {
+        for (j, &c) in n.iter().enumerate() {
+            if c == 0 {
+                continue;
+            }
+            any_scored = true;
+            let v = agg(j, c);
+            if recording {
+                explain_cands[j].root_agg = v;
+                explain_cands[j].worst = worst[j];
+                explain_cands[j].n = c;
+            }
+            if v > best_v {
+                best_v = v;
+                best_i = j;
+            }
         }
     }
     if any_scored {
@@ -571,6 +630,8 @@ fn run_h0_decision_mode(
             let mut acc = vec![0.0f32; subset.len()];
             let mut n = vec![0u32; subset.len()];
             let mut worst = vec![f32::INFINITY; subset.len()];
+            let mut best = vec![f32::NEG_INFINITY; subset.len()];
+            let mut votes = vec![0u32; subset.len()];
             let total_pairs = u64::from(k) * subset.len() as u64;
             let mut attempted = 0u64;
             let nodes_after_lethal = nodes;
@@ -640,6 +701,9 @@ fn run_h0_decision_mode(
                     &mut acc,
                     &mut n,
                     &mut worst,
+                    &mut best,
+                    &mut votes,
+                    h.wargmax,
                     &mut dec_stats,
                     &mut explain_cands,
                     recording,
@@ -648,6 +712,8 @@ fn run_h0_decision_mode(
                 nodes = nodes_after_lethal + world_nodes_sum;
             } else {
                 for (r, root) in roots.iter().enumerate() {
+                    let mut world_best_j = None;
+                    let mut world_best_v = f32::NEG_INFINITY;
                     let mut root_table = if h.info == Info::All {
                         h.tt.then(HashMap::new)
                     } else {
@@ -766,10 +832,22 @@ fn run_h0_decision_mode(
                         if fv < worst[j] {
                             worst[j] = fv;
                         }
+                        if fv > best[j] {
+                            best[j] = fv;
+                        }
                         n[j] += 1;
+                        if fv > world_best_v {
+                            world_best_v = fv;
+                            world_best_j = Some(j);
+                        }
                     }
                     if cap_exhausted {
                         break;
+                    }
+                    if h.wargmax {
+                        if let Some(j) = world_best_j {
+                            votes[j] += 1;
+                        }
                     }
                 }
             }
@@ -795,6 +873,9 @@ fn run_h0_decision_mode(
                 &acc,
                 &n,
                 &worst,
+                &best,
+                &votes,
+                h.wargmax,
                 pairs_skipped_add,
                 recording,
                 &mut explain_rec,
@@ -849,6 +930,8 @@ pub struct WorldOutcome {
     pub acc_bits: Vec<u32>,
     pub n: Vec<u32>,
     pub worst_bits: Vec<u32>,
+    #[serde(default)]
+    pub best_bits: Vec<u32>,
     pub nodes_spent: u32,
     pub attempted: u64,
     pub skipped_worlds: u64,
@@ -862,6 +945,7 @@ impl WorldOutcome {
             acc_bits: wr.acc.iter().map(|v| f32_bits(*v)).collect(),
             n: wr.n.clone(),
             worst_bits: wr.worst.iter().map(|v| f32_bits(*v)).collect(),
+            best_bits: wr.best.iter().map(|v| f32_bits(*v)).collect(),
             nodes_spent: wr.nodes_spent,
             attempted: wr.attempted,
             skipped_worlds: wr.skipped_worlds,
@@ -874,6 +958,11 @@ impl WorldOutcome {
             acc: self.acc_bits.iter().map(|b| f32_from_bits(*b)).collect(),
             n: self.n.clone(),
             worst: self.worst_bits.iter().map(|b| f32_from_bits(*b)).collect(),
+            best: if self.best_bits.is_empty() {
+                self.n.iter().map(|_| f32::NEG_INFINITY).collect()
+            } else {
+                self.best_bits.iter().map(|b| f32_from_bits(*b)).collect()
+            },
             nodes_spent: self.nodes_spent,
             stats: self.stats.clone(),
             attempted: self.attempted,
@@ -1625,6 +1714,8 @@ impl H0Job {
         let mut acc = vec![0.0f32; subset_len];
         let mut n = vec![0u32; subset_len];
         let mut worst = vec![f32::INFINITY; subset_len];
+        let mut best = vec![f32::NEG_INFINITY; subset_len];
+        let mut votes = vec![0u32; subset_len];
         let mut explain_cands: Vec<CandidateRecord> = if recording {
             self.subset
                 .iter()
@@ -1670,6 +1761,9 @@ impl H0Job {
             &mut acc,
             &mut n,
             &mut worst,
+            &mut best,
+            &mut votes,
+            h.wargmax,
             &mut self.dec_stats,
             &mut explain_cands,
             recording,
@@ -1700,6 +1794,9 @@ impl H0Job {
             &acc,
             &n,
             &worst,
+            &best,
+            &votes,
+            h.wargmax,
             pairs_skipped_add,
             recording,
             &mut explain_rec,
