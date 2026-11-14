@@ -23,7 +23,7 @@ use super::try_take_kill_parallel;
 use super::{
     all_cands_lost, consensus_lethal, finite, kill_det_on_roots, kill_roll_on_roots, line_key,
     one_ply, own_fuse_partners, root_agg, root_agg_spread, search_own, search_world,
-    tie_set_search, try_apply, try_holdback_resample, try_holdback_trade, try_lost_rerank,
+    tie_set_search, try_apply_legal, try_holdback_resample, try_holdback_trade, try_lost_rerank,
     try_take_kill, useful_action, Alloc, Deal, Info, SearchStats, WorldSearchResult, H0,
 };
 
@@ -764,7 +764,8 @@ fn run_h0_decision_mode(
                         } else {
                             None
                         };
-                        let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key]) else {
+                        let Some(s) = try_apply_legal(db, root, a, &mut nodes, cap, &[root_key])
+                        else {
                             if recording {
                                 explain_cands[j]
                                     .worlds
