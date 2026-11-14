@@ -607,6 +607,11 @@ default `6`; hard stop is `osteps+3`),
 `wv=<f32>` (saturation bound on every accumulated value; default `80`),
 `pess=<f32>` (pessimism weight on the root mean, in `[0, 1]`; default `0`
 is today's mean; `1` is the worst determinization),
+`spreadpess=<f32>` (default `0` = off: with `>0`, raise effective pessimism on
+each root candidate by `spreadpess × (best−worst world value)/wv` before
+`root_agg`; capped at `1`),
+`wargmax=0|1` (default `0` = mean aggregation; `1` = pick the candidate that
+wins the most determinizations, ties broken by aggregated value),
 `tt=0|1` (per-decision transposition table; default `1`),
 `alloc=root|fair|world` (how the node cap is spent across `(root, candidate)`
 pairs; default `fair` = per-pair share; `alloc=root` restores the
@@ -730,6 +735,8 @@ streams and output as before). `H0` is a determinized search bot:
 | `osteps` | 6 | greedy-line steps before a forced `EndTurn`; hard stop is `osteps+3` (default 9) |
 | `wv` | 80 | saturation bound on every accumulated value (`finite` clamps to ±`wv`); a detected opponent lethal returns exactly `-wv` |
 | `pess` | 0 | pessimism weight on the root aggregation: `(1-pess)*mean + pess*worst` over the K determinizations. `0` is today's mean (that path is the existing expression, not a blend). No default changed; a flip needs the owner's yardstick |
+| `spreadpess` | 0 | with `>0`, per-candidate effective pessimism adds `spreadpess × (best−worst)/wv` before the `pess` blend (capped at `1`); default off |
+| `wargmax` | 0 | `1` = majority vote across determinizations for the root move (ties by aggregated value); default off |
 | `lcap` | 0.5 | in `(0, 1]`: the consensus-lethal check before the search may spend at most `floor(lcap × node_cap)` nodes; running out counts as "no consensus lethal", and the search gets what is left. Sweep 10 pooled 0.503 [0.491, 0.516] / +2.1 Elo vs the pre-flip default on the 16-deck meta pool (4 096 + 2 048 games per candidate). Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `clip` | 5 | `≥ 0`: clamp each standardised input of the learned leaf to `[−clip, clip]`; `0` is off. Accepted and ignored with `value=v0` / `value=v1`. Sweep 10 pooled 0.531 [0.519, 0.543] / +21.6 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |
 | `fusemacro` | 1 | on the bot's own turn only: at a Main node each `Fuse` contributes one child — its best completion by immediate value (single partners; pairs too for hosts with fuse recipes) — and inside the bot's own `FusePartners` choice every completion is a child with no leaf ever scored inside that choice. Sweep 10 pooled 0.499 [0.486, 0.511] / −1.0 Elo vs the pre-flip default. Default since 2026-09-24 (sweep 10's pre-registered rule) |

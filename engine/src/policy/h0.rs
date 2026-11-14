@@ -792,6 +792,12 @@ pub struct H0 {
     /// today's mean over determinizations; `1` is the worst sample.
     /// Default `0` — the blend is not taken on that path.
     pub pess: f32,
+    /// Extra pessimism scaled by per-candidate world spread
+    /// `(best − worst) / wv`, added to `pess` (capped at `1`). `0` = off.
+    pub spreadpess: f32,
+    /// Pick the root candidate that wins the most determinizations; ties
+    /// break by mean aggregate (`pess` / `spreadpess` aware). Default off.
+    pub wargmax: bool,
     /// Per-decision transposition table. On by default (`tt=1`).
     pub tt: bool,
     /// Bounded opponent-lethal sweep before the greedy line (`odepth=0` only).
@@ -935,6 +941,8 @@ impl Default for H0 {
             onextleaf: false,
             wv: DEFAULT_WV,
             pess: 0.0,
+            spreadpess: 0.0,
+            wargmax: false,
             tt: true,
             olethal: true,
             oevo: true,
@@ -1570,6 +1578,40 @@ fn root_agg(acc: f32, n: u32, worst: f32, pess: f32) -> f32 {
     }
 }
 
+#[inline]
+pub(super) fn effective_pess(pess: f32, spreadpess: f32, wv: f32, best: f32, worst: f32) -> f32 {
+    if spreadpess == 0.0 {
+        return pess;
+    }
+    if !best.is_finite() || !worst.is_finite() {
+        return pess;
+    }
+    let spread = (best - worst).max(0.0);
+    (pess + spreadpess * spread / wv).clamp(0.0, 1.0)
+}
+
+#[inline]
+pub(super) fn root_agg_spread(
+    acc: f32,
+    n: u32,
+    worst: f32,
+    best: f32,
+    pess: f32,
+    spreadpess: f32,
+    wv: f32,
+) -> f32 {
+    if spreadpess == 0.0 {
+        root_agg(acc, n, worst, pess)
+    } else {
+        root_agg(
+            acc,
+            n,
+            worst,
+            effective_pess(pess, spreadpess, wv, best, worst),
+        )
+    }
+}
+
 fn tie_set_search(
     n: &[u32],
     acc: &[f32],
@@ -1657,6 +1699,7 @@ struct WorldSearchResult {
     acc: Vec<f32>,
     n: Vec<u32>,
     worst: Vec<f32>,
+    best: Vec<f32>,
     nodes_spent: u32,
     stats: SearchStats,
     attempted: u64,
@@ -1699,6 +1742,7 @@ fn search_world(
     let mut acc = vec![0.0f32; n_cand];
     let mut n = vec![0u32; n_cand];
     let mut worst = vec![f32::INFINITY; n_cand];
+    let mut best = vec![f32::NEG_INFINITY; n_cand];
     let mut explain = if recording {
         vec![Vec::new(); n_cand]
     } else {
@@ -1805,12 +1849,16 @@ fn search_world(
         if fv < worst[j] {
             worst[j] = fv;
         }
+        if fv > best[j] {
+            best[j] = fv;
+        }
         n[j] += 1;
     }
     WorldSearchResult {
         acc,
         n,
         worst,
+        best,
         nodes_spent: world_nodes,
         stats,
         attempted,
