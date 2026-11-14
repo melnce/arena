@@ -409,6 +409,13 @@ fn h0_value_v83_path() -> String {
         .to_string()
 }
 
+fn h0_value_v87_path() -> String {
+    repo_root()
+        .join("engine/models/h0-value-v87.json")
+        .display()
+        .to_string()
+}
+
 struct SelfPlayCase {
     label: String,
     state: State,
@@ -1835,6 +1842,125 @@ fn value_v83_matches_file_on_review_and_self_play() {
     assert!(
         v83_differs_from_v77,
         "h0-value-v83 explain should differ from h0-value-v77 on some review moment"
+    );
+
+    let cases = meta_selfplay_cases(&db);
+    assert!(cases.len() >= 40, "self-play cases={}", cases.len());
+    let mut searched = 0usize;
+    for case in &cases {
+        let legal_len = legal_actions(&db, &case.state).len();
+        let from_name = decide_state(&name_spec, 1, &db, &case.state, case.seed);
+        let from_file = decide_state(&file_spec, 1, &db, &case.state, case.seed);
+        assert_eq!(from_name.idx, from_file.idx, "{}", case.label);
+        assert_eq!(
+            from_name.value_bits, from_file.value_bits,
+            "value {}",
+            case.label
+        );
+        assert_eq!(
+            from_name.explain, from_file.explain,
+            "explain {}",
+            case.label
+        );
+        if from_name
+            .explain
+            .as_ref()
+            .is_some_and(|e| explain_used_search(e, legal_len))
+        {
+            searched += 1;
+        }
+    }
+    assert!(
+        searched * 2 >= cases.len(),
+        "expected most self-play decisions through search, searched={searched} of {}",
+        cases.len()
+    );
+}
+
+#[test]
+fn value_v87_builtin_names_and_round_trip() {
+    let h_v87 = parse_h0("h0:net=h0-value-v87");
+    assert!(std::sync::Arc::ptr_eq(
+        h_v87.net.as_ref().expect("net"),
+        &arena_engine::builtin_value_v87(),
+    ));
+    let h_v83 = parse_h0("h0:net=h0-value-v83");
+    assert!(std::sync::Arc::ptr_eq(
+        h_v83.net.as_ref().expect("net"),
+        &arena_engine::builtin_value_v83(),
+    ));
+    assert!(!std::sync::Arc::ptr_eq(
+        h_v83.net.as_ref().expect("net"),
+        &arena_engine::builtin_value_v87(),
+    ));
+    let h_triple = parse_h0("h0:net=h0-value-v87,order=h0-value-v87,oorder=h0-value-v87");
+    assert!(std::sync::Arc::ptr_eq(
+        h_triple.net.as_ref().expect("net"),
+        h_triple.order.as_ref().expect("order"),
+    ));
+    assert!(std::sync::Arc::ptr_eq(
+        h_triple.net.as_ref().expect("net"),
+        h_triple.oorder_net.as_ref().expect("oorder"),
+    ));
+    assert!(AnyPolicy::parse_spec("h0:value=v0,net=h0-value-v87")
+        .unwrap_err()
+        .contains("value=net"));
+    let spec = format!("{SERVED_LEAF_RELEASE},net=h0-value-v87");
+    let p = AnyPolicy::parse_spec(&spec).unwrap();
+    let p2 = AnyPolicy::parse_spec(&p.spec()).unwrap();
+    assert_eq!(p, p2);
+}
+
+#[test]
+fn h0_value_v87_file_is_sweep_87() {
+    let raw = fs::read_to_string(crate_dir().join("models/h0-value-v87.json")).expect("v87 file");
+    let trimmed = raw.trim_end_matches(&['\r', '\n'][..]);
+    assert_eq!(trimmed.len(), 1_401_819);
+    assert_eq!(fnv1a64(trimmed.as_bytes()), 0x63a9_d55a_7615_9cf7);
+}
+
+#[cfg_attr(
+    debug_assertions,
+    ignore = "release only: the ci job runs it in its release step"
+)]
+#[test]
+fn value_v87_matches_file_on_review_and_self_play() {
+    let db = load_recorded_db();
+    let v87 = h0_value_v87_path();
+    let name_spec = format!("{SERVED_LEAF_RELEASE},net=h0-value-v87");
+    let file_spec = format!("{SERVED_LEAF_RELEASE},net={v87}");
+    let v83_spec = format!("{SERVED_LEAF_RELEASE},net=h0-value-v83");
+
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let from_file = decide(&file_spec, 1, &db, &cap, m.ply, seed);
+        let from_name = decide(&name_spec, 1, &db, &cap, m.ply, seed);
+        assert_eq!(
+            from_name.idx, from_file.idx,
+            "{}/{}@{}",
+            m.review, m.game, m.ply
+        );
+        assert_eq!(from_name.value_bits, from_file.value_bits, "value");
+        assert_eq!(from_name.explain, from_file.explain, "explain");
+    }
+
+    let mut v87_differs_from_v83 = false;
+    for m in REVIEW_MOMENTS {
+        let raw = fs::read_to_string(review_fixture(m.review, m.game)).expect("review");
+        let cap: Value = serde_json::from_str(&raw).expect("json");
+        let seed = policy_seed(&cap, m.ply);
+        let v87_out = decide(&name_spec, 1, &db, &cap, m.ply, seed);
+        let v83_out = decide(&v83_spec, 1, &db, &cap, m.ply, seed);
+        if v87_out.explain != v83_out.explain {
+            v87_differs_from_v83 = true;
+            break;
+        }
+    }
+    assert!(
+        v87_differs_from_v83,
+        "h0-value-v87 explain should differ from h0-value-v83 on some review moment"
     );
 
     let cases = meta_selfplay_cases(&db);
