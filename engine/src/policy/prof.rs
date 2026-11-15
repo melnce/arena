@@ -1,5 +1,6 @@
 //! Off-by-default wall-time and duplicate-lookup counters for H0 (`h0-prof` feature).
 
+use std::collections::hash_map::Entry;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
@@ -155,12 +156,15 @@ pub fn dup_probe(kind: DupKind, key: u64) -> bool {
     let d = &p.dups[kind as usize];
     d.lookups.fetch_add(1, Ordering::Relaxed);
     let mut map = p.dup_keys.lock().unwrap();
-    if map.contains_key(&(tag, key)) {
-        d.repeats.fetch_add(1, Ordering::Relaxed);
-        true
-    } else {
-        map.insert((tag, key), ());
-        false
+    match map.entry((tag, key)) {
+        Entry::Occupied(_) => {
+            d.repeats.fetch_add(1, Ordering::Relaxed);
+            true
+        }
+        Entry::Vacant(e) => {
+            e.insert(());
+            false
+        }
     }
 }
 
@@ -230,10 +234,10 @@ pub fn take_decision(wall: Duration) -> DecisionProf {
 
 pub fn merge_decisions(rows: &[DecisionProf]) -> DecisionProf {
     let wall_ns: u64 = rows.iter().map(|r| r.wall_ns).sum();
-    let mut zone_ns = vec![0u64; ZONE_COUNT];
-    let mut zone_calls = vec![0u64; ZONE_COUNT];
-    let mut dup_lookups = vec![0u64; DUP_KIND_COUNT];
-    let mut dup_repeats = vec![0u64; DUP_KIND_COUNT];
+    let mut zone_ns = [0u64; ZONE_COUNT];
+    let mut zone_calls = [0u64; ZONE_COUNT];
+    let mut dup_lookups = [0u64; DUP_KIND_COUNT];
+    let mut dup_repeats = [0u64; DUP_KIND_COUNT];
     for r in rows {
         for (i, z) in r.zones.iter().enumerate() {
             zone_ns[i] += z.ns;
