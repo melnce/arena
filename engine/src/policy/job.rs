@@ -369,15 +369,6 @@ fn run_h0_decision_mode(
     h.last_value = None;
     h.last_path = None;
     prof::reset_decision();
-    h.clear_decision_caches();
-    h.bind_leaf_cache();
-    struct LeafCacheScope;
-    impl Drop for LeafCacheScope {
-        fn drop(&mut self) {
-            H0::unbind_leaf_cache();
-        }
-    }
-    let _leaf_cache_scope = LeafCacheScope;
     if mode != JobExecMode::ViaJobPostKill {
         h.stats.decisions += 1;
     }
@@ -677,27 +668,21 @@ fn run_h0_decision_mode(
                 };
                 #[cfg(not(target_arch = "wasm32"))]
                 if mode == JobExecMode::Direct && h.threads > 1 {
-                    use super::leaf_cache;
                     use std::sync::atomic::{AtomicUsize, Ordering};
                     let slots: Vec<std::sync::Mutex<Option<WorldSearchResult>>> = (0..roots.len())
                         .map(|_| std::sync::Mutex::new(None))
                         .collect();
                     let next = AtomicUsize::new(0);
                     let workers = h.threads.min(k).max(1) as usize;
-                    let worker_cache = std::sync::Arc::clone(&h.leaf_value_cache);
                     std::thread::scope(|s| {
                         for _ in 0..workers {
-                            s.spawn(|| {
-                                leaf_cache::bind(worker_cache.clone());
-                                loop {
-                                    let r = next.fetch_add(1, Ordering::Relaxed);
-                                    if r >= roots.len() {
-                                        break;
-                                    }
-                                    let wr = run_world(r);
-                                    *slots[r].lock().unwrap() = Some(wr);
+                            s.spawn(|| loop {
+                                let r = next.fetch_add(1, Ordering::Relaxed);
+                                if r >= roots.len() {
+                                    break;
                                 }
-                                leaf_cache::unbind();
+                                let wr = run_world(r);
+                                *slots[r].lock().unwrap() = Some(wr);
                             });
                         }
                     });

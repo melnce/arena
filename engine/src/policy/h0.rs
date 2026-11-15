@@ -14,9 +14,7 @@
 //! leaf; `info` is a search-time knob only.
 
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, OnceLock};
-
-use crate::fxhash::FxMap;
+use std::sync::{Arc, OnceLock};
 
 use crate::action::{acting_player, to_neutral, Action};
 use crate::apply::{apply, apply_known_legal, legal_actions};
@@ -40,7 +38,6 @@ use crate::state::FIELD_SIZE;
 use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
 
-use super::leaf_cache;
 use super::prof::{self, DupKind, Zone, ZoneGuard};
 
 use super::explain::{
@@ -416,30 +413,19 @@ impl Evaluator<'_> {
             ValueVersion::V1 => value_v1(state, me, self.needs, self.weights),
             ValueVersion::Net => {
                 let net = self.net.expect("value=net requires a loaded net");
-                let key = (
-                    search_key_id(state),
-                    me as u8,
-                    std::ptr::from_ref(net) as u64,
-                    self.clip.to_bits(),
-                );
-                if let Some(v) = leaf_cache::get(&key) {
-                    return v;
-                }
-                let prof_key = key.0 ^ ((key.1 as u64) << 56);
-                prof::dup_probe(DupKind::LeafValue, prof_key);
-                prof::dup_probe(DupKind::LeafEncode, prof_key);
+                let key = search_key_id(state) ^ ((me as u64) << 56);
+                prof::dup_probe(DupKind::LeafValue, key);
+                prof::dup_probe(DupKind::LeafEncode, key);
                 let obs = {
                     let _z = ZoneGuard::enter(Zone::LeafEncode);
                     encode_with_vocab(state, me, self.vocab, self.encoding, Some(self.db))
                 };
                 let _z = ZoneGuard::enter(Zone::LeafForward);
-                let v = if self.clip > 0.0 {
+                if self.clip > 0.0 {
                     net.value_clipped(&obs, self.clip)
                 } else {
                     net.value(&obs)
-                };
-                leaf_cache::insert(key, v);
-                v
+                }
             }
         }
     }
@@ -946,7 +932,6 @@ pub struct H0 {
     pub hreadm: u32,
     /// Per-turn world base cache (`wseed=turn` only; not in `spec()`).
     turn_world_cache: Option<TurnWorldCache>,
-    pub(crate) leaf_value_cache: Arc<Mutex<leaf_cache::LeafValMap>>,
 }
 
 impl Default for H0 {
@@ -1016,7 +1001,6 @@ impl Default for H0 {
             hread: None,
             hreadm: 256,
             turn_world_cache: None,
-            leaf_value_cache: Arc::new(Mutex::new(FxMap::default())),
         }
     }
 }
@@ -1107,20 +1091,6 @@ impl H0 {
             onextwin: self.onextwin,
             onextleaf: self.onextleaf,
         }
-    }
-
-    pub(crate) fn clear_decision_caches(&self) {
-        if let Ok(mut g) = self.leaf_value_cache.lock() {
-            g.clear();
-        }
-    }
-
-    pub(crate) fn bind_leaf_cache(&self) {
-        leaf_cache::bind(Arc::clone(&self.leaf_value_cache));
-    }
-
-    pub(crate) fn unbind_leaf_cache() {
-        leaf_cache::unbind();
     }
 
     fn lethal_cap(&self, nodes: u32) -> u32 {

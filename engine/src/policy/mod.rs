@@ -11,7 +11,6 @@
 mod explain;
 mod fuse_guard;
 mod h0;
-mod leaf_cache;
 mod mulligan;
 mod needs;
 mod net;
