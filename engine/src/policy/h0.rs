@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, OnceLock};
 
 use crate::action::{acting_player, to_neutral, Action};
-use crate::apply::{apply, legal_actions};
+use crate::apply::{apply, apply_known_legal, legal_actions};
 use crate::card::{CardId, CardKind};
 use crate::db::CardDb;
 use crate::determinize::{determinize_block, HreadDeal};
@@ -37,6 +37,8 @@ use crate::search_key::{search_key, search_key_id};
 use crate::state::FIELD_SIZE;
 use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
+
+use super::prof::{self, DupKind, Zone, ZoneGuard};
 
 use super::explain::{
     ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord, HoldbackRecord,
@@ -427,8 +429,15 @@ impl Evaluator<'_> {
             ValueVersion::V0 => value(state, me),
             ValueVersion::V1 => value_v1(state, me, self.needs, self.weights),
             ValueVersion::Net => {
-                let obs = encode_with_vocab(state, me, self.vocab, self.encoding, Some(self.db));
                 let net = self.net.expect("value=net requires a loaded net");
+                let probe_key = || search_key_id(state) ^ ((me as u64) << 56);
+                prof::dup_probe(DupKind::LeafValue, probe_key);
+                prof::dup_probe(DupKind::LeafEncode, probe_key);
+                let obs = {
+                    let _z = ZoneGuard::enter(Zone::LeafEncode);
+                    encode_with_vocab(state, me, self.vocab, self.encoding, Some(self.db))
+                };
+                let _z = ZoneGuard::enter(Zone::LeafForward);
                 if self.clip > 0.0 {
                     net.value_clipped(&obs, self.clip)
                 } else {
@@ -460,7 +469,11 @@ impl Evaluator<'_> {
     }
 
     fn order_leaf(self, state: &State, me: PlayerId, order_net: &ValueNet) -> f32 {
-        let obs = encode_with_vocab(state, me, self.vocab, order_net.encoding, Some(self.db));
+        let obs = {
+            let _z = ZoneGuard::enter(Zone::LeafEncode);
+            encode_with_vocab(state, me, self.vocab, order_net.encoding, Some(self.db))
+        };
+        let _z = ZoneGuard::enter(Zone::OrderNet);
         if self.clip > 0.0 {
             order_net.value_clipped(&obs, self.clip)
         } else {
@@ -1668,7 +1681,7 @@ pub(super) fn line_key(s: &State) -> u64 {
 }
 
 /// [`try_apply`] for `a` taken from `legal_actions(db, state)` of this very state (see [`apply_known_legal`]).
-fn try_apply_legal(
+pub(super) fn try_apply_legal(
     db: &CardDb,
     state: &State,
     a: &Action,
@@ -1755,6 +1768,7 @@ fn search_world(
     hres: u32,
     recording: bool,
 ) -> WorldSearchResult {
+    let _prof = ZoneGuard::enter(Zone::OwnSearch);
     let n_cand = subset.len();
     let mut acc = vec![0.0f32; n_cand];
     let mut n = vec![0u32; n_cand];
@@ -1800,7 +1814,9 @@ fn search_world(
         } else {
             None
         };
-        let Some(s) = try_apply(db, root, a, &mut world_nodes, cap, &[root_key]) else {
+        // Roots differ only in hidden opponent dealing / own deck order (see `determinize_block`);
+        // candidates are legal on the decision state and remain legal on every root.
+        let Some(s) = try_apply_legal(db, root, a, &mut world_nodes, cap, &[root_key]) else {
             if recording {
                 explain[j].push(PvTracker::skipped_world(r as u32, cap));
             }
@@ -2071,12 +2087,17 @@ fn try_take_kill(
     tkroll: u32,
     stats: &mut SearchStats,
 ) -> Option<(usize, ChoosePath)> {
-    let (taken, _) = kill_det_on_roots(db, roots, legal, cand, me, budget, stats);
+    let (taken, _) = {
+        let _prof = ZoneGuard::enter(Zone::Tkill);
+        kill_det_on_roots(db, roots, legal, cand, me, budget, stats)
+    };
     if let Some(idx) = taken {
         return Some((idx, ChoosePath::TakeKill));
     }
-    let (roll_taken, _) =
-        kill_roll_on_roots(db, roots, legal, cand, me, budget, tkroll, stats, None);
+    let (roll_taken, _) = {
+        let _prof = ZoneGuard::enter(Zone::Tkroll);
+        kill_roll_on_roots(db, roots, legal, cand, me, budget, tkroll, stats, None)
+    };
     roll_taken.map(|idx| (idx, ChoosePath::TakeKillRoll))
 }
 
@@ -2124,7 +2145,7 @@ fn is_lethal(
     if matches!(a, Action::EndTurn | Action::Confirm) {
         return false;
     }
-    let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+    let Some(s) = try_apply_legal(db, state, a, nodes, cap, line) else {
         return false;
     };
     if s.winner == Some(me) {
@@ -2173,7 +2194,7 @@ fn one_ply(
             }
             *nodes += 1;
             let mut s = root.clone();
-            if apply(db, &mut s, a.clone()).is_err() {
+            if apply_known_legal(db, &mut s, a.clone()).is_err() {
                 continue;
             }
             let mut v = if s.winner == Some(me) {
@@ -2349,7 +2370,7 @@ fn greedy_pick(
         let (v, evo) = if macro_evolve && matches!(a, Action::Play { .. }) {
             score_play_with_macro(db, state, a, choose_for, search_me, nodes, cap, line, eval)
         } else {
-            let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+            let Some(s) = try_apply_legal(db, state, a, nodes, cap, line) else {
                 continue;
             };
             (eval.pick_value(&s, choose_for, search_me), None)
@@ -2380,7 +2401,7 @@ fn score_play_with_macro(
     line: &[u64],
     eval: Evaluator<'_>,
 ) -> (f32, Option<Action>) {
-    let Some(mut s) = try_apply(db, state, play, nodes, cap, line) else {
+    let Some(mut s) = try_apply_legal(db, state, play, nodes, cap, line) else {
         return (f32::NEG_INFINITY, None);
     };
     let mut line2 = line.to_vec();
@@ -2411,7 +2432,7 @@ fn score_play_with_macro(
                 if *nodes >= cap {
                     break;
                 }
-                let Some(s2) = try_apply(db, &s, &a, nodes, cap, &line2) else {
+                let Some(s2) = try_apply_legal(db, &s, &a, nodes, cap, &line2) else {
                     continue;
                 };
                 per_slot += 1;
@@ -3356,7 +3377,7 @@ fn search_own(
             scored.push((v, s, k, prefix));
             continue;
         }
-        let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+        let Some(s) = try_apply_legal(db, state, a, nodes, cap, line) else {
             continue;
         };
         if s.winner == Some(me) {
@@ -3537,6 +3558,10 @@ fn opponent_open_search(
     stats: &mut SearchStats,
     mut track: Option<&mut PvTracker>,
 ) -> Option<(f32, Option<Line>)> {
+    let _prof = ZoneGuard::enter(Zone::Oopen);
+    prof::dup_probe(DupKind::Oopen, || {
+        search_key_id(state) ^ ((me as u64) << 52)
+    });
     if !opening_node(state, me, d, oopen, eval, *nodes, cap) {
         return None;
     }
@@ -4081,7 +4106,7 @@ fn search_opp_expand(
         if !useful_action(state, opp, a, eval.bpp1, eval.bpp2) {
             continue;
         }
-        let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+        let Some(s) = try_apply_legal(db, state, a, nodes, cap, line) else {
             if *nodes >= cap {
                 *truncated = true;
             }
@@ -4200,7 +4225,7 @@ fn greedy_until_end(
         }
         if let Some(end) = legal.iter().position(|a| matches!(a, Action::EndTurn)) {
             if steps >= eval.osteps {
-                if let Some(next) = try_apply(db, state, &legal[end], nodes, cap, &line) {
+                if let Some(next) = try_apply_legal(db, state, &legal[end], nodes, cap, &line) {
                     if let Some(t) = track.as_deref_mut() {
                         t.push(legal[end].clone());
                     }
@@ -4262,7 +4287,7 @@ fn greedy_until_end_omacro(
         }
         if let Some(end) = legal.iter().position(|a| matches!(a, Action::EndTurn)) {
             if steps >= eval.osteps {
-                if let Some(next) = try_apply(db, state, &legal[end], nodes, cap, &line) {
+                if let Some(next) = try_apply_legal(db, state, &legal[end], nodes, cap, &line) {
                     if let Some(t) = track.as_deref_mut() {
                         t.push(legal[end].clone());
                     }
@@ -4278,7 +4303,7 @@ fn greedy_until_end_omacro(
             GreedyPick::Plain(i) => (i, None),
             GreedyPick::PlayMacro { index, evolve } => (index, Some(evolve)),
         };
-        let Some(next) = try_apply(db, state, &legal[i], nodes, cap, &line) else {
+        let Some(next) = try_apply_legal(db, state, &legal[i], nodes, cap, &line) else {
             break;
         };
         if let Some(t) = track.as_deref_mut() {
@@ -4458,7 +4483,7 @@ fn chip_face_line_state(
         }) else {
             return s;
         };
-        let Some(next) = try_apply(db, &s, a, nodes, cap, &line) else {
+        let Some(next) = try_apply_legal(db, &s, a, nodes, cap, &line) else {
             return s;
         };
         line.push(line_key(&next));
@@ -4489,13 +4514,13 @@ fn resolve_pending_choices(
             .cloned()
             .collect();
         if !chooses.is_empty() {
-            let next = try_apply(db, &s, &chooses[0], nodes, cap, &line)?;
+            let next = try_apply_legal(db, &s, &chooses[0], nodes, cap, &line)?;
             line.push(line_key(&next));
             s = next;
             continue;
         }
         if let Some(a) = legal.iter().find(|a| matches!(a, Action::Confirm)) {
-            let next = try_apply(db, &s, a, nodes, cap, &line)?;
+            let next = try_apply_legal(db, &s, a, nodes, cap, &line)?;
             line.push(line_key(&next));
             s = next;
             continue;
@@ -4573,7 +4598,7 @@ fn face_line_kills(
         }) else {
             break;
         };
-        let Some(next) = try_apply(db, &s, a, nodes, cap, &line) else {
+        let Some(next) = try_apply_legal(db, &s, a, nodes, cap, &line) else {
             return false;
         };
         line.push(line_key(&next));
@@ -4606,7 +4631,7 @@ fn face_line_kills(
         }) else {
             continue;
         };
-        let Some(next) = try_apply(db, &s, a, nodes, cap, &line) else {
+        let Some(next) = try_apply_legal(db, &s, a, nodes, cap, &line) else {
             continue;
         };
         line.push(line_key(&next));
@@ -4811,7 +4836,7 @@ fn evolve_then_face(
         if *nodes >= cap {
             return false;
         }
-        let Some(s) = try_apply(db, state, &a, nodes, cap, line) else {
+        let Some(s) = try_apply_legal(db, state, &a, nodes, cap, line) else {
             continue;
         };
         let mut next_line = line.to_vec();
@@ -4849,7 +4874,7 @@ fn standalone_evolve_kills(
         if !matches!(a, Action::Evolve { .. }) {
             continue;
         }
-        let Some(s) = try_apply(db, state, a, nodes, cap, line) else {
+        let Some(s) = try_apply_legal(db, state, a, nodes, cap, line) else {
             continue;
         };
         let mut next_line = line.to_vec();
@@ -5127,7 +5152,7 @@ fn try_ward_prefix(
                 if *nodes >= cap {
                     return None;
                 }
-                let Some(next) = try_apply(db, &s, &a, nodes, cap, &line) else {
+                let Some(next) = try_apply_legal(db, &s, &a, nodes, cap, &line) else {
                     continue;
                 };
                 let mut nl = line.clone();
@@ -5148,7 +5173,7 @@ fn try_ward_prefix(
                     if *nodes >= cap {
                         break;
                     }
-                    let Some(next) = try_apply(db, &s, &play, nodes, cap, &line) else {
+                    let Some(next) = try_apply_legal(db, &s, &play, nodes, cap, &line) else {
                         continue;
                     };
                     let mut nl = line.clone();
@@ -5356,6 +5381,10 @@ fn opp_lethal_sweep(
     eval: Evaluator<'_>,
     stats: &mut SearchStats,
 ) -> bool {
+    let _prof = ZoneGuard::enter(Zone::OppLethal);
+    prof::dup_probe(DupKind::OppLethal, || {
+        search_key_id(state) ^ ((me as u64) << 48)
+    });
     stats.opp_lethal_checks += 1;
     let start = *nodes;
     let okill = eval.okill;
@@ -5860,7 +5889,7 @@ fn try_lost_rerank(
             };
             let cap = lost_nodes.saturating_add(share).min(lostrank);
             let pair_start = lost_nodes;
-            let Some(s) = try_apply(db, root, a, &mut lost_nodes, cap, &[root_key]) else {
+            let Some(s) = try_apply_legal(db, root, a, &mut lost_nodes, cap, &[root_key]) else {
                 continue;
             };
             let at_fuse_choice = fusemacro && own_fuse_partners(&s, me).is_some();
@@ -6190,7 +6219,7 @@ fn score_search_candidate_pair(
     let root_key = line_key(root);
     let cap = pair_cap;
     let pair_nodes_start = nodes;
-    let s = try_apply(db, root, a, &mut nodes, cap, &[root_key])?;
+    let s = try_apply_legal(db, root, a, &mut nodes, cap, &[root_key])?;
     let at_fuse_choice = fusemacro && own_fuse_partners(&s, me).is_some();
     let search_depth = if at_fuse_choice {
         depth
@@ -6264,6 +6293,7 @@ fn try_holdback_resample(
     explain_rec: &mut Option<ExplainRecord>,
     dec_stats: &mut SearchStats,
 ) -> Option<(usize, f32)> {
+    let _holdback_prof = ZoneGuard::enter(Zone::Holdback);
     if !matches!(subset[end_j], Action::EndTurn) {
         return None;
     }
@@ -6426,6 +6456,7 @@ fn try_holdback_trade(
     explain_rec: &mut Option<ExplainRecord>,
     dec_stats: &mut SearchStats,
 ) -> Option<(usize, f32)> {
+    let _holdback_prof = ZoneGuard::enter(Zone::Holdback);
     if !matches!(subset[end_j], Action::EndTurn) {
         return None;
     }

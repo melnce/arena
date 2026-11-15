@@ -18,12 +18,14 @@ use crate::policy::explain::{
 };
 use crate::policy::fuse_guard::filter_cand_fuseguard;
 
+use super::prof::{self, Zone, ZoneGuard};
 #[cfg(not(target_arch = "wasm32"))]
 use super::try_take_kill_parallel;
+
 use super::{
     all_cands_lost, consensus_lethal, finite, kill_det_on_roots, kill_roll_on_roots, line_key,
     one_ply, own_fuse_partners, root_agg, root_agg_spread, search_own, search_world,
-    tie_set_search, try_apply, try_holdback_resample, try_holdback_trade, try_lost_rerank,
+    tie_set_search, try_apply_legal, try_holdback_resample, try_holdback_trade, try_lost_rerank,
     try_take_kill, useful_action, Alloc, Deal, Info, SearchStats, WorldSearchResult, H0,
 };
 
@@ -366,6 +368,7 @@ fn run_h0_decision_mode(
 ) -> usize {
     h.last_value = None;
     h.last_path = None;
+    prof::reset_decision();
     if mode != JobExecMode::ViaJobPostKill {
         h.stats.decisions += 1;
     }
@@ -764,7 +767,9 @@ fn run_h0_decision_mode(
                         } else {
                             None
                         };
-                        let Some(s) = try_apply(db, root, a, &mut nodes, cap, &[root_key]) else {
+                        // See `search_world` root-pair comment: own-action legality is root-invariant.
+                        let Some(s) = try_apply_legal(db, root, a, &mut nodes, cap, &[root_key])
+                        else {
                             if recording {
                                 explain_cands[j]
                                     .worlds
@@ -1052,7 +1057,10 @@ fn prepare_roots(
         .filter(|(_, a)| useful_action(state, me, a, h.bpp1, h.bpp2))
         .map(|(i, _)| i)
         .collect();
-    let (cand, fuse_dropped) = filter_cand_fuseguard(db, state, me, h.fuseguard, legal, cand);
+    let (cand, fuse_dropped) = {
+        let _z = ZoneGuard::enter(Zone::Fuseguard);
+        filter_cand_fuseguard(db, state, me, h.fuseguard, legal, cand)
+    };
     h.stats.candidates += cand.len() as u64;
     if cand.is_empty() {
         if h.explain_armed {
@@ -1099,6 +1107,7 @@ fn prepare_roots(
         None
     };
     let mut roots = Vec::with_capacity(k as usize);
+    let _world_setup = ZoneGuard::enter(Zone::WorldSetup);
     for (world, seed) in world_seeds.into_iter().enumerate() {
         if h.info == Info::Open {
             let mut open = OpenStats::default();

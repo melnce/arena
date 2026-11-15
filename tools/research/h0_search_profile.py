@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import statistics
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 _HERE = Path(__file__).resolve().parents[2]
 if str(_HERE / "py") not in sys.path:
@@ -15,23 +17,79 @@ if str(_HERE / "py") not in sys.path:
 
 import arena  # noqa: E402
 
+_PY = _HERE / "py"
+_spec = importlib.util.spec_from_file_location("arena_lethal_audit", _PY / "lethal_audit.py")
+assert _spec and _spec.loader
+_mod = importlib.util.module_from_spec(_spec)
+sys.modules["arena_lethal_audit"] = _mod
+_spec.loader.exec_module(_mod)
+audit = _mod
+
+LEAF87Q = Path("/tmp/leaf87q.json")
 SWEEP = (
     "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,"
     "fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,"
     "order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,"
-    "net=/tmp/leaf87q.json,mull=leaf,mulls=256"
+    f"net={LEAF87Q},mull=leaf,mulls=256"
 )
 SERVED = (
     "h0:nodes=64000,horizon=3,k=16,tkill=10000,tkroll=8,hbcheck=2000,"
-    "fuseguard=1,okill=15,hbk=16,alloc=world,threads=8,lostrank=4000,"
+    "fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,"
     "order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,"
-    "net=/tmp/leaf87q.json,mull=leaf,mulls=256"
+    "net=h0-value-v87,mull=leaf,mulls=256"
 )
+QUARTER_K4 = SWEEP.replace("nodes=32000", "nodes=8000").replace("k=8", "k=4").replace(
+    f"net={LEAF87Q}", "net=h0-value-v87"
+)
+QUARTER_K8 = SWEEP.replace("nodes=32000", "nodes=8000").replace(f"net={LEAF87Q}", "net=h0-value-v87")
 
-REVIEW = [
+REVIEW_MOMENTS = [
     ("review13", "4984932781931433298-b4973563.json", 27),
+    ("review13", "4984932781931433298-b4973563.json", 45),
     ("review14", "14600367900189587136-d90f8eb2.json", 69),
+    ("review14", "14600367900189587136-d90f8eb2.json", 40),
+    ("review14", "6598261483642061665-d90f8eb2.json", 27),
+    ("review14", "6598261483642061665-d90f8eb2.json", 52),
+    ("review14", "6598261483642061665-d90f8eb2.json", 91),
+    ("review14", "12644260486301391828-d90f8eb2.json", 15),
+    ("review14", "12644260486301391828-d90f8eb2.json", 35),
+    ("review14", "6598261483642061665-d90f8eb2.json", 60),
+    ("review14", "14600367900189587136-d90f8eb2.json", 55),
+    ("review13", "4984932781931433298-b4973563.json", 60),
 ]
+
+
+def _load_capture(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text())
+
+
+def _bot_explain_seed(cap: dict[str, Any], ply: int) -> int:
+    actions = cap.get("actions") or []
+    if any(
+        s.get("mulligan") is not None or s.get("bot_value") is not None
+        for s in actions[:ply]
+    ):
+        base = int(cap["seed"])
+        n = sum(
+            1
+            for s in actions[:ply]
+            if s.get("mulligan") is not None or s.get("bot_value") is not None
+        )
+        return base + n
+    return int(cap["seed"]) + ply
+
+
+def _replay(db, cap: dict[str, Any], n: int) -> arena.Game:
+    game = arena.Game(
+        db,
+        int(cap["seed"]),
+        cap["deckA"],
+        cap["deckB"],
+        cap.get("first") or "coin",
+    )
+    for step in cap["actions"][:n]:
+        audit.apply_step(game, step)
+    return game
 
 
 def leaf_stats(explain: dict) -> dict[str, float]:
@@ -71,16 +129,16 @@ def leaf_stats(explain: dict) -> dict[str, float]:
     }
 
 
-def profile_spec(spec: str, labels: list[tuple[str, int]]) -> dict:
-    g = arena.Game()
+def profile_spec(spec: str, moments: list[tuple[Path, int]]) -> dict:
     db = arena.default_db()
     times: list[float] = []
     rows: list[dict[str, float]] = []
-    for path, ply in labels:
-        cap = json.loads(Path(path).read_text())
-        seed = cap["seed"] + ply
+    for path, ply in moments:
+        cap = _load_capture(path)
+        game = _replay(db, cap, ply)
+        seed = _bot_explain_seed(cap, ply)
         t0 = time.perf_counter()
-        exp = g.bot_action_explain(spec, seed)
+        exp = game.bot_action_explain(spec, seed)
         dt = time.perf_counter() - t0
         times.append(dt)
         rows.append(leaf_stats(exp))
@@ -88,7 +146,7 @@ def profile_spec(spec: str, labels: list[tuple[str, int]]) -> dict:
     return {
         "spec": spec,
         "wall_ms_per_decision": statistics.mean(times) * 1000,
-        "n": len(labels),
+        "n": len(moments),
         **agg,
     }
 
@@ -96,13 +154,16 @@ def profile_spec(spec: str, labels: list[tuple[str, int]]) -> dict:
 def main() -> int:
     fixtures = _HERE / "py/tests/fixtures"
     review_paths = [
-        (fixtures / rev / "games" / game, ply)
-        for rev, game, ply in REVIEW
+        (fixtures / review / "games" / game, ply) for review, game, ply in REVIEW_MOMENTS
     ]
-    # meta scan: reuse arena helper if available
+    if not LEAF87Q.is_file():
+        print(f"missing leaf: {LEAF87Q}", file=sys.stderr)
+        return 2
     out = {
-        "sweep_scale": profile_spec(SWEEP, [(str(p), ply) for p, ply in review_paths]),
-        "served": profile_spec(SERVED, [(str(p), ply) for p, ply in review_paths]),
+        "sweep_scale": profile_spec(SWEEP, review_paths),
+        "served": profile_spec(SERVED, review_paths),
+        "quarter_k4": profile_spec(QUARTER_K4, review_paths),
+        "quarter_k8": profile_spec(QUARTER_K8, review_paths),
     }
     art = Path("/opt/cursor/artifacts/h0_search_profile.json")
     art.parent.mkdir(parents=True, exist_ok=True)
