@@ -457,18 +457,25 @@ fn bench_env_single_case() {
 #[test]
 #[ignore = "writes /opt/cursor/artifacts/h0_interleaved_ab.json"]
 fn write_interleaved_ab_timing() {
-    let baseline = std::env::var("H0_SPEED_BASELINE_EXE").expect(
-        "set H0_SPEED_BASELINE_EXE to release h0_speed_profile test binary (edde4b5 build)",
-    );
-    let head = std::env::var("H0_SPEED_HEAD_EXE")
-        .unwrap_or_else(|_| std::env::var("CARGO_BIN_EXE_h0_speed_profile").expect("head exe"));
+    let baseline_dir =
+        std::env::var("H0_SPEED_BASELINE_DIR").expect("set H0_SPEED_BASELINE_DIR (edde4b5 worktree)");
+    let head_dir = std::env::var("H0_SPEED_HEAD_DIR")
+        .unwrap_or_else(|_| repo_root().to_string_lossy().into_owned());
     let db = load_recorded_db();
     let mut cases = review_cases(&db);
     cases.extend(meta_selfplay_cases(&db));
-    let run_one = |exe: &str, spec: &str, idx: usize| -> f64 {
-        let out = std::process::Command::new(exe)
+    let run_one = |dir: &str, spec: &str, idx: usize| -> f64 {
+        let out = std::process::Command::new("cargo")
+            .current_dir(dir)
             .args([
+                "test",
+                "--release",
+                "-p",
+                "arena-engine",
+                "--test",
+                "h0_speed_profile",
                 "bench_env_single_case",
+                "--",
                 "--ignored",
                 "--exact",
                 "--nocapture",
@@ -499,11 +506,11 @@ fn write_interleaved_ab_timing() {
         let mut head_ms = Vec::with_capacity(cases.len());
         for i in 0..cases.len() {
             if i % 2 == 0 {
-                base_ms.push(run_one(&baseline, spec, i));
-                head_ms.push(run_one(&head, spec, i));
+                base_ms.push(run_one(&baseline_dir, spec, i));
+                head_ms.push(run_one(&head_dir, spec, i));
             } else {
-                head_ms.push(run_one(&head, spec, i));
-                base_ms.push(run_one(&baseline, spec, i));
+                head_ms.push(run_one(&head_dir, spec, i));
+                base_ms.push(run_one(&baseline_dir, spec, i));
             }
         }
         let mean = |xs: &[f64]| xs.iter().sum::<f64>() / xs.len().max(1) as f64;
