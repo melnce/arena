@@ -457,8 +457,8 @@ fn bench_env_single_case() {
 #[test]
 #[ignore = "writes /opt/cursor/artifacts/h0_interleaved_ab.json"]
 fn write_interleaved_ab_timing() {
-    let baseline_dir =
-        std::env::var("H0_SPEED_BASELINE_DIR").expect("set H0_SPEED_BASELINE_DIR (edde4b5 worktree)");
+    let baseline_dir = std::env::var("H0_SPEED_BASELINE_DIR")
+        .expect("set H0_SPEED_BASELINE_DIR (edde4b5 worktree)");
     let head_dir = std::env::var("H0_SPEED_HEAD_DIR")
         .unwrap_or_else(|_| repo_root().to_string_lossy().into_owned());
     let db = load_recorded_db();
