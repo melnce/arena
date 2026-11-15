@@ -42,7 +42,7 @@ impl ZoneGuard {
 pub fn reset_decision() {}
 
 #[inline]
-pub fn dup_probe(_kind: DupKind, _key: u64) -> bool {
+pub fn dup_probe(_kind: DupKind, _key: impl FnOnce() -> u64) -> bool {
     false
 }
 

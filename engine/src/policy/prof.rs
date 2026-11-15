@@ -150,7 +150,8 @@ pub fn reset_decision() {
 
 /// Record a lookup; returns `true` when this key was seen before in this decision.
 #[inline]
-pub fn dup_probe(kind: DupKind, key: u64) -> bool {
+pub fn dup_probe(kind: DupKind, key: impl FnOnce() -> u64) -> bool {
+    let key = key();
     let tag = kind as u8;
     let p = prof();
     let d = &p.dups[kind as usize];

@@ -767,6 +767,7 @@ fn run_h0_decision_mode(
                         } else {
                             None
                         };
+                        // See `search_world` root-pair comment: own-action legality is root-invariant.
                         let Some(s) = try_apply_legal(db, root, a, &mut nodes, cap, &[root_key])
                         else {
                             if recording {

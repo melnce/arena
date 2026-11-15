@@ -413,9 +413,9 @@ impl Evaluator<'_> {
             ValueVersion::V1 => value_v1(state, me, self.needs, self.weights),
             ValueVersion::Net => {
                 let net = self.net.expect("value=net requires a loaded net");
-                let key = search_key_id(state) ^ ((me as u64) << 56);
-                prof::dup_probe(DupKind::LeafValue, key);
-                prof::dup_probe(DupKind::LeafEncode, key);
+                let probe_key = || search_key_id(state) ^ ((me as u64) << 56);
+                prof::dup_probe(DupKind::LeafValue, probe_key);
+                prof::dup_probe(DupKind::LeafEncode, probe_key);
                 let obs = {
                     let _z = ZoneGuard::enter(Zone::LeafEncode);
                     encode_with_vocab(state, me, self.vocab, self.encoding, Some(self.db))
@@ -1797,6 +1797,8 @@ fn search_world(
         } else {
             None
         };
+        // Roots differ only in hidden opponent dealing / own deck order (see `determinize_block`);
+        // candidates are legal on the decision state and remain legal on every root.
         let Some(s) = try_apply_legal(db, root, a, &mut world_nodes, cap, &[root_key]) else {
             if recording {
                 explain[j].push(PvTracker::skipped_world(r as u32, cap));
@@ -3540,8 +3542,9 @@ fn opponent_open_search(
     mut track: Option<&mut PvTracker>,
 ) -> Option<(f32, Option<Line>)> {
     let _prof = ZoneGuard::enter(Zone::Oopen);
-    let dup_key = search_key_id(state) ^ ((me as u64) << 52);
-    prof::dup_probe(DupKind::Oopen, dup_key);
+    prof::dup_probe(DupKind::Oopen, || {
+        search_key_id(state) ^ ((me as u64) << 52)
+    });
     if !opening_node(state, me, d, oopen, eval, *nodes, cap) {
         return None;
     }
@@ -5362,8 +5365,9 @@ fn opp_lethal_sweep(
     stats: &mut SearchStats,
 ) -> bool {
     let _prof = ZoneGuard::enter(Zone::OppLethal);
-    let dup_key = search_key_id(state) ^ ((me as u64) << 48);
-    prof::dup_probe(DupKind::OppLethal, dup_key);
+    prof::dup_probe(DupKind::OppLethal, || {
+        search_key_id(state) ^ ((me as u64) << 48)
+    });
     stats.opp_lethal_checks += 1;
     let start = *nodes;
     let okill = eval.okill;

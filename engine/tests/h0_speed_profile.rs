@@ -280,6 +280,16 @@ struct Row {
     n: usize,
 }
 
+fn bench_case_ms(db: &CardDb, spec: &str, case: &Case) -> f64 {
+    let legal = legal_actions(db, &case.state);
+    let mut h0 = parse_h0(spec);
+    h0.threads = 1;
+    let mut rng = policy_rng(case.seed);
+    let t0 = Instant::now();
+    let _ = h0.choose(db, &case.state, &legal, &mut rng);
+    t0.elapsed().as_secs_f64() * 1000.0
+}
+
 fn bench_spec(db: &CardDb, spec: &str, cases: &[Case]) -> Row {
     let mut ms = Vec::with_capacity(cases.len());
     let mut nodes = Vec::with_capacity(cases.len());
@@ -426,6 +436,99 @@ fn quarter_selfplay_game_seconds(db: &CardDb, _spec: &str, k: u8) -> f64 {
         }
     }
     t0.elapsed().as_secs_f64()
+}
+
+/// One decision wall ms on stdout (used by `tools/research/h0_interleaved_ab.sh`).
+#[test]
+#[ignore = "env: H0_SPEC, H0_CASE_IDX"]
+fn bench_env_single_case() {
+    let idx: usize = std::env::var("H0_CASE_IDX")
+        .expect("H0_CASE_IDX")
+        .parse()
+        .expect("idx");
+    let spec = std::env::var("H0_SPEC").expect("H0_SPEC");
+    let db = load_recorded_db();
+    let mut cases = review_cases(&db);
+    cases.extend(meta_selfplay_cases(&db));
+    let ms = bench_case_ms(&db, &spec, &cases[idx]);
+    println!("{ms}");
+}
+
+#[test]
+#[ignore = "writes /opt/cursor/artifacts/h0_interleaved_ab.json"]
+fn write_interleaved_ab_timing() {
+    let baseline = std::env::var("H0_SPEED_BASELINE_EXE").expect(
+        "set H0_SPEED_BASELINE_EXE to release h0_speed_profile test binary (edde4b5 build)",
+    );
+    let head = std::env::var("H0_SPEED_HEAD_EXE")
+        .unwrap_or_else(|_| std::env::var("CARGO_BIN_EXE_h0_speed_profile").expect("head exe"));
+    let db = load_recorded_db();
+    let mut cases = review_cases(&db);
+    cases.extend(meta_selfplay_cases(&db));
+    let run_one = |exe: &str, spec: &str, idx: usize| -> f64 {
+        let out = std::process::Command::new(exe)
+            .args([
+                "bench_env_single_case",
+                "--ignored",
+                "--exact",
+                "--nocapture",
+                "--quiet",
+            ])
+            .env("H0_SPEC", spec)
+            .env("H0_CASE_IDX", idx.to_string())
+            .output()
+            .expect("run case");
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        std::str::from_utf8(&out.stdout)
+            .expect("utf8")
+            .lines()
+            .find_map(|l| l.trim().parse::<f64>().ok())
+            .expect("ms line")
+    };
+    for spec in [SWEEP, SERVED] {
+        let spec_name = if spec.contains("nodes=32000") {
+            "sweep"
+        } else {
+            "served"
+        };
+        let mut base_ms = Vec::with_capacity(cases.len());
+        let mut head_ms = Vec::with_capacity(cases.len());
+        for i in 0..cases.len() {
+            if i % 2 == 0 {
+                base_ms.push(run_one(&baseline, spec, i));
+                head_ms.push(run_one(&head, spec, i));
+            } else {
+                head_ms.push(run_one(&head, spec, i));
+                base_ms.push(run_one(&baseline, spec, i));
+            }
+        }
+        let mean = |xs: &[f64]| xs.iter().sum::<f64>() / xs.len().max(1) as f64;
+        let bmean = mean(&base_ms);
+        let hmean = mean(&head_ms);
+        let report = serde_json::json!({
+            "spec": spec_name,
+            "cases": cases.len(),
+            "edde4b5_ms_mean": bmean,
+            "head_ms_mean": hmean,
+            "speedup_ratio": bmean / hmean,
+            "pct_saved": (1.0 - hmean / bmean) * 100.0,
+        });
+        let path = std::path::Path::new("/opt/cursor/artifacts/h0_interleaved_ab.json");
+        std::fs::create_dir_all(path.parent().unwrap()).ok();
+        let mut all: serde_json::Map<String, serde_json::Value> = if path.exists() {
+            serde_json::from_str(&fs::read_to_string(path).unwrap()).unwrap_or_default()
+        } else {
+            serde_json::Map::new()
+        };
+        let report_print = report.clone();
+        all.insert(spec_name.to_string(), report);
+        fs::write(path, serde_json::to_string_pretty(&all).unwrap()).expect("write");
+        println!("{}", serde_json::to_string_pretty(&report_print).unwrap());
+    }
 }
 
 #[test]
