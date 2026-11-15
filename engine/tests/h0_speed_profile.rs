@@ -383,7 +383,7 @@ fn write_prof_artifact() {
     println!("{}", serde_json::to_string_pretty(&report).unwrap());
 }
 
-fn quarter_selfplay_game_seconds(db: &CardDb, spec: &str, k: u8) -> f64 {
+fn quarter_selfplay_game_seconds(db: &CardDb, _spec: &str, k: u8) -> f64 {
     let spec = if k == 4 {
         QUARTER_K4.to_string()
     } else {
