@@ -14,7 +14,9 @@
 //! leaf; `info` is a search-time knob only.
 
 use std::collections::HashMap;
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
+
+use crate::fxhash::FxMap;
 
 use crate::action::{acting_player, to_neutral, Action};
 use crate::apply::{apply, apply_known_legal, legal_actions};
@@ -37,6 +39,9 @@ use crate::search_key::{search_key, search_key_id};
 use crate::state::FIELD_SIZE;
 use crate::state::{ChoiceNode, Phase, PlayerState, State};
 use crate::trace::{ChooseOptionJson, NeutralAction};
+
+use super::leaf_cache;
+use super::prof::{self, DupKind, Zone, ZoneGuard};
 
 use super::explain::{
     ChoosePath, ExplainRecord, HoldbackAttackRecord, HoldbackBranchWorldRecord, HoldbackRecord,
@@ -410,13 +415,31 @@ impl Evaluator<'_> {
             ValueVersion::V0 => value(state, me),
             ValueVersion::V1 => value_v1(state, me, self.needs, self.weights),
             ValueVersion::Net => {
-                let obs = encode_with_vocab(state, me, self.vocab, self.encoding, Some(self.db));
                 let net = self.net.expect("value=net requires a loaded net");
-                if self.clip > 0.0 {
+                let key = (
+                    search_key_id(state),
+                    me as u8,
+                    std::ptr::from_ref(net) as u64,
+                    self.clip.to_bits(),
+                );
+                if let Some(v) = leaf_cache::get(&key) {
+                    return v;
+                }
+                let prof_key = key.0 ^ ((key.1 as u64) << 56);
+                prof::dup_probe(DupKind::LeafValue, prof_key);
+                prof::dup_probe(DupKind::LeafEncode, prof_key);
+                let obs = {
+                    let _z = ZoneGuard::enter(Zone::LeafEncode);
+                    encode_with_vocab(state, me, self.vocab, self.encoding, Some(self.db))
+                };
+                let _z = ZoneGuard::enter(Zone::LeafForward);
+                let v = if self.clip > 0.0 {
                     net.value_clipped(&obs, self.clip)
                 } else {
                     net.value(&obs)
-                }
+                };
+                leaf_cache::insert(key, v);
+                v
             }
         }
     }
@@ -443,7 +466,11 @@ impl Evaluator<'_> {
     }
 
     fn order_leaf(self, state: &State, me: PlayerId, order_net: &ValueNet) -> f32 {
-        let obs = encode_with_vocab(state, me, self.vocab, order_net.encoding, Some(self.db));
+        let obs = {
+            let _z = ZoneGuard::enter(Zone::LeafEncode);
+            encode_with_vocab(state, me, self.vocab, order_net.encoding, Some(self.db))
+        };
+        let _z = ZoneGuard::enter(Zone::OrderNet);
         if self.clip > 0.0 {
             order_net.value_clipped(&obs, self.clip)
         } else {
@@ -919,6 +946,7 @@ pub struct H0 {
     pub hreadm: u32,
     /// Per-turn world base cache (`wseed=turn` only; not in `spec()`).
     turn_world_cache: Option<TurnWorldCache>,
+    pub(crate) leaf_value_cache: Arc<Mutex<leaf_cache::LeafValMap>>,
 }
 
 impl Default for H0 {
@@ -988,6 +1016,7 @@ impl Default for H0 {
             hread: None,
             hreadm: 256,
             turn_world_cache: None,
+            leaf_value_cache: Arc::new(Mutex::new(FxMap::default())),
         }
     }
 }
@@ -1078,6 +1107,20 @@ impl H0 {
             onextwin: self.onextwin,
             onextleaf: self.onextleaf,
         }
+    }
+
+    pub(crate) fn clear_decision_caches(&self) {
+        if let Ok(mut g) = self.leaf_value_cache.lock() {
+            g.clear();
+        }
+    }
+
+    pub(crate) fn bind_leaf_cache(&self) {
+        leaf_cache::bind(Arc::clone(&self.leaf_value_cache));
+    }
+
+    pub(crate) fn unbind_leaf_cache() {
+        leaf_cache::unbind();
     }
 
     fn lethal_cap(&self, nodes: u32) -> u32 {
@@ -1738,6 +1781,7 @@ fn search_world(
     hres: u32,
     recording: bool,
 ) -> WorldSearchResult {
+    let _prof = ZoneGuard::enter(Zone::OwnSearch);
     let n_cand = subset.len();
     let mut acc = vec![0.0f32; n_cand];
     let mut n = vec![0u32; n_cand];
@@ -2054,12 +2098,17 @@ fn try_take_kill(
     tkroll: u32,
     stats: &mut SearchStats,
 ) -> Option<(usize, ChoosePath)> {
-    let (taken, _) = kill_det_on_roots(db, roots, legal, cand, me, budget, stats);
+    let (taken, _) = {
+        let _prof = ZoneGuard::enter(Zone::Tkill);
+        kill_det_on_roots(db, roots, legal, cand, me, budget, stats)
+    };
     if let Some(idx) = taken {
         return Some((idx, ChoosePath::TakeKill));
     }
-    let (roll_taken, _) =
-        kill_roll_on_roots(db, roots, legal, cand, me, budget, tkroll, stats, None);
+    let (roll_taken, _) = {
+        let _prof = ZoneGuard::enter(Zone::Tkroll);
+        kill_roll_on_roots(db, roots, legal, cand, me, budget, tkroll, stats, None)
+    };
     roll_taken.map(|idx| (idx, ChoosePath::TakeKillRoll))
 }
 
@@ -3520,6 +3569,9 @@ fn opponent_open_search(
     stats: &mut SearchStats,
     mut track: Option<&mut PvTracker>,
 ) -> Option<(f32, Option<Line>)> {
+    let _prof = ZoneGuard::enter(Zone::Oopen);
+    let dup_key = search_key_id(state) ^ ((me as u64) << 52);
+    prof::dup_probe(DupKind::Oopen, dup_key);
     if !opening_node(state, me, d, oopen, eval, *nodes, cap) {
         return None;
     }
@@ -5339,6 +5391,9 @@ fn opp_lethal_sweep(
     eval: Evaluator<'_>,
     stats: &mut SearchStats,
 ) -> bool {
+    let _prof = ZoneGuard::enter(Zone::OppLethal);
+    let dup_key = search_key_id(state) ^ ((me as u64) << 48);
+    prof::dup_probe(DupKind::OppLethal, dup_key);
     stats.opp_lethal_checks += 1;
     let start = *nodes;
     let okill = eval.okill;
@@ -6247,6 +6302,7 @@ fn try_holdback_resample(
     explain_rec: &mut Option<ExplainRecord>,
     dec_stats: &mut SearchStats,
 ) -> Option<(usize, f32)> {
+    let _holdback_prof = ZoneGuard::enter(Zone::Holdback);
     if !matches!(subset[end_j], Action::EndTurn) {
         return None;
     }
@@ -6409,6 +6465,7 @@ fn try_holdback_trade(
     explain_rec: &mut Option<ExplainRecord>,
     dec_stats: &mut SearchStats,
 ) -> Option<(usize, f32)> {
+    let _holdback_prof = ZoneGuard::enter(Zone::Holdback);
     if !matches!(subset[end_j], Action::EndTurn) {
         return None;
     }

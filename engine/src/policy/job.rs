@@ -18,8 +18,10 @@ use crate::policy::explain::{
 };
 use crate::policy::fuse_guard::filter_cand_fuseguard;
 
+use super::prof::{self, Zone, ZoneGuard};
 #[cfg(not(target_arch = "wasm32"))]
 use super::try_take_kill_parallel;
+
 use super::{
     all_cands_lost, consensus_lethal, finite, kill_det_on_roots, kill_roll_on_roots, line_key,
     one_ply, own_fuse_partners, root_agg, root_agg_spread, search_own, search_world,
@@ -366,6 +368,16 @@ fn run_h0_decision_mode(
 ) -> usize {
     h.last_value = None;
     h.last_path = None;
+    prof::reset_decision();
+    h.clear_decision_caches();
+    h.bind_leaf_cache();
+    struct LeafCacheScope;
+    impl Drop for LeafCacheScope {
+        fn drop(&mut self) {
+            H0::unbind_leaf_cache();
+        }
+    }
+    let _leaf_cache_scope = LeafCacheScope;
     if mode != JobExecMode::ViaJobPostKill {
         h.stats.decisions += 1;
     }
@@ -665,21 +677,27 @@ fn run_h0_decision_mode(
                 };
                 #[cfg(not(target_arch = "wasm32"))]
                 if mode == JobExecMode::Direct && h.threads > 1 {
+                    use super::leaf_cache;
                     use std::sync::atomic::{AtomicUsize, Ordering};
                     let slots: Vec<std::sync::Mutex<Option<WorldSearchResult>>> = (0..roots.len())
                         .map(|_| std::sync::Mutex::new(None))
                         .collect();
                     let next = AtomicUsize::new(0);
                     let workers = h.threads.min(k).max(1) as usize;
+                    let worker_cache = std::sync::Arc::clone(&h.leaf_value_cache);
                     std::thread::scope(|s| {
                         for _ in 0..workers {
-                            s.spawn(|| loop {
-                                let r = next.fetch_add(1, Ordering::Relaxed);
-                                if r >= roots.len() {
-                                    break;
+                            s.spawn(|| {
+                                leaf_cache::bind(worker_cache.clone());
+                                loop {
+                                    let r = next.fetch_add(1, Ordering::Relaxed);
+                                    if r >= roots.len() {
+                                        break;
+                                    }
+                                    let wr = run_world(r);
+                                    *slots[r].lock().unwrap() = Some(wr);
                                 }
-                                let wr = run_world(r);
-                                *slots[r].lock().unwrap() = Some(wr);
+                                leaf_cache::unbind();
                             });
                         }
                     });
@@ -1053,7 +1071,10 @@ fn prepare_roots(
         .filter(|(_, a)| useful_action(state, me, a, h.bpp1, h.bpp2))
         .map(|(i, _)| i)
         .collect();
-    let (cand, fuse_dropped) = filter_cand_fuseguard(db, state, me, h.fuseguard, legal, cand);
+    let (cand, fuse_dropped) = {
+        let _z = ZoneGuard::enter(Zone::Fuseguard);
+        filter_cand_fuseguard(db, state, me, h.fuseguard, legal, cand)
+    };
     h.stats.candidates += cand.len() as u64;
     if cand.is_empty() {
         if h.explain_armed {
@@ -1100,6 +1121,7 @@ fn prepare_roots(
         None
     };
     let mut roots = Vec::with_capacity(k as usize);
+    let _world_setup = ZoneGuard::enter(Zone::WorldSetup);
     for (world, seed) in world_seeds.into_iter().enumerate() {
         if h.info == Info::Open {
             let mut open = OpenStats::default();

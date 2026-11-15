@@ -68,6 +68,8 @@ pub use policy::{
     BUILTIN_VALUE_V73_NAME, BUILTIN_VALUE_V75_NAME, BUILTIN_VALUE_V77_NAME, BUILTIN_VALUE_V83_NAME,
     BUILTIN_VALUE_V87_NAME, H0,
 };
+#[cfg(feature = "h0-prof")]
+pub use policy::{merge_decisions, take_decision, DecisionProf, DupRow, ZoneRow};
 pub use rng::{policy_rng, GameRng, Xoshiro256ss};
 pub use search_key::{lethal_key, search_key, search_key_id};
 pub use snapshot::{hash, snapshot, snapshot_json};

@@ -11,9 +11,16 @@
 mod explain;
 mod fuse_guard;
 mod h0;
+mod leaf_cache;
 mod mulligan;
 mod needs;
 mod net;
+#[cfg(feature = "h0-prof")]
+#[path = "prof.rs"]
+mod prof;
+#[cfg(not(feature = "h0-prof"))]
+#[path = "prof_stub.rs"]
+mod prof;
 mod record;
 
 use crate::determinize::{HREAD_DELTA, HREAD_EPS_FA, HREAD_EPS_S};
@@ -41,6 +48,8 @@ pub use mulligan::{
 };
 pub use needs::{CardNeeds, NeedsTable, SkippedAmount};
 pub use net::{NetArch, ValueNet};
+#[cfg(feature = "h0-prof")]
+pub use prof::{merge_decisions, take_decision, DecisionProf, DupKind, DupRow, Zone, ZoneRow};
 pub use record::{Recorder, Sample};
 
 use crate::action::Action;

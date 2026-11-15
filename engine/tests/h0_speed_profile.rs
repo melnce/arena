@@ -348,3 +348,96 @@ fn write_speed_timing_artifact() {
     fs::write(path, serde_json::to_string_pretty(&report).unwrap()).expect("write");
     println!("{}", serde_json::to_string_pretty(&report).unwrap());
 }
+
+#[cfg(feature = "h0-prof")]
+fn bench_spec_prof(db: &CardDb, spec: &str, cases: &[Case]) -> arena_engine::DecisionProf {
+    use arena_engine::{merge_decisions, take_decision};
+    let mut rows = Vec::with_capacity(cases.len());
+    for case in cases {
+        let legal = legal_actions(db, &case.state);
+        let mut h0 = parse_h0(spec);
+        h0.threads = 1;
+        let mut rng = policy_rng(case.seed);
+        let t0 = Instant::now();
+        let _ = h0.choose(db, &case.state, &legal, &mut rng);
+        rows.push(take_decision(t0.elapsed()));
+    }
+    merge_decisions(&rows)
+}
+
+#[test]
+#[ignore = "writes /opt/cursor/artifacts/h0_prof_sweep_served.json"]
+#[cfg(feature = "h0-prof")]
+fn write_prof_artifact() {
+    let db = load_recorded_db();
+    let mut cases = review_cases(&db);
+    cases.extend(meta_selfplay_cases(&db));
+    let report = serde_json::json!({
+        "cases": cases.len(),
+        "sweep": bench_spec_prof(&db, SWEEP, &cases),
+        "served": bench_spec_prof(&db, SERVED, &cases),
+    });
+    let path = std::path::Path::new("/opt/cursor/artifacts/h0_prof_sweep_served.json");
+    std::fs::create_dir_all(path.parent().unwrap()).ok();
+    fs::write(path, serde_json::to_string_pretty(&report).unwrap()).expect("write");
+    println!("{}", serde_json::to_string_pretty(&report).unwrap());
+}
+
+fn quarter_selfplay_game_seconds(db: &CardDb, spec: &str, k: u8) -> f64 {
+    let spec = if k == 4 {
+        QUARTER_K4.to_string()
+    } else {
+        QUARTER_K8.to_string()
+    };
+    let text = fs::read_to_string(repo_root().join("oracle/decks/POOLS.json")).expect("POOLS");
+    let pools: Value = serde_json::from_str(&text).expect("json");
+    let stem = pools["meta"]
+        .as_array()
+        .expect("meta")
+        .iter()
+        .find(|v| v.as_str() != Some("meta-rune-test-subject"))
+        .and_then(|v| v.as_str())
+        .expect("stem");
+    let deck = load_deck_file(repo_root().join(format!("oracle/decks/{stem}.json")));
+    let seed = 20261099u64;
+    let mut state = new_game(
+        db,
+        GameConfig {
+            seed,
+            deck_a: deck.clone(),
+            deck_b: deck,
+            first: First::A,
+            opening_hands: None,
+        },
+    )
+    .expect("new_game");
+    let mut pol = parse_h0(&spec);
+    pol.threads = 1;
+    let mut rng = policy_rng(seed);
+    let t0 = Instant::now();
+    while state.winner.is_none() && !matches!(state.phase, Phase::Terminal) {
+        let legal = legal_actions(db, &state);
+        if legal.is_empty() {
+            break;
+        }
+        let idx = pol.choose(db, &state, &legal, &mut rng);
+        if apply(db, &mut state, legal[idx].clone()).is_err() {
+            break;
+        }
+    }
+    t0.elapsed().as_secs_f64()
+}
+
+#[test]
+#[ignore = "quarter-scale self-play wall time"]
+fn write_quarter_selfplay_timing() {
+    let db = load_recorded_db();
+    let report = serde_json::json!({
+        "quarter_k4_game_s": quarter_selfplay_game_seconds(&db, QUARTER_K4, 4),
+        "quarter_k8_game_s": quarter_selfplay_game_seconds(&db, QUARTER_K8, 8),
+    });
+    let path = std::path::Path::new("/opt/cursor/artifacts/h0_quarter_selfplay.json");
+    std::fs::create_dir_all(path.parent().unwrap()).ok();
+    fs::write(path, serde_json::to_string_pretty(&report).unwrap()).expect("write");
+    println!("{}", serde_json::to_string_pretty(&report).unwrap());
+}
