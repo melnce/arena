@@ -281,7 +281,7 @@ pub fn builtin_value_v87() -> Arc<ValueNet> {
 }
 
 const BUILTIN_VALUE_V89_JSON: &str = include_str!("../../models/h0-value-v89.json");
-/// Committed name of the served-bot residual value leaf since brief YY (`engine/models/h0-value-v89.json`).
+/// Committed name of the served-bot residual value leaf from brief YY to brief ZC (`engine/models/h0-value-v89.json`).
 pub const BUILTIN_VALUE_V89_NAME: &str = "h0-value-v89";
 static BUILTIN_VALUE_V89: OnceLock<Arc<ValueNet>> = OnceLock::new();
 
@@ -296,7 +296,23 @@ pub fn builtin_value_v89() -> Arc<ValueNet> {
         .clone()
 }
 
-/// Resolve a built-in value leaf by committed name (`builtin`, `h0-linear-v4`, `h0-value-v64`, `h0-value-v65`, `h0-value-v66`, `h0-value-v69`, `h0-value-v73`, `h0-value-v75`, `h0-value-v77`, `h0-value-v83`, `h0-value-v87`, `h0-value-v89`).
+const BUILTIN_VALUE_V92_JSON: &str = include_str!("../../models/h0-value-v92.json");
+/// Committed name of the served-bot residual value leaf since brief ZC (`engine/models/h0-value-v92.json`).
+pub const BUILTIN_VALUE_V92_NAME: &str = "h0-value-v92";
+static BUILTIN_VALUE_V92: OnceLock<Arc<ValueNet>> = OnceLock::new();
+
+/// The built-in `h0-value-v92` residual leaf, parsed once. A parse failure is a
+/// build defect.
+pub fn builtin_value_v92() -> Arc<ValueNet> {
+    BUILTIN_VALUE_V92
+        .get_or_init(|| {
+            ValueNet::from_json_named(BUILTIN_VALUE_V92_NAME, BUILTIN_VALUE_V92_JSON)
+                .expect("built-in h0-value-v92 parses")
+        })
+        .clone()
+}
+
+/// Resolve a built-in value leaf by committed name (`builtin`, `h0-linear-v4`, `h0-value-v64`, `h0-value-v65`, `h0-value-v66`, `h0-value-v69`, `h0-value-v73`, `h0-value-v75`, `h0-value-v77`, `h0-value-v83`, `h0-value-v87`, `h0-value-v89`, `h0-value-v92`).
 pub fn builtin_net_by_name(name: &str) -> Option<Arc<ValueNet>> {
     match name {
         "builtin" | BUILTIN_NET_NAME => Some(builtin_net()),
@@ -310,6 +326,7 @@ pub fn builtin_net_by_name(name: &str) -> Option<Arc<ValueNet>> {
         BUILTIN_VALUE_V83_NAME => Some(builtin_value_v83()),
         BUILTIN_VALUE_V87_NAME => Some(builtin_value_v87()),
         BUILTIN_VALUE_V89_NAME => Some(builtin_value_v89()),
+        BUILTIN_VALUE_V92_NAME => Some(builtin_value_v92()),
         _ => None,
     }
 }
