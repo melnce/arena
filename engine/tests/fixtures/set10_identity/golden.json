@@ -1,5 +1,5 @@
 {
-  "main_sha": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+  "main_sha": "72ea422162d5c773a59a81dd2e4b716c9c4ce702",
   "generated_by": "ARENA_SET10_IDENTITY_WRITE=1 cargo test --release --test set10_identity -- --nocapture on unmodified main (reads POOLS.json pool \"all\" once; freezes decks+seeds into engine/tests/fixtures/set10_identity/golden.json)",
   "games_per_deck_seat": 8,
   "base_seed": 10010000,
@@ -2868,7 +2868,7 @@
       "seed": 10022006,
       "deck_a": 12,
       "deck_b": 13,
-      "digest": "0xe7027082b5e0425c",
+      "digest": "0x91c34c45c90aa778",
       "final_hash": "0xf97b927a04be12c4"
     },
     {
@@ -5063,5 +5063,5 @@
       "final_hash": "0x03edc5aaf199e446"
     }
   ],
-  "schedule_digest": "0x24e92c8a55698779"
+  "schedule_digest": "0xf430b9bfc0e1aac4"
 }

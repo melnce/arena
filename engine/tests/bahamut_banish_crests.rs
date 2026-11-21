@@ -54,7 +54,7 @@ fn grant_evolve(db: &CardDb, st: &mut State, slot: u8) {
 #[test]
 fn option3_banishes_enemy_crests_keeps_enemy_faith() {
     let db = load_db();
-    let mut st = started(&db, 108041_01);
+    let mut st = started(&db, 10_804_101);
     let me = PlayerId::A;
     let opp = PlayerId::B;
     put_faith_crest(&mut st, opp, SATHANID_FAITH, 4);
@@ -65,17 +65,14 @@ fn option3_banishes_enemy_crests_keeps_enemy_faith() {
     assert_eq!(st.player(opp).faith, 4);
     assert_eq!(
         crest_remove_events(&events),
-        vec![
-            (opp, THESTAE.to_string()),
-            (opp, GREAT_HART.to_string()),
-        ]
+        vec![(opp, THESTAE.to_string()), (opp, GREAT_HART.to_string()),]
     );
 }
 
 #[test]
 fn option3_banishes_both_sides_keeps_both_faiths() {
     let db = load_db();
-    let mut st = started(&db, 108041_02);
+    let mut st = started(&db, 10_804_102);
     let me = PlayerId::A;
     let opp = PlayerId::B;
     put_faith_crest(&mut st, me, SATHANID_FAITH, 2);
@@ -94,7 +91,7 @@ fn option3_banishes_both_sides_keeps_both_faiths() {
 #[test]
 fn option3_banish_fires_no_crest_last_words() {
     let db = load_db();
-    let mut st = started(&db, 108041_03);
+    let mut st = started(&db, 10_804_103);
     let me = PlayerId::A;
     let opp = PlayerId::B;
     put_crest(&mut st, me, STARRY_SKY);
@@ -112,7 +109,7 @@ fn option3_banish_fires_no_crest_last_words() {
 #[test]
 fn destroy_your_crest_still_fires_last_words() {
     let db = load_db();
-    let mut st = started(&db, 108041_04);
+    let mut st = started(&db, 10_804_104);
     let me = PlayerId::A;
     let opp = PlayerId::B;
     put_field(&db, &mut st, opp, "88001110");
@@ -138,7 +135,8 @@ fn destroy_your_crest_still_fires_last_words() {
 fn owner_capture_bahamut_option3() {
     // Origin: captures/2026-11/376746249247561826-f03b433a-808hmo71ga.json @ engine fb67809
     let db = load_db();
-    let path = crate_dir().join("tests/fixtures/captures/376746249247561826-f03b433a-808hmo71ga.json");
+    let path =
+        crate_dir().join("tests/fixtures/captures/376746249247561826-f03b433a-808hmo71ga.json");
     let text = std::fs::read_to_string(&path).expect("capture fixture");
     let cap: serde_json::Value = serde_json::from_str(&text).expect("json");
     let st = replay_capture_to_ply(&db, &cap, 73).expect("replay through action 72");
@@ -153,11 +151,15 @@ fn owner_capture_bahamut_option3() {
 #[test]
 fn option3_banish_crest_does_not_trigger_field_banish_reaction() {
     let db = load_db();
-    let mut st = started(&db, 108041_05);
+    let mut st = started(&db, 10_804_105);
     let me = PlayerId::A;
     put_crest_cd(&mut st, me, STARRY_SKY, 2);
     let hp_before = st.player(me).leader_defense;
     put_field(&db, &mut st, me, "11053110");
     play_bahamut_option3(&db, &mut st, me);
-    assert_eq!(st.player(me).leader_defense, hp_before, "no heal from crest banish");
+    assert_eq!(
+        st.player(me).leader_defense,
+        hp_before,
+        "no heal from crest banish"
+    );
 }
