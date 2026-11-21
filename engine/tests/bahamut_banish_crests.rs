@@ -155,7 +155,6 @@ fn option3_banish_crest_does_not_trigger_field_banish_reaction() {
     let db = load_db();
     let mut st = started(&db, 108041_05);
     let me = PlayerId::A;
-    let opp = PlayerId::B;
     put_crest_cd(&mut st, me, STARRY_SKY, 2);
     let hp_before = st.player(me).leader_defense;
     put_field(&db, &mut st, me, "11053110");
