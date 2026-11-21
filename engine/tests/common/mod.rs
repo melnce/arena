@@ -523,6 +523,123 @@ pub fn put_crest(st: &mut State, who: PlayerId, id: &str) {
         });
 }
 
+pub fn put_crest_cd(st: &mut State, who: PlayerId, id: &str, cd: i32) {
+    let order = st.crest_order;
+    st.crest_order += 1;
+    st.player_mut(who).crests.push(arena_engine::state::CrestInstance {
+        id: id.into(),
+        countdown: Some(cd),
+        faith: false,
+        once_used: vec![],
+        granted_order: order,
+        granted: vec![],
+        choose_used: Default::default(),
+        sequence_index: 0,
+    });
+}
+
+pub fn put_faith_crest(st: &mut State, who: PlayerId, id: &str, faith_value: i32) {
+    let order = st.crest_order;
+    st.crest_order += 1;
+    st.player_mut(who).crests.push(arena_engine::state::CrestInstance {
+        id: id.into(),
+        countdown: None,
+        faith: true,
+        once_used: vec![],
+        granted_order: order,
+        granted: vec![],
+        choose_used: Default::default(),
+        sequence_index: 0,
+    });
+    st.player_mut(who).faith = faith_value;
+}
+
+pub fn crest_ids(st: &State, who: PlayerId) -> Vec<String> {
+    st.player(who)
+        .crests
+        .iter()
+        .map(|c| c.id.clone())
+        .collect()
+}
+
+pub fn replay_capture_actions(
+    db: &CardDb,
+    cap: &serde_json::Value,
+    st: &mut State,
+    from: usize,
+    to: usize,
+) -> Result<(), (usize, arena_engine::Illegal)> {
+    use arena_engine::{apply_neutral, NeutralAction};
+    use serde_json::Value;
+
+    let actions = cap["actions"].as_array().expect("actions");
+    for (i, step) in actions.iter().enumerate().skip(from).take(to - from) {
+        if step.get("reseed").is_some() {
+            st.reseed(step["reseed"].as_u64().expect("reseed"));
+            continue;
+        }
+        let mut body = serde_json::Map::new();
+        for (k, v) in step.as_object().expect("action object") {
+            if k == "value" || k == "bot_value" {
+                continue;
+            }
+            body.insert(k.clone(), v.clone());
+        }
+        let neu: NeutralAction = serde_json::from_value(Value::Object(body)).expect("action");
+        if let Err(e) = apply_neutral(db, st, &neu) {
+            return Err((i, e));
+        }
+    }
+    Ok(())
+}
+
+pub fn replay_capture_to_ply(
+    db: &CardDb,
+    cap: &serde_json::Value,
+    n: usize,
+) -> Result<State, (usize, arena_engine::Illegal)> {
+    use std::collections::BTreeMap;
+
+    fn deck_from_json(v: &serde_json::Value) -> Vec<CardId> {
+        let map = v.as_object().expect("deck object");
+        let mut sorted = BTreeMap::new();
+        for (id, n) in map {
+            sorted.insert(id.clone(), n.as_u64().unwrap_or(0) as usize);
+        }
+        let mut out = Vec::new();
+        for (id, count) in sorted {
+            let cid = CardId::parse(&id).unwrap_or_else(|| panic!("bad id {id}"));
+            out.extend(std::iter::repeat_n(cid, count));
+        }
+        out
+    }
+
+    let seed = cap["seed"]
+        .as_u64()
+        .or_else(|| cap["seed"].as_str().and_then(|s| s.parse().ok()))
+        .expect("seed");
+    let deck_a = deck_from_json(&cap["deckA"]);
+    let deck_b = deck_from_json(&cap["deckB"]);
+    let first = match cap.get("first").and_then(|v| v.as_str()) {
+        Some("b") | Some("B") => First::B,
+        Some("a") | Some("A") => First::A,
+        _ => First::Coin,
+    };
+    let mut st = new_game(
+        db,
+        GameConfig {
+            seed,
+            deck_a,
+            deck_b,
+            first,
+            opening_hands: None,
+        },
+    )
+    .expect("new_game");
+    replay_capture_actions(db, cap, &mut st, 0, n)?;
+    Ok(st)
+}
+
 pub fn play_fresh(db: &CardDb, st: &mut State, who: PlayerId, id: &str) {
     clear_hand(st, who);
     give_pp(st, who, 10, 10);
