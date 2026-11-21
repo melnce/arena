@@ -1,0 +1,144 @@
+{
+  "tag": "teach96",
+  "teacher": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=results/run92/leaf92q.json,mull=leaf,mulls=256",
+  "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+  "seed": 9601,
+  "games": 4096,
+  "games_planned": 4096,
+  "replay_ok": 4096,
+  "replay_mismatch": [],
+  "unreadable_moved_aside": [],
+  "aborted": 0,
+  "games_with_errors": [],
+  "decisions": 379906,
+  "decisions_with_2plus_candidates": 295099,
+  "paths": {
+    "search": 293327,
+    "single_legal": 58058,
+    "take_kill": 16419,
+    "mulligan": 8192,
+    "take_kill_roll": 2059,
+    "holdback_trade": 1228,
+    "holdback_resample": 544,
+    "consensus_lethal": 79
+  },
+  "candidates_per_decision": {
+    "n": 295099,
+    "mean": 5.409,
+    "median": 5,
+    "p90": 10,
+    "p99": 16,
+    "max": 36
+  },
+  "duplicate_candidates": {
+    "share": 0.0612,
+    "count": 92943,
+    "of": 1518085
+  },
+  "top_gap": {
+    "n": 295099,
+    "mean": 4.887,
+    "median": 1.675,
+    "p90": 12.558,
+    "p99": 45.927,
+    "max": 160.0
+  },
+  "check_search_played_best": {
+    "ok": 290159,
+    "of": 290159
+  },
+  "check_aggregate_is_world_mean": {
+    "ok": 1596198,
+    "of": 1596198
+  },
+  "hbk_ran": 3029,
+  "hbk_flipped": 544,
+  "hbcheck_ran": 2485,
+  "lostrank_ran": 3168,
+  "lostrank_not_first_best": 2386,
+  "line_ends": {
+    "o": 4300303,
+    "O": 3890910,
+    "C": 2004538,
+    "L": 1076758,
+    "t": 725929,
+    "D": 725894,
+    "T": 23719,
+    "c": 21315,
+    "d": 218
+  },
+  "decision_seconds": {
+    "n": 379906,
+    "mean": 0.819,
+    "median": 0.201,
+    "p90": 2.481,
+    "p99": 5.806,
+    "max": 26.597
+  },
+  "search_decision_seconds": {
+    "n": 293327,
+    "mean": 1.049,
+    "median": 0.481,
+    "p90": 2.844,
+    "p99": 6.2,
+    "max": 24.175
+  },
+  "turn_seconds": {
+    "n": 71474,
+    "mean": 4.332,
+    "median": 1.517,
+    "p90": 12.509,
+    "p99": 31.217,
+    "max": 91.925
+  },
+  "game_seconds_per_core": {
+    "n": 4096,
+    "mean": 75.974,
+    "median": 66.723,
+    "p90": 138.226,
+    "p99": 228.677,
+    "max": 436.206
+  },
+  "decisions_per_game": {
+    "n": 4096,
+    "mean": 92.75,
+    "median": 90,
+    "p90": 129,
+    "p99": 168,
+    "max": 226
+  },
+  "turns": {
+    "n": 4096,
+    "mean": 9.002,
+    "median": 9,
+    "p90": 12,
+    "p99": 15,
+    "max": 20
+  },
+  "first_seat_win_rate": 0.5398,
+  "decisive": 4096,
+  "deck_win_rate": {
+    "meta-abyss-aggro": 0.4062,
+    "meta-abyss-midrange": 0.5039,
+    "meta-dragon-aggro": 0.3672,
+    "meta-dragon-ramp": 0.5293,
+    "meta-forest-combo": 0.4512,
+    "meta-haven-amulet": 0.416,
+    "meta-haven-evo": 0.6191,
+    "meta-haven-kukishiro": 0.5039,
+    "meta-portal-af": 0.5977,
+    "meta-portal-cutthroat": 0.5488,
+    "meta-portal-evo": 0.5527,
+    "meta-rune-crystal": 0.377,
+    "meta-rune-spell": 0.4277,
+    "meta-rune-test-subject": 0.6289,
+    "meta-sword-loot": 0.5156,
+    "meta-sword-rally": 0.5547
+  },
+  "segments": 1,
+  "wall_hours": 3.1,
+  "games_per_hour": 1320.9,
+  "data_mb": 91.4,
+  "archive_mb": 89.1,
+  "verdict": "DATA OK"
+}
