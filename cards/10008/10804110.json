@@ -55,6 +55,7 @@
               "effects": [
                 {
                   "op": "removeCrests",
+                  "banish": true,
                   "select": {
                     "side": "any",
                     "zone": "crests",

@@ -5496,8 +5496,8 @@ fn apply_effect(
             };
             gain_crest(db, state, who, &gain.0, events);
         }
-        Effect::RemoveCrests { select, .. } => {
-            remove_matching_crests(db, state, controller, select, events);
+        Effect::RemoveCrests { select, banish, .. } => {
+            remove_matching_crests(db, state, controller, select, *banish, events);
         }
         Effect::Countdown { select, delta, .. } => {
             let d = eval_amount(db, state, controller, Some(source), delta);
@@ -7746,34 +7746,40 @@ fn remove_matching_crests(
     state: &mut State,
     controller: PlayerId,
     select: &Selector,
+    banish: bool,
     events: &mut Vec<Event>,
 ) {
-    let (who, filter) = match select {
+    let (sides, filter) = match select {
         Selector::Pool(p) => {
-            let who = match p.side {
-                Side::Enemy => controller.opponent(),
-                _ => controller,
+            let sides = match p.side {
+                Side::Ally => vec![controller],
+                Side::Enemy => vec![controller.opponent()],
+                Side::Any => vec![controller, controller.opponent()],
             };
-            (who, p.filter.as_ref())
+            (sides, p.filter.as_ref())
         }
-        _ => (controller, None),
+        _ => (vec![controller], None),
     };
-    let mut kept = Vec::new();
-    let mut gone = Vec::new();
-    for c in state.player_mut(who).crests.drain(..) {
-        if crest_matches_filter(&c, filter) {
-            gone.push(c);
-        } else {
-            kept.push(c);
+    for who in sides {
+        let mut kept = Vec::new();
+        let mut gone = Vec::new();
+        for c in state.player_mut(who).crests.drain(..) {
+            if crest_matches_filter(&c, filter) {
+                gone.push(c);
+            } else {
+                kept.push(c);
+            }
         }
-    }
-    state.player_mut(who).crests = kept.into();
-    for c in gone {
-        events.push(Event::CrestRemove {
-            player: who,
-            id: c.id.clone(),
-        });
-        queue_crest_last_words(db, state, who, &c);
+        state.player_mut(who).crests = kept.into();
+        for c in gone {
+            events.push(Event::CrestRemove {
+                player: who,
+                id: c.id.clone(),
+            });
+            if !banish {
+                queue_crest_last_words(db, state, who, &c);
+            }
+        }
     }
 }
 
