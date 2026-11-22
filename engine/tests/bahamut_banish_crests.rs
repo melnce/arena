@@ -165,10 +165,10 @@ fn owner_capture_bahamut_option3() {
 }
 
 fn amanuensis_banish_setup(db: &CardDb, seed: u64) -> State {
-    let mut st = started(&db, seed);
+    let mut st = started(db, seed);
     let me = PlayerId::A;
     st.player_mut(me).leader_defense = 15;
-    put_field(&db, &mut st, me, AMANUENSIS);
+    put_field(db, &mut st, me, AMANUENSIS);
     drain_choice(db, &mut st);
     st
 }
