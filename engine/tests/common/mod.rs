@@ -526,40 +526,40 @@ pub fn put_crest(st: &mut State, who: PlayerId, id: &str) {
 pub fn put_crest_cd(st: &mut State, who: PlayerId, id: &str, cd: i32) {
     let order = st.crest_order;
     st.crest_order += 1;
-    st.player_mut(who).crests.push(arena_engine::state::CrestInstance {
-        id: id.into(),
-        countdown: Some(cd),
-        faith: false,
-        once_used: vec![],
-        granted_order: order,
-        granted: vec![],
-        choose_used: Default::default(),
-        sequence_index: 0,
-    });
+    st.player_mut(who)
+        .crests
+        .push(arena_engine::state::CrestInstance {
+            id: id.into(),
+            countdown: Some(cd),
+            faith: false,
+            once_used: vec![],
+            granted_order: order,
+            granted: vec![],
+            choose_used: Default::default(),
+            sequence_index: 0,
+        });
 }
 
 pub fn put_faith_crest(st: &mut State, who: PlayerId, id: &str, faith_value: i32) {
     let order = st.crest_order;
     st.crest_order += 1;
-    st.player_mut(who).crests.push(arena_engine::state::CrestInstance {
-        id: id.into(),
-        countdown: None,
-        faith: true,
-        once_used: vec![],
-        granted_order: order,
-        granted: vec![],
-        choose_used: Default::default(),
-        sequence_index: 0,
-    });
+    st.player_mut(who)
+        .crests
+        .push(arena_engine::state::CrestInstance {
+            id: id.into(),
+            countdown: None,
+            faith: true,
+            once_used: vec![],
+            granted_order: order,
+            granted: vec![],
+            choose_used: Default::default(),
+            sequence_index: 0,
+        });
     st.player_mut(who).faith = faith_value;
 }
 
 pub fn crest_ids(st: &State, who: PlayerId) -> Vec<String> {
-    st.player(who)
-        .crests
-        .iter()
-        .map(|c| c.id.clone())
-        .collect()
+    st.player(who).crests.iter().map(|c| c.id.clone()).collect()
 }
 
 pub fn replay_capture_actions(
