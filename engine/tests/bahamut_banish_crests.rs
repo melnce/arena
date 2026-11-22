@@ -12,18 +12,26 @@ const THESTAE: &str = "crest:10714110";
 const GREAT_HART: &str = "crest:10714120";
 const STARRY_SKY: &str = "crest:10412310";
 const INSOMNIAC: &str = "crest:10532110";
+const OPTION2: u8 = 1;
 const OPTION3: u8 = 2;
+const AMANUENSIS: &str = "11053110";
+/// Clue amulet — only Engage text; banish from Bahamut option 2 does not trigger its Engage.
+const DIVINE_EVIDENCE: &str = "90001210";
 
-fn play_bahamut_option3(db: &CardDb, st: &mut State, me: PlayerId) -> Vec<Event> {
+fn play_bahamut_mode(db: &CardDb, st: &mut State, me: PlayerId, mode: u8) -> Vec<Event> {
     give_pp(st, me, 9, 10);
     st.player_mut(me).hand.clear();
     play_id(db, st, me, BAHAMUT);
     let mut events = Vec::new();
-    events.extend(apply(db, st, Action::Choose(OPTION3)).expect("mode 3"));
+    events.extend(apply(db, st, Action::Choose(mode)).expect("mode choice"));
     while matches!(st.phase, Phase::Choice { .. }) {
         events.extend(apply(db, st, Action::Choose(0)).expect("drain choice"));
     }
     events
+}
+
+fn play_bahamut_option3(db: &CardDb, st: &mut State, me: PlayerId) -> Vec<Event> {
+    play_bahamut_mode(db, st, me, OPTION3)
 }
 
 fn crest_remove_events(events: &[Event]) -> Vec<(PlayerId, String)> {
@@ -127,8 +135,12 @@ fn destroy_your_crest_still_fires_last_words() {
         .unwrap() as u8;
     grant_evolve(&db, &mut st, slot);
     assert!(!st.player(me).crests.iter().any(|c| c.id == INSOMNIAC));
-    assert_eq!(field_count(&st, opp), 0);
-    assert_eq!(field_count(&st, me), 1, "Insomniac Witch body survives");
+    assert_eq!(field_count(&st, opp), 0, "vanilla took 3 from crest Last Words");
+    assert_eq!(
+        field_def(&st, me, "10532110"),
+        Some(2),
+        "evolved 5/5 Insomniac Witch took 3 from crest Last Words"
+    );
 }
 
 #[test]
@@ -148,18 +160,40 @@ fn owner_capture_bahamut_option3() {
     assert_eq!(st.player(PlayerId::B).faith, 4);
 }
 
+fn amanuensis_banish_setup(db: &CardDb, seed: u64) -> State {
+    let mut st = started(&db, seed);
+    let me = PlayerId::A;
+    st.player_mut(me).leader_defense = 15;
+    put_field(&db, &mut st, me, AMANUENSIS);
+    drain_choice(db, &mut st);
+    st
+}
+
+#[test]
+fn option2_banish_amulet_triggers_amuensis_heal() {
+    let db = load_db();
+    let me = PlayerId::A;
+    let mut st = amanuensis_banish_setup(&db, 10_804_105);
+    put_field(&db, &mut st, me, DIVINE_EVIDENCE);
+    assert_eq!(st.player(me).leader_defense, 15);
+    play_bahamut_mode(&db, &mut st, me, OPTION2);
+    assert!(
+        !field_has(&st, me, DIVINE_EVIDENCE),
+        "option 2 banishes allied amulets"
+    );
+    assert_eq!(st.player(me).leader_defense, 17, "ally_card_banished heal");
+}
+
 #[test]
 fn option3_banish_crest_does_not_trigger_field_banish_reaction() {
     let db = load_db();
-    let mut st = started(&db, 10_804_105);
     let me = PlayerId::A;
+    let mut st = amanuensis_banish_setup(&db, 10_804_106);
     put_crest_cd(&mut st, me, STARRY_SKY, 2);
-    let hp_before = st.player(me).leader_defense;
-    put_field(&db, &mut st, me, "11053110");
     play_bahamut_option3(&db, &mut st, me);
     assert_eq!(
         st.player(me).leader_defense,
-        hp_before,
-        "no heal from crest banish"
+        15,
+        "crest banish is not a field banish"
     );
 }

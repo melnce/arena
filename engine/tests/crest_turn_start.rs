@@ -28,22 +28,6 @@ fn load_crest_turn_start_db() -> CardDb {
     db
 }
 
-fn put_crest_cd(st: &mut State, who: PlayerId, id: &str, cd: i32) {
-    let order = st.crest_order;
-    st.crest_order += 1;
-    let faith = id.starts_with("faith:");
-    st.player_mut(who).crests.push(CrestInstance {
-        id: id.into(),
-        countdown: Some(cd),
-        faith,
-        once_used: vec![],
-        granted_order: order,
-        granted: vec![],
-        choose_used: Default::default(),
-        sequence_index: 0,
-    });
-}
-
 fn put_crest_no_cd(st: &mut State, who: PlayerId, id: &str) {
     let order = st.crest_order;
     st.crest_order += 1;

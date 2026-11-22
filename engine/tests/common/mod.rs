@@ -526,12 +526,13 @@ pub fn put_crest(st: &mut State, who: PlayerId, id: &str) {
 pub fn put_crest_cd(st: &mut State, who: PlayerId, id: &str, cd: i32) {
     let order = st.crest_order;
     st.crest_order += 1;
+    let faith = id.starts_with("faith:");
     st.player_mut(who)
         .crests
         .push(arena_engine::state::CrestInstance {
             id: id.into(),
             countdown: Some(cd),
-            faith: false,
+            faith,
             once_used: vec![],
             granted_order: order,
             granted: vec![],
