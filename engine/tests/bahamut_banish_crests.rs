@@ -135,7 +135,11 @@ fn destroy_your_crest_still_fires_last_words() {
         .unwrap() as u8;
     grant_evolve(&db, &mut st, slot);
     assert!(!st.player(me).crests.iter().any(|c| c.id == INSOMNIAC));
-    assert_eq!(field_count(&st, opp), 0, "vanilla took 3 from crest Last Words");
+    assert_eq!(
+        field_count(&st, opp),
+        0,
+        "vanilla took 3 from crest Last Words"
+    );
     assert_eq!(
         field_def(&st, me, "10532110"),
         Some(2),
