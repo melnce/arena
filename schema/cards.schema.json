@@ -2220,6 +2220,9 @@
             },
             "select": {
               "$ref": "#/$defs/Selector"
+            },
+            "banish": {
+              "type": "boolean"
             }
           },
           "required": [

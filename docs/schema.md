@@ -226,7 +226,7 @@ Common optional fields on every effect: `printed`, `as` (bind the result set), `
 | `pp` | `gainMax` `10444120`; `recover` `10604110`; `spend` via `pay` |
 | `ep` | `gain` `10854110` "Recover 1 evolution point" |
 | `crest` | `gain` + `player` self `10434120` / opponent `10574110` |
-| `removeCrests` | `10453310` Corruption Super Skybound (pool) |
+| `removeCrests` | `10453310` Corruption Super Skybound (pool); optional `banish` (default false) — `true` only on `10804110` Alabaster Bahamut mode 3 |
 | `countdown` | `delta` −1 advance `90021210`; +1 delay `10703210` |
 | `counter` | `earth` `10434120`; `combo` `10714110`; `skyboundHand` `10471120`; `shadows` via `pay`; `faith` `faith:10634120`; `clues` `11053310` Nocturne's Interrogation; `{var: X}` `10131320` |
 | `pay` | `shadows` `10754120`; `earth` `10031110`; `pp` `10934110`; `faith` `10624120` Yidmetra; `clues` `90001210` Divine Evidence / `11073310` Calamity in Custody |

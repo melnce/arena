@@ -6519,6 +6519,7 @@ File: `cards/10008/10804110.json`
               "effects": [
                 {
                   "op": "removeCrests",
+                  "banish": true,
                   "select": {
                     "side": "any",
                     "zone": "crests",
