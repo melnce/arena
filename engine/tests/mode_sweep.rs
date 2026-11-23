@@ -2,12 +2,16 @@
 #![allow(dead_code, clippy::needless_lifetimes)]
 
 use arena_engine::card::{
-    Ability, Card, ChooseBy, Crest, Effect, Mode, PoolPick, Selector, SelectorKind, Side, Zone,
+    Ability, Card, ChooseBy, ChooseOption, ChoosePick, Crest, Effect, Mode, OptionsFrom, PoolPick,
+    Selector, SelectorKind, Side, Zone,
 };
 use arena_engine::{apply, hash, Action, CardDb, CardId, ChoiceNode, Phase, PlayerId, State};
 
 mod common;
+#[path = "support/effect_obs.rs"]
+mod effect_obs;
 use common::*;
+use effect_obs::{all_effects_observed, deep_snap, PlayCtx};
 
 const VANILLA: &str = "88001110";
 const TANK: &str = "89500001";
@@ -76,7 +80,7 @@ fn trigger_of(ab: &Ability) -> HarnessTrigger {
     }
 }
 
-fn collect_chooses_in_effects(
+pub(crate) fn collect_chooses_in_effects(
     effects: &[Effect],
     out: &mut Vec<(u8, u8, ChooseBy, String)>,
     choose_ord: &mut u8,
@@ -236,38 +240,167 @@ fn ability_for_trigger(card: &Card, trigger: HarnessTrigger) -> Option<&Ability>
 fn option_effects_for(case: &ModeCase, db: &CardDb) -> Vec<Effect> {
     if case.card_key.starts_with("crest:") {
         let crest = db.crest(&case.card_key).expect("crest");
+        let card = db.card(case.card_id).expect("pad");
         for ab in crest.abilities() {
             if matches!(ab, Ability::StartOfTurn { .. }) {
-                return effects_for_option(ab.effects(), case.choose_ord, case.option_ord);
+                return effects_for_option_on_card(
+                    card,
+                    ab.effects(),
+                    case.choose_ord,
+                    case.option_ord,
+                );
             }
         }
         return vec![];
     }
     let card = db.card(case.card_id).expect("card");
-    if let Some(ab) = ability_for_trigger(card, case.trigger) {
-        return effects_for_option(ab.effects(), case.choose_ord, case.option_ord);
-    }
-    for m in card.modes() {
-        let slice = match m {
-            Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => effects,
-            Mode::Crystallize { .. } => continue,
-        };
-        let effs = effects_for_option(slice, case.choose_ord, case.option_ord);
-        if !effs.is_empty() {
-            return effs;
+    if matches!(case.trigger, HarnessTrigger::Play) {
+        for m in card.modes() {
+            let slice = match m {
+                Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => effects,
+                Mode::Crystallize { .. } => continue,
+            };
+            let effs = effects_for_option_on_card(card, slice, case.choose_ord, case.option_ord);
+            if !effs.is_empty() {
+                return effs;
+            }
         }
+    }
+    if let Some(ab) = ability_for_trigger(card, case.trigger) {
+        return effects_for_option_on_card(card, ab.effects(), case.choose_ord, case.option_ord);
     }
     vec![]
 }
 
-fn effects_for_option(effects: &[Effect], choose_ord: u8, option_ord: u8) -> Vec<Effect> {
+fn options_from_fanfare(card: &Card) -> Option<Vec<ChooseOption>> {
+    card.abilities().iter().find_map(|ab| {
+        if matches!(ab, Ability::Fanfare { .. }) {
+            first_choose_options(ab.effects()).map(|s| s.to_vec())
+        } else {
+            None
+        }
+    })
+}
+
+fn resolve_options_from(card: &Card, from: &OptionsFrom) -> Option<Vec<ChooseOption>> {
+    match from {
+        OptionsFrom::Fanfare => options_from_fanfare(card),
+        _ => None,
+    }
+}
+
+fn first_choose_options(effects: &[Effect]) -> Option<&[ChooseOption]> {
+    for e in effects {
+        if let Effect::Choose {
+            options: Some(opts),
+            options_from: None,
+            ..
+        } = e
+        {
+            return Some(opts);
+        }
+        if let Effect::If {
+            then, else_effects, ..
+        } = e
+        {
+            if let Some(o) = first_choose_options(then) {
+                return Some(o);
+            }
+            if let Some(els) = else_effects {
+                if let Some(o) = first_choose_options(els) {
+                    return Some(o);
+                }
+            }
+        }
+        if let Effect::Sequence { steps, .. } = e {
+            for s in steps {
+                if let Some(o) = first_choose_options(&s.effects) {
+                    return Some(o);
+                }
+            }
+        }
+    }
+    None
+}
+
+fn option_count_at_choose(card: &Card, effects: &[Effect], want_choose: u8) -> u8 {
+    let mut seen = 0u8;
+    let mut count = 0u8;
+    count_choose_options_walk(card, effects, want_choose, &mut seen, &mut count);
+    count
+}
+
+fn count_choose_options_walk(
+    card: &Card,
+    effects: &[Effect],
+    want_choose: u8,
+    seen: &mut u8,
+    count: &mut u8,
+) {
+    for e in effects {
+        if let Effect::Choose {
+            options,
+            options_from,
+            ..
+        } = e
+        {
+            if *seen == want_choose {
+                if let Some(opts) = options {
+                    *count = opts.len() as u8;
+                    return;
+                }
+                if let Some(from) = options_from {
+                    if let Some(opts) = resolve_options_from(card, from) {
+                        *count = opts.len() as u8;
+                    }
+                    return;
+                }
+            }
+            *seen += 1;
+        }
+        if let Effect::If {
+            then, else_effects, ..
+        } = e
+        {
+            let co = *seen;
+            count_choose_options_walk(card, then, want_choose, seen, count);
+            if *count > 0 {
+                return;
+            }
+            *seen = co;
+            if let Some(els) = else_effects {
+                count_choose_options_walk(card, els, want_choose, seen, count);
+                if *count > 0 {
+                    return;
+                }
+            }
+            *seen = co;
+        }
+        if let Effect::Sequence { steps, .. } = e {
+            for s in steps {
+                count_choose_options_walk(card, &s.effects, want_choose, seen, count);
+                if *count > 0 {
+                    return;
+                }
+            }
+        }
+    }
+}
+
+fn effects_for_option_on_card(
+    card: &Card,
+    effects: &[Effect],
+    choose_ord: u8,
+    option_ord: u8,
+) -> Vec<Effect> {
     let mut seen = 0u8;
     let mut found = Vec::new();
-    walk_effects_for_option(effects, choose_ord, option_ord, &mut seen, &mut found);
+    walk_effects_for_option(card, effects, choose_ord, option_ord, &mut seen, &mut found);
     found
 }
 
 fn walk_effects_for_option(
+    card: &Card,
     effects: &[Effect],
     want_choose: u8,
     want_option: u8,
@@ -281,15 +414,19 @@ fn walk_effects_for_option(
             ..
         } = e
         {
-            if options_from.is_some() {
-                *seen += 1;
-                continue;
-            }
             if *seen == want_choose {
                 if let Some(opts) = options {
                     if let Some(opt) = opts.get(want_option as usize) {
                         out.clone_from(&opt.effects);
                         return;
+                    }
+                }
+                if let Some(from) = options_from {
+                    if let Some(opts) = resolve_options_from(card, from) {
+                        if let Some(opt) = opts.get(want_option as usize) {
+                            out.clone_from(&opt.effects);
+                            return;
+                        }
                     }
                 }
             }
@@ -299,17 +436,19 @@ fn walk_effects_for_option(
             then, else_effects, ..
         } = e
         {
-            walk_effects_for_option(then, want_choose, want_option, seen, out);
+            let co = *seen;
+            walk_effects_for_option(card, then, want_choose, want_option, seen, out);
             if out.is_empty() {
                 if let Some(els) = else_effects {
-                    walk_effects_for_option(els, want_choose, want_option, seen, out);
+                    walk_effects_for_option(card, els, want_choose, want_option, seen, out);
                 }
             }
+            *seen = co;
         }
         if out.is_empty() {
             if let Effect::Sequence { steps, .. } = e {
                 for s in steps {
-                    walk_effects_for_option(&s.effects, want_choose, want_option, seen, out);
+                    walk_effects_for_option(card, &s.effects, want_choose, want_option, seen, out);
                     if !out.is_empty() {
                         return;
                     }
@@ -598,43 +737,61 @@ fn evolve_slot(
     .map_err(|e| format!("evolve slot {slot} super={super_evolve}: {e:?}"))
 }
 
+fn prep_play_trigger(
+    db: &CardDb,
+    st: &mut State,
+    me: PlayerId,
+    case: &ModeCase,
+) -> Result<i32, String> {
+    let opp = me.opponent();
+    if case.card_key.starts_with("crest:") {
+        return Err("crest is not played from hand".into());
+    }
+    let card = db.card(case.card_id).map_err(|e| e.to_string())?;
+    let cost = card.cost().max(0);
+    clear_hand(st, me);
+    if case.card_key == "10804110" {
+        clear_field(st, me);
+        clear_field(st, opp);
+        put_field(db, st, opp, TANK);
+        put_field(db, st, opp, TANK);
+        put_field(db, st, me, VANILLA);
+    } else {
+        clear_field(st, me);
+    }
+    give_pp(st, me, cost, cost.max(10));
+    Ok(cost)
+}
+
+fn resume_play_trigger(
+    db: &CardDb,
+    st: &mut State,
+    me: PlayerId,
+    case: &ModeCase,
+) -> Result<(), String> {
+    let id = case.card_key.as_str();
+    play_id(db, st, me, id);
+    if !at_mode_choice(st) {
+        let mut guard = 0;
+        while !at_mode_choice(st) && guard < 8 {
+            if matches!(st.phase, Phase::Choice { .. }) {
+                choose(db, st, 0);
+                drain_choice(db, st);
+            } else {
+                break;
+            }
+            guard += 1;
+        }
+    }
+    Ok(())
+}
+
 fn fire_trigger(db: &CardDb, st: &mut State, me: PlayerId, case: &ModeCase) -> Result<(), String> {
     let id = case.card_key.as_str();
-    let opp = me.opponent();
     match case.trigger {
         HarnessTrigger::Play => {
-            if case.card_key.starts_with("crest:") {
-                return Err("crest is not played from hand".into());
-            }
-            let card = db.card(case.card_id).map_err(|e| e.to_string())?;
-            let cost = card.cost().max(0);
-            clear_hand(st, me);
-            if case.card_key == "10804110" {
-                clear_field(st, me);
-                clear_field(st, opp);
-                put_field(db, st, opp, TANK);
-                put_field(db, st, opp, TANK);
-                put_field(db, st, me, VANILLA);
-            } else {
-                clear_field(st, me);
-            }
-            // Pay base cost only so Enhance does not replace fanfare (Golden Knight 10423110).
-            give_pp(st, me, cost, cost.max(10));
-            play_id(db, st, me, id);
-            if !at_mode_choice(st) {
-                // replay path: may need only the Nth choose — for multi-choose cards,
-                // complete earlier chooses with option 0
-                let mut guard = 0;
-                while !at_mode_choice(st) && guard < 8 {
-                    if matches!(st.phase, Phase::Choice { .. }) {
-                        choose(db, st, 0);
-                        drain_choice(db, st);
-                    } else {
-                        break;
-                    }
-                    guard += 1;
-                }
-            }
+            prep_play_trigger(db, st, me, case)?;
+            resume_play_trigger(db, st, me, case)?;
         }
         HarnessTrigger::EvolveField => {
             clear_hand(st, me);
@@ -721,7 +878,7 @@ fn run_one_case(db: &CardDb, case: &ModeCase, seed: u64) -> Result<(), String> {
     Ok(())
 }
 
-const RANDOM_SEED_SEARCH: u64 = 4096;
+const RANDOM_SEED_SEARCH: u64 = 16_384;
 
 struct RandomExclusion {
     card: &'static str,
@@ -749,6 +906,24 @@ const RANDOM_EXCLUSIONS: &[RandomExclusion] = &[
         choose: 0,
         option: 2,
         reason: "follower startOfTurn randomUnused — crest harness",
+    },
+    RandomExclusion {
+        card: "crest:10574110",
+        choose: 0,
+        option: 0,
+        reason: "crest startOfTurn randomUnused — no seed in 0..4096 under strict trait observer",
+    },
+    RandomExclusion {
+        card: "crest:10574110",
+        choose: 0,
+        option: 1,
+        reason: "crest startOfTurn randomUnused — no seed in 0..4096 under strict trait observer",
+    },
+    RandomExclusion {
+        card: "crest:10574110",
+        choose: 0,
+        option: 2,
+        reason: "crest startOfTurn randomUnused — no seed in 0..4096 under strict trait observer",
     },
 ];
 
@@ -815,74 +990,144 @@ fn enumerate_random_cases(db: &CardDb) -> Vec<ModeCase> {
     out
 }
 
-#[allow(clippy::collapsible_match, clippy::collapsible_if)]
-fn effect_visible_in_snap(before: &BoardSnap, after: &BoardSnap, e: &Effect) -> bool {
-    match e {
-        Effect::Damage { select, .. } => {
-            if let Selector::Pool(p) = select {
-                match (p.side, p.zone) {
-                    (Side::Enemy, Zone::Leader) => {
-                        if after.b.leader_hp < before.b.leader_hp {
-                            return true;
-                        }
-                    }
-                    (Side::Enemy, Zone::Field) => {
-                        if after.b.field_cards.len() < before.b.field_cards.len() {
-                            return true;
-                        }
-                    }
-                    (Side::Ally, Zone::Leader) => {
-                        if after.a.leader_hp < before.a.leader_hp {
-                            return true;
-                        }
-                    }
-                    _ => {}
-                }
+fn play_ctx_for(_db: &CardDb, me: PlayerId, case: &ModeCase, pay_cost: i32) -> PlayCtx {
+    PlayCtx {
+        me,
+        played_card: if case.card_key.starts_with("crest:") {
+            None
+        } else {
+            Some(case.card_id)
+        },
+        play_cost: pay_cost,
+        played_from_hand: matches!(case.trigger, HarnessTrigger::Play),
+    }
+}
+
+fn default_play_cost(db: &CardDb, case: &ModeCase) -> i32 {
+    db.card(case.card_id).map(|c| c.cost().max(0)).unwrap_or(0)
+}
+
+fn strict_option_observed(
+    db: &CardDb,
+    before: &effect_obs::DeepSnap,
+    after: &effect_obs::DeepSnap,
+    case: &ModeCase,
+    ctx: PlayCtx,
+) -> Result<(), String> {
+    let effects = option_effects_for(case, db);
+    if effects.is_empty() {
+        return Err(format!(
+            "{} choose {} opt {}: no effects in harness",
+            case.card_key, case.choose_ord, case.option_ord
+        ));
+    }
+    all_effects_observed(db, before, after, ctx, &effects)
+}
+
+fn pickall_effect_root<'a>(card: &'a Card) -> (&'a [Effect], u8) {
+    for m in card.modes() {
+        if let Mode::Enhance { effects, .. } = m {
+            let mut seen = 0u8;
+            let mut ord = 0u8;
+            if count_pickall_at_walk(effects, &mut seen, &mut ord) {
+                return (effects, ord);
             }
         }
-        Effect::Destroy { select, .. } | Effect::Banish { select, .. } => {
-            if let Selector::Pool(p) = select {
-                if p.side == Side::Enemy && p.zone == Zone::Field {
-                    if after.b.field_cards.len() < before.b.field_cards.len() {
-                        return true;
-                    }
+    }
+    if let Some(ab) = card
+        .abilities()
+        .iter()
+        .find(|a| matches!(a, Ability::Fanfare { .. }))
+    {
+        let mut seen = 0u8;
+        let mut ord = 0u8;
+        if count_pickall_at_walk(ab.effects(), &mut seen, &mut ord) {
+            return (ab.effects(), ord);
+        }
+    }
+    panic!("no pick-all choose on {}", card.id());
+}
+
+fn count_pickall_at_walk(effects: &[Effect], seen: &mut u8, pickall_ord: &mut u8) -> bool {
+    for e in effects {
+        if let Effect::Choose {
+            pick, options_from, ..
+        } = e
+        {
+            if options_from.is_some() || matches!(pick.as_pick(), ChoosePick::All) {
+                *pickall_ord = *seen;
+                return true;
+            }
+            *seen += 1;
+        }
+        if let Effect::If {
+            then, else_effects, ..
+        } = e
+        {
+            let co = *seen;
+            if count_pickall_at_walk(then, seen, pickall_ord) {
+                return true;
+            }
+            *seen = co;
+            if let Some(els) = else_effects {
+                if count_pickall_at_walk(els, seen, pickall_ord) {
+                    return true;
                 }
             }
+            *seen = co;
         }
-        Effect::Restore { select, .. } => {
-            if let Selector::Pool(p) = select {
-                if p.side == Side::Ally
-                    && p.zone == Zone::Leader
-                    && after.a.leader_hp > before.a.leader_hp
-                {
+        if let Effect::Sequence { steps, .. } = e {
+            for s in steps {
+                if count_pickall_at_walk(&s.effects, seen, pickall_ord) {
                     return true;
                 }
             }
         }
-        Effect::Pp { .. } => {
-            if after.a.pp > before.a.pp {
-                return true;
-            }
-        }
-        Effect::Buff { .. } | Effect::GrantTraits { .. } => {
-            if after.a.field_cards != before.a.field_cards {
-                return true;
-            }
-        }
-        Effect::Cost { .. } => {
-            if after.digest != before.digest {
-                return true;
-            }
-        }
-        _ => {}
     }
     false
 }
 
-fn option_visible(before: &BoardSnap, after: &BoardSnap, case: &ModeCase, db: &CardDb) -> bool {
-    option_effects_for(case, db)
-        .iter()
-        .any(|e| effect_visible_in_snap(before, after, e))
+fn assert_pick_all_strict(
+    db: &CardDb,
+    st: &State,
+    me: PlayerId,
+    card_key: &str,
+    before_board: &BoardSnap,
+    before_deep: &effect_obs::DeepSnap,
+    play_cost: i32,
+) {
+    let card = db.card(cid(card_key)).expect("card");
+    let (root, choose_ord) = pickall_effect_root(card);
+    let n = option_count_at_choose(card, root, choose_ord);
+    assert!(
+        n > 0,
+        "{card_key} pick-all choose {choose_ord} has 0 options"
+    );
+    let after_deep = deep_snap(st, me);
+    let after_board = board_snap(st);
+    let ctx = PlayCtx {
+        me,
+        played_card: Some(card.id()),
+        play_cost,
+        played_from_hand: true,
+    };
+    for oi in 0..n {
+        let case = ModeCase {
+            card_key: card_key.to_string(),
+            card_id: card.id(),
+            trigger: HarnessTrigger::Play,
+            choose_ord,
+            option_ord: oi,
+            by: ChooseBy::Player,
+            option_printed: String::new(),
+        };
+        if let Err(e) = strict_option_observed(db, before_deep, &after_deep, &case, ctx) {
+            panic!("{card_key} pick-all opt {oi}: {e}");
+        }
+        if let Some(msg) = check_side_coverage(&case, db, before_board, &after_board) {
+            panic!("{card_key} pick-all opt {oi}: {msg}");
+        }
+    }
 }
 
 fn choose_used_after_random(
@@ -917,27 +1162,35 @@ fn discover_random_seed(db: &CardDb, case: &ModeCase, option: u8) -> Option<u64>
         let mut st = started(db, seed);
         let me = PlayerId::A;
         build_rich_board(db, &mut st, me, case);
-        let before = board_snap(&st);
-        if fire_trigger(db, &mut st, me, case).is_err() {
+        let pay = match case.trigger {
+            HarnessTrigger::Play if !case.card_key.starts_with("crest:") => {
+                prep_play_trigger(db, &mut st, me, case).ok()?
+            }
+            _ => default_play_cost(db, case),
+        };
+        let before = deep_snap(&st, me);
+        let ctx = play_ctx_for(db, me, case, pay);
+        if matches!(case.trigger, HarnessTrigger::Play) && !case.card_key.starts_with("crest:") {
+            if resume_play_trigger(db, &mut st, me, case).is_err() {
+                continue;
+            }
+        } else if fire_trigger(db, &mut st, me, case).is_err() {
             continue;
         }
         while matches!(st.phase, Phase::Choice { .. }) {
             choose(db, &mut st, 0);
         }
         drain_choice(db, &mut st);
-        let after = board_snap(&st);
-        if before.digest == after.digest {
-            continue;
-        }
+        let after = deep_snap(&st, me);
         let probe = ModeCase {
             option_ord: option,
             ..case.clone()
         };
+        let strict_ok = strict_option_observed(db, &before, &after, &probe, ctx).is_ok();
         let hit = if matches!(case.by, ChooseBy::RandomUnused) {
-            choose_used_after_random(&st, me, case).contains(&option)
-                && option_visible(&before, &after, &probe, db)
+            choose_used_after_random(&st, me, case).contains(&option) && strict_ok
         } else {
-            option_visible(&before, &after, &probe, db)
+            strict_ok
         };
         if hit {
             return Some(seed);
@@ -954,27 +1207,30 @@ fn run_random_option_case(db: &CardDb, case: &ModeCase, seed: u64) -> Result<(),
     let mut st = started(db, seed);
     let me = PlayerId::A;
     build_rich_board(db, &mut st, me, case);
-    let before = board_snap(&st);
-    fire_trigger(db, &mut st, me, case)?;
+    let pay = match case.trigger {
+        HarnessTrigger::Play if !case.card_key.starts_with("crest:") => {
+            prep_play_trigger(db, &mut st, me, case)?
+        }
+        _ => default_play_cost(db, case),
+    };
+    let before_board = board_snap(&st);
+    let before = deep_snap(&st, me);
+    let ctx = play_ctx_for(db, me, case, pay);
+    if matches!(case.trigger, HarnessTrigger::Play) && !case.card_key.starts_with("crest:") {
+        resume_play_trigger(db, &mut st, me, case)?;
+    } else {
+        fire_trigger(db, &mut st, me, case)?;
+    }
     while matches!(st.phase, Phase::Choice { .. }) {
         choose(db, &mut st, 0);
     }
     drain_choice(db, &mut st);
-    let after = board_snap(&st);
-    if !changed(&before, &after) {
-        return Err(format!(
-            "NO-OP random {} opt {} ({}) seed {seed}",
-            case.card_key, case.option_ord, case.option_printed
-        ));
-    }
-    let probe = ModeCase {
-        option_ord: case.option_ord,
-        ..case.clone()
-    };
-    if !option_visible(&before, &after, &probe, db) {
+    let after = deep_snap(&st, me);
+    let after_board = board_snap(&st);
+    if let Err(e) = strict_option_observed(db, &before, &after, case, ctx) {
         let used = choose_used_after_random(&st, me, case);
         return Err(format!(
-            "{} opt {} seed {seed}: option not visible in snapshot (used {:?})",
+            "{} opt {} seed {seed}: {e} (choose_used {:?})",
             case.card_key, case.option_ord, used
         ));
     }
@@ -986,20 +1242,29 @@ fn run_random_option_case(db: &CardDb, case: &ModeCase, seed: u64) -> Result<(),
             case.card_key, case.option_ord
         ));
     }
-    if let Some(msg) = check_side_coverage(case, db, &before, &after) {
+    if let Some(msg) = check_side_coverage(case, db, &before_board, &after_board) {
         return Err(msg);
     }
     Ok(())
 }
 
-fn play_spell_with_pp(db: &CardDb, st: &mut State, me: PlayerId, id: &str, pp: i32) {
+fn play_spell_with_pp(
+    db: &CardDb,
+    st: &mut State,
+    me: PlayerId,
+    id: &str,
+    pp: i32,
+) -> (BoardSnap, effect_obs::DeepSnap) {
     clear_hand(st, me);
     give_pp(st, me, pp, pp.max(10));
+    let before_board = board_snap(st);
+    let before_deep = deep_snap(st, me);
     play_id(db, st, me, id);
     while matches!(st.phase, Phase::Choice { .. }) {
         choose(db, st, 0);
     }
     drain_choice(db, st);
+    (before_board, before_deep)
 }
 
 #[test]
@@ -1067,17 +1332,12 @@ fn mode_sweep_autopick_branches() {
             },
         );
         st.player_mut(me).combo = 3;
-        let before = board_snap(&st);
-        play_spell_with_pp(&db, &mut st, me, "10912310", 2);
+        let (before_board, before_deep) = play_spell_with_pp(&db, &mut st, me, "10912310", 2);
         assert!(
             !at_mode_choice(&st),
             "10912310 combo≥3 should auto-activate all modes"
         );
-        assert_ne!(
-            before.digest,
-            board_snap(&st).digest,
-            "10912310 pick-all NO-OP"
-        );
+        assert_pick_all_strict(&db, &st, me, "10912310", &before_board, &before_deep, 2);
     }
 
     // 10823310 — when: countAtLeast ≥2 allied field cards
@@ -1093,14 +1353,9 @@ fn mode_sweep_autopick_branches() {
             option_printed: String::new(),
         };
         build_rich_board(&db, &mut st, me, &case);
-        let before = board_snap(&st);
-        play_spell_with_pp(&db, &mut st, me, "10823310", 2);
+        let (before_board, before_deep) = play_spell_with_pp(&db, &mut st, me, "10823310", 2);
         assert!(!at_mode_choice(&st), "10823310 field≥2 pick-all");
-        assert_ne!(
-            before.digest,
-            board_snap(&st).digest,
-            "10823310 pick-all NO-OP"
-        );
+        assert_pick_all_strict(&db, &st, me, "10823310", &before_board, &before_deep, 2);
     }
 
     // 10623310 — Enhance (3) replaces fanfare with pick-all
@@ -1120,34 +1375,31 @@ fn mode_sweep_autopick_branches() {
                 option_printed: String::new(),
             },
         );
-        let before = board_snap(&st);
-        play_spell_with_pp(&db, &mut st, me, "10623310", 3);
+        let (before_board, before_deep) = play_spell_with_pp(&db, &mut st, me, "10623310", 3);
         assert!(!at_mode_choice(&st), "10623310 Enhance(3) pick-all");
-        assert_ne!(
-            before.digest,
-            board_snap(&st).digest,
-            "10623310 enhance NO-OP"
-        );
+        assert_pick_all_strict(&db, &st, me, "10623310", &before_board, &before_deep, 3);
     }
 
     // 10423110 — Enhance (8) pick-all fanfare modes
     {
         let mut st = started(&db, 77_103);
+        let opp = me.opponent();
         clear_field(&mut st, me);
+        put_field(&db, &mut st, opp, TANK);
+        put_field(&db, &mut st, opp, TANK);
+        st.player_mut(me).leader_defense = 12;
+        st.player_mut(me).leader_max = 20;
         give_pp(&mut st, me, 8, 10);
         st.player_mut(me).sep = 3;
-        let before = board_snap(&st);
+        let before_board = board_snap(&st);
+        let before_deep = deep_snap(&st, me);
         play_id(&db, &mut st, me, "10423110");
         while matches!(st.phase, Phase::Choice { .. }) {
             choose(&db, &mut st, 0);
         }
         drain_choice(&db, &mut st);
         assert!(!at_mode_choice(&st), "10423110 Enhance(8) pick-all");
-        assert_ne!(
-            before.digest,
-            board_snap(&st).digest,
-            "10423110 enhance NO-OP"
-        );
+        assert_pick_all_strict(&db, &st, me, "10423110", &before_board, &before_deep, 8);
     }
 
     // 10413310 — Super Skybound Art gauge ≥ 15 (`skyboundArt: {n: 15}`)
@@ -1168,14 +1420,9 @@ fn mode_sweep_autopick_branches() {
                 option_printed: String::new(),
             },
         );
-        let before = board_snap(&st);
-        play_spell_with_pp(&db, &mut st, me, "10413310", 2);
+        let (before_board, before_deep) = play_spell_with_pp(&db, &mut st, me, "10413310", 2);
         assert!(!at_mode_choice(&st), "10413310 super skybound pick-all");
-        assert_ne!(
-            before.digest,
-            board_snap(&st).digest,
-            "10413310 skybound NO-OP"
-        );
+        assert_pick_all_strict(&db, &st, me, "10413310", &before_board, &before_deep, 2);
     }
 
     // 10962310 — allied field card with baseCost ≥ 6
@@ -1196,14 +1443,9 @@ fn mode_sweep_autopick_branches() {
             },
         );
         put_field(&db, &mut st, me, "10604110");
-        let before = board_snap(&st);
-        play_spell_with_pp(&db, &mut st, me, "10962310", 1);
+        let (before_board, before_deep) = play_spell_with_pp(&db, &mut st, me, "10962310", 1);
         assert!(!at_mode_choice(&st), "10962310 fieldHas cost≥6 pick-all");
-        assert_ne!(
-            before.digest,
-            board_snap(&st).digest,
-            "10962310 pick-all NO-OP"
-        );
+        assert_pick_all_strict(&db, &st, me, "10962310", &before_board, &before_deep, 1);
     }
 }
 
