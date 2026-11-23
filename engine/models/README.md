@@ -88,7 +88,7 @@ Training: `py/train_value.py --data results/net10/data-e0 results/net10/data-e10
 
 sha256 `76685509ff4aef49e34ae37793385d40b477d0756b52141299300f4cb85d8c95`
 
-Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v92`](#h0-value-v92) since brief ZC (`h0-value-v64` from brief YC, `h0-value-v65` from brief YE, `h0-value-v66` from brief YF, `h0-value-v69` from brief YJ, `h0-value-v73` from brief YP, `h0-value-v75` from brief YQ, `h0-value-v77` from brief YR, `h0-value-v83` from brief YS, `h0-value-v87` from brief YU, `h0-value-v89` from brief YY). Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
+Promoted under the owner's "not worse" bar (pooled ≥ 0.49, registered before the leaf existed), not the `better` rule v2 and v3 passed. This is the default H0 leaf since this PR. `net=builtin` and `net=h0-linear-v4` reach it; `py/serve.py`'s defaults and the browser's Full-strength bot score their lines with [`h0-value-v97`](#h0-value-v97) since brief ZD (`h0-value-v64` from brief YC, `h0-value-v65` from brief YE, `h0-value-v66` from brief YF, `h0-value-v69` from brief YJ, `h0-value-v73` from brief YP, `h0-value-v75` from brief YQ, `h0-value-v77` from brief YR, `h0-value-v83` from brief YS, `h0-value-v87` from brief YU, `h0-value-v89` from brief YY, `h0-value-v92` from brief ZC). Reach the previous leaf with `h0:net=engine/models/h0-linear-v3.json`.
 
 # `h0-value-v64`
 
@@ -479,7 +479,43 @@ Sweep 92 (engine `bcfb6cd`, results `sweep92/` at `7c3e5f9`), all 16 meta decks:
 sha256 `7f66f7e06001632ba70f7de9197cbf5c4a72a280c05fc65a52daa8ce11ace79f`
 
 Reach it with `net=h0-value-v92` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
-Full-strength bot score their lines with it since brief ZC.
+Full-strength bot scored their lines with it from brief ZC to brief ZD ([`h0-value-v97`](#h0-value-v97) since).
+
+# `h0-value-v97`
+
+The `h0-value-v97` value model (the leaf) — `arch: residual` on encoding 3, the same architecture as
+[`h0-value-v92`](#h0-value-v92): `h0-linear-v4`'s linear part unchanged plus a ReLU MLP residual with 32 hidden
+units on the 961 standardized features and an 8-dimensional embedding per card and zone (13 zones), `scale` 60.
+Its residual is three quarters of the trained network's (`w2`, `b2` scaled by 0.75: `trained_on.shrink` 0.75).
+
+## Provenance
+
+Trained on the owner's box inside runbook 97 (`fit97.py`, `fit66.py`'s code), with `h0-value-v92`'s recipe on
+newer rows, as many as the box's memory holds. Targets: TD(λ 0.95) returns from four cross-fitted networks of
+`h0-value-v64`'s recipe on every search decision with two or more scored candidates of six of the box's teach
+archives, teach70 and teach92 … teach96 (43 008 games of the served search), and of the recorded games of
+twenty-six sweeps, 80b … 96 (181 248 games: the served stack against its candidates, both seats; 12 966 046
+states), each encoded from the decider's side, split by game (crc32) (12.79 M training rows); then 10 epochs of
+the squared error of `60·tanh(pre)` (AdamW lr 1e-4, weight decay 1e-3, a moving average of the weights over one
+epoch; best epoch 10) on the rows of all six teach archives and all twenty-six sweeps. On the 22 501 held-out
+games of those sets, at turn starts (where the search uses the leaf), Brier score: this file 0.1833, the full
+network 0.1804, `h0-value-v92` 0.1834, `h0-value-v89` 0.1834, `h0-linear-v4` 0.2291; on teach96's held-out games
+this file 0.1842, `h0-value-v92` 0.1839.
+
+## Yardstick
+
+Sweep 97 (engine `bcfb6cd`, results `sweep97/` at `451ba6c`), all 16 meta decks: `net=<this file>` vs
+`h0-value-v92`, both on `h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,mull=leaf,mulls=256`
+(the leaf in both roles: the search's and the mulligan's):
+
+- screen 260 / 512 = 0.508 (the same recipe on the rows of teach92 … and of every sweep: 257 / 512 = 0.502);
+- final 2 895 / 5 632 = 0.5140 (+9.7 Elo; early stop at look 11 of 12);
+- self-play throughput × 1.02.
+
+sha256 `057d9f72580ccee48401c0973238fb5f10bffea5a499ede46932ef26e165cead`
+
+Reach it with `net=h0-value-v97` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
+Full-strength bot score their lines with it since brief ZD.
 
 # `h0-order-v53`
 
