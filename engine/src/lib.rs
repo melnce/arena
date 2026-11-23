@@ -22,6 +22,7 @@ pub mod policy;
 pub mod rng;
 pub mod search_key;
 pub mod shared;
+pub mod side_resolve;
 pub mod snapshot;
 pub mod state;
 pub mod support;

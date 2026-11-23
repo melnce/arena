@@ -212,6 +212,12 @@ impl CardDb {
                         name,
                     });
                 }
+                if let Some(detail) = card.invalid_side_usage() {
+                    return Err(LoadError::InvalidSide {
+                        card: key.clone(),
+                        detail,
+                    });
+                }
                 self.paths.insert(key, PathBuf::from(label));
                 self.cards.insert(id, Arc::new(card));
             }
@@ -231,6 +237,12 @@ impl CardDb {
                     return Err(LoadError::UnboundRef {
                         card: key.clone(),
                         name,
+                    });
+                }
+                if let Some(detail) = crest.invalid_side_usage() {
+                    return Err(LoadError::InvalidSide {
+                        card: key.clone(),
+                        detail,
                     });
                 }
                 self.paths.insert(key.clone(), PathBuf::from(label));
@@ -256,6 +268,12 @@ impl CardDb {
                         name,
                     });
                 }
+                if let Some(detail) = card.invalid_side_usage() {
+                    return Err(LoadError::InvalidSide {
+                        card: key.clone(),
+                        detail,
+                    });
+                }
                 self.paths.insert(key, PathBuf::from(label));
                 self.cards.insert(id, Arc::new(card));
             }
@@ -265,6 +283,12 @@ impl CardDb {
                     return Err(LoadError::UnboundRef {
                         card: key.clone(),
                         name,
+                    });
+                }
+                if let Some(detail) = crest.invalid_side_usage() {
+                    return Err(LoadError::InvalidSide {
+                        card: key.clone(),
+                        detail,
                     });
                 }
                 self.paths.insert(key.clone(), PathBuf::from(label));

@@ -2697,6 +2697,18 @@ impl Card {
         }
         used.into_iter().filter(|n| !produced.contains(n)).collect()
     }
+
+    /// Unsupported `side` combinations (load-time rejection).
+    pub fn invalid_side_usage(&self) -> Option<String> {
+        let mut bad = None;
+        for a in self.abilities() {
+            walk_ability_side_validate(a, &mut bad);
+        }
+        for m in self.modes() {
+            walk_mode_side_validate(m, &mut bad);
+        }
+        bad
+    }
 }
 
 impl Crest {
@@ -2707,6 +2719,114 @@ impl Crest {
             walk_ability(a, &mut produced, &mut used);
         }
         used.into_iter().filter(|n| !produced.contains(n)).collect()
+    }
+
+    pub fn invalid_side_usage(&self) -> Option<String> {
+        let mut bad = None;
+        for a in self.abilities() {
+            walk_ability_side_validate(a, &mut bad);
+        }
+        bad
+    }
+}
+
+fn walk_ability_side_validate(a: &Ability, bad: &mut Option<String>) {
+    if let Some(c) = a.when_cond() {
+        walk_condition_side_validate(c, bad);
+    }
+    for e in a.effects() {
+        walk_effect_side_validate(e, bad);
+    }
+}
+
+fn walk_mode_side_validate(m: &Mode, bad: &mut Option<String>) {
+    match m {
+        Mode::Enhance { effects, .. } | Mode::Accelerate { effects, .. } => {
+            for e in effects {
+                walk_effect_side_validate(e, bad);
+            }
+        }
+        Mode::Crystallize { abilities, .. } => {
+            if let Some(abs) = abilities {
+                for a in abs {
+                    walk_ability_side_validate(a, bad);
+                }
+            }
+        }
+    }
+}
+
+fn walk_effect_side_validate(e: &Effect, bad: &mut Option<String>) {
+    if let Some(c) = e.when_cond() {
+        walk_condition_side_validate(c, bad);
+    }
+    match e {
+        Effect::If {
+            cond,
+            then,
+            else_effects,
+            ..
+        } => {
+            walk_condition_side_validate(cond, bad);
+            for x in then {
+                walk_effect_side_validate(x, bad);
+            }
+            if let Some(els) = else_effects {
+                for x in els {
+                    walk_effect_side_validate(x, bad);
+                }
+            }
+        }
+        Effect::Choose {
+            options: Some(opts),
+            ..
+        } => {
+            for o in opts {
+                for x in &o.effects {
+                    walk_effect_side_validate(x, bad);
+                }
+            }
+        }
+        Effect::Sequence { steps, .. } => {
+            for s in steps {
+                for x in &s.effects {
+                    walk_effect_side_validate(x, bad);
+                }
+            }
+        }
+        Effect::Repeat { effects, .. } => {
+            for x in effects {
+                walk_effect_side_validate(x, bad);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn walk_condition_side_validate(c: &Condition, bad: &mut Option<String>) {
+    if bad.is_some() {
+        return;
+    }
+    match c {
+        Condition::All { all } => {
+            for x in all {
+                walk_condition_side_validate(x, bad);
+            }
+        }
+        Condition::Any { any } => {
+            for x in any {
+                walk_condition_side_validate(x, bad);
+            }
+        }
+        Condition::Not { not } => walk_condition_side_validate(not, bad),
+        Condition::EnterCountAtLeast {
+            enter_count_at_least,
+        } if enter_count_at_least.side == Some(Side::Any) => {
+            *bad = Some(
+                "enterCountAtLeast.side \"any\" is undefined (field enterCountAtLeast)".into(),
+            );
+        }
+        _ => {}
     }
 }
 
