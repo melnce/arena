@@ -2777,6 +2777,7 @@ fn walk_effect_side_validate(e: &Effect, bad: &mut Option<String>) {
                 }
             }
         }
+        Effect::GrantAbility { ability, .. } => walk_ability_side_validate(ability, bad),
         Effect::Choose {
             options: Some(opts),
             ..
@@ -2785,6 +2786,11 @@ fn walk_effect_side_validate(e: &Effect, bad: &mut Option<String>) {
                 for x in &o.effects {
                     walk_effect_side_validate(x, bad);
                 }
+            }
+        }
+        Effect::Seq { effects, .. } => {
+            for x in effects {
+                walk_effect_side_validate(x, bad);
             }
         }
         Effect::Sequence { steps, .. } => {

@@ -1,0 +1,12 @@
+{
+  "live_actions": 3175,
+  "live_replays": 49,
+  "live_digest": "0xa075eaa3d960d8d8",
+  "recorded_actions": 3771,
+  "recorded_replays": 56,
+  "recorded_digest": "0xc49d7930a35ecf84",
+  "oracle_traces": 260,
+  "oracle_actions": 26997,
+  "meta_games": 8,
+  "meta_actions": 603
+}

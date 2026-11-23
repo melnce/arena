@@ -26,9 +26,11 @@ enum HarnessTrigger {
     EvolveField,
     SuperEvolveField,
     Engage,
+    CardStartOfTurn,
     CrestStartOfTurn,
 }
 
+#[derive(Clone)]
 struct ModeCase {
     card_key: String,
     card_id: CardId,
@@ -49,233 +51,7 @@ struct Exclusion {
 
 /// Options exempt from the gate (conditions, harness limits, owner questions).
 /// Never pin wrong engine behavior — only quoted conditions or gaps.
-const EXCLUSIONS: &[Exclusion] = &[
-    Exclusion {
-        card: "10574110",
-        choose: 0,
-        option: 0,
-        _class: "harness",
-        reason: "startOfTurn on crest + by randomUnused — not reachable as a controller play",
-    },
-    Exclusion {
-        card: "10574110",
-        choose: 0,
-        option: 1,
-        _class: "harness",
-        reason: "startOfTurn on crest + by randomUnused",
-    },
-    Exclusion {
-        card: "10574110",
-        choose: 0,
-        option: 2,
-        _class: "harness",
-        reason: "startOfTurn on crest + by randomUnused",
-    },
-    Exclusion {
-        card: "crest:10574110",
-        choose: 0,
-        option: 0,
-        _class: "harness",
-        reason: "crest startOfTurn randomUnused",
-    },
-    Exclusion {
-        card: "crest:10574110",
-        choose: 0,
-        option: 1,
-        _class: "harness",
-        reason: "crest startOfTurn randomUnused",
-    },
-    Exclusion {
-        card: "crest:10574110",
-        choose: 0,
-        option: 2,
-        _class: "harness",
-        reason: "crest startOfTurn randomUnused",
-    },
-    Exclusion {
-        card: "10604110",
-        choose: 0,
-        option: 0,
-        _class: "harness",
-        reason: "by random — covered via seed sweep in mode_sweep_random_cards",
-    },
-    Exclusion {
-        card: "10604110",
-        choose: 0,
-        option: 1,
-        _class: "harness",
-        reason: "by random",
-    },
-    Exclusion {
-        card: "10604110",
-        choose: 0,
-        option: 2,
-        _class: "harness",
-        reason: "by random",
-    },
-    Exclusion {
-        card: "10604110",
-        choose: 0,
-        option: 3,
-        _class: "harness",
-        reason: "by random",
-    },
-    Exclusion {
-        card: "10532310",
-        choose: 0,
-        option: 0,
-        _class: "harness",
-        reason: "by random",
-    },
-    Exclusion {
-        card: "10532310",
-        choose: 0,
-        option: 1,
-        _class: "harness",
-        reason: "by random",
-    },
-    Exclusion {
-        card: "10532310",
-        choose: 0,
-        option: 2,
-        _class: "harness",
-        reason: "by random",
-    },
-    Exclusion {
-        card: "11071310",
-        choose: 0,
-        option: 0,
-        _class: "harness",
-        reason: "by random",
-    },
-    Exclusion {
-        card: "11071310",
-        choose: 0,
-        option: 1,
-        _class: "harness",
-        reason: "by random",
-    },
-    Exclusion {
-        card: "10603110",
-        choose: 0,
-        option: 0,
-        _class: "harness",
-        reason: "by randomUnused trait roll",
-    },
-    Exclusion {
-        card: "10603110",
-        choose: 0,
-        option: 1,
-        _class: "harness",
-        reason: "by randomUnused",
-    },
-    Exclusion {
-        card: "10603110",
-        choose: 0,
-        option: 2,
-        _class: "harness",
-        reason: "by randomUnused",
-    },
-    Exclusion {
-        card: "10603110",
-        choose: 0,
-        option: 3,
-        _class: "harness",
-        reason: "by randomUnused",
-    },
-    Exclusion {
-        card: "10603110",
-        choose: 0,
-        option: 4,
-        _class: "harness",
-        reason: "by randomUnused",
-    },
-    Exclusion {
-        card: "10603110",
-        choose: 0,
-        option: 5,
-        _class: "harness",
-        reason: "by randomUnused",
-    },
-    Exclusion {
-        card: "10771310",
-        choose: 1,
-        option: 0,
-        _class: "harness",
-        reason: "choose uses optionsFrom with empty inline options — not a player pick list",
-    },
-    Exclusion {
-        card: "10823310",
-        choose: 1,
-        option: 0,
-        _class: "legit",
-        reason:
-            "second choose is pick-all when ≥2 allied field (optionsFrom) — not single-option pick",
-    },
-    Exclusion {
-        card: "10823310",
-        choose: 1,
-        option: 1,
-        _class: "legit",
-        reason: "same pick-all branch",
-    },
-    Exclusion {
-        card: "10912310",
-        choose: 1,
-        option: 0,
-        _class: "legit",
-        reason: "conditional second choose (when) — not player mode pick",
-    },
-    Exclusion {
-        card: "10962310",
-        choose: 1,
-        option: 0,
-        _class: "legit",
-        reason: "conditional second choose (when)",
-    },
-    Exclusion {
-        card: "10623310",
-        choose: 1,
-        option: 0,
-        _class: "legit",
-        reason: "printed_mode enhance branch — optionsFrom fanfare",
-    },
-    Exclusion {
-        card: "10633310",
-        choose: 1,
-        option: 0,
-        _class: "legit",
-        reason: "printed_mode enhance",
-    },
-    Exclusion {
-        card: "10413310",
-        choose: 1,
-        option: 0,
-        _class: "legit",
-        reason: "conditional fanfare when — second choose",
-    },
-    Exclusion {
-        card: "10413310",
-        choose: 1,
-        option: 1,
-        _class: "legit",
-        reason: "conditional fanfare when — second choose",
-    },
-    Exclusion {
-        card: "10413310",
-        choose: 1,
-        option: 2,
-        _class: "legit",
-        reason: "conditional fanfare when — second choose",
-    },
-    Exclusion {
-        card: "10423110",
-        choose: 1,
-        option: 0,
-        _class: "legit",
-        reason: "Enhance (8) pick-all via optionsFrom — not per-option player pick",
-    },
-];
+const EXCLUSIONS: &[Exclusion] = &[];
 
 fn excluded(key: &CaseKey) -> Option<&'static str> {
     EXCLUSIONS
@@ -295,7 +71,7 @@ fn trigger_of(ab: &Ability) -> HarnessTrigger {
             HarnessTrigger::SuperEvolveField
         }
         Ability::Engage { .. } => HarnessTrigger::Engage,
-        Ability::StartOfTurn { .. } => HarnessTrigger::CrestStartOfTurn,
+        Ability::StartOfTurn { .. } => HarnessTrigger::CardStartOfTurn,
         _ => HarnessTrigger::Play,
     }
 }
@@ -443,9 +219,16 @@ fn ability_for_trigger(card: &Card, trigger: HarnessTrigger) -> Option<&Ability>
                 | (HarnessTrigger::Play, Ability::Enter { .. })
                 | (HarnessTrigger::EvolveField, Ability::Evolve { .. })
                 | (HarnessTrigger::EvolveField, Ability::AnyEvolve { .. })
-                | (HarnessTrigger::SuperEvolveField, Ability::SuperEvolve { .. })
-                | (HarnessTrigger::SuperEvolveField, Ability::AnySuperEvolve { .. })
+                | (
+                    HarnessTrigger::SuperEvolveField,
+                    Ability::SuperEvolve { .. }
+                )
+                | (
+                    HarnessTrigger::SuperEvolveField,
+                    Ability::AnySuperEvolve { .. }
+                )
                 | (HarnessTrigger::Engage, Ability::Engage { .. })
+                | (HarnessTrigger::CardStartOfTurn, Ability::StartOfTurn { .. })
         )
     })
 }
@@ -745,6 +528,9 @@ fn build_rich_board(db: &CardDb, st: &mut State, me: PlayerId, case: &ModeCase) 
         put_field(db, st, me, VANILLA);
         put_field(db, st, me, TANK);
     }
+    if case.card_key == "10604110" {
+        st.player_mut(me).pp = 0;
+    }
 }
 
 fn clear_field(st: &mut State, who: PlayerId) {
@@ -874,6 +660,14 @@ fn fire_trigger(db: &CardDb, st: &mut State, me: PlayerId, case: &ModeCase) -> R
             )
             .map_err(|e| e.to_string())?;
         }
+        HarnessTrigger::CardStartOfTurn => {
+            clear_hand(st, me);
+            clear_field(st, me);
+            let slot = put_field(db, st, me, id);
+            evolve_slot(db, st, me, slot, false)?;
+            end_turn(db, st);
+            end_turn(db, st);
+        }
         HarnessTrigger::CrestStartOfTurn => {
             put_crest(st, me, &case.card_key);
             end_turn(db, st);
@@ -925,6 +719,492 @@ fn run_one_case(db: &CardDb, case: &ModeCase, seed: u64) -> Result<(), String> {
         return Err(msg);
     }
     Ok(())
+}
+
+const RANDOM_SEED_SEARCH: u64 = 4096;
+
+struct RandomExclusion {
+    card: &'static str,
+    choose: u8,
+    option: u8,
+    reason: &'static str,
+}
+
+/// Options no seed in `0..RANDOM_SEED_SEARCH` could activate (quoted reason).
+const RANDOM_EXCLUSIONS: &[RandomExclusion] = &[
+    RandomExclusion {
+        card: "10574110",
+        choose: 0,
+        option: 0,
+        reason: "follower startOfTurn randomUnused — covered on crest:10574110 (same option text)",
+    },
+    RandomExclusion {
+        card: "10574110",
+        choose: 0,
+        option: 1,
+        reason: "follower startOfTurn randomUnused — crest harness",
+    },
+    RandomExclusion {
+        card: "10574110",
+        choose: 0,
+        option: 2,
+        reason: "follower startOfTurn randomUnused — crest harness",
+    },
+];
+
+fn random_excluded(key: &CaseKey) -> Option<&'static str> {
+    RANDOM_EXCLUSIONS
+        .iter()
+        .find(|e| e.card == key.0 && e.choose == key.1 && e.option == key.2)
+        .map(|e| e.reason)
+}
+
+fn enumerate_random_cases(db: &CardDb) -> Vec<ModeCase> {
+    let all = enumerate_cases(db);
+    let mut out = Vec::new();
+    for card in db.cards.values() {
+        if card.token() {
+            continue;
+        }
+        let key = card.id().as_str().to_string();
+        for ab in card.abilities() {
+            let trig = trigger_of(ab);
+            let mut raw = Vec::new();
+            let mut ord = 0u8;
+            collect_chooses_in_effects(ab.effects(), &mut raw, &mut ord);
+            for (co, oi, by, printed) in raw {
+                if matches!(by, ChooseBy::Random | ChooseBy::RandomUnused) {
+                    out.push(ModeCase {
+                        card_key: key.clone(),
+                        card_id: card.id(),
+                        trigger: trig,
+                        choose_ord: co,
+                        option_ord: oi,
+                        by,
+                        option_printed: printed,
+                    });
+                }
+            }
+        }
+    }
+    for crest in db.crests.values() {
+        let key = crest.id.clone();
+        for ab in crest.abilities() {
+            let mut raw = Vec::new();
+            let mut ord = 0u8;
+            collect_chooses_in_effects(ab.effects(), &mut raw, &mut ord);
+            for (co, oi, by, printed) in raw {
+                if matches!(by, ChooseBy::Random | ChooseBy::RandomUnused) {
+                    out.push(ModeCase {
+                        card_key: key.clone(),
+                        card_id: CardId::parse("88001110").expect("pad"),
+                        trigger: HarnessTrigger::CrestStartOfTurn,
+                        choose_ord: co,
+                        option_ord: oi,
+                        by,
+                        option_printed: printed,
+                    });
+                }
+            }
+        }
+    }
+    let _ = all;
+    out.sort_by(|a, b| {
+        (&a.card_key, a.choose_ord, a.option_ord).cmp(&(&b.card_key, b.choose_ord, b.option_ord))
+    });
+    out
+}
+
+#[allow(clippy::collapsible_match, clippy::collapsible_if)]
+fn effect_visible_in_snap(before: &BoardSnap, after: &BoardSnap, e: &Effect) -> bool {
+    match e {
+        Effect::Damage { select, .. } => {
+            if let Selector::Pool(p) = select {
+                match (p.side, p.zone) {
+                    (Side::Enemy, Zone::Leader) => {
+                        if after.b.leader_hp < before.b.leader_hp {
+                            return true;
+                        }
+                    }
+                    (Side::Enemy, Zone::Field) => {
+                        if after.b.field_cards.len() < before.b.field_cards.len() {
+                            return true;
+                        }
+                    }
+                    (Side::Ally, Zone::Leader) => {
+                        if after.a.leader_hp < before.a.leader_hp {
+                            return true;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Effect::Destroy { select, .. } | Effect::Banish { select, .. } => {
+            if let Selector::Pool(p) = select {
+                if p.side == Side::Enemy && p.zone == Zone::Field {
+                    if after.b.field_cards.len() < before.b.field_cards.len() {
+                        return true;
+                    }
+                }
+            }
+        }
+        Effect::Restore { select, .. } => {
+            if let Selector::Pool(p) = select {
+                if p.side == Side::Ally
+                    && p.zone == Zone::Leader
+                    && after.a.leader_hp > before.a.leader_hp
+                {
+                    return true;
+                }
+            }
+        }
+        Effect::Pp { .. } => {
+            if after.a.pp > before.a.pp {
+                return true;
+            }
+        }
+        Effect::Buff { .. } | Effect::GrantTraits { .. } => {
+            if after.a.field_cards != before.a.field_cards {
+                return true;
+            }
+        }
+        Effect::Cost { .. } => {
+            if after.digest != before.digest {
+                return true;
+            }
+        }
+        _ => {}
+    }
+    false
+}
+
+fn option_visible(before: &BoardSnap, after: &BoardSnap, case: &ModeCase, db: &CardDb) -> bool {
+    option_effects_for(case, db)
+        .iter()
+        .any(|e| effect_visible_in_snap(before, after, e))
+}
+
+fn choose_used_after_random(
+    st: &State,
+    me: PlayerId,
+    case: &ModeCase,
+) -> std::collections::BTreeSet<u8> {
+    if case.card_key.starts_with("crest:") {
+        return st
+            .player(me)
+            .crests
+            .iter()
+            .find(|c| c.id == case.card_key)
+            .map(|c| c.choose_used.clone())
+            .unwrap_or_default();
+    }
+    for slot in st.player(me).field.iter().flatten() {
+        if slot.card == case.card_id {
+            return slot.choose_used.clone();
+        }
+    }
+    for c in st.player(me).hand.iter() {
+        if c.card == case.card_id {
+            return c.choose_used.clone();
+        }
+    }
+    std::collections::BTreeSet::new()
+}
+
+fn discover_random_seed(db: &CardDb, case: &ModeCase, option: u8) -> Option<u64> {
+    for seed in 0..RANDOM_SEED_SEARCH {
+        let mut st = started(db, seed);
+        let me = PlayerId::A;
+        build_rich_board(db, &mut st, me, case);
+        let before = board_snap(&st);
+        if fire_trigger(db, &mut st, me, case).is_err() {
+            continue;
+        }
+        while matches!(st.phase, Phase::Choice { .. }) {
+            choose(db, &mut st, 0);
+        }
+        drain_choice(db, &mut st);
+        let after = board_snap(&st);
+        if before.digest == after.digest {
+            continue;
+        }
+        let probe = ModeCase {
+            option_ord: option,
+            ..case.clone()
+        };
+        let hit = if matches!(case.by, ChooseBy::RandomUnused) {
+            choose_used_after_random(&st, me, case).contains(&option)
+                && option_visible(&before, &after, &probe, db)
+        } else {
+            option_visible(&before, &after, &probe, db)
+        };
+        if hit {
+            return Some(seed);
+        }
+    }
+    None
+}
+
+fn run_random_option_case(db: &CardDb, case: &ModeCase, seed: u64) -> Result<(), String> {
+    let key = (case.card_key.clone(), case.choose_ord, case.option_ord);
+    if random_excluded(&key).is_some() {
+        return Ok(());
+    }
+    let mut st = started(db, seed);
+    let me = PlayerId::A;
+    build_rich_board(db, &mut st, me, case);
+    let before = board_snap(&st);
+    fire_trigger(db, &mut st, me, case)?;
+    while matches!(st.phase, Phase::Choice { .. }) {
+        choose(db, &mut st, 0);
+    }
+    drain_choice(db, &mut st);
+    let after = board_snap(&st);
+    if !changed(&before, &after) {
+        return Err(format!(
+            "NO-OP random {} opt {} ({}) seed {seed}",
+            case.card_key, case.option_ord, case.option_printed
+        ));
+    }
+    let probe = ModeCase {
+        option_ord: case.option_ord,
+        ..case.clone()
+    };
+    if !option_visible(&before, &after, &probe, db) {
+        let used = choose_used_after_random(&st, me, case);
+        return Err(format!(
+            "{} opt {} seed {seed}: option not visible in snapshot (used {:?})",
+            case.card_key, case.option_ord, used
+        ));
+    }
+    if matches!(case.by, ChooseBy::RandomUnused)
+        && !choose_used_after_random(&st, me, case).contains(&case.option_ord)
+    {
+        return Err(format!(
+            "{} opt {}: seed {seed} did not mark choose_used",
+            case.card_key, case.option_ord
+        ));
+    }
+    if let Some(msg) = check_side_coverage(case, db, &before, &after) {
+        return Err(msg);
+    }
+    Ok(())
+}
+
+fn play_spell_with_pp(db: &CardDb, st: &mut State, me: PlayerId, id: &str, pp: i32) {
+    clear_hand(st, me);
+    give_pp(st, me, pp, pp.max(10));
+    play_id(db, st, me, id);
+    while matches!(st.phase, Phase::Choice { .. }) {
+        choose(db, st, 0);
+    }
+    drain_choice(db, st);
+}
+
+#[test]
+fn mode_sweep_random_cards() {
+    let db = load_db();
+    let cases = enumerate_random_cases(&db);
+    assert!(
+        cases
+            .iter()
+            .any(|c| c.card_key == "10604110" && c.option_ord == 0),
+        "10604110 random fanfare options"
+    );
+    let mut failures = Vec::new();
+    let mut seeds: Vec<String> = Vec::new();
+    for case in &cases {
+        let key = (case.card_key.clone(), case.choose_ord, case.option_ord);
+        if random_excluded(&key).is_some() {
+            continue;
+        }
+        let seed = discover_random_seed(&db, case, case.option_ord);
+        let Some(seed) = seed else {
+            failures.push(format!(
+                "{} choose {} opt {}: no seed in 0..{} (not listed in RANDOM_EXCLUSIONS)",
+                case.card_key, case.choose_ord, case.option_ord, RANDOM_SEED_SEARCH
+            ));
+            continue;
+        };
+        seeds.push(format!(
+            "{} choose {} opt {} => seed {}",
+            case.card_key, case.choose_ord, case.option_ord, seed
+        ));
+        if let Err(e) = run_random_option_case(&db, case, seed) {
+            failures.push(e);
+        }
+    }
+    assert!(
+        failures.is_empty(),
+        "random mode sweep ({}):\n{}\n\nseeds:\n{}",
+        failures.len(),
+        failures.join("\n"),
+        seeds.join("\n")
+    );
+}
+
+#[test]
+fn mode_sweep_autopick_branches() {
+    let db = load_db();
+    let me = PlayerId::A;
+
+    // 10912310 — when: `combo: {n: 3}` pick-all (optionsFrom fanfare)
+    {
+        let mut st = started(&db, 77_100);
+        build_rich_board(
+            &db,
+            &mut st,
+            me,
+            &ModeCase {
+                card_key: "10912310".into(),
+                card_id: cid("10912310"),
+                trigger: HarnessTrigger::Play,
+                choose_ord: 0,
+                option_ord: 0,
+                by: ChooseBy::Player,
+                option_printed: String::new(),
+            },
+        );
+        st.player_mut(me).combo = 3;
+        let before = board_snap(&st);
+        play_spell_with_pp(&db, &mut st, me, "10912310", 2);
+        assert!(
+            !at_mode_choice(&st),
+            "10912310 combo≥3 should auto-activate all modes"
+        );
+        assert_ne!(
+            before.digest,
+            board_snap(&st).digest,
+            "10912310 pick-all NO-OP"
+        );
+    }
+
+    // 10823310 — when: countAtLeast ≥2 allied field cards
+    {
+        let mut st = started(&db, 77_101);
+        let case = ModeCase {
+            card_key: "10823310".into(),
+            card_id: cid("10823310"),
+            trigger: HarnessTrigger::Play,
+            choose_ord: 1,
+            option_ord: 0,
+            by: ChooseBy::Player,
+            option_printed: String::new(),
+        };
+        build_rich_board(&db, &mut st, me, &case);
+        let before = board_snap(&st);
+        play_spell_with_pp(&db, &mut st, me, "10823310", 2);
+        assert!(!at_mode_choice(&st), "10823310 field≥2 pick-all");
+        assert_ne!(
+            before.digest,
+            board_snap(&st).digest,
+            "10823310 pick-all NO-OP"
+        );
+    }
+
+    // 10623310 — Enhance (3) replaces fanfare with pick-all
+    {
+        let mut st = started(&db, 77_102);
+        build_rich_board(
+            &db,
+            &mut st,
+            me,
+            &ModeCase {
+                card_key: "10623310".into(),
+                card_id: cid("10623310"),
+                trigger: HarnessTrigger::Play,
+                choose_ord: 0,
+                option_ord: 0,
+                by: ChooseBy::Player,
+                option_printed: String::new(),
+            },
+        );
+        let before = board_snap(&st);
+        play_spell_with_pp(&db, &mut st, me, "10623310", 3);
+        assert!(!at_mode_choice(&st), "10623310 Enhance(3) pick-all");
+        assert_ne!(
+            before.digest,
+            board_snap(&st).digest,
+            "10623310 enhance NO-OP"
+        );
+    }
+
+    // 10423110 — Enhance (8) pick-all fanfare modes
+    {
+        let mut st = started(&db, 77_103);
+        clear_field(&mut st, me);
+        give_pp(&mut st, me, 8, 10);
+        st.player_mut(me).sep = 3;
+        let before = board_snap(&st);
+        play_id(&db, &mut st, me, "10423110");
+        while matches!(st.phase, Phase::Choice { .. }) {
+            choose(&db, &mut st, 0);
+        }
+        drain_choice(&db, &mut st);
+        assert!(!at_mode_choice(&st), "10423110 Enhance(8) pick-all");
+        assert_ne!(
+            before.digest,
+            board_snap(&st).digest,
+            "10423110 enhance NO-OP"
+        );
+    }
+
+    // 10413310 — Super Skybound Art gauge ≥ 15 (`skyboundArt: {n: 15}`)
+    {
+        let mut st = started(&db, 77_104);
+        set_round(&mut st, me, 15);
+        build_rich_board(
+            &db,
+            &mut st,
+            me,
+            &ModeCase {
+                card_key: "10413310".into(),
+                card_id: cid("10413310"),
+                trigger: HarnessTrigger::Play,
+                choose_ord: 0,
+                option_ord: 0,
+                by: ChooseBy::Player,
+                option_printed: String::new(),
+            },
+        );
+        let before = board_snap(&st);
+        play_spell_with_pp(&db, &mut st, me, "10413310", 2);
+        assert!(!at_mode_choice(&st), "10413310 super skybound pick-all");
+        assert_ne!(
+            before.digest,
+            board_snap(&st).digest,
+            "10413310 skybound NO-OP"
+        );
+    }
+
+    // 10962310 — allied field card with baseCost ≥ 6
+    {
+        let mut st = started(&db, 77_105);
+        build_rich_board(
+            &db,
+            &mut st,
+            me,
+            &ModeCase {
+                card_key: "10962310".into(),
+                card_id: cid("10962310"),
+                trigger: HarnessTrigger::Play,
+                choose_ord: 0,
+                option_ord: 0,
+                by: ChooseBy::Player,
+                option_printed: String::new(),
+            },
+        );
+        put_field(&db, &mut st, me, "10604110");
+        let before = board_snap(&st);
+        play_spell_with_pp(&db, &mut st, me, "10962310", 1);
+        assert!(!at_mode_choice(&st), "10962310 fieldHas cost≥6 pick-all");
+        assert_ne!(
+            before.digest,
+            board_snap(&st).digest,
+            "10962310 pick-all NO-OP"
+        );
+    }
 }
 
 #[test]

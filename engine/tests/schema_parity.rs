@@ -87,6 +87,41 @@ fn schema_parity_rejects_faith_in_crest_gain() {
     assert!(serde_json::from_str::<CardOrCrest>(&t).is_err());
 }
 
+fn assert_invalid_side_card(path: &Path, want_id: &str) {
+    let text = fs::read_to_string(path).unwrap();
+    let card: arena_engine::Card = serde_json::from_str(&text).unwrap();
+    assert_eq!(card.id().as_str(), want_id);
+    let detail = card
+        .invalid_side_usage()
+        .unwrap_or_else(|| panic!("{} should fail invalid_side_usage", want_id));
+    assert!(detail.contains("enterCountAtLeast"), "{want_id}: {detail}");
+    let label = format!("test/{want_id}.json");
+    match arena_engine::CardDb::from_json(&[(label, text)]) {
+        Err(arena_engine::LoadError::InvalidSide { card, detail: d }) => {
+            assert_eq!(card, want_id);
+            assert!(d.contains("enterCountAtLeast"), "{d}");
+        }
+        Ok(_) => panic!("expected InvalidSide for {want_id}"),
+        Err(other) => panic!("expected InvalidSide, got {other:?}"),
+    }
+}
+
+#[test]
+fn schema_parity_rejects_enter_count_at_least_side_any() {
+    assert_invalid_side_card(
+        &common::fixtures_dir().join("invalid/enter_count_side_any.json"),
+        "89501991",
+    );
+}
+
+#[test]
+fn schema_parity_rejects_nested_grant_ability_enter_count_side_any() {
+    assert_invalid_side_card(
+        &common::fixtures_dir().join("invalid/grant_ability_nested_enter_count_side_any.json"),
+        "89501992",
+    );
+}
+
 #[test]
 fn m1_unsupported_list_is_nonempty() {
     let v = m1_unsupported_list();
