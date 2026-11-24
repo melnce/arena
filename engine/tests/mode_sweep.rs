@@ -5,7 +5,10 @@ use arena_engine::card::{
     Ability, Card, ChooseBy, ChooseOption, ChoosePick, Crest, Effect, Mode, OptionsFrom, PoolPick,
     Selector, SelectorKind, Side, Zone,
 };
-use arena_engine::{apply, hash, Action, CardDb, CardId, ChoiceNode, Phase, PlayerId, State};
+use arena_engine::state::DestroyedRecord;
+use arena_engine::{
+    apply, hash, Action, CardDb, CardId, CardKind, ChoiceNode, Phase, PlayerId, State,
+};
 
 mod common;
 #[path = "support/effect_obs.rs"]
@@ -20,6 +23,9 @@ const SPELL_HAND: &str = "10051310";
 const FAITH: &str = "faith:10614120";
 const CREST_A: &str = "crest:10714110";
 const CREST_B: &str = "crest:10412310";
+const SWORD_FOLLOWER: &str = "10021110";
+const WARD_FOLLOWER: &str = "89100010";
+const SLAUS: &str = "10574110";
 
 /// (card id, choose index in ability/mode effect list, option index)
 type CaseKey = (String, u8, u8);
@@ -670,12 +676,61 @@ fn build_rich_board(db: &CardDb, st: &mut State, me: PlayerId, case: &ModeCase) 
     if case.card_key == "10604110" {
         st.player_mut(me).pp = 0;
     }
+    if matches!(case.card_key.as_str(), "10031110" | "10732310" | "11031120") {
+        st.player_mut(me).earth = 3;
+    }
+    if case.card_key == "10423310" {
+        put_field(db, st, me, SWORD_FOLLOWER);
+    }
+    if case.card_key == "10564110" {
+        put_field(db, st, me, WARD_FOLLOWER);
+    }
+    if matches!(case.card_key.as_str(), "10051310" | "10803310") {
+        clear_field(st, me);
+        put_field(db, st, opp, TANK);
+        st.player_mut(me).destroyed_history.clear();
+        remember_destroyed(st, me, VANILLA, 1);
+        remember_destroyed(st, me, VANILLA, 1);
+    }
+    if case.card_key == "10803310" && case.option_ord == 2 {
+        put_field(db, st, me, VANILLA);
+        put_field(db, st, me, TANK);
+    }
+    if case.card_key == "10564110" && case.option_ord == 1 {
+        put_field(db, st, me, WARD_FOLLOWER);
+    }
+    if case.card_key == "10504110" {
+        while st.player(me).deck.len() < 12 {
+            put_deck(db, st, me, VANILLA);
+        }
+    }
+    if case.card_key == "10434110" {
+        put_field(db, st, me, VANILLA);
+    }
+}
+
+fn remember_destroyed(st: &mut State, who: PlayerId, id: &str, base_cost: i32) {
+    st.player_mut(who).destroyed_history.push(DestroyedRecord {
+        card: cid(id),
+        base_cost,
+        kind: CardKind::Follower,
+        owner: who,
+        from_field: true,
+    });
 }
 
 fn clear_field(st: &mut State, who: PlayerId) {
     for slot in st.player_mut(who).field.iter_mut() {
         *slot = None;
     }
+}
+
+fn end_turns_to_owner_start(db: &CardDb, st: &mut State, who: PlayerId) {
+    assert_eq!(st.active, who);
+    end_turn(db, st);
+    assert_eq!(st.active, who.opponent());
+    end_turn(db, st);
+    assert_eq!(st.active, who);
 }
 
 fn at_mode_choice(st: &State) -> bool {
@@ -737,6 +792,13 @@ fn evolve_slot(
     .map_err(|e| format!("evolve slot {slot} super={super_evolve}: {e:?}"))
 }
 
+fn spell_keeps_ally_field(card_key: &str) -> bool {
+    matches!(
+        card_key,
+        "10413310" | "10423310" | "10803310" | "11043310" | "10031110" | "10633310"
+    )
+}
+
 fn prep_play_trigger(
     db: &CardDb,
     st: &mut State,
@@ -756,7 +818,17 @@ fn prep_play_trigger(
         put_field(db, st, opp, TANK);
         put_field(db, st, opp, TANK);
         put_field(db, st, me, VANILLA);
-    } else {
+        put_field(db, st, me, CLUE);
+        put_field(db, st, opp, CLUE);
+    } else if case.card_key == "10564110" {
+        clear_field(st, me);
+        let w1 = put_field(db, st, me, WARD_FOLLOWER);
+        let _w2 = put_field(db, st, me, WARD_FOLLOWER);
+        let _ = w1;
+    } else if case.card_key == "10031110" {
+        clear_field(st, me);
+        put_hand(db, st, me, "10413310");
+    } else if !spell_keeps_ally_field(&case.card_key) {
         clear_field(st, me);
     }
     give_pp(st, me, cost, cost.max(10));
@@ -797,11 +869,17 @@ fn fire_trigger(db: &CardDb, st: &mut State, me: PlayerId, case: &ModeCase) -> R
             clear_hand(st, me);
             clear_field(st, me);
             let slot = put_field(db, st, me, id);
+            if case.card_key == "10854110" {
+                st.player_mut(me).pp = 4;
+            }
             evolve_slot(db, st, me, slot, false)?;
         }
         HarnessTrigger::SuperEvolveField => {
             clear_hand(st, me);
             clear_field(st, me);
+            if case.card_key == "10434110" {
+                put_field(db, st, me, VANILLA);
+            }
             let slot = put_field(db, st, me, id);
             evolve_slot(db, st, me, slot, true)?;
         }
@@ -818,17 +896,23 @@ fn fire_trigger(db: &CardDb, st: &mut State, me: PlayerId, case: &ModeCase) -> R
             .map_err(|e| e.to_string())?;
         }
         HarnessTrigger::CardStartOfTurn => {
-            clear_hand(st, me);
+            if case.card_key != SLAUS {
+                clear_hand(st, me);
+            }
             clear_field(st, me);
-            let slot = put_field(db, st, me, id);
-            evolve_slot(db, st, me, slot, false)?;
-            end_turn(db, st);
-            end_turn(db, st);
+            put_field(db, st, me, id);
+            if case.card_key == SLAUS {
+                end_turns_to_owner_start(db, st, me);
+            } else {
+                let slot = follower_slot(st, me, id);
+                evolve_slot(db, st, me, slot, false)?;
+                end_turn(db, st);
+                end_turn(db, st);
+            }
         }
         HarnessTrigger::CrestStartOfTurn => {
             put_crest(st, me, &case.card_key);
-            end_turn(db, st);
-            end_turn(db, st);
+            end_turns_to_owner_start(db, st, me);
         }
     }
     Ok(())
@@ -862,17 +946,36 @@ fn run_one_case(db: &CardDb, case: &ModeCase, seed: u64) -> Result<(), String> {
             case.card_key, case.option_ord, st.phase
         )
     })?;
-    let before = board_snap(&st);
+    let pay = match case.trigger {
+        HarnessTrigger::Play if !case.card_key.starts_with("crest:") => default_play_cost(db, case),
+        _ => 0,
+    };
+    let ctx = play_ctx_for(db, me, case, pay);
+    if case.card_key == "10854110"
+        && matches!(case.trigger, HarnessTrigger::EvolveField)
+        && case.option_ord == 1
+    {
+        st.player_mut(me).pp = 3;
+    }
+    let before_board = board_snap(&st);
+    let before = deep_snap(&st, me);
     choose(db, &mut st, pick);
     drain_after_mode(db, &mut st);
-    let after = board_snap(&st);
-    if !changed(&before, &after) {
+    let after_board = board_snap(&st);
+    let after = deep_snap(&st, me);
+    if !changed(&before_board, &after_board) {
         return Err(format!(
             "NO-OP {} choose {} option {} ({})",
             case.card_key, case.choose_ord, case.option_ord, case.option_printed
         ));
     }
-    if let Some(msg) = check_side_coverage(case, db, &before, &after) {
+    if let Err(e) = strict_option_observed(db, &before, &after, case, ctx) {
+        return Err(format!(
+            "{} choose {} option {}: {e}",
+            case.card_key, case.choose_ord, case.option_ord
+        ));
+    }
+    if let Some(msg) = check_side_coverage(case, db, &before_board, &after_board) {
         return Err(msg);
     }
     Ok(())
@@ -888,44 +991,7 @@ struct RandomExclusion {
 }
 
 /// Options no seed in `0..RANDOM_SEED_SEARCH` could activate (quoted reason).
-const RANDOM_EXCLUSIONS: &[RandomExclusion] = &[
-    RandomExclusion {
-        card: "10574110",
-        choose: 0,
-        option: 0,
-        reason: "follower startOfTurn randomUnused — not covered; no seed in 0..16384 under strict trait observer",
-    },
-    RandomExclusion {
-        card: "10574110",
-        choose: 0,
-        option: 1,
-        reason: "follower startOfTurn randomUnused — crest harness",
-    },
-    RandomExclusion {
-        card: "10574110",
-        choose: 0,
-        option: 2,
-        reason: "follower startOfTurn randomUnused — crest harness",
-    },
-    RandomExclusion {
-        card: "crest:10574110",
-        choose: 0,
-        option: 0,
-        reason: "crest startOfTurn randomUnused — no seed in 0..16384 under strict trait observer",
-    },
-    RandomExclusion {
-        card: "crest:10574110",
-        choose: 0,
-        option: 1,
-        reason: "crest startOfTurn randomUnused — no seed in 0..16384 under strict trait observer",
-    },
-    RandomExclusion {
-        card: "crest:10574110",
-        choose: 0,
-        option: 2,
-        reason: "crest startOfTurn randomUnused — no seed in 0..16384 under strict trait observer",
-    },
-];
+const RANDOM_EXCLUSIONS: &[RandomExclusion] = &[];
 
 fn random_excluded(key: &CaseKey) -> Option<&'static str> {
     RANDOM_EXCLUSIONS
@@ -1157,6 +1223,36 @@ fn choose_used_after_random(
     std::collections::BTreeSet::new()
 }
 
+fn random_turn_start(case: &ModeCase) -> bool {
+    matches!(
+        case.trigger,
+        HarnessTrigger::CardStartOfTurn | HarnessTrigger::CrestStartOfTurn
+    )
+}
+
+fn prep_turn_start_board(
+    db: &CardDb,
+    st: &mut State,
+    me: PlayerId,
+    case: &ModeCase,
+) -> Result<(), String> {
+    match case.trigger {
+        HarnessTrigger::CardStartOfTurn => {
+            if case.card_key != SLAUS {
+                clear_hand(st, me);
+            }
+            clear_field(st, me);
+            put_field(db, st, me, case.card_key.as_str());
+            Ok(())
+        }
+        HarnessTrigger::CrestStartOfTurn => {
+            put_crest(st, me, &case.card_key);
+            Ok(())
+        }
+        _ => Err("not turn-start".into()),
+    }
+}
+
 fn discover_random_seed(db: &CardDb, case: &ModeCase, option: u8) -> Option<u64> {
     for seed in 0..RANDOM_SEED_SEARCH {
         let mut st = started(db, seed);
@@ -1168,15 +1264,26 @@ fn discover_random_seed(db: &CardDb, case: &ModeCase, option: u8) -> Option<u64>
             }
             _ => default_play_cost(db, case),
         };
-        let before = deep_snap(&st, me);
         let ctx = play_ctx_for(db, me, case, pay);
-        if matches!(case.trigger, HarnessTrigger::Play) && !case.card_key.starts_with("crest:") {
-            if resume_play_trigger(db, &mut st, me, case).is_err() {
+        let before = if random_turn_start(case) {
+            if prep_turn_start_board(db, &mut st, me, case).is_err() {
                 continue;
             }
-        } else if fire_trigger(db, &mut st, me, case).is_err() {
-            continue;
-        }
+            let b = deep_snap(&st, me);
+            end_turns_to_owner_start(db, &mut st, me);
+            b
+        } else {
+            let b = deep_snap(&st, me);
+            if matches!(case.trigger, HarnessTrigger::Play) && !case.card_key.starts_with("crest:")
+            {
+                if resume_play_trigger(db, &mut st, me, case).is_err() {
+                    continue;
+                }
+            } else if fire_trigger(db, &mut st, me, case).is_err() {
+                continue;
+            }
+            b
+        };
         while matches!(st.phase, Phase::Choice { .. }) {
             choose(db, &mut st, 0);
         }
@@ -1213,14 +1320,23 @@ fn run_random_option_case(db: &CardDb, case: &ModeCase, seed: u64) -> Result<(),
         }
         _ => default_play_cost(db, case),
     };
-    let before_board = board_snap(&st);
-    let before = deep_snap(&st, me);
     let ctx = play_ctx_for(db, me, case, pay);
-    if matches!(case.trigger, HarnessTrigger::Play) && !case.card_key.starts_with("crest:") {
-        resume_play_trigger(db, &mut st, me, case)?;
+    let (before, before_board) = if random_turn_start(case) {
+        prep_turn_start_board(db, &mut st, me, case)?;
+        let b = deep_snap(&st, me);
+        let bb = board_snap(&st);
+        end_turns_to_owner_start(db, &mut st, me);
+        (b, bb)
     } else {
-        fire_trigger(db, &mut st, me, case)?;
-    }
+        let b = deep_snap(&st, me);
+        let bb = board_snap(&st);
+        if matches!(case.trigger, HarnessTrigger::Play) && !case.card_key.starts_with("crest:") {
+            resume_play_trigger(db, &mut st, me, case)?;
+        } else {
+            fire_trigger(db, &mut st, me, case)?;
+        }
+        (b, bb)
+    };
     while matches!(st.phase, Phase::Choice { .. }) {
         choose(db, &mut st, 0);
     }
@@ -1465,6 +1581,110 @@ fn mode_sweep_all_player_options() {
         "mode sweep failures ({}):\n{}",
         failures.len(),
         failures.join("\n")
+    );
+}
+
+fn slaus_follower_case(option: u8) -> ModeCase {
+    ModeCase {
+        card_key: SLAUS.into(),
+        card_id: cid(SLAUS),
+        trigger: HarnessTrigger::CardStartOfTurn,
+        choose_ord: 0,
+        option_ord: option,
+        by: ChooseBy::RandomUnused,
+        option_printed: String::new(),
+    }
+}
+
+fn slaus_crest_case(option: u8) -> ModeCase {
+    ModeCase {
+        card_key: "crest:10574110".into(),
+        card_id: cid(SLAUS),
+        trigger: HarnessTrigger::CrestStartOfTurn,
+        choose_ord: 0,
+        option_ord: option,
+        by: ChooseBy::RandomUnused,
+        option_printed: String::new(),
+    }
+}
+
+#[test]
+fn mode_sweep_slaus_start_of_turn_modes() {
+    let db = load_db();
+    for option in 0..3u8 {
+        let follower = slaus_follower_case(option);
+        let crest = slaus_crest_case(option);
+        let seed_f = discover_random_seed(&db, &follower, option)
+            .unwrap_or_else(|| panic!("10574110 follower opt {option}: no seed"));
+        let seed_c = discover_random_seed(&db, &crest, option)
+            .unwrap_or_else(|| panic!("crest:10574110 opt {option}: no seed"));
+        run_random_option_case(&db, &follower, seed_f)
+            .unwrap_or_else(|e| panic!("follower opt {option} seed {seed_f}: {e}"));
+        run_random_option_case(&db, &crest, seed_c)
+            .unwrap_or_else(|e| panic!("crest opt {option} seed {seed_c}: {e}"));
+    }
+
+    let me = PlayerId::A;
+    for seed in 0..128u64 {
+        let mut st = started(&db, seed);
+        build_rich_board(&db, &mut st, me, &slaus_follower_case(0));
+        clear_field(&mut st, me);
+        put_field(&db, &mut st, me, SLAUS);
+        let mut seen = std::collections::BTreeSet::<u8>::new();
+        for turn in 0..3 {
+            let before_used = choose_used_after_random(&st, me, &slaus_follower_case(0));
+            end_turns_to_owner_start(&db, &mut st, me);
+            let after_used = choose_used_after_random(&st, me, &slaus_follower_case(0));
+            assert_eq!(
+                after_used.len(),
+                before_used.len() + 1,
+                "seed={seed} turn={turn}: one new follower option"
+            );
+            let new_opt = after_used
+                .difference(&before_used)
+                .next()
+                .copied()
+                .expect("new option");
+            seen.insert(new_opt);
+        }
+        assert_eq!(seen.len(), 3, "seed={seed}: all three follower options");
+    }
+
+    // Hand cost −1 until EOT (follower opt 0): reverts next turn.
+    let follower0 = slaus_follower_case(0);
+    let seed = discover_random_seed(&db, &follower0, 0).expect("follower opt0 seed");
+    let mut st = started(&db, seed);
+    build_rich_board(&db, &mut st, me, &follower0);
+    clear_field(&mut st, me);
+    put_field(&db, &mut st, me, SLAUS);
+    let base_cost = st
+        .player(me)
+        .hand
+        .iter()
+        .find(|c| c.card == cid(VANILLA))
+        .map(|c| c.cost);
+    end_turns_to_owner_start(&db, &mut st, me);
+    let reduced = st
+        .player(me)
+        .hand
+        .iter()
+        .find(|c| c.card == cid(VANILLA))
+        .map(|c| c.cost)
+        .expect("hand card");
+    if let Some(base) = base_cost {
+        assert_eq!(reduced, base - 1, "follower opt0: hand −1 this turn");
+    }
+    end_turn(&db, &mut st);
+    end_turn(&db, &mut st);
+    let after_eot = st
+        .player(me)
+        .hand
+        .iter()
+        .find(|c| c.card == cid(VANILLA))
+        .map(|c| c.cost);
+    assert_eq!(
+        after_eot, base_cost,
+        "follower opt0: cost restored next turn"
     );
 }
 
