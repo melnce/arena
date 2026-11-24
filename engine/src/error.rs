@@ -42,6 +42,8 @@ pub enum LoadError {
     Unsupported(Unsupported),
     #[error("card {card} has bound ref {name} that no `as` on the same card can produce")]
     UnboundRef { card: String, name: String },
+    #[error("card {card}: {detail}")]
+    InvalidSide { card: String, detail: String },
     #[error("opening hand card {card} is not in player {player}'s deck")]
     OpeningHandNotInDeck { player: String, card: String },
 }

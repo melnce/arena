@@ -8,9 +8,9 @@ use crate::apply::{
     eval_amount, eval_cond, legal_actions, resolve_choose_options, resolve_select, source_card_id,
 };
 use crate::card::{
-    Ability, Amount, CardId, CardKind, CardSource, Class, Condition, Controller, CounterKey,
-    Effect, FieldHasKind, Filter, FilterKind, Mode, NamedCounter, PayResource, Selector,
-    SelectorKind, Side, Tribe, TribeOrList, VarKey, Zone,
+    Ability, Amount, CardId, CardKind, CardSource, Class, Condition, CounterKey, Effect,
+    FieldHasKind, Filter, FilterKind, Mode, NamedCounter, PayResource, Selector, SelectorKind,
+    Side, Tribe, TribeOrList, VarKey, Zone,
 };
 use crate::db::CardDb;
 use crate::ids::{AttackTarget, PlayerId};
@@ -648,10 +648,7 @@ fn walk_effect(ctx: WalkCtx<'_>, effect: &Effect, gates: &mut Vec<GateInfo>) {
             && card_has_self_enter_count_gate(ctx.db, *named) =>
         {
             let need = enter_count_threshold(ctx.db, *named).unwrap_or(0);
-            let side = match controller {
-                Some(Controller::Opponent) => ctx.player.opponent(),
-                _ => ctx.player,
-            };
+            let side = crate::side_resolve::player_for_controller(*controller, ctx.player);
             let have = ctx
                 .state
                 .player(side)
@@ -828,10 +825,8 @@ fn push_evaluated(
             enter_count_at_least,
         } => {
             let need = amount_int(&enter_count_at_least.n).unwrap_or(0);
-            let side = match enter_count_at_least.side {
-                Some(Side::Enemy) => player.opponent(),
-                _ => player,
-            };
+            let side =
+                crate::side_resolve::player_enter_count_at_least(enter_count_at_least.side, player);
             let mut have = eval_state
                 .player(side)
                 .enter_counts
@@ -972,11 +967,7 @@ fn counter_have(
 }
 
 fn field_has_count(state: &State, who: PlayerId, field_has: &crate::card::FieldHas) -> i32 {
-    let sides: Vec<PlayerId> = match field_has.side {
-        Some(Side::Enemy) => vec![who.opponent()],
-        Some(Side::Any) => vec![who, who.opponent()],
-        None | Some(Side::Ally) => vec![who],
-    };
+    let sides = crate::side_resolve::players_for_option_side(field_has.side, who);
     let mut count = 0i32;
     for p in sides {
         for c in state.player(p).field.iter().flatten() {

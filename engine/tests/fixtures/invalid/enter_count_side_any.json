@@ -1,0 +1,35 @@
+{
+  "id": "89501991",
+  "name": "invalid enterCountAtLeast side any",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "load-time reject",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "load-time reject",
+      "effects": [
+        {
+          "op": "if",
+          "cond": {
+            "enterCountAtLeast": {
+              "card": "89500001",
+              "n": 1,
+              "side": "any"
+            }
+          },
+          "then": [
+            {
+              "op": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

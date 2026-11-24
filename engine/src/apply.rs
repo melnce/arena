@@ -3,17 +3,17 @@
 use crate::action::{from_neutral, to_neutral, Action};
 use crate::card::{
     Ability, AbilityZone, Amount, Card, CardId, CardKind, CardSource, ChooseBy, ChooseOption,
-    ChoosePick, Condition, Controller, CounterHow, CounterKey, CrestPlayer, DeckPosition, Effect,
-    EpAction, EventName, FieldHasKind, Filter, FilterKind, FuseResult, MaxDefenseChange, Mode,
-    NamedCounter, OptionsFrom, OrderBy, PayResource, PoolPick, PoolSelector, PpAction, RefPick,
-    ReplicateKey, Selector, SelectorKind, Side, StatWhich, Traits, TriggerTag, TurnOwner, Until,
-    VarKey, Whose, Zone,
+    ChoosePick, Condition, CounterHow, CounterKey, CrestPlayer, DeckPosition, Effect, EpAction,
+    EventName, FieldHasKind, Filter, FilterKind, FuseResult, MaxDefenseChange, Mode, NamedCounter,
+    OptionsFrom, OrderBy, PayResource, PoolPick, PoolSelector, PpAction, RefPick, ReplicateKey,
+    Selector, SelectorKind, StatWhich, Traits, TriggerTag, TurnOwner, Until, VarKey, Whose, Zone,
 };
 use crate::db::CardDb;
 use crate::error::{Illegal, LoadError, Unsupported};
 use crate::event::{Event, EventTarget, ZoneLabel};
 use crate::ids::{AttackTarget, First, PlayerId, Slot};
 use crate::rng::GameRng;
+use crate::side_resolve;
 use crate::state::{
     Aftermath, BoundRef, CardInstance, ChoiceNode, CrestInstance, DestroyedRecord, GameConfig,
     LeaderMod, PendingChoice, PendingKind, PendingPlayChoices, Phase, PlayCapture,
@@ -25,11 +25,6 @@ use crate::support;
 use crate::trace::{NeutralAction, Pick, PickChose, PickWhat};
 
 // Hand overflow: owner-rulings.md — Hand overflow destroys without Last Words — 2026-08-10
-
-/// Official Q&A (World of Games `10503210` / Divine Thunder): "a card on
-/// the field other than it" includes the enemy field. Owner 2026-09-10:
-/// "yes any card". Set `false` to count allied field only (old engine).
-const WORLD_OF_GAMES_COUNTS_EITHER_SIDE: bool = true;
 
 /// Owner ruling 2026-11-01: "Whenever you Fuse an amulet" (Socialite 11072110 /
 /// Dandy 11073110) — "the effects only trigger once per fuse no matter how many
@@ -5022,10 +5017,7 @@ fn apply_effect_with_targets(
                 _ => false,
             };
             let move_instance = matches!(card, CardSource::From { .. });
-            let who = match ctrl {
-                Some(Controller::Opponent) => controller.opponent(),
-                _ => controller,
-            };
+            let who = side_resolve::player_for_controller(*ctrl, controller);
             let mut summoned = Vec::new();
             for t in targets {
                 if let Some(s) = summon_from_opt(db, state, who, t, exact, move_instance, events)? {
@@ -5352,10 +5344,7 @@ fn apply_effect(
             ..
         } => {
             let n = eval_amount(db, state, controller, Some(source), count).max(0);
-            let who = match ctrl {
-                Some(Controller::Opponent) => controller.opponent(),
-                _ => controller,
-            };
+            let who = side_resolve::player_for_controller(*ctrl, controller);
             let mut summoned = Vec::new();
             let mut used_names = Vec::new();
             for _ in 0..n {
@@ -5404,10 +5393,7 @@ fn apply_effect(
             player,
             ..
         } => {
-            let who = match player {
-                Some(CrestPlayer::Opponent) => controller.opponent(),
-                _ => controller,
-            };
+            let who = side_resolve::player_for_crest_player(*player, controller);
             let n = eval_amount(db, state, controller, Some(source), count).max(0);
             let mut exclude: Vec<CardId> = Vec::new();
             let mut drawn = Vec::new();
@@ -5657,15 +5643,13 @@ fn apply_effect(
         } => {
             if let Selector::Pool(p) = select {
                 if p.zone == Zone::Crests {
-                    let who = match p.side {
-                        Side::Enemy => controller.opponent(),
-                        _ => controller,
-                    };
-                    for c in &mut state.player_mut(who).crests {
-                        if p.kind == SelectorKind::Faith && !c.faith {
-                            continue;
+                    for who in side_resolve::players_for_side(p.side, controller) {
+                        for c in &mut state.player_mut(who).crests {
+                            if p.kind == SelectorKind::Faith && !c.faith {
+                                continue;
+                            }
+                            c.granted.push((**ability).clone());
                         }
-                        c.granted.push((**ability).clone());
                     }
                     return Ok(());
                 }
@@ -6865,11 +6849,7 @@ fn apply_crest_countdown(
 ) -> Result<(), Illegal> {
     let (sides, want) = match select {
         Selector::Pool(p) if p.zone == Zone::Crests => {
-            let sides = match p.side {
-                Side::Ally => vec![controller],
-                Side::Enemy => vec![controller.opponent()],
-                Side::Any => vec![controller, controller.opponent()],
-            };
+            let sides = side_resolve::players_for_side(p.side, controller);
             (sides, p.filter.as_ref().and_then(|f| f.card))
         }
         _ => return Ok(()),
@@ -7751,11 +7731,7 @@ fn remove_matching_crests(
 ) {
     let (sides, filter) = match select {
         Selector::Pool(p) => {
-            let sides = match p.side {
-                Side::Ally => vec![controller],
-                Side::Enemy => vec![controller.opponent()],
-                Side::Any => vec![controller, controller.opponent()],
-            };
+            let sides = side_resolve::players_for_side(p.side, controller);
             (sides, p.filter.as_ref())
         }
         _ => (vec![controller], None),
@@ -8601,11 +8577,7 @@ fn pool_candidates(
     p: &PoolSelector,
     exclude_hand: Option<usize>,
 ) -> Vec<TargetOpt> {
-    let sides: Vec<PlayerId> = match p.side {
-        Side::Ally => vec![controller],
-        Side::Enemy => vec![controller.opponent()],
-        Side::Any => vec![controller, controller.opponent()],
-    };
+    let sides: Vec<PlayerId> = side_resolve::players_for_side(p.side, controller);
     if p.filter.as_ref().is_some_and(filter_wants_destroyed) {
         return pool_destroyed_history(db, state, controller, p);
     }
@@ -8768,11 +8740,7 @@ fn pool_destroyed_history(
     controller: PlayerId,
     p: &PoolSelector,
 ) -> Vec<TargetOpt> {
-    let sides: Vec<PlayerId> = match p.side {
-        Side::Ally => vec![controller],
-        Side::Enemy => vec![controller.opponent()],
-        Side::Any => vec![controller, controller.opponent()],
-    };
+    let sides: Vec<PlayerId> = side_resolve::players_for_side(p.side, controller);
     let mut out = Vec::new();
     for who in sides {
         for rec in &state.player(who).destroyed_history {
@@ -8946,11 +8914,7 @@ fn static_modifier_hits(
     }
     match &modifier.select {
         Selector::Pool(p) => {
-            let side_ok = match p.side {
-                Side::Ally => inst_owner == static_owner,
-                Side::Enemy => inst_owner != static_owner,
-                Side::Any => true,
-            };
+            let side_ok = side_resolve::static_pool_side_ok(p.side, inst_owner, static_owner);
             if !side_ok {
                 return false;
             }
@@ -9639,14 +9603,7 @@ pub(crate) fn eval_cond(
                 .as_ref()
                 .map(|a| eval_amount(db, state, who, source, a))
                 .unwrap_or(1);
-            let sides: Vec<PlayerId> = match field_has.side {
-                Some(Side::Enemy) => vec![who.opponent()],
-                Some(Side::Any) if WORLD_OF_GAMES_COUNTS_EITHER_SIDE => {
-                    vec![who, who.opponent()]
-                }
-                Some(Side::Any) => vec![who],
-                None | Some(Side::Ally) => vec![who],
-            };
+            let sides = side_resolve::players_for_option_side(field_has.side, who);
             let mut count = 0i32;
             for p in sides {
                 for c in state.player(p).field.iter().flatten() {
@@ -9688,11 +9645,8 @@ pub(crate) fn eval_cond(
             let Some(refs) = state.bindings.get(&bound_has.ref_name) else {
                 return false;
             };
-            let side_ok = |player: PlayerId| match bound_has.side {
-                Some(Side::Ally) => player == who,
-                Some(Side::Enemy) => player == who.opponent(),
-                Some(Side::Any) | None => true,
-            };
+            let side_ok =
+                |player: PlayerId| side_resolve::bound_has_side_ok(bound_has.side, who, player);
             refs.iter().any(|r| match r {
                 BoundRef::Field {
                     player, card, kind, ..
@@ -9774,10 +9728,7 @@ pub(crate) fn eval_cond(
             enter_count_at_least,
         } => {
             let n = eval_amount(db, state, who, source, &enter_count_at_least.n);
-            let side = match enter_count_at_least.side {
-                Some(Side::Enemy) => who.opponent(),
-                _ => who,
-            };
+            let side = side_resolve::player_enter_count_at_least(enter_count_at_least.side, who);
             let mut count = state
                 .player(side)
                 .enter_counts

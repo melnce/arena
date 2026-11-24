@@ -1,0 +1,48 @@
+{
+  "id": "89501992",
+  "name": "invalid nested enterCountAtLeast side any",
+  "kind": "spell",
+  "class": "neutral",
+  "set": 89500,
+  "rarity": "bronze",
+  "token": true,
+  "cost": 0,
+  "text": "nested grantAbility load-time reject",
+  "abilities": [
+    {
+      "on": "fanfare",
+      "printed": "nested grantAbility load-time reject",
+      "effects": [
+        {
+          "op": "grantAbility",
+          "select": {
+            "pick": "self"
+          },
+          "ability": {
+            "on": "engage",
+            "cost": 0,
+            "printed": "engage",
+            "effects": [
+              {
+                "op": "if",
+                "cond": {
+                  "enterCountAtLeast": {
+                    "card": "89500001",
+                    "n": 1,
+                    "side": "any"
+                  }
+                },
+                "then": [
+                  {
+                    "op": "draw",
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
