@@ -893,7 +893,7 @@ const RANDOM_EXCLUSIONS: &[RandomExclusion] = &[
         card: "10574110",
         choose: 0,
         option: 0,
-        reason: "follower startOfTurn randomUnused — covered on crest:10574110 (same option text)",
+        reason: "follower startOfTurn randomUnused — not covered; no seed in 0..16384 under strict trait observer",
     },
     RandomExclusion {
         card: "10574110",
@@ -911,19 +911,19 @@ const RANDOM_EXCLUSIONS: &[RandomExclusion] = &[
         card: "crest:10574110",
         choose: 0,
         option: 0,
-        reason: "crest startOfTurn randomUnused — no seed in 0..4096 under strict trait observer",
+        reason: "crest startOfTurn randomUnused — no seed in 0..16384 under strict trait observer",
     },
     RandomExclusion {
         card: "crest:10574110",
         choose: 0,
         option: 1,
-        reason: "crest startOfTurn randomUnused — no seed in 0..4096 under strict trait observer",
+        reason: "crest startOfTurn randomUnused — no seed in 0..16384 under strict trait observer",
     },
     RandomExclusion {
         card: "crest:10574110",
         choose: 0,
         option: 2,
-        reason: "crest startOfTurn randomUnused — no seed in 0..4096 under strict trait observer",
+        reason: "crest startOfTurn randomUnused — no seed in 0..16384 under strict trait observer",
     },
 ];
 
