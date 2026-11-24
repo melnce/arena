@@ -5,7 +5,10 @@ use arena_engine::card::{
     Ability, Card, ChooseBy, ChooseOption, ChoosePick, Crest, Effect, Mode, OptionsFrom, PoolPick,
     Selector, SelectorKind, Side, Zone,
 };
-use arena_engine::{apply, hash, Action, CardDb, CardId, ChoiceNode, Phase, PlayerId, State};
+use arena_engine::state::DestroyedRecord;
+use arena_engine::{
+    apply, hash, Action, CardDb, CardId, CardKind, ChoiceNode, Phase, PlayerId, State,
+};
 
 mod common;
 #[path = "support/effect_obs.rs"]
@@ -20,6 +23,11 @@ const SPELL_HAND: &str = "10051310";
 const FAITH: &str = "faith:10614120";
 const CREST_A: &str = "crest:10714110";
 const CREST_B: &str = "crest:10412310";
+const SWORD_FOLLOWER: &str = "10021110";
+const WARD_FOLLOWER: &str = "89100010";
+const SLAUS: &str = "10574110";
+const SLAUS_CREST: &str = "crest:10574110";
+const ZERO_COST: &str = "90021110";
 
 /// (card id, choose index in ability/mode effect list, option index)
 type CaseKey = (String, u8, u8);
@@ -670,11 +678,441 @@ fn build_rich_board(db: &CardDb, st: &mut State, me: PlayerId, case: &ModeCase) 
     if case.card_key == "10604110" {
         st.player_mut(me).pp = 0;
     }
+    if matches!(case.card_key.as_str(), "10031110" | "10732310" | "11031120") {
+        st.player_mut(me).earth = 3;
+    }
+    if case.card_key == "10423310" {
+        put_field(db, st, me, SWORD_FOLLOWER);
+    }
+    if case.card_key == "10564110" {
+        put_field(db, st, me, WARD_FOLLOWER);
+    }
+    if matches!(case.card_key.as_str(), "10051310" | "10803310") {
+        clear_field(st, me);
+        put_field(db, st, opp, TANK);
+        st.player_mut(me).destroyed_history.clear();
+        remember_destroyed(st, me, VANILLA, 1);
+        remember_destroyed(st, me, VANILLA, 1);
+    }
+    if case.card_key == "10803310" && case.option_ord == 2 {
+        put_field(db, st, me, VANILLA);
+        put_field(db, st, me, TANK);
+    }
+    if case.card_key == "10564110" && case.option_ord == 1 {
+        put_field(db, st, me, WARD_FOLLOWER);
+    }
+    if case.card_key == "10504110" {
+        while st.player(me).deck.len() < 12 {
+            put_deck(db, st, me, VANILLA);
+        }
+    }
+    if case.card_key == "10434110" {
+        put_field(db, st, me, VANILLA);
+    }
+}
+
+fn remember_destroyed(st: &mut State, who: PlayerId, id: &str, base_cost: i32) {
+    st.player_mut(who).destroyed_history.push(DestroyedRecord {
+        card: cid(id),
+        base_cost,
+        kind: CardKind::Follower,
+        owner: who,
+        from_field: true,
+    });
 }
 
 fn clear_field(st: &mut State, who: PlayerId) {
     for slot in st.player_mut(who).field.iter_mut() {
         *slot = None;
+    }
+}
+
+fn end_turns_to_owner_start(db: &CardDb, st: &mut State, who: PlayerId) {
+    assert_eq!(st.active, who);
+    end_turn(db, st);
+    assert_eq!(st.active, who.opponent());
+    end_turn(db, st);
+    assert_eq!(st.active, who);
+}
+
+fn end_opponent_turn(db: &CardDb, st: &mut State, me: PlayerId) {
+    assert_eq!(st.active, me.opponent());
+    apply(db, st, Action::EndTurn).expect("opponent end turn");
+}
+
+type HandCosts = std::collections::BTreeMap<u32, i32>;
+
+fn hand_costs(st: &State, me: PlayerId) -> HandCosts {
+    st.player(me).hand.iter().map(|c| (c.id, c.cost)).collect()
+}
+
+struct SlausPrep {
+    /// Ally follower with defense ≤ 2 (tank) — crest printed 2 destroys this one.
+    crest_destroy_inst: u32,
+}
+
+fn prep_slaus_exact_board(db: &CardDb, st: &mut State, me: PlayerId) -> SlausPrep {
+    st.player_mut(me).leader_defense = 12;
+    st.player_mut(me).leader_max = 20;
+    clear_hand(st, me);
+    clear_field(st, me);
+    put_hand(db, st, me, VANILLA);
+    put_hand(db, st, me, SPELL_HAND);
+    put_hand(db, st, me, ZERO_COST);
+    let slaus_slot = put_field(db, st, me, SLAUS);
+    let _ = slaus_slot;
+    let hi = put_field(db, st, me, VANILLA);
+    if let Some(f) = st.field_inst_mut(me, hi) {
+        f.attack = 2;
+        f.defense = 5;
+        f.max_defense = 5;
+    }
+    let low = put_field(db, st, me, TANK);
+    let crest_destroy_inst = if let Some(f) = st.field_inst_mut(me, low) {
+        f.attack = 1;
+        f.defense = 2;
+        f.max_defense = 2;
+        f.id
+    } else {
+        panic!("tank");
+    };
+    let opp = me.opponent();
+    clear_field(st, opp);
+    clear_hand(st, opp);
+    st.player_mut(opp).pp = 0;
+    st.player_mut(opp).pp_max = 0;
+    st.player_mut(opp).leader_defense = 20;
+    st.player_mut(opp).leader_max = 20;
+    SlausPrep { crest_destroy_inst }
+}
+
+fn prep_slaus_follower_field(db: &CardDb, st: &mut State, me: PlayerId) -> SlausPrep {
+    prep_slaus_exact_board(db, st, me)
+}
+
+fn prep_slaus_crest_board(db: &CardDb, st: &mut State, me: PlayerId) -> SlausPrep {
+    // Crest-only board: no `10574110` on field so follower startOfTurn does not
+    // interleave with `crest:10574110` randomUnused in the same queue.
+    let mut prep = prep_slaus_exact_board(db, st, me);
+    clear_field(st, me);
+    let hi = put_field(db, st, me, VANILLA);
+    if let Some(f) = st.field_inst_mut(me, hi) {
+        f.attack = 2;
+        f.defense = 5;
+        f.max_defense = 5;
+    }
+    let low = put_field(db, st, me, TANK);
+    if let Some(f) = st.field_inst_mut(me, low) {
+        f.attack = 1;
+        f.defense = 2;
+        f.max_defense = 2;
+        prep.crest_destroy_inst = f.id;
+    }
+    put_crest_cd(st, me, SLAUS_CREST, 3);
+    prep
+}
+
+fn field_stats(st: &State, me: PlayerId) -> std::collections::BTreeMap<u32, (i32, i32)> {
+    st.player(me)
+        .field
+        .iter()
+        .flatten()
+        .map(|c| (c.id, (c.attack, c.defense)))
+        .collect()
+}
+
+fn assert_follower_opt0_hand(db: &CardDb, st: &mut State, me: PlayerId, prep_costs: &HandCosts) {
+    assert!(
+        st.player(me).hand.len() >= 3,
+        "follower printed 1: need hand of at least three cards"
+    );
+    for c in st.player(me).hand.iter() {
+        let printed = db
+            .card(c.card)
+            .map(|card| card.cost().max(0))
+            .unwrap_or(c.cost);
+        let expect = if let Some(base) = prep_costs.get(&c.id) {
+            (*base - 1).max(0)
+        } else {
+            // Turn-start draw happens after the SoT queue (apply.rs ContinueTurnStart step 8).
+            printed
+        };
+        assert_eq!(
+            c.cost,
+            expect,
+            "follower printed 1: inst {} ({})",
+            c.id,
+            c.card.as_str()
+        );
+    }
+    end_turn(db, st);
+    assert_eq!(st.active, me.opponent());
+    for c in st.player(me).hand.iter() {
+        let printed = db
+            .card(c.card)
+            .map(|card| card.cost().max(0))
+            .unwrap_or(c.cost);
+        if let Some(prep) = prep_costs.get(&c.id) {
+            assert_eq!(
+                c.cost, *prep,
+                "follower printed 1: revert prep inst {}",
+                c.id
+            );
+        } else {
+            assert_eq!(
+                c.cost, printed,
+                "follower printed 1: drawn revert inst {}",
+                c.id
+            );
+        }
+    }
+}
+
+fn assert_crest_opt0_hand(db: &CardDb, st: &mut State, me: PlayerId, prep_costs: &HandCosts) {
+    for c in st.player(me).hand.iter() {
+        let printed = db
+            .card(c.card)
+            .map(|card| card.cost().max(0))
+            .unwrap_or(c.cost);
+        let expect = if let Some(base) = prep_costs.get(&c.id) {
+            *base + 1
+        } else {
+            printed
+        };
+        assert_eq!(
+            c.cost,
+            expect,
+            "crest printed 1: inst {} (+1) baseline={:?}",
+            c.id,
+            prep_costs.get(&c.id)
+        );
+    }
+    end_turn(db, st);
+    assert_eq!(st.active, me.opponent());
+    for c in st.player(me).hand.iter() {
+        let printed = db
+            .card(c.card)
+            .map(|card| card.cost().max(0))
+            .unwrap_or(c.cost);
+        if let Some(prep) = prep_costs.get(&c.id) {
+            assert_eq!(c.cost, *prep, "crest printed 1: revert prep inst {}", c.id);
+        } else {
+            assert_eq!(c.cost, printed, "crest printed 1: drawn revert {}", c.id);
+        }
+    }
+}
+
+fn assert_follower_opt1_field(
+    st: &State,
+    me: PlayerId,
+    before: &std::collections::BTreeMap<u32, (i32, i32)>,
+) {
+    let after = field_stats(st, me);
+    for (id, (atk_b, def_b)) in before {
+        let (atk_a, def_a) = after
+            .get(id)
+            .unwrap_or_else(|| panic!("follower printed 2: missing inst {id}"));
+        assert_eq!(*atk_a, atk_b + 2, "follower printed 2: atk inst {id}");
+        assert_eq!(*def_a, def_b + 2, "follower printed 2: def inst {id}");
+    }
+    assert_eq!(after.len(), before.len(), "follower printed 2: no destroy");
+}
+
+fn assert_crest_opt1_field(
+    before: &std::collections::BTreeMap<u32, (i32, i32)>,
+    after: &std::collections::BTreeMap<u32, (i32, i32)>,
+    must_destroy_inst: u32,
+) {
+    let mut saw_destroy = false;
+    for (id, (atk_b, def_b)) in before {
+        let exp_atk = (*atk_b - 2).max(0);
+        let exp_def = (*def_b - 2).max(0);
+        if exp_def <= 0 {
+            let lethal = after.get(id).map(|(_, d)| *d <= 0).unwrap_or(true);
+            assert!(
+                lethal,
+                "crest printed 2: inst {id} at 0 def or removed (got {:?})",
+                after.get(id)
+            );
+            if *id == must_destroy_inst && lethal {
+                saw_destroy = true;
+            }
+            continue;
+        }
+        let (atk_a, def_a) = after.get(id).expect("crest printed 2: follower survives");
+        assert_eq!(*atk_a, exp_atk, "crest printed 2: atk {id}");
+        assert_eq!(*def_a, exp_def, "crest printed 2: def {id}");
+    }
+    let tank_must_die = before.get(&must_destroy_inst).is_some_and(|(_, d)| *d <= 2);
+    if tank_must_die {
+        assert!(
+            saw_destroy,
+            "crest printed 2: follower def≤2 before debuff must hit 0 def or leave field"
+        );
+    }
+}
+
+fn discover_slaus_follower_seed(db: &CardDb, option: u8) -> Option<u64> {
+    let case = slaus_follower_case(option);
+    let me = PlayerId::A;
+    let ctx = play_ctx_for(db, me, &case, 0);
+    for seed in 0..RANDOM_SEED_SEARCH {
+        let mut st = started(db, seed);
+        prep_slaus_follower_field(db, &mut st, me);
+        let before = deep_snap(&st, me);
+        end_turn(db, &mut st);
+        let used_before = choose_used_after_random(&st, me, &case);
+        end_opponent_turn(db, &mut st, me);
+        let used = choose_used_after_random(&st, me, &case);
+        let new_opt = used.difference(&used_before).next().copied();
+        if new_opt != Some(option) {
+            continue;
+        }
+        let probe = ModeCase {
+            option_ord: option,
+            ..case.clone()
+        };
+        let after = deep_snap(&st, me);
+        if strict_option_observed(db, &before, &after, &probe, ctx).is_ok() {
+            return Some(seed);
+        }
+    }
+    None
+}
+
+fn discover_slaus_crest_seed(db: &CardDb, option: u8) -> Option<u64> {
+    let case = slaus_crest_case(option);
+    let me = PlayerId::A;
+    let ctx = play_ctx_for(db, me, &case, 0);
+    for seed in 0..RANDOM_SEED_SEARCH {
+        let mut st = started(db, seed);
+        prep_slaus_crest_board(db, &mut st, me);
+        let before = deep_snap(&st, me);
+        end_turn(db, &mut st);
+        let used_before = st
+            .player(me)
+            .crests
+            .iter()
+            .find(|c| c.id == SLAUS_CREST)
+            .map(|c| c.choose_used.clone())
+            .unwrap_or_default();
+        end_opponent_turn(db, &mut st, me);
+        let used = st
+            .player(me)
+            .crests
+            .iter()
+            .find(|c| c.id == SLAUS_CREST)
+            .map(|c| c.choose_used.clone())
+            .unwrap_or_default();
+        let new_opt = used.difference(&used_before).next().copied();
+        if new_opt != Some(option) {
+            continue;
+        }
+        let probe = ModeCase {
+            option_ord: option,
+            ..case.clone()
+        };
+        let after = deep_snap(&st, me);
+        if strict_option_observed(db, &before, &after, &probe, ctx).is_ok() {
+            return Some(seed);
+        }
+    }
+    None
+}
+
+fn slaus_follower_opt2_capped_at_max(db: &CardDb, me: PlayerId, seed: u64) {
+    let mut st = started(db, seed);
+    prep_slaus_follower_field(db, &mut st, me);
+    let max = st.player(me).leader_max;
+    st.player_mut(me).leader_defense = max - 1;
+    end_turn(db, &mut st);
+    let used_before = choose_used_after_random(&st, me, &slaus_follower_case(0));
+    end_opponent_turn(db, &mut st, me);
+    let used = choose_used_after_random(&st, me, &slaus_follower_case(0));
+    let new_opt = used
+        .difference(&used_before)
+        .next()
+        .copied()
+        .expect("new slaus option");
+    assert_eq!(new_opt, 2, "seed {seed}");
+    assert_eq!(
+        st.player(me).leader_defense,
+        max,
+        "follower printed 3: +3 capped at max (leader was max-1)"
+    );
+}
+
+fn slaus_exact_follower_option(db: &CardDb, me: PlayerId, want_opt: u8, seed: u64) {
+    let mut st = started(db, seed);
+    prep_slaus_follower_field(db, &mut st, me);
+    let field_before = field_stats(&st, me);
+    let prep_hand = hand_costs(&st, me);
+    end_turn(db, &mut st);
+    let _hand_before = hand_costs(&st, me);
+    let hp_before = st.player(me).leader_defense;
+    let used_before = choose_used_after_random(&st, me, &slaus_follower_case(0));
+    end_opponent_turn(db, &mut st, me);
+    let used = choose_used_after_random(&st, me, &slaus_follower_case(0));
+    let new_opt = used
+        .difference(&used_before)
+        .next()
+        .copied()
+        .expect("new slaus option");
+    assert_eq!(new_opt, want_opt, "seed {seed}");
+    match want_opt {
+        0 => assert_follower_opt0_hand(db, &mut st, me, &prep_hand),
+        1 => assert_follower_opt1_field(&st, me, &field_before),
+        2 => {
+            let hp = st.player(me).leader_defense;
+            assert_eq!(
+                hp,
+                (hp_before + 3).min(st.player(me).leader_max),
+                "follower printed 3: +3"
+            );
+        }
+        _ => panic!("bad opt"),
+    }
+}
+
+fn slaus_exact_crest_option(db: &CardDb, me: PlayerId, want_opt: u8, seed: u64) {
+    let mut st = started(db, seed);
+    let prep = prep_slaus_crest_board(db, &mut st, me);
+    let low_id = prep.crest_destroy_inst;
+    let field_before = field_stats(&st, me);
+    let prep_hand = hand_costs(&st, me);
+    end_turn(db, &mut st);
+    let _hand_before = hand_costs(&st, me);
+    let hp_before = st.player(me).leader_defense;
+    let used_before = st
+        .player(me)
+        .crests
+        .iter()
+        .find(|c| c.id == SLAUS_CREST)
+        .map(|c| c.choose_used.clone())
+        .unwrap_or_default();
+    end_opponent_turn(db, &mut st, me);
+    let crest_used = st
+        .player(me)
+        .crests
+        .iter()
+        .find(|c| c.id == SLAUS_CREST)
+        .map(|c| c.choose_used.clone())
+        .unwrap_or_default();
+    let new_opt = crest_used
+        .difference(&used_before)
+        .next()
+        .copied()
+        .expect("new crest option");
+    assert_eq!(new_opt, want_opt, "seed {seed}");
+    match want_opt {
+        0 => assert_crest_opt0_hand(db, &mut st, me, &prep_hand),
+        1 => assert_crest_opt1_field(&field_before, &field_stats(&st, me), low_id),
+        2 => assert_eq!(
+            st.player(me).leader_defense,
+            hp_before - 3,
+            "crest printed 3: deal 3"
+        ),
+        _ => panic!("bad opt"),
     }
 }
 
@@ -737,6 +1175,13 @@ fn evolve_slot(
     .map_err(|e| format!("evolve slot {slot} super={super_evolve}: {e:?}"))
 }
 
+fn spell_keeps_ally_field(card_key: &str) -> bool {
+    matches!(
+        card_key,
+        "10413310" | "10423310" | "10803310" | "11043310" | "10031110" | "10633310"
+    )
+}
+
 fn prep_play_trigger(
     db: &CardDb,
     st: &mut State,
@@ -756,7 +1201,17 @@ fn prep_play_trigger(
         put_field(db, st, opp, TANK);
         put_field(db, st, opp, TANK);
         put_field(db, st, me, VANILLA);
-    } else {
+        put_field(db, st, me, CLUE);
+        put_field(db, st, opp, CLUE);
+    } else if case.card_key == "10564110" {
+        clear_field(st, me);
+        let w1 = put_field(db, st, me, WARD_FOLLOWER);
+        let _w2 = put_field(db, st, me, WARD_FOLLOWER);
+        let _ = w1;
+    } else if case.card_key == "10031110" {
+        clear_field(st, me);
+        put_hand(db, st, me, "10413310");
+    } else if !spell_keeps_ally_field(&case.card_key) {
         clear_field(st, me);
     }
     give_pp(st, me, cost, cost.max(10));
@@ -797,11 +1252,17 @@ fn fire_trigger(db: &CardDb, st: &mut State, me: PlayerId, case: &ModeCase) -> R
             clear_hand(st, me);
             clear_field(st, me);
             let slot = put_field(db, st, me, id);
+            if case.card_key == "10854110" {
+                st.player_mut(me).pp = 4;
+            }
             evolve_slot(db, st, me, slot, false)?;
         }
         HarnessTrigger::SuperEvolveField => {
             clear_hand(st, me);
             clear_field(st, me);
+            if case.card_key == "10434110" {
+                put_field(db, st, me, VANILLA);
+            }
             let slot = put_field(db, st, me, id);
             evolve_slot(db, st, me, slot, true)?;
         }
@@ -818,17 +1279,23 @@ fn fire_trigger(db: &CardDb, st: &mut State, me: PlayerId, case: &ModeCase) -> R
             .map_err(|e| e.to_string())?;
         }
         HarnessTrigger::CardStartOfTurn => {
-            clear_hand(st, me);
+            if case.card_key != SLAUS {
+                clear_hand(st, me);
+            }
             clear_field(st, me);
-            let slot = put_field(db, st, me, id);
-            evolve_slot(db, st, me, slot, false)?;
-            end_turn(db, st);
-            end_turn(db, st);
+            put_field(db, st, me, id);
+            if case.card_key == SLAUS {
+                end_turns_to_owner_start(db, st, me);
+            } else {
+                let slot = follower_slot(st, me, id);
+                evolve_slot(db, st, me, slot, false)?;
+                end_turn(db, st);
+                end_turn(db, st);
+            }
         }
         HarnessTrigger::CrestStartOfTurn => {
             put_crest(st, me, &case.card_key);
-            end_turn(db, st);
-            end_turn(db, st);
+            end_turns_to_owner_start(db, st, me);
         }
     }
     Ok(())
@@ -862,17 +1329,36 @@ fn run_one_case(db: &CardDb, case: &ModeCase, seed: u64) -> Result<(), String> {
             case.card_key, case.option_ord, st.phase
         )
     })?;
-    let before = board_snap(&st);
+    let pay = match case.trigger {
+        HarnessTrigger::Play if !case.card_key.starts_with("crest:") => default_play_cost(db, case),
+        _ => 0,
+    };
+    let ctx = play_ctx_for(db, me, case, pay);
+    if case.card_key == "10854110"
+        && matches!(case.trigger, HarnessTrigger::EvolveField)
+        && case.option_ord == 1
+    {
+        st.player_mut(me).pp = 3;
+    }
+    let before_board = board_snap(&st);
+    let before = deep_snap(&st, me);
     choose(db, &mut st, pick);
     drain_after_mode(db, &mut st);
-    let after = board_snap(&st);
-    if !changed(&before, &after) {
+    let after_board = board_snap(&st);
+    let after = deep_snap(&st, me);
+    if !changed(&before_board, &after_board) {
         return Err(format!(
             "NO-OP {} choose {} option {} ({})",
             case.card_key, case.choose_ord, case.option_ord, case.option_printed
         ));
     }
-    if let Some(msg) = check_side_coverage(case, db, &before, &after) {
+    if let Err(e) = strict_option_observed(db, &before, &after, case, ctx) {
+        return Err(format!(
+            "{} choose {} option {}: {e}",
+            case.card_key, case.choose_ord, case.option_ord
+        ));
+    }
+    if let Some(msg) = check_side_coverage(case, db, &before_board, &after_board) {
         return Err(msg);
     }
     Ok(())
@@ -888,44 +1374,7 @@ struct RandomExclusion {
 }
 
 /// Options no seed in `0..RANDOM_SEED_SEARCH` could activate (quoted reason).
-const RANDOM_EXCLUSIONS: &[RandomExclusion] = &[
-    RandomExclusion {
-        card: "10574110",
-        choose: 0,
-        option: 0,
-        reason: "follower startOfTurn randomUnused — not covered; no seed in 0..16384 under strict trait observer",
-    },
-    RandomExclusion {
-        card: "10574110",
-        choose: 0,
-        option: 1,
-        reason: "follower startOfTurn randomUnused — crest harness",
-    },
-    RandomExclusion {
-        card: "10574110",
-        choose: 0,
-        option: 2,
-        reason: "follower startOfTurn randomUnused — crest harness",
-    },
-    RandomExclusion {
-        card: "crest:10574110",
-        choose: 0,
-        option: 0,
-        reason: "crest startOfTurn randomUnused — no seed in 0..16384 under strict trait observer",
-    },
-    RandomExclusion {
-        card: "crest:10574110",
-        choose: 0,
-        option: 1,
-        reason: "crest startOfTurn randomUnused — no seed in 0..16384 under strict trait observer",
-    },
-    RandomExclusion {
-        card: "crest:10574110",
-        choose: 0,
-        option: 2,
-        reason: "crest startOfTurn randomUnused — no seed in 0..16384 under strict trait observer",
-    },
-];
+const RANDOM_EXCLUSIONS: &[RandomExclusion] = &[];
 
 fn random_excluded(key: &CaseKey) -> Option<&'static str> {
     RANDOM_EXCLUSIONS
@@ -1157,6 +1606,42 @@ fn choose_used_after_random(
     std::collections::BTreeSet::new()
 }
 
+fn random_turn_start(case: &ModeCase) -> bool {
+    matches!(
+        case.trigger,
+        HarnessTrigger::CardStartOfTurn | HarnessTrigger::CrestStartOfTurn
+    )
+}
+
+fn prep_turn_start_board(
+    db: &CardDb,
+    st: &mut State,
+    me: PlayerId,
+    case: &ModeCase,
+) -> Result<(), String> {
+    match case.trigger {
+        HarnessTrigger::CardStartOfTurn => {
+            if case.card_key == SLAUS {
+                prep_slaus_follower_field(db, st, me);
+                return Ok(());
+            }
+            clear_hand(st, me);
+            clear_field(st, me);
+            put_field(db, st, me, case.card_key.as_str());
+            Ok(())
+        }
+        HarnessTrigger::CrestStartOfTurn => {
+            if case.card_key == SLAUS_CREST {
+                prep_slaus_crest_board(db, st, me);
+            } else {
+                put_crest(st, me, &case.card_key);
+            }
+            Ok(())
+        }
+        _ => Err("not turn-start".into()),
+    }
+}
+
 fn discover_random_seed(db: &CardDb, case: &ModeCase, option: u8) -> Option<u64> {
     for seed in 0..RANDOM_SEED_SEARCH {
         let mut st = started(db, seed);
@@ -1168,15 +1653,26 @@ fn discover_random_seed(db: &CardDb, case: &ModeCase, option: u8) -> Option<u64>
             }
             _ => default_play_cost(db, case),
         };
-        let before = deep_snap(&st, me);
         let ctx = play_ctx_for(db, me, case, pay);
-        if matches!(case.trigger, HarnessTrigger::Play) && !case.card_key.starts_with("crest:") {
-            if resume_play_trigger(db, &mut st, me, case).is_err() {
+        let before = if random_turn_start(case) {
+            if prep_turn_start_board(db, &mut st, me, case).is_err() {
                 continue;
             }
-        } else if fire_trigger(db, &mut st, me, case).is_err() {
-            continue;
-        }
+            let b = deep_snap(&st, me);
+            end_turns_to_owner_start(db, &mut st, me);
+            b
+        } else {
+            let b = deep_snap(&st, me);
+            if matches!(case.trigger, HarnessTrigger::Play) && !case.card_key.starts_with("crest:")
+            {
+                if resume_play_trigger(db, &mut st, me, case).is_err() {
+                    continue;
+                }
+            } else if fire_trigger(db, &mut st, me, case).is_err() {
+                continue;
+            }
+            b
+        };
         while matches!(st.phase, Phase::Choice { .. }) {
             choose(db, &mut st, 0);
         }
@@ -1213,14 +1709,23 @@ fn run_random_option_case(db: &CardDb, case: &ModeCase, seed: u64) -> Result<(),
         }
         _ => default_play_cost(db, case),
     };
-    let before_board = board_snap(&st);
-    let before = deep_snap(&st, me);
     let ctx = play_ctx_for(db, me, case, pay);
-    if matches!(case.trigger, HarnessTrigger::Play) && !case.card_key.starts_with("crest:") {
-        resume_play_trigger(db, &mut st, me, case)?;
+    let (before, before_board) = if random_turn_start(case) {
+        prep_turn_start_board(db, &mut st, me, case)?;
+        let b = deep_snap(&st, me);
+        let bb = board_snap(&st);
+        end_turns_to_owner_start(db, &mut st, me);
+        (b, bb)
     } else {
-        fire_trigger(db, &mut st, me, case)?;
-    }
+        let b = deep_snap(&st, me);
+        let bb = board_snap(&st);
+        if matches!(case.trigger, HarnessTrigger::Play) && !case.card_key.starts_with("crest:") {
+            resume_play_trigger(db, &mut st, me, case)?;
+        } else {
+            fire_trigger(db, &mut st, me, case)?;
+        }
+        (b, bb)
+    };
     while matches!(st.phase, Phase::Choice { .. }) {
         choose(db, &mut st, 0);
     }
@@ -1284,7 +1789,17 @@ fn mode_sweep_random_cards() {
         if random_excluded(&key).is_some() {
             continue;
         }
-        let seed = discover_random_seed(&db, case, case.option_ord);
+        let seed = discover_random_seed(&db, case, case.option_ord).or_else(|| {
+            match (case.card_key.as_str(), case.trigger) {
+                (SLAUS, HarnessTrigger::CardStartOfTurn) => {
+                    discover_slaus_follower_seed(&db, case.option_ord)
+                }
+                (SLAUS_CREST, HarnessTrigger::CrestStartOfTurn) => {
+                    discover_slaus_crest_seed(&db, case.option_ord)
+                }
+                _ => None,
+            }
+        });
         let Some(seed) = seed else {
             failures.push(format!(
                 "{} choose {} opt {}: no seed in 0..{} (not listed in RANDOM_EXCLUSIONS)",
@@ -1466,6 +1981,142 @@ fn mode_sweep_all_player_options() {
         failures.len(),
         failures.join("\n")
     );
+}
+
+fn slaus_follower_case(option: u8) -> ModeCase {
+    ModeCase {
+        card_key: SLAUS.into(),
+        card_id: cid(SLAUS),
+        trigger: HarnessTrigger::CardStartOfTurn,
+        choose_ord: 0,
+        option_ord: option,
+        by: ChooseBy::RandomUnused,
+        option_printed: String::new(),
+    }
+}
+
+fn slaus_crest_case(option: u8) -> ModeCase {
+    ModeCase {
+        card_key: "crest:10574110".into(),
+        card_id: cid(SLAUS),
+        trigger: HarnessTrigger::CrestStartOfTurn,
+        choose_ord: 0,
+        option_ord: option,
+        by: ChooseBy::RandomUnused,
+        option_printed: String::new(),
+    }
+}
+
+#[test]
+fn mode_sweep_slaus_start_of_turn_modes() {
+    let db = load_db();
+    let me = PlayerId::A;
+    for option in 0..3u8 {
+        let seed_f = discover_slaus_follower_seed(&db, option)
+            .unwrap_or_else(|| panic!("10574110 follower opt {option}: no seed on exact board"));
+        let seed_c = discover_slaus_crest_seed(&db, option)
+            .unwrap_or_else(|| panic!("{SLAUS_CREST} opt {option}: no seed on exact board"));
+        slaus_exact_follower_option(&db, me, option, seed_f);
+        slaus_exact_crest_option(&db, me, option, seed_c);
+    }
+    let seed_cap = discover_slaus_follower_seed(&db, 2)
+        .expect("10574110 follower opt 2: no seed for capped restore");
+    slaus_follower_opt2_capped_at_max(&db, me, seed_cap);
+
+    // Body: three owner turn-starts → three distinct randomUnused options.
+    for seed in 0..128u64 {
+        let mut st = started(&db, seed);
+        prep_slaus_follower_field(&db, &mut st, me);
+        let mut seen = std::collections::BTreeSet::<u8>::new();
+        for turn in 0..3 {
+            let before_used = choose_used_after_random(&st, me, &slaus_follower_case(0));
+            end_turns_to_owner_start(&db, &mut st, me);
+            let after_used = choose_used_after_random(&st, me, &slaus_follower_case(0));
+            assert_eq!(
+                after_used.len(),
+                before_used.len() + 1,
+                "seed={seed} turn={turn}: one new follower option"
+            );
+            let new_opt = after_used
+                .difference(&before_used)
+                .next()
+                .copied()
+                .expect("new option");
+            seen.insert(new_opt);
+        }
+        assert_eq!(seen.len(), 3, "seed={seed}: all three follower options");
+        // rules/rulebook.md turn-start step 2; Owner ruling — Slaus unused-ability pool
+        // (2026-08-13) [provisional]: a fourth body start must not activate a fourth mode.
+        let before_used = choose_used_after_random(&st, me, &slaus_follower_case(0));
+        let hp = st.player(me).leader_defense;
+        end_turns_to_owner_start(&db, &mut st, me);
+        let after_used = choose_used_after_random(&st, me, &slaus_follower_case(0));
+        assert_eq!(
+            after_used, before_used,
+            "seed={seed}: fourth body start must not add option (provisional ruling)"
+        );
+        assert_eq!(
+            st.player(me).leader_defense,
+            hp,
+            "seed={seed}: fourth start — no spurious restore"
+        );
+    }
+
+    // Crest Countdown (3): three activations, each option once; crest gone after the third start.
+    for seed in 0..128u64 {
+        let mut st = started(&db, seed);
+        let prep = prep_slaus_crest_board(&db, &mut st, me);
+        let low_id = prep.crest_destroy_inst;
+        let mut seen = std::collections::BTreeSet::<u8>::new();
+        for turn in 0..3 {
+            let crest = st.player(me).crests.iter().find(|c| c.id == SLAUS_CREST);
+            if turn < 2 {
+                let c = crest.expect("crest present");
+                let before_used = c.choose_used.clone();
+                end_turns_to_owner_start(&db, &mut st, me);
+                let after = st
+                    .player(me)
+                    .crests
+                    .iter()
+                    .find(|c| c.id == SLAUS_CREST)
+                    .expect("crest survives");
+                assert_eq!(after.choose_used.len(), before_used.len() + 1);
+                let opt = after
+                    .choose_used
+                    .difference(&before_used)
+                    .next()
+                    .copied()
+                    .unwrap();
+                seen.insert(opt);
+            } else {
+                let before_used = crest.expect("third start").choose_used.clone();
+                let hp_before = st.player(me).leader_defense;
+                let field_before = field_stats(&st, me);
+                let hand_before_effect = hand_costs(&st, me);
+                end_turns_to_owner_start(&db, &mut st, me);
+                assert!(
+                    st.player(me).crests.iter().all(|c| c.id != SLAUS_CREST),
+                    "seed={seed}: crest gone after third countdown"
+                );
+                let rem = [0u8, 1, 2]
+                    .into_iter()
+                    .find(|o| !before_used.contains(o))
+                    .expect("one option left");
+                seen.insert(rem);
+                match rem {
+                    0 => assert_crest_opt0_hand(&db, &mut st, me, &hand_before_effect),
+                    1 => assert_crest_opt1_field(&field_before, &field_stats(&st, me), low_id),
+                    2 => assert_eq!(
+                        st.player(me).leader_defense,
+                        hp_before - 3,
+                        "seed={seed}: crest printed 3 on third activation"
+                    ),
+                    _ => {}
+                }
+            }
+        }
+        assert_eq!(seen.len(), 3, "seed={seed}: crest three options");
+    }
 }
 
 #[test]

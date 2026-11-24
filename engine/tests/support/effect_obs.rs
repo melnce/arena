@@ -2,7 +2,9 @@
 
 use std::collections::BTreeMap;
 
-use arena_engine::card::{Amount, CardSource, Effect, RefPick, Selector, Side, Traits, Zone};
+use arena_engine::card::{
+    Amount, CardSource, Effect, PayResource, PoolPick, RefPick, Selector, Side, Traits, Zone,
+};
 use arena_engine::{CardDb, CardId, PlayerId, State};
 
 use super::*;
@@ -23,6 +25,7 @@ pub struct HandInstSnap {
     pub inst_id: u32,
     pub card: CardId,
     pub cost: i32,
+    pub spellboost_count: i32,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -41,6 +44,8 @@ pub struct DeepSnap {
     pub faith: i32,
     pub earth: i32,
     pub shadows: i32,
+    pub ally_crest_ids: Vec<String>,
+    pub ally_clue_total: i32,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -53,7 +58,7 @@ pub struct PlayCtx {
 
 pub fn trait_sig(t: &Traits) -> String {
     format!(
-        "w:{} b:{} r:{} s:{} a:{} i:{} d:{} br:{}",
+        "w:{} b:{} r:{} s:{} a:{} i:{} d:{} br:{} apt:{}",
         t.ward == Some(true),
         t.bane == Some(true),
         t.rush == Some(true),
@@ -62,6 +67,7 @@ pub fn trait_sig(t: &Traits) -> String {
         t.intimidate == Some(true),
         t.drain == Some(true),
         t.barrier == Some(true),
+        t.attacks_per_turn.unwrap_or(1),
     )
 }
 
@@ -100,6 +106,7 @@ pub fn deep_snap(st: &State, me: PlayerId) -> DeepSnap {
                 inst_id: c.id,
                 card: c.card,
                 cost: c.cost,
+                spellboost_count: c.spellboost_count,
             })
             .collect(),
         ally_leader_hp: p.leader_defense,
@@ -113,6 +120,79 @@ pub fn deep_snap(st: &State, me: PlayerId) -> DeepSnap {
         faith: p.faith,
         earth: p.earth,
         shadows: p.shadows,
+        ally_crest_ids: p.crests.iter().map(|c| c.id.clone()).collect(),
+        ally_clue_total: p.field.iter().flatten().map(|c| c.clue_count).sum(),
+    }
+}
+
+pub fn hand_all_cost_delta(db: &CardDb, before: &DeepSnap, after: &DeepSnap, delta: i32) -> bool {
+    for hb in &before.ally_hand {
+        let Some(ha) = after.ally_hand.iter().find(|x| x.inst_id == hb.inst_id) else {
+            return false;
+        };
+        let expect = (hb.cost + delta).max(0);
+        if ha.cost != expect {
+            return false;
+        }
+    }
+    for ha in &after.ally_hand {
+        if before.ally_hand.iter().any(|hb| hb.inst_id == ha.inst_id) {
+            continue;
+        }
+        if let Ok(card) = db.card(ha.card) {
+            let base = card.cost().max(0);
+            // Turn-start draw is after the SoT queue (`ContinueTurnStart` step 8).
+            let expect = base;
+            if ha.cost != expect {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn hand_cost_changed(
+    db: &CardDb,
+    before: &DeepSnap,
+    after: &DeepSnap,
+    want_increase: bool,
+) -> bool {
+    for hb in &before.ally_hand {
+        let Some(ha) = after.ally_hand.iter().find(|x| x.inst_id == hb.inst_id) else {
+            continue;
+        };
+        if want_increase {
+            if ha.cost > hb.cost {
+                return true;
+            }
+        } else if ha.cost < hb.cost {
+            return true;
+        }
+    }
+    for ha in &after.ally_hand {
+        if before.ally_hand.iter().any(|hb| hb.inst_id == ha.inst_id) {
+            continue;
+        }
+        if let Ok(card) = db.card(ha.card) {
+            let base = card.cost().max(0);
+            if !want_increase && ha.cost < base {
+                return true;
+            }
+            if want_increase && ha.cost > base {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn resource_before(pay: &PayResource, snap: &DeepSnap) -> i32 {
+    match pay {
+        PayResource::Earth => snap.earth,
+        PayResource::Faith => snap.faith,
+        PayResource::Shadows => snap.shadows,
+        PayResource::Pp => snap.ally_pp,
+        PayResource::Clues => snap.ally_clue_total,
     }
 }
 
@@ -146,6 +226,198 @@ fn amount_min(a: &Amount) -> i32 {
         Amount::Int(n) => *n,
         _ => 1,
     }
+}
+
+fn amount_signed(a: &Option<Amount>) -> Option<i32> {
+    match a.as_ref()? {
+        Amount::Int(n) => Some(*n),
+        _ => None,
+    }
+}
+
+fn buff_pool_ally_ok(
+    before: &DeepSnap,
+    after: &DeepSnap,
+    da: Option<i32>,
+    dd: Option<i32>,
+) -> bool {
+    let want_atk_up = da.is_some_and(|x| x > 0);
+    let want_def_up = dd.is_some_and(|x| x > 0);
+    let want_atk_down = da.is_some_and(|x| x < 0);
+    let want_def_down = dd.is_some_and(|x| x < 0);
+    let mut atk_up = false;
+    let mut def_up = false;
+    let mut atk_down = false;
+    let mut def_down = false;
+    let removed = after.ally_field.len() < before.ally_field.len();
+    for (id, b) in &before.ally_field {
+        if let Some(a) = after.ally_field.get(id) {
+            if want_atk_up && a.attack > b.attack {
+                atk_up = true;
+            }
+            if want_def_up && a.defense > b.defense {
+                def_up = true;
+            }
+            if want_atk_down && a.attack < b.attack {
+                atk_down = true;
+            }
+            if want_def_down && a.defense < b.defense {
+                def_down = true;
+            }
+        }
+    }
+    if want_atk_up && !atk_up {
+        return false;
+    }
+    if want_def_up && !def_up {
+        return false;
+    }
+    if (want_atk_down || want_def_down) && !(atk_down || def_down || removed) {
+        return false;
+    }
+    if !want_atk_up && !want_def_up && !want_atk_down && !want_def_down {
+        return before.ally_field.iter().any(|(id, b)| {
+            after
+                .ally_field
+                .get(id)
+                .is_some_and(|a| a.attack != b.attack || a.defense != b.defense)
+        });
+    }
+    true
+}
+
+fn buff_pool_enemy_ok(
+    before: &DeepSnap,
+    after: &DeepSnap,
+    da: Option<i32>,
+    dd: Option<i32>,
+) -> bool {
+    let want_down = da.is_some_and(|x| x < 0) || dd.is_some_and(|x| x < 0);
+    if !want_down {
+        return before.enemy_field.iter().any(|(id, b)| {
+            after
+                .enemy_field
+                .get(id)
+                .is_some_and(|a| a.attack > b.attack || a.defense > b.defense)
+        });
+    }
+    let debuffed = before.enemy_field.iter().any(|(id, b)| {
+        after.enemy_field.get(id).is_some_and(|a| {
+            (da.is_some_and(|x| x < 0) && a.attack < b.attack)
+                || (dd.is_some_and(|x| x < 0) && a.defense < b.defense)
+        })
+    });
+    let removed = after.enemy_field.len() < before.enemy_field.len();
+    debuffed || removed
+}
+
+const EVOLVE_STAT_BONUS: i32 = 2;
+
+fn buff_expected_new_follower(
+    db: &CardDb,
+    f: &FieldInstSnap,
+    da: Option<i32>,
+    dd: Option<i32>,
+) -> bool {
+    let Ok(card) = db.card(f.card) else {
+        return false;
+    };
+    let pa = card.attack().max(0);
+    let pd = card.defense().max(0);
+    let ea = da.unwrap_or(0);
+    let ed = dd.unwrap_or(0);
+    if ea > 0 && f.attack != pa + ea {
+        return false;
+    }
+    if ea < 0 && f.attack > pa + ea {
+        return false;
+    }
+    if ed > 0 && f.defense != pd + ed {
+        return false;
+    }
+    if ed < 0 && f.defense > (pd + ed).max(0) {
+        return false;
+    }
+    ea != 0 || ed != 0
+}
+
+fn buff_expected_bound_pair(
+    b: &FieldInstSnap,
+    a: &FieldInstSnap,
+    da: Option<i32>,
+    dd: Option<i32>,
+) -> bool {
+    let ea = da.unwrap_or(0);
+    let ed = dd.unwrap_or(0);
+    let (evo_a, evo_d) = if !b.evolved && a.evolved {
+        (EVOLVE_STAT_BONUS, EVOLVE_STAT_BONUS)
+    } else {
+        (0, 0)
+    };
+    let exp_atk = b.attack + evo_a + ea;
+    let exp_def = b.defense + evo_d + ed;
+    if ea > 0 || ed > 0 {
+        return a.attack == exp_atk && a.defense == exp_def;
+    }
+    if ea < 0 || ed < 0 {
+        return a.attack <= exp_atk
+            && a.defense <= exp_def
+            && (a.attack < b.attack || a.defense < b.defense);
+    }
+    false
+}
+
+fn buff_bound_ally_ok(
+    db: &CardDb,
+    before: &DeepSnap,
+    after: &DeepSnap,
+    da: Option<i32>,
+    dd: Option<i32>,
+) -> bool {
+    for (id, b) in &before.ally_field {
+        if let Some(a) = after.ally_field.get(id) {
+            if buff_expected_bound_pair(b, a, da, dd) {
+                return true;
+            }
+        }
+    }
+    new_ally_field(before, after)
+        .iter()
+        .any(|f| buff_expected_new_follower(db, f, da, dd))
+}
+
+fn buff_self_ok(
+    db: &CardDb,
+    before: &DeepSnap,
+    after: &DeepSnap,
+    pid: CardId,
+    da: Option<i32>,
+    dd: Option<i32>,
+) -> bool {
+    for (id, b) in &before.ally_field {
+        if let Some(a) = after.ally_field.get(id) {
+            if a.card != pid {
+                continue;
+            }
+            if da.is_some_and(|x| x > 0) && a.attack <= b.attack {
+                return false;
+            }
+            if dd.is_some_and(|x| x > 0) && a.defense <= b.defense {
+                return false;
+            }
+            if (da.is_some_and(|x| x < 0) || dd.is_some_and(|x| x < 0))
+                && a.attack >= b.attack
+                && a.defense >= b.defense
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+    after
+        .ally_field
+        .values()
+        .any(|f| f.card == pid && buff_expected_new_follower(db, f, da, dd))
 }
 
 fn selector_is_self(select: &Selector) -> bool {
@@ -262,23 +534,35 @@ pub fn effect_observed_strict(
                     return Ok(());
                 }
             }
-            Err("damage: no observable HP/field change on enemy".into())
-        }
-        Effect::Destroy { select, .. } | Effect::Banish { select, .. } => {
-            if let Selector::Pool(p) = select {
-                if p.zone == Zone::Field
-                    && matches!(p.side, Side::Enemy | Side::Any)
-                    && after.enemy_field.len() < before.enemy_field.len()
-                {
-                    return Ok(());
-                }
-            }
-            if matches!(select, Selector::Bound { .. })
-                && after.enemy_field.len() < before.enemy_field.len()
+            if matches!(select, Selector::Pool(p) if p.zone == Zone::Leader && matches!(p.side, Side::Ally | Side::Any))
+                && after.ally_leader_hp < before.ally_leader_hp
             {
                 return Ok(());
             }
-            Err("destroy/banish: enemy field unchanged".into())
+            Err("damage: no observable HP/field change".into())
+        }
+        Effect::Destroy { select, .. } | Effect::Banish { select, .. } => {
+            if let Selector::Pool(p) = select {
+                if p.zone == Zone::Field {
+                    if matches!(p.side, Side::Enemy | Side::Any)
+                        && after.enemy_field.len() < before.enemy_field.len()
+                    {
+                        return Ok(());
+                    }
+                    if matches!(p.side, Side::Ally | Side::Any)
+                        && after.ally_field.len() < before.ally_field.len()
+                    {
+                        return Ok(());
+                    }
+                }
+            }
+            if matches!(select, Selector::Bound { .. })
+                && (after.enemy_field.len() < before.enemy_field.len()
+                    || after.ally_field.len() < before.ally_field.len())
+            {
+                return Ok(());
+            }
+            Err("destroy/banish: field unchanged".into())
         }
         Effect::Restore { select, .. } => {
             if let Selector::Pool(p) = select {
@@ -307,53 +591,67 @@ pub fn effect_observed_strict(
                 _ => Err(format!("pp op {action:?}: not checked")),
             }
         }
-        Effect::Buff { select, .. } => {
+        Effect::Buff {
+            select,
+            attack,
+            defense,
+            ..
+        } => {
+            let da = amount_signed(attack);
+            let dd = amount_signed(defense);
+            if attack.is_some() && da.is_none() || defense.is_some() && dd.is_none() {
+                return Err("buff: non-Int amount (list option in harness)".into());
+            }
             if matches!(select, Selector::Bound { .. }) {
-                let newbies = new_ally_field(before, after);
-                if newbies.iter().any(|f| {
-                    before
-                        .ally_field
-                        .get(&f.inst_id)
-                        .is_none_or(|b| f.attack > b.attack || f.defense > b.defense)
-                }) {
+                if buff_bound_ally_ok(db, before, after, da, dd) {
                     return Ok(());
                 }
-                return Err("buff bound: new summon not buffed".into());
+                return Err("buff bound: wrong direction".into());
             }
             if let Selector::Pool(p) = select {
-                if p.zone == Zone::Field
-                    && matches!(p.side, Side::Ally | Side::Any)
-                    && before.ally_field.iter().any(|(id, b)| {
-                        after
-                            .ally_field
-                            .get(id)
-                            .is_some_and(|a| a.attack > b.attack || a.defense > b.defense)
-                    })
-                {
-                    return Ok(());
+                if p.zone == Zone::Field && matches!(p.side, Side::Enemy | Side::Any) {
+                    if buff_pool_enemy_ok(before, after, da, dd) {
+                        return Ok(());
+                    }
+                    return Err("buff enemy: wrong direction".into());
+                }
+                if p.zone == Zone::Field && matches!(p.side, Side::Ally | Side::Any) {
+                    if buff_pool_ally_ok(before, after, da, dd) {
+                        return Ok(());
+                    }
+                    return Err("buff ally: wrong direction".into());
                 }
             }
             if selector_is_self(select) {
                 if let Some(pid) = ctx.played_card {
-                    if after.ally_field.values().any(|f| {
-                        f.card == pid
-                            && before
-                                .ally_field
-                                .get(&f.inst_id)
-                                .is_none_or(|b| f.attack > b.attack || f.defense > b.defense)
-                    }) {
+                    if buff_self_ok(db, before, after, pid, da, dd) {
                         return Ok(());
                     }
                 }
             }
-            Err("buff: no stat change on pre-existing ally field".into())
+            Err("buff: no stat change in expected direction".into())
         }
         Effect::GrantTraits { select, .. } => {
             let changed_inst = |b: &FieldInstSnap, a: &FieldInstSnap| a.trait_sig != b.trait_sig;
             if let Selector::Bound { .. } = select {
                 for f in new_ally_field(before, after) {
-                    if ctx.played_card.is_none_or(|pid| f.card == pid) {
+                    if let Ok(base) = db.card(f.card) {
+                        let base_sig = base
+                            .traits()
+                            .map(trait_sig)
+                            .unwrap_or_else(|| trait_sig(&Traits::default()));
+                        if f.trait_sig != base_sig {
+                            return Ok(());
+                        }
+                    } else if f.trait_sig != trait_sig(&Traits::default()) {
                         return Ok(());
+                    }
+                }
+                for (id, b) in &before.ally_field {
+                    if let Some(a) = after.ally_field.get(id) {
+                        if changed_inst(b, a) {
+                            return Ok(());
+                        }
                     }
                 }
             }
@@ -399,28 +697,33 @@ pub fn effect_observed_strict(
             }
             Err("grantTraits: traits unchanged".into())
         }
-        Effect::Cost { select, .. } => {
+        Effect::Cost { select, delta, .. } => {
+            let Some(d) = delta.as_ref().and_then(|a| amount_signed(&Some(a.clone()))) else {
+                return Err("cost: non-Int delta or set-only (list option in harness)".into());
+            };
+            if d == 0 {
+                return Err("cost: zero delta".into());
+            }
+            let want_increase = d > 0;
+            if matches!(select, Selector::Bound { .. }) || matches!(select, Selector::Ref(_)) {
+                if hand_cost_changed(db, before, after, want_increase) {
+                    return Ok(());
+                }
+                return Err("cost: bound/ref hand wrong direction".into());
+            }
             if let Selector::Pool(p) = select {
                 if p.zone == Zone::Hand {
-                    let mut saw = false;
-                    for hb in &before.ally_hand {
-                        if let Some(ha) = after.ally_hand.iter().find(|x| x.inst_id == hb.inst_id) {
-                            if ctx.played_card == Some(hb.card)
-                                && !after.ally_hand.iter().any(|x| x.inst_id == hb.inst_id)
-                            {
-                                continue;
-                            }
-                            if ha.cost < hb.cost {
-                                saw = true;
-                            }
-                        }
-                    }
-                    if saw {
+                    let ok = if matches!(p.pick, PoolPick::All) {
+                        hand_all_cost_delta(db, before, after, d)
+                    } else {
+                        hand_cost_changed(db, before, after, want_increase)
+                    };
+                    if ok {
                         return Ok(());
                     }
                 }
             }
-            Err("cost: no hand cost reduction on surviving cards".into())
+            Err("cost: no hand cost change in expected direction".into())
         }
         Effect::Evolve {
             select,
@@ -435,6 +738,17 @@ pub fn effect_observed_strict(
                     a.evolved && !b.evolved
                 }
             };
+            if let Selector::Pool(p) = select {
+                if p.zone == Zone::Field && matches!(p.side, Side::Ally | Side::Any) {
+                    for (id, b) in &before.ally_field {
+                        if let Some(a) = after.ally_field.get(id) {
+                            if evolved(b, a) {
+                                return Ok(());
+                            }
+                        }
+                    }
+                }
+            }
             if selector_is_self(select) {
                 for (id, b) in &before.ally_field {
                     if let Some(a) = after.ally_field.get(id) {
@@ -493,7 +807,90 @@ pub fn effect_observed_strict(
                 }
             }
         }
-        Effect::RemoveCrests { .. } => Ok(()),
+        Effect::RemoveCrests { select, .. } => {
+            if let Selector::Pool(p) = select {
+                if p.zone == Zone::Crests
+                    && after.ally_crest_ids.len() < before.ally_crest_ids.len()
+                {
+                    return Ok(());
+                }
+            }
+            if after.ally_crest_ids != before.ally_crest_ids {
+                Ok(())
+            } else {
+                Err("removeCrests: crest area unchanged".into())
+            }
+        }
+        Effect::SpellboostHand { times, .. } => {
+            let need = amount_min(times);
+            let boosted: i32 = before
+                .ally_hand
+                .iter()
+                .filter_map(|hb| {
+                    after
+                        .ally_hand
+                        .iter()
+                        .find(|ha| ha.inst_id == hb.inst_id)
+                        .map(|ha| ha.spellboost_count - hb.spellboost_count)
+                })
+                .sum();
+            let new_boosted: i32 = after
+                .ally_hand
+                .iter()
+                .filter(|ha| !before.ally_hand.iter().any(|hb| hb.inst_id == ha.inst_id))
+                .map(|ha| ha.spellboost_count)
+                .sum();
+            if boosted + new_boosted >= need {
+                Ok(())
+            } else {
+                Err(format!(
+                    "spellboostHand: +{boosted} on old cards, +{new_boosted} on new, need >= {need}"
+                ))
+            }
+        }
+        Effect::Reanimate { .. } => {
+            let field_growth = after
+                .ally_field
+                .len()
+                .saturating_sub(before.ally_field.len());
+            if field_growth > 0 {
+                Ok(())
+            } else {
+                Err(format!("reanimate: field +{field_growth}"))
+            }
+        }
+        Effect::Pay {
+            resource,
+            amount,
+            effects,
+            ..
+        } => {
+            let need = amount_min(amount);
+            let after_res = resource_before(resource, after);
+            let before_res = resource_before(resource, before);
+            if before_res >= need && after_res < before_res {
+                for x in effects {
+                    effect_observed_strict(db, before, after, ctx, x)?;
+                }
+                Ok(())
+            } else if before_res < need {
+                Err(format!(
+                    "pay {:?}: not affordable at baseline (board gap)",
+                    resource
+                ))
+            } else {
+                Err(format!("pay {:?}: resource unchanged", resource))
+            }
+        }
+        Effect::Crest { .. } => {
+            if after.ally_crest_ids.len() > before.ally_crest_ids.len()
+                || after.ally_crest_ids != before.ally_crest_ids
+            {
+                Ok(())
+            } else {
+                Err("crest: no new crest".into())
+            }
+        }
         Effect::Choose { .. } => Ok(()),
         _ => Err(format!(
             "effect {:?}: no strict observer (add harness or justify)",
