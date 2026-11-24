@@ -1,0 +1,5 @@
+From https://github.com/melnce/arena
+ * [new branch]      cursor/mode-sweep-side-resolver -> origin/cursor/mode-sweep-side-resolver
+ * [new branch]      cursor/serve-leaf97 -> origin/cursor/serve-leaf97
+   d9f6e18..d2993ee  main                -> origin/main
+Already up to date.
