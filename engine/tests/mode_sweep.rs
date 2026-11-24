@@ -1020,6 +1020,28 @@ fn discover_slaus_crest_seed(db: &CardDb, option: u8) -> Option<u64> {
     None
 }
 
+fn slaus_follower_opt2_capped_at_max(db: &CardDb, me: PlayerId, seed: u64) {
+    let mut st = started(db, seed);
+    prep_slaus_follower_field(db, &mut st, me);
+    let max = st.player(me).leader_max;
+    st.player_mut(me).leader_defense = max - 1;
+    end_turn(db, &mut st);
+    let used_before = choose_used_after_random(&st, me, &slaus_follower_case(0));
+    end_opponent_turn(db, &mut st, me);
+    let used = choose_used_after_random(&st, me, &slaus_follower_case(0));
+    let new_opt = used
+        .difference(&used_before)
+        .next()
+        .copied()
+        .expect("new slaus option");
+    assert_eq!(new_opt, 2, "seed {seed}");
+    assert_eq!(
+        st.player(me).leader_defense,
+        max,
+        "follower printed 3: +3 capped at max (leader was max-1)"
+    );
+}
+
 fn slaus_exact_follower_option(db: &CardDb, me: PlayerId, want_opt: u8, seed: u64) {
     let mut st = started(db, seed);
     prep_slaus_follower_field(db, &mut st, me);
@@ -1997,6 +2019,9 @@ fn mode_sweep_slaus_start_of_turn_modes() {
         slaus_exact_follower_option(&db, me, option, seed_f);
         slaus_exact_crest_option(&db, me, option, seed_c);
     }
+    let seed_cap = discover_slaus_follower_seed(&db, 2)
+        .expect("10574110 follower opt 2: no seed for capped restore");
+    slaus_follower_opt2_capped_at_max(&db, me, seed_cap);
 
     // Body: three owner turn-starts → three distinct randomUnused options.
     for seed in 0..128u64 {
@@ -2067,9 +2092,8 @@ fn mode_sweep_slaus_start_of_turn_modes() {
                 let before_used = crest.expect("third start").choose_used.clone();
                 let hp_before = st.player(me).leader_defense;
                 let field_before = field_stats(&st, me);
-                end_turn(&db, &mut st);
                 let hand_before_effect = hand_costs(&st, me);
-                end_opponent_turn(&db, &mut st, me);
+                end_turns_to_owner_start(&db, &mut st, me);
                 assert!(
                     st.player(me).crests.iter().all(|c| c.id != SLAUS_CREST),
                     "seed={seed}: crest gone after third countdown"
@@ -2079,10 +2103,16 @@ fn mode_sweep_slaus_start_of_turn_modes() {
                     .find(|o| !before_used.contains(o))
                     .expect("one option left");
                 seen.insert(rem);
-                let _ = hp_before;
-                let _ = field_before;
-                let _ = hand_before_effect;
-                let _ = low_id;
+                match rem {
+                    0 => assert_crest_opt0_hand(&db, &mut st, me, &hand_before_effect),
+                    1 => assert_crest_opt1_field(&field_before, &field_stats(&st, me), low_id),
+                    2 => assert_eq!(
+                        st.player(me).leader_defense,
+                        hp_before - 3,
+                        "seed={seed}: crest printed 3 on third activation"
+                    ),
+                    _ => {}
+                }
             }
         }
         assert_eq!(seen.len(), 3, "seed={seed}: crest three options");

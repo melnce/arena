@@ -311,21 +311,83 @@ fn buff_pool_enemy_ok(
     debuffed || removed
 }
 
+const EVOLVE_STAT_BONUS: i32 = 2;
+
+fn buff_expected_new_follower(
+    db: &CardDb,
+    f: &FieldInstSnap,
+    da: Option<i32>,
+    dd: Option<i32>,
+) -> bool {
+    let Ok(card) = db.card(f.card) else {
+        return false;
+    };
+    let pa = card.attack().max(0);
+    let pd = card.defense().max(0);
+    let ea = da.unwrap_or(0);
+    let ed = dd.unwrap_or(0);
+    if ea > 0 && f.attack != pa + ea {
+        return false;
+    }
+    if ea < 0 && f.attack > pa + ea {
+        return false;
+    }
+    if ed > 0 && f.defense != pd + ed {
+        return false;
+    }
+    if ed < 0 && f.defense > (pd + ed).max(0) {
+        return false;
+    }
+    ea != 0 || ed != 0
+}
+
+fn buff_expected_bound_pair(
+    b: &FieldInstSnap,
+    a: &FieldInstSnap,
+    da: Option<i32>,
+    dd: Option<i32>,
+) -> bool {
+    let ea = da.unwrap_or(0);
+    let ed = dd.unwrap_or(0);
+    let (evo_a, evo_d) = if !b.evolved && a.evolved {
+        (EVOLVE_STAT_BONUS, EVOLVE_STAT_BONUS)
+    } else {
+        (0, 0)
+    };
+    let exp_atk = b.attack + evo_a + ea;
+    let exp_def = b.defense + evo_d + ed;
+    if ea > 0 || ed > 0 {
+        return a.attack == exp_atk && a.defense == exp_def;
+    }
+    if ea < 0 || ed < 0 {
+        return a.attack <= exp_atk
+            && a.defense <= exp_def
+            && (a.attack < b.attack || a.defense < b.defense);
+    }
+    false
+}
+
 fn buff_bound_ally_ok(
+    db: &CardDb,
     before: &DeepSnap,
     after: &DeepSnap,
     da: Option<i32>,
     dd: Option<i32>,
 ) -> bool {
-    buff_pool_ally_ok(before, after, da, dd)
-        || new_ally_field(before, after).iter().any(|f| {
-            let atk_ok = !da.is_some_and(|x| x > 0) || f.attack > 0;
-            let def_ok = !dd.is_some_and(|x| x > 0) || f.defense > 0;
-            atk_ok && def_ok && (da.is_some_and(|x| x > 0) || dd.is_some_and(|x| x > 0))
-        })
+    for (id, b) in &before.ally_field {
+        if let Some(a) = after.ally_field.get(id) {
+            if buff_expected_bound_pair(b, a, da, dd) {
+                return true;
+            }
+        }
+    }
+    new_ally_field(before, after)
+        .iter()
+        .any(|f| buff_expected_new_follower(db, f, da, dd))
 }
 
 fn buff_self_ok(
+    db: &CardDb,
     before: &DeepSnap,
     after: &DeepSnap,
     pid: CardId,
@@ -352,11 +414,10 @@ fn buff_self_ok(
             return true;
         }
     }
-    after.ally_field.values().any(|f| {
-        f.card == pid
-            && (da.is_some_and(|x| x > 0) || dd.is_some_and(|x| x > 0))
-            && (f.attack > 0 || f.defense > 0)
-    })
+    after
+        .ally_field
+        .values()
+        .any(|f| f.card == pid && buff_expected_new_follower(db, f, da, dd))
 }
 
 fn selector_is_self(select: &Selector) -> bool {
@@ -542,7 +603,7 @@ pub fn effect_observed_strict(
                 return Err("buff: non-Int amount (list option in harness)".into());
             }
             if matches!(select, Selector::Bound { .. }) {
-                if buff_bound_ally_ok(before, after, da, dd) {
+                if buff_bound_ally_ok(db, before, after, da, dd) {
                     return Ok(());
                 }
                 return Err("buff bound: wrong direction".into());
@@ -563,7 +624,7 @@ pub fn effect_observed_strict(
             }
             if selector_is_self(select) {
                 if let Some(pid) = ctx.played_card {
-                    if buff_self_ok(before, after, pid, da, dd) {
+                    if buff_self_ok(db, before, after, pid, da, dd) {
                         return Ok(());
                     }
                 }
