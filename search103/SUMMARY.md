@@ -1,8 +1,8 @@
 # search103: the Abysscraft deck search, all rounds (runbooks 101-103)
 
-- rounds: 1 (search101, -, 8192 games, 64 decks, verdict: DATA OK), 2 (search102, exploit, 4096 games, 64 decks, verdict: DATA OK), 3 (search102, exploit, 4096 games, 64 decks, verdict: DATA OK), 4 (search102, exploit, 4096 games, 64 decks, verdict: DATA OK), 5 (search103, coverage, 4096 games, 64 decks, verdict: DATA OK), 6 (search103, coverage, 4096 games, 64 decks, verdict: DATA OK)
-- decks played: 329; games: 28672
-- the control (Midrange Abyss as it is): 0.5089 over 448 games, 95 % [0.4628, 0.5549]
+- rounds: 1 (search101, -, 8192 games, 64 decks, verdict: DATA OK), 2 (search102, exploit, 4096 games, 64 decks, verdict: DATA OK), 3 (search102, exploit, 4096 games, 64 decks, verdict: DATA OK), 4 (search102, exploit, 4096 games, 64 decks, verdict: DATA OK), 5 (search103, coverage, 4096 games, 64 decks, verdict: DATA OK), 6 (search103, coverage, 4096 games, 64 decks, verdict: DATA OK), 7 (search103, exploit, 4096 games, 64 decks, verdict: DATA OK)
+- decks played: 379; games: 32768
+- the control (Midrange Abyss as it is): 0.5117 over 512 games, 95 % [0.4685, 0.5548]
 - coverage trials (a card's copies added to or cut from Midrange's shell): 71
 
 ## The best decks with 128 games or more (Wilson 95 %)
@@ -10,25 +10,25 @@
 | deck | its swaps from Midrange | games | win rate | 95 % | rounds | the model's rate when proposed |
 |---|---|---:|---:|---|---|---:|
 | 0bd878b6f94db060 | -2 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, -1 World of Games, +1 Fediel, Darkness Personified, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Lyria, Skydestined | 128 | 0.5938 | [0.5071, 0.6749] | r04:m03, r05:i05 | 0.5322 |
+| 38933ea8fb931b44 | -1 Istyndet vs. Mitilykket, -1 World of Games, +1 Limil, Devilish Bunny, +1 Void Colonel | 128 | 0.5859 | [0.4993, 0.6675] | r06:s06, r07:i07 | 0.5363 |
 | e0c28f7f561fa353 | -1 Bibatii, Eld Sight, -1 Netherworld Lieutenant, -1 World of Games, +1 Bittersweet Departures, +1 Fediel, Darkness Personified, +1 Lyria, Skydestined | 192 | 0.5833 | [0.5126, 0.6508] | r02:s08, r03:i01, r04:i11 | 0.5407 |
 | d821cef17317e16b | -1 World of Games, +1 Yuni, Cosmic Legacy | 192 | 0.5781 | [0.5074, 0.6458] | r01:s01, r02:i02 | 0.5406 |
 | 0e6812f3de6c8172 | -2 Macmillan, Reaper of Ceremonies, -2 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Friendly Blue Ogre, +1 Ruthless Blitzer, +1 Valiant Edge, +1 Valor of the Nightblossom | 128 | 0.5781 | [0.4915, 0.6602] | r02:s07, r03:i03 | 0.5501 |
-| f6d4ca56209b37e5 | -2 Istyndet vs. Mitilykket, -1 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge, +1 Void Colonel | 192 | 0.5781 | [0.5074, 0.6458] | r03:s32, r05:i02, r06:i02 | 0.5366 |
+| a598cfdec2c40c92 | -1 Adahime, Anathema of Death, -2 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, -2 Void Colonel, -1 World of Games, +2 Fediel, Darkness Personified, +1 Fickle Necromancer, +1 Indomitable Fighter, +1 Itsurugi & Taketsumi, Brothers, +1 Limil, Devilish Bunny, +1 Wills United | 320 | 0.575 | [0.5203, 0.628] | r02:s14, r03:i02, r05:i04, r06:i03, r07:i03 | 0.5386 |
 | 470b15bc2eaad7fc | -1 World of Games, +1 Reverent Demon | 192 | 0.5729 | [0.5022, 0.6408] | r01:s49, r02:i06 | 0.5308 |
 | 5dbd602fd4716dff | -2 Istyndet vs. Mitilykket, -1 World of Games, +3 Anisage, Clear Resolve | 128 | 0.5703 | [0.4837, 0.6528] | r01:s05 | - |
-| a598cfdec2c40c92 | -1 Adahime, Anathema of Death, -2 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, -2 Void Colonel, -1 World of Games, +2 Fediel, Darkness Personified, +1 Fickle Necromancer, +1 Indomitable Fighter, +1 Itsurugi & Taketsumi, Brothers, +1 Limil, Devilish Bunny, +1 Wills United | 256 | 0.5703 | [0.5091, 0.6295] | r02:s14, r03:i02, r05:i04, r06:i03 | 0.5346 |
+| f6d4ca56209b37e5 | -2 Istyndet vs. Mitilykket, -1 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge, +1 Void Colonel | 256 | 0.5703 | [0.5091, 0.6295] | r03:s32, r05:i02, r06:i02, r07:i06 | 0.5374 |
 | c749708b09b84a9a | -1 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, -1 World of Games, +1 Fediel, Darkness Personified, +1 Itsurugi & Taketsumi, Brothers, +1 Lyria, Skydestined | 128 | 0.5703 | [0.4837, 0.6528] | r04:m02, r05:i06 | 0.5321 |
 | 9f522ad933ec7aa7 | -1 Istyndet vs. Mitilykket, -1 World of Games, +2 Devious Lesser Mummy | 128 | 0.5703 | [0.4837, 0.6528] | r05:a01, r06:i04 | 0.5322 |
-| 3be4a1793f6446d0 | -1 Istyndet vs. Mitilykket, -1 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge | 320 | 0.5656 | [0.5109, 0.6188] | r02:m02, r03:i05, r04:i08, r05:i01, r06:i01 | 0.5444 |
+| 3be4a1793f6446d0 | -1 Istyndet vs. Mitilykket, -1 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge | 384 | 0.5651 | [0.5151, 0.6138] | r02:m02, r03:i05, r04:i08, r05:i01, r06:i01, r07:i01 | 0.5492 |
 | 0c4a8d95c86f607c | -1 Istyndet vs. Mitilykket, +1 Hamsa, Sculpted Divinity | 128 | 0.5625 | [0.476, 0.6454] | r01:s02 | - |
 | 59c90167dfc8b047 | -2 Macmillan, Reaper of Ceremonies, +1 Corruption, +1 Marsha, Dark Knight | 128 | 0.5625 | [0.476, 0.6454] | r01:s20 | - |
-| a8f3b51f5cd830d6 | -2 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, -2 Void Colonel, -1 World of Games, +2 Fediel, Darkness Personified, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Marsha, Dark Knight, +1 Wills United | 320 | 0.5625 | [0.5077, 0.6158] | r01:s26, r02:i04, r03:i12, r06:i07 | 0.5278 |
 | 3c3fa437f54c74fb | -1 Void Colonel, -1 World of Games, +1 Bibatii, Eld Sight, +1 Sandalphon, Primarch Successor | 192 | 0.5625 | [0.4918, 0.6308] | r01:s35, r02:i08 | 0.5248 |
+| ce703cd207637fa9 | -1 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, -1 World of Games, +2 Devious Lesser Mummy, +1 Itsurugi & Taketsumi, Brothers | 128 | 0.5625 | [0.476, 0.6454] | r06:s02, r07:i12 | 0.5331 |
+| d3188a9e2dc3d51e | -2 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +2 Limil, Devilish Bunny | 128 | 0.5625 | [0.476, 0.6454] | r06:s05, r07:i11 | 0.5333 |
 | ef8a8485bc12b1d3 | -2 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +2 Valiant Edge | 192 | 0.5573 | [0.4866, 0.6257] | r01:s53, r02:i01 | 0.542 |
-| 875528c111028d49 | -2 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge | 128 | 0.5547 | [0.4682, 0.6379] | r02:m01, r06:i06 | 0.5286 |
+| 875528c111028d49 | -2 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge | 192 | 0.5573 | [0.4866, 0.6257] | r02:m01, r06:i06, r07:i05 | 0.5378 |
 | 7fa2680c449ad6c2 | -1 Bibatii, Eld Sight, -1 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, +1 Depletive Eld Sight, +1 Itsurugi & Taketsumi, Brothers, +1 Limil, Devilish Bunny | 128 | 0.5547 | [0.4682, 0.6379] | r03:s24, r04:i10 | 0.5409 |
-| 86c9ecc9b9113607 | -1 Netherworld Lieutenant, -1 World of Games, +2 Hamsa, Sculpted Divinity | 256 | 0.5469 | [0.4857, 0.6067] | r01:s19, r02:i03, r03:i11 | 0.5316 |
-| 4e9138dabac6e978 | -2 Netherworld Lieutenant, -1 Raz, Demon on the Drums, -1 World of Games, +3 Reverent Demon, +1 Void Colonel | 192 | 0.5469 | [0.4762, 0.6157] | r01:s24, r02:i05 | 0.5346 |
 
 ## Every card's trial in Midrange's shell (coverage decks, best first)
 
@@ -36,7 +36,6 @@
 |---|---|---:|---:|---|---|
 | Spooky Surprise | +2 | 64 | 0.6094 | [0.4869, 0.7194] | -1 Istyndet vs. Mitilykket, -1 World of Games, +2 Spooky Surprise |
 | Itsurugi & Taketsumi, Brothers | -2 | 64 | 0.6094 | [0.4869, 0.7194] | -2 Itsurugi & Taketsumi, Brothers, +1 Fickle Necromancer, +1 Lilith, Enchanting Succubus |
-| Hark to the Night Song | -2 | 64 | 0.6094 | [0.4869, 0.7194] | -2 Hark to the Night Song, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers |
 | Monster Litterateur | +2 | 64 | 0.5938 | [0.4714, 0.7054] | -1 Istyndet vs. Mitilykket, -1 World of Games, +2 Monster Litterateur |
 | Almeida, Headstrong Miner | +2 | 64 | 0.5938 | [0.4714, 0.7054] | -1 Istyndet vs. Mitilykket, -1 World of Games, +2 Almeida, Headstrong Miner |
 | Encroached World | +2 | 64 | 0.5938 | [0.4714, 0.7054] | -1 Istyndet vs. Mitilykket, -1 World of Games, +2 Encroached World |
@@ -58,6 +57,7 @@
 | Altaro Superfan | +2 | 64 | 0.5469 | [0.4257, 0.6627] | -1 Istyndet vs. Mitilykket, -1 World of Games, +2 Altaro Superfan |
 | Adahime, Anathema of Death | -2 | 64 | 0.5469 | [0.4257, 0.6627] | -2 Adahime, Anathema of Death, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers |
 | Highwire Feline | -2 | 64 | 0.5469 | [0.4257, 0.6627] | -2 Highwire Feline, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers |
+| Hark to the Night Song | -2 | 128 | 0.5391 | [0.4528, 0.623] | -2 Hark to the Night Song, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers |
 | Caravan Mammoth | +2 | 64 | 0.5312 | [0.4107, 0.6482] | -1 Istyndet vs. Mitilykket, -1 World of Games, +2 Caravan Mammoth |
 | Katalina, Sky's Protector | +2 | 64 | 0.5312 | [0.4107, 0.6482] | -1 Istyndet vs. Mitilykket, -1 World of Games, +2 Katalina, Sky's Protector |
 | Behemoth General | +2 | 64 | 0.5312 | [0.4107, 0.6482] | -1 Istyndet vs. Mitilykket, -1 World of Games, +2 Behemoth General |
