@@ -1,0 +1,11182 @@
+{
+  "tag": "search101",
+  "teacher": "h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,net=results/run100/leaf100q.json,mull=leaf,mulls=256",
+  "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+  "seed": 10101,
+  "games": 4096,
+  "games_planned": 4096,
+  "replay_ok": 4096,
+  "replay_mismatch": [],
+  "unreadable_moved_aside": [],
+  "aborted": 0,
+  "games_with_errors": [],
+  "decisions": 346533,
+  "decisions_with_2plus_candidates": 263309,
+  "paths": {
+    "search": 261626,
+    "single_legal": 57011,
+    "take_kill": 16816,
+    "mulligan": 8192,
+    "take_kill_roll": 1158,
+    "holdback_trade": 1143,
+    "holdback_resample": 540,
+    "consensus_lethal": 47
+  },
+  "candidates_per_decision": {
+    "n": 263309,
+    "mean": 5.437,
+    "median": 5,
+    "p90": 10,
+    "p99": 17,
+    "max": 35
+  },
+  "duplicate_candidates": {
+    "share": 0.0661,
+    "count": 89284,
+    "of": 1350307
+  },
+  "top_gap": {
+    "n": 263309,
+    "mean": 5.647,
+    "median": 1.815,
+    "p90": 14.724,
+    "p99": 54.585,
+    "max": 160.0
+  },
+  "check_search_played_best": {
+    "ok": 258149,
+    "of": 258149
+  },
+  "check_aggregate_is_world_mean": {
+    "ok": 1431531,
+    "of": 1431531
+  },
+  "hbk_ran": 3159,
+  "hbk_flipped": 540,
+  "hbcheck_ran": 2619,
+  "lostrank_ran": 3477,
+  "lostrank_not_first_best": 2644,
+  "line_ends": {
+    "o": 4026606,
+    "O": 3282055,
+    "C": 1659347,
+    "L": 1115734,
+    "t": 757484,
+    "D": 587942,
+    "T": 17441,
+    "c": 5624,
+    "d": 15
+  },
+  "decision_seconds": {
+    "n": 346533,
+    "mean": 0.691,
+    "median": 0.156,
+    "p90": 2.101,
+    "p99": 5.627,
+    "max": 19.393
+  },
+  "search_decision_seconds": {
+    "n": 261626,
+    "mean": 0.903,
+    "median": 0.349,
+    "p90": 2.498,
+    "p99": 6.058,
+    "max": 19.393
+  },
+  "turn_seconds": {
+    "n": 68934,
+    "mean": 3.455,
+    "median": 1.035,
+    "p90": 10.187,
+    "p99": 27.383,
+    "max": 81.629
+  },
+  "game_seconds_per_core": {
+    "n": 4096,
+    "mean": 58.516,
+    "median": 51.865,
+    "p90": 105.583,
+    "p99": 161.336,
+    "max": 266.258
+  },
+  "decisions_per_game": {
+    "n": 4096,
+    "mean": 84.603,
+    "median": 81,
+    "p90": 117,
+    "p99": 150,
+    "max": 180
+  },
+  "turns": {
+    "n": 4096,
+    "mean": 8.683,
+    "median": 8,
+    "p90": 11,
+    "p99": 14,
+    "max": 16
+  },
+  "first_seat_win_rate": 0.5322,
+  "decisive": 4096,
+  "deck_win_rate": {
+    "meta-abyss-aggro": 0.3789,
+    "meta-abyss-midrange": 0.6914,
+    "meta-dragon-aggro": 0.2617,
+    "meta-dragon-ramp": 0.4609,
+    "meta-forest-combo": 0.5664,
+    "meta-haven-amulet": 0.5742,
+    "meta-haven-evo": 0.793,
+    "meta-haven-kukishiro": 0.6289,
+    "meta-portal-af": 0.6719,
+    "meta-portal-cutthroat": 0.457,
+    "meta-portal-evo": 0.7031,
+    "meta-rune-crystal": 0.3438,
+    "meta-rune-spell": 0.375,
+    "meta-rune-test-subject": 0.7383,
+    "meta-sword-loot": 0.5,
+    "meta-sword-rally": 0.6133,
+    "abyss-search": 0.4526
+  },
+  "segments": 1,
+  "wall_hours": 2.39,
+  "games_per_hour": 1715.4,
+  "data_mb": 81.6,
+  "archive_mb": 79.4,
+  "explore_win_rate": {
+    "all": [
+      1854,
+      4096,
+      0.4526
+    ],
+    "deck c-aggro": [
+      32,
+      64,
+      0.5
+    ],
+    "deck c-aggro vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck c-aggro vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck c-aggro vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck c-aggro vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck c-aggro vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck c-aggro vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck c-aggro vs meta-haven-evo": [
+      4,
+      4,
+      1.0
+    ],
+    "deck c-aggro vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck c-aggro vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck c-aggro vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck c-aggro vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck c-aggro vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck c-aggro vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck c-aggro vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck c-aggro vs meta-sword-loot": [
+      0,
+      4,
+      0.0
+    ],
+    "deck c-aggro vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck c-aggro went first": [
+      12,
+      32,
+      0.375
+    ],
+    "deck c-aggro went second": [
+      20,
+      32,
+      0.625
+    ],
+    "deck c-midrange": [
+      35,
+      64,
+      0.5469
+    ],
+    "deck c-midrange vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck c-midrange vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck c-midrange vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck c-midrange vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck c-midrange vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck c-midrange vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck c-midrange vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck c-midrange vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck c-midrange vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck c-midrange vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck c-midrange vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck c-midrange vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck c-midrange vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck c-midrange vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck c-midrange vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck c-midrange vs meta-sword-rally": [
+      4,
+      4,
+      1.0
+    ],
+    "deck c-midrange went first": [
+      20,
+      32,
+      0.625
+    ],
+    "deck c-midrange went second": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck f01": [
+      23,
+      64,
+      0.3594
+    ],
+    "deck f01 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck f01 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck f01 vs meta-dragon-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f01 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck f01 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f01 vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck f01 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck f01 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f01 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f01 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck f01 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck f01 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck f01 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f01 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f01 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck f01 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f01 went first": [
+      12,
+      32,
+      0.375
+    ],
+    "deck f01 went second": [
+      11,
+      32,
+      0.3438
+    ],
+    "deck f02": [
+      16,
+      64,
+      0.25
+    ],
+    "deck f02 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck f02 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck f02 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck f02 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f02 vs meta-forest-combo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck f02 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck f02 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck f02 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f02 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck f02 vs meta-portal-cutthroat": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f02 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck f02 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck f02 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f02 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck f02 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck f02 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck f02 went first": [
+      8,
+      32,
+      0.25
+    ],
+    "deck f02 went second": [
+      8,
+      32,
+      0.25
+    ],
+    "deck m01": [
+      30,
+      64,
+      0.4688
+    ],
+    "deck m01 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m01 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m01 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m01 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m01 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m01 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m01 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m01 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m01 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m01 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m01 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m01 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m01 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m01 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck m01 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m01 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m01 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck m01 went second": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck m02": [
+      27,
+      64,
+      0.4219
+    ],
+    "deck m02 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m02 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m02 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck m02 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m02 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m02 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m02 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck m02 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m02 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck m02 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m02 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m02 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m02 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m02 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck m02 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m02 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m02 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck m02 went second": [
+      10,
+      32,
+      0.3125
+    ],
+    "deck m03": [
+      24,
+      64,
+      0.375
+    ],
+    "deck m03 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m03 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m03 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m03 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m03 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m03 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m03 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck m03 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m03 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m03 vs meta-portal-cutthroat": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m03 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m03 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m03 vs meta-rune-spell": [
+      0,
+      4,
+      0.0
+    ],
+    "deck m03 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m03 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m03 vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m03 went first": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck m03 went second": [
+      9,
+      32,
+      0.2812
+    ],
+    "deck m04": [
+      28,
+      64,
+      0.4375
+    ],
+    "deck m04 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m04 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m04 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck m04 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m04 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m04 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m04 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck m04 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m04 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck m04 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m04 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck m04 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m04 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m04 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck m04 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m04 vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck m04 went first": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck m04 went second": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s01": [
+      41,
+      64,
+      0.6406
+    ],
+    "deck s01 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s01 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s01 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s01 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s01 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s01 vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s01 vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s01 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s01 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s01 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s01 vs meta-portal-evo": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s01 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s01 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s01 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s01 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s01 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s01 went first": [
+      25,
+      32,
+      0.7812
+    ],
+    "deck s01 went second": [
+      16,
+      32,
+      0.5
+    ],
+    "deck s02": [
+      37,
+      64,
+      0.5781
+    ],
+    "deck s02 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s02 vs meta-abyss-midrange": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s02 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s02 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s02 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s02 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s02 vs meta-haven-evo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s02 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s02 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s02 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s02 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s02 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s02 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s02 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s02 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s02 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s02 went first": [
+      18,
+      32,
+      0.5625
+    ],
+    "deck s02 went second": [
+      19,
+      32,
+      0.5938
+    ],
+    "deck s03": [
+      35,
+      64,
+      0.5469
+    ],
+    "deck s03 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s03 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s03 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s03 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s03 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s03 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s03 vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s03 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s03 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s03 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s03 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s03 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s03 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s03 vs meta-rune-test-subject": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s03 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s03 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s03 went first": [
+      19,
+      32,
+      0.5938
+    ],
+    "deck s03 went second": [
+      16,
+      32,
+      0.5
+    ],
+    "deck s04": [
+      35,
+      64,
+      0.5469
+    ],
+    "deck s04 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s04 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s04 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s04 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s04 vs meta-forest-combo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s04 vs meta-haven-amulet": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s04 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s04 vs meta-haven-kukishiro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s04 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s04 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s04 vs meta-portal-evo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s04 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s04 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s04 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s04 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s04 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s04 went first": [
+      18,
+      32,
+      0.5625
+    ],
+    "deck s04 went second": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s05": [
+      31,
+      64,
+      0.4844
+    ],
+    "deck s05 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s05 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s05 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s05 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s05 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s05 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s05 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s05 vs meta-haven-kukishiro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s05 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s05 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s05 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s05 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s05 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s05 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s05 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s05 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s05 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s05 went second": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s06": [
+      26,
+      64,
+      0.4062
+    ],
+    "deck s06 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s06 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s06 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s06 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s06 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s06 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s06 vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s06 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s06 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s06 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s06 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s06 vs meta-rune-crystal": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s06 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s06 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s06 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s06 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s06 went first": [
+      11,
+      32,
+      0.3438
+    ],
+    "deck s06 went second": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s07": [
+      32,
+      64,
+      0.5
+    ],
+    "deck s07 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s07 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s07 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s07 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s07 vs meta-forest-combo": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s07 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s07 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s07 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s07 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s07 vs meta-portal-cutthroat": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s07 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s07 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s07 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s07 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s07 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s07 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s07 went first": [
+      19,
+      32,
+      0.5938
+    ],
+    "deck s07 went second": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s08": [
+      21,
+      64,
+      0.3281
+    ],
+    "deck s08 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s08 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s08 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s08 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s08 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s08 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s08 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s08 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s08 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s08 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s08 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s08 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s08 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s08 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s08 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s08 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s08 went first": [
+      10,
+      32,
+      0.3125
+    ],
+    "deck s08 went second": [
+      11,
+      32,
+      0.3438
+    ],
+    "deck s09": [
+      28,
+      64,
+      0.4375
+    ],
+    "deck s09 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s09 vs meta-abyss-midrange": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s09 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s09 vs meta-dragon-ramp": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s09 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s09 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s09 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s09 vs meta-haven-kukishiro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s09 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s09 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s09 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s09 vs meta-rune-crystal": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s09 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s09 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s09 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s09 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s09 went first": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s09 went second": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s10": [
+      31,
+      64,
+      0.4844
+    ],
+    "deck s10 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s10 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s10 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s10 vs meta-dragon-ramp": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s10 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s10 vs meta-haven-amulet": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s10 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s10 vs meta-haven-kukishiro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s10 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s10 vs meta-portal-cutthroat": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s10 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s10 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s10 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s10 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s10 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s10 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s10 went first": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s10 went second": [
+      16,
+      32,
+      0.5
+    ],
+    "deck s11": [
+      21,
+      64,
+      0.3281
+    ],
+    "deck s11 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s11 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s11 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s11 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s11 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s11 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s11 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s11 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s11 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s11 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s11 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s11 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s11 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s11 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s11 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s11 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s11 went first": [
+      12,
+      32,
+      0.375
+    ],
+    "deck s11 went second": [
+      9,
+      32,
+      0.2812
+    ],
+    "deck s12": [
+      27,
+      64,
+      0.4219
+    ],
+    "deck s12 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s12 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s12 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s12 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s12 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s12 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s12 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s12 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s12 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s12 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s12 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s12 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s12 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s12 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s12 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s12 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s12 went first": [
+      12,
+      32,
+      0.375
+    ],
+    "deck s12 went second": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s13": [
+      23,
+      64,
+      0.3594
+    ],
+    "deck s13 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s13 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s13 vs meta-dragon-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s13 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s13 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s13 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s13 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s13 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s13 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s13 vs meta-portal-cutthroat": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s13 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s13 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s13 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s13 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s13 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s13 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s13 went first": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s13 went second": [
+      10,
+      32,
+      0.3125
+    ],
+    "deck s14": [
+      22,
+      64,
+      0.3438
+    ],
+    "deck s14 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s14 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s14 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s14 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s14 vs meta-forest-combo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s14 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s14 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s14 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s14 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s14 vs meta-portal-cutthroat": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s14 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s14 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s14 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s14 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s14 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s14 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s14 went first": [
+      16,
+      32,
+      0.5
+    ],
+    "deck s14 went second": [
+      6,
+      32,
+      0.1875
+    ],
+    "deck s15": [
+      25,
+      64,
+      0.3906
+    ],
+    "deck s15 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s15 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s15 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s15 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s15 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s15 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s15 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s15 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s15 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s15 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s15 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s15 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s15 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s15 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s15 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s15 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s15 went first": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s15 went second": [
+      11,
+      32,
+      0.3438
+    ],
+    "deck s16": [
+      23,
+      64,
+      0.3594
+    ],
+    "deck s16 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s16 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s16 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s16 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s16 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s16 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s16 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s16 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s16 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s16 vs meta-portal-cutthroat": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s16 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s16 vs meta-rune-crystal": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s16 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s16 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s16 vs meta-sword-loot": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s16 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s16 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s16 went second": [
+      6,
+      32,
+      0.1875
+    ],
+    "deck s17": [
+      33,
+      64,
+      0.5156
+    ],
+    "deck s17 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s17 vs meta-abyss-midrange": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s17 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s17 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s17 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s17 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s17 vs meta-haven-evo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s17 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s17 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s17 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s17 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s17 vs meta-rune-crystal": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s17 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s17 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s17 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s17 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s17 went first": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s17 went second": [
+      18,
+      32,
+      0.5625
+    ],
+    "deck s18": [
+      39,
+      64,
+      0.6094
+    ],
+    "deck s18 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s18 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s18 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s18 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s18 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s18 vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s18 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s18 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s18 vs meta-portal-af": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s18 vs meta-portal-cutthroat": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s18 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s18 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s18 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s18 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s18 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s18 vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s18 went first": [
+      19,
+      32,
+      0.5938
+    ],
+    "deck s18 went second": [
+      20,
+      32,
+      0.625
+    ],
+    "deck s19": [
+      38,
+      64,
+      0.5938
+    ],
+    "deck s19 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s19 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s19 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s19 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s19 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s19 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s19 vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s19 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s19 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s19 vs meta-portal-cutthroat": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s19 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s19 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s19 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s19 vs meta-rune-test-subject": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s19 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s19 vs meta-sword-rally": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s19 went first": [
+      21,
+      32,
+      0.6562
+    ],
+    "deck s19 went second": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s20": [
+      35,
+      64,
+      0.5469
+    ],
+    "deck s20 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s20 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s20 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s20 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s20 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s20 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s20 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s20 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s20 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s20 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s20 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s20 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s20 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s20 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s20 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s20 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s20 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s20 went second": [
+      18,
+      32,
+      0.5625
+    ],
+    "deck s21": [
+      30,
+      64,
+      0.4688
+    ],
+    "deck s21 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s21 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s21 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s21 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s21 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s21 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s21 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s21 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s21 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s21 vs meta-portal-cutthroat": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s21 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s21 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s21 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s21 vs meta-rune-test-subject": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s21 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s21 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s21 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s21 went second": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s22": [
+      32,
+      64,
+      0.5
+    ],
+    "deck s22 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s22 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s22 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s22 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s22 vs meta-forest-combo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s22 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s22 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s22 vs meta-haven-kukishiro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s22 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s22 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s22 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s22 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s22 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s22 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s22 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s22 vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s22 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s22 went second": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s23": [
+      31,
+      64,
+      0.4844
+    ],
+    "deck s23 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s23 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s23 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s23 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s23 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s23 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s23 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s23 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s23 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s23 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s23 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s23 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s23 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s23 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s23 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s23 vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s23 went first": [
+      16,
+      32,
+      0.5
+    ],
+    "deck s23 went second": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s24": [
+      35,
+      64,
+      0.5469
+    ],
+    "deck s24 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s24 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s24 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s24 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s24 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s24 vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s24 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s24 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s24 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s24 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s24 vs meta-portal-evo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s24 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s24 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s24 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s24 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s24 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s24 went first": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s24 went second": [
+      20,
+      32,
+      0.625
+    ],
+    "deck s25": [
+      26,
+      64,
+      0.4062
+    ],
+    "deck s25 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s25 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s25 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s25 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s25 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s25 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s25 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s25 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s25 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s25 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s25 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s25 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s25 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s25 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s25 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s25 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s25 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s25 went second": [
+      9,
+      32,
+      0.2812
+    ],
+    "deck s26": [
+      36,
+      64,
+      0.5625
+    ],
+    "deck s26 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s26 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s26 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s26 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s26 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s26 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s26 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s26 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s26 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s26 vs meta-portal-cutthroat": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s26 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s26 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s26 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s26 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s26 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s26 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s26 went first": [
+      19,
+      32,
+      0.5938
+    ],
+    "deck s26 went second": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s27": [
+      27,
+      64,
+      0.4219
+    ],
+    "deck s27 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s27 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s27 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s27 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s27 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s27 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s27 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s27 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s27 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s27 vs meta-portal-cutthroat": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s27 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s27 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s27 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s27 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s27 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s27 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s27 went first": [
+      16,
+      32,
+      0.5
+    ],
+    "deck s27 went second": [
+      11,
+      32,
+      0.3438
+    ],
+    "deck s28": [
+      29,
+      64,
+      0.4531
+    ],
+    "deck s28 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s28 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s28 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s28 vs meta-dragon-ramp": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s28 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s28 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s28 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s28 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s28 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s28 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s28 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s28 vs meta-rune-crystal": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s28 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s28 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s28 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s28 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s28 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s28 went second": [
+      12,
+      32,
+      0.375
+    ],
+    "deck s29": [
+      31,
+      64,
+      0.4844
+    ],
+    "deck s29 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s29 vs meta-abyss-midrange": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s29 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s29 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s29 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s29 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s29 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s29 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s29 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s29 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s29 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s29 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s29 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s29 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s29 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s29 vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s29 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s29 went second": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s30": [
+      26,
+      64,
+      0.4062
+    ],
+    "deck s30 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s30 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s30 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s30 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s30 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s30 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s30 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s30 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s30 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s30 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s30 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s30 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s30 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s30 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s30 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s30 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s30 went first": [
+      12,
+      32,
+      0.375
+    ],
+    "deck s30 went second": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s31": [
+      27,
+      64,
+      0.4219
+    ],
+    "deck s31 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s31 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s31 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s31 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s31 vs meta-forest-combo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s31 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s31 vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s31 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s31 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s31 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s31 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s31 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s31 vs meta-rune-spell": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s31 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s31 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s31 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s31 went first": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s31 went second": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s32": [
+      17,
+      64,
+      0.2656
+    ],
+    "deck s32 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s32 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s32 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s32 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s32 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s32 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s32 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s32 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s32 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s32 vs meta-portal-cutthroat": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s32 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s32 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s32 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s32 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s32 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s32 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s32 went first": [
+      12,
+      32,
+      0.375
+    ],
+    "deck s32 went second": [
+      5,
+      32,
+      0.1562
+    ],
+    "deck s33": [
+      33,
+      64,
+      0.5156
+    ],
+    "deck s33 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s33 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s33 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s33 vs meta-dragon-ramp": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s33 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s33 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s33 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s33 vs meta-haven-kukishiro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s33 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s33 vs meta-portal-cutthroat": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s33 vs meta-portal-evo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s33 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s33 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s33 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s33 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s33 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s33 went first": [
+      18,
+      32,
+      0.5625
+    ],
+    "deck s33 went second": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s34": [
+      35,
+      64,
+      0.5469
+    ],
+    "deck s34 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s34 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s34 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s34 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s34 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s34 vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s34 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s34 vs meta-haven-kukishiro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s34 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s34 vs meta-portal-cutthroat": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s34 vs meta-portal-evo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s34 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s34 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s34 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s34 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s34 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s34 went first": [
+      19,
+      32,
+      0.5938
+    ],
+    "deck s34 went second": [
+      16,
+      32,
+      0.5
+    ],
+    "deck s35": [
+      39,
+      64,
+      0.6094
+    ],
+    "deck s35 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s35 vs meta-abyss-midrange": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s35 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s35 vs meta-dragon-ramp": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s35 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s35 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s35 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s35 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s35 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s35 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s35 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s35 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s35 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s35 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s35 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s35 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s35 went first": [
+      18,
+      32,
+      0.5625
+    ],
+    "deck s35 went second": [
+      21,
+      32,
+      0.6562
+    ],
+    "deck s36": [
+      34,
+      64,
+      0.5312
+    ],
+    "deck s36 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s36 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s36 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s36 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s36 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s36 vs meta-haven-amulet": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s36 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s36 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s36 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s36 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s36 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s36 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s36 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s36 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s36 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s36 vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s36 went first": [
+      18,
+      32,
+      0.5625
+    ],
+    "deck s36 went second": [
+      16,
+      32,
+      0.5
+    ],
+    "deck s37": [
+      30,
+      64,
+      0.4688
+    ],
+    "deck s37 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s37 vs meta-abyss-midrange": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s37 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s37 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s37 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s37 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s37 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s37 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s37 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s37 vs meta-portal-cutthroat": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s37 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s37 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s37 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s37 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s37 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s37 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s37 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s37 went second": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s38": [
+      33,
+      64,
+      0.5156
+    ],
+    "deck s38 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s38 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s38 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s38 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s38 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s38 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s38 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s38 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s38 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s38 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s38 vs meta-portal-evo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s38 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s38 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s38 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s38 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s38 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s38 went first": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s38 went second": [
+      18,
+      32,
+      0.5625
+    ],
+    "deck s39": [
+      25,
+      64,
+      0.3906
+    ],
+    "deck s39 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s39 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s39 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s39 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s39 vs meta-forest-combo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s39 vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s39 vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s39 vs meta-haven-kukishiro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s39 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s39 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s39 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s39 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s39 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s39 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s39 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s39 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s39 went first": [
+      10,
+      32,
+      0.3125
+    ],
+    "deck s39 went second": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s40": [
+      30,
+      64,
+      0.4688
+    ],
+    "deck s40 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s40 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s40 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s40 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s40 vs meta-forest-combo": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s40 vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s40 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s40 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s40 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s40 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s40 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s40 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s40 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s40 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s40 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s40 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s40 went first": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s40 went second": [
+      15,
+      32,
+      0.4688
+    ],
+    "deck s41": [
+      31,
+      64,
+      0.4844
+    ],
+    "deck s41 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s41 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s41 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s41 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s41 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s41 vs meta-haven-amulet": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s41 vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s41 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s41 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s41 vs meta-portal-cutthroat": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s41 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s41 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s41 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s41 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s41 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s41 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s41 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s41 went second": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s42": [
+      29,
+      64,
+      0.4531
+    ],
+    "deck s42 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s42 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s42 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s42 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s42 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s42 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s42 vs meta-haven-evo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s42 vs meta-haven-kukishiro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s42 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s42 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s42 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s42 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s42 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s42 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s42 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s42 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s42 went first": [
+      19,
+      32,
+      0.5938
+    ],
+    "deck s42 went second": [
+      10,
+      32,
+      0.3125
+    ],
+    "deck s43": [
+      26,
+      64,
+      0.4062
+    ],
+    "deck s43 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s43 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s43 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s43 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s43 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s43 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s43 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s43 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s43 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s43 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s43 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s43 vs meta-rune-crystal": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s43 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s43 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s43 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s43 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s43 went first": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s43 went second": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s44": [
+      19,
+      64,
+      0.2969
+    ],
+    "deck s44 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s44 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s44 vs meta-dragon-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s44 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s44 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s44 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s44 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s44 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s44 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s44 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s44 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s44 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s44 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s44 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s44 vs meta-sword-loot": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s44 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s44 went first": [
+      9,
+      32,
+      0.2812
+    ],
+    "deck s44 went second": [
+      10,
+      32,
+      0.3125
+    ],
+    "deck s45": [
+      21,
+      64,
+      0.3281
+    ],
+    "deck s45 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s45 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s45 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s45 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s45 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s45 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s45 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s45 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s45 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s45 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s45 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s45 vs meta-rune-crystal": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s45 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s45 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s45 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s45 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s45 went first": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s45 went second": [
+      7,
+      32,
+      0.2188
+    ],
+    "deck s46": [
+      19,
+      64,
+      0.2969
+    ],
+    "deck s46 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s46 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s46 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s46 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s46 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s46 vs meta-haven-amulet": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s46 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s46 vs meta-haven-kukishiro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s46 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s46 vs meta-portal-cutthroat": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s46 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s46 vs meta-rune-crystal": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s46 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s46 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s46 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s46 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s46 went first": [
+      11,
+      32,
+      0.3438
+    ],
+    "deck s46 went second": [
+      8,
+      32,
+      0.25
+    ],
+    "deck s47": [
+      23,
+      64,
+      0.3594
+    ],
+    "deck s47 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s47 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s47 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s47 vs meta-dragon-ramp": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s47 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s47 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s47 vs meta-haven-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s47 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s47 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s47 vs meta-portal-cutthroat": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s47 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s47 vs meta-rune-crystal": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s47 vs meta-rune-spell": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s47 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s47 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s47 vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s47 went first": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s47 went second": [
+      10,
+      32,
+      0.3125
+    ],
+    "deck s48": [
+      25,
+      64,
+      0.3906
+    ],
+    "deck s48 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s48 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s48 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s48 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s48 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s48 vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s48 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s48 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s48 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s48 vs meta-portal-cutthroat": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s48 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s48 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s48 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s48 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s48 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s48 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s48 went first": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s48 went second": [
+      12,
+      32,
+      0.375
+    ],
+    "deck s49": [
+      34,
+      64,
+      0.5312
+    ],
+    "deck s49 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s49 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s49 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s49 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s49 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s49 vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s49 vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s49 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s49 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s49 vs meta-portal-cutthroat": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s49 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s49 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s49 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s49 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s49 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s49 vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s49 went first": [
+      21,
+      32,
+      0.6562
+    ],
+    "deck s49 went second": [
+      13,
+      32,
+      0.4062
+    ],
+    "deck s50": [
+      31,
+      64,
+      0.4844
+    ],
+    "deck s50 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s50 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s50 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s50 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s50 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s50 vs meta-haven-amulet": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s50 vs meta-haven-evo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s50 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s50 vs meta-portal-af": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s50 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s50 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s50 vs meta-rune-crystal": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s50 vs meta-rune-spell": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s50 vs meta-rune-test-subject": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s50 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s50 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s50 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s50 went second": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s51": [
+      25,
+      64,
+      0.3906
+    ],
+    "deck s51 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s51 vs meta-abyss-midrange": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s51 vs meta-dragon-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s51 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s51 vs meta-forest-combo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s51 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s51 vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s51 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s51 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s51 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s51 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s51 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s51 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s51 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s51 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s51 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s51 went first": [
+      11,
+      32,
+      0.3438
+    ],
+    "deck s51 went second": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s52": [
+      24,
+      64,
+      0.375
+    ],
+    "deck s52 vs meta-abyss-aggro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s52 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s52 vs meta-dragon-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s52 vs meta-dragon-ramp": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s52 vs meta-forest-combo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s52 vs meta-haven-amulet": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s52 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s52 vs meta-haven-kukishiro": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s52 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s52 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s52 vs meta-portal-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s52 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s52 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s52 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s52 vs meta-sword-loot": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s52 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s52 went first": [
+      10,
+      32,
+      0.3125
+    ],
+    "deck s52 went second": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s53": [
+      39,
+      64,
+      0.6094
+    ],
+    "deck s53 vs meta-abyss-aggro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s53 vs meta-abyss-midrange": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s53 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s53 vs meta-dragon-ramp": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s53 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s53 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s53 vs meta-haven-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s53 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s53 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s53 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s53 vs meta-portal-evo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s53 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s53 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s53 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s53 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s53 vs meta-sword-rally": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s53 went first": [
+      21,
+      32,
+      0.6562
+    ],
+    "deck s53 went second": [
+      18,
+      32,
+      0.5625
+    ],
+    "deck s54": [
+      28,
+      64,
+      0.4375
+    ],
+    "deck s54 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s54 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s54 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s54 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s54 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s54 vs meta-haven-amulet": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s54 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s54 vs meta-haven-kukishiro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s54 vs meta-portal-af": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s54 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s54 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s54 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s54 vs meta-rune-spell": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s54 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s54 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s54 vs meta-sword-rally": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s54 went first": [
+      17,
+      32,
+      0.5312
+    ],
+    "deck s54 went second": [
+      11,
+      32,
+      0.3438
+    ],
+    "deck s55": [
+      26,
+      64,
+      0.4062
+    ],
+    "deck s55 vs meta-abyss-aggro": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s55 vs meta-abyss-midrange": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s55 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s55 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s55 vs meta-forest-combo": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s55 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s55 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s55 vs meta-haven-kukishiro": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s55 vs meta-portal-af": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s55 vs meta-portal-cutthroat": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s55 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s55 vs meta-rune-crystal": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s55 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s55 vs meta-rune-test-subject": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s55 vs meta-sword-loot": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s55 vs meta-sword-rally": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s55 went first": [
+      14,
+      32,
+      0.4375
+    ],
+    "deck s55 went second": [
+      12,
+      32,
+      0.375
+    ],
+    "deck s56": [
+      30,
+      64,
+      0.4688
+    ],
+    "deck s56 vs meta-abyss-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s56 vs meta-abyss-midrange": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s56 vs meta-dragon-aggro": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s56 vs meta-dragon-ramp": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s56 vs meta-forest-combo": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s56 vs meta-haven-amulet": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s56 vs meta-haven-evo": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s56 vs meta-haven-kukishiro": [
+      4,
+      4,
+      1.0
+    ],
+    "deck s56 vs meta-portal-af": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s56 vs meta-portal-cutthroat": [
+      3,
+      4,
+      0.75
+    ],
+    "deck s56 vs meta-portal-evo": [
+      1,
+      4,
+      0.25
+    ],
+    "deck s56 vs meta-rune-crystal": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s56 vs meta-rune-spell": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s56 vs meta-rune-test-subject": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s56 vs meta-sword-loot": [
+      2,
+      4,
+      0.5
+    ],
+    "deck s56 vs meta-sword-rally": [
+      0,
+      4,
+      0.0
+    ],
+    "deck s56 went first": [
+      16,
+      32,
+      0.5
+    ],
+    "deck s56 went second": [
+      14,
+      32,
+      0.4375
+    ],
+    "kind search": [
+      1854,
+      4096,
+      0.4526
+    ],
+    "vs meta-abyss-aggro": [
+      159,
+      256,
+      0.6211
+    ],
+    "vs meta-abyss-midrange": [
+      79,
+      256,
+      0.3086
+    ],
+    "vs meta-dragon-aggro": [
+      189,
+      256,
+      0.7383
+    ],
+    "vs meta-dragon-ramp": [
+      138,
+      256,
+      0.5391
+    ],
+    "vs meta-forest-combo": [
+      111,
+      256,
+      0.4336
+    ],
+    "vs meta-haven-amulet": [
+      109,
+      256,
+      0.4258
+    ],
+    "vs meta-haven-evo": [
+      53,
+      256,
+      0.207
+    ],
+    "vs meta-haven-kukishiro": [
+      95,
+      256,
+      0.3711
+    ],
+    "vs meta-portal-af": [
+      84,
+      256,
+      0.3281
+    ],
+    "vs meta-portal-cutthroat": [
+      139,
+      256,
+      0.543
+    ],
+    "vs meta-portal-evo": [
+      76,
+      256,
+      0.2969
+    ],
+    "vs meta-rune-crystal": [
+      168,
+      256,
+      0.6562
+    ],
+    "vs meta-rune-spell": [
+      160,
+      256,
+      0.625
+    ],
+    "vs meta-rune-test-subject": [
+      67,
+      256,
+      0.2617
+    ],
+    "vs meta-sword-loot": [
+      128,
+      256,
+      0.5
+    ],
+    "vs meta-sword-rally": [
+      99,
+      256,
+      0.3867
+    ],
+    "went first": [
+      993,
+      2048,
+      0.4849
+    ],
+    "went second": [
+      861,
+      2048,
+      0.4204
+    ]
+  },
+  "explore_pool": 113,
+  "explore_pool_cards_played": 69,
+  "decks_per_card": {
+    "n": 113,
+    "mean": 623.575,
+    "median": 64,
+    "p90": 3136,
+    "p99": 4096,
+    "max": 4096
+  },
+  "fewest_decks": [
+    [
+      0,
+      "10001130"
+    ],
+    [
+      0,
+      "10001210"
+    ],
+    [
+      0,
+      "10002110"
+    ],
+    [
+      0,
+      "10002210"
+    ],
+    [
+      0,
+      "10051110"
+    ],
+    [
+      0,
+      "10051120"
+    ],
+    [
+      0,
+      "10052310"
+    ],
+    [
+      0,
+      "10401110"
+    ],
+    [
+      0,
+      "10401120"
+    ],
+    [
+      0,
+      "10403110"
+    ]
+  ],
+  "cards_in_error_games": {},
+  "search_decks": {
+    "c-midrange": {
+      "wins": 35,
+      "games": 64,
+      "rate": 0.5469,
+      "lo": 0.4257,
+      "hi": 0.6627,
+      "first": 0.625,
+      "second": 0.4688,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          4,
+          4
+        ]
+      }
+    },
+    "c-aggro": {
+      "wins": 32,
+      "games": 64,
+      "rate": 0.5,
+      "lo": 0.381,
+      "hi": 0.619,
+      "first": 0.375,
+      "second": 0.625,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          4,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          0,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "f01": {
+      "wins": 23,
+      "games": 64,
+      "rate": 0.3594,
+      "lo": 0.2529,
+      "hi": 0.4818,
+      "first": 0.375,
+      "second": 0.3438,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          1,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "f02": {
+      "wins": 16,
+      "games": 64,
+      "rate": 0.25,
+      "lo": 0.1601,
+      "hi": 0.3682,
+      "first": 0.25,
+      "second": 0.25,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          0,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          1,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    },
+    "m01": {
+      "wins": 30,
+      "games": 64,
+      "rate": 0.4688,
+      "lo": 0.3518,
+      "hi": 0.5893,
+      "first": 0.5312,
+      "second": 0.4062,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "m02": {
+      "wins": 27,
+      "games": 64,
+      "rate": 0.4219,
+      "lo": 0.3087,
+      "hi": 0.5439,
+      "first": 0.5312,
+      "second": 0.3125,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "m03": {
+      "wins": 24,
+      "games": 64,
+      "rate": 0.375,
+      "lo": 0.2667,
+      "hi": 0.4975,
+      "first": 0.4688,
+      "second": 0.2812,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          1,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          0,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "m04": {
+      "wins": 28,
+      "games": 64,
+      "rate": 0.4375,
+      "lo": 0.3229,
+      "hi": 0.5591,
+      "first": 0.4375,
+      "second": 0.4375,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "s01": {
+      "wins": 41,
+      "games": 64,
+      "rate": 0.6406,
+      "lo": 0.5182,
+      "hi": 0.7471,
+      "first": 0.7812,
+      "second": 0.5,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          4,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s02": {
+      "wins": 37,
+      "games": 64,
+      "rate": 0.5781,
+      "lo": 0.4561,
+      "hi": 0.6913,
+      "first": 0.5625,
+      "second": 0.5938,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          4,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          3,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s03": {
+      "wins": 35,
+      "games": 64,
+      "rate": 0.5469,
+      "lo": 0.4257,
+      "hi": 0.6627,
+      "first": 0.5938,
+      "second": 0.5,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          3,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s04": {
+      "wins": 35,
+      "games": 64,
+      "rate": 0.5469,
+      "lo": 0.4257,
+      "hi": 0.6627,
+      "first": 0.5625,
+      "second": 0.5312,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          0,
+          4
+        ],
+        "meta-haven-amulet": [
+          4,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          4,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          3,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s05": {
+      "wins": 31,
+      "games": 64,
+      "rate": 0.4844,
+      "lo": 0.3663,
+      "hi": 0.6042,
+      "first": 0.5312,
+      "second": 0.4375,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          3,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s06": {
+      "wins": 26,
+      "games": 64,
+      "rate": 0.4062,
+      "lo": 0.2946,
+      "hi": 0.5286,
+      "first": 0.3438,
+      "second": 0.4688,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          1,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s07": {
+      "wins": 32,
+      "games": 64,
+      "rate": 0.5,
+      "lo": 0.381,
+      "hi": 0.619,
+      "first": 0.5938,
+      "second": 0.4062,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          4,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          1,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s08": {
+      "wins": 21,
+      "games": 64,
+      "rate": 0.3281,
+      "lo": 0.2257,
+      "hi": 0.45,
+      "first": 0.3125,
+      "second": 0.3438,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s09": {
+      "wins": 28,
+      "games": 64,
+      "rate": 0.4375,
+      "lo": 0.3229,
+      "hi": 0.5591,
+      "first": 0.4688,
+      "second": 0.4062,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          3,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          0,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          4,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          0,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s10": {
+      "wins": 31,
+      "games": 64,
+      "rate": 0.4844,
+      "lo": 0.3663,
+      "hi": 0.6042,
+      "first": 0.4688,
+      "second": 0.5,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          4,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          0,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          3,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          1,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s11": {
+      "wins": 21,
+      "games": 64,
+      "rate": 0.3281,
+      "lo": 0.2257,
+      "hi": 0.45,
+      "first": 0.375,
+      "second": 0.2812,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    },
+    "s12": {
+      "wins": 27,
+      "games": 64,
+      "rate": 0.4219,
+      "lo": 0.3087,
+      "hi": 0.5439,
+      "first": 0.375,
+      "second": 0.4688,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    },
+    "s13": {
+      "wins": 23,
+      "games": 64,
+      "rate": 0.3594,
+      "lo": 0.2529,
+      "hi": 0.4818,
+      "first": 0.4062,
+      "second": 0.3125,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          1,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          0,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s14": {
+      "wins": 22,
+      "games": 64,
+      "rate": 0.3438,
+      "lo": 0.2392,
+      "hi": 0.466,
+      "first": 0.5,
+      "second": 0.1875,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          0,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          1,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s15": {
+      "wins": 25,
+      "games": 64,
+      "rate": 0.3906,
+      "lo": 0.2806,
+      "hi": 0.5131,
+      "first": 0.4375,
+      "second": 0.3438,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    },
+    "s16": {
+      "wins": 23,
+      "games": 64,
+      "rate": 0.3594,
+      "lo": 0.2529,
+      "hi": 0.4818,
+      "first": 0.5312,
+      "second": 0.1875,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          0,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          0,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          4,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s17": {
+      "wins": 33,
+      "games": 64,
+      "rate": 0.5156,
+      "lo": 0.3958,
+      "hi": 0.6337,
+      "first": 0.4688,
+      "second": 0.5625,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          3,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          3,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          0,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s18": {
+      "wins": 39,
+      "games": 64,
+      "rate": 0.6094,
+      "lo": 0.4869,
+      "hi": 0.7194,
+      "first": 0.5938,
+      "second": 0.625,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          4,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          1,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "s19": {
+      "wins": 38,
+      "games": 64,
+      "rate": 0.5938,
+      "lo": 0.4714,
+      "hi": 0.7054,
+      "first": 0.6562,
+      "second": 0.5312,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          4,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          3,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          4,
+          4
+        ]
+      }
+    },
+    "s20": {
+      "wins": 35,
+      "games": 64,
+      "rate": 0.5469,
+      "lo": 0.4257,
+      "hi": 0.6627,
+      "first": 0.5312,
+      "second": 0.5625,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s21": {
+      "wins": 30,
+      "games": 64,
+      "rate": 0.4688,
+      "lo": 0.3518,
+      "hi": 0.5893,
+      "first": 0.5312,
+      "second": 0.4062,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          0,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          3,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s22": {
+      "wins": 32,
+      "games": 64,
+      "rate": 0.5,
+      "lo": 0.381,
+      "hi": 0.619,
+      "first": 0.5312,
+      "second": 0.4688,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          0,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          3,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "s23": {
+      "wins": 31,
+      "games": 64,
+      "rate": 0.4844,
+      "lo": 0.3663,
+      "hi": 0.6042,
+      "first": 0.5,
+      "second": 0.4688,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "s24": {
+      "wins": 35,
+      "games": 64,
+      "rate": 0.5469,
+      "lo": 0.4257,
+      "hi": 0.6627,
+      "first": 0.4688,
+      "second": 0.625,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          3,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s25": {
+      "wins": 26,
+      "games": 64,
+      "rate": 0.4062,
+      "lo": 0.2946,
+      "hi": 0.5286,
+      "first": 0.5312,
+      "second": 0.2812,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s26": {
+      "wins": 36,
+      "games": 64,
+      "rate": 0.5625,
+      "lo": 0.4409,
+      "hi": 0.6771,
+      "first": 0.5938,
+      "second": 0.5312,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          4,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s27": {
+      "wins": 27,
+      "games": 64,
+      "rate": 0.4219,
+      "lo": 0.3087,
+      "hi": 0.5439,
+      "first": 0.5,
+      "second": 0.3438,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          1,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s28": {
+      "wins": 29,
+      "games": 64,
+      "rate": 0.4531,
+      "lo": 0.3373,
+      "hi": 0.5743,
+      "first": 0.5312,
+      "second": 0.375,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          4,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          1,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    },
+    "s29": {
+      "wins": 31,
+      "games": 64,
+      "rate": 0.4844,
+      "lo": 0.3663,
+      "hi": 0.6042,
+      "first": 0.5312,
+      "second": 0.4375,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          3,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "s30": {
+      "wins": 26,
+      "games": 64,
+      "rate": 0.4062,
+      "lo": 0.2946,
+      "hi": 0.5286,
+      "first": 0.375,
+      "second": 0.4375,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    },
+    "s31": {
+      "wins": 27,
+      "games": 64,
+      "rate": 0.4219,
+      "lo": 0.3087,
+      "hi": 0.5439,
+      "first": 0.4375,
+      "second": 0.4062,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          0,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          0,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s32": {
+      "wins": 17,
+      "games": 64,
+      "rate": 0.2656,
+      "lo": 0.173,
+      "hi": 0.3848,
+      "first": 0.375,
+      "second": 0.1562,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          0,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s33": {
+      "wins": 33,
+      "games": 64,
+      "rate": 0.5156,
+      "lo": 0.3958,
+      "hi": 0.6337,
+      "first": 0.5625,
+      "second": 0.4688,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          4,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          3,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          4,
+          4
+        ],
+        "meta-portal-evo": [
+          3,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s34": {
+      "wins": 35,
+      "games": 64,
+      "rate": 0.5469,
+      "lo": 0.4257,
+      "hi": 0.6627,
+      "first": 0.5938,
+      "second": 0.5,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          3,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          4,
+          4
+        ],
+        "meta-portal-evo": [
+          3,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s35": {
+      "wins": 39,
+      "games": 64,
+      "rate": 0.6094,
+      "lo": 0.4869,
+      "hi": 0.7194,
+      "first": 0.5625,
+      "second": 0.6562,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          3,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          4,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s36": {
+      "wins": 34,
+      "games": 64,
+      "rate": 0.5312,
+      "lo": 0.4107,
+      "hi": 0.6482,
+      "first": 0.5625,
+      "second": 0.5,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          0,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "s37": {
+      "wins": 30,
+      "games": 64,
+      "rate": 0.4688,
+      "lo": 0.3518,
+      "hi": 0.5893,
+      "first": 0.5312,
+      "second": 0.4062,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          3,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          0,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s38": {
+      "wins": 33,
+      "games": 64,
+      "rate": 0.5156,
+      "lo": 0.3958,
+      "hi": 0.6337,
+      "first": 0.4688,
+      "second": 0.5625,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          3,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    },
+    "s39": {
+      "wins": 25,
+      "games": 64,
+      "rate": 0.3906,
+      "lo": 0.2806,
+      "hi": 0.5131,
+      "first": 0.3125,
+      "second": 0.4688,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          0,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          3,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s40": {
+      "wins": 30,
+      "games": 64,
+      "rate": 0.4688,
+      "lo": 0.3518,
+      "hi": 0.5893,
+      "first": 0.4688,
+      "second": 0.4688,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          4,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s41": {
+      "wins": 31,
+      "games": 64,
+      "rate": 0.4844,
+      "lo": 0.3663,
+      "hi": 0.6042,
+      "first": 0.5312,
+      "second": 0.4375,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          0,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          4,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s42": {
+      "wins": 29,
+      "games": 64,
+      "rate": 0.4531,
+      "lo": 0.3373,
+      "hi": 0.5743,
+      "first": 0.5938,
+      "second": 0.3125,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          3,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          3,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s43": {
+      "wins": 26,
+      "games": 64,
+      "rate": 0.4062,
+      "lo": 0.2946,
+      "hi": 0.5286,
+      "first": 0.4062,
+      "second": 0.4062,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          4,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    },
+    "s44": {
+      "wins": 19,
+      "games": 64,
+      "rate": 0.2969,
+      "lo": 0.199,
+      "hi": 0.4177,
+      "first": 0.2812,
+      "second": 0.3125,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          2,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          0,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s45": {
+      "wins": 21,
+      "games": 64,
+      "rate": 0.3281,
+      "lo": 0.2257,
+      "hi": 0.45,
+      "first": 0.4375,
+      "second": 0.2188,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          1,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    },
+    "s46": {
+      "wins": 19,
+      "games": 64,
+      "rate": 0.2969,
+      "lo": 0.199,
+      "hi": 0.4177,
+      "first": 0.3438,
+      "second": 0.25,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          0,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          3,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          1,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          1,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s47": {
+      "wins": 23,
+      "games": 64,
+      "rate": 0.3594,
+      "lo": 0.2529,
+      "hi": 0.4818,
+      "first": 0.4062,
+      "second": 0.3125,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          0,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          1,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          0,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          0,
+          4
+        ],
+        "meta-rune-spell": [
+          1,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "s48": {
+      "wins": 25,
+      "games": 64,
+      "rate": 0.3906,
+      "lo": 0.2806,
+      "hi": 0.5131,
+      "first": 0.4062,
+      "second": 0.375,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          1,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    },
+    "s49": {
+      "wins": 34,
+      "games": 64,
+      "rate": 0.5312,
+      "lo": 0.4107,
+      "hi": 0.6482,
+      "first": 0.6562,
+      "second": 0.4062,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          4,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "s50": {
+      "wins": 31,
+      "games": 64,
+      "rate": 0.4844,
+      "lo": 0.3663,
+      "hi": 0.6042,
+      "first": 0.5312,
+      "second": 0.4375,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          3,
+          4
+        ],
+        "meta-haven-evo": [
+          3,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          1,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          1,
+          4
+        ],
+        "meta-rune-spell": [
+          3,
+          4
+        ],
+        "meta-rune-test-subject": [
+          0,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s51": {
+      "wins": 25,
+      "games": 64,
+      "rate": 0.3906,
+      "lo": 0.2806,
+      "hi": 0.5131,
+      "first": 0.3438,
+      "second": 0.4375,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          0,
+          4
+        ],
+        "meta-dragon-aggro": [
+          4,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          0,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s52": {
+      "wins": 24,
+      "games": 64,
+      "rate": 0.375,
+      "lo": 0.2667,
+      "hi": 0.4975,
+      "first": 0.3125,
+      "second": 0.4375,
+      "vs": {
+        "meta-abyss-aggro": [
+          4,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          1,
+          4
+        ],
+        "meta-dragon-ramp": [
+          2,
+          4
+        ],
+        "meta-forest-combo": [
+          1,
+          4
+        ],
+        "meta-haven-amulet": [
+          1,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          0,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          0,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          3,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s53": {
+      "wins": 39,
+      "games": 64,
+      "rate": 0.6094,
+      "lo": 0.4869,
+      "hi": 0.7194,
+      "first": 0.6562,
+      "second": 0.5625,
+      "vs": {
+        "meta-abyss-aggro": [
+          1,
+          4
+        ],
+        "meta-abyss-midrange": [
+          3,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          3,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          2,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          2,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          3,
+          4
+        ]
+      }
+    },
+    "s54": {
+      "wins": 28,
+      "games": 64,
+      "rate": 0.4375,
+      "lo": 0.3229,
+      "hi": 0.5591,
+      "first": 0.5312,
+      "second": 0.3438,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          0,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          2,
+          4
+        ],
+        "meta-portal-af": [
+          3,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          4,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          1,
+          4
+        ]
+      }
+    },
+    "s55": {
+      "wins": 26,
+      "games": 64,
+      "rate": 0.4062,
+      "lo": 0.2946,
+      "hi": 0.5286,
+      "first": 0.4375,
+      "second": 0.375,
+      "vs": {
+        "meta-abyss-aggro": [
+          2,
+          4
+        ],
+        "meta-abyss-midrange": [
+          2,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          3,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          1,
+          4
+        ],
+        "meta-portal-af": [
+          0,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          2,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          3,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          1,
+          4
+        ],
+        "meta-sword-loot": [
+          1,
+          4
+        ],
+        "meta-sword-rally": [
+          2,
+          4
+        ]
+      }
+    },
+    "s56": {
+      "wins": 30,
+      "games": 64,
+      "rate": 0.4688,
+      "lo": 0.3518,
+      "hi": 0.5893,
+      "first": 0.5,
+      "second": 0.4375,
+      "vs": {
+        "meta-abyss-aggro": [
+          3,
+          4
+        ],
+        "meta-abyss-midrange": [
+          1,
+          4
+        ],
+        "meta-dragon-aggro": [
+          3,
+          4
+        ],
+        "meta-dragon-ramp": [
+          1,
+          4
+        ],
+        "meta-forest-combo": [
+          2,
+          4
+        ],
+        "meta-haven-amulet": [
+          2,
+          4
+        ],
+        "meta-haven-evo": [
+          0,
+          4
+        ],
+        "meta-haven-kukishiro": [
+          4,
+          4
+        ],
+        "meta-portal-af": [
+          2,
+          4
+        ],
+        "meta-portal-cutthroat": [
+          3,
+          4
+        ],
+        "meta-portal-evo": [
+          1,
+          4
+        ],
+        "meta-rune-crystal": [
+          2,
+          4
+        ],
+        "meta-rune-spell": [
+          2,
+          4
+        ],
+        "meta-rune-test-subject": [
+          2,
+          4
+        ],
+        "meta-sword-loot": [
+          2,
+          4
+        ],
+        "meta-sword-rally": [
+          0,
+          4
+        ]
+      }
+    }
+  },
+  "verdict": "DATA OK"
+}
