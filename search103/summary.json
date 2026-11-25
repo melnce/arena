@@ -40,52 +40,27 @@
    "games": 4096,
    "decks": 64,
    "verdict": "verdict: DATA OK"
+  },
+  {
+   "round": 6,
+   "tag": "search103",
+   "policy": "coverage",
+   "games": 4096,
+   "decks": 64,
+   "verdict": "verdict: DATA OK"
   }
  ],
- "decks": 273,
- "games": 24576,
+ "decks": 329,
+ "games": 28672,
  "control": {
-  "rate": 0.4922,
-  "games": 384,
+  "rate": 0.5089,
+  "games": 448,
   "ci95": [
-   0.4425,
-   0.542
+   0.4628,
+   0.5549
   ]
  },
  "best_with_128_games": [
-  {
-   "id": "f6d4ca56209b37e5",
-   "rate": 0.5938,
-   "games": 128,
-   "ci95": [
-    0.5071,
-    0.6749
-   ],
-   "names": [
-    "r03:s32",
-    "r05:i02"
-   ],
-   "model_rate": 0.5348,
-   "swaps": "-2 Istyndet vs. Mitilykket, -1 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge, +1 Void Colonel",
-   "deck": {
-    "10052110": 1,
-    "10451310": 1,
-    "10452130": 3,
-    "10552110": 3,
-    "10654120": 2,
-    "10751120": 3,
-    "10752110": 3,
-    "10753310": 3,
-    "10754110": 3,
-    "10754120": 3,
-    "10851120": 3,
-    "10854110": 3,
-    "10951120": 2,
-    "10952110": 3,
-    "10954110": 1,
-    "10954120": 3
-   }
-  },
   {
    "id": "0bd878b6f94db060",
    "rate": 0.5938,
@@ -153,42 +128,6 @@
     "10951120": 2,
     "10952110": 2,
     "10954110": 3,
-    "10954120": 3
-   }
-  },
-  {
-   "id": "a598cfdec2c40c92",
-   "rate": 0.5833,
-   "games": 192,
-   "ci95": [
-    0.5126,
-    0.6508
-   ],
-   "names": [
-    "r02:s14",
-    "r03:i02",
-    "r05:i04"
-   ],
-   "model_rate": 0.5338,
-   "swaps": "-1 Adahime, Anathema of Death, -2 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, -2 Void Colonel, -1 World of Games, +2 Fediel, Darkness Personified, +1 Fickle Necromancer, +1 Indomitable Fighter, +1 Itsurugi & Taketsumi, Brothers, +1 Limil, Devilish Bunny, +1 Wills United",
-   "deck": {
-    "10001110": 1,
-    "10052110": 1,
-    "10452130": 3,
-    "10454110": 2,
-    "10552110": 3,
-    "10654120": 2,
-    "10751120": 3,
-    "10752110": 3,
-    "10753310": 3,
-    "10754110": 2,
-    "10754120": 2,
-    "10803310": 1,
-    "10851120": 3,
-    "10851130": 1,
-    "10854110": 3,
-    "10951120": 3,
-    "10954110": 1,
     "10954120": 3
    }
   },
@@ -262,6 +201,40 @@
    }
   },
   {
+   "id": "f6d4ca56209b37e5",
+   "rate": 0.5781,
+   "games": 192,
+   "ci95": [
+    0.5074,
+    0.6458
+   ],
+   "names": [
+    "r03:s32",
+    "r05:i02",
+    "r06:i02"
+   ],
+   "model_rate": 0.5366,
+   "swaps": "-2 Istyndet vs. Mitilykket, -1 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge, +1 Void Colonel",
+   "deck": {
+    "10052110": 1,
+    "10451310": 1,
+    "10452130": 3,
+    "10552110": 3,
+    "10654120": 2,
+    "10751120": 3,
+    "10752110": 3,
+    "10753310": 3,
+    "10754110": 3,
+    "10754120": 3,
+    "10851120": 3,
+    "10854110": 3,
+    "10951120": 2,
+    "10952110": 3,
+    "10954110": 1,
+    "10954120": 3
+   }
+  },
+  {
    "id": "470b15bc2eaad7fc",
    "rate": 0.5729,
    "games": 192,
@@ -327,6 +300,43 @@
    }
   },
   {
+   "id": "a598cfdec2c40c92",
+   "rate": 0.5703,
+   "games": 256,
+   "ci95": [
+    0.5091,
+    0.6295
+   ],
+   "names": [
+    "r02:s14",
+    "r03:i02",
+    "r05:i04",
+    "r06:i03"
+   ],
+   "model_rate": 0.5346,
+   "swaps": "-1 Adahime, Anathema of Death, -2 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, -2 Void Colonel, -1 World of Games, +2 Fediel, Darkness Personified, +1 Fickle Necromancer, +1 Indomitable Fighter, +1 Itsurugi & Taketsumi, Brothers, +1 Limil, Devilish Bunny, +1 Wills United",
+   "deck": {
+    "10001110": 1,
+    "10052110": 1,
+    "10452130": 3,
+    "10454110": 2,
+    "10552110": 3,
+    "10654120": 2,
+    "10751120": 3,
+    "10752110": 3,
+    "10753310": 3,
+    "10754110": 2,
+    "10754120": 2,
+    "10803310": 1,
+    "10851120": 3,
+    "10851130": 1,
+    "10854110": 3,
+    "10951120": 3,
+    "10954110": 1,
+    "10954120": 3
+   }
+  },
+  {
    "id": "c749708b09b84a9a",
    "rate": 0.5703,
    "games": 128,
@@ -361,37 +371,71 @@
    }
   },
   {
-   "id": "a8f3b51f5cd830d6",
-   "rate": 0.5664,
-   "games": 256,
+   "id": "9f522ad933ec7aa7",
+   "rate": 0.5703,
+   "games": 128,
    "ci95": [
-    0.5052,
-    0.6257
+    0.4837,
+    0.6528
    ],
    "names": [
-    "r01:s26",
-    "r02:i04",
-    "r03:i12"
+    "r05:a01",
+    "r06:i04"
    ],
-   "model_rate": 0.5315,
-   "swaps": "-2 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, -2 Void Colonel, -1 World of Games, +2 Fediel, Darkness Personified, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Marsha, Dark Knight, +1 Wills United",
+   "model_rate": 0.5322,
+   "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Devious Lesser Mummy",
    "deck": {
+    "10051130": 2,
     "10052110": 1,
     "10452130": 3,
-    "10454110": 2,
+    "10552110": 2,
+    "10654120": 2,
+    "10751120": 3,
+    "10752110": 3,
+    "10753310": 3,
+    "10754110": 3,
+    "10754120": 3,
+    "10851120": 3,
+    "10854110": 2,
+    "10951120": 3,
+    "10952110": 2,
+    "10954110": 2,
+    "10954120": 3
+   }
+  },
+  {
+   "id": "3be4a1793f6446d0",
+   "rate": 0.5656,
+   "games": 320,
+   "ci95": [
+    0.5109,
+    0.6188
+   ],
+   "names": [
+    "r02:m02",
+    "r03:i05",
+    "r04:i08",
+    "r05:i01",
+    "r06:i01"
+   ],
+   "model_rate": 0.5444,
+   "swaps": "-1 Istyndet vs. Mitilykket, -1 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge",
+   "deck": {
+    "10052110": 1,
+    "10451310": 1,
+    "10452130": 3,
     "10552110": 3,
     "10654120": 2,
     "10751120": 3,
     "10752110": 3,
     "10753310": 3,
     "10754110": 3,
-    "10754120": 2,
-    "10803310": 1,
+    "10754120": 3,
     "10851120": 3,
-    "10852120": 1,
     "10854110": 3,
-    "10951120": 3,
-    "10954110": 1,
+    "10951120": 2,
+    "10952110": 2,
+    "10954110": 2,
     "10954120": 3
    }
   },
@@ -463,6 +507,42 @@
    }
   },
   {
+   "id": "a8f3b51f5cd830d6",
+   "rate": 0.5625,
+   "games": 320,
+   "ci95": [
+    0.5077,
+    0.6158
+   ],
+   "names": [
+    "r01:s26",
+    "r02:i04",
+    "r03:i12",
+    "r06:i07"
+   ],
+   "model_rate": 0.5278,
+   "swaps": "-2 Istyndet vs. Mitilykket, -1 Macmillan, Reaper of Ceremonies, -2 Void Colonel, -1 World of Games, +2 Fediel, Darkness Personified, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Marsha, Dark Knight, +1 Wills United",
+   "deck": {
+    "10052110": 1,
+    "10452130": 3,
+    "10454110": 2,
+    "10552110": 3,
+    "10654120": 2,
+    "10751120": 3,
+    "10752110": 3,
+    "10753310": 3,
+    "10754110": 3,
+    "10754120": 2,
+    "10803310": 1,
+    "10851120": 3,
+    "10852120": 1,
+    "10854110": 3,
+    "10951120": 3,
+    "10954110": 1,
+    "10954120": 3
+   }
+  },
+  {
    "id": "3c3fa437f54c74fb",
    "rate": 0.5625,
    "games": 192,
@@ -529,6 +609,39 @@
    }
   },
   {
+   "id": "875528c111028d49",
+   "rate": 0.5547,
+   "games": 128,
+   "ci95": [
+    0.4682,
+    0.6379
+   ],
+   "names": [
+    "r02:m01",
+    "r06:i06"
+   ],
+   "model_rate": 0.5286,
+   "swaps": "-2 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge",
+   "deck": {
+    "10052110": 1,
+    "10451310": 1,
+    "10452130": 3,
+    "10552110": 3,
+    "10654120": 2,
+    "10751120": 3,
+    "10752110": 3,
+    "10753310": 3,
+    "10754110": 3,
+    "10754120": 3,
+    "10851120": 3,
+    "10854110": 3,
+    "10951120": 1,
+    "10952110": 2,
+    "10954110": 3,
+    "10954120": 3
+   }
+  },
+  {
    "id": "7fa2680c449ad6c2",
    "rate": 0.5547,
    "games": 128,
@@ -558,41 +671,6 @@
     "10851130": 1,
     "10854110": 3,
     "10951120": 3,
-    "10952110": 2,
-    "10954110": 2,
-    "10954120": 3
-   }
-  },
-  {
-   "id": "3be4a1793f6446d0",
-   "rate": 0.5508,
-   "games": 256,
-   "ci95": [
-    0.4895,
-    0.6105
-   ],
-   "names": [
-    "r02:m02",
-    "r03:i05",
-    "r04:i08",
-    "r05:i01"
-   ],
-   "model_rate": 0.5446,
-   "swaps": "-1 Istyndet vs. Mitilykket, -1 Netherworld Lieutenant, -1 World of Games, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Valiant Edge",
-   "deck": {
-    "10052110": 1,
-    "10451310": 1,
-    "10452130": 3,
-    "10552110": 3,
-    "10654120": 2,
-    "10751120": 3,
-    "10752110": 3,
-    "10753310": 3,
-    "10754110": 3,
-    "10754120": 3,
-    "10851120": 3,
-    "10854110": 3,
-    "10951120": 2,
     "10952110": 2,
     "10954110": 2,
     "10954120": 3
@@ -664,77 +742,6 @@
     "10954110": 3,
     "10954120": 3
    }
-  },
-  {
-   "id": "ff286f2495da4c76",
-   "rate": 0.5469,
-   "games": 128,
-   "ci95": [
-    0.4605,
-    0.6305
-   ],
-   "names": [
-    "r03:s26",
-    "r04:i02"
-   ],
-   "model_rate": 0.556,
-   "swaps": "-1 Bibatii, Eld Sight, -1 Macmillan, Reaper of Ceremonies, -1 Netherworld Lieutenant, -1 World of Games, +1 Ceres, Liminal Rose, +1 Fediel, Darkness Personified, +1 Lyria, Skydestined, +1 Nezha, Soaring War God",
-   "deck": {
-    "10052110": 1,
-    "10403120": 1,
-    "10452110": 1,
-    "10452130": 3,
-    "10454110": 1,
-    "10552110": 2,
-    "10654120": 1,
-    "10751120": 3,
-    "10752110": 3,
-    "10753310": 3,
-    "10754110": 3,
-    "10754120": 2,
-    "10851120": 3,
-    "10854110": 2,
-    "10854120": 1,
-    "10951120": 2,
-    "10952110": 2,
-    "10954110": 3,
-    "10954120": 3
-   }
-  },
-  {
-   "id": "2d01b23fae3b2c4a",
-   "rate": 0.5417,
-   "games": 192,
-   "ci95": [
-    0.4711,
-    0.6106
-   ],
-   "names": [
-    "r02:s22",
-    "r03:i06",
-    "r04:i06"
-   ],
-   "model_rate": 0.5452,
-   "swaps": "-1 Netherworld Lieutenant, -1 Void Colonel, -1 World of Games, +2 Hamsa, Sculpted Divinity, +1 Wills United",
-   "deck": {
-    "10052110": 1,
-    "10452130": 3,
-    "10552110": 2,
-    "10654120": 2,
-    "10751120": 3,
-    "10752110": 3,
-    "10753310": 3,
-    "10754110": 3,
-    "10754120": 3,
-    "10801110": 2,
-    "10803310": 1,
-    "10851120": 3,
-    "10854110": 2,
-    "10951120": 2,
-    "10952110": 1,
-    "10954110": 3,
-    "10954120": 3
-   }
   }
  ],
  "trials": [
@@ -753,18 +760,32 @@
    "id": "aceac6f012e51728"
   },
   {
-   "card": "10051130",
-   "name": "Devious Lesser Mummy",
-   "kind": "cover-add",
+   "card": "10854110",
+   "name": "Itsurugi & Taketsumi, Brothers",
+   "kind": "cover-cut",
    "copies": 2,
-   "rate": 0.5938,
+   "rate": 0.6094,
    "games": 64,
    "ci95": [
-    0.4714,
-    0.7054
+    0.4869,
+    0.7194
    ],
-   "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Devious Lesser Mummy",
-   "id": "9f522ad933ec7aa7"
+   "swaps": "-2 Itsurugi & Taketsumi, Brothers, +1 Fickle Necromancer, +1 Lilith, Enchanting Succubus",
+   "id": "cdc27aac71672fe9"
+  },
+  {
+   "card": "10753310",
+   "name": "Hark to the Night Song",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.6094,
+   "games": 64,
+   "ci95": [
+    0.4869,
+    0.7194
+   ],
+   "swaps": "-2 Hark to the Night Song, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers",
+   "id": "2bb5bbe4793acd50"
   },
   {
    "card": "10501110",
@@ -809,6 +830,20 @@
    "id": "53bbb1e679748ca7"
   },
   {
+   "card": "10851120",
+   "name": "Lilith, Devilish Cutie",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.5938,
+   "games": 64,
+   "ci95": [
+    0.4714,
+    0.7054
+   ],
+   "swaps": "-2 Lilith, Devilish Cutie, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers",
+   "id": "43c08730c704b3ea"
+  },
+  {
    "card": "10704120",
    "name": "Altaro, Mayor of Babelon",
    "kind": "cover-add",
@@ -851,6 +886,34 @@
    "id": "c985de722dbbee53"
   },
   {
+   "card": "10001210",
+   "name": "Detective's Lens",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5781,
+   "games": 64,
+   "ci95": [
+    0.4561,
+    0.6913
+   ],
+   "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Detective's Lens",
+   "id": "036abf478e773be1"
+  },
+  {
+   "card": "10051130",
+   "name": "Devious Lesser Mummy",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5703,
+   "games": 128,
+   "ci95": [
+    0.4837,
+    0.6528
+   ],
+   "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Devious Lesser Mummy",
+   "id": "9f522ad933ec7aa7"
+  },
+  {
    "card": "10553310",
    "name": "Rigor of the Nightblossom",
    "kind": "cover-add",
@@ -877,6 +940,34 @@
    ],
    "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Illamrita, Designated Target",
    "id": "b97572602060c14f"
+  },
+  {
+   "card": "10703210",
+   "name": "City of Babelon",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5625,
+   "games": 64,
+   "ci95": [
+    0.4409,
+    0.6771
+   ],
+   "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 City of Babelon",
+   "id": "9a2330538f7af7a2"
+  },
+  {
+   "card": "10052110",
+   "name": "Lilith, Enchanting Succubus",
+   "kind": "cover-cut",
+   "copies": 1,
+   "rate": 0.5625,
+   "games": 64,
+   "ci95": [
+    0.4409,
+    0.6771
+   ],
+   "swaps": "-1 Lilith, Enchanting Succubus, +1 Itsurugi & Taketsumi, Brothers",
+   "id": "f434efb48181a84e"
   },
   {
    "card": "10601110",
@@ -949,6 +1040,48 @@
    "id": "777570e28fecf7f6"
   },
   {
+   "card": "10701110",
+   "name": "Altaro Superfan",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5469,
+   "games": 64,
+   "ci95": [
+    0.4257,
+    0.6627
+   ],
+   "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Altaro Superfan",
+   "id": "ac509321ac4fcd2a"
+  },
+  {
+   "card": "10754110",
+   "name": "Adahime, Anathema of Death",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.5469,
+   "games": 64,
+   "ci95": [
+    0.4257,
+    0.6627
+   ],
+   "swaps": "-2 Adahime, Anathema of Death, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers",
+   "id": "c08b795a88c8505c"
+  },
+  {
+   "card": "10752110",
+   "name": "Highwire Feline",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.5469,
+   "games": 64,
+   "ci95": [
+    0.4257,
+    0.6627
+   ],
+   "swaps": "-2 Highwire Feline, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers",
+   "id": "11797b82427e82b1"
+  },
+  {
    "card": "10002120",
    "name": "Caravan Mammoth",
    "kind": "cover-add",
@@ -989,6 +1122,20 @@
    ],
    "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Behemoth General",
    "id": "c435d16b159ccbe3"
+  },
+  {
+   "card": "10051120",
+   "name": "Night Fiend",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5312,
+   "games": 64,
+   "ci95": [
+    0.4107,
+    0.6482
+   ],
+   "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Night Fiend",
+   "id": "08576e90dd27d2d3"
   },
   {
    "card": "10853110",
@@ -1059,6 +1206,34 @@
    ],
    "swaps": "-2 Istyndet vs. Mitilykket, +2 World of Games",
    "id": "2751970e3f84ac3f"
+  },
+  {
+   "card": "10554120",
+   "name": "Shakdoh, Nightblossom",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5156,
+   "games": 64,
+   "ci95": [
+    0.3958,
+    0.6337
+   ],
+   "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Shakdoh, Nightblossom",
+   "id": "10485a371f8bf23b"
+  },
+  {
+   "card": "10452130",
+   "name": "Baal, Elemental Resonance",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.5156,
+   "games": 64,
+   "ci95": [
+    0.3958,
+    0.6337
+   ],
+   "swaps": "-2 Baal, Elemental Resonance, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers",
+   "id": "28fbbd0565dbaab1"
   },
   {
    "card": "10051310",
@@ -1213,6 +1388,34 @@
    ],
    "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Yearnful Necromancer",
    "id": "a90342781a789bf3"
+  },
+  {
+   "card": "10552110",
+   "name": "Fickle Necromancer",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.5,
+   "games": 64,
+   "ci95": [
+    0.381,
+    0.619
+   ],
+   "swaps": "-2 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers, +1 Lilith, Enchanting Succubus",
+   "id": "418d8049f7226073"
+  },
+  {
+   "card": "10954120",
+   "name": "Garodeth vs. Zeth",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.5,
+   "games": 64,
+   "ci95": [
+    0.381,
+    0.619
+   ],
+   "swaps": "-2 Garodeth vs. Zeth, +1 Fickle Necromancer, +1 Itsurugi & Taketsumi, Brothers",
+   "id": "0221daf1735021ef"
   },
   {
    "card": "10752120",
@@ -1451,6 +1654,20 @@
    ],
    "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Rampaging Commander",
    "id": "9200458e4196b957"
+  },
+  {
+   "card": "10502110",
+   "name": "Goddess of Starlight",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-1 Istyndet vs. Mitilykket, -1 World of Games, +2 Goddess of Starlight",
+   "id": "3b1ef8eb012f8726"
   },
   {
    "card": "10401120",
