@@ -1,0 +1,2382 @@
+{
+ "tag": "search104",
+ "stages": {
+  "1": [
+   {
+    "name": "c-midrange",
+    "kind": "control",
+    "wins": 250,
+    "games": 512,
+    "rate": 0.4883,
+    "ci95": [
+     0.4452,
+     0.5315
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      18,
+      32
+     ],
+     "meta-abyss-midrange": [
+      14,
+      32
+     ],
+     "meta-dragon-aggro": [
+      20,
+      32
+     ],
+     "meta-dragon-ramp": [
+      21,
+      32
+     ],
+     "meta-forest-combo": [
+      15,
+      32
+     ],
+     "meta-haven-amulet": [
+      13,
+      32
+     ],
+     "meta-haven-evo": [
+      5,
+      32
+     ],
+     "meta-haven-kukishiro": [
+      18,
+      32
+     ],
+     "meta-portal-af": [
+      15,
+      32
+     ],
+     "meta-portal-cutthroat": [
+      17,
+      32
+     ],
+     "meta-portal-evo": [
+      14,
+      32
+     ],
+     "meta-rune-crystal": [
+      19,
+      32
+     ],
+     "meta-rune-spell": [
+      15,
+      32
+     ],
+     "meta-rune-test-subject": [
+      14,
+      32
+     ],
+     "meta-sword-loot": [
+      19,
+      32
+     ],
+     "meta-sword-rally": [
+      13,
+      32
+     ]
+    },
+    "diff_vs_control": 0.0,
+    "diff_se": 0.0,
+    "model_rate": 0.5231,
+    "games_before": 2560,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 1,
+      "name": "World of Games",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 2
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 2
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 2
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10452130": 3,
+     "10503210": 1,
+     "10552110": 2,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 2,
+     "10951120": 3,
+     "10952110": 2,
+     "10954110": 3,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k01",
+    "kind": "candidate",
+    "wins": 288,
+    "games": 512,
+    "rate": 0.5625,
+    "ci95": [
+     0.5192,
+     0.6048
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      19,
+      32
+     ],
+     "meta-abyss-midrange": [
+      16,
+      32
+     ],
+     "meta-dragon-aggro": [
+      25,
+      32
+     ],
+     "meta-dragon-ramp": [
+      20,
+      32
+     ],
+     "meta-forest-combo": [
+      22,
+      32
+     ],
+     "meta-haven-amulet": [
+      17,
+      32
+     ],
+     "meta-haven-evo": [
+      10,
+      32
+     ],
+     "meta-haven-kukishiro": [
+      19,
+      32
+     ],
+     "meta-portal-af": [
+      18,
+      32
+     ],
+     "meta-portal-cutthroat": [
+      14,
+      32
+     ],
+     "meta-portal-evo": [
+      14,
+      32
+     ],
+     "meta-rune-crystal": [
+      20,
+      32
+     ],
+     "meta-rune-spell": [
+      21,
+      32
+     ],
+     "meta-rune-test-subject": [
+      17,
+      32
+     ],
+     "meta-sword-loot": [
+      16,
+      32
+     ],
+     "meta-sword-rally": [
+      20,
+      32
+     ]
+    },
+    "diff_vs_control": 0.0742,
+    "diff_se": 0.0289,
+    "model_rate": 0.5432,
+    "games_before": 384,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 2
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Valiant Edge",
+      "copies": 1
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 2
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 2
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 3
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10451310": 1,
+     "10452130": 3,
+     "10552110": 3,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 3,
+     "10951120": 2,
+     "10952110": 2,
+     "10954110": 2,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k02",
+    "kind": "candidate",
+    "wins": 266,
+    "games": 512,
+    "rate": 0.5195,
+    "ci95": [
+     0.4763,
+     0.5625
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      16,
+      32
+     ],
+     "meta-abyss-midrange": [
+      13,
+      32
+     ],
+     "meta-dragon-aggro": [
+      25,
+      32
+     ],
+     "meta-dragon-ramp": [
+      12,
+      32
+     ],
+     "meta-forest-combo": [
+      20,
+      32
+     ],
+     "meta-haven-amulet": [
+      13,
+      32
+     ],
+     "meta-haven-evo": [
+      9,
+      32
+     ],
+     "meta-haven-kukishiro": [
+      15,
+      32
+     ],
+     "meta-portal-af": [
+      22,
+      32
+     ],
+     "meta-portal-cutthroat": [
+      18,
+      32
+     ],
+     "meta-portal-evo": [
+      8,
+      32
+     ],
+     "meta-rune-crystal": [
+      23,
+      32
+     ],
+     "meta-rune-spell": [
+      22,
+      32
+     ],
+     "meta-rune-test-subject": [
+      18,
+      32
+     ],
+     "meta-sword-loot": [
+      16,
+      32
+     ],
+     "meta-sword-rally": [
+      16,
+      32
+     ]
+    },
+    "diff_vs_control": 0.0312,
+    "diff_se": 0.0297,
+    "model_rate": 0.5409,
+    "games_before": 128,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Chains of the Past",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 2
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Valiant Edge",
+      "copies": 1
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 2
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 3
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 1
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 3
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10451310": 1,
+     "10452130": 2,
+     "10552110": 3,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 3,
+     "10951120": 2,
+     "10952110": 3,
+     "10952310": 1,
+     "10954110": 1,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k03",
+    "kind": "candidate",
+    "wins": 282,
+    "games": 512,
+    "rate": 0.5508,
+    "ci95": [
+     0.5075,
+     0.5933
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      20,
+      32
+     ],
+     "meta-abyss-midrange": [
+      14,
+      32
+     ],
+     "meta-dragon-aggro": [
+      23,
+      32
+     ],
+     "meta-dragon-ramp": [
+      16,
+      32
+     ],
+     "meta-forest-combo": [
+      23,
+      32
+     ],
+     "meta-haven-amulet": [
+      14,
+      32
+     ],
+     "meta-haven-evo": [
+      7,
+      32
+     ],
+     "meta-haven-kukishiro": [
+      18,
+      32
+     ],
+     "meta-portal-af": [
+      18,
+      32
+     ],
+     "meta-portal-cutthroat": [
+      14,
+      32
+     ],
+     "meta-portal-evo": [
+      17,
+      32
+     ],
+     "meta-rune-crystal": [
+      22,
+      32
+     ],
+     "meta-rune-spell": [
+      22,
+      32
+     ],
+     "meta-rune-test-subject": [
+      19,
+      32
+     ],
+     "meta-sword-loot": [
+      19,
+      32
+     ],
+     "meta-sword-rally": [
+      16,
+      32
+     ]
+    },
+    "diff_vs_control": 0.0625,
+    "diff_se": 0.0291,
+    "model_rate": 0.5383,
+    "games_before": 192,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Valiant Edge",
+      "copies": 1
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 2
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 3
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10451310": 1,
+     "10452130": 3,
+     "10552110": 3,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 3,
+     "10951120": 1,
+     "10952110": 2,
+     "10954110": 3,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k04",
+    "kind": "candidate",
+    "wins": 296,
+    "games": 512,
+    "rate": 0.5781,
+    "ci95": [
+     0.5349,
+     0.6202
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      23,
+      32
+     ],
+     "meta-abyss-midrange": [
+      14,
+      32
+     ],
+     "meta-dragon-aggro": [
+      23,
+      32
+     ],
+     "meta-dragon-ramp": [
+      21,
+      32
+     ],
+     "meta-forest-combo": [
+      23,
+      32
+     ],
+     "meta-haven-amulet": [
+      16,
+      32
+     ],
+     "meta-haven-evo": [
+      10,
+      32
+     ],
+     "meta-haven-kukishiro": [
+      22,
+      32
+     ],
+     "meta-portal-af": [
+      19,
+      32
+     ],
+     "meta-portal-cutthroat": [
+      15,
+      32
+     ],
+     "meta-portal-evo": [
+      13,
+      32
+     ],
+     "meta-rune-crystal": [
+      23,
+      32
+     ],
+     "meta-rune-spell": [
+      19,
+      32
+     ],
+     "meta-rune-test-subject": [
+      16,
+      32
+     ],
+     "meta-sword-loot": [
+      21,
+      32
+     ],
+     "meta-sword-rally": [
+      18,
+      32
+     ]
+    },
+    "diff_vs_control": 0.0898,
+    "diff_se": 0.0299,
+    "model_rate": 0.537,
+    "games_before": 256,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 2
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Valiant Edge",
+      "copies": 1
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 3
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 1
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 3
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10451310": 1,
+     "10452130": 3,
+     "10552110": 3,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 3,
+     "10951120": 2,
+     "10952110": 3,
+     "10954110": 1,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k05",
+    "kind": "candidate",
+    "wins": 289,
+    "games": 512,
+    "rate": 0.5645,
+    "ci95": [
+     0.5212,
+     0.6068
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      25,
+      32
+     ],
+     "meta-abyss-midrange": [
+      16,
+      32
+     ],
+     "meta-dragon-aggro": [
+      19,
+      32
+     ],
+     "meta-dragon-ramp": [
+      15,
+      32
+     ],
+     "meta-forest-combo": [
+      20,
+      32
+     ],
+     "meta-haven-amulet": [
+      21,
+      32
+     ],
+     "meta-haven-evo": [
+      8,
+      32
+     ],
+     "meta-haven-kukishiro": [
+      19,
+      32
+     ],
+     "meta-portal-af": [
+      16,
+      32
+     ],
+     "meta-portal-cutthroat": [
+      20,
+      32
+     ],
+     "meta-portal-evo": [
+      13,
+      32
+     ],
+     "meta-rune-crystal": [
+      24,
+      32
+     ],
+     "meta-rune-spell": [
+      21,
+      32
+     ],
+     "meta-rune-test-subject": [
+      18,
+      32
+     ],
+     "meta-sword-loot": [
+      18,
+      32
+     ],
+     "meta-sword-rally": [
+      16,
+      32
+     ]
+    },
+    "diff_vs_control": 0.0762,
+    "diff_se": 0.0307,
+    "model_rate": 0.532,
+    "games_before": 320,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Indomitable Fighter",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Limil, Devilish Bunny",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Wills United",
+      "copies": 1
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 2
+     },
+     {
+      "cost": 7,
+      "name": "Fediel, Darkness Personified",
+      "copies": 2
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 1
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 3
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 2
+     }
+    ],
+    "deck": {
+     "10001110": 1,
+     "10052110": 1,
+     "10452130": 3,
+     "10454110": 2,
+     "10552110": 3,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 2,
+     "10754120": 2,
+     "10803310": 1,
+     "10851120": 3,
+     "10851130": 1,
+     "10854110": 3,
+     "10951120": 3,
+     "10954110": 1,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k06",
+    "kind": "candidate",
+    "wins": 270,
+    "games": 512,
+    "rate": 0.5273,
+    "ci95": [
+     0.4841,
+     0.5702
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      20,
+      32
+     ],
+     "meta-abyss-midrange": [
+      14,
+      32
+     ],
+     "meta-dragon-aggro": [
+      23,
+      32
+     ],
+     "meta-dragon-ramp": [
+      15,
+      32
+     ],
+     "meta-forest-combo": [
+      17,
+      32
+     ],
+     "meta-haven-amulet": [
+      11,
+      32
+     ],
+     "meta-haven-evo": [
+      6,
+      32
+     ],
+     "meta-haven-kukishiro": [
+      18,
+      32
+     ],
+     "meta-portal-af": [
+      16,
+      32
+     ],
+     "meta-portal-cutthroat": [
+      13,
+      32
+     ],
+     "meta-portal-evo": [
+      18,
+      32
+     ],
+     "meta-rune-crystal": [
+      29,
+      32
+     ],
+     "meta-rune-spell": [
+      17,
+      32
+     ],
+     "meta-rune-test-subject": [
+      14,
+      32
+     ],
+     "meta-sword-loot": [
+      18,
+      32
+     ],
+     "meta-sword-rally": [
+      21,
+      32
+     ]
+    },
+    "diff_vs_control": 0.0391,
+    "diff_se": 0.0288,
+    "model_rate": 0.531,
+    "games_before": 128,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Limil, Devilish Bunny",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 2
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 3
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 2
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 2
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10452130": 3,
+     "10552110": 2,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10851130": 1,
+     "10854110": 2,
+     "10951120": 3,
+     "10952110": 3,
+     "10954110": 2,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k07",
+    "kind": "candidate",
+    "wins": 277,
+    "games": 512,
+    "rate": 0.541,
+    "ci95": [
+     0.4977,
+     0.5837
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      20,
+      32
+     ],
+     "meta-abyss-midrange": [
+      16,
+      32
+     ],
+     "meta-dragon-aggro": [
+      23,
+      32
+     ],
+     "meta-dragon-ramp": [
+      15,
+      32
+     ],
+     "meta-forest-combo": [
+      25,
+      32
+     ],
+     "meta-haven-amulet": [
+      15,
+      32
+     ],
+     "meta-haven-evo": [
+      7,
+      32
+     ],
+     "meta-haven-kukishiro": [
+      17,
+      32
+     ],
+     "meta-portal-af": [
+      15,
+      32
+     ],
+     "meta-portal-cutthroat": [
+      19,
+      32
+     ],
+     "meta-portal-evo": [
+      12,
+      32
+     ],
+     "meta-rune-crystal": [
+      19,
+      32
+     ],
+     "meta-rune-spell": [
+      20,
+      32
+     ],
+     "meta-rune-test-subject": [
+      16,
+      32
+     ],
+     "meta-sword-loot": [
+      20,
+      32
+     ],
+     "meta-sword-rally": [
+      18,
+      32
+     ]
+    },
+    "diff_vs_control": 0.0527,
+    "diff_se": 0.0273,
+    "model_rate": 0.537,
+    "games_before": 64,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 2
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 2
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 3
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10452130": 3,
+     "10552110": 3,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 3,
+     "10951120": 3,
+     "10952110": 2,
+     "10954110": 2,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k08",
+    "kind": "candidate",
+    "wins": 291,
+    "games": 512,
+    "rate": 0.5684,
+    "ci95": [
+     0.5251,
+     0.6106
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      25,
+      32
+     ],
+     "meta-abyss-midrange": [
+      20,
+      32
+     ],
+     "meta-dragon-aggro": [
+      22,
+      32
+     ],
+     "meta-dragon-ramp": [
+      17,
+      32
+     ],
+     "meta-forest-combo": [
+      23,
+      32
+     ],
+     "meta-haven-amulet": [
+      17,
+      32
+     ],
+     "meta-haven-evo": [
+      6,
+      32
+     ],
+     "meta-haven-kukishiro": [
+      17,
+      32
+     ],
+     "meta-portal-af": [
+      17,
+      32
+     ],
+     "meta-portal-cutthroat": [
+      23,
+      32
+     ],
+     "meta-portal-evo": [
+      14,
+      32
+     ],
+     "meta-rune-crystal": [
+      25,
+      32
+     ],
+     "meta-rune-spell": [
+      20,
+      32
+     ],
+     "meta-rune-test-subject": [
+      16,
+      32
+     ],
+     "meta-sword-loot": [
+      16,
+      32
+     ],
+     "meta-sword-rally": [
+      13,
+      32
+     ]
+    },
+    "diff_vs_control": 0.0801,
+    "diff_se": 0.0299,
+    "model_rate": 0.5338,
+    "games_before": 64,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Valiant Edge",
+      "copies": 1
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 2
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 1
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 3
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10451310": 1,
+     "10452130": 3,
+     "10552110": 3,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 3,
+     "10951120": 3,
+     "10952110": 2,
+     "10954110": 1,
+     "10954120": 3
+    }
+   }
+  ],
+  "2": [
+   {
+    "name": "c-midrange",
+    "kind": "control",
+    "wins": 825,
+    "games": 1536,
+    "rate": 0.5371,
+    "ci95": [
+     0.5121,
+     0.5619
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      46,
+      96
+     ],
+     "meta-abyss-midrange": [
+      54,
+      96
+     ],
+     "meta-dragon-aggro": [
+      67,
+      96
+     ],
+     "meta-dragon-ramp": [
+      48,
+      96
+     ],
+     "meta-forest-combo": [
+      44,
+      96
+     ],
+     "meta-haven-amulet": [
+      48,
+      96
+     ],
+     "meta-haven-evo": [
+      22,
+      96
+     ],
+     "meta-haven-kukishiro": [
+      47,
+      96
+     ],
+     "meta-portal-af": [
+      58,
+      96
+     ],
+     "meta-portal-cutthroat": [
+      52,
+      96
+     ],
+     "meta-portal-evo": [
+      53,
+      96
+     ],
+     "meta-rune-crystal": [
+      71,
+      96
+     ],
+     "meta-rune-spell": [
+      62,
+      96
+     ],
+     "meta-rune-test-subject": [
+      51,
+      96
+     ],
+     "meta-sword-loot": [
+      53,
+      96
+     ],
+     "meta-sword-rally": [
+      49,
+      96
+     ]
+    },
+    "diff_vs_control": 0.0,
+    "diff_se": 0.0,
+    "model_rate": 0.5181,
+    "games_before": 3072,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 1,
+      "name": "World of Games",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 2
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 2
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 2
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10452130": 3,
+     "10503210": 1,
+     "10552110": 2,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 2,
+     "10951120": 3,
+     "10952110": 2,
+     "10954110": 3,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k01",
+    "kind": "candidate",
+    "wins": 855,
+    "games": 1536,
+    "rate": 0.5566,
+    "ci95": [
+     0.5317,
+     0.5813
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      60,
+      96
+     ],
+     "meta-abyss-midrange": [
+      51,
+      96
+     ],
+     "meta-dragon-aggro": [
+      64,
+      96
+     ],
+     "meta-dragon-ramp": [
+      48,
+      96
+     ],
+     "meta-forest-combo": [
+      59,
+      96
+     ],
+     "meta-haven-amulet": [
+      47,
+      96
+     ],
+     "meta-haven-evo": [
+      22,
+      96
+     ],
+     "meta-haven-kukishiro": [
+      57,
+      96
+     ],
+     "meta-portal-af": [
+      51,
+      96
+     ],
+     "meta-portal-cutthroat": [
+      51,
+      96
+     ],
+     "meta-portal-evo": [
+      44,
+      96
+     ],
+     "meta-rune-crystal": [
+      78,
+      96
+     ],
+     "meta-rune-spell": [
+      65,
+      96
+     ],
+     "meta-rune-test-subject": [
+      45,
+      96
+     ],
+     "meta-sword-loot": [
+      59,
+      96
+     ],
+     "meta-sword-rally": [
+      54,
+      96
+     ]
+    },
+    "diff_vs_control": 0.0195,
+    "diff_se": 0.0172,
+    "model_rate": 0.5515,
+    "games_before": 896,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 2
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Valiant Edge",
+      "copies": 1
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 2
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 2
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 3
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10451310": 1,
+     "10452130": 3,
+     "10552110": 3,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 3,
+     "10951120": 2,
+     "10952110": 2,
+     "10954110": 2,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k02",
+    "kind": "candidate",
+    "wins": 824,
+    "games": 1536,
+    "rate": 0.5365,
+    "ci95": [
+     0.5115,
+     0.5613
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      58,
+      96
+     ],
+     "meta-abyss-midrange": [
+      49,
+      96
+     ],
+     "meta-dragon-aggro": [
+      64,
+      96
+     ],
+     "meta-dragon-ramp": [
+      43,
+      96
+     ],
+     "meta-forest-combo": [
+      60,
+      96
+     ],
+     "meta-haven-amulet": [
+      45,
+      96
+     ],
+     "meta-haven-evo": [
+      27,
+      96
+     ],
+     "meta-haven-kukishiro": [
+      49,
+      96
+     ],
+     "meta-portal-af": [
+      51,
+      96
+     ],
+     "meta-portal-cutthroat": [
+      42,
+      96
+     ],
+     "meta-portal-evo": [
+      38,
+      96
+     ],
+     "meta-rune-crystal": [
+      80,
+      96
+     ],
+     "meta-rune-spell": [
+      59,
+      96
+     ],
+     "meta-rune-test-subject": [
+      47,
+      96
+     ],
+     "meta-sword-loot": [
+      62,
+      96
+     ],
+     "meta-sword-rally": [
+      50,
+      96
+     ]
+    },
+    "diff_vs_control": -0.0007,
+    "diff_se": 0.0173,
+    "model_rate": 0.5475,
+    "games_before": 768,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 2
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Valiant Edge",
+      "copies": 1
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 3
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 1
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 3
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10451310": 1,
+     "10452130": 3,
+     "10552110": 3,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 3,
+     "10951120": 2,
+     "10952110": 3,
+     "10954110": 1,
+     "10954120": 3
+    }
+   },
+   {
+    "name": "k03",
+    "kind": "candidate",
+    "wins": 804,
+    "games": 1536,
+    "rate": 0.5234,
+    "ci95": [
+     0.4984,
+     0.5483
+    ],
+    "per_list": {
+     "meta-abyss-aggro": [
+      59,
+      96
+     ],
+     "meta-abyss-midrange": [
+      43,
+      96
+     ],
+     "meta-dragon-aggro": [
+      60,
+      96
+     ],
+     "meta-dragon-ramp": [
+      47,
+      96
+     ],
+     "meta-forest-combo": [
+      55,
+      96
+     ],
+     "meta-haven-amulet": [
+      37,
+      96
+     ],
+     "meta-haven-evo": [
+      21,
+      96
+     ],
+     "meta-haven-kukishiro": [
+      38,
+      96
+     ],
+     "meta-portal-af": [
+      60,
+      96
+     ],
+     "meta-portal-cutthroat": [
+      51,
+      96
+     ],
+     "meta-portal-evo": [
+      39,
+      96
+     ],
+     "meta-rune-crystal": [
+      83,
+      96
+     ],
+     "meta-rune-spell": [
+      63,
+      96
+     ],
+     "meta-rune-test-subject": [
+      47,
+      96
+     ],
+     "meta-sword-loot": [
+      46,
+      96
+     ],
+     "meta-sword-rally": [
+      55,
+      96
+     ]
+    },
+    "diff_vs_control": -0.0137,
+    "diff_se": 0.0172,
+    "model_rate": 0.545,
+    "games_before": 576,
+    "cards": [
+     {
+      "cost": 1,
+      "name": "Lilith, Devilish Cutie",
+      "copies": 3
+     },
+     {
+      "cost": 1,
+      "name": "Lilith, Enchanting Succubus",
+      "copies": 1
+     },
+     {
+      "cost": 2,
+      "name": "Netherworld Lieutenant",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Raz, Demon on the Drums",
+      "copies": 3
+     },
+     {
+      "cost": 2,
+      "name": "Valiant Edge",
+      "copies": 1
+     },
+     {
+      "cost": 3,
+      "name": "Baal, Elemental Resonance",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Fickle Necromancer",
+      "copies": 3
+     },
+     {
+      "cost": 3,
+      "name": "Hark to the Night Song",
+      "copies": 3
+     },
+     {
+      "cost": 4,
+      "name": "Bibatii, Eld Sight",
+      "copies": 2
+     },
+     {
+      "cost": 5,
+      "name": "Highwire Feline",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Adahime, Anathema of Death",
+      "copies": 3
+     },
+     {
+      "cost": 6,
+      "name": "Void Colonel",
+      "copies": 2
+     },
+     {
+      "cost": 7,
+      "name": "Istyndet vs. Mitilykket",
+      "copies": 1
+     },
+     {
+      "cost": 8,
+      "name": "Garodeth vs. Zeth",
+      "copies": 3
+     },
+     {
+      "cost": 8,
+      "name": "Itsurugi & Taketsumi, Brothers",
+      "copies": 3
+     },
+     {
+      "cost": 9,
+      "name": "Macmillan, Reaper of Ceremonies",
+      "copies": 3
+     }
+    ],
+    "deck": {
+     "10052110": 1,
+     "10451310": 1,
+     "10452130": 3,
+     "10552110": 3,
+     "10654120": 2,
+     "10751120": 3,
+     "10752110": 3,
+     "10753310": 3,
+     "10754110": 3,
+     "10754120": 3,
+     "10851120": 3,
+     "10854110": 3,
+     "10951120": 3,
+     "10952110": 2,
+     "10954110": 1,
+     "10954120": 3
+    }
+   }
+  ]
+ },
+ "best": {
+  "name": "k01",
+  "rate": 0.5566,
+  "games": 1536,
+  "diff_vs_control": 0.0195,
+  "diff_se": 0.0172,
+  "z": 1.13
+ }
+}
