@@ -386,9 +386,81 @@
       "wall_seconds": 18860.1,
       "cpu_seconds": 526819.3,
       "end": "2026-11-26 13:18:39 UTC"
+    },
+    {
+      "start": "2026-11-26 13:22:36 UTC",
+      "workers": 28,
+      "todo": 1024,
+      "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+      "games_per_pair": 36,
+      "games": 1024,
+      "error_games": 0,
+      "wall_seconds": 2364.4,
+      "cpu_seconds": 65308.0,
+      "end": "2026-11-26 14:02:01 UTC"
+    },
+    {
+      "start": "2026-11-26 14:03:29 UTC",
+      "workers": 28,
+      "todo": 1024,
+      "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+      "games_per_pair": 40,
+      "games": 1024,
+      "error_games": 0,
+      "wall_seconds": 2317.1,
+      "cpu_seconds": 63857.9,
+      "end": "2026-11-26 14:42:07 UTC"
+    },
+    {
+      "start": "2026-11-26 14:43:19 UTC",
+      "workers": 28,
+      "todo": 1024,
+      "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+      "games_per_pair": 44,
+      "games": 1024,
+      "error_games": 0,
+      "wall_seconds": 2380.4,
+      "cpu_seconds": 65215.2,
+      "end": "2026-11-26 15:22:59 UTC"
+    },
+    {
+      "start": "2026-11-26 15:24:24 UTC",
+      "workers": 28,
+      "todo": 1024,
+      "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+      "games_per_pair": 48,
+      "games": 1024,
+      "error_games": 0,
+      "wall_seconds": 2326.5,
+      "cpu_seconds": 64163.1,
+      "end": "2026-11-26 16:03:10 UTC"
+    },
+    {
+      "start": "2026-11-26 16:04:29 UTC",
+      "workers": 28,
+      "todo": 1024,
+      "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+      "games_per_pair": 52,
+      "games": 1024,
+      "error_games": 0,
+      "wall_seconds": 2297.4,
+      "cpu_seconds": 63429.9,
+      "end": "2026-11-26 16:42:46 UTC"
+    },
+    {
+      "start": "2026-11-26 16:43:33 UTC",
+      "workers": 28,
+      "todo": 1024,
+      "engine": "bcfb6cd2d737d7cb68cc8ef6bc0f1e3a65d17150",
+      "games_per_pair": 56,
+      "games": 1024,
+      "error_games": 0,
+      "wall_seconds": 2443.3,
+      "cpu_seconds": 67342.2,
+      "end": "2026-11-26 17:24:16 UTC"
     }
   ],
-  "games_per_pair": 32,
-  "total_games": 8192,
-  "finished": "2026-11-26 13:18:40 UTC"
+  "games_per_pair": 56,
+  "total_games": 14336,
+  "finished": "2026-11-26 17:24:16 UTC"
 }
