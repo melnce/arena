@@ -1213,7 +1213,7 @@ brief YP's `h0-value-v73`, +13.5 against brief YJ's `h0-value-v69`, +7 against b
 brief YE's `h0-value-v65`, +9 against brief YC's `h0-value-v64`, itself +32 against `h0-linear-v4`, all at eight
 worlds; it knows 410 card ids — every Forestcraft, Portalcraft and Abysscraft card — where `h0-value-v97` knows 245):
 the bot scores the end of each line it reads — and, since brief YN, each opening mulligan — with a small neural network
-trained on the results of its own games instead of the linear `h0-linear-v4`; it thinks ≈1.16× as long per decision on the served spec (twelve review moments, `threads=8`, interleaved passes).
+trained on the results of its own games instead of the linear `h0-linear-v4`; it thinks ≈ 1.01× as long per decision at one thread (fifty-two-case served harness, `threads=1`, two interleaved passes) and ≈ 1.17× at eight threads (twelve review moments, six interleaved passes).
 `deal=block` since brief YK (2026-10-28; sweeps 70 and 70b: +5 Elo against the same stack with independent
 deals, at eight worlds): the bot's worlds deal the opponent's hidden hand as consecutive blocks of one shuffle of
 the cards it cannot rule out, so together they cover his possible hands evenly. The cheater (`info=all`) sees the
