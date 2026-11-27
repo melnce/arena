@@ -24,19 +24,60 @@
    "games": 4096,
    "decks": 64,
    "verdict": "verdict: DATA OK"
+  },
+  {
+   "round": 4,
+   "tag": "search107",
+   "policy": "exploit",
+   "games": 4096,
+   "decks": 64,
+   "verdict": "verdict: DATA OK"
   }
  ],
- "decks": 171,
- "games": 12288,
+ "decks": 222,
+ "games": 16384,
  "control": {
-  "rate": 0.4583,
-  "games": 192,
+  "rate": 0.4531,
+  "games": 256,
   "ci95": [
-   0.3894,
-   0.5289
+   0.3933,
+   0.5143
   ]
  },
  "best_with_128_games": [
+  {
+   "id": "2ceb9672b55cd6af",
+   "rate": 0.5234,
+   "games": 128,
+   "ci95": [
+    0.4375,
+    0.608
+   ],
+   "names": [
+    "r03:s17",
+    "r04:i11"
+   ],
+   "model_rate": 0.4585,
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, -1 Grace of the Swarmpetal, -3 Sathanid, Eld Lance, +1 Aika, Elegy of Loss, +2 Althenia, Nurturing Bloom, +1 Great Hart of the Glacial Realm, +1 Kou & You, Love and Hatred, +1 Vyrn, Bestest Pal",
+   "deck": {
+    "10401120": 1,
+    "10403120": 2,
+    "10411110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614110": 2,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 3,
+    "10803110": 1,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
   {
    "id": "b12ac276a83bbdf4",
    "rate": 0.5104,
@@ -58,39 +99,6 @@
     "10503210": 3,
     "10514120": 3,
     "10614110": 2,
-    "10614120": 3,
-    "10712110": 3,
-    "10714110": 3,
-    "10714120": 2,
-    "10811130": 3,
-    "10814110": 3,
-    "10911110": 3,
-    "10912110": 3,
-    "10913110": 3,
-    "10914110": 3
-   }
-  },
-  {
-   "id": "8bc1213ae3c32850",
-   "rate": 0.5052,
-   "games": 192,
-   "ci95": [
-    0.4351,
-    0.5751
-   ],
-   "names": [
-    "r01:a03",
-    "r02:i01",
-    "r03:i01"
-   ],
-   "model_rate": 0.4795,
-   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gran & Djeeta, Valiant Skyfarers",
-   "deck": {
-    "10403110": 2,
-    "10403120": 2,
-    "10414110": 1,
-    "10503210": 3,
-    "10514120": 3,
     "10614120": 3,
     "10712110": 3,
     "10714110": 3,
@@ -137,6 +145,104 @@
    }
   },
   {
+   "id": "39d1122f5ff2bd88",
+   "rate": 0.5,
+   "games": 128,
+   "ci95": [
+    0.4147,
+    0.5853
+   ],
+   "names": [
+    "r01:a63",
+    "r04:i12"
+   ],
+   "model_rate": 0.4577,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Initiation of Rebirth",
+   "deck": {
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10901310": 2,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "228b76dcf667cb1e",
+   "rate": 0.5,
+   "games": 128,
+   "ci95": [
+    0.4147,
+    0.5853
+   ],
+   "names": [
+    "r03:s44",
+    "r04:i01"
+   ],
+   "model_rate": 0.4733,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, -2 Sathanid, Eld Lance, +1 Anthuria, Toe-Tapping Torch, +3 Gran & Djeeta, Valiant Skyfarers",
+   "deck": {
+    "10403110": 3,
+    "10403120": 2,
+    "10412120": 1,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 1,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "b3799a1ad976b484",
+   "rate": 0.4948,
+   "games": 192,
+   "ci95": [
+    0.4249,
+    0.5649
+   ],
+   "names": [
+    "r01:a12",
+    "r03:i10",
+    "r04:i07"
+   ],
+   "model_rate": 0.4608,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Legacy of the Brave",
+   "deck": {
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10802310": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
    "id": "8b4f35c21bb18d3a",
    "rate": 0.4948,
    "games": 192,
@@ -170,18 +276,85 @@
    }
   },
   {
-   "id": "536206ace38b8abc",
-   "rate": 0.4844,
+   "id": "bad3ca05356bf46b",
+   "rate": 0.4922,
    "games": 128,
    "ci95": [
-    0.3995,
-    0.5701
+    0.4071,
+    0.5778
+   ],
+   "names": [
+    "r03:m01",
+    "r04:i04"
+   ],
+   "model_rate": 0.4661,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, -1 Sprouting Initiate, +3 Gran & Djeeta, Valiant Skyfarers",
+   "deck": {
+    "10403110": 3,
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 2,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "8bc1213ae3c32850",
+   "rate": 0.4844,
+   "games": 256,
+   "ci95": [
+    0.4238,
+    0.5454
+   ],
+   "names": [
+    "r01:a03",
+    "r02:i01",
+    "r03:i01",
+    "r04:i02"
+   ],
+   "model_rate": 0.4705,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gran & Djeeta, Valiant Skyfarers",
+   "deck": {
+    "10403110": 2,
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "536206ace38b8abc",
+   "rate": 0.4844,
+   "games": 192,
+   "ci95": [
+    0.4147,
+    0.5547
    ],
    "names": [
     "r01:a05",
-    "r03:i11"
+    "r03:i11",
+    "r04:i08"
    ],
-   "model_rate": 0.454,
+   "model_rate": 0.4608,
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Spirited Skipper",
    "deck": {
     "10403120": 2,
@@ -196,6 +369,106 @@
     "10811130": 3,
     "10814110": 3,
     "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "b13aa4746116556d",
+   "rate": 0.4844,
+   "games": 128,
+   "ci95": [
+    0.3995,
+    0.5701
+   ],
+   "names": [
+    "r03:s15",
+    "r04:i05"
+   ],
+   "model_rate": 0.4656,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, -2 Sathanid, Eld Lance, +1 Anthuria, Toe-Tapping Torch, +1 Fairy Tamer, +2 Spirited Skipper",
+   "deck": {
+    "10011110": 1,
+    "10403120": 2,
+    "10412120": 1,
+    "10414110": 1,
+    "10503210": 3,
+    "10513110": 2,
+    "10514120": 3,
+    "10614120": 1,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "7d7093a887e55e50",
+   "rate": 0.4844,
+   "games": 128,
+   "ci95": [
+    0.3995,
+    0.5701
+   ],
+   "names": [
+    "r03:s21",
+    "r04:i06"
+   ],
+   "model_rate": 0.4652,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, -1 Sprouting Initiate, +2 Gran & Djeeta, Valiant Skyfarers, +1 Legacy of the Brave",
+   "deck": {
+    "10403110": 2,
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10802310": 1,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 2,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "d96347a688eb85f5",
+   "rate": 0.4844,
+   "games": 128,
+   "ci95": [
+    0.3995,
+    0.5701
+   ],
+   "names": [
+    "r03:s42",
+    "r04:i03"
+   ],
+   "model_rate": 0.4691,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, -1 Sprouting Initiate, +1 Alfheimr, +2 Gran & Djeeta, Valiant Skyfarers",
+   "deck": {
+    "10403110": 2,
+    "10403120": 2,
+    "10413310": 1,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 2,
     "10912110": 3,
     "10913110": 3,
     "10914110": 3
@@ -226,38 +499,6 @@
     "10714110": 3,
     "10714120": 2,
     "10803110": 2,
-    "10811130": 3,
-    "10814110": 3,
-    "10911110": 3,
-    "10912110": 3,
-    "10913110": 3,
-    "10914110": 3
-   }
-  },
-  {
-   "id": "b3799a1ad976b484",
-   "rate": 0.4766,
-   "games": 128,
-   "ci95": [
-    0.392,
-    0.5625
-   ],
-   "names": [
-    "r01:a12",
-    "r03:i10"
-   ],
-   "model_rate": 0.4545,
-   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Legacy of the Brave",
-   "deck": {
-    "10403120": 2,
-    "10414110": 1,
-    "10503210": 3,
-    "10514120": 3,
-    "10614120": 3,
-    "10712110": 3,
-    "10714110": 3,
-    "10714120": 2,
-    "10802310": 2,
     "10811130": 3,
     "10814110": 3,
     "10911110": 3,
@@ -365,18 +606,19 @@
   },
   {
    "id": "541e50973ab2025e",
-   "rate": 0.4583,
-   "games": 192,
+   "rate": 0.4531,
+   "games": 256,
    "ci95": [
-    0.3894,
-    0.5289
+    0.3933,
+    0.5143
    ],
    "names": [
     "r01:c-combo",
     "r02:c-combo",
-    "r03:c-combo"
+    "r03:c-combo",
+    "r04:c-combo"
    ],
-   "model_rate": 0.4186,
+   "model_rate": 0.4353,
    "swaps": "Combo Forest as it is",
    "deck": {
     "10403120": 2,
@@ -400,16 +642,17 @@
   {
    "id": "dba030fef4e25cf6",
    "rate": 0.4375,
-   "games": 128,
+   "games": 192,
    "ci95": [
-    0.3546,
-    0.524
+    0.3692,
+    0.5082
    ],
    "names": [
     "r01:a60",
-    "r02:i05"
+    "r02:i05",
+    "r04:i09"
    ],
-   "model_rate": 0.48,
+   "model_rate": 0.46,
    "swaps": "-1 Crimson Incense, +1 Great Hart of the Glacial Realm",
    "deck": {
     "10403120": 2,
@@ -461,39 +704,6 @@
     "10913110": 3,
     "10914110": 3
    }
-  },
-  {
-   "id": "70237b0209f565bd",
-   "rate": 0.4141,
-   "games": 128,
-   "ci95": [
-    0.3325,
-    0.5007
-   ],
-   "names": [
-    "r02:s03",
-    "r03:i02"
-   ],
-   "model_rate": 0.4659,
-   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, -1 Sprouting Initiate, +2 Flight of the Swarmpetal, +1 Leah, Bellringer Angel",
-   "deck": {
-    "10001120": 1,
-    "10403120": 2,
-    "10414110": 1,
-    "10503210": 3,
-    "10511310": 2,
-    "10514120": 3,
-    "10614120": 3,
-    "10712110": 3,
-    "10714110": 3,
-    "10714120": 2,
-    "10811130": 3,
-    "10814110": 3,
-    "10911110": 2,
-    "10912110": 3,
-    "10913110": 3,
-    "10914110": 3
-   }
   }
  ],
  "trials": [
@@ -538,20 +748,6 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Bug Alert",
    "id": "2d41c327390e88e2"
-  },
-  {
-   "card": "10901310",
-   "name": "Initiation of Rebirth",
-   "kind": "cover-add",
-   "copies": 2,
-   "rate": 0.5312,
-   "games": 64,
-   "ci95": [
-    0.4107,
-    0.6482
-   ],
-   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Initiation of Rebirth",
-   "id": "39d1122f5ff2bd88"
   },
   {
    "card": "10911110",
@@ -608,20 +804,6 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Althenia, Nurturing Bloom",
    "id": "b12ac276a83bbdf4"
-  },
-  {
-   "card": "10403110",
-   "name": "Gran & Djeeta, Valiant Skyfarers",
-   "kind": "cover-add",
-   "copies": 2,
-   "rate": 0.5052,
-   "games": 192,
-   "ci95": [
-    0.4351,
-    0.5751
-   ],
-   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gran & Djeeta, Valiant Skyfarers",
-   "id": "8bc1213ae3c32850"
   },
   {
    "card": "10511310",
@@ -694,6 +876,34 @@
    "id": "f153e87ffe535dde"
   },
   {
+   "card": "10901310",
+   "name": "Initiation of Rebirth",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5,
+   "games": 128,
+   "ci95": [
+    0.4147,
+    0.5853
+   ],
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Initiation of Rebirth",
+   "id": "39d1122f5ff2bd88"
+  },
+  {
+   "card": "10802310",
+   "name": "Legacy of the Brave",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4948,
+   "games": 192,
+   "ci95": [
+    0.4249,
+    0.5649
+   ],
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Legacy of the Brave",
+   "id": "b3799a1ad976b484"
+  },
+  {
    "card": "10001120",
    "name": "Leah, Bellringer Angel",
    "kind": "cover-add",
@@ -708,15 +918,29 @@
    "id": "8b4f35c21bb18d3a"
   },
   {
+   "card": "10403110",
+   "name": "Gran & Djeeta, Valiant Skyfarers",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4844,
+   "games": 256,
+   "ci95": [
+    0.4238,
+    0.5454
+   ],
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gran & Djeeta, Valiant Skyfarers",
+   "id": "8bc1213ae3c32850"
+  },
+  {
    "card": "10513110",
    "name": "Spirited Skipper",
    "kind": "cover-add",
    "copies": 2,
    "rate": 0.4844,
-   "games": 128,
+   "games": 192,
    "ci95": [
-    0.3995,
-    0.5701
+    0.4147,
+    0.5547
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Spirited Skipper",
    "id": "536206ace38b8abc"
@@ -790,20 +1014,6 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Aika, Elegy of Loss",
    "id": "8d736122165936f0"
-  },
-  {
-   "card": "10802310",
-   "name": "Legacy of the Brave",
-   "kind": "cover-add",
-   "copies": 2,
-   "rate": 0.4766,
-   "games": 128,
-   "ci95": [
-    0.392,
-    0.5625
-   ],
-   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Legacy of the Brave",
-   "id": "b3799a1ad976b484"
   },
   {
    "card": "10811120",
@@ -1077,10 +1287,10 @@
    "kind": "cover-add",
    "copies": 1,
    "rate": 0.4375,
-   "games": 128,
+   "games": 192,
    "ci95": [
-    0.3546,
-    0.524
+    0.3692,
+    0.5082
    ],
    "swaps": "-1 Crimson Incense, +1 Great Hart of the Glacial Realm",
    "id": "dba030fef4e25cf6"
