@@ -313,7 +313,7 @@ pub fn builtin_value_v92() -> Arc<ValueNet> {
 }
 
 const BUILTIN_VALUE_V97_JSON: &str = include_str!("../../models/h0-value-v97.json");
-/// Committed name of the served-bot residual value leaf since brief ZD (`engine/models/h0-value-v97.json`).
+/// Committed name of the served-bot residual value leaf from brief ZD to brief ZE (`engine/models/h0-value-v97.json`).
 pub const BUILTIN_VALUE_V97_NAME: &str = "h0-value-v97";
 static BUILTIN_VALUE_V97: OnceLock<Arc<ValueNet>> = OnceLock::new();
 
@@ -328,7 +328,23 @@ pub fn builtin_value_v97() -> Arc<ValueNet> {
         .clone()
 }
 
-/// Resolve a built-in value leaf by committed name (`builtin`, `h0-linear-v4`, `h0-value-v64`, `h0-value-v65`, `h0-value-v66`, `h0-value-v69`, `h0-value-v73`, `h0-value-v75`, `h0-value-v77`, `h0-value-v83`, `h0-value-v87`, `h0-value-v89`, `h0-value-v92`, `h0-value-v97`).
+const BUILTIN_VALUE_V106_JSON: &str = include_str!("../../models/h0-value-v106.json");
+/// Committed name of the served-bot residual value leaf since brief ZE (`engine/models/h0-value-v106.json`).
+pub const BUILTIN_VALUE_V106_NAME: &str = "h0-value-v106";
+static BUILTIN_VALUE_V106: OnceLock<Arc<ValueNet>> = OnceLock::new();
+
+/// The built-in `h0-value-v106` residual leaf, parsed once. A parse failure is a
+/// build defect.
+pub fn builtin_value_v106() -> Arc<ValueNet> {
+    BUILTIN_VALUE_V106
+        .get_or_init(|| {
+            ValueNet::from_json_named(BUILTIN_VALUE_V106_NAME, BUILTIN_VALUE_V106_JSON)
+                .expect("built-in h0-value-v106 parses")
+        })
+        .clone()
+}
+
+/// Resolve a built-in value leaf by committed name (`builtin`, `h0-linear-v4`, `h0-value-v64`, `h0-value-v65`, `h0-value-v66`, `h0-value-v69`, `h0-value-v73`, `h0-value-v75`, `h0-value-v77`, `h0-value-v83`, `h0-value-v87`, `h0-value-v89`, `h0-value-v92`, `h0-value-v97`, `h0-value-v106`).
 pub fn builtin_net_by_name(name: &str) -> Option<Arc<ValueNet>> {
     match name {
         "builtin" | BUILTIN_NET_NAME => Some(builtin_net()),
@@ -344,6 +360,7 @@ pub fn builtin_net_by_name(name: &str) -> Option<Arc<ValueNet>> {
         BUILTIN_VALUE_V89_NAME => Some(builtin_value_v89()),
         BUILTIN_VALUE_V92_NAME => Some(builtin_value_v92()),
         BUILTIN_VALUE_V97_NAME => Some(builtin_value_v97()),
+        BUILTIN_VALUE_V106_NAME => Some(builtin_value_v106()),
         _ => None,
     }
 }
