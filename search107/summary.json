@@ -8,72 +8,324 @@
    "games": 4096,
    "decks": 64,
    "verdict": "verdict: DATA OK"
+  },
+  {
+   "round": 2,
+   "tag": "search107",
+   "policy": "coverage",
+   "games": 4096,
+   "decks": 64,
+   "verdict": "verdict: DATA OK"
   }
  ],
- "decks": 64,
- "games": 4096,
+ "decks": 120,
+ "games": 8192,
  "control": {
-  "rate": 0.5312,
-  "games": 64,
+  "rate": 0.4766,
+  "games": 128,
   "ci95": [
-   0.4107,
-   0.6482
+   0.392,
+   0.5625
   ]
  },
- "best_with_128_games": [],
- "trials": [
+ "best_with_128_games": [
   {
-   "card": "10511310",
-   "name": "Flight of the Swarmpetal",
-   "kind": "cover-add",
-   "copies": 2,
-   "rate": 0.5938,
-   "games": 64,
+   "id": "8bc1213ae3c32850",
+   "rate": 0.5547,
+   "games": 128,
    "ci95": [
-    0.4714,
-    0.7054
+    0.4682,
+    0.6379
    ],
-   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Flight of the Swarmpetal",
-   "id": "28c048b49a7bd7df"
+   "names": [
+    "r01:a03",
+    "r02:i01"
+   ],
+   "model_rate": 0.4968,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gran & Djeeta, Valiant Skyfarers",
+   "deck": {
+    "10403110": 2,
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
   },
+  {
+   "id": "b12ac276a83bbdf4",
+   "rate": 0.5312,
+   "games": 128,
+   "ci95": [
+    0.4452,
+    0.6155
+   ],
+   "names": [
+    "r01:a01",
+    "r02:i02"
+   ],
+   "model_rate": 0.4958,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Althenia, Nurturing Bloom",
+   "deck": {
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614110": 2,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "8b4f35c21bb18d3a",
+   "rate": 0.5312,
+   "games": 128,
+   "ci95": [
+    0.4452,
+    0.6155
+   ],
+   "names": [
+    "r01:a16",
+    "r02:i04"
+   ],
+   "model_rate": 0.4845,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Leah, Bellringer Angel",
+   "deck": {
+    "10001120": 2,
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "28c048b49a7bd7df",
+   "rate": 0.5,
+   "games": 128,
+   "ci95": [
+    0.4147,
+    0.5853
+   ],
+   "names": [
+    "r01:a14",
+    "r02:i03"
+   ],
+   "model_rate": 0.4868,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Flight of the Swarmpetal",
+   "deck": {
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10511310": 2,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "541e50973ab2025e",
+   "rate": 0.4766,
+   "games": 128,
+   "ci95": [
+    0.392,
+    0.5625
+   ],
+   "names": [
+    "r01:c-combo",
+    "r02:c-combo"
+   ],
+   "model_rate": 0.4618,
+   "swaps": "Combo Forest as it is",
+   "deck": {
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10513310": 1,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10913310": 1,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "8d736122165936f0",
+   "rate": 0.4688,
+   "games": 128,
+   "ci95": [
+    0.3845,
+    0.5548
+   ],
+   "names": [
+    "r01:a06",
+    "r02:i07"
+   ],
+   "model_rate": 0.4684,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Aika, Elegy of Loss",
+   "deck": {
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10803110": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "4d7134c729c89816",
+   "rate": 0.4609,
+   "games": 128,
+   "ci95": [
+    0.377,
+    0.5472
+   ],
+   "names": [
+    "r01:a02",
+    "r02:i06"
+   ],
+   "model_rate": 0.4715,
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Anthuria, Toe-Tapping Torch",
+   "deck": {
+    "10403120": 2,
+    "10412120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 2,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  },
+  {
+   "id": "dba030fef4e25cf6",
+   "rate": 0.4375,
+   "games": 128,
+   "ci95": [
+    0.3546,
+    0.524
+   ],
+   "names": [
+    "r01:a60",
+    "r02:i05"
+   ],
+   "model_rate": 0.48,
+   "swaps": "-1 Crimson Incense, +1 Great Hart of the Glacial Realm",
+   "deck": {
+    "10403120": 2,
+    "10414110": 1,
+    "10503210": 3,
+    "10513310": 1,
+    "10514120": 3,
+    "10614120": 3,
+    "10712110": 3,
+    "10714110": 3,
+    "10714120": 3,
+    "10811130": 3,
+    "10814110": 3,
+    "10911110": 3,
+    "10912110": 3,
+    "10913110": 3,
+    "10914110": 3
+   }
+  }
+ ],
+ "trials": [
   {
    "card": "10403110",
    "name": "Gran & Djeeta, Valiant Skyfarers",
    "kind": "cover-add",
    "copies": 2,
-   "rate": 0.5625,
-   "games": 64,
+   "rate": 0.5547,
+   "games": 128,
    "ci95": [
-    0.4409,
-    0.6771
+    0.4682,
+    0.6379
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gran & Djeeta, Valiant Skyfarers",
    "id": "8bc1213ae3c32850"
   },
   {
-   "card": "10001120",
-   "name": "Leah, Bellringer Angel",
-   "kind": "cover-add",
-   "copies": 2,
-   "rate": 0.5625,
-   "games": 64,
-   "ci95": [
-    0.4409,
-    0.6771
-   ],
-   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Leah, Bellringer Angel",
-   "id": "8b4f35c21bb18d3a"
-  },
-  {
-   "card": "10614110",
-   "name": "Althenia, Nurturing Bloom",
-   "kind": "cover-add",
+   "card": "10814110",
+   "name": "Setus & Maisha, Bladerights",
+   "kind": "cover-cut",
    "copies": 2,
    "rate": 0.5469,
    "games": 64,
    "ci95": [
     0.4257,
     0.6627
+   ],
+   "swaps": "-2 Setus & Maisha, Bladerights, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "cc3ff086abe7bdf9"
+  },
+  {
+   "card": "10614110",
+   "name": "Althenia, Nurturing Bloom",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5312,
+   "games": 128,
+   "ci95": [
+    0.4452,
+    0.6155
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Althenia, Nurturing Bloom",
    "id": "b12ac276a83bbdf4"
@@ -91,6 +343,20 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Legacy of the Brave",
    "id": "b3799a1ad976b484"
+  },
+  {
+   "card": "10001120",
+   "name": "Leah, Bellringer Angel",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5312,
+   "games": 128,
+   "ci95": [
+    0.4452,
+    0.6155
+   ],
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Leah, Bellringer Angel",
+   "id": "8b4f35c21bb18d3a"
   },
   {
    "card": "10002110",
@@ -135,6 +401,48 @@
    "id": "39d1122f5ff2bd88"
   },
   {
+   "card": "10911110",
+   "name": "Sprouting Initiate",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.5312,
+   "games": 64,
+   "ci95": [
+    0.4107,
+    0.6482
+   ],
+   "swaps": "-2 Sprouting Initiate, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "15a9886d3f485ff9"
+  },
+  {
+   "card": "10711310",
+   "name": "Cognitive Shift",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5156,
+   "games": 64,
+   "ci95": [
+    0.3958,
+    0.6337
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Cognitive Shift",
+   "id": "665190836a15db90"
+  },
+  {
+   "card": "10703210",
+   "name": "City of Babelon",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5156,
+   "games": 64,
+   "ci95": [
+    0.3958,
+    0.6337
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 City of Babelon",
+   "id": "1ec59c4f4dfa8350"
+  },
+  {
    "card": "10812120",
    "name": "Lycoris, Barbs of Passion",
    "kind": "cover-add",
@@ -147,6 +455,20 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Lycoris, Barbs of Passion",
    "id": "1bb0a7e4a6b07828"
+  },
+  {
+   "card": "10511310",
+   "name": "Flight of the Swarmpetal",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.5,
+   "games": 128,
+   "ci95": [
+    0.4147,
+    0.5853
+   ],
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Flight of the Swarmpetal",
+   "id": "28c048b49a7bd7df"
   },
   {
    "card": "10011110",
@@ -189,20 +511,6 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Fairy Beastwhisperer",
    "id": "f153e87ffe535dde"
-  },
-  {
-   "card": "10412120",
-   "name": "Anthuria, Toe-Tapping Torch",
-   "kind": "cover-add",
-   "copies": 2,
-   "rate": 0.4844,
-   "games": 64,
-   "ci95": [
-    0.3663,
-    0.6042
-   ],
-   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Anthuria, Toe-Tapping Torch",
-   "id": "4d7134c729c89816"
   },
   {
    "card": "10912120",
@@ -261,6 +569,20 @@
    "id": "bed3160f51350ff6"
   },
   {
+   "card": "10803110",
+   "name": "Aika, Elegy of Loss",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4688,
+   "games": 128,
+   "ci95": [
+    0.3845,
+    0.5548
+   ],
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Aika, Elegy of Loss",
+   "id": "8d736122165936f0"
+  },
+  {
    "card": "10401120",
    "name": "Vyrn, Bestest Pal",
    "kind": "cover-add",
@@ -317,20 +639,6 @@
    "id": "eae402d1cf26c95c"
   },
   {
-   "card": "10714120",
-   "name": "Great Hart of the Glacial Realm",
-   "kind": "cover-add",
-   "copies": 1,
-   "rate": 0.4688,
-   "games": 64,
-   "ci95": [
-    0.3518,
-    0.5893
-   ],
-   "swaps": "-1 Crimson Incense, +1 Great Hart of the Glacial Realm",
-   "id": "dba030fef4e25cf6"
-  },
-  {
    "card": "10011120",
    "name": "Stray Beastman",
    "kind": "cover-add",
@@ -343,6 +651,76 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Stray Beastman",
    "id": "840595508e4c47cb"
+  },
+  {
+   "card": "10704120",
+   "name": "Altaro, Mayor of Babelon",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4688,
+   "games": 64,
+   "ci95": [
+    0.3518,
+    0.5893
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Altaro, Mayor of Babelon",
+   "id": "1db29da948b5e9eb"
+  },
+  {
+   "card": "10002210",
+   "name": "Adventurers' Guild",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4688,
+   "games": 64,
+   "ci95": [
+    0.3518,
+    0.5893
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Adventurers' Guild",
+   "id": "c865be4f7d696478"
+  },
+  {
+   "card": "10611310",
+   "name": "Advent of the Eld Lance",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4688,
+   "games": 64,
+   "ci95": [
+    0.3518,
+    0.5893
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Advent of the Eld Lance",
+   "id": "e23c9f88051eb01f"
+  },
+  {
+   "card": "10601120",
+   "name": "Disrupted Commoner",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4688,
+   "games": 64,
+   "ci95": [
+    0.3518,
+    0.5893
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Disrupted Commoner",
+   "id": "d22c4307988bcd1f"
+  },
+  {
+   "card": "10412120",
+   "name": "Anthuria, Toe-Tapping Torch",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4609,
+   "games": 128,
+   "ci95": [
+    0.377,
+    0.5472
+   ],
+   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Anthuria, Toe-Tapping Torch",
+   "id": "4d7134c729c89816"
   },
   {
    "card": "10513110",
@@ -373,6 +751,48 @@
    "id": "a09c69ac62f0b0d8"
   },
   {
+   "card": "10801120",
+   "name": "Reina, Timeless Wanderer",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4531,
+   "games": 64,
+   "ci95": [
+    0.3373,
+    0.5743
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Reina, Timeless Wanderer",
+   "id": "a8a879acb1420714"
+  },
+  {
+   "card": "10411310",
+   "name": "Comet Drive",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4531,
+   "games": 64,
+   "ci95": [
+    0.3373,
+    0.5743
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Comet Drive",
+   "id": "319e64644f5d025e"
+  },
+  {
+   "card": "10801110",
+   "name": "Hamsa, Sculpted Divinity",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4531,
+   "games": 64,
+   "ci95": [
+    0.3373,
+    0.5743
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Hamsa, Sculpted Divinity",
+   "id": "273b02623b62bf70"
+  },
+  {
    "card": "10811120",
    "name": "Citrus, Heretical Hermit",
    "kind": "cover-add",
@@ -385,20 +805,6 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Citrus, Heretical Hermit",
    "id": "a7d775565a8542a6"
-  },
-  {
-   "card": "10803110",
-   "name": "Aika, Elegy of Loss",
-   "kind": "cover-add",
-   "copies": 2,
-   "rate": 0.4375,
-   "games": 64,
-   "ci95": [
-    0.3229,
-    0.5591
-   ],
-   "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Aika, Elegy of Loss",
-   "id": "8d736122165936f0"
   },
   {
    "card": "10413310",
@@ -471,6 +877,20 @@
    "id": "97348fca1b7c5912"
   },
   {
+   "card": "10714120",
+   "name": "Great Hart of the Glacial Realm",
+   "kind": "cover-add",
+   "copies": 1,
+   "rate": 0.4375,
+   "games": 128,
+   "ci95": [
+    0.3546,
+    0.524
+   ],
+   "swaps": "-1 Crimson Incense, +1 Great Hart of the Glacial Realm",
+   "id": "dba030fef4e25cf6"
+  },
+  {
    "card": "10912310",
    "name": "Verdant Ring Kindred",
    "kind": "cover-add",
@@ -483,6 +903,146 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Verdant Ring Kindred",
    "id": "c4038fa92f7d847d"
+  },
+  {
+   "card": "10414120",
+   "name": "Yuel & Societte, Dancing Duo",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Yuel & Societte, Dancing Duo",
+   "id": "718d7d4f7604c84f"
+  },
+  {
+   "card": "10511110",
+   "name": "Prudent Tanuki",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Prudent Tanuki",
+   "id": "32907709799aa75a"
+  },
+  {
+   "card": "10911210",
+   "name": "Trap in the Woods",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Trap in the Woods",
+   "id": "c616deb9e49e82f7"
+  },
+  {
+   "card": "10513310",
+   "name": "Grace of the Swarmpetal",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Grace of the Swarmpetal",
+   "id": "97aacf274c8b32d9"
+  },
+  {
+   "card": "10402110",
+   "name": "Yuni, Cosmic Legacy",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Yuni, Cosmic Legacy",
+   "id": "2cd69407599f7fa6"
+  },
+  {
+   "card": "10604110",
+   "name": "Omegotep, the Dreaded One",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Omegotep, the Dreaded One",
+   "id": "f72e3a3f897ff1cf"
+  },
+  {
+   "card": "10512310",
+   "name": "Quiet Encouragement",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Quiet Encouragement",
+   "id": "edf0ccb6347c18db"
+  },
+  {
+   "card": "10603110",
+   "name": "Beast Lost to the Dark",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Beast Lost to the Dark",
+   "id": "fb20664e0b6189c4"
+  },
+  {
+   "card": "10912110",
+   "name": "Leafshadow Assassin",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-2 Leafshadow Assassin, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "d21fdbc29a821415"
+  },
+  {
+   "card": "10914110",
+   "name": "Magachiyo, Aromatic Convict",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.4375,
+   "games": 64,
+   "ci95": [
+    0.3229,
+    0.5591
+   ],
+   "swaps": "-2 Magachiyo, Aromatic Convict, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "d515fb280c82255a"
   },
   {
    "card": "10012120",
@@ -597,6 +1157,62 @@
    "id": "bd0cacd20b7b2c47"
   },
   {
+   "card": "10411120",
+   "name": "Manamel, Super Cutest",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4219,
+   "games": 64,
+   "ci95": [
+    0.3087,
+    0.5439
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Manamel, Super Cutest",
+   "id": "305b7130185a7737"
+  },
+  {
+   "card": "10412310",
+   "name": "Starry Sky",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4219,
+   "games": 64,
+   "ci95": [
+    0.3087,
+    0.5439
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Starry Sky",
+   "id": "8ba344042d24ba46"
+  },
+  {
+   "card": "10903210",
+   "name": "Azvaldt, Penitentiary of Chaos",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4219,
+   "games": 64,
+   "ci95": [
+    0.3087,
+    0.5439
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Azvaldt, Penitentiary of Chaos",
+   "id": "0f40d618748a0290"
+  },
+  {
+   "card": "10403120",
+   "name": "Lyria, Skydestined",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.4219,
+   "games": 64,
+   "ci95": [
+    0.3087,
+    0.5439
+   ],
+   "swaps": "-2 Lyria, Skydestined, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "22fafa9d8d5523a7"
+  },
+  {
    "card": "10712120",
    "name": "Hawkeyed Tactician",
    "kind": "cover-add",
@@ -695,6 +1311,132 @@
    "id": "50d11abdbce11f86"
   },
   {
+   "card": "10701310",
+   "name": "Tears of Degradation",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4062,
+   "games": 64,
+   "ci95": [
+    0.2946,
+    0.5286
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Tears of Degradation",
+   "id": "ddf7c7b110d0620a"
+  },
+  {
+   "card": "10901110",
+   "name": "Jailor of Antiquity",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4062,
+   "games": 64,
+   "ci95": [
+    0.2946,
+    0.5286
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Jailor of Antiquity",
+   "id": "c9c869f4d00f5b84"
+  },
+  {
+   "card": "10002120",
+   "name": "Caravan Mammoth",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4062,
+   "games": 64,
+   "ci95": [
+    0.2946,
+    0.5286
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Caravan Mammoth",
+   "id": "478122266f99f4fb"
+  },
+  {
+   "card": "10703110",
+   "name": "Hedonistic Socialite",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4062,
+   "games": 64,
+   "ci95": [
+    0.2946,
+    0.5286
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Hedonistic Socialite",
+   "id": "19c74b19d0345b81"
+  },
+  {
+   "card": "10712310",
+   "name": "Minimized Anxiety",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4062,
+   "games": 64,
+   "ci95": [
+    0.2946,
+    0.5286
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Minimized Anxiety",
+   "id": "d61181214abee46a"
+  },
+  {
+   "card": "10701110",
+   "name": "Altaro Superfan",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.4062,
+   "games": 64,
+   "ci95": [
+    0.2946,
+    0.5286
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Altaro Superfan",
+   "id": "c32e21e683a593f6"
+  },
+  {
+   "card": "10614120",
+   "name": "Sathanid, Eld Lance",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.4062,
+   "games": 64,
+   "ci95": [
+    0.2946,
+    0.5286
+   ],
+   "swaps": "-2 Sathanid, Eld Lance, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "fdf454b6da8e8b51"
+  },
+  {
+   "card": "10811130",
+   "name": "Moelle, Gloomy Maiden",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.4062,
+   "games": 64,
+   "ci95": [
+    0.2946,
+    0.5286
+   ],
+   "swaps": "-2 Moelle, Gloomy Maiden, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "d5b85bacaa90aeca"
+  },
+  {
+   "card": "10714110",
+   "name": "Thestae, Anathema of Distortion",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.4062,
+   "games": 64,
+   "ci95": [
+    0.2946,
+    0.5286
+   ],
+   "swaps": "-2 Thestae, Anathema of Distortion, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "0ef8794999cf18cc"
+  },
+  {
    "card": "10411110",
    "name": "Kou & You, Love and Hatred",
    "kind": "cover-add",
@@ -749,6 +1491,48 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Nurturing Eld Lance",
    "id": "b8a6ce5470eb8d13"
+  },
+  {
+   "card": "10704110",
+   "name": "Illamrita, Designated Target",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.3906,
+   "games": 64,
+   "ci95": [
+    0.2806,
+    0.5131
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Illamrita, Designated Target",
+   "id": "c4eb0e7ecf2ceb63"
+  },
+  {
+   "card": "10702110",
+   "name": "Intrepid Newshound",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.3906,
+   "games": 64,
+   "ci95": [
+    0.2806,
+    0.5131
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Intrepid Newshound",
+   "id": "09b1a662ecf8a275"
+  },
+  {
+   "card": "10913110",
+   "name": "Virid Lieutenant",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.3906,
+   "games": 64,
+   "ci95": [
+    0.2806,
+    0.5131
+   ],
+   "swaps": "-2 Virid Lieutenant, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "e8ff1a3a59a123de"
   },
   {
    "card": "10713310",
@@ -807,6 +1591,48 @@
    "id": "e99e92d478729b05"
   },
   {
+   "card": "10504110",
+   "name": "Getenou, Eightfold Glory",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.375,
+   "games": 64,
+   "ci95": [
+    0.2667,
+    0.4975
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Getenou, Eightfold Glory",
+   "id": "feb638bd31058508"
+  },
+  {
+   "card": "10902110",
+   "name": "Blade Angel",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.375,
+   "games": 64,
+   "ci95": [
+    0.2667,
+    0.4975
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Blade Angel",
+   "id": "c57aff7500a55251"
+  },
+  {
+   "card": "10503210",
+   "name": "World of Games",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.375,
+   "games": 64,
+   "ci95": [
+    0.2667,
+    0.4975
+   ],
+   "swaps": "-2 World of Games, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "4cddcc323abca407"
+  },
+  {
    "card": "10612120",
    "name": "Howling Wolfman",
    "kind": "cover-add",
@@ -849,6 +1675,62 @@
    "id": "8d273532096ca11d"
   },
   {
+   "card": "10412110",
+   "name": "Chloe, What a Gal",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.3594,
+   "games": 64,
+   "ci95": [
+    0.2529,
+    0.4818
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Chloe, What a Gal",
+   "id": "9ff78e70f7acf64c"
+  },
+  {
+   "card": "10502110",
+   "name": "Goddess of Starlight",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.3594,
+   "games": 64,
+   "ci95": [
+    0.2529,
+    0.4818
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Goddess of Starlight",
+   "id": "f096464126bc17d7"
+  },
+  {
+   "card": "10011210",
+   "name": "Wild Profusion",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.3594,
+   "games": 64,
+   "ci95": [
+    0.2529,
+    0.4818
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Wild Profusion",
+   "id": "5c9d7c75c10a412e"
+  },
+  {
+   "card": "10712110",
+   "name": "Virewind Fencer",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.3594,
+   "games": 64,
+   "ci95": [
+    0.2529,
+    0.4818
+   ],
+   "swaps": "-2 Virewind Fencer, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "28ae3cfdc1b46e5d"
+  },
+  {
    "card": "10713110",
    "name": "Frostbow Sniper",
    "kind": "cover-add",
@@ -861,6 +1743,48 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Frostbow Sniper",
    "id": "996dcf36fa79952c"
+  },
+  {
+   "card": "10501110",
+   "name": "Monster Litterateur",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.3438,
+   "games": 64,
+   "ci95": [
+    0.2392,
+    0.466
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Monster Litterateur",
+   "id": "5ac1311ceb6af4ff"
+  },
+  {
+   "card": "10904110",
+   "name": "Zerael, Sundered Rebirth",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.3438,
+   "games": 64,
+   "ci95": [
+    0.2392,
+    0.466
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Zerael, Sundered Rebirth",
+   "id": "dabbb282cb4b519b"
+  },
+  {
+   "card": "10714120",
+   "name": "Great Hart of the Glacial Realm",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.3438,
+   "games": 64,
+   "ci95": [
+    0.2392,
+    0.466
+   ],
+   "swaps": "-2 Great Hart of the Glacial Realm, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "44e08d6e81481d7e"
   },
   {
    "card": "10813110",
@@ -877,6 +1801,62 @@
    "id": "de4483d8885f4b48"
   },
   {
+   "card": "10811110",
+   "name": "Marlone, Scales of the Past",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.3281,
+   "games": 64,
+   "ci95": [
+    0.2257,
+    0.45
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Marlone, Scales of the Past",
+   "id": "40536405cd649b7e"
+  },
+  {
+   "card": "10804120",
+   "name": "Olivia, Proud Dark Angel",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.3281,
+   "games": 64,
+   "ci95": [
+    0.2257,
+    0.45
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Olivia, Proud Dark Angel",
+   "id": "7de5f3ae78257f2f"
+  },
+  {
+   "card": "10913310",
+   "name": "Crimson Incense",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.3281,
+   "games": 64,
+   "ci95": [
+    0.2257,
+    0.45
+   ],
+   "swaps": "-1 Ewiyar, Wind Personified, -1 Grace of the Swarmpetal, +2 Crimson Incense",
+   "id": "d6cfc7ddcdcf800f"
+  },
+  {
+   "card": "10514120",
+   "name": "Miroku, Swarmpetal",
+   "kind": "cover-cut",
+   "copies": 2,
+   "rate": 0.3281,
+   "games": 64,
+   "ci95": [
+    0.2257,
+    0.45
+   ],
+   "swaps": "-2 Miroku, Swarmpetal, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch",
+   "id": "263179f69394123b"
+  },
+  {
    "card": "10611120",
    "name": "Monkey of Paradise",
    "kind": "cover-add",
@@ -889,6 +1869,34 @@
    ],
    "swaps": "-1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Monkey of Paradise",
    "id": "ce5bced0f4c80f8c"
+  },
+  {
+   "card": "10414110",
+   "name": "Ewiyar, Wind Personified",
+   "kind": "cover-cut",
+   "copies": 1,
+   "rate": 0.3125,
+   "games": 64,
+   "ci95": [
+    0.2123,
+    0.4339
+   ],
+   "swaps": "-1 Ewiyar, Wind Personified, +1 Althenia, Nurturing Bloom",
+   "id": "5ccffb430c7302dd"
+  },
+  {
+   "card": "10404110",
+   "name": "Sandalphon, Primarch Successor",
+   "kind": "cover-add",
+   "copies": 2,
+   "rate": 0.2969,
+   "games": 64,
+   "ci95": [
+    0.199,
+    0.4177
+   ],
+   "swaps": "-1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Sandalphon, Primarch Successor",
+   "id": "8b863b3e2f4ab328"
   },
   {
    "card": "10601110",
