@@ -515,7 +515,43 @@ Sweep 97 (engine `bcfb6cd`, results `sweep97/` at `451ba6c`), all 16 meta decks:
 sha256 `057d9f72580ccee48401c0973238fb5f10bffea5a499ede46932ef26e165cead`
 
 Reach it with `net=h0-value-v97` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
-Full-strength bot score their lines with it since brief ZD.
+Full-strength bot scored their lines with it from brief ZD to brief ZE ([`h0-value-v106`](#h0-value-v106) since).
+
+# `h0-value-v106`
+
+The `h0-value-v106` value model (the leaf) — `arch: residual` on encoding 3, the architecture of
+[`h0-value-v97`](#h0-value-v97) on a wider card list: its linear part is `h0-linear-v4`'s on a card list widened from
+245 to 410 ids (every Forestcraft, Portalcraft and Abysscraft card of the rotation and the tokens they make; a new id
+starts from the weights of index 0, the slot every unknown card shared), plus a ReLU MLP residual with 32 hidden units
+on the 961 standardized features and an 8-dimensional embedding per card and zone (410 ids, 13 zones), `scale` 60.
+Its residual is three quarters of the trained network's (`w2`, `b2` scaled by 0.75: `trained_on.shrink` 0.75).
+
+## Provenance
+
+Trained on the owner's box inside runbook 106 (`fit106.py`, `fit66.py`'s code on the widened card list) on the rows of
+the teach archives teach92 … teach97, teach99, teach100 and teach105 (teach105: 14 336 games with Forestcraft and
+Portalcraft exploring decks) and of the recorded games of seventeen sweeps, 87 … 100 — every rows folder of the run but
+teach70's (26 folders). Targets: TD(λ 0.95) returns from four cross-fitted networks of `h0-value-v64`'s recipe (11 740 860
+rows); 10 epochs, best epoch 10. Brier score at the turn starts of the held-out games of the 16 meta decks' teach sets
+(94 970 turn starts, the run's gate): the full network 0.1828, `leaf100`'s network 0.1827, `h0-linear-v4` 0.2303; at all
+333 538 held-out turn starts this file 0.1702, `leaf100q` 0.1722, `h0-value-v97` 0.1789; at the exploration games'
+turn starts (teach99, teach100, teach105) this file 0.0990, `leaf100q` 0.1125, `h0-value-v97` 0.1565.
+
+## Yardstick
+
+Sweep 106 (engine `bcfb6cd`, results `sweep106/` at `2229409`), all 16 meta decks: `net=<this file>` vs `leaf100q` (the
+box's leaf since sweep 100, never served; +2.9 Elo against `h0-value-v97` in sweep 100, 3 072 games), both on
+`h0:nodes=32000,horizon=3,k=8,tkill=10000,tkroll=8,hbcheck=2000,fuseguard=1,okill=15,hbk=16,alloc=world,threads=1,lostrank=4000,order=h0-order-v59,oorder=h0-order-v53,oopen=1,onext=0,deal=block,mull=leaf,mulls=256`
+(the leaf in both roles: the search's and the mulligan's):
+
+- screen 260 / 512 = 0.508 (the same recipe on every rows folder: 255 / 512 = 0.498);
+- final 2 091 / 4 096 = 0.5105 (+7.3 Elo; main 1 310 / 2 560, reverse 781 / 1 536; early stop at look 8);
+- self-play throughput × 1.035.
+
+sha256 `35ec3dcaa81596e804f735eb55cb7ad924582b0e668e5b3d43ade85509235089`
+
+Reach it with `net=h0-value-v106` (embedded like `h0-linear-v4`). `py/serve.py`'s defaults and the browser's
+Full-strength bot score their lines with it since brief ZE.
 
 # `h0-order-v53`
 
