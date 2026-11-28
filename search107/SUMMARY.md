@@ -1,8 +1,8 @@
 # search107: the Forestcraft deck search, all rounds (runbook 107)
 
-- rounds: 1 (search107, coverage, 4096 games, 64 decks, verdict: DATA OK), 2 (search107, coverage, 4096 games, 64 decks, verdict: DATA OK), 3 (search107, exploit, 4096 games, 64 decks, verdict: DATA OK), 4 (search107, exploit, 4096 games, 64 decks, verdict: DATA OK)
-- decks played: 222; games: 16384
-- the control (Combo Forest as it is): 0.4531 over 256 games, 95 % [0.3933, 0.5143]
+- rounds: 1 (search107, coverage, 4096 games, 64 decks, verdict: DATA OK), 2 (search107, coverage, 4096 games, 64 decks, verdict: DATA OK), 3 (search107, exploit, 4096 games, 64 decks, verdict: DATA OK), 4 (search107, exploit, 4096 games, 64 decks, verdict: DATA OK), 5 (search107, exploit, 4096 games, 64 decks, verdict: DATA OK)
+- decks played: 273; games: 20480
+- the control (Combo Forest as it is): 0.4688 over 320 games, 95 % [0.4148, 0.5235]
 - coverage trials (a card's copies added to or cut from Combo Forest's shell): 116
 
 ## The best decks with 128 games or more (Wilson 95 %)
@@ -10,25 +10,25 @@
 | deck | its swaps from Combo Forest | games | win rate | 95 % | rounds | the model's rate when proposed |
 |---|---|---:|---:|---|---|---:|
 | 2ceb9672b55cd6af | -1 Crimson Incense, -1 Ewiyar, Wind Personified, -1 Grace of the Swarmpetal, -3 Sathanid, Eld Lance, +1 Aika, Elegy of Loss, +2 Althenia, Nurturing Bloom, +1 Great Hart of the Glacial Realm, +1 Kou & You, Love and Hatred, +1 Vyrn, Bestest Pal | 128 | 0.5234 | [0.4375, 0.608] | r03:s17, r04:i11 | 0.4585 |
-| b12ac276a83bbdf4 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Althenia, Nurturing Bloom | 192 | 0.5104 | [0.4402, 0.5802] | r01:a01, r02:i02, r03:i06 | 0.46 |
 | 28c048b49a7bd7df | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Flight of the Swarmpetal | 192 | 0.5052 | [0.4351, 0.5751] | r01:a14, r02:i03, r03:i12 | 0.4512 |
-| 39d1122f5ff2bd88 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Initiation of Rebirth | 128 | 0.5 | [0.4147, 0.5853] | r01:a63, r04:i12 | 0.4577 |
 | 228b76dcf667cb1e | -1 Crimson Incense, -1 Grace of the Swarmpetal, -2 Sathanid, Eld Lance, +1 Anthuria, Toe-Tapping Torch, +3 Gran & Djeeta, Valiant Skyfarers | 128 | 0.5 | [0.4147, 0.5853] | r03:s44, r04:i01 | 0.4733 |
 | b3799a1ad976b484 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Legacy of the Brave | 192 | 0.4948 | [0.4249, 0.5649] | r01:a12, r03:i10, r04:i07 | 0.4608 |
 | 8b4f35c21bb18d3a | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Leah, Bellringer Angel | 192 | 0.4948 | [0.4249, 0.5649] | r01:a16, r02:i04, r03:i05 | 0.461 |
-| bad3ca05356bf46b | -1 Crimson Incense, -1 Grace of the Swarmpetal, -1 Sprouting Initiate, +3 Gran & Djeeta, Valiant Skyfarers | 128 | 0.4922 | [0.4071, 0.5778] | r03:m01, r04:i04 | 0.4661 |
-| 8bc1213ae3c32850 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gran & Djeeta, Valiant Skyfarers | 256 | 0.4844 | [0.4238, 0.5454] | r01:a03, r02:i01, r03:i01, r04:i02 | 0.4705 |
-| 536206ace38b8abc | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Spirited Skipper | 192 | 0.4844 | [0.4147, 0.5547] | r01:a05, r03:i11, r04:i08 | 0.4608 |
+| 39d1122f5ff2bd88 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Initiation of Rebirth | 192 | 0.4948 | [0.4249, 0.5649] | r01:a63, r04:i12, r05:i06 | 0.4634 |
+| b12ac276a83bbdf4 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Althenia, Nurturing Bloom | 256 | 0.4922 | [0.4315, 0.5531] | r01:a01, r02:i02, r03:i06, r05:i11 | 0.4561 |
 | b13aa4746116556d | -1 Crimson Incense, -1 Grace of the Swarmpetal, -2 Sathanid, Eld Lance, +1 Anthuria, Toe-Tapping Torch, +1 Fairy Tamer, +2 Spirited Skipper | 128 | 0.4844 | [0.3995, 0.5701] | r03:s15, r04:i05 | 0.4656 |
 | 7d7093a887e55e50 | -1 Crimson Incense, -1 Grace of the Swarmpetal, -1 Sprouting Initiate, +2 Gran & Djeeta, Valiant Skyfarers, +1 Legacy of the Brave | 128 | 0.4844 | [0.3995, 0.5701] | r03:s21, r04:i06 | 0.4652 |
 | d96347a688eb85f5 | -1 Crimson Incense, -1 Grace of the Swarmpetal, -1 Sprouting Initiate, +1 Alfheimr, +2 Gran & Djeeta, Valiant Skyfarers | 128 | 0.4844 | [0.3995, 0.5701] | r03:s42, r04:i03 | 0.4691 |
+| 1f64434e775c6db7 | -1 Crimson Incense, -1 Grace of the Swarmpetal, -2 Sathanid, Eld Lance, -1 Setus & Maisha, Bladerights, +3 Citrus, Heretical Hermit, +2 Gran & Djeeta, Valiant Skyfarers | 128 | 0.4844 | [0.3995, 0.5701] | r04:s17, r05:i07 | 0.4618 |
+| 8bc1213ae3c32850 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gran & Djeeta, Valiant Skyfarers | 320 | 0.4813 | [0.4271, 0.5359] | r01:a03, r02:i01, r03:i01, r04:i02, r05:i04 | 0.4672 |
+| 536206ace38b8abc | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Spirited Skipper | 256 | 0.4805 | [0.42, 0.5415] | r01:a05, r03:i11, r04:i08, r05:i05 | 0.4641 |
 | 8d736122165936f0 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Aika, Elegy of Loss | 192 | 0.4792 | [0.4096, 0.5495] | r01:a06, r02:i07, r03:i08 | 0.4571 |
 | 9b3fd18f85538232 | -1 Crimson Incense, -1 Grace of the Swarmpetal, -1 Sathanid, Eld Lance, +3 Althenia, Nurturing Bloom | 128 | 0.4766 | [0.392, 0.5625] | r02:s01, r03:i04 | 0.4627 |
-| a7d775565a8542a6 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Citrus, Heretical Hermit | 128 | 0.4688 | [0.3845, 0.5548] | r01:a04, r03:i09 | 0.4553 |
+| bad3ca05356bf46b | -1 Crimson Incense, -1 Grace of the Swarmpetal, -1 Sprouting Initiate, +3 Gran & Djeeta, Valiant Skyfarers | 192 | 0.474 | [0.4045, 0.5444] | r03:m01, r04:i04, r05:i02 | 0.4675 |
+| 541e50973ab2025e | Combo Forest as it is | 320 | 0.4688 | [0.4148, 0.5235] | r01:c-combo, r02:c-combo, r03:c-combo, r04:c-combo, r05:c-combo | 0.4395 |
+| e37bc7d6278e93c3 | -1 Crimson Incense, -1 Grace of the Swarmpetal, -2 Virid Lieutenant, +1 Citrus, Heretical Hermit, +1 Gran & Djeeta, Valiant Skyfarers, +2 Spirited Skipper | 128 | 0.4688 | [0.3845, 0.5548] | r04:s35, r05:i01 | 0.4685 |
+| a7d775565a8542a6 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Citrus, Heretical Hermit | 192 | 0.4635 | [0.3944, 0.5341] | r01:a04, r03:i09, r05:i10 | 0.4588 |
 | f4d7f95d6cdc681e | -1 Crimson Incense, -1 Grace of the Swarmpetal, -1 Sathanid, Eld Lance, +1 Aika, Elegy of Loss, +2 Althenia, Nurturing Bloom | 128 | 0.4609 | [0.377, 0.5472] | r02:s02, r03:i03 | 0.465 |
-| 541e50973ab2025e | Combo Forest as it is | 256 | 0.4531 | [0.3933, 0.5143] | r01:c-combo, r02:c-combo, r03:c-combo, r04:c-combo | 0.4353 |
-| dba030fef4e25cf6 | -1 Crimson Incense, +1 Great Hart of the Glacial Realm | 192 | 0.4375 | [0.3692, 0.5082] | r01:a60, r02:i05, r04:i09 | 0.46 |
-| 4d7134c729c89816 | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Anthuria, Toe-Tapping Torch | 192 | 0.4323 | [0.3642, 0.503] | r01:a02, r02:i06, r03:i07 | 0.4594 |
 
 ## Every card's trial in Combo Forest's shell (coverage decks, best first)
 
@@ -40,23 +40,21 @@
 | Sprouting Initiate | -2 | 64 | 0.5312 | [0.4107, 0.6482] | -2 Sprouting Initiate, +1 Althenia, Nurturing Bloom, +1 Anthuria, Toe-Tapping Torch |
 | Cognitive Shift | +2 | 64 | 0.5156 | [0.3958, 0.6337] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Cognitive Shift |
 | City of Babelon | +2 | 64 | 0.5156 | [0.3958, 0.6337] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 City of Babelon |
-| Althenia, Nurturing Bloom | +2 | 192 | 0.5104 | [0.4402, 0.5802] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Althenia, Nurturing Bloom |
 | Flight of the Swarmpetal | +2 | 192 | 0.5052 | [0.4351, 0.5751] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Flight of the Swarmpetal |
 | Lycoris, Barbs of Passion | +2 | 64 | 0.5 | [0.381, 0.619] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Lycoris, Barbs of Passion |
 | Fairy Tamer | +2 | 64 | 0.5 | [0.381, 0.619] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Fairy Tamer |
 | Fate of the World | +2 | 64 | 0.5 | [0.381, 0.619] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Fate of the World |
 | Fairy Beastwhisperer | +2 | 64 | 0.5 | [0.381, 0.619] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Fairy Beastwhisperer |
-| Initiation of Rebirth | +2 | 128 | 0.5 | [0.4147, 0.5853] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Initiation of Rebirth |
 | Legacy of the Brave | +2 | 192 | 0.4948 | [0.4249, 0.5649] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Legacy of the Brave |
 | Leah, Bellringer Angel | +2 | 192 | 0.4948 | [0.4249, 0.5649] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Leah, Bellringer Angel |
-| Gran & Djeeta, Valiant Skyfarers | +2 | 256 | 0.4844 | [0.4238, 0.5454] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gran & Djeeta, Valiant Skyfarers |
-| Spirited Skipper | +2 | 192 | 0.4844 | [0.4147, 0.5547] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Spirited Skipper |
+| Initiation of Rebirth | +2 | 192 | 0.4948 | [0.4249, 0.5649] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Initiation of Rebirth |
+| Althenia, Nurturing Bloom | +2 | 256 | 0.4922 | [0.4315, 0.5531] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Althenia, Nurturing Bloom |
 | Primate Plotters | +2 | 64 | 0.4844 | [0.3663, 0.6042] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Primate Plotters |
 | May, Journey Elf | +2 | 64 | 0.4844 | [0.3663, 0.6042] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 May, Journey Elf |
 | Curiosity Abounds | +2 | 64 | 0.4844 | [0.3663, 0.6042] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Curiosity Abounds |
-| Lyria, Skydestined | +1 | 64 | 0.4844 | [0.3663, 0.6042] | -1 Crimson Incense, +1 Lyria, Skydestined |
+| Gran & Djeeta, Valiant Skyfarers | +2 | 320 | 0.4813 | [0.4271, 0.5359] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gran & Djeeta, Valiant Skyfarers |
+| Spirited Skipper | +2 | 256 | 0.4805 | [0.42, 0.5415] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Spirited Skipper |
 | Aika, Elegy of Loss | +2 | 192 | 0.4792 | [0.4096, 0.5495] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Aika, Elegy of Loss |
-| Citrus, Heretical Hermit | +2 | 128 | 0.4688 | [0.3845, 0.5548] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Citrus, Heretical Hermit |
 | Vyrn, Bestest Pal | +2 | 64 | 0.4688 | [0.3518, 0.5893] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Vyrn, Bestest Pal |
 | Peaceful Solitude | +2 | 64 | 0.4688 | [0.3518, 0.5893] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Peaceful Solitude |
 | Tia, Eternal Crystalian | +2 | 64 | 0.4688 | [0.3518, 0.5893] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Tia, Eternal Crystalian |
@@ -66,16 +64,17 @@
 | Adventurers' Guild | +2 | 64 | 0.4688 | [0.3518, 0.5893] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Adventurers' Guild |
 | Advent of the Eld Lance | +2 | 64 | 0.4688 | [0.3518, 0.5893] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Advent of the Eld Lance |
 | Disrupted Commoner | +2 | 64 | 0.4688 | [0.3518, 0.5893] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Disrupted Commoner |
+| Citrus, Heretical Hermit | +2 | 192 | 0.4635 | [0.3944, 0.5341] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Citrus, Heretical Hermit |
 | Gentle Treant | +2 | 64 | 0.4531 | [0.3373, 0.5743] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Gentle Treant |
 | Reina, Timeless Wanderer | +2 | 64 | 0.4531 | [0.3373, 0.5743] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Reina, Timeless Wanderer |
 | Comet Drive | +2 | 64 | 0.4531 | [0.3373, 0.5743] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Comet Drive |
 | Hamsa, Sculpted Divinity | +2 | 64 | 0.4531 | [0.3373, 0.5743] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Hamsa, Sculpted Divinity |
+| Great Hart of the Glacial Realm | +1 | 256 | 0.4492 | [0.3895, 0.5105] | -1 Crimson Incense, +1 Great Hart of the Glacial Realm |
 | Alfheimr | +2 | 64 | 0.4375 | [0.3229, 0.5591] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Alfheimr |
 | Alabaster Bahamut | +2 | 64 | 0.4375 | [0.3229, 0.5591] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Alabaster Bahamut |
 | Macrobear | +2 | 64 | 0.4375 | [0.3229, 0.5591] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Macrobear |
 | Alfied, Squire of Joy | +2 | 64 | 0.4375 | [0.3229, 0.5591] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Alfied, Squire of Joy |
 | Battledore Woodsmaiden | +2 | 64 | 0.4375 | [0.3229, 0.5591] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Battledore Woodsmaiden |
-| Great Hart of the Glacial Realm | +1 | 192 | 0.4375 | [0.3692, 0.5082] | -1 Crimson Incense, +1 Great Hart of the Glacial Realm |
 | Verdant Ring Kindred | +2 | 64 | 0.4375 | [0.3229, 0.5591] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Verdant Ring Kindred |
 | Yuel & Societte, Dancing Duo | +2 | 64 | 0.4375 | [0.3229, 0.5591] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Yuel & Societte, Dancing Duo |
 | Prudent Tanuki | +2 | 64 | 0.4375 | [0.3229, 0.5591] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Prudent Tanuki |
@@ -96,6 +95,7 @@
 | Dark Dimensions | +2 | 64 | 0.4219 | [0.3087, 0.5439] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Dark Dimensions |
 | Floral Offering | +2 | 64 | 0.4219 | [0.3087, 0.5439] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Floral Offering |
 | Ewiyar, Wind Personified | +2 | 64 | 0.4219 | [0.3087, 0.5439] | -1 Crimson Incense, -1 Grace of the Swarmpetal, +2 Ewiyar, Wind Personified |
+| Lyria, Skydestined | +1 | 128 | 0.4219 | [0.3398, 0.5085] | -1 Crimson Incense, +1 Lyria, Skydestined |
 | Manamel, Super Cutest | +2 | 64 | 0.4219 | [0.3087, 0.5439] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Manamel, Super Cutest |
 | Starry Sky | +2 | 64 | 0.4219 | [0.3087, 0.5439] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Starry Sky |
 | Azvaldt, Penitentiary of Chaos | +2 | 64 | 0.4219 | [0.3087, 0.5439] | -1 Crimson Incense, -1 Ewiyar, Wind Personified, +2 Azvaldt, Penitentiary of Chaos |
