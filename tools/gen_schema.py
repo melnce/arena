@@ -571,6 +571,7 @@ def effect_schema():
         }, ["gain", "player"]),
         leaf("removeCrests", {
             "select": {"$ref": "#/$defs/Selector"},
+            "banish": {"type": "boolean"},
         }, ["select"]),
         leaf("countdown", {
             "select": {"$ref": "#/$defs/Selector"},

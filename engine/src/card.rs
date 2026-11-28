@@ -1459,6 +1459,9 @@ pub enum Effect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         when: Option<Condition>,
         select: Selector,
+        /// When true, crests are banished (no Last Words). Default destroy.
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        banish: bool,
     },
     Countdown {
         #[serde(default, skip_serializing_if = "Option::is_none")]
